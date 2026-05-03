@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+<title>Wine Finder | Hotel St. Cloud</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --navy:   #1f2b3f;
+    --cream:  #e4e2d9;
+    --gold:   #ba8032;
+    --rust:   #600f0f;
+    --white:  #ffffff;
+    --navy-light: #2e3f58;
+    --navy-mid:   #263449;
+    --cream-dark: #ccc9bc;
+    --font: 'Josefin Sans', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--navy);
+    font-family: var(--font);
+    color: var(--cream);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Header ─────────────────────────────────────── */
+  .header {
+    width: 100%;
+    max-width: 640px;
+    text-align: center;
+    padding: 32px 24px 0;
+  }
+  .header-eyebrow {
+    font-size: 0.65rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+  .header-title {
+    font-size: 1.6rem;
+    font-weight: 300;
+    letter-spacing: 0.06em;
+    color: var(--white);
+    margin-bottom: 6px;
+  }
+  .header-sub {
+    font-size: 0.8rem;
+    font-weight: 300;
+    color: rgba(228,226,217,0.6);
+    letter-spacing: 0.04em;
+  }
+
+  /* ── Progress bar ───────────────────────────────── */
+  .progress-wrap {
+    width: 100%;
+    max-width: 480px;
+    margin: 24px auto 0;
+    padding: 0 24px;
+  }
+  .progress-track {
+    height: 2px;
+    background: rgba(228,226,217,0.12);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--gold);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+  .progress-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: rgba(228,226,217,0.4);
+    text-align: right;
+    margin-top: 6px;
+    text-transform: uppercase;
+  }
+
+  /* ── Card ───────────────────────────────────────── */
+  .card {
+    width: 100%;
+    max-width: 560px;
+    margin: 24px auto 0;
+    padding: 0 20px 48px;
+  }
+
+  /* ── Question ───────────────────────────────────── */
+  .question-screen { display: none; }
+  .question-screen.active { display: block; }
+
+  .q-number {
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .q-text {
+    font-size: 1.25rem;
+    font-weight: 300;
+    text-align: center;
+    color: var(--white);
+    letter-spacing: 0.04em;
+    line-height: 1.45;
+    margin-bottom: 8px;
+  }
+  .q-hint {
+    font-size: 0.75rem;
+    font-weight: 300;
+    text-align: center;
+    color: rgba(228,226,217,0.45);
+    letter-spacing: 0.04em;
+    margin-bottom: 28px;
+  }
+
+  /* ── Answer buttons ─────────────────────────────── */
+  .answers {
+    display: grid;
+    gap: 12px;
+  }
+  .answers.two-col { grid-template-columns: 1fr 1fr; }
+  .answers.one-col { grid-template-columns: 1fr; }
+
+  .answer-btn {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(228,226,217,0.15);
+    border-radius: 4px;
+    padding: 18px 16px;
+    color: var(--cream);
+    font-family: var(--font);
+    font-size: 0.88rem;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.18s ease;
+    line-height: 1.35;
+    min-height: 64px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+  .answer-btn:hover, .answer-btn:focus {
+    background: rgba(186,128,50,0.15);
+    border-color: rgba(186,128,50,0.5);
+    color: var(--white);
+    outline: none;
+    transform: translateY(-1px);
+  }
+  .answer-btn:active { transform: translateY(0); }
+  .answer-btn .btn-icon { font-size: 1.3rem; }
+  .answer-btn .btn-label { font-weight: 600; font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; }
+  .answer-btn .btn-sub { font-size: 0.7rem; font-weight: 300; opacity: 0.6; letter-spacing: 0.04em; }
+
+  /* ── Back button ───────────────────────────────── */
+  .back-btn {
+    background: none;
+    border: none;
+    color: rgba(228,226,217,0.35);
+    font-family: var(--font);
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 20px auto 0;
+    padding: 8px 12px;
+    transition: color 0.2s;
+  }
+  .back-btn:hover { color: var(--cream); }
+
+  /* ── Result screen ──────────────────────────────── */
+  #result-screen { display: none; }
+  #result-screen.active { display: block; }
+
+  .result-eyebrow {
+    font-size: 0.65rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--gold);
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  .result-headline {
+    font-size: 1.1rem;
+    font-weight: 300;
+    text-align: center;
+    color: rgba(228,226,217,0.65);
+    letter-spacing: 0.05em;
+    margin-bottom: 28px;
+  }
+
+  .wine-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(186,128,50,0.35);
+    border-radius: 5px;
+    padding: 24px 22px;
+    margin-bottom: 14px;
+  }
+  .wine-card.secondary {
+    border-color: rgba(228,226,217,0.12);
+    background: rgba(255,255,255,0.02);
+  }
+
+  .wine-venue {
+    font-size: 0.62rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 6px;
+  }
+  .wine-card.secondary .wine-venue { color: rgba(228,226,217,0.4); }
+
+  .wine-name {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--white);
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+    line-height: 1.25;
+  }
+  .wine-varietal {
+    font-size: 0.72rem;
+    font-weight: 300;
+    color: rgba(228,226,217,0.5);
+    letter-spacing: 0.06em;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+  .wine-description {
+    font-size: 0.85rem;
+    font-weight: 300;
+    color: rgba(228,226,217,0.8);
+    line-height: 1.65;
+    margin-bottom: 16px;
+  }
+
+  .wine-meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .wine-tag {
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(228,226,217,0.55);
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(228,226,217,0.1);
+    border-radius: 2px;
+    padding: 3px 8px;
+  }
+
+  .wine-price-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(228,226,217,0.1);
+  }
+  .wine-price {
+    font-size: 0.8rem;
+    color: rgba(228,226,217,0.7);
+    letter-spacing: 0.04em;
+  }
+  .wine-price strong {
+    color: var(--white);
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .result-also {
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(228,226,217,0.3);
+    text-align: center;
+    margin: 20px 0 14px;
+  }
+
+  /* ── Action buttons ─────────────────────────────── */
+  .action-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 28px;
+  }
+  .action-btn {
+    background: none;
+    border: 1px solid rgba(228,226,217,0.2);
+    border-radius: 4px;
+    color: var(--cream);
+    font-family: var(--font);
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 14px 10px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+  }
+  .action-btn:hover { background: rgba(255,255,255,0.05); border-color: rgba(228,226,217,0.4); }
+  .action-btn.primary {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--navy);
+    font-weight: 600;
+  }
+  .action-btn.primary:hover { background: #cc9040; border-color: #cc9040; }
+
+  /* ── Footer ─────────────────────────────────────── */
+  .footer {
+    margin-top: auto;
+    padding: 24px;
+    text-align: center;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    color: rgba(228,226,217,0.2);
+    text-transform: uppercase;
+  }
+
+  /* ── Transition ─────────────────────────────────── */
+  .fade-in { animation: fadeIn 0.3s ease forwards; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <p class="header-eyebrow">Hotel St. Cloud · Wine Finder</p>
+  <h1 class="header-title">Find Your Perfect Glass</h1>
+  <p class="header-sub">Five questions. One perfect bottle.</p>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  <p class="progress-label" id="progress-label">Question 1 of 5</p>
+</div>
+
+<div class="card">
+
+  <!-- Q1: Color -->
+  <div class="question-screen active fade-in" id="q1">
+    <p class="q-number">Question 1 of 5</p>
+    <p class="q-text">What are you in the mood for tonight?</p>
+    <p class="q-hint">No wrong answer — just go with your gut.</p>
+    <div class="answers two-col">
+      <button class="answer-btn" onclick="answer(1,'red')">
+        <span class="btn-icon">🍷</span>
+        <span class="btn-label">Red</span>
+        <span class="btn-sub">Bold, rich, warming</span>
+      </button>
+      <button class="answer-btn" onclick="answer(1,'white')">
+        <span class="btn-icon">🥂</span>
+        <span class="btn-label">White</span>
+        <span class="btn-sub">Crisp, fresh, bright</span>
+      </button>
+      <button class="answer-btn" onclick="answer(1,'sparkling')">
+        <span class="btn-icon">✨</span>
+        <span class="btn-label">Sparkling</span>
+        <span class="btn-sub">Celebratory, lively</span>
+      </button>
+      <button class="answer-btn" onclick="answer(1,'any')">
+        <span class="btn-icon">🍾</span>
+        <span class="btn-label">Surprise me</span>
+        <span class="btn-sub">Open to anything</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Q2: Sweetness -->
+  <div class="question-screen" id="q2">
+    <p class="q-number">Question 2 of 5</p>
+    <p class="q-text">How do you like your wine on the sweetness scale?</p>
+    <p class="q-hint">Think about what you've enjoyed before.</p>
+    <div class="answers two-col">
+      <button class="answer-btn" onclick="answer(2,'dry')">
+        <span class="btn-label">Bone Dry</span>
+        <span class="btn-sub">No sweetness at all</span>
+      </button>
+      <button class="answer-btn" onclick="answer(2,'off-dry')">
+        <span class="btn-label">Just a Hint</span>
+        <span class="btn-sub">Dry with a soft finish</span>
+      </button>
+      <button class="answer-btn" onclick="answer(2,'sweet')">
+        <span class="btn-label">Noticeably Sweet</span>
+        <span class="btn-sub">Fruity and approachable</span>
+      </button>
+      <button class="answer-btn" onclick="answer(2,'any')">
+        <span class="btn-label">No Preference</span>
+        <span class="btn-sub">Whatever fits best</span>
+      </button>
+    </div>
+    <button class="back-btn" onclick="goBack(2)">← Back</button>
+  </div>
+
+  <!-- Q3: Body -->
+  <div class="question-screen" id="q3">
+    <p class="q-number">Question 3 of 5</p>
+    <p class="q-text">Light and delicate, or bold and full?</p>
+    <p class="q-hint">Think about how you want the wine to feel in your mouth.</p>
+    <div class="answers two-col">
+      <button class="answer-btn" onclick="answer(3,'light')">
+        <span class="btn-icon">🌿</span>
+        <span class="btn-label">Light</span>
+        <span class="btn-sub">Elegant, easy-drinking</span>
+      </button>
+      <button class="answer-btn" onclick="answer(3,'medium')">
+        <span class="btn-icon">⚖️</span>
+        <span class="btn-label">Medium</span>
+        <span class="btn-sub">Balanced, versatile</span>
+      </button>
+      <button class="answer-btn" onclick="answer(3,'full')">
+        <span class="btn-icon">💪</span>
+        <span class="btn-label">Full-Bodied</span>
+        <span class="btn-sub">Rich, robust, complex</span>
+      </button>
+      <button class="answer-btn" onclick="answer(3,'any')">
+        <span class="btn-icon">🎲</span>
+        <span class="btn-label">No Preference</span>
+        <span class="btn-sub">Dealer's choice</span>
+      </button>
+    </div>
+    <button class="back-btn" onclick="goBack(3)">← Back</button>
+  </div>
+
+  <!-- Q4: Food -->
+  <div class="question-screen" id="q4">
+    <p class="q-number">Question 4 of 5</p>
+    <p class="q-text">What are you having with it?</p>
+    <p class="q-hint">Food pairing makes all the difference.</p>
+    <div class="answers two-col">
+      <button class="answer-btn" onclick="answer(4,'meat')">
+        <span class="btn-icon">🥩</span>
+        <span class="btn-label">Red Meat</span>
+        <span class="btn-sub">Steak, lamb, bison</span>
+      </button>
+      <button class="answer-btn" onclick="answer(4,'seafood')">
+        <span class="btn-icon">🐟</span>
+        <span class="btn-label">Fish & Seafood</span>
+        <span class="btn-sub">Light, fresh dishes</span>
+      </button>
+      <button class="answer-btn" onclick="answer(4,'pasta')">
+        <span class="btn-icon">🍝</span>
+        <span class="btn-label">Pasta & Veggie</span>
+        <span class="btn-sub">Comfort food, salads</span>
+      </button>
+      <button class="answer-btn" onclick="answer(4,'drinks')">
+        <span class="btn-icon">🥂</span>
+        <span class="btn-label">Just Drinking</span>
+        <span class="btn-sub">No food, sipping only</span>
+      </button>
+    </div>
+    <button class="back-btn" onclick="goBack(4)">← Back</button>
+  </div>
+
+  <!-- Q5: Budget -->
+  <div class="question-screen" id="q5">
+    <p class="q-number">Question 5 of 5</p>
+    <p class="q-text">What's the vibe tonight?</p>
+    <p class="q-hint">Every option on our list is worth it.</p>
+    <div class="answers one-col">
+      <button class="answer-btn" onclick="answer(5,'glass')">
+        <span class="btn-label">By the Glass</span>
+        <span class="btn-sub">$7.50–$16 · Easy and approachable</span>
+      </button>
+      <button class="answer-btn" onclick="answer(5,'mid')">
+        <span class="btn-label">Mid-Range Bottle</span>
+        <span class="btn-sub">$33–$70 · Something special</span>
+      </button>
+      <button class="answer-btn" onclick="answer(5,'premium')">
+        <span class="btn-label">Go Big</span>
+        <span class="btn-sub">$100+ · This is a night to remember</span>
+      </button>
+    </div>
+    <button class="back-btn" onclick="goBack(5)">← Back</button>
+  </div>
+
+  <!-- Result -->
+  <div id="result-screen">
+    <p class="result-eyebrow">Your Match</p>
+    <p class="result-headline" id="result-headline">Based on your taste, we'd pour you...</p>
+    <div id="primary-wine"></div>
+    <p class="result-also" id="also-label">You might also enjoy</p>
+    <div id="secondary-wine"></div>
+    <div class="action-row">
+      <button class="action-btn" onclick="restart()">Start Over</button>
+      <button class="action-btn primary" onclick="restart()">Try Another</button>
+    </div>
+  </div>
+
+</div><!-- /card -->
+
+<div class="footer">Hotel St. Cloud · 631 Main Street · Cañon City, CO</div>
+
+<script>
+// ── Wine database ──────────────────────────────────────────────────────────
+const WINES = [
+  // ─── REDS ───
+  {
+    name: "Holy Cross Abbey — Seventh & Main",
+    varietal: "Cabernet Sauvignon · Colorado",
+    venue: "1887 Historic Eatery & Fremont Public House",
+    color: "red", body: "full", sweetness: "dry", acidity: "medium",
+    flavors: ["blackberry","dark cherry","mocha","cinnamon","toasted oak"],
+    food: ["meat","pasta"],
+    glass: 10, bottle: 55,
+    description: "A proudly Colorado Cabernet, grown at the foot of the Rockies — ripe mountain berry, mocha, and warm cinnamon spice with a long, satisfying finish. And yes, it's made by monks.",
+    local: true
+  },
+  {
+    name: "The Prisoner",
+    varietal: "Red Wine Blend · Napa Valley",
+    venue: "Fremont Public House",
+    color: "red", body: "full", sweetness: "off-dry", acidity: "medium",
+    flavors: ["dark cherry","blackberry","vanilla","dried plum","toasted coconut"],
+    food: ["meat","drinks"],
+    glass: null, bottle: null,
+    description: "Opulent and unapologetically indulgent — The Prisoner's Zinfandel-led Napa blend seduces with dark fruit, silky tannins, and a finish as bold as the name suggests. A special-occasion wine through and through.",
+    local: false
+  },
+  {
+    name: "Jordan Cabernet Sauvignon",
+    varietal: "Cabernet Sauvignon · Alexander Valley",
+    venue: "Fremont Public House",
+    color: "red", body: "full", sweetness: "dry", acidity: "medium",
+    flavors: ["blackcurrant","cedar","dark cherry","tobacco","subtle oak"],
+    food: ["meat"],
+    glass: null, bottle: 250,
+    description: "One of California's most storied names — Jordan is the definition of elegance in a Cab. Structured and refined, with a classic Alexander Valley character that pairs effortlessly with a great steak.",
+    local: false
+  },
+  {
+    name: "Cakebread Cellars Cabernet Sauvignon",
+    varietal: "Cabernet Sauvignon · Napa Valley",
+    venue: "Fremont Public House",
+    color: "red", body: "full", sweetness: "dry", acidity: "medium",
+    flavors: ["blackberry","cassis","dark chocolate","tobacco","vanilla oak"],
+    food: ["meat"],
+    glass: null, bottle: 190,
+    description: "Napa at its most confident — rich, layered dark fruit with refined structure and a beautifully long finish. This is a wine you linger over.",
+    local: false
+  },
+  {
+    name: "Duckhorn Merlot",
+    varietal: "Merlot · Napa Valley",
+    venue: "Fremont Public House",
+    color: "red", body: "full", sweetness: "dry", acidity: "medium",
+    flavors: ["plum","dark cherry","cocoa","cedar","mocha"],
+    food: ["meat","pasta"],
+    glass: 25, bottle: 110,
+    description: "Duckhorn's Merlot almost single-handedly saved Merlot's reputation. Plush, velvety, and deeply satisfying — dark fruit, cocoa, and cedar that linger long after the glass is empty.",
+    local: false
+  },
+  {
+    name: "Flowers Pinot Noir",
+    varietal: "Pinot Noir · Sonoma Coast",
+    venue: "Fremont Public House",
+    color: "red", body: "medium", sweetness: "dry", acidity: "high",
+    flavors: ["wild strawberry","cherry","earth","spice","violet"],
+    food: ["seafood","pasta","meat"],
+    glass: null, bottle: 135,
+    description: "From the windswept ridges of Sonoma Coast — Flowers Pinot is a wine of tension and beauty. Wild strawberry, delicate earth, and a minerality that speaks of cool Pacific fog and coastal terroir.",
+    local: false
+  },
+  {
+    name: "La Crema Pinot Noir",
+    varietal: "Pinot Noir · Sonoma Coast",
+    venue: "Fremont Public House",
+    color: "red", body: "medium", sweetness: "dry", acidity: "high",
+    flavors: ["cherry","raspberry","mushroom","spice","vanilla"],
+    food: ["seafood","pasta","meat"],
+    glass: 16, bottle: 70,
+    description: "Approachable Sonoma Coast elegance — cherry and raspberry with earthy mushroom notes and warm spice. La Crema is the Pinot you reach for when you want something polished but not precious.",
+    local: false
+  },
+  {
+    name: "Yamhill Estates Pinot Noir",
+    varietal: "Pinot Noir · Willamette Valley",
+    venue: "1887 Historic Eatery & Fremont Public House",
+    color: "red", body: "medium", sweetness: "dry", acidity: "high",
+    flavors: ["cherry","cranberry","rose petal","forest floor","subtle spice"],
+    food: ["seafood","pasta"],
+    glass: null, bottle: 63,
+    description: "Oregon's Willamette Valley produces Pinot Noir with a distinctly cool-climate elegance — and Yamhill Estates delivers exactly that. Bright cherry, cranberry, and a forest-floor earthiness with beautifully balanced acidity.",
+    local: false
+  },
+  {
+    name: "Torre Zambra \"Maida\"",
+    varietal: "Montepulciano d'Abruzzo · Italy",
+    venue: "1887 Historic Eatery",
+    color: "red", body: "medium", sweetness: "dry", acidity: "medium",
+    flavors: ["spiced cherries","blackberry","violets","clove","bitter licorice"],
+    food: ["meat","pasta"],
+    glass: 12, bottle: 45,
+    description: "An expressive, organically grown gem from Abruzzo — spiced cherries and violet perfume, with supple tannins and vibrant acidity. A 92-point wine at a table-wine price.",
+    local: false
+  },
+  {
+    name: "Fableist Cabernet Sauvignon",
+    varietal: "Cabernet Sauvignon · Paso Robles",
+    venue: "1887 Historic Eatery & Fremont Public House",
+    color: "red", body: "full", sweetness: "dry", acidity: "medium",
+    flavors: ["blackberry","dark plum","cocoa","vanilla","soft oak"],
+    food: ["meat","pasta"],
+    glass: 10, bottle: 50,
+    description: "Paso Robles Cab with California warmth and grip — blackberry and dark plum with cocoa and vanilla from careful oak aging. Great value for a full-bodied, food-friendly wine.",
+    local: false
+  },
+  {
+    name: "Chateau de L'Hospital Bordeaux",
+    varietal: "Bordeaux Blend · Graves, France",
+    venue: "1887 Historic Eatery",
+    color: "red", body: "full", sweetness: "dry", acidity: "medium",
+    flavors: ["black cherry","graphite","tobacco","dark plum","earthy minerality"],
+    food: ["meat"],
+    glass: 15, bottle: 60,
+    description: "Classic Left Bank Bordeaux structure — black cherry, graphite, and tobacco with a minerality that speaks of Graves gravel. Refined and age-worthy; this is Bordeaux doing exactly what it was born to do.",
+    local: false
+  },
+  {
+    name: "Lomas del Marques Tempranillo",
+    varietal: "Tempranillo · Rioja, Spain",
+    venue: "1887 Historic Eatery",
+    color: "red", body: "medium", sweetness: "dry", acidity: "medium",
+    flavors: ["ripe cherry","strawberry","dried red plum","baking spice","vanilla"],
+    food: ["meat","pasta","drinks"],
+    glass: 7.50, bottle: 33,
+    description: "Pure, fruit-forward, and silky — this Rioja Tempranillo captures the warm, honest pleasure of a great Spanish house red. Cherry and strawberry with a touch of spice and a smooth, inviting finish.",
+    local: false
+  },
+  {
+    name: "Sempre Avanti Red",
+    varietal: "Montepulciano d'Abruzzo · Italy",
+    venue: "1887 Historic Eatery & Fremont Public House",
+    color: "red", body: "medium", sweetness: "dry", acidity: "medium",
+    flavors: ["dark cherry","blackberry","violet","warm spice","bitter licorice"],
+    food: ["pasta","meat","drinks"],
+    glass: null, bottle: 36,
+    description: "A spirited, table-ready Italian red built on Montepulciano — juicy dark fruit, violet perfume, and a clean spice-edged finish. The kind of wine that makes any dinner feel more Italian.",
+    local: false
+  },
+  {
+    name: "Chateau Lescours St Emilion",
+    varietal: "Bordeaux Blend · Saint-Émilion, France",
+    venue: "1887 Historic Eatery & Fremont Public House",
+    color: "red", body: "full", sweetness: "dry", acidity: "medium",
+    flavors: ["dark cherry","plum","chocolate","tobacco","cedar"],
+    food: ["meat"],
+    glass: null, bottle: 105,
+    description: "Right Bank Bordeaux at its finest — Merlot-dominant with ripe dark fruit, chocolate, and the unmistakable refinement of Saint-Émilion. A wine worth the occasion.",
+    local: false
+  },
+  // ─── WHITES ───
+  {
+    name: "Kistler Les Noisetiers Chardonnay",
+    varietal: "Chardonnay · Sonoma Coast",
+    venue: "Fremont Public House",
+    color: "white", body: "full", sweetness: "dry", acidity: "high",
+    flavors: ["lemon cream","toasted hazelnut","stone fruit","oak spice","mineral"],
+    food: ["seafood","pasta","drinks"],
+    glass: null, bottle: 175,
+    description: "Kistler is arguably California's greatest Chardonnay producer — and Les Noisetiers is where they start. Lemon cream, hazelnut, and beautiful Burgundian structure. Not just a glass of wine; an experience.",
+    local: false
+  },
+  {
+    name: "Cakebread Cellars Chardonnay",
+    varietal: "Chardonnay · Napa Valley",
+    venue: "Fremont Public House",
+    color: "white", body: "full", sweetness: "dry", acidity: "medium",
+    flavors: ["pear","apple","vanilla","toasted oak","citrus"],
+    food: ["seafood","pasta"],
+    glass: null, bottle: 125,
+    description: "One of Napa's most beloved Chardonnays — tropical fruit and ripe pear with creamy oak and a silky, persistent finish. The white wine equivalent of a great Napa Cab.",
+    local: false
+  },
+  {
+    name: "Abadia Do Seixo Albarino",
+    varietal: "Albariño · Rías Baixas, Spain",
+    venue: "1887 Historic Eatery",
+    color: "white", body: "medium", sweetness: "dry", acidity: "high",
+    flavors: ["Valencia orange","yuzu","caramelized pineapple","lemon zest","saline minerality"],
+    food: ["seafood","drinks"],
+    glass: 12.50, bottle: 50,
+    description: "A quintessential Galician Albariño — exotic citrus, tropical fruit, and bracing coastal salinity. This is the wine sommeliers order for themselves, and it's extraordinary with anything from the sea.",
+    local: false
+  },
+  {
+    name: "Bonny Doon Le Cigare Orange Wine",
+    varietal: "Orange Wine · Central Coast, CA",
+    venue: "1887 Historic Eatery & Fremont Public House",
+    color: "white", body: "medium", sweetness: "dry", acidity: "medium",
+    flavors: ["peach","apricot","kumquat","orange peel","soft spice"],
+    food: ["seafood","pasta","drinks"],
+    glass: 12, bottle: 48,
+    description: "Orange wine: white grapes treated like reds, with skin contact that adds texture and complexity. Peach, apricot, and orange peel with a beautiful amber hue. The most interesting glass on the list — for the curious.",
+    local: false
+  },
+  {
+    name: "Groundwork Grenache Blanc",
+    varietal: "Grenache Blanc · Paso Robles",
+    venue: "1887 Historic Eatery & Fremont Public House",
+    color: "white", body: "medium", sweetness: "dry", acidity: "medium",
+    flavors: ["lychee","pink lady apple","lemon pith","orange blossom","sea breeze"],
+    food: ["seafood","pasta","drinks"],
+    glass: 15, bottle: 60,
+    description: "Organic, unfined, unfiltered — Groundwork makes wine with nothing to hide. Lychee, fresh apple, and orange blossom with a breezy minerality. A white wine for people who find most whites boring.",
+    local: false
+  },
+  {
+    name: "Sturmwolken Riesling",
+    varietal: "Riesling · Germany",
+    venue: "1887 Historic Eatery & Fremont Public House",
+    color: "white", body: "light", sweetness: "off-dry", acidity: "high",
+    flavors: ["green apple","lime","white peach","slate minerality","floral"],
+    food: ["seafood","pasta","drinks"],
+    glass: 10, bottle: 40,
+    description: "German Riesling is one of the world's great white wines — and this one delivers. Green apple, lime, and floral notes with a slate minerality and just a whisper of sweetness to balance the beautiful acidity.",
+    local: false
+  },
+  {
+    name: "Cave De Buxy Chardonnay",
+    varietal: "Chardonnay · Burgundy, France",
+    venue: "1887 Historic Eatery & Fremont Public House",
+    color: "white", body: "medium", sweetness: "dry", acidity: "high",
+    flavors: ["green apple","lemon zest","white flower","minerality","subtle oak"],
+    food: ["seafood","pasta"],
+    glass: 15, bottle: 65,
+    description: "Burgundy Chardonnay at an honest price — crisp green apple, lemon, and white flower with a beautiful mineral spine. This is what Chardonnay tastes like before Hollywood got to it.",
+    local: false
+  },
+  {
+    name: "Fableist Sauvignon Blanc",
+    varietal: "Sauvignon Blanc · Central Coast",
+    venue: "1887 Historic Eatery & Fremont Public House",
+    color: "white", body: "light", sweetness: "dry", acidity: "high",
+    flavors: ["grapefruit","green apple","lime","fresh herbs","subtle floral"],
+    food: ["seafood","pasta","drinks"],
+    glass: null, bottle: 65,
+    description: "Vibrant and food-friendly — grapefruit, green apple, and a herbaceous freshness that makes it the go-to white for a reason. Crisp, clean, and endlessly drinkable.",
+    local: false
+  },
+  {
+    name: "Sempre Avanti White",
+    varietal: "Bianco Toscana · Italy",
+    venue: "1887 Historic Eatery & Fremont Public House",
+    color: "white", body: "light", sweetness: "dry", acidity: "high",
+    flavors: ["peach","apricot","citrus blossom","green apple","fresh herbs"],
+    food: ["seafood","pasta","drinks"],
+    glass: 9, bottle: 36,
+    description: "Crisp and refreshing Tuscan white — stone fruit and citrus blossom with a bright acidity. The perfect aperitivo glass, or the easiest yes when nothing else comes to mind.",
+    local: false
+  },
+  {
+    name: "Casalcomignoli Moscato d'Asti",
+    varietal: "Moscato d'Asti · Piedmont, Italy",
+    venue: "1887 Historic Eatery",
+    color: "white", body: "light", sweetness: "sweet", acidity: "medium",
+    flavors: ["orange blossom","sage","honey","preserved lemon peel","white peach"],
+    food: ["drinks","pasta"],
+    glass: 7.50, bottle: 33,
+    description: "Softly sparkling, irresistibly fragrant — orange flower, honey, and white peach balanced by lively acidity and only 6% alcohol. Dessert in a glass, or the sweetest way to start an evening.",
+    local: false
+  },
+  {
+    name: "Two Birds One Stone",
+    varietal: "White Blend · Vin de France",
+    venue: "1887 Historic Eatery",
+    color: "white", body: "light", sweetness: "dry", acidity: "medium",
+    flavors: ["nectarine","grapefruit","citrus blossom","green apple","minerality"],
+    food: ["seafood","pasta","drinks"],
+    glass: 7.50, bottle: 33,
+    description: "A light, glossy, disarmingly charming French white blend — nectarine, grapefruit, and mineral freshness that makes it the effortless pour for any occasion. Easy to love, hard to put down.",
+    local: false
+  },
+  // ─── SPARKLING ───
+  {
+    name: "Dom Pérignon",
+    varietal: "Champagne · France",
+    venue: "Fremont Public House",
+    color: "sparkling", body: "medium", sweetness: "dry", acidity: "high",
+    flavors: ["brioche","toasted almond","citrus","white flower","chalk minerality"],
+    food: ["seafood","drinks","meat"],
+    glass: null, bottle: 500,
+    description: "There's nothing else to say. Dom Pérignon is one of the most iconic wines in the world — brioche, toasted almond, citrus, and an elegance that justifies every penny. Some nights call for the best.",
+    local: false
+  },
+  {
+    name: "Cristal",
+    varietal: "Champagne · Louis Roederer, France",
+    venue: "Fremont Public House",
+    color: "sparkling", body: "medium", sweetness: "dry", acidity: "high",
+    flavors: ["white cherry","brioche","almond","citrus zest","fine mineral"],
+    food: ["seafood","drinks"],
+    glass: null, bottle: 600,
+    description: "Louis Roederer's prestige cuvée — delicate, precise, and iconic. White cherry, brioche, and a mineral refinement that has made Cristal the benchmark for celebration since 1876.",
+    local: false
+  },
+  {
+    name: "LaMarca Prosecco",
+    varietal: "Prosecco · Veneto, Italy",
+    venue: "1887 Historic Eatery & Fremont Public House",
+    color: "sparkling", body: "light", sweetness: "off-dry", acidity: "high",
+    flavors: ["honey","cream","green apple","white peach","floral"],
+    food: ["drinks","seafood","pasta"],
+    glass: 14, bottle: null,
+    description: "The Prosecco you reach for without thinking and never regret — honey, cream, green apple, and a delicate fizz that makes everything feel a little more festive.",
+    local: false
+  },
+  {
+    name: "Los Monteros Brut",
+    varietal: "Sparkling Wine · Spain",
+    venue: "1887 Historic Eatery & Fremont Public House",
+    color: "sparkling", body: "light", sweetness: "dry", acidity: "high",
+    flavors: ["green apple","lemon","white flower","subtle almond","light toast"],
+    food: ["drinks","seafood"],
+    glass: 9, bottle: 40,
+    description: "Bright, clean, and very drinkable — this Spanish Brut delivers crisp apple and citrus with fine, persistent bubbles. The honest value-for-occasion sparkling on the list.",
+    local: false
+  },
+  {
+    name: "Sempre Avanti Sparkling",
+    varietal: "Sparkling Wine · Italy",
+    venue: "1887 Historic Eatery & Fremont Public House",
+    color: "sparkling", body: "light", sweetness: "off-dry", acidity: "high",
+    flavors: ["white peach","green apple","lemon zest","almond blossom","brioche"],
+    food: ["drinks","seafood"],
+    glass: null, bottle: 48,
+    description: "Elegant and vivacious Italian sparkling — white peach, green apple, and fragrant almond blossom. Transforms any table into something worth celebrating.",
+    local: false
+  },
+  {
+    name: "Mirabello Prosecco",
+    varietal: "Prosecco · Veneto, Italy",
+    venue: "1887 Historic Eatery",
+    color: "sparkling", body: "light", sweetness: "off-dry", acidity: "high",
+    flavors: ["pear","apple","citrus","floral","light cream"],
+    food: ["drinks","seafood"],
+    glass: 8.75, bottle: 35,
+    description: "Fresh, fragrant, and very approachable — Mirabello Prosecco is the welcoming glass that starts the evening right. Pear, apple, and a gentle floral lift.",
+    local: false
+  },
+  // ─── ROSÉ ───
+  {
+    name: "Apothic Rosé",
+    varietal: "Rosé · California",
+    venue: "1887 Historic Eatery & Fremont Public House",
+    color: "any", body: "light", sweetness: "off-dry", acidity: "medium",
+    flavors: ["watermelon","strawberry","peach","light cream","citrus"],
+    food: ["seafood","pasta","drinks"],
+    glass: 7.50, bottle: 40,
+    description: "Bright, pretty, and crowd-pleasing — Apothic's Rosé delivers watermelon, strawberry, and peach with just a hint of sweetness. The easy choice when the mood calls for something pink and effortless.",
+    local: false
+  }
+];
+
+// ── State ──────────────────────────────────────────────────────────────────
+const answers = {};
+let currentQ = 1;
+
+// ── Scoring engine ─────────────────────────────────────────────────────────
+function scoreWine(wine) {
+  let score = 0;
+
+  // Color (Q1)
+  if (answers[1] !== 'any') {
+    if (answers[1] === 'sparkling') {
+      if (wine.color === 'sparkling') score += 40;
+      else return -1; // hard filter if they asked for sparkling
+    } else if (answers[1] === 'red' || answers[1] === 'white') {
+      if (wine.color === answers[1]) score += 40;
+      else if (wine.color === 'any') score += 10; // rosé is flexible
+      else return -1; // wrong color
+    }
+  } else {
+    score += 10; // no preference, slight base
+  }
+
+  // Sweetness (Q2)
+  if (answers[2] !== 'any') {
+    if (wine.sweetness === answers[2]) score += 25;
+    else if (
+      (answers[2] === 'dry' && wine.sweetness === 'off-dry') ||
+      (answers[2] === 'off-dry' && (wine.sweetness === 'dry' || wine.sweetness === 'sweet'))
+    ) score += 8;
+    else score += 0;
+  } else score += 10;
+
+  // Body (Q3)
+  if (answers[3] !== 'any') {
+    if (wine.body === answers[3]) score += 20;
+    else if (
+      (answers[3] === 'medium' && (wine.body === 'light' || wine.body === 'full'))
+    ) score += 8;
+    else score += 2;
+  } else score += 10;
+
+  // Food (Q4)
+  if (wine.food.includes(answers[4])) score += 15;
+
+  // Budget (Q5)
+  const hasByGlass = wine.glass !== null;
+  const hasBottle = wine.bottle !== null;
+  if (answers[5] === 'glass') {
+    if (hasByGlass) score += 15;
+  } else if (answers[5] === 'mid') {
+    if (hasBottle && wine.bottle >= 30 && wine.bottle <= 75) score += 15;
+    else if (hasBottle) score += 5;
+  } else if (answers[5] === 'premium') {
+    if (hasBottle && wine.bottle >= 80) score += 15;
+    else if (hasBottle) score += 5;
+  }
+
+  // Bonus: local wines get a slight boost for the story
+  if (wine.local) score += 3;
+
+  return score;
+}
+
+function getRecommendations() {
+  const scored = WINES.map(w => ({ wine: w, score: scoreWine(w) }))
+    .filter(x => x.score > 0)
+    .sort((a, b) => b.score - a.score);
+  return [scored[0]?.wine, scored[1]?.wine].filter(Boolean);
+}
+
+// ── Navigation ─────────────────────────────────────────────────────────────
+function answer(q, value) {
+  answers[q] = value;
+  if (q < 5) {
+    showQuestion(q + 1);
+  } else {
+    showResults();
+  }
+}
+
+function goBack(q) {
+  delete answers[q - 1];
+  showQuestion(q - 1);
+}
+
+function showQuestion(n) {
+  currentQ = n;
+  document.querySelectorAll('.question-screen').forEach(el => el.classList.remove('active'));
+  const screen = document.getElementById('q' + n);
+  screen.classList.add('active');
+  screen.classList.remove('fade-in');
+  void screen.offsetWidth;
+  screen.classList.add('fade-in');
+  document.getElementById('result-screen').classList.remove('active');
+  updateProgress(n, 5);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateProgress(current, total) {
+  const pct = ((current - 1) / total) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = 'Question ' + current + ' of ' + total;
+}
+
+function formatPrice(wine) {
+  const parts = [];
+  if (wine.glass) parts.push('<span class="wine-price">Glass <strong>$' + wine.glass + '</strong></span>');
+  if (wine.bottle) parts.push('<span class="wine-price">Bottle <strong>$' + wine.bottle + '</strong></span>');
+  if (!wine.glass && !wine.bottle) parts.push('<span class="wine-price">Ask your server for pricing</span>');
+  return parts.join('');
+}
+
+function buildWineCard(wine, isPrimary) {
+  const cls = isPrimary ? 'wine-card' : 'wine-card secondary';
+  const flavors = wine.flavors.slice(0, 4).map(f => `<span class="wine-tag">${f}</span>`).join('');
+  return `
+    <div class="${cls}">
+      <p class="wine-venue">${wine.venue}</p>
+      <p class="wine-name">${wine.name}</p>
+      <p class="wine-varietal">${wine.varietal}</p>
+      <p class="wine-description">${wine.description}</p>
+      <div class="wine-meta">${flavors}</div>
+      <div class="wine-price-row">${formatPrice(wine)}</div>
+    </div>`;
+}
+
+function showResults() {
+  document.querySelectorAll('.question-screen').forEach(el => el.classList.remove('active'));
+  const recs = getRecommendations();
+  const resultScreen = document.getElementById('result-screen');
+
+  if (recs.length > 0) {
+    document.getElementById('primary-wine').innerHTML = buildWineCard(recs[0], true);
+  }
+  if (recs.length > 1) {
+    document.getElementById('secondary-wine').innerHTML = buildWineCard(recs[1], false);
+    document.getElementById('also-label').style.display = 'block';
+  } else {
+    document.getElementById('also-label').style.display = 'none';
+  }
+
+  resultScreen.classList.add('active');
+  resultScreen.classList.add('fade-in');
+  document.getElementById('progress-fill').style.width = '100%';
+  document.getElementById('progress-label').textContent = 'Your recommendation';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function restart() {
+  Object.keys(answers).forEach(k => delete answers[k]);
+  showQuestion(1);
+  document.getElementById('result-screen').classList.remove('active');
+}
+</script>
+</body>
+</html>
