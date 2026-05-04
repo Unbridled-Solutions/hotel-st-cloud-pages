@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MC — Unbridled Agent Team</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --blue:       #5a8ba7;
+    --blue-dark:  #396889;
+    --blue-deep:  #2d4654;
+    --blue-deepest: #001c28;
+    --gray:       #4b4f54;
+    --gray-light: #72757c;
+    --gray-lightest: #8f939d;
+    --fog:        #a6bbc8;
+    --gold:       #d4b104;
+    --white:      #ffffff;
+    --off-white:  #f4f6f8;
+    --page-bg:    #0d1820;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--page-bg);
+    font-family: 'Inter', sans-serif;
+    color: var(--white);
+    min-height: 100vh;
+  }
+
+  /* ── Print / PDF ─────────────────────────────────────── */
+  @media print {
+    body { background: var(--page-bg) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { box-shadow: none !important; }
+    @page { size: A4 landscape; margin: 0; }
+  }
+
+  /* ── Page shell ──────────────────────────────────────── */
+  .page {
+    width: 297mm;
+    min-height: 210mm;
+    margin: 32px auto;
+    background: var(--page-bg);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+  }
+
+  /* ── Background texture ──────────────────────────────── */
+  .bg-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(90,139,167,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(90,139,167,0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+  }
+  .bg-glow {
+    position: absolute;
+    top: -120px; left: -120px;
+    width: 480px; height: 480px;
+    background: radial-gradient(circle, rgba(90,139,167,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .bg-glow-br {
+    position: absolute;
+    bottom: -100px; right: -100px;
+    width: 360px; height: 360px;
+    background: radial-gradient(circle, rgba(57,104,137,0.1) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* ── Layout ──────────────────────────────────────────── */
+  .layout {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    grid-template-rows: auto 1fr auto;
+    min-height: 210mm;
+    padding: 36px 40px 28px 36px;
+    gap: 0;
+  }
+
+  /* ── Left sidebar ────────────────────────────────────── */
+  .sidebar {
+    grid-row: 1 / 4;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding-right: 28px;
+    border-right: 1px solid rgba(90,139,167,0.2);
+  }
+
+  .elk-mark {
+    width: 52px;
+    height: 52px;
+    margin-bottom: 20px;
+  }
+
+  .brand-name {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 4px;
+  }
+  .doc-title {
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--white);
+    margin-bottom: 6px;
+  }
+  .doc-subtitle {
+    font-size: 10.5px;
+    font-weight: 300;
+    color: var(--fog);
+    line-height: 1.55;
+    margin-bottom: 28px;
+  }
+
+  .divider {
+    width: 32px;
+    height: 1px;
+    background: var(--blue);
+    margin-bottom: 24px;
+    opacity: 0.5;
+  }
+
+  .sidebar-section {
+    margin-bottom: 24px;
+  }
+  .sidebar-label {
+    font-size: 7.5px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 10px;
+  }
+  .sidebar-item {
+    font-size: 9.5px;
+    font-weight: 300;
+    color: var(--fog);
+    line-height: 1.65;
+    padding-left: 10px;
+    border-left: 2px solid rgba(90,139,167,0.25);
+    margin-bottom: 6px;
+  }
+  .sidebar-item strong {
+    color: var(--white);
+    font-weight: 500;
+    display: block;
+  }
+
+  .cornerstone-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+    margin-top: 4px;
+  }
+  .cornerstone-pill {
+    background: rgba(90,139,167,0.1);
+    border: 1px solid rgba(90,139,167,0.25);
+    border-radius: 3px;
+    padding: 6px 8px;
+    font-size: 8px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--fog);
+    text-align: center;
+  }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding-top: 20px;
+    font-size: 8px;
+    color: rgba(166,187,200,0.4);
+    letter-spacing: 0.06em;
+    line-height: 1.6;
+  }
+
+  /* ── Main chart area ─────────────────────────────────── */
+  .chart-area {
+    grid-column: 2;
+    grid-row: 1 / 4;
+    padding-left: 32px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .chart-header {
+    font-size: 8px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(90,139,167,0.6);
+    margin-bottom: 22px;
+  }
+
+  /* ── Org tree ────────────────────────────────────────── */
+  .org-tree {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    flex: 1;
+  }
+
+  /* MC node */
+  .mc-node {
+    position: relative;
+    background: linear-gradient(135deg, var(--blue-dark) 0%, var(--blue-deepest) 100%);
+    border: 1.5px solid var(--blue);
+    border-radius: 6px;
+    padding: 14px 24px;
+    text-align: center;
+    width: 210px;
+    box-shadow: 0 0 32px rgba(90,139,167,0.25), 0 4px 16px rgba(0,0,0,0.4);
+  }
+  .mc-node::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 6px;
+    background: linear-gradient(135deg, rgba(90,139,167,0.15), transparent);
+    pointer-events: none;
+  }
+  .mc-eyebrow {
+    font-size: 7px;
+    font-weight: 500;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 4px;
+  }
+  .mc-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--white);
+    letter-spacing: 0.04em;
+  }
+  .mc-role {
+    font-size: 8.5px;
+    font-weight: 300;
+    color: var(--fog);
+    margin-top: 3px;
+    letter-spacing: 0.06em;
+  }
+
+  /* Connector lines */
+  .connector-down {
+    width: 1.5px;
+    height: 20px;
+    background: linear-gradient(to bottom, var(--blue), rgba(90,139,167,0.4));
+    margin: 0 auto;
+  }
+  .connector-horizontal {
+    height: 1.5px;
+    background: rgba(90,139,167,0.35);
+    width: 100%;
+    position: relative;
+  }
+
+  /* Team row */
+  .teams-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    width: 100%;
+  }
+
+  /* Team column */
+  .team-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
+  .team-connector-down {
+    width: 1.5px;
+    height: 16px;
+    background: rgba(90,139,167,0.3);
+    margin: 0 auto;
+  }
+
+  /* Team header node */
+  .team-node {
+    border-radius: 5px;
+    padding: 10px 12px;
+    text-align: center;
+    width: 100%;
+    border: 1px solid;
+    position: relative;
+  }
+  .team-node.web    { background: rgba(57,104,137,0.18); border-color: rgba(57,104,137,0.5); }
+  .team-node.ads    { background: rgba(90,139,167,0.18); border-color: rgba(90,139,167,0.5); }
+  .team-node.legal  { background: rgba(45,70,84,0.25);  border-color: rgba(90,139,167,0.35); }
+  .team-node.brand  { background: rgba(212,177,4,0.1);  border-color: rgba(212,177,4,0.35); }
+
+  .team-icon {
+    font-size: 14px;
+    margin-bottom: 4px;
+    display: block;
+  }
+  .team-name {
+    font-size: 9.5px;
+    font-weight: 600;
+    color: var(--white);
+    letter-spacing: 0.04em;
+    line-height: 1.2;
+  }
+  .team-desc {
+    font-size: 7.5px;
+    font-weight: 300;
+    color: var(--fog);
+    margin-top: 2px;
+    letter-spacing: 0.03em;
+  }
+  .team-node.brand .team-name { color: #e8d65a; }
+  .team-node.brand .team-desc { color: rgba(232,214,90,0.65); }
+
+  /* Agent list */
+  .agent-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 100%;
+    padding-top: 8px;
+  }
+
+  .agent-connector {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .agent-line-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 1.5px;
+    flex-shrink: 0;
+    padding-left: 0;
+    margin-left: 50%;
+    transform: translateX(-50%);
+  }
+  .agent-vline {
+    width: 1.5px;
+    background: rgba(90,139,167,0.2);
+    flex: 1;
+    min-height: 100%;
+  }
+
+  .agent-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(90,139,167,0.15);
+    border-radius: 4px;
+    padding: 8px 10px;
+    width: 100%;
+    position: relative;
+    transition: border-color 0.2s;
+  }
+  .agent-card::before {
+    content: '';
+    position: absolute;
+    left: -1px; top: 50%;
+    transform: translateY(-50%);
+    width: 8px; height: 1.5px;
+    background: rgba(90,139,167,0.25);
+  }
+
+  .agent-status {
+    position: absolute;
+    top: 7px; right: 8px;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+  }
+  .agent-status.live    { background: #4ade80; box-shadow: 0 0 6px rgba(74,222,128,0.6); }
+  .agent-status.pending { background: rgba(166,187,200,0.4); }
+  .agent-status.gold    { background: var(--gold); box-shadow: 0 0 6px rgba(212,177,4,0.5); }
+
+  .agent-name {
+    font-size: 9px;
+    font-weight: 500;
+    color: var(--white);
+    padding-right: 14px;
+    line-height: 1.2;
+  }
+  .agent-role {
+    font-size: 7.5px;
+    font-weight: 300;
+    color: var(--fog);
+    margin-top: 2px;
+    line-height: 1.4;
+  }
+
+  /* Status legend */
+  .legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(90,139,167,0.12);
+    align-items: center;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 7.5px;
+    color: var(--fog);
+    font-weight: 300;
+    letter-spacing: 0.06em;
+  }
+  .legend-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .legend-dot.live    { background: #4ade80; box-shadow: 0 0 6px rgba(74,222,128,0.5); }
+  .legend-dot.gold    { background: var(--gold); box-shadow: 0 0 6px rgba(212,177,4,0.4); }
+  .legend-dot.pending { background: rgba(166,187,200,0.4); }
+
+  .legend-label { text-transform: uppercase; letter-spacing: 0.12em; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="bg-grid"></div>
+  <div class="bg-glow"></div>
+  <div class="bg-glow-br"></div>
+
+  <div class="layout">
+
+    <!-- ── Sidebar ─────────────────────────────────── -->
+    <aside class="sidebar">
+
+      <!-- Elk SVG mark -->
+      <img class="elk-mark" src="/home/hermes/assets/logos/unbridled-solutions/icon-Unbridled-Elk-Icon_White.png" alt="Unbridled Elk" />
+
+      <p class="brand-name">Unbridled Solutions</p>
+      <h1 class="doc-title">MC Agent<br/>Team Structure</h1>
+      <p class="doc-subtitle">Orchestrator model — specialist agents spawned on demand, all output passing Brand QA before delivery.</p>
+
+      <div class="divider"></div>
+
+      <div class="sidebar-section">
+        <p class="sidebar-label">Mission</p>
+        <div class="sidebar-item">Doing Good<br/><strong>by Doing Well</strong></div>
+      </div>
+
+      <div class="sidebar-section">
+        <p class="sidebar-label">Model</p>
+        <div class="sidebar-item">
+          <strong>20%</strong> Philanthropy
+        </div>
+        <div class="sidebar-item">
+          <strong>20%</strong> Reinvestment
+        </div>
+        <div class="sidebar-item">
+          <strong>60%</strong> People
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <p class="sidebar-label">Four Cornerstones</p>
+        <div class="cornerstone-grid">
+          <div class="cornerstone-pill">Character</div>
+          <div class="cornerstone-pill">Community</div>
+          <div class="cornerstone-pill">Change</div>
+          <div class="cornerstone-pill">Credibility</div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <p class="sidebar-label">Active Clients</p>
+        <div class="sidebar-item"><strong>Hotel St. Cloud</strong>Cañon City, CO</div>
+      </div>
+
+      <div class="sidebar-footer">
+        Unbridled Solutions · May 2026<br/>
+        Internal use only
+      </div>
+    </aside>
+
+    <!-- ── Chart Area ──────────────────────────────── -->
+    <main class="chart-area">
+      <p class="chart-header">Agent Roster &amp; Reporting Structure</p>
+
+      <div class="org-tree">
+
+        <!-- MC Node -->
+        <div class="mc-node">
+          <p class="mc-eyebrow">Master of Ceremonies</p>
+          <p class="mc-name">MC</p>
+          <p class="mc-role">Orchestrator — Stan Bullis's Digital Chief of Staff</p>
+        </div>
+
+        <!-- Line down to horizontal bar -->
+        <div class="connector-down"></div>
+        <div class="connector-horizontal"></div>
+
+        <!-- Teams row -->
+        <div class="teams-row">
+
+          <!-- ── Web Design & Build ── -->
+          <div class="team-col">
+            <div class="team-connector-down"></div>
+            <div class="team-node web">
+              <span class="team-icon">🌐</span>
+              <p class="team-name">Web Design<br/>&amp; Build</p>
+              <p class="team-desc">Sites · Apps · Deploy</p>
+            </div>
+            <div class="agent-list">
+              <div class="agent-card">
+                <span class="agent-status pending"></span>
+                <p class="agent-name">Web Designer</p>
+                <p class="agent-role">Requirements · UX/UI</p>
+              </div>
+              <div class="agent-card">
+                <span class="agent-status pending"></span>
+                <p class="agent-name">Content Writer</p>
+                <p class="agent-role">Web copy · Brand voice</p>
+              </div>
+              <div class="agent-card">
+                <span class="agent-status pending"></span>
+                <p class="agent-name">Builder</p>
+                <p class="agent-role">Frontend · Backend</p>
+              </div>
+              <div class="agent-card">
+                <span class="agent-status pending"></span>
+                <p class="agent-name">QA Reviewer</p>
+                <p class="agent-role">Quality · Security</p>
+              </div>
+              <div class="agent-card">
+                <span class="agent-status pending"></span>
+                <p class="agent-name">Deploy Agent</p>
+                <p class="agent-role">Infra · Launch</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Google Ads ── -->
+          <div class="team-col">
+            <div class="team-connector-down"></div>
+            <div class="team-node ads">
+              <span class="team-icon">📣</span>
+              <p class="team-name">Google Ads</p>
+              <p class="team-desc">Strategy · Copy · Analytics</p>
+            </div>
+            <div class="agent-list">
+              <div class="agent-card">
+                <span class="agent-status live"></span>
+                <p class="agent-name">Ads Strategist</p>
+                <p class="agent-role">Audit · Campaign strategy · Keywords</p>
+              </div>
+              <div class="agent-card">
+                <span class="agent-status live"></span>
+                <p class="agent-name">Ads Copywriter</p>
+                <p class="agent-role">RSA copy · Landing page copy</p>
+              </div>
+              <div class="agent-card">
+                <span class="agent-status live"></span>
+                <p class="agent-name">Landing Page Builder</p>
+                <p class="agent-role">Build · Deploy · UTM tracking</p>
+              </div>
+              <div class="agent-card">
+                <span class="agent-status pending"></span>
+                <p class="agent-name">Ads Analyst</p>
+                <p class="agent-role">Performance · Budgets · Bidding</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Legal ── -->
+          <div class="team-col">
+            <div class="team-connector-down"></div>
+            <div class="team-node legal">
+              <span class="team-icon">⚖️</span>
+              <p class="team-name">Legal</p>
+              <p class="team-desc">Draft · Review · Risk</p>
+            </div>
+            <div class="agent-list">
+              <div class="agent-card">
+                <span class="agent-status live"></span>
+                <p class="agent-name">Legal Drafter</p>
+                <p class="agent-role">NDAs · Contracts · Policies · Event agreements</p>
+              </div>
+              <div class="agent-card">
+                <span class="agent-status live"></span>
+                <p class="agent-name">Legal Reviewer</p>
+                <p class="agent-role">Gap analysis · Risk flags · Enforceability</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Brand QA ── -->
+          <div class="team-col">
+            <div class="team-connector-down"></div>
+            <div class="team-node brand">
+              <span class="team-icon">✦</span>
+              <p class="team-name">Brand QA</p>
+              <p class="team-desc">Cross-cutting quality gate</p>
+            </div>
+            <div class="agent-list">
+              <div class="agent-card">
+                <span class="agent-status gold"></span>
+                <p class="agent-name">Brand Reviewer</p>
+                <p class="agent-role">Tone · Visual · DNA alignment · Every deliverable</p>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /teams-row -->
+
+        <!-- Legend -->
+        <div class="legend">
+          <div class="legend-item">
+            <div class="legend-dot live"></div>
+            <span class="legend-label">Live</span>
+            <span>— Skill built, active</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot gold"></div>
+            <span class="legend-label">Always On</span>
+            <span>— Runs on every deliverable</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot pending"></div>
+            <span class="legend-label">Phase 3</span>
+            <span>— Activates when first project lands</span>
+          </div>
+        </div>
+
+      </div><!-- /org-tree -->
+    </main>
+
+  </div><!-- /layout -->
+</div><!-- /page -->
+
+<div style="text-align:center; padding: 16px 0 32px; font-size: 10px; color: rgba(90,139,167,0.4); letter-spacing: 0.1em; font-family: 'Inter', sans-serif;">
+  TO EXPORT AS PDF — File → Print → Save as PDF · Set to Landscape · A4 · No margins
+</div>
+
+</body>
+</html>
