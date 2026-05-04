@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MC — Portfolio | Unbridled Solutions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+
+/* ── Design tokens: Linear × Unbridled ─────────────────────────────────── */
+:root {
+  /* Surfaces */
+  --bg:          #08090a;
+  --bg-panel:    #0f1011;
+  --bg-card:     #141516;
+  --bg-raised:   #1a1b1d;
+  --bg-hover:    #202124;
+
+  /* Unbridled Blue scale (replaces Linear indigo) */
+  --accent:      #5a8ba7;
+  --accent-dim:  #396889;
+  --accent-glow: rgba(90,139,167,0.18);
+  --accent-line: rgba(90,139,167,0.25);
+
+  /* Text */
+  --text-1:      #f7f8f8;
+  --text-2:      #a8b3be;
+  --text-3:      #62686f;
+  --text-4:      #3d4248;
+
+  /* Borders */
+  --border-1:    rgba(255,255,255,0.05);
+  --border-2:    rgba(255,255,255,0.08);
+  --border-3:    rgba(255,255,255,0.12);
+
+  /* Status */
+  --green:       #27a644;
+  --green-glow:  rgba(39,166,68,0.15);
+  --gold:        #d4b104;
+  --gold-glow:   rgba(212,177,4,0.12);
+
+  /* Type */
+  --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  /* Radii */
+  --r-sm: 5px;
+  --r-md: 8px;
+  --r-lg: 12px;
+}
+
+/* ── Reset ──────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text-2);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "cv01", "ss03";
+}
+a { color: inherit; text-decoration: none; }
+img { display: block; max-width: 100%; }
+button { cursor: pointer; font-family: var(--font); }
+
+/* ── Nav ────────────────────────────────────────────────────────────────── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  height: 52px;
+  background: rgba(8,9,10,0.8);
+  backdrop-filter: blur(16px) saturate(180%);
+  border-bottom: 1px solid var(--border-1);
+}
+.nav-inner {
+  max-width: 1100px; margin: 0 auto;
+  padding: 0 24px;
+  height: 100%;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 24px;
+}
+.nav-left { display: flex; align-items: center; gap: 10px; }
+.nav-logo { width: 22px; height: 22px; opacity: 0.85; flex-shrink: 0; }
+.nav-wordmark {
+  font-size: 13px; font-weight: 500;
+  color: var(--text-1); letter-spacing: -0.01em;
+}
+.nav-sep {
+  width: 1px; height: 14px;
+  background: var(--border-2); margin: 0 4px;
+}
+.nav-sub {
+  font-size: 12px; font-weight: 400;
+  color: var(--text-3); letter-spacing: 0;
+}
+.nav-center {
+  display: flex; gap: 2px;
+}
+.nav-link {
+  font-size: 12.5px; font-weight: 400; color: var(--text-3);
+  padding: 5px 10px; border-radius: var(--r-sm);
+  transition: color 0.15s, background 0.15s;
+}
+.nav-link:hover { color: var(--text-1); background: var(--border-1); }
+.nav-right { display: flex; align-items: center; gap: 8px; }
+.nav-status {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 500; color: var(--green);
+  background: var(--green-glow);
+  border: 1px solid rgba(39,166,68,0.2);
+  border-radius: 20px; padding: 3px 10px;
+}
+.status-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+  animation: blink 2.4s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+/* ── Page wrapper ───────────────────────────────────────────────────────── */
+.page {
+  max-width: 1100px; margin: 0 auto;
+  padding: 0 24px 120px;
+  padding-top: 52px;
+}
+
+/* ── Hero ───────────────────────────────────────────────────────────────── */
+.hero {
+  padding: 80px 0 64px;
+  position: relative;
+}
+/* Subtle radial gradient behind hero text */
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100px; right: -100px; bottom: 0;
+  background: radial-gradient(ellipse 600px 300px at 30% 40%, rgba(90,139,167,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-kicker {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 500;
+  color: var(--accent);
+  letter-spacing: 0.12em; text-transform: uppercase;
+  margin-bottom: 24px;
+}
+.hero-kicker-line {
+  width: 28px; height: 1px; background: var(--accent); opacity: 0.5;
+}
+h1 {
+  font-size: clamp(36px, 5vw, 56px);
+  font-weight: 600;
+  letter-spacing: -1.2px;
+  line-height: 1.04;
+  color: var(--text-1);
+  margin-bottom: 20px;
+  max-width: 720px;
+  font-feature-settings: "cv01","ss03";
+}
+h1 .accent { color: var(--accent); }
+.hero-sub {
+  font-size: 16px; font-weight: 300;
+  color: var(--text-3);
+  line-height: 1.65;
+  max-width: 520px;
+  margin-bottom: 48px;
+}
+.hero-meta {
+  display: flex; gap: 0;
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  width: fit-content;
+}
+.hero-stat {
+  padding: 16px 28px;
+  border-right: 1px solid var(--border-1);
+  position: relative;
+}
+.hero-stat:last-child { border-right: none; }
+.stat-n {
+  font-size: 22px; font-weight: 600;
+  color: var(--text-1); letter-spacing: -0.5px;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.stat-n sup { font-size: 13px; color: var(--accent); font-weight: 500; }
+.stat-l {
+  font-size: 11px; font-weight: 400;
+  color: var(--text-3); letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ── Section ────────────────────────────────────────────────────────────── */
+.section { padding-top: 72px; }
+
+.section-label {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 24px;
+}
+.section-label-text {
+  font-size: 11px; font-weight: 500;
+  color: var(--text-3);
+  letter-spacing: 0.14em; text-transform: uppercase;
+}
+.section-label-line {
+  flex: 1; height: 1px;
+  background: var(--border-1);
+}
+.section-label-count {
+  font-size: 11px; color: var(--text-4);
+  letter-spacing: 0.06em;
+}
+
+/* Client tag */
+.client-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-glow);
+  border: 1px solid var(--accent-line);
+  border-radius: 20px; padding: 3px 10px;
+  margin-bottom: 20px;
+  letter-spacing: 0.06em;
+}
+.client-tag-dot {
+  width: 4px; height: 4px; border-radius: 50%;
+  background: var(--accent);
+}
+
+/* Subsection header */
+.sub-header {
+  display: flex; align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 16px; padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-1);
+}
+.sub-header + .sub-header { margin-top: 48px; }
+.sub-title {
+  font-size: 13px; font-weight: 500;
+  color: var(--text-2); letter-spacing: -0.01em;
+}
+.sub-meta {
+  font-size: 11px; color: var(--text-4);
+  letter-spacing: 0.04em;
+}
+
+/* ── Grid ───────────────────────────────────────────────────────────────── */
+.grid { display: grid; gap: 12px; }
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-auto { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+
+@media (max-width: 720px) {
+  .grid-2, .grid-3, .grid-auto { grid-template-columns: 1fr; }
+  .hero-meta { flex-direction: column; border-radius: var(--r-md); }
+  .hero-stat { border-right: none; border-bottom: 1px solid var(--border-1); }
+  .hero-stat:last-child { border-bottom: none; }
+  .nav-center { display: none; }
+}
+
+/* ── Card ───────────────────────────────────────────────────────────────── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-1);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  display: flex; flex-direction: column;
+  cursor: pointer;
+}
+.card:hover {
+  border-color: var(--border-3);
+  box-shadow: 0 0 0 1px var(--border-1), 0 8px 32px rgba(0,0,0,0.4);
+  transform: translateY(-1px);
+}
+.card.featured {
+  border-color: var(--border-2);
+  background: var(--bg-raised);
+}
+.card.featured:hover {
+  border-color: rgba(90,139,167,0.3);
+  box-shadow: 0 0 0 1px rgba(90,139,167,0.1), 0 8px 32px rgba(0,0,0,0.5);
+}
+
+/* Card top accent line */
+.card-accent {
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.card:hover .card-accent,
+.card.featured .card-accent { opacity: 1; }
+
+/* Card preview */
+.card-preview {
+  height: 188px;
+  background: var(--bg-panel);
+  position: relative; overflow: hidden;
+  flex-shrink: 0;
+}
+.card-preview img {
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: top center;
+  transition: transform 0.5s ease;
+}
+.card:hover .card-preview img { transform: scale(1.04); }
+.card-preview-icon {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, var(--bg-panel), var(--bg-raised));
+  position: relative;
+}
+/* Subtle grid texture on icon previews */
+.card-preview-icon::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(var(--border-1) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border-1) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Card badge */
+.card-badge {
+  position: absolute; top: 10px; right: 10px;
+  display: flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 500;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 20px;
+  backdrop-filter: blur(8px);
+}
+.card-badge.live {
+  color: var(--green);
+  background: rgba(8,20,12,0.85);
+  border: 1px solid rgba(39,166,68,0.3);
+}
+.card-badge.live::before {
+  content:''; width:4px; height:4px; border-radius:50%;
+  background: var(--green);
+  box-shadow: 0 0 5px var(--green);
+}
+.card-badge.doc {
+  color: var(--text-3);
+  background: rgba(8,9,10,0.85);
+  border: 1px solid var(--border-2);
+}
+.card-badge.asset {
+  color: var(--gold);
+  background: rgba(20,17,8,0.85);
+  border: 1px solid rgba(212,177,4,0.25);
+}
+
+/* Card body */
+.card-body {
+  padding: 18px 20px 20px;
+  flex: 1; display: flex; flex-direction: column;
+}
+.card-type {
+  font-size: 10px; font-weight: 500;
+  color: var(--accent);
+  letter-spacing: 0.12em; text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.card-title {
+  font-size: 14px; font-weight: 600;
+  color: var(--text-1); letter-spacing: -0.01em;
+  line-height: 1.3; margin-bottom: 8px;
+}
+.card-desc {
+  font-size: 12.5px; font-weight: 300;
+  color: var(--text-3); line-height: 1.6;
+  flex: 1; margin-bottom: 16px;
+}
+.card-tags {
+  display: flex; gap: 5px; flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.tag {
+  font-size: 10px; font-weight: 500;
+  color: var(--text-4);
+  background: var(--border-1);
+  border: 1px solid var(--border-1);
+  border-radius: 3px; padding: 2px 6px;
+  letter-spacing: 0.04em;
+}
+.card-footer {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-1);
+  gap: 8px;
+}
+.card-date {
+  font-size: 11px; color: var(--text-4);
+  letter-spacing: 0.02em;
+}
+.card-btns { display: flex; gap: 6px; align-items: center; }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 500;
+  letter-spacing: 0.04em;
+  padding: 5px 11px;
+  border-radius: var(--r-sm);
+  border: 1px solid;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.btn-primary {
+  background: var(--accent); border-color: var(--accent);
+  color: var(--bg);
+}
+.btn-primary:hover { background: #6aa0be; border-color: #6aa0be; }
+.btn-ghost {
+  background: transparent; border-color: var(--border-2);
+  color: var(--text-3);
+}
+.btn-ghost:hover { border-color: var(--border-3); color: var(--text-2); }
+.btn-arrow { font-size: 10px; transition: transform 0.15s; }
+.btn:hover .btn-arrow { transform: translateX(2px); }
+
+/* ── Infra / skill rows ─────────────────────────────────────────────────── */
+.row-list { display: flex; flex-direction: column; gap: 1px; }
+
+.row-item {
+  display: flex; align-items: center;
+  gap: 14px;
+  padding: 13px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-1);
+  border-radius: var(--r-sm);
+  transition: background 0.15s, border-color 0.15s;
+}
+.row-item:hover {
+  background: var(--bg-raised);
+  border-color: var(--border-2);
+}
+.row-item.muted { opacity: 0.45; }
+
+.row-icon {
+  width: 30px; height: 30px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-1);
+  border-radius: 7px;
+}
+.row-name {
+  font-size: 12.5px; font-weight: 500;
+  color: var(--text-2); flex: 1;
+  letter-spacing: -0.01em;
+  font-feature-settings: "cv01";
+}
+.row-desc {
+  font-size: 11.5px; color: var(--text-4);
+  max-width: 380px; text-align: right;
+  line-height: 1.4;
+}
+.row-badge {
+  flex-shrink: 0;
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 500;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 20px;
+}
+.row-badge.live {
+  color: var(--green);
+  background: var(--green-glow);
+  border: 1px solid rgba(39,166,68,0.2);
+}
+.row-badge.live::before {
+  content:''; width:4px; height:4px; border-radius:50%;
+  background: var(--green);
+}
+.row-badge.always {
+  color: var(--gold);
+  background: var(--gold-glow);
+  border: 1px solid rgba(212,177,4,0.2);
+}
+.row-badge.soon {
+  color: var(--text-4);
+  background: var(--border-1);
+  border: 1px solid var(--border-1);
+}
+
+/* ── Pipeline strip ─────────────────────────────────────────────────────── */
+.pipeline {
+  margin-top: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-1);
+  border-radius: var(--r-md);
+  padding: 16px 20px;
+  display: flex; align-items: center;
+  justify-content: space-between; gap: 8px;
+  flex-wrap: wrap;
+}
+.pipeline-label {
+  font-size: 11px; color: var(--text-4);
+  letter-spacing: 0.1em; text-transform: uppercase;
+  white-space: nowrap;
+}
+.pipeline-items { display: flex; gap: 6px; flex-wrap: wrap; }
+.pipeline-item {
+  font-size: 11px; font-weight: 400;
+  color: var(--text-4);
+  background: var(--bg-raised);
+  border: 1px solid var(--border-1);
+  border-radius: 3px; padding: 3px 8px;
+}
+
+/* ── Footer ─────────────────────────────────────────────────────────────── */
+footer {
+  max-width: 1100px; margin: 0 auto 0;
+  padding: 28px 24px;
+  border-top: 1px solid var(--border-1);
+  display: flex; align-items: center;
+  justify-content: space-between; gap: 20px;
+  flex-wrap: wrap;
+}
+.footer-left {
+  display: flex; align-items: center; gap: 10px;
+}
+.footer-logo { width: 18px; height: 18px; opacity: 0.4; }
+.footer-text {
+  font-size: 12px; color: var(--text-4);
+  letter-spacing: 0.02em;
+}
+.footer-right {
+  font-size: 11px; color: var(--text-4);
+  letter-spacing: 0.02em;
+}
+
+/* ── Preview overlay ────────────────────────────────────────────────────── */
+.overlay {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(0,0,0,0.88);
+  backdrop-filter: blur(8px);
+  display: none; align-items: center; justify-content: center;
+  padding: 24px;
+}
+.overlay.open { display: flex; }
+.overlay-shell {
+  width: 100%; max-width: 1080px;
+  height: calc(100vh - 80px);
+  max-height: 840px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  box-shadow: 0 32px 96px rgba(0,0,0,0.6);
+}
+.overlay-bar {
+  display: flex; align-items: center;
+  gap: 12px; padding: 10px 14px;
+  border-bottom: 1px solid var(--border-1);
+  background: var(--bg-card);
+  flex-shrink: 0;
+}
+.overlay-dots { display: flex; gap: 6px; flex-shrink: 0; }
+.overlay-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+}
+.overlay-dot.close {
+  background: #ff5f56; cursor: pointer;
+}
+.overlay-dot.close:hover { filter: brightness(1.2); }
+.overlay-dot.min { background: #febc2e; }
+.overlay-dot.max { background: #28c840; }
+.overlay-url-bar {
+  flex: 1;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-1);
+  border-radius: 5px;
+  padding: 4px 12px;
+  font-size: 12px; color: var(--text-3);
+  letter-spacing: 0;
+  display: flex; align-items: center; gap: 6px;
+}
+.overlay-lock { font-size: 10px; color: var(--text-4); }
+.overlay-ext-btn {
+  flex-shrink: 0;
+  font-size: 11px; font-weight: 500;
+  color: var(--text-3); padding: 4px 10px;
+  background: var(--border-1);
+  border: 1px solid var(--border-1);
+  border-radius: 4px;
+  transition: all 0.15s;
+  text-decoration: none;
+}
+.overlay-ext-btn:hover { color: var(--text-1); background: var(--border-2); }
+.overlay-iframe {
+  flex: 1; border: none;
+  background: var(--bg);
+}
+</style>
+</head>
+<body>
+
+<!-- ══ Nav ══════════════════════════════════════════════════════════════════ -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-left">
+      <img src="/assets/logos/unbridled-elk-icon-white.png" alt="Unbridled" class="nav-logo"/>
+      <span class="nav-wordmark">Unbridled</span>
+      <div class="nav-sep"></div>
+      <span class="nav-sub">MC Agent Portfolio</span>
+    </div>
+    <div class="nav-center">
+      <a href="#work" class="nav-link">Work</a>
+      <a href="#infrastructure" class="nav-link">Infrastructure</a>
+      <a href="#skills" class="nav-link">Skills</a>
+    </div>
+    <div class="nav-right">
+      <div class="nav-status">
+        <div class="status-dot"></div>
+        Active
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ══ Page ══════════════════════════════════════════════════════════════════ -->
+<div class="page">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-kicker">
+      <div class="hero-kicker-line"></div>
+      Built by MC · May 2026
+    </div>
+    <h1>Everything MC has built<br/>for <span class="accent">Unbridled</span></h1>
+    <p class="hero-sub">A live record of every deliverable, tool, and system — with direct links to see it in action. Stan's digital chief of staff, fully operational.</p>
+    <div class="hero-meta">
+      <div class="hero-stat">
+        <div class="stat-n">5<sup>+</sup></div>
+        <div class="stat-l">Live deliverables</div>
+      </div>
+      <div class="hero-stat">
+        <div class="stat-n">4</div>
+        <div class="stat-l">Agent skills</div>
+      </div>
+      <div class="hero-stat">
+        <div class="stat-n">30<sup>+</sup></div>
+        <div class="stat-l">Wines profiled</div>
+      </div>
+      <div class="hero-stat">
+        <div class="stat-n">1</div>
+        <div class="stat-l">Client active</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Work ─────────────────────────────────────────── -->
+  <section class="section" id="work">
+    <div class="section-label">
+      <span class="section-label-text">Deliverables</span>
+      <div class="section-label-line"></div>
+      <span class="section-label-count">5 items</span>
+    </div>
+
+    <div class="client-tag">
+      <div class="client-tag-dot"></div>
+      Hotel St. Cloud · Cañon City, CO
+    </div>
+
+    <!-- Web & Tools -->
+    <div class="sub-header">
+      <div class="sub-title">Web &amp; Interactive Tools</div>
+      <div class="sub-meta">Cloudflare Pages · Auto-deploy on push</div>
+    </div>
+
+    <div class="grid grid-2" style="margin-bottom: 12px;">
+
+      <!-- /stay -->
+      <div class="card featured" onclick="openPreview('Hotel St. Cloud — /stay Landing Page','https://offers.hotelstcloud.com/stay/')">
+        <div class="card-accent"></div>
+        <div class="card-preview">
+          <img src="https://lirp.cdn-website.com/0f03241a/dms3rep/multi/opt/StCloud-65-1920w.jpg" alt="Hotel exterior" loading="lazy"/>
+          <div class="card-badge live">Live</div>
+        </div>
+        <div class="card-body">
+          <div class="card-type">Landing Page</div>
+          <div class="card-title">Hotel Booking Page — /stay</div>
+          <div class="card-desc">Core hotel booking landing page. Brand-researched copy, real property photos, Cloudbeds booking widget with UTM conversion tracking. Full pipeline: Copywriter → Builder → Brand Reviewer → Deploy.</div>
+          <div class="card-tags">
+            <span class="tag">HTML</span>
+            <span class="tag">UTM Tracking</span>
+            <span class="tag">Google Ads</span>
+            <span class="tag">Branded</span>
+          </div>
+          <div class="card-footer">
+            <div class="card-date">May 3, 2026</div>
+            <div class="card-btns">
+              <a href="https://offers.hotelstcloud.com/stay/" target="_blank" class="btn btn-ghost" onclick="event.stopPropagation()">Open <span class="btn-arrow">↗</span></a>
+              <button class="btn btn-primary" onclick="event.stopPropagation(); openPreview('Hotel St. Cloud — /stay','https://offers.hotelstcloud.com/stay/')">Preview</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Wine Finder -->
+      <div class="card featured" onclick="openPreview('Wine Finder — Server Tool','https://offers.hotelstcloud.com/wine-finder/')">
+        <div class="card-accent"></div>
+        <div class="card-preview">
+          <div class="card-preview-icon" style="position:relative;">
+            <span style="position:relative;z-index:1;">🍷</span>
+          </div>
+          <div class="card-badge live">Live</div>
+        </div>
+        <div class="card-body">
+          <div class="card-type">Interactive Tool</div>
+          <div class="card-title">Wine Finder — Server &amp; Guest Tool</div>
+          <div class="card-desc">5-question sommelier tool for servers. Scores the full wine list against guest answers and surfaces the best 1–2 matches. 30+ wines profiled with researched tasting notes, food pairings, and prices. Offline-capable.</div>
+          <div class="card-tags">
+            <span class="tag">Interactive</span>
+            <span class="tag">Offline-Ready</span>
+            <span class="tag">30+ Wines</span>
+            <span class="tag">QR Code</span>
+          </div>
+          <div class="card-footer">
+            <div class="card-date">May 3, 2026</div>
+            <div class="card-btns">
+              <a href="https://offers.hotelstcloud.com/wine-finder/" target="_blank" class="btn btn-ghost" onclick="event.stopPropagation()">Open <span class="btn-arrow">↗</span></a>
+              <button class="btn btn-primary" onclick="event.stopPropagation(); openPreview('Wine Finder','https://offers.hotelstcloud.com/wine-finder/')">Preview</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Strategy & Print -->
+    <div class="sub-header" style="margin-top:40px;">
+      <div class="sub-title">Strategy &amp; Print Assets</div>
+      <div class="sub-meta">May 2026</div>
+    </div>
+
+    <div class="grid grid-3">
+
+      <!-- Ads Audit -->
+      <div class="card">
+        <div class="card-accent"></div>
+        <div class="card-preview">
+          <div class="card-preview-icon"><span style="position:relative;z-index:1;">📊</span></div>
+          <div class="card-badge doc">Report</div>
+        </div>
+        <div class="card-body">
+          <div class="card-type">Strategy</div>
+          <div class="card-title">Google Ads Audit</div>
+          <div class="card-desc">Full account audit — 6 campaigns, conversion gaps, keyword opportunities, landing page strategy. Prioritized next steps.</div>
+          <div class="card-tags"><span class="tag">Audit</span><span class="tag">Keywords</span><span class="tag">RSA Brief</span></div>
+          <div class="card-footer">
+            <div class="card-date">May 3, 2026</div>
+            <div class="card-btns"><span class="btn btn-ghost">On Server</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Org Chart -->
+      <div class="card">
+        <div class="card-accent"></div>
+        <div class="card-preview">
+          <div class="card-preview-icon"><span style="position:relative;z-index:1;">🗂️</span></div>
+          <div class="card-badge doc">PDF-Ready</div>
+        </div>
+        <div class="card-body">
+          <div class="card-type">Visual / Print</div>
+          <div class="card-title">MC Team Org Chart</div>
+          <div class="card-desc">Branded SVG org chart — Unbridled Blue, elk mark, cornerstone pills, live/pending status dots. Open in browser → Print → PDF.</div>
+          <div class="card-tags"><span class="tag">SVG</span><span class="tag">A4 Landscape</span><span class="tag">Unbridled Brand</span></div>
+          <div class="card-footer">
+            <div class="card-date">May 3, 2026</div>
+            <div class="card-btns"><span class="btn btn-ghost">On Server</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- QR Code -->
+      <div class="card">
+        <div class="card-accent"></div>
+        <div class="card-preview">
+          <img src="https://offers.hotelstcloud.com/wine-finder/qr-wine-finder.png" alt="QR Code" loading="lazy" style="object-fit:contain;padding:20px;background:#1a1b1d;"/>
+          <div class="card-badge asset">Print</div>
+        </div>
+        <div class="card-body">
+          <div class="card-type">Print Asset</div>
+          <div class="card-title">Wine Finder QR Code</div>
+          <div class="card-desc">300 DPI branded QR code. Navy/cream/gold. Drop on table tents, menus, or coasters. Scan → instant recommendation.</div>
+          <div class="card-tags"><span class="tag">300 DPI</span><span class="tag">Branded</span><span class="tag">Table-Ready</span></div>
+          <div class="card-footer">
+            <div class="card-date">May 3, 2026</div>
+            <div class="card-btns">
+              <a href="https://offers.hotelstcloud.com/wine-finder/qr-wine-finder.png" target="_blank" download class="btn btn-primary">Download</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── Infrastructure ───────────────────────────────── -->
+  <section class="section" id="infrastructure">
+    <div class="section-label">
+      <span class="section-label-text">Infrastructure</span>
+      <div class="section-label-line"></div>
+      <span class="section-label-count">6 systems</span>
+    </div>
+
+    <div class="row-list">
+      <div class="row-item">
+        <div class="row-icon">☁️</div>
+        <div class="row-name">Cloudflare Pages</div>
+        <div class="row-desc">offers.hotelstcloud.com · auto-deploys on every push to main</div>
+        <div class="row-badge live">Live</div>
+      </div>
+      <div class="row-item">
+        <div class="row-icon">🐙</div>
+        <div class="row-name">GitHub — Unbridled Solutions</div>
+        <div class="row-desc">hotel-st-cloud-pages · MC pushes directly via token</div>
+        <div class="row-badge live">Connected</div>
+      </div>
+      <div class="row-item">
+        <div class="row-icon">📣</div>
+        <div class="row-name">Google Ads MCP</div>
+        <div class="row-desc">Account 403-215-3396 · read + mutation access · safe mode default</div>
+        <div class="row-badge live">Connected</div>
+      </div>
+      <div class="row-item">
+        <div class="row-icon">📓</div>
+        <div class="row-name">Obsidian Vault</div>
+        <div class="row-desc">mc-notes · brand guidelines, session logs, menus, team directory</div>
+        <div class="row-badge live">Syncing</div>
+      </div>
+      <div class="row-item">
+        <div class="row-icon">🏨</div>
+        <div class="row-name">Cloudbeds</div>
+        <div class="row-desc">Hotel St. Cloud booking · UTM tracking via all landing pages</div>
+        <div class="row-badge live">Integrated</div>
+      </div>
+      <div class="row-item">
+        <div class="row-icon">📱</div>
+        <div class="row-name">Telegram Gateway</div>
+        <div class="row-desc">MC accessible 24/7 via Telegram DM · Justin &amp; Stan</div>
+        <div class="row-badge live">Active</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Skills ────────────────────────────────────────── -->
+  <section class="section" id="skills">
+    <div class="section-label">
+      <span class="section-label-text">Agent Skills</span>
+      <div class="section-label-line"></div>
+      <span class="section-label-count">4 built · 3 queued</span>
+    </div>
+
+    <div class="row-list">
+      <div class="row-item">
+        <div class="row-icon">✦</div>
+        <div class="row-name">unbridled-brand-reviewer</div>
+        <div class="row-desc">DNA-enforced quality gate · runs on every deliverable · no exceptions</div>
+        <div class="row-badge always">Always On</div>
+      </div>
+      <div class="row-item">
+        <div class="row-icon">📣</div>
+        <div class="row-name">unbridled-ads-strategist</div>
+        <div class="row-desc">Google Ads strategy · keyword research · campaign creation via MCP</div>
+        <div class="row-badge live">Live</div>
+      </div>
+      <div class="row-item">
+        <div class="row-icon">✍️</div>
+        <div class="row-name">unbridled-ads-copywriter</div>
+        <div class="row-desc">RSA headlines · descriptions · landing page copy · brand-aligned</div>
+        <div class="row-badge live">Live</div>
+      </div>
+      <div class="row-item">
+        <div class="row-icon">🚀</div>
+        <div class="row-name">unbridled-landing-page-builder</div>
+        <div class="row-desc">Fills template · brand review · deploys to Cloudflare Pages via GitHub</div>
+        <div class="row-badge live">Live</div>
+      </div>
+      <div class="row-item muted">
+        <div class="row-icon">📊</div>
+        <div class="row-name">unbridled-ads-analyst</div>
+        <div class="row-desc">Performance · budget optimization · Smart Bidding readiness</div>
+        <div class="row-badge soon">Phase 3</div>
+      </div>
+      <div class="row-item muted">
+        <div class="row-icon">⚖️</div>
+        <div class="row-name">Legal team — 2 agents</div>
+        <div class="row-desc">Legal Drafter + Legal Reviewer · activates on first legal project</div>
+        <div class="row-badge soon">Phase 3</div>
+      </div>
+      <div class="row-item muted">
+        <div class="row-icon">🌐</div>
+        <div class="row-name">Web Build team — 5 agents</div>
+        <div class="row-desc">Designer · Writer · Builder · QA · Deploy · activates when a project lands</div>
+        <div class="row-badge soon">Phase 3</div>
+      </div>
+    </div>
+
+    <div class="pipeline">
+      <span class="pipeline-label">Next up</span>
+      <div class="pipeline-items">
+        <span class="pipeline-item">Conversion Tracking</span>
+        <span class="pipeline-item">RSA Ad Copy</span>
+        <span class="pipeline-item">Campaign Launch</span>
+        <span class="pipeline-item">Wine Finder v2</span>
+        <span class="pipeline-item">Texas Campaign</span>
+        <span class="pipeline-item">Web Team</span>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /page -->
+
+<!-- Footer -->
+<footer>
+  <div class="footer-left">
+    <img src="/assets/logos/unbridled-elk-icon-white.png" alt="Unbridled" class="footer-logo"/>
+    <span class="footer-text">MC Agent — Unbridled Solutions · Doing&nbsp;Good by&nbsp;Doing&nbsp;Well</span>
+  </div>
+  <div class="footer-right">Built by MC · May 2026</div>
+</footer>
+
+<!-- Preview overlay -->
+<div class="overlay" id="overlay" onclick="maybeClose(event)">
+  <div class="overlay-shell">
+    <div class="overlay-bar">
+      <div class="overlay-dots">
+        <div class="overlay-dot close" onclick="closePreview()" title="Close"></div>
+        <div class="overlay-dot min"></div>
+        <div class="overlay-dot max"></div>
+      </div>
+      <div class="overlay-url-bar">
+        <span class="overlay-lock">🔒</span>
+        <span id="overlay-url-text">offers.hotelstcloud.com</span>
+      </div>
+      <a class="overlay-ext-btn" id="overlay-ext-link" href="#" target="_blank">Open ↗</a>
+    </div>
+    <iframe class="overlay-iframe" id="overlay-iframe" src="" title="Preview" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+  </div>
+</div>
+
+<script>
+function openPreview(title, url) {
+  document.getElementById('overlay-url-text').textContent = url.replace('https://','');
+  document.getElementById('overlay-ext-link').href = url;
+  document.getElementById('overlay-iframe').src = url;
+  const o = document.getElementById('overlay');
+  o.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closePreview() {
+  const o = document.getElementById('overlay');
+  o.classList.remove('open');
+  document.getElementById('overlay-iframe').src = '';
+  document.body.style.overflow = '';
+}
+function maybeClose(e) {
+  if (e.target === document.getElementById('overlay')) closePreview();
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePreview(); });
+</script>
+
+</body>
+</html>
