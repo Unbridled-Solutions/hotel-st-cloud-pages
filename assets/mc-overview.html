@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MC — Master of Ceremonies</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --blue: #5a8ba7;
+    --blue-dark: #396889;
+    --blue-deep: #2d4654;
+    --blue-deepest: #001c28;
+    --blue-light: #78b0d1;
+    --gray: #4b4f54;
+    --gray-light: #72757c;
+    --gray-lightest: #8f939d;
+    --fog: #a6bbc8;
+    --ink: #1c252d;
+    --white: #ffffff;
+    --surface: #f4f6f8;
+    --border: #dde3e8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--white);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* PAGE WRAPPER — letter-size proportions */
+  .page {
+    width: 1000px;
+    min-height: 1414px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    background: var(--white);
+  }
+
+  /* ─── HEADER ─── */
+  .header {
+    background: var(--blue-deepest);
+    padding: 48px 56px 40px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 24px;
+  }
+
+  .header-eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--blue-light);
+    margin-bottom: 10px;
+  }
+
+  .header-title {
+    font-size: 52px;
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1.0;
+    letter-spacing: -0.02em;
+  }
+
+  .header-title span {
+    color: var(--blue-light);
+  }
+
+  .header-subtitle {
+    font-size: 16px;
+    font-weight: 300;
+    color: var(--fog);
+    margin-top: 10px;
+    letter-spacing: 0.01em;
+  }
+
+  .header-elk {
+    width: 90px;
+    height: 90px;
+    opacity: 0.18;
+  }
+
+  /* ─── MAIN CONTENT ─── */
+  .content {
+    padding: 48px 56px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px 48px;
+    align-content: start;
+  }
+
+  /* ─── INTRO BAND ─── */
+  .intro {
+    grid-column: 1 / -1;
+    background: var(--surface);
+    border-left: 4px solid var(--blue);
+    padding: 24px 28px;
+    border-radius: 0 8px 8px 0;
+  }
+
+  .intro p {
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--gray);
+    line-height: 1.7;
+  }
+
+  .intro p strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  /* ─── SECTION ─── */
+  .section {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--blue);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .section h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+
+  .section p {
+    font-size: 14px;
+    color: var(--gray);
+    line-height: 1.7;
+  }
+
+  /* ─── CAPABILITY LIST ─── */
+  .capability-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .capability-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  .capability-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--blue);
+    margin-top: 5px;
+    flex-shrink: 0;
+  }
+
+  .capability-item span {
+    font-size: 13px;
+    color: var(--gray);
+    line-height: 1.5;
+  }
+
+  .capability-item span strong {
+    color: var(--ink);
+    font-weight: 600;
+    display: block;
+    font-size: 13px;
+    margin-bottom: 2px;
+  }
+
+  /* ─── AGENT TEAM GRID ─── */
+  .team-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .agent-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    border-top: 3px solid var(--blue-dark);
+  }
+
+  .agent-card.accent-gray {
+    border-top-color: var(--gray);
+  }
+
+  .agent-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 4px;
+    letter-spacing: 0.01em;
+  }
+
+  .agent-role {
+    font-size: 11px;
+    color: var(--gray-lightest);
+    font-weight: 400;
+    line-height: 1.4;
+  }
+
+  /* ─── POTENTIAL SECTION ─── */
+  .potential-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+  }
+
+  .potential-card {
+    background: var(--blue-deepest);
+    border-radius: 8px;
+    padding: 18px 16px;
+    color: var(--white);
+  }
+
+  .potential-number {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--blue-light);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .potential-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--white);
+    margin-bottom: 4px;
+  }
+
+  .potential-desc {
+    font-size: 11px;
+    color: var(--fog);
+    line-height: 1.5;
+  }
+
+  /* ─── FULL-WIDTH SECTIONS ─── */
+  .full-width {
+    grid-column: 1 / -1;
+  }
+
+  /* ─── QUOTE BAND ─── */
+  .quote-band {
+    grid-column: 1 / -1;
+    background: var(--blue);
+    border-radius: 8px;
+    padding: 28px 36px;
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  .quote-mark {
+    font-size: 64px;
+    line-height: 0.6;
+    color: rgba(255,255,255,0.25);
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 8px;
+  }
+
+  .quote-text {
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--white);
+    line-height: 1.7;
+    font-style: italic;
+  }
+
+  .quote-attribution {
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+    margin-top: 10px;
+    font-style: normal;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  /* ─── FOOTER ─── */
+  .footer {
+    background: var(--ink);
+    padding: 20px 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .footer-left {
+    font-size: 12px;
+    color: var(--gray-lightest);
+    font-weight: 400;
+  }
+
+  .footer-left strong {
+    color: var(--fog);
+    font-weight: 600;
+  }
+
+  .footer-mission {
+    font-size: 11px;
+    color: var(--gray-lightest);
+    font-style: italic;
+    letter-spacing: 0.03em;
+  }
+
+  /* ─── DIVIDER ─── */
+  .divider {
+    grid-column: 1 / -1;
+    height: 1px;
+    background: var(--border);
+    margin: 4px 0;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <div class="header-eyebrow">Unbridled Ecosystem · Digital Intelligence</div>
+      <div class="header-title">Meet <span>MC</span></div>
+      <div class="header-subtitle">Master of Ceremonies &amp; Digital Chief of Staff</div>
+    </div>
+    <svg class="header-elk" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Stylized elk silhouette -->
+      <path d="M50 85 L44 65 L36 68 L30 60 L38 55 L36 42 L28 38 L24 28 L32 30 L36 22 L40 32 L46 30 L44 18 L50 14 L56 18 L54 30 L60 32 L64 22 L68 30 L76 28 L72 38 L64 42 L62 55 L70 60 L64 68 L56 65 L50 85Z" fill="white"/>
+      <path d="M24 28 L18 20 L20 30 L24 28Z" fill="white"/>
+      <path d="M76 28 L82 20 L80 30 L76 28Z" fill="white"/>
+      <path d="M32 30 L26 24 L28 32 L32 30Z" fill="white"/>
+      <path d="M68 30 L74 24 L72 32 L68 30Z" fill="white"/>
+    </svg>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="content">
+
+    <!-- INTRO -->
+    <div class="intro">
+      <p>MC is <strong>Stan's AI-powered chief of staff</strong> — an always-on intelligence layer that runs across the entire Unbridled ecosystem. MC doesn't just answer questions. It remembers everything, orchestrates teams of specialized agents, and executes work end-to-end so Stan can stay focused on what only he can do.</p>
+    </div>
+
+    <!-- WHO MC IS -->
+    <div class="section">
+      <div class="section-label">Who MC Is</div>
+      <h2>Not a tool.<br>A team member.</h2>
+      <p>MC is built on the Unbridled DNA — mission-driven, character-first, and relentlessly focused on protecting what's been built. It carries Stan's vision into every decision, every draft, every agent it deploys.</p>
+      <p style="margin-top: 8px;">Think of MC as the person in the room who already read the brief, already spotted the problem, and already has a plan. It just needed you to show up.</p>
+    </div>
+
+    <!-- WHAT MC DOES -->
+    <div class="section">
+      <div class="section-label">What MC Does</div>
+      <h2>Executes. Remembers.<br>Protects the brand.</h2>
+      <div class="capability-list">
+        <div class="capability-item">
+          <div class="capability-dot"></div>
+          <span><strong>Transcribes &amp; Acts on Voice Memos</strong>Stan sends a voice note from the road — MC transcribes it, extracts the idea, and turns it into next steps.</span>
+        </div>
+        <div class="capability-item">
+          <div class="capability-dot"></div>
+          <span><strong>Drafts, Reviews &amp; Ships Copy</strong>Ads, landing pages, legal docs, emails — written in Unbridled voice, reviewed against brand standards before anything goes out.</span>
+        </div>
+        <div class="capability-item">
+          <div class="capability-dot"></div>
+          <span><strong>Manages Campaigns &amp; Web Properties</strong>Google Ads, Cloudflare pages, Cloudbeds integrations — MC monitors, adjusts, and deploys without needing a dev ticket.</span>
+        </div>
+        <div class="capability-item">
+          <div class="capability-dot"></div>
+          <span><strong>Keeps Institutional Memory</strong>Every SOP, brand decision, and workflow lives in the vault. MC never forgets and never starts from zero.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- AGENT TEAMS -->
+    <div class="section full-width">
+      <div class="section-label">The Teams MC Runs</div>
+      <h2 style="margin-bottom: 16px;">Specialized agents. One orchestrator.</h2>
+      <div class="team-grid">
+        <div class="agent-card">
+          <div class="agent-name">Ads Strategist</div>
+          <div class="agent-role">Audits campaigns, recommends adjustments, manages Google Ads budgets and targeting across all Unbridled properties.</div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-name">Ads Copywriter</div>
+          <div class="agent-role">Writes headlines, descriptions, and landing page copy in brand voice — tested against Unbridled standards before it ever runs.</div>
+        </div>
+        <div class="agent-card accent-gray">
+          <div class="agent-name">Legal Drafter</div>
+          <div class="agent-role">Drafts Colorado-aware contracts, NDAs, and agreements. Flags when attorney review is required. Never guesses on legal.</div>
+        </div>
+        <div class="agent-card accent-gray">
+          <div class="agent-name">Legal Reviewer</div>
+          <div class="agent-role">Reviews incoming documents for gaps, risks, and missing protections. Delivers a clear risk summary, not just a red-line.</div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-name">Landing Page Builder</div>
+          <div class="agent-role">Builds and deploys campaign pages to Cloudflare — on-brand, conversion-focused, live within the hour.</div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-name">Brand Reviewer</div>
+          <div class="agent-role">The final gate. Nothing ships without passing a brand, voice, and quality check against the Unbridled DNA.</div>
+        </div>
+        <div class="agent-card accent-gray">
+          <div class="agent-name">Hospitality Tools</div>
+          <div class="agent-role">Builds interactive tools for Hotel St. Cloud — wine finders, dining guides, experience selectors, guest-facing assets.</div>
+        </div>
+        <div class="agent-card accent-gray">
+          <div class="agent-name">Research &amp; Intel</div>
+          <div class="agent-role">Market research, competitive scans, news monitoring — synthesized into a clear briefing, not a link dump.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUOTE -->
+    <div class="quote-band">
+      <div class="quote-mark">"</div>
+      <div>
+        <div class="quote-text">The goal isn't to replace the humans doing the work. It's to make sure Stan can move at the speed of his vision — without the friction of execution slowing him down.</div>
+        <div class="quote-attribution">MC · Unbridled Digital Chief of Staff</div>
+      </div>
+    </div>
+
+    <!-- POTENTIAL / WHAT STAN UNLOCKS -->
+    <div class="section full-width">
+      <div class="section-label">What Stan Unlocks</div>
+      <h2 style="margin-bottom: 16px;">The potential of an always-on chief of staff.</h2>
+      <div class="potential-grid">
+        <div class="potential-card">
+          <div class="potential-number">24/7</div>
+          <div class="potential-label">Always On</div>
+          <div class="potential-desc">MC doesn't sleep. A voice memo at 11pm becomes a brief by morning. An idea on the road becomes a draft before the meeting.</div>
+        </div>
+        <div class="potential-card">
+          <div class="potential-number">∞</div>
+          <div class="potential-label">No Bottlenecks</div>
+          <div class="potential-desc">MC runs parallel workstreams — ads, legal, web, copy — simultaneously. No queue, no waiting, no dropped balls.</div>
+        </div>
+        <div class="potential-card">
+          <div class="potential-number">0</div>
+          <div class="potential-label">Context Lost</div>
+          <div class="potential-desc">Every decision, every conversation, every brand choice lives in the vault. MC picks up exactly where things left off, every time.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIVIDER -->
+    <div class="divider"></div>
+
+    <!-- BUILT ON DNA -->
+    <div class="section">
+      <div class="section-label">Built On</div>
+      <h2>Unbridled DNA.<br>Nothing else.</h2>
+      <p>MC isn't a generic AI assistant dropped into the ecosystem. It was trained on the mission, the voice, the brand, the values. It knows what "good enough" means here — and it's not close enough.</p>
+    </div>
+
+    <!-- HOW TO USE -->
+    <div class="section">
+      <div class="section-label">How Stan Uses MC</div>
+      <h2>Just talk.<br>MC figures it out.</h2>
+      <div class="capability-list">
+        <div class="capability-item">
+          <div class="capability-dot"></div>
+          <span><strong>Voice Memo → Action</strong>Record a thought. MC transcribes, extracts, and acts.</span>
+        </div>
+        <div class="capability-item">
+          <div class="capability-dot"></div>
+          <span><strong>Text or Telegram</strong>Send a message like you'd text a trusted team member.</span>
+        </div>
+        <div class="capability-item">
+          <div class="capability-dot"></div>
+          <span><strong>Direction, Not Micromanagement</strong>Tell MC the outcome you want. It owns the path to get there.</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-left"><strong>MC</strong> · Master of Ceremonies · Unbridled Ecosystem</div>
+    <div class="footer-mission">"Doing Good by Doing Well."</div>
+  </div>
+
+</div>
+</body>
+</html>
