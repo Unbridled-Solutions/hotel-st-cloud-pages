@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stan's MC Playbook</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-white: #ffffff;
+            --color-primary-text: #1a1a1a;
+            --color-brand-blue: #5a8ba7;
+            --color-brand-gray: #4b4f54;
+            --color-deep-navy: #001c28;
+            --color-card-bg: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--color-white);
+            color: var(--color-primary-text);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Responsive container */
+        .container {
+            max-width: 860px;
+            margin: clamp(1rem, 2vw, 2rem) auto;
+            padding: 0 clamp(1rem, 3vw, 2rem);
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Hero Section */
+        .hero {
+            background-color: var(--color-deep-navy);
+            color: var(--color-white);
+            padding: clamp(3rem, 10vw, 8rem) 0;
+            text-align: center;
+        }
+
+        .hero img {
+            width: clamp(40px, 8vw, 48px);
+            height: auto;
+            margin-bottom: clamp(1rem, 3vw, 2rem);
+        }
+
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 700;
+            margin: 0 0 clamp(0.5rem, 1.5vw, 1rem);
+            line-height: 1.1;
+        }
+
+        .hero h2 {
+            color: var(--color-brand-blue);
+            font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+            font-weight: 400;
+            margin: 0 auto clamp(1rem, 2vw, 1.5rem);
+            max-width: 600px;
+            line-height: 1.4;
+        }
+
+        .hero p {
+            font-size: clamp(0.85rem, 2vw, 1rem);
+            color: rgba(255, 255, 255, 0.7);
+            margin: 0;
+        }
+
+        /* Section dividers */
+        .section-divider {
+            position: relative;
+            height: 1px;
+            background-color: rgba(0, 0, 0, 0.1);
+            margin: clamp(2rem, 5vw, 4rem) 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .section-divider img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: clamp(30px, 6vw, 36px); /* Adjusted size for the divider elk */
+            height: auto;
+            background-color: var(--color-white); /* To make the white elk visible */
+            padding: 0 10px; /* Space around elk */
+        }
+
+        /* General Section Styling */
+        section {
+            padding: clamp(2.5rem, 6vw, 4rem) 0;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+            transition-delay: 0.1s; /* Staggered fade in */
+        }
+
+        section.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        @media (prefers-reduced-motion: reduce) {
+            section {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+
+        h3 {
+            font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+            color: var(--color-brand-blue);
+            font-weight: 600;
+            margin-bottom: clamp(1rem, 2vw, 1.5rem);
+            padding-left: clamp(1rem, 2vw, 1.2rem);
+            border-left: 3px solid var(--color-brand-blue);
+        }
+
+        p, ul, ol {
+            font-size: clamp(1rem, 2vw, 1.15rem);
+            color: var(--color-primary-text);
+            margin-bottom: clamp(0.8rem, 1.5vw, 1.2rem);
+        }
+
+        ul, ol {
+            padding-left: clamp(1.2rem, 3vw, 1.8rem);
+        }
+
+        li {
+            margin-bottom: clamp(0.5rem, 1vw, 0.8rem);
+        }
+
+        /* Section 3 - Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: clamp(1rem, 2vw, 1.5rem);
+            margin-top: clamp(1rem, 2vw, 2rem);
+        }
+
+        .card {
+            background-color: var(--color-card-bg);
+            border-radius: 8px;
+            padding: clamp(1.2rem, 3vw, 1.8rem);
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box; /* Ensure padding doesn't increase size */
+        }
+
+        .card h4 {
+            font-size: clamp(1.1rem, 2.2vw, 1.4rem);
+            color: var(--color-brand-blue);
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: clamp(0.5rem, 1.5vw, 1rem);
+            line-height: 1.3;
+        }
+
+        .card p {
+            font-size: clamp(0.95rem, 1.8vw, 1.05rem);
+            color: var(--color-primary-text);
+            margin-bottom: 0;
+            flex-grow: 1;
+        }
+
+        @media (max-width: 640px) {
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Section 4 - Tips list */
+        .tips-list ol {
+            list-style-type: decimal;
+            padding-left: clamp(1.5rem, 3vw, 2rem);
+        }
+
+        .tips-list li {
+            font-size: clamp(1rem, 2vw, 1.15rem);
+            margin-bottom: clamp(0.8rem, 1.5vw, 1.2rem);
+        }
+
+        /* Section 5 - Automatic runs */
+        .automatic-list ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .automatic-list li {
+            position: relative;
+            padding-left: clamp(6rem, 12vw, 7rem);
+            margin-bottom: clamp(0.8rem, 1.5vw, 1.2rem);
+        }
+        .automatic-list li strong {
+            display: block;
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: clamp(5.5rem, 10vw, 6rem);
+            color: var(--color-brand-gray);
+            font-weight: 500;
+            font-size: clamp(0.9rem, 1.8vw, 1rem); /* Make time label slightly smaller */
+        }
+        .automatic-list li span {
+            display: block;
+            font-size: clamp(1rem, 2vw, 1.15rem);
+        }
+
+
+        /* Section 6 - Legal Note */
+        .legal-note {
+            background-color: var(--color-card-bg); /* Use card-bg for subtle accent */
+            border-radius: 8px;
+            padding: clamp(1.2rem, 3vw, 1.8rem);
+            font-size: clamp(0.85rem, 1.7vw, 1rem);
+            line-height: 1.5;
+            color: var(--color-brand-gray);
+            margin-top: clamp(2rem, 5vw, 3rem);
+        }
+
+        /* Footer */
+        .footer {
+            background-color: var(--color-deep-navy);
+            color: var(--color-white);
+            text-align: center;
+            padding: clamp(2rem, 6vw, 4rem) 0;
+            margin-top: clamp(3rem, 8vw, 5rem);
+        }
+
+        .footer .logo-pill {
+            display: inline-block;
+            background-color: var(--color-brand-blue); /* Brand blue pill for white elk */
+            border-radius: 50%; /* Make it a circle */
+            width: clamp(36px, 7vw, 44px); /* Make it a touch target */
+            height: clamp(36px, 7vw, 44px); /* Make it a touch target */
+            display: flex; /* For centering content */
+            align-items: center; /* For centering content */
+            justify-content: center; /* For centering content */
+            margin-bottom: clamp(1rem, 2vw, 1.5rem);
+        }
+
+        .footer .logo-pill img {
+            width: clamp(20px, 4vw, 24px);
+            height: auto;
+        }
+
+        .footer p {
+            color: var(--color-white); /* Ensure footer text is white */
+            margin: 0;
+            font-size: clamp(0.9rem, 1.8vw, 1.1rem);
+        }
+
+        .footer p:last-of-type {
+            font-size: clamp(0.8rem, 1.6vw, 0.95rem);
+            margin-top: clamp(0.5rem, 1vw, 0.8rem);
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Accessibility: Touch targets */
+        a, button, input[type="button"], input[type="submit"] {
+            min-height: 44px;
+            min-width: 44px;
+            box-sizing: border-box;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background-color: #fff;
+                color: #000;
+                font-size: 11pt; /* Readable print size */
+            }
+            .hero, .footer {
+                background-color: #fff;
+                color: #000;
+            }
+            .hero h1, .hero h2, .footer p {
+                color: #000 !important;
+            }
+            .section-divider {
+                background-color: #ccc;
+            }
+            .section-divider img {
+                background-color: #fff;
+            }
+            section {
+                opacity: 1 !important;
+                transform: none !important;
+                background-color: #fff;
+                box-shadow: none;
+            }
+            .card, .legal-note {
+                background-color: #eee;
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+            p, ul, ol, li, h3, h4 {
+                color: #000 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="hero">
+        <img src="https://offers.hotelstcloud.com/assets/logos/unbridled-elk-icon-white.png" alt="Unbridled Solutions Elk Logo">
+        <h1>Your Playbook, Stan.</h1>
+        <h2>Everything you need to know about working with MC — your AI Chief of Staff.</h2>
+        <p>Unbridled Solutions · Private</p>
+    </header>
+
+    <div class="section-divider">
+        <img src="https://offers.hotelstcloud.com/assets/logos/unbridled-elk-icon-white.png" alt="Elk Mark">
+    </div>
+
+    <main class="container">
+        <section id="what-mc-is">
+            <h3>What MC Is</h3>
+            <p>MC is not a chatbot. MC is your digital Chief of Staff — an AI agent that remembers everything, runs specialist teams, and handles the work so you can focus on the vision. Built on the Hermes Agent framework, running 24/7 on a dedicated server, always available on Telegram.</p>
+        </section>
+
+        <section id="how-to-reach-mc">
+            <h3>How to Reach MC</h3>
+            <ul>
+                <li>Open Telegram → find the MC bot</li>
+                <li>Just talk to it like you'd talk to a smart person on your team</li>
+                <li>Voice memos work — MC transcribes and acts on them automatically</li>
+                <li>No special commands needed. Plain English is perfect.</li>
+                <li>Available 24/7. Responds fast.</li>
+            </ul>
+        </section>
+
+        <section id="what-you-can-ask-for">
+            <h3>What You Can Ask For</h3>
+            <div class="card-grid">
+                <div class="card">
+                    <h4>Google Ads</h4>
+                    <p>"Review the campaign performance" / "Pause that ad" / "Write new headlines for the dining offer" — MC manages Hotel St. Cloud's ads directly.</p>
+                </div>
+                <div class="card">
+                    <h4>Legal Documents</h4>
+                    <p>"Draft an NDA for the vendor meeting Thursday" / "Review this contract before I sign" — MC drafts and reviews. Always flags what needs a real attorney.</p>
+                </div>
+                <div class="card">
+                    <h4>Landing Pages & Web</h4>
+                    <p>"Build a landing page for the summer promotion" / "Update the wine finder" — MC designs, builds, and deploys to offers.hotelstcloud.com.</p>
+                </div>
+                <div class="card">
+                    <h4>Research & Strategy</h4>
+                    <p>"What are competitors in Cañon City doing with their ads?" / "Give me a strategy for the Texas market" — MC digs in and comes back with a brief.</p>
+                </div>
+                <div class="card">
+                    <h4>Work That Runs Itself</h4>
+                    <p>Weekly ads reports arrive Monday mornings. Nightly work logs are written automatically. You don't have to ask — it just happens.</p>
+                </div>
+                <div class="card">
+                    <h4>Anything Else</h4>
+                    <p>If it's business work and you're not sure if MC can do it, just ask. The answer is usually yes.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="tips-for-getting-best">
+            <h3>Tips for Getting the Best from MC</h3>
+            <ol class="tips-list">
+                <li>Be as specific as you'd be with a real team member — "draft an NDA for a photography contractor, Colorado law, 2 years" beats "draft an NDA"</li>
+                <li>You don't need to be technical. MC handles the infrastructure.</li>
+                <li>If something's not right, say so directly. MC remembers corrections and improves.</li>
+                <li>Voice memos on Telegram work great for quick requests on the go.</li>
+                <li>Ask for a draft first on anything important — MC will flag what needs your review before anything ships.</li>
+            </ol>
+        </section>
+
+        <section id="what-runs-automatically">
+            <h3>What Runs Automatically</h3>
+            <ul class="automatic-list">
+                <li><strong>Every Monday morning:</strong> <span>Weekly Google Ads performance report → delivered to Telegram</span></li>
+                <li><strong>Every Monday morning:</strong> <span>Routing health check — MC monitors its own AI infrastructure</span></li>
+                <li><strong>Every night:</strong> <span>Work log written and filed — full record of everything completed</span></li>
+                <li><strong>Ongoing:</strong> <span>Brand Reviewer runs on every deliverable before it reaches you</span></li>
+            </ul>
+        </section>
+
+        <section id="legal-privacy-note">
+            <div class="legal-note">
+                <p>When you ask MC to draft or review legal documents, those conversations are routed through Venice AI — a provider with zero data retention. Your contracts, NDAs, and agreements are never stored or used for training. For highly sensitive matters (M&A, equity, litigation), an even more private end-to-end encrypted option is available. Ask MC.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="footer">
+        <div class="logo-pill">
+            <img src="https://offers.hotelstcloud.com/assets/logos/unbridled-elk-icon-white.png" alt="Unbridled Solutions Elk Logo">
+        </div>
+        <p>MC — Master of Ceremonies</p>
+        <p>Unbridled Solutions · Confidential · For Stan Bullis</p>
+        <p>Questions? Just ask MC on Telegram.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sections = document.querySelectorAll('section');
+
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.1
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+</body>
+</html>
