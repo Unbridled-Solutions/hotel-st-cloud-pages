@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BeUnbridled — Unit Economics Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --navy: #1a2535;
+      --blue: #5a8ba7;
+      --blue-light: #e8f2f7;
+      --gray: #4b4f54;
+      --light: #f5f5f3;
+      --cream: #f0ede6;
+      --white: #ffffff;
+      --gold: #b07d2e;
+      --green: #2b8a3e;
+      --green-light: #ebfbee;
+      --red: #c92a2a;
+      --red-light: #fff5f5;
+      --orange: #e67700;
+      --orange-light: #fff4e6;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--cream); color: var(--navy); -webkit-font-smoothing: antialiased; }
+    .page { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+    /* Header */
+    .header { text-align: center; margin-bottom: 2.5rem; padding: 2.5rem 2rem; background: var(--navy); border-radius: 16px; }
+    .header-eyebrow { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--blue); margin-bottom: 0.75rem; }
+    .header h1 { font-size: clamp(1.5rem, 3vw, 2.2rem); font-weight: 800; color: var(--white); margin-bottom: 0.5rem; }
+    .header p { font-size: 0.95rem; color: rgba(255,255,255,0.55); }
+
+    /* Section titles */
+    .section-title { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 1rem; }
+
+    /* Cards */
+    .card { background: var(--white); border-radius: 14px; border: 1px solid var(--border); padding: 1.75rem; margin-bottom: 1.5rem; }
+    .card-title { font-size: 1rem; font-weight: 700; color: var(--navy); margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem; }
+    .card-title .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dot-blue { background: var(--blue); }
+    .dot-green { background: var(--green); }
+    .dot-orange { background: var(--orange); }
+    .dot-red { background: var(--red); }
+
+    /* Sliders */
+    .slider-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; }
+    .slider-item label { font-size: 0.82rem; font-weight: 600; color: var(--gray); display: block; margin-bottom: 0.4rem; }
+    .slider-item .value-display { font-size: 1.3rem; font-weight: 700; color: var(--navy); margin-bottom: 0.5rem; }
+    .slider-item input[type=range] { width: 100%; accent-color: var(--blue); height: 4px; cursor: pointer; }
+    .slider-item .range-labels { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--muted); margin-top: 0.25rem; }
+
+    /* Radio buttons */
+    .radio-group { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+    .radio-btn { position: relative; }
+    .radio-btn input { position: absolute; opacity: 0; width: 0; }
+    .radio-btn label { display: block; padding: 0.6rem 1.25rem; border-radius: 100px; border: 2px solid var(--border); font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.15s; color: var(--gray); background: var(--white); }
+    .radio-btn input:checked + label { background: var(--navy); color: var(--white); border-color: var(--navy); }
+
+    /* Results grid */
+    .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-top: 1rem; }
+    .result-box { border-radius: 12px; padding: 1.25rem; }
+    .result-box.green { background: var(--green-light); border: 1px solid #a3d9a5; }
+    .result-box.blue { background: var(--blue-light); border: 1px solid #b3d4e6; }
+    .result-box.orange { background: var(--orange-light); border: 1px solid #ffd59e; }
+    .result-box.red { background: var(--red-light); border: 1px solid #ffc9c9; }
+    .result-box .rb-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.4rem; }
+    .result-box .rb-value { font-size: 1.6rem; font-weight: 800; color: var(--navy); line-height: 1; }
+    .result-box .rb-sub { font-size: 0.78rem; color: var(--muted); margin-top: 0.3rem; }
+
+    /* Margin bar */
+    .margin-bar-wrap { margin-top: 1rem; }
+    .margin-bar-label { display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 600; margin-bottom: 0.4rem; }
+    .margin-bar-track { height: 12px; background: var(--border); border-radius: 100px; overflow: hidden; }
+    .margin-bar-fill { height: 100%; border-radius: 100px; transition: width 0.4s ease, background 0.3s; }
+
+    /* Cost breakdown */
+    .cost-breakdown { margin-top: 1rem; }
+    .cost-row { display: flex; justify-content: space-between; align-items: center; padding: 0.55rem 0; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
+    .cost-row:last-child { border-bottom: none; font-weight: 700; }
+    .cost-row .label { color: var(--gray); }
+    .cost-row .amount { font-weight: 600; color: var(--navy); }
+    .cost-row.total .label, .cost-row.total .amount { color: var(--navy); font-size: 0.95rem; }
+
+    /* Scale table */
+    .scale-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    .scale-table th { text-align: left; padding: 0.6rem 0.75rem; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); border-bottom: 2px solid var(--border); }
+    .scale-table td { padding: 0.7rem 0.75rem; border-bottom: 1px solid var(--border); }
+    .scale-table tr:last-child td { border-bottom: none; }
+    .scale-table tr.highlight { background: var(--blue-light); font-weight: 600; }
+    .scale-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .scale-table .good { color: var(--green); font-weight: 700; }
+    .scale-table .warn { color: var(--orange); }
+
+    /* Insight pills */
+    .insights { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem; }
+    .insight { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.9rem 1rem; border-radius: 10px; font-size: 0.88rem; line-height: 1.55; }
+    .insight.green { background: var(--green-light); color: #1a4d2a; }
+    .insight.orange { background: var(--orange-light); color: #7a3c00; }
+    .insight.blue { background: var(--blue-light); color: #1a3a4a; }
+    .insight .icon { font-size: 1rem; flex-shrink: 0; margin-top: 0.05rem; }
+
+    /* Footer */
+    .footer { text-align: center; margin-top: 3rem; font-size: 0.78rem; color: var(--muted); }
+
+    @media (max-width: 600px) {
+      .results-grid { grid-template-columns: 1fr 1fr; }
+      .scale-table { font-size: 0.78rem; }
+      .scale-table th, .scale-table td { padding: 0.5rem 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <p class="header-eyebrow">BeUnbridled</p>
+    <h1>Unit Economics Calculator</h1>
+    <p>Adjust the inputs below to model per-customer profitability and scale economics</p>
+  </div>
+
+  <!-- INPUTS -->
+  <div class="card">
+    <div class="card-title"><span class="dot dot-blue"></span> Pricing</div>
+    <div class="section-title" style="margin-bottom:0.75rem;">Monthly Retainer</div>
+    <div class="radio-group" id="price-group">
+      <div class="radio-btn"><input type="radio" name="price" id="p750" value="750"><label for="p750">$750 / mo</label></div>
+      <div class="radio-btn"><input type="radio" name="price" id="p1000" value="1000" checked><label for="p1000">$1,000 / mo</label></div>
+      <div class="radio-btn"><input type="radio" name="price" id="p1250" value="1250"><label for="p1250">$1,250 / mo</label></div>
+      <div class="radio-btn"><input type="radio" name="price" id="p1500" value="1500"><label for="p1500">$1,500 / mo</label></div>
+      <div class="radio-btn"><input type="radio" name="price" id="p2000" value="2000"><label for="p2000">$2,000 / mo</label></div>
+    </div>
+    <div style="margin-top:1.25rem;">
+      <div class="section-title" style="margin-bottom:0.75rem;">Setup Fee</div>
+      <div class="radio-group" id="setup-group">
+        <div class="radio-btn"><input type="radio" name="setup" id="s500" value="500"><label for="s500">$500</label></div>
+        <div class="radio-btn"><input type="radio" name="setup" id="s750" value="750" checked><label for="s750">$750</label></div>
+        <div class="radio-btn"><input type="radio" name="setup" id="s1000" value="1000"><label for="s1000">$1,000</label></div>
+        <div class="radio-btn"><input type="radio" name="setup" id="s0" value="0"><label for="s0">Waived</label></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot dot-orange"></span> Cost Assumptions</div>
+    <div class="slider-group">
+      <div class="slider-item">
+        <label>LLM Cost / Customer / Mo</label>
+        <div class="value-display" id="llm-display">$45</div>
+        <input type="range" id="llm-slider" min="10" max="150" value="45" step="5">
+        <div class="range-labels"><span>$10 light</span><span>$150 heavy</span></div>
+      </div>
+      <div class="slider-item">
+        <label>Your Time / Customer / Mo</label>
+        <div class="value-display" id="time-display">2.5 hrs</div>
+        <input type="range" id="time-slider" min="0.5" max="6" value="2.5" step="0.5">
+        <div class="range-labels"><span>0.5 hrs</span><span>6 hrs</span></div>
+      </div>
+      <div class="slider-item">
+        <label>Your Hourly Rate</label>
+        <div class="value-display" id="rate-display">$150</div>
+        <input type="range" id="rate-slider" min="75" max="300" value="150" step="25">
+        <div class="range-labels"><span>$75</span><span>$300</span></div>
+      </div>
+      <div class="slider-item">
+        <label>Onboarding Time (month 1)</label>
+        <div class="value-display" id="onboard-display">4 hrs</div>
+        <input type="range" id="onboard-slider" min="1" max="10" value="4" step="0.5">
+        <div class="range-labels"><span>1 hr</span><span>10 hrs</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PER-CUSTOMER RESULTS -->
+  <div class="card">
+    <div class="card-title"><span class="dot dot-green"></span> Per-Customer Economics</div>
+
+    <div class="results-grid">
+      <div class="result-box green">
+        <div class="rb-label">Monthly Profit</div>
+        <div class="rb-value" id="res-profit">—</div>
+        <div class="rb-sub">after all costs</div>
+      </div>
+      <div class="result-box blue">
+        <div class="rb-label">Gross Margin</div>
+        <div class="rb-value" id="res-margin">—</div>
+        <div class="rb-sub">of monthly retainer</div>
+      </div>
+      <div class="result-box orange">
+        <div class="rb-label">Month 1 Profit</div>
+        <div class="rb-value" id="res-m1">—</div>
+        <div class="rb-sub">incl. setup fee</div>
+      </div>
+      <div class="result-box blue">
+        <div class="rb-label">Payback Period</div>
+        <div class="rb-value" id="res-payback">—</div>
+        <div class="rb-sub">months to break even</div>
+      </div>
+    </div>
+
+    <div class="margin-bar-wrap">
+      <div class="margin-bar-label">
+        <span style="font-size:0.82rem;color:var(--muted);">Margin</span>
+        <span id="margin-pct-label" style="font-weight:700;">—</span>
+      </div>
+      <div class="margin-bar-track">
+        <div class="margin-bar-fill" id="margin-bar" style="width:0%;background:var(--green);"></div>
+      </div>
+    </div>
+
+    <div class="cost-breakdown" style="margin-top:1.5rem;">
+      <div class="cost-row"><span class="label">Server (Hetzner CCX23)</span><span class="amount">$19/mo</span></div>
+      <div class="cost-row"><span class="label">Backups (Backblaze B2)</span><span class="amount">$3/mo</span></div>
+      <div class="cost-row"><span class="label">Misc SaaS</span><span class="amount">$5/mo</span></div>
+      <div class="cost-row"><span class="label" id="llm-row-label">LLM (OpenRouter)</span><span class="amount" id="llm-row-val">—</span></div>
+      <div class="cost-row"><span class="label" id="labor-row-label">Your time</span><span class="amount" id="labor-row-val">—</span></div>
+      <div class="cost-row total"><span class="label">Total monthly cost</span><span class="amount" id="total-cost-val">—</span></div>
+    </div>
+  </div>
+
+  <!-- SCALE TABLE -->
+  <div class="card">
+    <div class="card-title"><span class="dot dot-green"></span> Scale Economics</div>
+    <p style="font-size:0.84rem;color:var(--muted);margin-bottom:1.25rem;">Based on your inputs above. Labor efficiency improves as you scale (templates, automation, ops help).</p>
+    <div style="overflow-x:auto;">
+      <table class="scale-table" id="scale-table">
+        <thead>
+          <tr>
+            <th>Customers</th>
+            <th class="num">MRR</th>
+            <th class="num">ARR</th>
+            <th class="num">LLM / mo</th>
+            <th class="num">Infra / mo</th>
+            <th class="num">Labor / mo</th>
+            <th class="num">Net Profit</th>
+            <th class="num">Margin</th>
+          </tr>
+        </thead>
+        <tbody id="scale-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- INSIGHTS -->
+  <div class="card">
+    <div class="card-title"><span class="dot dot-blue"></span> Key Insights</div>
+    <div class="insights" id="insights"></div>
+  </div>
+
+  <div class="footer">
+    BeUnbridled · Unit Economics Model · Built by MC · May 2026<br>
+    All figures are estimates. Update assumptions as real customer data comes in.
+  </div>
+
+</div>
+
+<script>
+  const INFRA = 27; // server + b2 + misc fixed per customer
+
+  function fmt$(n) { return '$' + Math.round(n).toLocaleString(); }
+  function fmtPct(n) { return Math.round(n) + '%'; }
+
+  function getLaborEfficiency(n) {
+    if (n <= 5)  return 1.0;
+    if (n <= 15) return 0.75;
+    if (n <= 30) return 0.55;
+    return 0.40;
+  }
+  function getExtraOpsFixed(n) {
+    if (n <= 15) return 0;
+    if (n <= 30) return 3000;
+    return 7000;
+  }
+
+  function recalc() {
+    const price    = parseInt(document.querySelector('input[name=price]:checked').value);
+    const setup    = parseInt(document.querySelector('input[name=setup]:checked').value);
+    const llm      = parseInt(document.getElementById('llm-slider').value);
+    const timeHrs  = parseFloat(document.getElementById('time-slider').value);
+    const rate     = parseInt(document.getElementById('rate-slider').value);
+    const onboard  = parseFloat(document.getElementById('onboard-slider').value);
+
+    // Update displays
+    document.getElementById('llm-display').textContent   = '$' + llm;
+    document.getElementById('time-display').textContent  = timeHrs + ' hrs';
+    document.getElementById('rate-display').textContent  = '$' + rate;
+    document.getElementById('onboard-display').textContent = onboard + ' hrs';
+
+    const laborCost   = timeHrs * rate;
+    const onboardCost = onboard * rate;
+    const totalCost   = INFRA + llm + laborCost;
+    const profit      = price - totalCost;
+    const margin      = (profit / price) * 100;
+    const m1Revenue   = price + setup;
+    const m1Cost      = totalCost + onboardCost;
+    const m1Profit    = m1Revenue - m1Cost;
+    const payback     = m1Profit >= 0 ? '< 1' : Math.ceil((-m1Profit) / profit).toString();
+
+    // Results
+    document.getElementById('res-profit').textContent  = fmt$(profit);
+    document.getElementById('res-margin').textContent  = fmtPct(margin);
+    document.getElementById('res-m1').textContent      = fmt$(m1Profit);
+    document.getElementById('res-payback').textContent = payback + (payback === '< 1' ? '' : ' mo');
+
+    // Margin bar color
+    const bar = document.getElementById('margin-bar');
+    bar.style.width = Math.max(0, Math.min(100, margin)) + '%';
+    bar.style.background = margin >= 55 ? '#2b8a3e' : margin >= 40 ? '#e67700' : '#c92a2a';
+    document.getElementById('margin-pct-label').textContent = fmtPct(margin);
+
+    // Cost breakdown
+    document.getElementById('llm-row-label').textContent   = 'LLM (OpenRouter)';
+    document.getElementById('llm-row-val').textContent     = fmt$(llm) + '/mo';
+    document.getElementById('labor-row-label').textContent = `Your time (${timeHrs} hrs @ $${rate}/hr)`;
+    document.getElementById('labor-row-val').textContent   = fmt$(laborCost) + '/mo';
+    document.getElementById('total-cost-val').textContent  = fmt$(totalCost) + '/mo';
+
+    // Highlight result boxes
+    const profitBox = document.getElementById('res-profit').parentElement;
+    profitBox.className = 'result-box ' + (profit >= 500 ? 'green' : profit >= 200 ? 'orange' : 'red');
+
+    // Scale table
+    const points = [1, 3, 5, 10, 15, 20, 30, 50];
+    const tbody = document.getElementById('scale-tbody');
+    tbody.innerHTML = '';
+    points.forEach(n => {
+      const mrr        = n * price;
+      const arr        = mrr * 12;
+      const totalLLM   = n * llm;
+      const totalInfra = n * INFRA;
+      const eff        = getLaborEfficiency(n);
+      const opsFixed   = getExtraOpsFixed(n);
+      const totalLabor = n * laborCost * eff + opsFixed;
+      const netProfit  = mrr - totalLLM - totalInfra - totalLabor;
+      const netMargin  = (netProfit / mrr) * 100;
+      const highlight  = n === 10;
+
+      const tr = document.createElement('tr');
+      if (highlight) tr.className = 'highlight';
+      tr.innerHTML = `
+        <td><strong>${n}</strong></td>
+        <td class="num">${fmt$(mrr)}</td>
+        <td class="num">${fmt$(arr)}</td>
+        <td class="num">${fmt$(totalLLM)}</td>
+        <td class="num">${fmt$(totalInfra)}</td>
+        <td class="num">${fmt$(totalLabor)}</td>
+        <td class="num ${netProfit > 0 ? 'good' : 'warn'}">${fmt$(netProfit)}</td>
+        <td class="num ${netMargin >= 55 ? 'good' : netMargin >= 35 ? 'warn' : ''}">${fmtPct(netMargin)}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // Insights
+    const insights = document.getElementById('insights');
+    insights.innerHTML = '';
+
+    const insightData = [];
+
+    if (margin < 40) {
+      insightData.push({ type: 'orange', icon: '⚠️', text: `At $${price}/mo, margin is ${fmtPct(margin)} — below the 40% threshold. Consider raising price or reducing your time per customer.` });
+    } else if (margin >= 60) {
+      insightData.push({ type: 'green', icon: '✅', text: `Strong ${fmtPct(margin)} margin at $${price}/mo. LLM cost is only ${fmtPct(llm/price*100)} of revenue — smart routing is doing its job.` });
+    } else {
+      insightData.push({ type: 'blue', icon: '📊', text: `Solid ${fmtPct(margin)} margin at $${price}/mo. You're in good shape. Margin improves as you automate onboarding.` });
+    }
+
+    if (setup === 0) {
+      insightData.push({ type: 'orange', icon: '⚠️', text: `You're waiving the setup fee. Month 1 costs you ${fmt$(onboardCost)} in onboarding labor with no offset. Only do this for strategic customers.` });
+    } else if (m1Profit < 0) {
+      insightData.push({ type: 'orange', icon: '⚠️', text: `Month 1 is slightly negative (${fmt$(m1Profit)}) even with the setup fee. Profitable from month 2.` });
+    } else {
+      insightData.push({ type: 'green', icon: '✅', text: `Setup fee covers onboarding cost. Month 1 profit: ${fmt$(m1Profit)}. Profitable from day one.` });
+    }
+
+    if (llm > 80) {
+      insightData.push({ type: 'orange', icon: '🤖', text: `LLM cost is elevated at $${llm}/mo. Consider tighter routing rules — push more tasks to Gemini Flash and GPT-4.1 Mini instead of Claude.` });
+    } else {
+      insightData.push({ type: 'blue', icon: '🤖', text: `LLM cost ($${llm}/mo) is well-controlled. Set a per-customer OpenRouter spend cap at ~$${Math.round(llm * 2)}/mo to catch spikes.` });
+    }
+
+    if (timeHrs > 3) {
+      insightData.push({ type: 'orange', icon: '⏰', text: `At ${timeHrs} hrs/customer/month, labor is your biggest cost. Tighter skill packs and onboarding templates could cut this in half.` });
+    } else {
+      insightData.push({ type: 'green', icon: '⏰', text: `${timeHrs} hrs/customer/month is efficient. At scale, this drops further as skill packs and SOPs handle more automatically.` });
+    }
+
+    const at50 = 50 * price - 50 * llm - 50 * INFRA - (50 * laborCost * 0.40 + 7000);
+    insightData.push({ type: 'blue', icon: '📈', text: `At 50 customers: ${fmt$(50 * price * 12)} ARR, ${fmt$(at50)}/mo net profit with one dedicated ops person baked in.` });
+
+    insightData.forEach(({ type, icon, text }) => {
+      const div = document.createElement('div');
+      div.className = `insight ${type}`;
+      div.innerHTML = `<span class="icon">${icon}</span><span>${text}</span>`;
+      insights.appendChild(div);
+    });
+  }
+
+  // Wire up all inputs
+  document.querySelectorAll('input[type=range]').forEach(el => el.addEventListener('input', recalc));
+  document.querySelectorAll('input[type=radio]').forEach(el => el.addEventListener('change', recalc));
+
+  // Initial render
+  recalc();
+</script>
+</body>
+</html>
