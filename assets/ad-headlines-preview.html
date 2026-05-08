@@ -209,24 +209,52 @@
       "Handcrafted drinks, luxury bathrooms, historic character. Best stop on the Western Slope.",
     ];
 
-    // Image sets — pair bathroom headlines with bathroom photos, drink headlines with cocktail photos
-    const BATHROOM_HEADLINES = [1, 3, 7, 11]; // 1-indexed
-    const IMG_SETS = {
-      bathroom: ["hsc-bathroom-1.jpg", "hsc-bathroom-2.jpg", "hsc-cocktails-fireplace.jpg"],
-      cocktail: ["hsc-cocktails-fireplace.jpg", "hsc-war-room-espresso.jpg", "hsc-craft-cocktails-bar.jpg"],
-      mixed:    ["hsc-bathroom-1.jpg", "hsc-cocktails-fireplace.jpg", "hsc-craft-cocktails-bar.jpg"],
-    };
+    // All 6 real photos available
+    const ALL_PHOTOS = [
+      "hsc-bathroom-1.jpg",
+      "hsc-bathroom-2.jpg",
+      "hsc-cocktails-fireplace.jpg",
+      "hsc-war-room-espresso.jpg",
+      "hsc-craft-cocktails-bar.jpg",
+      "hsc-1887-berry-sour.jpg",
+    ];
 
-    // Keywords that should trigger bathroom imagery
-    const bathroomKW = ["bathroom", "marble", "floors", "luxury"];
-    const drinkKW    = ["cocktail", "bar", "drink", "sip", "coffee", "war room"];
+    // Explicit image set per headline (0-indexed) — bathroom copy → bathroom photo, drink copy → drink photo
+    const HEADLINE_IMAGES = [
+      // 0  Pull Over. You've Earned This.
+      ["hsc-bathroom-1.jpg",       "hsc-cocktails-fireplace.jpg",  "hsc-craft-cocktails-bar.jpg"],
+      // 1  Bathrooms Worth the Detour
+      ["hsc-bathroom-1.jpg",       "hsc-bathroom-2.jpg",           "hsc-cocktails-fireplace.jpg"],
+      // 2  Cocktails After Miles of Road
+      ["hsc-cocktails-fireplace.jpg", "hsc-craft-cocktails-bar.jpg", "hsc-war-room-espresso.jpg"],
+      // 3  Marble Floors. Real Cocktails.
+      ["hsc-bathroom-1.jpg",       "hsc-cocktails-fireplace.jpg",  "hsc-1887-berry-sour.jpg"],
+      // 4  Highway 50's Best Pit Stop
+      ["hsc-bathroom-2.jpg",       "hsc-craft-cocktails-bar.jpg",  "hsc-war-room-espresso.jpg"],
+      // 5  Stop. Sip. Stay Awhile.
+      ["hsc-cocktails-fireplace.jpg", "hsc-1887-berry-sour.jpg",   "hsc-bathroom-1.jpg"],
+      // 6  A Bar Worthy of the Drive
+      ["hsc-war-room-espresso.jpg", "hsc-craft-cocktails-bar.jpg", "hsc-cocktails-fireplace.jpg"],
+      // 7  Luxury Hiding on Hwy 50
+      ["hsc-bathroom-2.jpg",       "hsc-cocktails-fireplace.jpg",  "hsc-craft-cocktails-bar.jpg"],
+      // 8  Ditch the Gas Station Coffee
+      ["hsc-war-room-espresso.jpg", "hsc-1887-berry-sour.jpg",     "hsc-cocktails-fireplace.jpg"],
+      // 9  Cañon City's Coolest Stop
+      ["hsc-bathroom-1.jpg",       "hsc-craft-cocktails-bar.jpg",  "hsc-1887-berry-sour.jpg"],
+      // 10 Reset at Hotel St. Cloud
+      ["hsc-bathroom-2.jpg",       "hsc-cocktails-fireplace.jpg",  "hsc-war-room-espresso.jpg"],
+      // 11 Craft Cocktails. Real Marble.
+      ["hsc-cocktails-fireplace.jpg", "hsc-bathroom-1.jpg",        "hsc-1887-berry-sour.jpg"],
+      // 12 You Deserve a Real Drink
+      ["hsc-1887-berry-sour.jpg",  "hsc-war-room-espresso.jpg",    "hsc-craft-cocktails-bar.jpg"],
+      // 13 Exit Now. Thank Yourself Later
+      ["hsc-bathroom-2.jpg",       "hsc-cocktails-fireplace.jpg",  "hsc-craft-cocktails-bar.jpg"],
+      // 14 The War Room Is Waiting
+      ["hsc-war-room-espresso.jpg", "hsc-craft-cocktails-bar.jpg", "hsc-1887-berry-sour.jpg"],
+    ];
 
     function pickImages(headline, idx) {
-      const h = headline.toLowerCase();
-      if (bathroomKW.some(k => h.includes(k))) return IMG_SETS.bathroom;
-      if (drinkKW.some(k => h.includes(k)))    return IMG_SETS.cocktail;
-      // alternate mixed for the rest
-      return idx % 2 === 0 ? IMG_SETS.mixed : ["hsc-bathroom-1.jpg", "hsc-war-room-espresso.jpg", "hsc-1887-berry-sour.jpg"];
+      return HEADLINE_IMAGES[idx] || ALL_PHOTOS.slice(0, 3);
     }
 
     function pickDesc(idx) {
