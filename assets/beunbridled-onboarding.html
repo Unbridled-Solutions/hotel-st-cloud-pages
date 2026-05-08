@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BeUnbridled Onboarding Questionnaire</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #1a2535;
+            --blue: #5a8ba7;
+            --cream: #f0ede6;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--cream);
+            color: var(--navy);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: var(--white);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 700px;
+            box-sizing: border-box;
+            margin-top: 20px; /* Added some margin from top */
+        }
+
+        h1, h2, h3 {
+            color: var(--navy);
+            text-align: center;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-bottom: 30px;
+            height: 10px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: var(--blue);
+            border-radius: 5px;
+            transition: width 0.4s ease-in-out;
+        }
+
+        .form-step {
+            display: none;
+        }
+
+        .form-step.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+            font-family: 'Inter', sans-serif;
+            color: var(--navy);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .checkbox-group, .radio-group {
+            margin-top: 10px;
+        }
+
+        .checkbox-group label, .radio-group label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            font-weight: 400;
+        }
+
+        .checkbox-group input[type="checkbox"], .radio-group input[type="radio"] {
+            margin-right: 10px;
+        }
+
+        .other-input {
+            margin-top: 10px;
+            padding-left: 25px; /* Align with checkbox */
+            display: none; /* Hidden by default */
+        }
+
+        .btn-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+
+        button {
+            background-color: var(--blue);
+            color: var(--white);
+            padding: 12px 25px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #4a7a97; /* A slightly darker blue */
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .completion-screen {
+            text-align: center;
+            display: none;
+            padding: 40px 20px;
+        }
+
+        .completion-screen h2 {
+            color: var(--navy);
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .completion-screen p {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .field-summary {
+            background-color: var(--cream);
+            padding: 20px;
+            border-radius: 6px;
+            text-align: left;
+            margin-top: 30px;
+        }
+
+        .field-summary p {
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .field-summary strong {
+            color: var(--navy);
+        }
+
+        .error-message {
+            color: #d9534f;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 20px;
+            }
+            .btn-group {
+                flex-direction: column;
+            }
+            button {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            button:last-child {
+                margin-bottom: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <form id="onboardingForm">
+            <!-- Step 1: About You -->
+            <div class="form-step active" data-step="1">
+                <h2>Step 1: About You</h2>
+                <div class="form-group">
+                    <label for="fullName">Full Name <span style="color:#d9534f;">*</span></label>
+                    <input type="text" id="fullName" name="fullName" required>
+                    <div class="error-message">Full Name is required.</div>
+                </div>
+                <div class="form-group">
+                    <label for="businessName">Business Name <span style="color:#d9534f;">*</span></label>
+                    <input type="text" id="businessName" name="businessName" required>
+                    <div class="error-message">Business Name is required.</div>
+                </div>
+                <div class="form-group">
+                    <label for="yourRole">Your Role / Title <span style="color:#d9534f;">*</span></label>
+                    <input type="text" id="yourRole" name="yourRole" required>
+                    <div class="error-message">Your Role / Title is required.</div>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="next-btn">Next</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Your Business -->
+            <div class="form-step" data-step="2">
+                <h2>Step 2: Your Business</h2>
+                <div class="form-group">
+                    <label for="industry">Industry / Vertical <span style="color:#d9534f;">*</span></label>
+                    <select id="industry" name="industry" required>
+                        <option value="">Select an industry</option>
+                        <option value="Hospitality">Hospitality</option>
+                        <option value="Legal">Legal</option>
+                        <option="Real Estate">Real Estate</option>
+                        <option value="Retail">Retail</option>
+                        <option value="Professional Services">Professional Services</option>
+                        <option value="Marketing/Agency">Marketing/Agency</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <div class="error-message">Industry is required.</div>
+                </div>
+                <div class="form-group">
+                    <label for="businessDescription">What does your business do? (2-3 sentences) <span style="color:#d9534f;">*</span></label>
+                    <textarea id="businessDescription" name="businessDescription" rows="4" required minlength="20"></textarea>
+                    <div class="error-message">Please provide a brief description of your business (at least 20 characters).</div>
+                </div>
+                <div class="form-group">
+                    <label for="teamSize">How many people on your team? <span style="color:#d9534f;">*</span></label>
+                    <select id="teamSize" name="teamSize" required>
+                        <option value="">Select team size</option>
+                        <option value="Just me">Just me</option>
+                        <option value="2-5">2-5</option>
+                        <option value="6-15">6-15</option>
+                        <option value="16-50">16-50</option>
+                        <option value="50+">50+</option>
+                    </select>
+                    <div class="error-message">Team size is required.</div>
+                </div>
+                <div class="form-group">
+                    <label for="cityTimezone">What city/timezone are you in? <span style="color:#d9534f;">*</span></label>
+                    <input type="text" id="cityTimezone" name="cityTimezone" required>
+                    <div class="error-message">City/Timezone is required.</div>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="prev-btn">Back</button>
+                    <button type="button" class="next-btn">Next</button>
+                </div>
+            </div>
+
+            <!-- Step 3: Your Pain Points -->
+            <div class="form-step" data-step="3">
+                <h2>Step 3: Your Pain Points</h2>
+                <div class="form-group">
+                    <label>Check all that apply:</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="painPoints" value="Too much email / follow-up management"> Too much email / follow-up management</label>
+                        <label><input type="checkbox" name="painPoints" value="Reports and analytics take too long"> Reports and analytics take too long</label>
+                        <label><input type="checkbox" name="painPoints" value="Legal documents and contracts"> Legal documents and contracts</label>
+                        <label><input type="checkbox" name="painPoints" value="Google Ads / paid marketing"> Google Ads / paid marketing</label>
+                        <label><input type="checkbox" name="painPoints" value="Website updates and landing pages"> Website updates and landing pages</label>
+                        <label><input type="checkbox" name="painPoints" value="Scheduling and calendar management"> Scheduling and calendar management</label>
+                        <label><input type="checkbox" name="painPoints" value="Content writing and communications"> Content writing and communications</label>
+                        <label><input type="checkbox" name="painPoints" value="CRM / customer follow-up"> CRM / customer follow-up</label>
+                        <label><input type="checkbox" name="painPoints" value="Other"> Other</label>
+                        <input type="text" name="painPointsOther" class="other-input" placeholder="Please specify other pain points">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="oneThingChangeWeek">What's the ONE thing that if handled automatically would change your week? <span style="color:#d9534f;">*</span></label>
+                    <textarea id="oneThingChangeWeek" name="oneThingChangeWeek" rows="4" required minlength="20"></textarea>
+                    <div class="error-message">Please tell us the one thing that would change your week (at least 20 characters).</div>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="prev-btn">Back</button>
+                    <button type="button" class="next-btn">Next</button>
+                </div>
+            </div>
+
+            <!-- Step 4: Your Tools -->
+            <div class="form-step" data-step="4">
+                <h2>Step 4: Your Tools</h2>
+                <div class="form-group">
+                    <label>Which tools do you currently use? (Check all that apply)</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="toolsUsed" value="Google Workspace (Gmail, Calendar, Drive)"> Google Workspace (Gmail, Calendar, Drive)</label>
+                        <label><input type="checkbox" name="toolsUsed" value="Microsoft 365"> Microsoft 365</label>
+                        <label><input type="checkbox" name="toolsUsed" value="Slack"> Slack</label>
+                        <label><input type="checkbox" name="toolsUsed" value="HubSpot"> HubSpot</label>
+                        <label><input type="checkbox" name="toolsUsed" value="Salesforce"> Salesforce</label>
+                        <label><input type="checkbox" name="toolsUsed" value="Airtable"> Airtable</label>
+                        <label><input type="checkbox" name="toolsUsed" value="QuickBooks / Xero"> QuickBooks / Xero</label>
+                        <label><input type="checkbox" name="toolsUsed" value="Shopify"> Shopify</label>
+                        <label><input type="checkbox" name="toolsUsed" value="Google Ads"> Google Ads</label>
+                        <label><input type="checkbox" name="toolsUsed" value="Meta Ads"> Meta Ads</label>
+                        <label><input type="checkbox" name="toolsUsed" value="A property management system (PMS)"> A property management system (PMS)</label>
+                        <label><input type="checkbox" name="toolsUsed" value="Other"> Other</label>
+                        <input type="text" name="toolsUsedOther" class="other-input" placeholder="Please specify other tools">
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="prev-btn">Back</button>
+                    <button type="button" class="next-btn">Next</button>
+                </div>
+            </div>
+
+            <!-- Step 5: Your Voice -->
+            <div class="form-step" data-step="5">
+                <h2>Step 5: Your Voice</h2>
+                <div class="form-group">
+                    <label for="communicationStyle">How would you describe your communication style? <span style="color:#d9534f;">*</span></label>
+                    <select id="communicationStyle" name="communicationStyle" required>
+                        <option value="">Select a style</option>
+                        <option value="Direct and concise">Direct and concise</option>
+                        <option value="Warm and conversational">Warm and conversational</option>
+                        <option value="Formal and professional">Formal and professional</option>
+                        <option value="Casual and friendly">Casual and friendly</option>
+                    </select>
+                    <div class="error-message">Communication style is required.</div>
+                </div>
+                <div class="form-group">
+                    <label for="brandWords">What 3 words describe your brand? (comma separated) <span style="color:#d9534f;">*</span></label>
+                    <input type="text" id="brandWords" name="brandWords" required pattern="^(\w+)(,\s*\w+){2}$" title="Please enter exactly 3 words separated by commas.">
+                    <div class="error-message">Please enter exactly 3 words separated by commas (e.g., "innovative, reliable, friendly").</div>
+                </div>
+                <div class="form-group">
+                    <label for="neverSayOrDo">Is there anything your agent should NEVER say or do?</label>
+                    <textarea id="neverSayOrDo" name="neverSayOrDo" rows="4"></textarea>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="prev-btn">Back</button>
+                    <button type="button" class="next-btn">Next</button>
+                </div>
+            </div>
+
+            <!-- Step 6: Access & Setup -->
+            <div class="form-step" data-step="6">
+                <h2>Step 6: Access & Setup</h2>
+                <div class="form-group">
+                    <label for="telegramUsername">Telegram username (so we can pair your agent) <span style="color:#d9534f;">*</span></label>
+                    <input type="text" id="telegramUsername" name="telegramUsername" required pattern="^@[a-zA-Z0-9_]{5,}$" title="Please enter a valid Telegram username starting with '@' and at least 5 characters.">
+                    <div class="error-message">A valid Telegram username (e.g., @yourusername) is required.</div>
+                </div>
+                <div class="form-group">
+                    <label>Preferred server tier <span style="color:#d9534f;">*</span></label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="serverTier" value="Standard — CCX23 $1,000/mo recommended" required> Standard — CCX23 $1,000/mo recommended</label>
+                        <label><input type="radio" name="serverTier" value="Starter — CCX13 $750/mo light workloads"> Starter — CCX13 $750/mo light workloads</label>
+                    </div>
+                    <div class="error-message">Please select a server tier.</div>
+                </div>
+                <div class="form-group">
+                    <label for="anythingElse">Anything else we should know before we build?</label>
+                    <textarea id="anythingElse" name="anythingElse" rows="4"></textarea>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="prev-btn">Back</button>
+                    <button type="submit">Submit</button>
+                </div>
+            </div>
+        </form>
+
+        <!-- Completion Screen -->
+        <div class="completion-screen" id="completionScreen">
+            <h2>You're in!</h2>
+            <p>We'll have your Chief of Staff ready within 24 hours.</p>
+            <div class="field-summary" id="submissionSummary">
+                <h3>Summary of Your Submission:</h3>
+            </div>
+            <p>We'll reach out on Telegram once it's live.</p>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('onboardingForm');
+        const formSteps = form.querySelectorAll('.form-step');
+        const progressBar = document.getElementById('progressBar');
+        const completionScreen = document.getElementById('completionScreen');
+        const submissionSummary = document.getElementById('submissionSummary');
+        let currentStep = 0;
+
+        function updateProgressBar() {
+            const progress = ((currentStep + 1) / formSteps.length) * 100;
+            progressBar.style.width = progress + '%';
+        }
+
+        function showStep(stepIndex) {
+            formSteps.forEach((step, index) => {
+                step.classList.remove('active');
+                if (index === stepIndex) {
+                    step.classList.add('active');
+                }
+            });
+            currentStep = stepIndex;
+            updateProgressBar();
+        }
+
+        function validateStep(stepIndex) {
+            const currentFormStep = formSteps[stepIndex];
+            const inputs = currentFormStep.querySelectorAll('input:required, textarea:required, select:required');
+            let isValid = true;
+
+            const painPointsOther = currentFormStep.querySelector('input[name="painPointsOther"]');
+            const toolsUsedOther = currentFormStep.querySelector('input[name="toolsUsedOther"]');
+
+            inputs.forEach(input => {
+                input.classList.remove('error');
+                const errorMessage = input.nextElementSibling;
+                if (errorMessage && errorMessage.classList.contains('error-message')) {
+                    errorMessage.style.display = 'none';
+                }
+
+                if (!input.checkValidity()) {
+                    isValid = false;
+                    input.classList.add('error');
+                    if (errorMessage && errorMessage.classList.contains('error-message')) {
+                        errorMessage.style.display = 'block';
+                    }
+                } else if (input.id === 'brandWords') {
+                    // Custom validation for brandWords (exactly 3 comma-separated words)
+                    const value = input.value.trim();
+                    const words = value.split(',').map(word => word.trim()).filter(word => word !== '');
+                    if (words.length !== 3) {
+                        isValid = false;
+                        input.classList.add('error');
+                        if (errorMessage && errorMessage.classList.contains('error-message')) {
+                            errorMessage.style.display = 'block';
+                            errorMessage.textContent = "Please enter exactly 3 words separated by commas (e.g., 'innovative, reliable, friendly').";
+                        }
+                    }
+                } else if (input.id === 'telegramUsername') {
+                    // Custom validation for Telegram username
+                    const value = input.value.trim();
+                    if (!value.match(/^@[a-zA-Z0-9_]{5,}$/)) {
+                        isValid = false;
+                        input.classList.add('error');
+                        if (errorMessage && errorMessage.classList.contains('error-message')) {
+                            errorMessage.style.display = 'block';
+                            errorMessage.textContent = "A valid Telegram username (e.g., @yourusername) is required and must start with '@' and have at least 5 characters.";
+                        }
+                    }
+                }
+            });
+
+            // Specific validation for radio buttons (server tier)
+            if (stepIndex === 5) { // Step 6: Access & Setup
+                const serverTierRadios = document.querySelectorAll('input[name="serverTier"]');
+                const serverTierError = document.querySelector('.radio-group + .error-message');
+                let radioChecked = Array.from(serverTierRadios).some(radio => radio.checked);
+                if (!radioChecked) {
+                    isValid = false;
+                    if (serverTierError) serverTierError.style.display = 'block';
+                } else {
+                    if (serverTierError) serverTierError.style.display = 'none';
+                }
+            }
+
+
+            // Handle "Other" text fields for checkboxes
+            const otherPainPointsCheckbox = currentFormStep.querySelector('input[name="painPoints"][value="Other"]');
+            if (otherPainPointsCheckbox && otherPainPointsCheckbox.checked && painPointsOther && painPointsOther.value.trim() === '') {
+                isValid = false;
+                painPointsOther.classList.add('error');
+                const errorMessage = painPointsOther.nextElementSibling;
+                if (errorMessage && errorMessage.classList.contains('error-message')) {
+                    errorMessage.textContent = "Please specify 'Other' pain points.";
+                    errorMessage.style.display = 'block';
+                }
+            } else if (painPointsOther) {
+                painPointsOther.classList.remove('error');
+                const errorMessage = painPointsOther.nextElementSibling;
+                if (errorMessage && errorMessage.classList.contains('error-message')) {
+                    errorMessage.style.display = 'none';
+                }
+            }
+
+            const otherToolsCheckbox = currentFormStep.querySelector('input[name="toolsUsed"][value="Other"]');
+            if (otherToolsCheckbox && otherToolsCheckbox.checked && toolsUsedOther && toolsUsedOther.value.trim() === '') {
+                isValid = false;
+                toolsUsedOther.classList.add('error');
+                const errorMessage = toolsUsedOther.nextElementSibling;
+                if (errorMessage && errorMessage.classList.contains('error-message')) {
+                    errorMessage.textContent = "Please specify 'Other' tools.";
+                    errorMessage.style.display = 'block';
+                }
+            } else if (toolsUsedOther) {
+                toolsUsedOther.classList.remove('error');
+                const errorMessage = toolsUsedOther.nextElementSibling;
+                if (errorMessage && errorMessage.classList.contains('error-message')) {
+                    errorMessage.style.display = 'none';
+                }
+            }
+
+
+            return isValid;
+        }
+
+        form.addEventListener('click', (e) => {
+            if (e.target.classList.contains('next-btn')) {
+                if (validateStep(currentStep)) {
+                    if (currentStep < formSteps.length - 1) {
+                        showStep(currentStep + 1);
+                    }
+                }
+            } else if (e.target.classList.contains('prev-btn')) {
+                if (currentStep > 0) {
+                    showStep(currentStep - 1);
+                }
+            }
+        });
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (validateStep(currentStep)) {
+                const formData = new FormData(form);
+                const data = {};
+                for (let [key, value] of formData.entries()) {
+                    if (key.includes('Other') && value === '') {
+                        // Don't include empty 'Other' fields if their corresponding checkbox wasn't checked
+                        const checkboxName = key.replace('Other', '');
+                        const checkbox = document.querySelector(`input[name="${checkboxName}"][value="Other"]`);
+                        if (!checkbox || !checkbox.checked) {
+                            continue;
+                        }
+                    }
+                    if (data[key]) {
+                        if (Array.isArray(data[key])) {
+                            data[key].push(value);
+                        } else {
+                            data[key] = [data[key], value];
+                        }
+                    } else {
+                        data[key] = value;
+                    }
+                }
+
+                // Custom handling for checkbox groups to consolidate and include "Other" if present
+                const checkboxFields = ['painPoints', 'toolsUsed'];
+                checkboxFields.forEach(field => {
+                    const checkedValues = Array.from(form.querySelectorAll(`input[name="${field}"]:checked`)).map(cb => cb.value);
+                    const otherInput = form.querySelector(`input[name="${field}Other"]`);
+                    if (otherInput && otherInput.value.trim() !== '') {
+                        // Check if 'Other' checkbox was selected, if not, add it explicitly
+                        if (!checkedValues.includes('Other')) {
+                            checkedValues.push(`Other: ${otherInput.value.trim()}`);
+                        } else {
+                            // If 'Other' was checked, replace the simple 'Other' with the specific value
+                             const index = checkedValues.indexOf('Other');
+                             if (index > -1) {
+                                 checkedValues[index] = `Other: ${otherInput.value.trim()}`;
+                             }
+                        }
+                    }
+                    data[field] = checkedValues.join(', ');
+                     // Remove the standalone 'Other' field from data if it was merged
+                    delete data[`${field}Other`];
+                });
+
+
+                console.log('Form Data:', data); // Log to console
+                // In a real application, you would send 'data' to a backend endpoint here.
+                // fetch('/api/onboarding', {
+                //     method: 'POST',
+                //     headers: {
+                //         'Content-Type': 'application/json'
+                //     },
+                //     body: JSON.stringify(data)
+                // }).then(response => response.json())
+                //   .then(result => console.log('Success:', result))
+                //   .catch(error => console.error('Error:', error));
+
+                displayCompletionScreen(data);
+            }
+        });
+
+        function displayCompletionScreen(data) {
+            form.style.display = 'none';
+            completionScreen.style.display = 'block';
+            progressBar.style.width = '100%'; // Ensure progress bar is full
+
+            let summaryHtml = '<h3>Summary of Your Submission:</h3>';
+            for (const key in data) {
+                // Format keys for display
+                let displayKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                if (displayKey.endsWith('Name')) displayKey = displayKey; // Keep 'Name' as is, not ' Name'
+                if (displayKey === 'Full Name') displayKey = 'Full Name';
+                if (displayKey === 'Business Name') displayKey = 'Business Name';
+                if (displayKey === 'Your Role') displayKey = 'Your Role / Title';
+                if (displayKey === 'Business Description') displayKey = 'What your business does';
+                if (displayKey === 'Team Size') displayKey = 'Team Size';
+                if (displayKey === 'City Timezone') displayKey = 'City/Timezone';
+                if (displayKey === 'Pain Points') displayKey = 'Pain Points';
+                if (displayKey === 'One Thing Change Week') displayKey = 'One thing that would change your week';
+                if (displayKey === 'Tools Used') displayKey = 'Tools Used';
+                if (displayKey === 'Communication Style') displayKey = 'Communication Style';
+                if (displayKey === 'Brand Words') displayKey = 'Brand Words';
+                if (displayKey === 'Never Say Or Do') displayKey = 'Agent should NEVER say/do';
+                if (displayKey === 'Telegram Username') displayKey = 'Telegram Username';
+                if (displayKey === 'Server Tier') displayKey = 'Preferred Server Tier';
+                if (displayKey === 'Anything Else') displayKey = 'Anything else to know';
+                if (displayKey.startsWith('Painpoints')) displayKey = 'Pain Points'; // Correct for original 'painPoints'
+                if (displayKey.startsWith('Toolsused')) displayKey = 'Tools Used'; // Correct for original 'toolsUsed'
+
+
+                summaryHtml += `<p><strong>${displayKey}:</strong> ${data[key]}</p>`;
+            }
+            submissionSummary.innerHTML = summaryHtml;
+        }
+
+        // Initial setup
+        showStep(0);
+
+        // Toggle "Other" input for checkboxes
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', (event) => {
+                if (event.target.value === 'Other') {
+                    const otherInput = event.target.closest('.checkbox-group').querySelector('input[type="text"].other-input');
+                    if (otherInput) {
+                        otherInput.style.display = event.target.checked ? 'block' : 'none';
+                        if (!event.target.checked) {
+                            otherInput.value = ''; // Clear input if 'Other' is unchecked
+                        }
+                        // Optionally make 'Other' input required if its checkbox is checked
+                        otherInput.required = event.target.checked;
+                    }
+                }
+            });
+        });
+
+    </script>
+</body>
+</html>
