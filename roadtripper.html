@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Road Tripper Deal — Hotel St. Cloud</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Georgia', serif;
+      background: #1a2e3b;
+      color: #f5f0e8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: #f5f0e8;
+      color: #1a2e3b;
+      border-radius: 12px;
+      max-width: 420px;
+      width: 100%;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    .header {
+      background: #1a2e3b;
+      padding: 28px 32px 24px;
+      text-align: center;
+    }
+
+    .hotel-name {
+      font-size: 13px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #c9aa7c;
+      margin-bottom: 6px;
+    }
+
+    .tagline {
+      font-size: 22px;
+      color: #f5f0e8;
+      font-style: italic;
+    }
+
+    /* OFFER STATE */
+    .offer { padding: 36px 32px; text-align: center; }
+
+    .offer-badge {
+      display: inline-block;
+      background: #1a2e3b;
+      color: #c9aa7c;
+      font-size: 13px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 6px 18px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+
+    .discount {
+      font-size: 72px;
+      font-weight: bold;
+      color: #1a2e3b;
+      line-height: 1;
+    }
+
+    .discount-label {
+      font-size: 18px;
+      color: #4a5568;
+      margin-top: 4px;
+      margin-bottom: 8px;
+    }
+
+    .offer-detail {
+      font-size: 15px;
+      color: #6b7280;
+      margin-bottom: 28px;
+      font-style: italic;
+    }
+
+    .code-box {
+      background: #1a2e3b;
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+    }
+
+    .code-label {
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #c9aa7c;
+      margin-bottom: 8px;
+    }
+
+    .code {
+      font-size: 32px;
+      font-weight: bold;
+      color: #f5f0e8;
+      letter-spacing: 4px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .code-expires {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: 8px;
+    }
+
+    .instructions {
+      font-size: 14px;
+      color: #6b7280;
+      line-height: 1.6;
+    }
+
+    /* EXPIRED STATE */
+    .expired { padding: 40px 32px; text-align: center; }
+
+    .expired-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .expired-title {
+      font-size: 22px;
+      color: #1a2e3b;
+      margin-bottom: 12px;
+    }
+
+    .expired-msg {
+      font-size: 15px;
+      color: #6b7280;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .next-date {
+      display: inline-block;
+      background: #1a2e3b;
+      color: #c9aa7c;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      letter-spacing: 1px;
+    }
+
+    .footer {
+      background: #e8e2d6;
+      padding: 16px 32px;
+      text-align: center;
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    .footer a {
+      color: #1a2e3b;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <div class="hotel-name">Hotel St. Cloud · Cañon City, CO</div>
+      <div class="tagline">You've earned a real drink.</div>
+    </div>
+
+    <div id="offer-content"></div>
+
+    <div class="footer">
+      Valid for dine-in drink orders only. One use per visit.<br>
+      <a href="https://hotelstcloud.com">hotelstcloud.com</a>
+    </div>
+  </div>
+
+  <script>
+    // Day-specific codes — staff validates by today's code
+    const CODES = {
+      4: { code: 'RT-THU', day: 'Thursday' },   // Thu
+      5: { code: 'RT-FRI', day: 'Friday' },      // Fri
+      6: { code: 'RT-SAT', day: 'Saturday' },    // Sat
+      0: { code: 'RT-SUN', day: 'Sunday' },      // Sun
+    };
+
+    const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+    // Use Mountain Time
+    const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Denver' }));
+    const dow = now.getDay(); // 0=Sun, 1=Mon...
+    const todayName = DAYS[dow];
+
+    // Midnight Mountain Time expiry
+    const midnight = new Date(now);
+    midnight.setHours(23, 59, 0, 0);
+    const hoursLeft = Math.floor((midnight - now) / 3600000);
+    const minsLeft  = Math.floor(((midnight - now) % 3600000) / 60000);
+
+    const el = document.getElementById('offer-content');
+
+    if (CODES[dow]) {
+      const { code, day } = CODES[dow];
+      el.innerHTML = `
+        <div class="offer">
+          <div class="offer-badge">Today Only · ${day}</div>
+          <div class="discount">5%</div>
+          <div class="discount-label">off your drinks</div>
+          <div class="offer-detail">Show this screen to your server.</div>
+          <div class="code-box">
+            <div class="code-label">Today's Code</div>
+            <div class="code">${code}</div>
+            <div class="code-expires">Expires in ${hoursLeft}h ${minsLeft}m (midnight MT)</div>
+          </div>
+          <div class="instructions">
+            Valid at the War Room bar and 1887 Historic Eatery.<br>
+            Dine-in only · one use per visit.
+          </div>
+        </div>
+      `;
+    } else {
+      // Find next Thursday
+      const daysUntilThu = (4 - dow + 7) % 7 || 7;
+      const nextThu = new Date(now);
+      nextThu.setDate(now.getDate() + daysUntilThu);
+      const nextThuStr = nextThu.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+
+      el.innerHTML = `
+        <div class="expired">
+          <div class="expired-icon">🗓</div>
+          <div class="expired-title">Not today, road tripper.</div>
+          <div class="expired-msg">
+            This offer runs <strong>Thursday through Sunday</strong> only —
+            for those who've been on the road long enough to deserve it.
+          </div>
+          <div class="next-date">Come back Thursday, ${nextThuStr}</div>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
