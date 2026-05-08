@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Road Tripper UX Flow — Hotel St. Cloud</title>
+  <style>
+    :root {
+      --navy: #1a2e3b;
+      --gold: #c9aa7c;
+      --cream: #f5f0e8;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --google-blue: #1a73e8;
+      --google-green: #1e8e3e;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f1923;
+      min-height: 100vh;
+      padding: clamp(24px, 5vw, 60px) clamp(16px, 4vw, 40px);
+    }
+
+    /* ── Page header ── */
+    .page-header {
+      text-align: center;
+      margin-bottom: clamp(32px, 6vw, 56px);
+    }
+    .page-header h1 {
+      font-size: clamp(18px, 3vw, 26px);
+      color: #fff;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .page-header p {
+      font-size: clamp(13px, 2vw, 15px);
+      color: #7a9bb5;
+    }
+
+    /* ── Flow layout ── */
+    .flow {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: flex-start;
+      gap: clamp(16px, 3vw, 32px);
+    }
+
+    /* ── Step container ── */
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      flex: 0 0 auto;
+    }
+
+    .step-label {
+      font-size: 11px;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    /* ── Arrow ── */
+    .arrow {
+      display: flex;
+      align-items: center;
+      padding-top: 60px;
+      color: #3d5a6e;
+      font-size: 28px;
+      flex: 0 0 auto;
+    }
+
+    @media (max-width: 680px) {
+      .arrow { display: none; }
+      .flow { gap: 40px; }
+    }
+
+    /* ── Phone shell ── */
+    .phone {
+      width: clamp(240px, 36vw, 300px);
+      background: #111;
+      border-radius: 36px;
+      padding: 14px 10px 18px;
+      box-shadow:
+        0 0 0 2px #2a3d4d,
+        0 30px 80px rgba(0,0,0,0.8),
+        inset 0 1px 0 rgba(255,255,255,0.05);
+      position: relative;
+    }
+
+    .phone-notch {
+      width: 90px;
+      height: 22px;
+      background: #111;
+      border-radius: 0 0 14px 14px;
+      margin: 0 auto 10px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .phone-screen {
+      background: #fff;
+      border-radius: 22px;
+      overflow: hidden;
+      min-height: clamp(420px, 70vw, 520px);
+    }
+
+    /* ── Status bar ── */
+    .status-bar {
+      background: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 16px 4px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #111;
+    }
+    .status-icons { display: flex; gap: 4px; align-items: center; }
+
+    /* ══════════════════════════
+       SCREEN 1 — Google Search
+    ══════════════════════════ */
+    .google-screen { font-family: Arial, sans-serif; }
+
+    .google-bar {
+      background: #f1f3f4;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 8px 10px;
+      padding: 10px 14px;
+      border-radius: 24px;
+      font-size: 13px;
+      color: #5f6368;
+    }
+    .google-bar .mic { color: var(--google-blue); font-size: 15px; }
+
+    .google-tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 10px;
+      border-bottom: 1px solid #e8eaed;
+      font-size: 12px;
+    }
+    .g-tab {
+      padding: 8px 12px;
+      color: #5f6368;
+      cursor: default;
+    }
+    .g-tab.active {
+      color: var(--google-blue);
+      border-bottom: 2px solid var(--google-blue);
+      font-weight: 600;
+    }
+
+    .google-results { padding: 10px; }
+
+    /* Ad result */
+    .ad-result {
+      border: 1px solid #e8eaed;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+      background: #fff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      position: relative;
+      cursor: pointer;
+      transition: box-shadow 0.15s;
+    }
+    .ad-result:hover { box-shadow: 0 2px 10px rgba(0,0,0,0.14); }
+
+    .ad-badge {
+      font-size: 10px;
+      color: #5f6368;
+      background: #f1f3f4;
+      padding: 2px 6px;
+      border-radius: 3px;
+      display: inline-block;
+      margin-bottom: 4px;
+    }
+    .ad-url { font-size: 12px; color: var(--google-green); margin-bottom: 3px; }
+    .ad-headline {
+      font-size: 15px;
+      color: var(--google-blue);
+      font-weight: 500;
+      margin-bottom: 5px;
+      line-height: 1.3;
+    }
+    .ad-desc { font-size: 12px; color: #4d5156; line-height: 1.5; }
+
+    /* Ad image strip */
+    .ad-images {
+      display: flex;
+      gap: 4px;
+      margin-top: 10px;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .ad-img {
+      flex: 1;
+      height: 70px;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+    .ad-img-placeholder {
+      flex: 1;
+      height: 70px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    /* Organic result */
+    .organic-result { padding: 12px 0; border-bottom: 1px solid #f1f3f4; }
+    .org-url { font-size: 11px; color: #5f6368; margin-bottom: 3px; }
+    .org-title { font-size: 14px; color: var(--google-blue); margin-bottom: 4px; }
+    .org-desc { font-size: 12px; color: #4d5156; line-height: 1.5; }
+
+    /* ══════════════════════════
+       SCREEN 2 — Landing Page (Stay page)
+    ══════════════════════════ */
+    .landing-screen { background: var(--cream); }
+
+    .landing-hero {
+      background: var(--navy);
+      padding: 20px 16px 18px;
+      text-align: center;
+    }
+    .landing-hotel-name {
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 6px;
+      font-family: Georgia, serif;
+    }
+    .landing-headline {
+      font-size: 17px;
+      color: #fff;
+      font-family: Georgia, serif;
+      font-style: italic;
+      line-height: 1.4;
+      margin-bottom: 4px;
+    }
+    .landing-sub { font-size: 11px; color: #7a9bb5; }
+
+    .landing-img-hero {
+      width: 100%;
+      height: 130px;
+      object-fit: cover;
+      display: block;
+    }
+    .landing-img-placeholder {
+      width: 100%;
+      height: 130px;
+      background: linear-gradient(135deg, #2a3d4d, #1a2e3b);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+    }
+
+    .landing-body { padding: 16px; }
+
+    .landing-offer-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #fff5e6;
+      color: #92400e;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 20px;
+      margin-bottom: 14px;
+    }
+
+    .landing-perks {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .landing-perk {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--navy);
+    }
+    .perk-icon { font-size: 18px; }
+
+    .landing-cta {
+      display: block;
+      background: var(--navy);
+      color: #fff;
+      text-align: center;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+      text-decoration: none;
+    }
+
+    .landing-qr-hint {
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    /* ══════════════════════════
+       SCREEN 3 — QR Promo Page
+    ══════════════════════════ */
+    .promo-screen { background: var(--navy); }
+
+    .promo-header {
+      padding: 20px 16px 16px;
+      text-align: center;
+    }
+    .promo-hotel {
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 6px;
+    }
+    .promo-tagline {
+      font-size: 15px;
+      color: #f5f0e8;
+      font-style: italic;
+      font-family: Georgia, serif;
+    }
+
+    .promo-card {
+      background: var(--cream);
+      margin: 0 12px;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .promo-card-header {
+      background: #fff;
+      padding: 16px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .promo-day-badge {
+      display: inline-block;
+      background: var(--navy);
+      color: var(--gold);
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+    }
+    .promo-discount {
+      font-size: 58px;
+      font-weight: 800;
+      color: var(--navy);
+      line-height: 1;
+    }
+    .promo-discount-label {
+      font-size: 14px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .promo-card-body { padding: 16px; }
+
+    .promo-code-box {
+      background: var(--navy);
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    .promo-code-lbl {
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 6px;
+    }
+    .promo-code-val {
+      font-size: 26px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: 4px;
+      font-family: 'Courier New', monospace;
+    }
+    .promo-code-exp {
+      font-size: 10px;
+      color: #7a9bb5;
+      margin-top: 6px;
+    }
+
+    .promo-instruction {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .promo-footer {
+      background: #e8e2d6;
+      padding: 10px 16px;
+      text-align: center;
+      font-size: 10px;
+      color: var(--muted);
+      margin: 12px 0 0;
+    }
+
+    /* ── Context label below phone ── */
+    .context-note {
+      font-size: 11px;
+      color: #4a7a99;
+      text-align: center;
+      max-width: 220px;
+      line-height: 1.5;
+      padding: 0 8px;
+    }
+
+    /* ── Road context banner ── */
+    .road-context {
+      text-align: center;
+      margin-bottom: 32px;
+      color: #4a7a99;
+      font-size: 13px;
+      letter-spacing: 1px;
+    }
+    .road-context span { color: var(--gold); font-weight: 600; }
+
+    /* ── Footer ── */
+    .page-footer {
+      text-align: center;
+      margin-top: 48px;
+      font-size: 11px;
+      color: #2a4a5e;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <h1>The Road Tripper Experience</h1>
+    <p>What your customer sees — from highway to happy hour</p>
+  </div>
+
+  <div class="road-context">
+    🚗 Driving east on <span>Highway 50</span> · 8 miles from Cañon City · passenger Googles "bar near me"
+  </div>
+
+  <div class="flow">
+
+    <!-- ══ STEP 1: Google Search ══ -->
+    <div class="step">
+      <div class="step-label">1 · Google Search</div>
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="phone-screen google-screen">
+          <div class="status-bar">
+            <span>9:41</span>
+            <div class="status-icons">
+              <span>●●●</span>
+              <span>WiFi</span>
+              <span>🔋</span>
+            </div>
+          </div>
+
+          <div class="google-bar">
+            <span style="font-size:15px;color:var(--google-blue)">G</span>
+            bar near highway 50 canon city
+            <span class="mic">🎤</span>
+          </div>
+
+          <div class="google-tabs">
+            <div class="g-tab active">All</div>
+            <div class="g-tab">Maps</div>
+            <div class="g-tab">Reviews</div>
+            <div class="g-tab">Photos</div>
+          </div>
+
+          <div class="google-results">
+            <!-- THE AD -->
+            <div class="ad-result">
+              <div class="ad-badge">Sponsored</div>
+              <div class="ad-url">🌐 offers.hotelstcloud.com</div>
+              <div class="ad-headline">Exit Now. Thank Yourself Later · Hotel St. Cloud</div>
+              <div class="ad-desc">Been in that car long enough. Hotel St. Cloud has the bar — and the bathroom — you need.</div>
+              <!-- Image extensions strip -->
+              <div class="ad-images">
+                <div class="ad-img-placeholder" style="background:linear-gradient(135deg,#2a3d4d,#1a2e3b)">🛁</div>
+                <div class="ad-img-placeholder" style="background:linear-gradient(135deg,#3d2a1a,#2a1a0a)">🍸</div>
+                <div class="ad-img-placeholder" style="background:linear-gradient(135deg,#1a3d2a,#0a2a1a)">🍹</div>
+              </div>
+            </div>
+
+            <!-- organic -->
+            <div class="organic-result">
+              <div class="org-url">yelp.com › cañon-city › bars</div>
+              <div class="org-title">Best Bars Near Cañon City, CO - Yelp</div>
+              <div class="org-desc">Top-rated bars and cocktail lounges near Highway 50...</div>
+            </div>
+            <div class="organic-result">
+              <div class="org-url">tripadvisor.com › restaurants</div>
+              <div class="org-title">Restaurants near Royal Gorge - TripAdvisor</div>
+              <div class="org-desc">See traveler reviews for dining near...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="context-note">Ad appears because they're within 15 miles of Cañon City on a Thursday–Sunday</div>
+    </div>
+
+    <!-- Arrow -->
+    <div class="arrow">→</div>
+
+    <!-- ══ STEP 2: Landing Page ══ -->
+    <div class="step">
+      <div class="step-label">2 · They Tap the Ad</div>
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="phone-screen landing-screen">
+          <div class="status-bar" style="background:var(--navy);color:#fff;">
+            <span>9:41</span>
+            <div class="status-icons">
+              <span style="color:#7a9bb5">offers.hotelstcloud.com</span>
+            </div>
+          </div>
+
+          <div class="landing-hero">
+            <div class="landing-hotel-name">Hotel St. Cloud · Cañon City, CO</div>
+            <div class="landing-headline">"Pull over.<br>You've earned this."</div>
+            <div class="landing-sub">Historic hotel · craft cocktails · legendary bathrooms</div>
+          </div>
+
+          <div class="landing-img-placeholder">🛁🍸</div>
+
+          <div class="landing-body">
+            <div class="landing-offer-pill">🎉 5% off drinks today — scan below</div>
+
+            <div class="landing-perks">
+              <div class="landing-perk">
+                <span class="perk-icon">🥃</span>
+                <span>War Room bar · craft cocktails from $12</span>
+              </div>
+              <div class="landing-perk">
+                <span class="perk-icon">🍽️</span>
+                <span>1887 Historic Eatery · full menu</span>
+              </div>
+              <div class="landing-perk">
+                <span class="perk-icon">🚿</span>
+                <span>The most talked-about bathrooms on Hwy 50</span>
+              </div>
+              <div class="landing-perk">
+                <span class="perk-icon">📍</span>
+                <span>631 Main St · 2 min off Hwy 50</span>
+              </div>
+            </div>
+
+            <a class="landing-cta" href="#">Reserve a Room →</a>
+            <div class="landing-qr-hint">🎟 Show QR code at the bar for 5% off drinks</div>
+          </div>
+        </div>
+      </div>
+      <div class="context-note">Landing page confirms the offer and gives them directions + reason to stop</div>
+    </div>
+
+    <!-- Arrow -->
+    <div class="arrow">→</div>
+
+    <!-- ══ STEP 3: QR Promo Page ══ -->
+    <div class="step">
+      <div class="step-label">3 · At the Bar · Scans QR</div>
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="phone-screen promo-screen">
+          <div class="status-bar" style="background:var(--navy);color:#fff;">
+            <span>10:14</span>
+            <div class="status-icons">
+              <span style="color:#7a9bb5">offers.hotelstcloud.com</span>
+            </div>
+          </div>
+
+          <div class="promo-header">
+            <div class="promo-hotel">Hotel St. Cloud · Cañon City, CO</div>
+            <div class="promo-tagline">You've earned a real drink.</div>
+          </div>
+
+          <div class="promo-card">
+            <div class="promo-card-header">
+              <div class="promo-day-badge">Today Only · Friday</div>
+              <div class="promo-discount">5%</div>
+              <div class="promo-discount-label">off your drinks</div>
+            </div>
+            <div class="promo-card-body">
+              <div class="promo-code-box">
+                <div class="promo-code-lbl">Today's Code</div>
+                <div class="promo-code-val">RT-FRI</div>
+                <div class="promo-code-exp">Expires at midnight MT</div>
+              </div>
+              <div class="promo-instruction">
+                Show this screen to your server.<br>
+                Valid at War Room &amp; 1887 · dine-in only.
+              </div>
+            </div>
+            <div class="promo-footer">
+              Valid for dine-in drink orders only · one use per visit
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div class="context-note">Code changes daily. Mon–Wed shows "come back Thursday" — no wasted scans</div>
+    </div>
+
+  </div>
+
+  <div class="page-footer">
+    Campaign ID 23825710773 · Thu–Sun · $20/day · 15-mile radius Cañon City, CO
+  </div>
+
+</body>
+</html>
