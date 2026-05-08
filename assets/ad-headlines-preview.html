@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>15 Ad Headlines — Hotel St. Cloud</title>
+  <style>
+    :root {
+      --navy: #1a2e3b;
+      --gold: #c9aa7c;
+      --cream: #f5f0e8;
+      --google-blue: #1a73e8;
+      --google-green: #1e8e3e;
+      --google-url: #202124;
+      --google-desc: #4d5156;
+      --google-bg: #f8f9fa;
+      --border: #e8eaed;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f1923;
+      min-height: 100vh;
+      padding: clamp(24px, 5vw, 56px) clamp(16px, 4vw, 40px);
+    }
+
+    /* ── Page header ── */
+    .page-header {
+      text-align: center;
+      margin-bottom: clamp(28px, 5vw, 48px);
+    }
+    .page-header h1 {
+      font-size: clamp(18px, 3vw, 24px);
+      color: #fff;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .page-header p {
+      font-size: clamp(12px, 2vw, 14px);
+      color: #4a7a99;
+    }
+
+    /* ── Grid ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: clamp(16px, 3vw, 28px);
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* ── Ad card ── */
+    .ad-card {
+      background: #fff;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+      font-family: Arial, sans-serif;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .ad-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 36px rgba(0,0,0,0.6);
+    }
+
+    /* Number badge */
+    .ad-num {
+      background: var(--navy);
+      color: var(--gold);
+      font-size: 11px;
+      letter-spacing: 2px;
+      font-family: -apple-system, sans-serif;
+      padding: 7px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .ad-num .status {
+      font-size: 10px;
+      color: #7a9bb5;
+    }
+    .ad-num .status.approved { color: #4ade80; }
+    .ad-num .status.review   { color: #facc15; }
+
+    /* Google search bar */
+    .search-bar {
+      background: var(--google-bg);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 10px 12px;
+      padding: 9px 14px;
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      font-size: 12px;
+      color: #5f6368;
+    }
+    .search-bar .g { color: var(--google-blue); font-weight: 700; font-size: 13px; }
+    .search-bar .query { flex: 1; }
+
+    /* Ad body */
+    .ad-body { padding: 0 14px 14px; }
+
+    .ad-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+    .ad-badge {
+      font-size: 10px;
+      color: #5f6368;
+      background: #f1f3f4;
+      padding: 2px 6px;
+      border-radius: 3px;
+      border: 1px solid #dadce0;
+    }
+    .ad-domain {
+      font-size: 12px;
+      color: var(--google-green);
+    }
+    .ad-domain-name {
+      font-size: 12px;
+      color: var(--google-url);
+      font-weight: 500;
+    }
+
+    .ad-headline {
+      font-size: 17px;
+      color: var(--google-blue);
+      line-height: 1.35;
+      margin-bottom: 5px;
+      cursor: pointer;
+    }
+    .ad-headline:hover { text-decoration: underline; }
+
+    .ad-desc {
+      font-size: 12px;
+      color: var(--google-desc);
+      line-height: 1.55;
+      margin-bottom: 10px;
+    }
+
+    /* Image strip */
+    .ad-images {
+      display: flex;
+      gap: 4px;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .ad-images img {
+      flex: 1;
+      height: 72px;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+
+    /* ── Footer ── */
+    .page-footer {
+      text-align: center;
+      margin-top: clamp(32px, 5vw, 56px);
+      font-size: 12px;
+      color: #2a4a5e;
+      line-height: 1.8;
+    }
+    .page-footer strong { color: #4a7a99; }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <h1>All 15 Headlines — Road Tripper Campaign</h1>
+    <p>Hotel St. Cloud · Google Search Ad Previews · Google rotates and optimizes automatically</p>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="page-footer">
+    Campaign ID 23825710773 &nbsp;·&nbsp; Thu–Sun &nbsp;·&nbsp; $20/day &nbsp;·&nbsp; 15-mile radius Cañon City, CO<br>
+    <strong>Green = Approved &nbsp;·&nbsp; Yellow = Under Review</strong>
+  </div>
+
+  <script>
+    const HEADLINES = [
+      { text: "Pull Over. You've Earned This.",    status: "approved" },
+      { text: "Bathrooms Worth the Detour",         status: "approved" },
+      { text: "Cocktails After Miles of Road",      status: "review"   },
+      { text: "Marble Floors. Real Cocktails.",     status: "approved" },
+      { text: "Highway 50's Best Pit Stop",         status: "approved" },
+      { text: "Stop. Sip. Stay Awhile.",            status: "review"   },
+      { text: "A Bar Worthy of the Drive",          status: "review"   },
+      { text: "Luxury Hiding on Hwy 50",            status: "approved" },
+      { text: "Ditch the Gas Station Coffee",       status: "approved" },
+      { text: "Cañon City's Coolest Stop",          status: "approved" },
+      { text: "Reset at Hotel St. Cloud",           status: "approved" },
+      { text: "Craft Cocktails. Real Marble.",      status: "review"   },
+      { text: "You Deserve a Real Drink",           status: "review"   },
+      { text: "Exit Now. Thank Yourself Later",     status: "approved" },
+      { text: "The War Room Is Waiting",            status: "approved" },
+    ];
+
+    // Pick a description that fits the headline's vibe
+    const DESCS = [
+      "Been in that car long enough. Hotel St. Cloud has the bar — and the bathroom — you need.",
+      "World-class bathrooms and handcrafted cocktails — right off Highway 50 in Cañon City.",
+      "Marble floors, fire-lit cocktails, and zero apologies. Pull over at Hotel St. Cloud.",
+      "Handcrafted drinks, luxury bathrooms, historic character. Best stop on the Western Slope.",
+    ];
+
+    // Image sets — pair bathroom headlines with bathroom photos, drink headlines with cocktail photos
+    const BATHROOM_HEADLINES = [1, 3, 7, 11]; // 1-indexed
+    const IMG_SETS = {
+      bathroom: ["hsc-bathroom-1.jpg", "hsc-bathroom-2.jpg", "hsc-cocktails-fireplace.jpg"],
+      cocktail: ["hsc-cocktails-fireplace.jpg", "hsc-war-room-espresso.jpg", "hsc-craft-cocktails-bar.jpg"],
+      mixed:    ["hsc-bathroom-1.jpg", "hsc-cocktails-fireplace.jpg", "hsc-craft-cocktails-bar.jpg"],
+    };
+
+    // Keywords that should trigger bathroom imagery
+    const bathroomKW = ["bathroom", "marble", "floors", "luxury"];
+    const drinkKW    = ["cocktail", "bar", "drink", "sip", "coffee", "war room"];
+
+    function pickImages(headline, idx) {
+      const h = headline.toLowerCase();
+      if (bathroomKW.some(k => h.includes(k))) return IMG_SETS.bathroom;
+      if (drinkKW.some(k => h.includes(k)))    return IMG_SETS.cocktail;
+      // alternate mixed for the rest
+      return idx % 2 === 0 ? IMG_SETS.mixed : ["hsc-bathroom-1.jpg", "hsc-war-room-espresso.jpg", "hsc-1887-berry-sour.jpg"];
+    }
+
+    function pickDesc(idx) {
+      return DESCS[idx % DESCS.length];
+    }
+
+    const grid = document.getElementById('grid');
+
+    HEADLINES.forEach((hl, i) => {
+      const imgs = pickImages(hl.text, i);
+      const desc = pickDesc(i);
+      const statusLabel = hl.status === 'approved' ? '✓ Approved' : '⏳ In Review';
+
+      grid.innerHTML += `
+        <div class="ad-card">
+          <div class="ad-num">
+            <span>Headline ${i + 1} of 15</span>
+            <span class="status ${hl.status}">${statusLabel}</span>
+          </div>
+          <div class="search-bar">
+            <span class="g">G</span>
+            <span class="query">bar near highway 50 canon city</span>
+          </div>
+          <div class="ad-body">
+            <div class="ad-meta">
+              <span class="ad-badge">Sponsored</span>
+              <span class="ad-domain">🌐</span>
+              <span class="ad-domain-name">offers.hotelstcloud.com</span>
+            </div>
+            <div class="ad-headline">${hl.text} · Hotel St. Cloud</div>
+            <div class="ad-desc">${desc}</div>
+            <div class="ad-images">
+              <img src="${imgs[0]}" alt="Hotel St. Cloud">
+              <img src="${imgs[1]}" alt="Hotel St. Cloud">
+              <img src="${imgs[2]}" alt="Hotel St. Cloud">
+            </div>
+          </div>
+        </div>
+      `;
+    });
+  </script>
+
+</body>
+</html>
