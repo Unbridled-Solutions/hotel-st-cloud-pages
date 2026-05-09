@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bars & Bathrooms Daily Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0f1923; /* Dark background */
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .header {
+            text-align: center;
+            padding: 20px;
+            background-color: #1a2e3b; /* Navy */
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            color: #c9aa7c; /* Gold */
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+        .header p {
+            margin: 5px 0 0;
+            font-size: 1.1em;
+            color: #5a8ba7; /* Blue */
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .stat-card {
+            background-color: #1a2e3b; /* Navy */
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .stat-card .value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #c9aa7c; /* Gold */
+            margin-bottom: 5px;
+        }
+        .stat-card .label {
+            font-size: 1em;
+            color: #5a8ba7; /* Blue */
+        }
+        .stat-card .secondary-value {
+            font-size: 1.2em;
+            color: #e0e0e0;
+            margin-top: 10px;
+        }
+        .chart-section {
+            background-color: #1a2e3b; /* Navy */
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .chart-section h2 {
+            color: #c9aa7c; /* Gold */
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        .two-charts {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        @media (min-width: 768px) {
+            .two-charts {
+                flex-direction: row;
+            }
+            .two-charts > div {
+                flex: 1;
+            }
+        }
+        .table-section {
+            background-color: #1a2e3b; /* Navy */
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            overflow-x: auto; /* For mobile responsiveness */
+        }
+        .table-section h2 {
+            color: #c9aa7c; /* Gold */
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #0f1923; /* Darker border */
+            padding: 10px;
+            text-align: left;
+            color: #e0e0e0;
+        }
+        .data-table th {
+            background-color: #5a8ba7; /* Blue header */
+            color: #0f1923;
+            font-weight: bold;
+        }
+        .data-table tr:nth-child(even) {
+            background-color: #1a2e3b; /* Navy for even rows */
+        }
+        .data-table tr:nth-child(odd) {
+            background-color: #0f1923; /* Darker for odd rows */
+        }
+        .mcu-take {
+            background-color: #1a2e3b; /* Navy */
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border-left: 5px solid #c9aa7c; /* Gold accent */
+        }
+        .mcu-take h2 {
+            color: #c9aa7c; /* Gold */
+            margin-top: 0;
+        }
+        .mcu-take p {
+            line-height: 1.6;
+            margin-bottom: 10px;
+            color: #e0e0e0;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9em;
+            color: #5a8ba7; /* Blue */
+        }
+    </style>
+</head>
+<body>
+    <script type="application/json" id="dashboard-data">
+        {"history": [{"date": "2026-05-08", "impressions": 387, "clicks": 22, "ctr": 5.68, "avg_cpc": 1.69, "spend": 37.09}], "ad_groups": [{"name": "Hwy 50 Road Trippers", "impressions": 0, "clicks": 0, "ctr": 0.0, "spend": 0.0}]}
+    </script>
+
+    <div class="container">
+        <div class="header">
+            <h1>Bars & Bathrooms — Daily Dashboard</h1>
+            <p>May 10, 2026</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="value" id="stat-impressions">387</div>
+                <div class="label">Impressions (Yesterday)</div>
+            </div>
+            <div class="stat-card">
+                <div class="value" id="stat-clicks">22</div>
+                <div class="label">Clicks (Yesterday)</div>
+            </div>
+            <div class="stat-card">
+                <div class="value" id="stat-ctr">5.68%</div>
+                <div class="label">CTR (Yesterday)</div>
+            </div>
+            <div class="stat-card">
+                <div class="value" id="stat-spend">$37.09</div>
+                <div class="label">Spend (Yesterday)</div>
+                <div class="secondary-value">Budget Remaining: <span id="budget-remaining">-$2.09</span></div>
+            </div>
+        </div>
+
+        <div class="chart-section two-charts">
+            <div>
+                <h2>Impressions & Clicks (Last 14 Days)</h2>
+                <canvas id="impressionsClicksChart"></canvas>
+            </div>
+            <div>
+                <h2>Daily Spend (Last 14 Days)</h2>
+                <canvas id="spendChart"></canvas>
+            </div>
+        </div>
+
+        <div class="table-section">
+            <h2>Today's Ad Groups Breakdown (May 10, 2026)</h2>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Ad Group</th>
+                        <th>Impressions</th>
+                        <th>Clicks</th>
+                        <th>CTR%</th>
+                        <th>Spend</th>
+                    </tr>
+                </thead>
+                <tbody id="ad-group-table-body">
+                    <tr>
+                        <td>Hwy 50 Road Trippers</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0.0%</td>
+                        <td>$0.00</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mcu-take">
+            <h2>MC's Take</h2>
+            <p>
+                The provided data for "Bars & Bathrooms" is very limited, currently only showing activity from May 8, 2026.
+                Today's (May 10, 2026) data for ad groups are all zero, which might indicate that today's data collection has not fully started or there was no activity yet.
+                The campaign spent $37.09 on May 8, exceeding the $35 budget by $2.09.
+            </p>
+            <p>
+                <strong>Recommendation:</strong> While acknowledging that today's data starts accumulating after 11 AM MT, it is critical to monitor the dashboard after this time to ensure live data is being captured. Also, closely watch spend against the $35 daily budget as the campaign previously overspent. If this trend continues, adjust bids or daily budget caps to prevent exceeding targets.
+            </p>
+        </div>
+
+        <div class="footer">
+            Bars & Bathrooms · Hotel St. Cloud · Historic Main Street, Cañon City · Powered by MC · May 10, 2026
+        </div>
+    </div>
+
+    <script>
+        const data = JSON.parse(document.getElementById('dashboard-data').textContent);
+        const history = data.history;
+        const adGroups = data.ad_groups;
+
+        // Process historical data for charts
+        const dates = history.map(row => row.date);
+        const impressions = history.map(row => row.impressions);
+        const clicks = history.map(row => row.clicks);
+        const spend = history.map(row => row.spend);
+
+        // Chart: Impressions & Clicks
+        new Chart(document.getElementById('impressionsClicksChart'), {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [
+                    {
+                        label: 'Impressions',
+                        data: impressions,
+                        borderColor: '#c9aa7c', // Gold
+                        backgroundColor: 'rgba(201, 170, 124, 0.2)',
+                        tension: 0.1,
+                        fill: false
+                    },
+                    {
+                        label: 'Clicks',
+                        data: clicks,
+                        borderColor: '#5a8ba7', // Blue
+                        backgroundColor: 'rgba(90, 139, 167, 0.2)',
+                        tension: 0.1,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: '#e0e0e0' },
+                        grid: { color: 'rgba(255,255,255,0.1)' }
+                    },
+                    x: {
+                        ticks: { color: '#e0e0e0' },
+                        grid: { color: 'rgba(255,255,255,0.1)' }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#e0e0e0'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Chart: Daily Spend
+        new Chart(document.getElementById('spendChart'), {
+            type: 'bar',
+            data: {
+                labels: dates,
+                datasets: [
+                    {
+                        label: 'Daily Spend',
+                        data: spend,
+                        backgroundColor: '#5a8ba7', // Blue bars
+                        borderColor: '#5a8ba7',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: '#e0e0e0' },
+                        grid: { color: 'rgba(255,255,255,0.1)' }
+                    },
+                    x: {
+                        ticks: { color: '#e0e0e0' },
+                        grid: { color: 'rgba(255,255,255,0.1)' }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#e0e0e0'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Ad Group Table (already hardcoded for now due to zero data from ad_groups)
+        // This part would dynamically populate if adGroups had data.
+    </script>
+</body>
+</html>
