@@ -589,17 +589,49 @@
                 });
 
 
-                console.log('Form Data:', data); // Log to console
-                // In a real application, you would send 'data' to a backend endpoint here.
-                // fetch('/api/onboarding', {
-                //     method: 'POST',
-                //     headers: {
-                //         'Content-Type': 'application/json'
-                //     },
-                //     body: JSON.stringify(data)
-                // }).then(response => response.json())
-                //   .then(result => console.log('Success:', result))
-                //   .catch(error => console.error('Error:', error));
+                // Submit to Airtable
+                const airtableBaseId = 'appUUjLXEUwlyx23M';
+                const airtableTableId = 'tblZHw2NCn9gB4dqX';
+                const airtableToken = 'REDACTED_SET_VIA_ENV';
+
+                const fields = {
+                    'Full Name': data.fullName || '',
+                    'Business Name': data.businessName || '',
+                    'Role Title': data.yourRole || '',
+                    'Email': data.email || '',
+                    'City Timezone': data.cityTimezone || '',
+                    'Team Size': data.teamSize || '',
+                    'Business Description': data.businessDescription || '',
+                    'Pain Points': data.painPoints || '',
+                    'One Thing Change Week': data.oneThingChangeWeek || '',
+                    'Tools Used': data.toolsUsed || '',
+                    'Communication Style': data.communicationStyle || '',
+                    'Brand Words': data.brandWords || '',
+                    'Never Say Or Do': data.neverSayOrDo || '',
+                    'Telegram Username': data.telegramUsername || '',
+                    'Server Tier': data.serverTier || '',
+                    'Anything Else': data.anythingElse || '',
+                    'Status': 'New — Needs Review',
+                    'Submitted At': new Date().toISOString()
+                };
+
+                fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${airtableToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ fields: fields, typecast: true })
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.id) {
+                        console.log('Submitted to Airtable:', result.id);
+                    } else {
+                        console.error('Airtable error:', result);
+                    }
+                })
+                .catch(error => console.error('Submission error:', error));
 
                 displayCompletionScreen(data);
             }
