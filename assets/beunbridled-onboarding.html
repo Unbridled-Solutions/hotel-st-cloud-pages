@@ -589,46 +589,18 @@
                 });
 
 
-                // Submit to Airtable
-                const airtableBaseId = 'appUUjLXEUwlyx23M';
-                const airtableTableId = 'tblZHw2NCn9gB4dqX';
-                const airtableToken = 'REDACTED_SET_VIA_ENV';
-
-                const fields = {
-                    'Full Name': data.fullName || '',
-                    'Business Name': data.businessName || '',
-                    'Role Title': data.yourRole || '',
-                    'Email': data.email || '',
-                    'City Timezone': data.cityTimezone || '',
-                    'Team Size': data.teamSize || '',
-                    'Business Description': data.businessDescription || '',
-                    'Pain Points': data.painPoints || '',
-                    'One Thing Change Week': data.oneThingChangeWeek || '',
-                    'Tools Used': data.toolsUsed || '',
-                    'Communication Style': data.communicationStyle || '',
-                    'Brand Words': data.brandWords || '',
-                    'Never Say Or Do': data.neverSayOrDo || '',
-                    'Telegram Username': data.telegramUsername || '',
-                    'Server Tier': data.serverTier || '',
-                    'Anything Else': data.anythingElse || '',
-                    'Status': 'New — Needs Review',
-                    'Submitted At': new Date().toISOString()
-                };
-
-                fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableId}`, {
+                // Submit via Cloudflare Worker (no secrets in client code)
+                fetch('https://beunbridled-onboarding.unbridled.workers.dev', {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${airtableToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ fields: fields, typecast: true })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
                 })
                 .then(response => response.json())
                 .then(result => {
-                    if (result.id) {
-                        console.log('Submitted to Airtable:', result.id);
+                    if (result.success) {
+                        console.log('Submitted successfully:', result.id);
                     } else {
-                        console.error('Airtable error:', result);
+                        console.error('Submission error:', result.error);
                     }
                 })
                 .catch(error => console.error('Submission error:', error));
