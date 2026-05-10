@@ -8,72 +8,94 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: #0e1117; color: #e8e8e8; font-family: 'Segoe UI', system-ui, sans-serif; padding: 24px; max-width: 900px; margin: 0 auto; }
 
-  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; padding-bottom: 18px; border-bottom: 1px solid #1e2a38; flex-wrap: wrap; gap: 12px; }
+  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; padding-bottom: 16px; border-bottom: 1px solid #1e2a38; flex-wrap: wrap; gap: 12px; }
   .header h1 { font-size: 20px; font-weight: 700; color: #fff; }
   .header p { font-size: 12px; color: #7a8fa6; margin-top: 3px; }
   .updated { font-size: 11px; color: #3a5a76; text-align: right; }
 
-  .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px; }
+  .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
   .sum-box { background: #131c27; border: 1px solid #1e2a38; border-radius: 10px; padding: 14px 16px; text-align: center; }
-  .sum-box .num { font-size: 26px; font-weight: 800; color: #fff; }
+  .sum-box .num { font-size: 26px; font-weight: 800; }
   .sum-box .lbl { font-size: 10px; color: #5a7a96; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 4px; }
   .sum-box.done .num { color: #4ade80; }
-  .sum-box.active .num { color: #60a5fa; }
-  .sum-box.blocked .num { color: #f87171; }
-  .sum-box.pending .num { color: #f59e0b; }
+  .sum-box.active .num { color: #f59e0b; }
+  .sum-box.pend .num { color: #7a8fa6; }
+  .sum-box.blk .num { color: #f87171; }
+
+  .progress-bar { height: 5px; background: #1e2a38; border-radius: 3px; margin-bottom: 24px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #5a8ba7, #4ade80); border-radius: 3px; transition: width 0.5s; }
+
+  .legend { display: flex; gap: 10px; margin-bottom: 22px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #7a8fa6; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
 
   .category { margin-bottom: 28px; }
-  .cat-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-  .cat-icon { font-size: 18px; }
-  .cat-title { font-size: 14px; font-weight: 700; color: #fff; }
+  .cat-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .cat-icon { font-size: 17px; }
+  .cat-title { font-size: 14px; font-weight: 700; }
   .cat-count { font-size: 11px; color: #5a7a96; background: #1e2a38; padding: 2px 8px; border-radius: 10px; }
 
   .todo-item {
-    display: flex; align-items: flex-start; gap: 12px;
+    display: flex; align-items: center; gap: 14px;
     background: #131c27; border: 1px solid #1e2a38;
-    border-radius: 10px; padding: 14px 16px;
-    margin-bottom: 8px; transition: background 0.15s;
-    cursor: pointer;
+    border-radius: 10px; padding: 13px 16px;
+    margin-bottom: 8px; transition: all 0.2s;
   }
-  .todo-item:hover { background: #1a2535; }
-  .todo-item.completed { opacity: 0.5; }
+  .todo-item.completed { opacity: 0.55; }
   .todo-item.completed .todo-text { text-decoration: line-through; color: #5a7a96; }
+  .todo-item.blocked { border-left: 3px solid #f87171; }
+  .todo-item.in_progress { border-left: 3px solid #f59e0b; }
+  .todo-item.completed { border-left: 3px solid #4ade80; }
 
-  .status-dot {
-    width: 14px; height: 14px; border-radius: 50%;
-    flex-shrink: 0; margin-top: 2px;
-    border: 2px solid;
-  }
-  .status-dot.completed { background: #4ade80; border-color: #4ade80; }
-  .status-dot.in_progress { background: #60a5fa; border-color: #60a5fa; animation: pulse 2s infinite; }
-  .status-dot.pending { background: transparent; border-color: #f59e0b; }
-  .status-dot.blocked { background: #f87171; border-color: #f87171; }
-
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
-  .todo-body { flex: 1; }
+  .todo-body { flex: 1; min-width: 0; }
   .todo-text { font-size: 13px; color: #e8e8e8; line-height: 1.5; margin-bottom: 5px; }
-  .todo-meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .todo-meta { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
 
-  .badge { font-size: 10px; padding: 2px 8px; border-radius: 8px; font-weight: 600; }
+  .badge { font-size: 10px; padding: 2px 7px; border-radius: 7px; font-weight: 600; }
   .badge.high { background: #3a1a1a; color: #f87171; }
   .badge.medium { background: #3a2a1a; color: #f59e0b; }
   .badge.low { background: #1e2a38; color: #7a8fa6; }
   .badge.owner { background: #1a2a3a; color: #60a5fa; font-weight: 400; }
-  .badge.status-completed { background: #1a3a2a; color: #4ade80; }
-  .badge.status-in_progress { background: #1a2a3a; color: #60a5fa; }
-  .badge.status-pending { background: #2a2a1a; color: #f59e0b; }
-  .badge.status-blocked { background: #3a1a1a; color: #f87171; }
 
-  .footer { text-align: center; color: #3a5a76; font-size: 11px; padding-top: 20px; border-top: 1px solid #1e2a38; margin-top: 10px; }
+  /* Status buttons */
+  .status-btns { display: flex; gap: 6px; flex-shrink: 0; }
+  .sbtn {
+    width: 26px; height: 26px; border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700;
+    outline: none;
+  }
+  .sbtn:hover { transform: scale(1.15); }
+  .sbtn.green { background: #1a3a2a; border-color: #2d5a3d; color: #4ade80; }
+  .sbtn.green.active { background: #4ade80; border-color: #4ade80; color: #0a1a0a; }
+  .sbtn.yellow { background: #2a2a1a; border-color: #5a4a1a; color: #f59e0b; }
+  .sbtn.yellow.active { background: #f59e0b; border-color: #f59e0b; color: #1a1000; }
+  .sbtn.red { background: #3a1a1a; border-color: #5a2a2a; color: #f87171; }
+  .sbtn.red.active { background: #f87171; border-color: #f87171; color: #1a0000; }
+  .sbtn.gray { background: #1e2a38; border-color: #2a3a4a; color: #7a8fa6; }
+  .sbtn.gray.active { background: #7a8fa6; border-color: #7a8fa6; color: #0a1a2a; }
+
+  .sync-bar {
+    display: none; align-items: center; justify-content: space-between;
+    background: #1a2a3a; border: 1px solid #1e3a50;
+    border-radius: 10px; padding: 12px 16px; margin-bottom: 20px;
+    font-size: 12px; color: #60a5fa; gap: 12px; flex-wrap: wrap;
+  }
+  .sync-bar.visible { display: flex; }
+  .sync-btn {
+    background: #5a8ba7; color: #fff; border: none; border-radius: 6px;
+    padding: 6px 14px; font-size: 11px; font-weight: 700; cursor: pointer;
+  }
+  .sync-btn:hover { background: #4a7a96; }
+  .reset-btn {
+    background: #1e2a38; color: #7a8fa6; border: 1px solid #2a3a4a;
+    border-radius: 6px; padding: 6px 14px; font-size: 11px; cursor: pointer;
+  }
+
+  .footer { text-align: center; color: #3a5a76; font-size: 11px; padding-top: 18px; border-top: 1px solid #1e2a38; margin-top: 10px; }
   .footer strong { color: #5a8ba7; }
-
-  .progress-bar { height: 4px; background: #1e2a38; border-radius: 2px; margin-bottom: 28px; overflow: hidden; }
-  .progress-fill { height: 100%; background: linear-gradient(90deg, #5a8ba7, #4ade80); border-radius: 2px; transition: width 0.5s; }
-
-  .legend { display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
-  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #7a8fa6; }
-  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
 </style>
 </head>
 <body>
@@ -81,66 +103,151 @@
 <div class="header">
   <div>
     <h1>📋 MC Daily To-Do</h1>
-    <p>Unbridled Ecosystem — Live task tracker</p>
+    <p>Unbridled Ecosystem — tap the buttons to update status</p>
   </div>
   <div class="updated" id="updated">Loading...</div>
 </div>
 
-<div class="summary" id="summary"></div>
+<!-- Sync bar — appears when there are unsaved changes -->
+<div class="sync-bar" id="syncBar">
+  <span>📝 You have unsaved status changes — tell MC "sync my to-do changes" to update the master list.</span>
+  <div style="display:flex;gap:8px">
+    <button class="reset-btn" onclick="resetChanges()">Undo all</button>
+    <button class="sync-btn" onclick="copyChanges()">Copy changes for MC</button>
+  </div>
+</div>
 
+<div class="summary" id="summary"></div>
 <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
 
 <div class="legend">
-  <div class="legend-item"><div class="legend-dot" style="background:#4ade80"></div> Completed</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#60a5fa"></div> In Progress</div>
-  <div class="legend-item"><div class="legend-dot" style="background:transparent;border:2px solid #f59e0b"></div> Pending</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#4ade80"></div> Done</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div> In Progress</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#7a8fa6;border:1px solid #5a6a7a"></div> Pending</div>
   <div class="legend-item"><div class="legend-dot" style="background:#f87171"></div> Blocked</div>
 </div>
 
 <div id="categories"></div>
 
 <div class="footer">
-  Maintained by <strong>MC — Unbridled Solutions</strong> · Updated daily at 6am MT · Last updated: <span id="footer-updated">—</span>
+  Maintained by <strong>MC — Unbridled Solutions</strong> · Updated daily 6am MT · <span id="footer-updated">—</span>
 </div>
 
 <script>
-async function loadTodos() {
-  const res = await fetch('todos.json?v=' + Date.now());
-  const data = await res.json();
+let masterData = null;
+let localOverrides = JSON.parse(localStorage.getItem('todo_overrides') || '{}');
+let hasChanges = Object.keys(localOverrides).length > 0;
 
-  document.getElementById('updated').innerHTML = `Last updated<br>${data.updated}`;
-  document.getElementById('footer-updated').textContent = data.updated;
+const statusMap = {
+  completed: { btn: 'green', label: '✓' },
+  in_progress: { btn: 'yellow', label: '●' },
+  pending: { btn: 'gray', label: '○' },
+  blocked: { btn: 'red', label: '✕' }
+};
+
+function getStatus(id) {
+  return localOverrides[id] || (masterData ? getOriginalStatus(id) : 'pending');
+}
+
+function getOriginalStatus(id) {
+  for (const cat of masterData.categories) {
+    for (const item of cat.items) {
+      if (item.id === id) return item.status;
+    }
+  }
+  return 'pending';
+}
+
+function setStatus(id, status) {
+  const original = getOriginalStatus(id);
+  if (status === original) {
+    delete localOverrides[id];
+  } else {
+    localOverrides[id] = status;
+  }
+  localStorage.setItem('todo_overrides', JSON.stringify(localOverrides));
+  hasChanges = Object.keys(localOverrides).length > 0;
+  document.getElementById('syncBar').className = 'sync-bar' + (hasChanges ? ' visible' : '');
+  render();
+}
+
+function resetChanges() {
+  localOverrides = {};
+  localStorage.removeItem('todo_overrides');
+  hasChanges = false;
+  document.getElementById('syncBar').className = 'sync-bar';
+  render();
+}
+
+function copyChanges() {
+  const lines = ['My to-do status changes to sync:'];
+  for (const [id, status] of Object.entries(localOverrides)) {
+    // Find item text
+    for (const cat of masterData.categories) {
+      for (const item of cat.items) {
+        if (item.id == id) {
+          lines.push(`- #${id} "${item.text}" → ${status}`);
+        }
+      }
+    }
+  }
+  navigator.clipboard.writeText(lines.join('\n')).then(() => {
+    alert('Copied! Paste this to MC in Telegram.');
+  });
+}
+
+function render() {
+  if (!masterData) return;
 
   // Count stats
   let total = 0, done = 0, active = 0, blocked = 0, pending = 0;
-  data.categories.forEach(cat => {
+  masterData.categories.forEach(cat => {
     cat.items.forEach(item => {
       total++;
-      if (item.status === 'completed') done++;
-      else if (item.status === 'in_progress') active++;
-      else if (item.status === 'blocked') blocked++;
+      const s = getStatus(item.id);
+      if (s === 'completed') done++;
+      else if (s === 'in_progress') active++;
+      else if (s === 'blocked') blocked++;
       else pending++;
     });
   });
 
-  // Summary
   document.getElementById('summary').innerHTML = `
     <div class="sum-box done"><div class="num">${done}</div><div class="lbl">Done</div></div>
     <div class="sum-box active"><div class="num">${active}</div><div class="lbl">In Progress</div></div>
-    <div class="sum-box pending"><div class="num">${pending}</div><div class="lbl">Pending</div></div>
-    <div class="sum-box blocked"><div class="num">${blocked}</div><div class="lbl">Blocked</div></div>
+    <div class="sum-box pend"><div class="num">${pending}</div><div class="lbl">Pending</div></div>
+    <div class="sum-box blk"><div class="num">${blocked}</div><div class="lbl">Blocked</div></div>
   `;
-
-  // Progress bar
   document.getElementById('progress').style.width = Math.round((done / total) * 100) + '%';
 
-  // Categories
   const container = document.getElementById('categories');
-  data.categories.forEach(cat => {
+  container.innerHTML = '';
+
+  masterData.categories.forEach(cat => {
+    const catDone = cat.items.filter(i => getStatus(i.id) === 'completed').length;
     const catEl = document.createElement('div');
     catEl.className = 'category';
 
-    const catDone = cat.items.filter(i => i.status === 'completed').length;
+    const items = cat.items.map(item => {
+      const s = getStatus(item.id);
+      return `
+        <div class="todo-item ${s}" id="item-${item.id}">
+          <div class="status-btns">
+            <button class="sbtn green ${s === 'completed' ? 'active' : ''}" onclick="setStatus(${item.id},'completed')" title="Done">✓</button>
+            <button class="sbtn yellow ${s === 'in_progress' ? 'active' : ''}" onclick="setStatus(${item.id},'in_progress')" title="In Progress">●</button>
+            <button class="sbtn gray ${s === 'pending' ? 'active' : ''}" onclick="setStatus(${item.id},'pending')" title="Pending">○</button>
+            <button class="sbtn red ${s === 'blocked' ? 'active' : ''}" onclick="setStatus(${item.id},'blocked')" title="Blocked">✕</button>
+          </div>
+          <div class="todo-body">
+            <div class="todo-text">${item.text}</div>
+            <div class="todo-meta">
+              <span class="badge ${item.priority}">${item.priority}</span>
+              <span class="badge owner">→ ${item.owner}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
 
     catEl.innerHTML = `
       <div class="cat-header">
@@ -148,22 +255,19 @@ async function loadTodos() {
         <span class="cat-title" style="color:${cat.color}">${cat.name}</span>
         <span class="cat-count">${catDone}/${cat.items.length} done</span>
       </div>
-      ${cat.items.map(item => `
-        <div class="todo-item ${item.status === 'completed' ? 'completed' : ''}">
-          <div class="status-dot ${item.status}"></div>
-          <div class="todo-body">
-            <div class="todo-text">${item.text}</div>
-            <div class="todo-meta">
-              <span class="badge ${item.priority}">${item.priority} priority</span>
-              <span class="badge status-${item.status}">${item.status.replace('_', ' ')}</span>
-              <span class="badge owner">→ ${item.owner}</span>
-            </div>
-          </div>
-        </div>
-      `).join('')}
+      ${items}
     `;
     container.appendChild(catEl);
   });
+}
+
+async function loadTodos() {
+  const res = await fetch('todos.json?v=' + Date.now());
+  masterData = await res.json();
+  document.getElementById('updated').innerHTML = `Last updated<br>${masterData.updated}`;
+  document.getElementById('footer-updated').textContent = masterData.updated;
+  document.getElementById('syncBar').className = 'sync-bar' + (hasChanges ? ' visible' : '');
+  render();
 }
 
 loadTodos();
