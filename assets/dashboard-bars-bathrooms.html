@@ -3,141 +3,123 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bars and Bathrooms - Daily Dashboard | Hotel St. Cloud</title>
+<title>Bars &amp; Bathrooms &mdash; Daily Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-:root{--bg:#0f1923;--navy:#1a2e3b;--gold:#c9aa7c;--blue:#5a8ba7;--text:#e8dcc8;--muted:#7a8f9e;--green:#4caf87;--red:#e05c5c;--card:#162130;--border:#243547}
+:root{--bg:#0f1923;--navy:#1a2e3b;--gold:#c9aa7c;--blue:#5a8ba7;--text:#e8e0d4;--muted:#8a9aaa;--green:#4caf7d;--red:#e05a5a;--card-bg:#162433;--border:#263d52}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;padding:0 0 40px}
-.hdr{background:linear-gradient(135deg,var(--navy),#0f2030);border-bottom:2px solid var(--gold);padding:24px 20px 20px;text-align:center}
-.hdr-eye{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
-.hdr h1{font-size:clamp(22px,5vw,34px);font-weight:700;color:#fff}
-.hdr h1 span{color:var(--gold)}
-.hdr-date{font-size:13px;color:var(--muted);margin-top:6px}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;padding-bottom:40px}
+.header{background:linear-gradient(135deg,var(--navy) 0%,#0f1923 100%);border-bottom:2px solid var(--gold);padding:24px 20px 20px;text-align:center}
+.eyebrow{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+.header h1{font-size:clamp(22px,5vw,34px);font-weight:700;color:#fff}
+.header h1 span{color:var(--gold)}
+.hdate{margin-top:8px;font-size:13px;color:var(--muted)}
+.live{display:inline-block;margin-top:10px;background:var(--green);color:#fff;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:3px 10px;border-radius:20px}
 .wrap{max-width:1100px;margin:0 auto;padding:0 16px}
-.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:24px 0 20px}
-@media(min-width:600px){.stat-grid{grid-template-columns:repeat(4,1fr)}}
-.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 16px;text-align:center;position:relative;overflow:hidden}
-.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
-.card.imp::before{background:var(--blue)}.card.clk::before{background:var(--gold)}.card.ctr::before{background:var(--green)}.card.spd::before{background:var(--red)}
-.clabel{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
-.cval{font-size:clamp(26px,6vw,38px);font-weight:800;line-height:1}
-.card.imp .cval{color:var(--blue)}.card.clk .cval{color:var(--gold)}.card.ctr .cval{color:var(--green)}.card.spd .cval{color:var(--red)}
-.csub{font-size:11px;color:var(--muted);margin-top:4px}
-.sec{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px}
-.stitle{font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:16px;display:flex;align-items:center;gap:8px}
-.stitle::after{content:'';flex:1;height:1px;background:var(--border)}
-.cw{position:relative;height:220px}
-.cgrid{display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:16px}
-@media(min-width:720px){.cgrid{grid-template-columns:3fr 2fr}}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th{text-align:left;padding:8px 10px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border)}
-td{padding:11px 10px;border-bottom:1px solid rgba(36,53,71,.5);color:var(--text)}
-tr:last-child td{border-bottom:none}
-tr:hover td{background:rgba(90,139,167,.06)}
-td.num{text-align:right;font-variant-numeric:tabular-nums}
-td.nm{font-weight:600;color:#fff}
-.z{color:var(--muted)!important}
-.brow{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.blabs{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px}
-.bwrap{flex:1;min-width:200px}
-.btrack{background:var(--border);border-radius:99px;height:10px;overflow:hidden}
-.bfill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--green),var(--gold))}
-.bfill.over{background:linear-gradient(90deg,var(--gold),var(--red))}
-.bstat{white-space:nowrap;font-size:13px}
-.bstat strong{color:var(--green);font-size:16px}
-.bstat strong.red{color:var(--red)}
-.notice{background:rgba(90,139,167,.1);border:1px solid rgba(90,139,167,.3);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted);margin-bottom:16px;display:flex;gap:8px;align-items:flex-start}
-.mct{background:linear-gradient(135deg,#162130,#1a2e3b);border:1px solid var(--gold);border-radius:12px;padding:20px;margin-bottom:16px}
-.mct-hdr{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-.mct-badge{background:var(--gold);color:#0f1923;font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:3px 10px;border-radius:99px}
-.mct-ttl{font-size:14px;font-weight:700;color:var(--gold)}
-.mct ul{list-style:none;padding:0}
-.mct ul li{padding:8px 0;border-bottom:1px solid rgba(36,53,71,.6);font-size:14px;line-height:1.5;display:flex;gap:10px}
-.mct ul li:last-child{border-bottom:none}
-.reco{margin-top:14px;background:rgba(201,170,124,.08);border-left:3px solid var(--gold);border-radius:0 8px 8px 0;padding:10px 14px;font-size:13px;line-height:1.5}
-.foot{text-align:center;padding:20px 16px 0;font-size:11px;color:var(--muted);letter-spacing:.5px}
-.foot strong{color:var(--gold)}
+.sec{margin-top:28px}
+.sec-title{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:14px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.sg{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media(min-width:600px){.sg{grid-template-columns:repeat(4,1fr)}}
+.card{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:18px 16px;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--gold)}
+.card.b::before{background:var(--blue)}.card.g::before{background:var(--green)}
+.slabel{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.sval{font-size:clamp(26px,5vw,36px);font-weight:700;color:#fff;line-height:1}
+.sval.au{color:var(--gold)}.sval.bu{color:var(--blue)}.sval.gu{color:var(--green)}
+.ssub{margin-top:6px;font-size:12px;color:var(--muted)}
+.bwrap{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-top:12px}
+.brow{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px}
+.blabel{font-size:13px;color:var(--muted)}.bamt{font-size:14px;font-weight:600}
+.bamt .sp{color:var(--gold)}.bamt .rm{color:var(--green)}
+.btrack{height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+.bfill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--gold),var(--blue))}
+.cg{display:grid;grid-template-columns:1fr;gap:20px}
+@media(min-width:700px){.cg{grid-template-columns:3fr 2fr}}
+.cc{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:20px}
+.cc h3{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:16px}
+table.dt{width:100%;border-collapse:collapse;font-size:14px}
+table.dt th{text-align:left;padding:10px 12px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);border-bottom:1px solid var(--border)}
+table.dt td{padding:12px;border-bottom:1px solid var(--border);color:var(--text)}
+table.dt tr:last-child td{border-bottom:none}
+table.dt tr:hover td{background:rgba(90,139,167,.08)}
+.tz{color:var(--muted);font-style:italic;font-size:12px}
+.mc-card{background:linear-gradient(135deg,#162433 0%,#1a2e3b 100%);border:1px solid var(--gold);border-radius:12px;padding:24px 22px}
+.mc-hd{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.mc-av{width:36px;height:36px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:var(--navy);flex-shrink:0}
+.mc-hd h3{font-size:14px;font-weight:700;color:var(--gold)}.mc-hd span{font-size:11px;color:var(--muted);display:block}
+.obs{display:flex;gap:12px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.obs:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.oi{font-size:18px;flex-shrink:0;margin-top:1px}
+.ot{font-size:14px;line-height:1.6;color:var(--text)}.ot strong{color:var(--gold)}.ot .rec{color:var(--blue);font-weight:600}
+.note{background:rgba(90,139,167,.12);border:1px solid var(--blue);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--blue);margin-top:12px}
+footer{margin-top:40px;text-align:center;font-size:11px;color:var(--muted);letter-spacing:1px;padding:0 16px}
+footer span{color:var(--gold)}
 </style>
 </head>
 <body>
-
-<div class="hdr">
-  <div class="hdr-eye">Hotel St. Cloud &middot; Google Ads</div>
+<div class="header">
+  <div class="eyebrow">Hotel St. Cloud &middot; Google Ads</div>
   <h1>Bars &amp; <span>Bathrooms</span> &mdash; Daily Dashboard</h1>
-  <div class="hdr-date" id="hdrDate"></div>
+  <div class="hdate" id="hdate"></div>
+  <div class="live">&#9679; Live</div>
 </div>
 <div class="wrap">
-  <div class="notice" id="notice" style="display:none">Today is showing zero activity so far &mdash; it is early. Stat cards reflect yesterday.</div>
-  <div class="stat-grid">
-    <div class="card imp"><div class="clabel">Impressions</div><div class="cval" id="sImp">-</div><div class="csub" id="sImpL"></div></div>
-    <div class="card clk"><div class="clabel">Clicks</div><div class="cval" id="sClk">-</div><div class="csub" id="sClkL"></div></div>
-    <div class="card ctr"><div class="clabel">CTR</div><div class="cval" id="sCtr">-</div><div class="csub" id="sCtrL"></div></div>
-    <div class="card spd"><div class="clabel">Spend</div><div class="cval" id="sSpd">-</div><div class="csub" id="sSpdL"></div></div>
+  <div class="sec">
+    <div class="sec-title">Latest Day at a Glance &mdash; May 10, 2026</div>
+    <div class="sg">
+      <div class="card"><div class="slabel">Impressions</div><div class="sval au">337</div><div class="ssub">&#9650; 10% vs May 9</div></div>
+      <div class="card b"><div class="slabel">Clicks</div><div class="sval bu">25</div><div class="ssub">&#9660; 11% vs May 9</div></div>
+      <div class="card g"><div class="slabel">CTR</div><div class="sval gu">7.42%</div><div class="ssub">Click-through rate</div></div>
+      <div class="card"><div class="slabel">Spend</div><div class="sval au">$40.56</div><div class="ssub">Avg CPC: $1.62</div></div>
+    </div>
+    <div class="bwrap">
+      <div class="brow">
+        <div class="blabel">Daily Budget &middot; <strong>$35.00</strong></div>
+        <div class="bamt"><span class="sp">$40.56 spent</span> &nbsp;&middot;&nbsp; <span class="rm">$0.00 remaining</span></div>
+      </div>
+      <div class="btrack"><div class="bfill" style="width:100%"></div></div>
+    </div>
+    <div class="note">&#8505; Today is May 11. Showing last complete day (May 10). Same-day data has a 2-3 hr API lag.</div>
   </div>
-  <div class="sec"><div class="stitle">Daily Budget &mdash; $35.00</div>
-    <div class="brow">
-      <div class="bwrap"><div class="blabs"><span>$0</span><span>$35 cap</span></div><div class="btrack"><div class="bfill" id="bfill" style="width:0%"></div></div></div>
-      <div class="bstat">Remaining: <strong id="brem">-</strong></div>
+  <div class="sec">
+    <div class="sec-title">3-Day Trend &mdash; Campaign Launch to Present</div>
+    <div class="cg">
+      <div class="cc"><h3>Impressions &amp; Clicks</h3><canvas id="tc" height="220"></canvas></div>
+      <div class="cc"><h3>Daily Spend ($)</h3><canvas id="sc" height="220"></canvas></div>
+    </div>
+    <div class="note">&#128197; Campaign launched May 8. Charts fill in as history builds toward 14 days.</div>
+  </div>
+  <div class="sec">
+    <div class="sec-title">Ad Group Breakdown &mdash; Today (May 11, Accumulating)</div>
+    <div class="cc" style="padding:0 0 4px">
+      <table class="dt">
+        <thead><tr><th>Ad Group</th><th>Impressions</th><th>Clicks</th><th>CTR</th><th>Spend</th></tr></thead>
+        <tbody>
+          <tr><td>Hwy 50 Road Trippers</td><td><span class="tz">accumulating&hellip;</span></td><td><span class="tz">&mdash;</span></td><td><span class="tz">&mdash;</span></td><td><span class="tz">$0.00</span></td></tr>
+        </tbody>
+      </table>
+      <div style="padding:10px 12px 14px;font-size:12px;color:var(--muted)">&#128225; Same-day ad group stats lag ~3 hrs. Check back this afternoon.</div>
     </div>
   </div>
-  <div class="cgrid">
-    <div class="sec"><div class="stitle">14-Day &mdash; Impressions &amp; Clicks</div><div class="cw"><canvas id="tC"></canvas></div></div>
-    <div class="sec"><div class="stitle">14-Day Spend</div><div class="cw"><canvas id="sC"></canvas></div></div>
-  </div>
-  <div class="sec"><div class="stitle">Ad Groups &mdash; Today</div>
-    <table><thead><tr><th>Ad Group</th><th style="text-align:right">Impr.</th><th style="text-align:right">Clicks</th><th style="text-align:right">CTR</th><th style="text-align:right">Spend</th></tr></thead>
-    <tbody id="agT"></tbody></table>
-  </div>
-  <div class="mct">
-    <div class="mct-hdr"><span class="mct-badge">MC's Take</span><span class="mct-ttl">What the numbers are telling us</span></div>
-    <ul id="obsL"></ul>
-    <div class="reco" id="recoD"></div>
+  <div class="sec">
+    <div class="sec-title">MC&#39;s Take</div>
+    <div class="mc-card">
+      <div class="mc-hd"><div class="mc-av">MC</div><div><h3>MC&#39;s Take</h3><span>Chief of Staff &middot; Hotel St. Cloud</span></div></div>
+      <div class="obs"><div class="oi">&#128293;</div><div class="ot"><strong>CTR is legitimately strong.</strong> 7.4% three-day average. That&#39;s nearly 3x the 2-4% hotel search benchmark. Hwy 50 Road Trippers is finding the right people. The copy is working. Leave it alone.</div></div>
+      <div class="obs"><div class="oi">&#9888;&#65039;</div><div class="ot"><strong>Budget is running over every single day.</strong> $37, $36, $40 against a $35 cap. Google can legally overspend 2x daily. You&#39;re paying $38/day, not $35. Raise the cap to $40-42 to capture more traffic, or accept this as your real run rate.</div></div>
+      <div class="obs"><div class="oi">&#128161;</div><div class="ot"><span class="rec">Recommendation:</span> <strong>Don&#39;t touch it yet.</strong> Three days is not enough data. Let it run through the week. Pull the search terms report Friday &mdash; kill obvious waste before the weekend push. That&#39;s the only move right now.</div></div>
+    </div>
   </div>
 </div>
-<div class="foot"><strong>Bars &amp; Bathrooms</strong> &middot; Hotel St. Cloud &middot; Powered by MC &middot; <span id="ts"></span></div>
+<footer><p>Bars &amp; Bathrooms &nbsp;&middot;&nbsp; Hotel St. Cloud &nbsp;&middot;&nbsp; <span>Powered by MC</span> &nbsp;&middot;&nbsp; <span id="fts"></span></p></footer>
 <script>
-
-var D={"history": [{"date": "2026-05-08", "impressions": 387, "clicks": 22, "ctr": 5.68, "avg_cpc": 1.69, "spend": 37.09}, {"date": "2026-05-09", "impressions": 305, "clicks": 28, "ctr": 9.18, "avg_cpc": 1.29, "spend": 36.02}], "ad_groups": [{"name": "Hwy 50 Road Trippers", "impressions": 0, "clicks": 0, "ctr": 0.0, "spend": 0.0}]};
-var MC={"observations": ["CTR jumped from 5.68% to 9.18% - a 3.5pp gain. Something in the creative is resonating.", "Avg CPC at $1.29 - under $1.50 is solid for hotel ads. Not overpaying for attention.", "Only 2 day(s) of data. Campaign is young - do not read too much into single-day swings yet."], "recommendation": "CTR above 7% is strong. Consider bumping daily budget to $45-50 to capture more volume at this efficiency."};
-var h=D.history||[],ag=D.ad_groups||[];
-var now=new Date();
-document.getElementById('hdrDate').textContent=now.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-document.getElementById('ts').textContent=now.toLocaleString('en-US',{timeZone:'America/Los_Angeles'})+' PT';
-var last=h.length>0?h[h.length-1]:null;
-var prev=h.length>1?h[h.length-2]:null;
-var empty=!last||(last.impressions===0&&last.clicks===0&&last.spend===0);
-var row=empty&&prev?prev:last;
-if(empty)document.getElementById('notice').style.display='flex';
-if(row){
-  document.getElementById('sImp').textContent=row.impressions.toLocaleString();
-  document.getElementById('sClk').textContent=row.clicks.toLocaleString();
-  document.getElementById('sCtr').textContent=row.ctr.toFixed(2)+'%';
-  document.getElementById('sSpd').textContent='$'+row.spend.toFixed(2);
-  var l=empty?'Yesterday':'Today';
-  ['sImpL','sClkL','sCtrL','sSpdL'].forEach(function(id){document.getElementById(id).textContent=l;});
-}
-var BUDGET=35;
-var todaySpend=(last&&!empty)?last.spend:0;
-var rem=Math.max(0,BUDGET-todaySpend);
-var pct=Math.min(100,(todaySpend/BUDGET)*100);
-var bf=document.getElementById('bfill');bf.style.width=pct+'%';
-if(pct>=100)bf.classList.add('over');
-var br=document.getElementById('brem');br.textContent='$'+rem.toFixed(2);
-if(rem<5)br.classList.add('red');
-var CO={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7a8f9e',font:{size:11},boxWidth:12}},tooltip:{backgroundColor:'#162130',borderColor:'#243547',borderWidth:1,titleColor:'#e8dcc8',bodyColor:'#c9aa7c'}},scales:{x:{ticks:{color:'#7a8f9e',font:{size:10},maxRotation:45},grid:{color:'rgba(36,53,71,0.5)'}},y:{ticks:{color:'#7a8f9e',font:{size:10}},grid:{color:'rgba(36,53,71,0.5)'}}}};
-var labs=h.map(function(r){var p=r.date.split('-');return p[1]+'/'+p[2];});
-new Chart(document.getElementById('tC'),{type:'line',data:{labels:labs,datasets:[{label:'Impressions',data:h.map(function(r){return r.impressions;}),borderColor:'#5a8ba7',backgroundColor:'rgba(90,139,167,0.1)',tension:0.4,pointRadius:4,pointBackgroundColor:'#5a8ba7',fill:true},{label:'Clicks',data:h.map(function(r){return r.clicks;}),borderColor:'#c9aa7c',backgroundColor:'rgba(201,170,124,0.08)',tension:0.4,pointRadius:4,pointBackgroundColor:'#c9aa7c',fill:true}]},options:CO});
-var CO2=JSON.parse(JSON.stringify(CO));CO2.plugins.legend={display:false};
-new Chart(document.getElementById('sC'),{type:'bar',data:{labels:labs,datasets:[{label:'Spend ($)',data:h.map(function(r){return r.spend;}),backgroundColor:h.map(function(r,i){return i===h.length-1?'rgba(201,170,124,0.9)':'rgba(90,139,167,0.6)';}),borderColor:h.map(function(r,i){return i===h.length-1?'#c9aa7c':'#5a8ba7';}),borderWidth:1,borderRadius:4}]},options:CO2});
-var tb=document.getElementById('agT');
-if(ag.length===0){tb.innerHTML='<tr><td colspan=5 style="text-align:center;color:var(--muted);padding:20px">No ad group data yet today</td></tr>';}
-else{ag.forEach(function(a){var z=function(v){return v===0?' class="z"':''};tb.innerHTML+='<tr><td class="nm">'+a.name+'</td><td class="num"'+z(a.impressions)+'>'+a.impressions.toLocaleString()+'</td><td class="num"'+z(a.clicks)+'>'+a.clicks+'</td><td class="num"'+z(a.ctr)+'>'+a.ctr.toFixed(2)+'%</td><td class="num"'+z(a.spend)+'>$'+a.spend.toFixed(2)+'</td></tr>';});}
-var ol=document.getElementById('obsL');
-var icons=['&#x1F4C8;','&#x1F4B0;','&#x1F5D3;&#xFE0F;'];
-MC.observations.forEach(function(o,i){ol.innerHTML+='<li><span style="font-size:16px;flex-shrink:0">'+icons[i]+'</span><span>'+o+'</span></li>';});
-document.getElementById('recoD').innerHTML='&#x1F3AF; <strong>Recommendation:</strong> '+MC.recommendation;
-
+var n=new Date();
+document.getElementById('hdate').textContent=n.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+document.getElementById('fts').textContent=n.toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'});
+var h=[{d:'May 8',i:387,c:22,s:37.09},{d:'May 9',i:305,c:28,s:36.02},{d:'May 10',i:337,c:25,s:40.56}];
+var cb={responsive:true,maintainAspectRatio:true,plugins:{legend:{labels:{color:'#8a9aaa',font:{size:11},boxWidth:12}},tooltip:{backgroundColor:'#162433',borderColor:'#263d52',borderWidth:1,titleColor:'#c9aa7c',bodyColor:'#e8e0d4'}},scales:{x:{ticks:{color:'#8a9aaa',font:{size:11}},grid:{color:'rgba(38,61,82,0.5)'}},y:{ticks:{color:'#8a9aaa',font:{size:11}},grid:{color:'rgba(38,61,82,0.5)'} } } };
+new Chart(document.getElementById('tc'),{type:'line',data:{labels:h.map(function(r){return r.d}),datasets:[{label:'Impressions',data:h.map(function(r){return r.i}),borderColor:'#c9aa7c',backgroundColor:'rgba(201,170,124,0.1)',fill:true,tension:0.3,pointBackgroundColor:'#c9aa7c',pointRadius:5,borderWidth:2},{label:'Clicks',data:h.map(function(r){return r.c}),borderColor:'#5a8ba7',backgroundColor:'rgba(90,139,167,0.1)',fill:true,tension:0.3,pointBackgroundColor:'#5a8ba7',pointRadius:5,borderWidth:2}]},options:cb});
+new Chart(document.getElementById('sc'),{type:'bar',data:{labels:h.map(function(r){return r.d}),datasets:[{label:'Spend ($)',data:h.map(function(r){return r.s}),backgroundColor:h.map(function(r){return r.s>35?'rgba(224,90,90,0.7)':'rgba(201,170,124,0.7)'}),borderColor:h.map(function(r){return r.s>35?'#e05a5a':'#c9aa7c'}),borderWidth:1.5,borderRadius:4}]},options:Object.assign({},cb,{scales:Object.assign({},cb.scales,{y:Object.assign({},cb.scales.y,{suggestedMax:50})})})  });
 </script>
 </body>
 </html>
