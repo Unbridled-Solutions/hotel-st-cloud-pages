@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Table Service Training Quiz</title>
+<style>
+:root{--bg:#0f1923;--navy:#1a2e3b;--gold:#c9aa7c;--blue:#5a8ba7;--text:#e8e0d4;--muted:#8a9aaa;--green:#4caf7d;--red:#e05a5a;--card-bg:#162433;--border:#263d52}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;padding-bottom:60px}
+
+.header{background:linear-gradient(135deg,var(--navy) 0%,#0f1923 100%);border-bottom:2px solid var(--gold);padding:28px 20px 22px;text-align:center}
+.eyebrow{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+.header h1{font-size:clamp(22px,5vw,32px);font-weight:700;color:#fff}
+.header h1 span{color:var(--gold)}
+.hdate{margin-top:8px;font-size:13px;color:var(--muted)}
+.badge{display:inline-block;margin-top:12px;background:#1a2e3b;color:var(--gold);border:1px solid var(--gold);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:3px 14px;border-radius:20px}
+
+.wrap{max-width:820px;margin:0 auto;padding:0 16px}
+
+.progress-bar-wrap{margin:28px 0 8px;background:var(--card-bg);border:1px solid var(--border);border-radius:30px;height:8px;overflow:hidden}
+.progress-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--blue));border-radius:30px;transition:width .4s ease;width:0%}
+.progress-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:24px}
+
+.q-card{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:28px 26px;margin-bottom:12px;display:none;animation:fadein .3s ease}
+.q-card.active{display:block}
+@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.q-num{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+.q-text{font-size:17px;font-weight:600;color:#fff;line-height:1.55;margin-bottom:22px}
+
+.options{display:flex;flex-direction:column;gap:10px}
+.option{background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:13px 16px;cursor:pointer;display:flex;align-items:flex-start;gap:12px;transition:border-color .2s,background .2s;font-size:14px;color:var(--text);line-height:1.5;text-align:left}
+.option:hover:not(.locked){border-color:var(--gold);background:#1a2a3a}
+.option .letter{width:24px;height:24px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--muted);flex-shrink:0;margin-top:1px;transition:background .2s,color .2s}
+.option.correct{border-color:var(--green);background:#0d2a18}
+.option.correct .letter{background:var(--green);color:#0f1923}
+.option.wrong{border-color:var(--red);background:#2a0d0d}
+.option.wrong .letter{background:var(--red);color:#fff}
+.option.reveal-correct{border-color:var(--green);background:#0d2a18;opacity:.75}
+.option.reveal-correct .letter{background:var(--green);color:#0f1923}
+
+.feedback{margin-top:16px;padding:14px 16px;border-radius:10px;font-size:14px;line-height:1.6;display:none}
+.feedback.show{display:block}
+.feedback.correct{background:#0d2a18;border:1px solid var(--green);color:#a8e6c3}
+.feedback.wrong{background:#2a0d0d;border:1px solid var(--red);color:#f4a0a0}
+.feedback strong{display:block;margin-bottom:4px;font-size:13px;text-transform:uppercase;letter-spacing:1px}
+
+.btn-next{margin-top:18px;background:var(--gold);color:var(--navy);border:none;border-radius:10px;padding:12px 28px;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.5px;display:none;transition:opacity .2s}
+.btn-next:hover{opacity:.88}
+.btn-next.show{display:inline-block}
+
+#results{display:none;text-align:center;padding:40px 20px}
+.score-ring{width:140px;height:140px;border-radius:50%;background:conic-gradient(var(--gold) 0deg, var(--border) 0deg);display:flex;align-items:center;justify-content:center;margin:0 auto 24px}
+.score-inner{width:110px;height:110px;border-radius:50%;background:var(--card-bg);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.score-num{font-size:32px;font-weight:800;color:var(--gold)}
+.score-denom{font-size:13px;color:var(--muted)}
+.score-label{font-size:20px;font-weight:700;color:#fff;margin-bottom:8px}
+.score-sub{font-size:14px;color:var(--muted);margin-bottom:28px}
+.grade-badge{display:inline-block;padding:6px 20px;border-radius:20px;font-size:13px;font-weight:800;letter-spacing:1px;margin-bottom:28px}
+.grade-a{background:#0d2a18;color:var(--green);border:1px solid var(--green)}
+.grade-b{background:#1a2e3b;color:var(--blue);border:1px solid var(--blue)}
+.grade-c{background:#3a2a08;color:var(--gold);border:1px solid var(--gold)}
+.grade-d{background:#2a0d0d;color:var(--red);border:1px solid var(--red)}
+
+.review{text-align:left;margin-top:32px}
+.review-title{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:16px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.review-item{background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.review-item.r-correct{border-color:var(--green)}
+.review-item.r-wrong{border-color:var(--red)}
+.review-q{font-size:13px;font-weight:600;color:#fff;margin-bottom:6px;line-height:1.4}
+.review-a{font-size:12px;color:var(--muted);line-height:1.5}
+.review-a .correct-ans{color:var(--green);font-weight:600}
+.review-a .your-ans{color:var(--red)}
+
+.btn-restart{background:var(--gold);color:var(--navy);border:none;border-radius:10px;padding:13px 32px;font-size:15px;font-weight:800;cursor:pointer;margin-top:8px}
+.btn-restart:hover{opacity:.88}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="eyebrow">Hospitality Staff Training</div>
+  <h1>Table Service <span>Certification</span></h1>
+  <div class="hdate">15 Questions · Multiple Choice · Scored</div>
+  <div class="badge">Front of House Essentials</div>
+</div>
+
+<div class="wrap">
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill"></div></div>
+  <div class="progress-meta">
+    <span id="progressText">Question 1 of 15</span>
+    <span id="scoreText">Score: 0</span>
+  </div>
+
+  <!-- Q1 -->
+  <div class="q-card active" data-q="0">
+    <div class="q-num">Question 1 of 15 · Greeting &amp; First Impressions</div>
+    <div class="q-text">A guest walks through the door. What should happen within the first 30 seconds?</div>
+    <div class="options">
+      <div class="option" data-i="0"><span class="letter">A</span>Wait until you finish your current task, then greet them.</div>
+      <div class="option" data-i="1"><span class="letter">B</span>Make eye contact, smile, and acknowledge them immediately — even if you can't seat them right away.</div>
+      <div class="option" data-i="2"><span class="letter">C</span>Greet them only once a table is fully available and reset.</div>
+      <div class="option" data-i="3"><span class="letter">D</span>Direct them to a menu stand and let them browse while you get organized.</div>
+    </div>
+    <div class="feedback"></div>
+    <button class="btn-next">Next Question →</button>
+  </div>
+
+  <!-- Q2 -->
+  <div class="q-card" data-q="1">
+    <div class="q-num">Question 2 of 15 · Seating</div>
+    <div class="q-text">When escorting guests to their table, what is proper etiquette?</div>
+    <div class="options">
+      <div class="option" data-i="0"><span class="letter">A</span>Walk ahead quickly and assume they'll follow.</div>
+      <div class="option" data-i="1"><span class="letter">B</span>Walk at the guests' pace, lead the way, and pull out chairs for guests when appropriate.</div>
+      <div class="option" data-i="2"><span class="letter">C</span>Point to the table from across the room to save time.</div>
+      <div class="option" data-i="3"><span class="letter">D</span>Let guests choose their own seats without guidance.</div>
+    </div>
+    <div class="feedback"></div>
+    <button class="btn-next">Next Question →</button>
+  </div>
+
+  <!-- Q3 -->
+  <div class="q-card" data-q="2">
+    <div class="q-num">Question 3 of 15 · Order Taking</div>
+    <div class="q-text">A large table is ready to order but one guest hasn't decided yet. What do you do?</div>
+    <div class="options">
+      <div class="option" data-i="0"><span class="letter">A</span>Take the orders of those who are ready and skip the undecided guest entirely.</div>
+      <div class="option" data-i="1"><span class="letter">B</span>Stand silently and wait for everyone to be ready, no matter how long it takes.</div>
+      <div class="option" data-i="2"><span class="letter">C</span>Take orders from those who are ready, then circle back to the undecided guest — offer a quick suggestion to help them decide.</div>
+      <div class="option" data-i="3"><span class="letter">D</span>Tell the table you'll come back when everyone is ready.</div>
+    </div>
+    <div class="feedback"></div>
+    <button class="btn-next">Next Question →</button>
+  </div>
+
+  <!-- Q4 -->
+  <div class="q-card" data-q="3">
+    <div class="q-num">Question 4 of 15 · Food Delivery</div>
+    <div class="q-text">You're delivering food to a table. What is the correct approach?</div>
+    <div class="options">
+      <div class="option" data-i="0"><span class="letter">A</span>Set plates down quickly and leave to get the next order.</div>
+      <div class="option" data-i="1"><span class="letter">B</span>Announce each dish, confirm it matches the guest's order, and ask if they need anything before stepping away.</div>
+      <div class="option" data-i="2"><span class="letter">C</span>Ask "Who had the chicken?" for every dish at every table.</div>
+      <div class="option" data-i="3"><span class="letter">D</span>Deliver from the left side only, regardless of obstacles.</div>
+    </div>
+    <div class="feedback"></div>
+    <button class="btn-next">Next Question →</button>
+  </div>
+
+  <!-- Q5 -->
+  <div class="q-card" data-q="4">
+    <div class="q-num">Question 5 of 15 · The Two-Minute Check</div>
+    <div class="q-text">How soon after food is delivered should you check back with the table?</div>
+    <div class="options">
+      <div class="option" data-i="0"><span class="letter">A</span>After they've finished eating.</div>
+      <div class="option" data-i="1"><span class="letter">B</span>Only if they flag you down.</div>
+      <div class="option" data-i="2"><span class="letter">C</span>Within two minutes — enough time for guests to take a bite and identify any issues while there's still time to fix them.</div>
+      <div class="option" data-i="3"><span class="letter">D</span>After 15 minutes so you don't interrupt the meal.</div>
+    </div>
+    <div class="feedback"></div>
+    <button class="btn-next">Next Question →</button>
+  </div>
+
+  <!-- Q6 -->
+  <div class="q-card" data-q="5">
+    <div class="q-num">Question 6 of 15 · Allergen Handling</div>
+    <div class="q-text">A guest mentions a gluten intolerance when ordering. What is the correct response?</div>
+    <div class="options">
+      <div class="option" data-i="0"><span class="letter">A</span>Note it mentally and tell the kitchen when you get a chance.</div>
+      <div class="option" data-i="1"><span class="letter">B</span>Recommend switching to a salad as the safe option.</div>
+      <div class="option" data-i="2"><span class="letter">C</span>Clearly flag the allergy on the written ticket, communicate directly with the kitchen, and confirm the dish is safe before serving.</div>
+      <div class="option" data-i="3"><span class="letter">D</span>Tell the guest the menu doesn't have any gluten-free options.</div>
+    </div>
+    <div class="feedback"></div>
+    <button class="btn-next">Next Question →</button>
+  </div>
+
+  <!-- Q7 -->
+  <div class="q-card" data-q="6">
+    <div class="q-num">Question 7 of 15 · Handling Complaints</div>
+    <div class="q-text">A guest says their food is cold. What do you do first?</div>
+    <div class="options">
+      <div class="option" data-i="0"><span class="letter">A</span>Explain that the kitchen was busy tonight.</div>
+      <div class="option" data-i="1"><span class="letter">B</span>Apologize, take the plate without hesitation, and return it to the kitchen to be corrected immediately.</div>
+      <div class="option" data-i="2"><span class="letter">C</span>Offer a discount before checking with a manager.</div>
+      <div class="option" data-i="3"><span class="letter">D</span>Ask the guest if they'd like to wait while it heats up on its own.</div>
+    </div>
+    <div class="feedback"></div>
+    <button class="btn-next">Next Question →</button>
+  </div>
+
+  <!-- Q8 -->
+  <div class="q-card" data-q="7">
+    <div class="q-num">Question 8 of 15 · Table Maintenance</div>
+    <div class="q-text">Which of the following best describes proper table maintenance throughout a meal?</div>
+    <div class="options">
+      <div class="option" data-i="0"><span class="letter">A</span>Clear everything from the table as quickly as possible to keep it tidy.</div>
+      <div class="option" data-i="1"><span class="letter">B</span>Remove used items only when all guests at the table have finished that course, and crumb the table between courses as needed.</div>
+      <div class="option" data-i="2"><span class="letter">C</span>Only clear the table after the guests have left.</div>
+      <div class="option" data-i="3"><span class="letter">D</span>Ask guests to stack their own dishes to help the process along.</div>
+    </div>
+    <div class="feedback"></div>
+    <button class="btn-next">Next Question →</button>
+  </div>
+
+  <!-- Q9 -->
+  <div class="q-card" data-q="8">
+    <div class="q-num">Question 9 of 15 · Beverage Service</div>
+    <div class="q-text">When should non-alcoholic beverages be refilled?</div>
+    <div class="options">
+      <div class="option" data-i="0"><span class="letter">A</span>Only when the guest asks.</div>
+      <div class="option" data-i="1"><span class="letter">B</span>Once at the start and once at the end of the meal.</div>
+      <div class="option" data-i="2"><span class="letter">C</span>Proactively, before the glass is empty — anticipate the need so the guest never has to ask.</div>
+      <div class="option" data-i="3"><span class="letter">D</span>After each course is cleared.</div>
+    </div>
+    <div class="feedback"></div>
+    <button class="btn-next">Next Question →</button>
+  </div>
+
+  <!-- Q10 -->
+  <div class="q-card" data-q="9">
+    <div class="q-num">Question 10 of 15 · Upselling</div>
+    <div class="q-text">What is the most effective and guest-friendly way to upsell a menu item?</div>
+    <div class="options">
+      <div class="option" data-i="0"><span class="letter">A</span>Mention every add-on and premium option for every dish.</div>
+      <div class="option" data-i="1"><span class="letter">B</span>Make a specific, enthusiastic recommendation based on what the kitchen does best — and briefly explain why it's worth it.</div>
+      <div class="option" data-i="2"><span class="letter">C</span>Always suggest the most expensive item on the menu.</div>
+      <div class="option" data-i="3"><span class="letter">D</span>Avoid upselling — it comes across as pushy.</div>
+    </div>
+    <div class="feedback"></div>
+    <button class="btn-next">Next Question →</button>
+  </div>
+
+  <!-- Q11 -->
+  <div class="q-card" data-q="10">
+    <div class="q-num">Question 11 of 15 · Alcohol Service</div>
+    <div class="q-text">You believe a guest may have had too much to drink. What is the right move?</div>
+    <div class="options">
+      <div class="option" data-i="0"><span class="letter">A</span>Continue serving — it's not your responsibility to judge.</div>
+      <div class="option" data-i="1"><span class="letter">B</span>Loudly announce to the table that you think the guest is cut off.</div>
+      <div class="option" data-i="2"><span class="letter">C</span>Quietly alert a manager or lead staff, offer water and food, and do not serve another alcoholic beverage without management approval.</div>
+      <div class="option" data-i="3"><span class="letter">D</span>Water down their next drink without telling them.</div>
+    </div>
+    <div class="feedback"></div>
+    <button class="btn-next">Next Question →</button>
+  </div>
+
+  <!-- Q12 -->
+  <div class="q-card" data-q="11">
+    <div class="q-num">Question 12 of 15 · Check Presentation</div>
+    <div class="q-text">When is the right time to present the check?</div>
+    <div class="options">
+      <div class="option" data-i="0"><span class="letter">A</span>Right after they order dessert so you can turn the table faster.</div>
+      <div class="option" data-i="1"><span class="letter">B</span>Only when the guest explicitly asks for it.</div>
+      <div class="option" data-i="2"><span class="letter">C</span>After the meal is finished and there's a natural pause — or promptly if the guest signals they're ready to leave.</div>
+      <div class="option" data-i="3"><span class="letter">D</span>Slide it under a plate mid-meal so it's ready when they want it.</div>
+    </div>
+    <div class="feedback"></div>
+    <button class="btn-next">Next Question →</button>
+  </div>
+
+  <!-- Q13 -->
+  <div class="q-card" data-q="12">
+    <div class="q-num">Question 13 of 15 · Teamwork</div>
+    <div class="q-text">You see a table in another server's section that has been waiting a long time and looks frustrated. What do you do?</div>
+    <div class="options">
+      <div class="option" data-i="0"><span class="letter">A</span>Nothing — it's not your table.</div>
+      <div class="option" data-i="1"><span class="letter">B</span>Approach the table, acknowledge the wait, let them know you'll find their server, and alert your colleague immediately.</div>
+      <div class="option" data-i="2"><span class="letter">C</span>Tell a manager and let them handle it.</div>
+      <div class="option" data-i="3"><span class="letter">D</span>Take their order yourself without telling the other server.</div>
+    </div>
+    <div class="feedback"></div>
+    <button class="btn-next">Next Question →</button>
+  </div>
+
+  <!-- Q14 -->
+  <div class="q-card" data-q="13">
+    <div class="q-num">Question 14 of 15 · Menu Knowledge</div>
+    <div class="q-text">A guest asks about the difference between two dishes. You're not completely sure. What do you do?</div>
+    <div class="options">
+      <div class="option" data-i="0"><span class="letter">A</span>Make your best guess — it probably doesn't matter.</div>
+      <div class="option" data-i="1"><span class="letter">B</span>Tell the guest both dishes are great and let them decide.</div>
+      <div class="option" data-i="2"><span class="letter">C</span>Be honest that you want to confirm the details, step away to verify with the kitchen, and return with a confident, accurate answer.</div>
+      <div class="option" data-i="3"><span class="letter">D</span>Recommend the more expensive dish without explaining.</div>
+    </div>
+    <div class="feedback"></div>
+    <button class="btn-next">Next Question →</button>
+  </div>
+
+  <!-- Q15 -->
+  <div class="q-card" data-q="14">
+    <div class="q-num">Question 15 of 15 · The Farewell</div>
+    <div class="q-text">Guests are putting on their coats to leave. What is the single most important thing you can do?</div>
+    <div class="options">
+      <div class="option" data-i="0"><span class="letter">A</span>Check to make sure the tip was left before they reach the door.</div>
+      <div class="option" data-i="1"><span class="letter">B</span>Start resetting the table so the next party sees it's ready.</div>
+      <div class="option" data-i="2"><span class="letter">C</span>Hand them a comment card and ask for a review.</div>
+      <div class="option" data-i="3"><span class="letter">D</span>Thank them warmly and sincerely, and make them feel genuinely welcome to return — the last impression is the lasting one.</div>
+    </div>
+    <div class="feedback"></div>
+    <button class="btn-next">See My Results →</button>
+  </div>
+
+  <!-- Results -->
+  <div id="results">
+    <div class="score-ring" id="scoreRing">
+      <div class="score-inner">
+        <div class="score-num" id="scoreNum">0</div>
+        <div class="score-denom">out of 15</div>
+      </div>
+    </div>
+    <div class="score-label" id="scoreLabel"></div>
+    <div class="grade-badge" id="gradeBadge"></div>
+    <div class="score-sub" id="scoreSub"></div>
+    <br>
+    <button class="btn-restart" onclick="restart()">Retake Quiz</button>
+    <div class="review" id="reviewSection">
+      <div class="review-title">Answer Review</div>
+      <div id="reviewItems"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const questions = [
+  { correct: 1, explanation: "The first impression is made at the door. Even if you're occupied, a quick acknowledgment — eye contact and a smile — tells the guest they've been seen and are welcome. Making them feel invisible is the fastest way to start the experience on the wrong foot." },
+  { correct: 1, explanation: "Walk at the guests' pace, lead with confidence, and assist with seating. Pulling out a chair when appropriate is a small gesture that communicates professionalism and care." },
+  { correct: 2, explanation: "Don't stall the whole table for one person — take the ready orders and circle back. Offering a quick recommendation to the undecided guest is helpful and keeps the experience moving." },
+  { correct: 1, explanation: "Food delivery is a service moment, not just a logistics task. Announcing each dish, confirming it's correct, and checking for immediate needs prevents problems and shows attentiveness." },
+  { correct: 2, explanation: "Two minutes is the sweet spot — enough time for guests to taste the food and identify an issue, while there's still time to fix it gracefully. Any longer and a problem becomes a complaint." },
+  { correct: 2, explanation: "Allergen communication must be documented and confirmed — not assumed. A verbal note to the kitchen is not enough. Flag it on the ticket, speak directly to the kitchen, and verify before the dish is served." },
+  { correct: 1, explanation: "When food is wrong, the only correct first move is a genuine apology and immediate action. Explanations feel like excuses. Remove the plate, take ownership, and fix it — without making the guest ask." },
+  { correct: 1, explanation: "Clearing too early signals rushing. The standard is to wait until all guests at a table have finished a course before clearing, then crumb the table between courses as appropriate for the venue." },
+  { correct: 2, explanation: "Proactive service means guests never have to ask. Anticipating a refill need — and acting on it before the glass is empty — is one of the clearest signals of attentive, professional service." },
+  { correct: 1, explanation: "The best upsell is a genuine recommendation, not a sales pitch. Specific knowledge and honest enthusiasm are far more effective than listing options or defaulting to the priciest item on the menu." },
+  { correct: 2, explanation: "Over-service is a legal liability and a guest safety issue. Never make the call alone — alert management quietly, offer alternatives, and discontinue alcohol service until a manager weighs in." },
+  { correct: 2, explanation: "Dropping the check too early signals you're rushing the guest. Too late is annoying. Read the natural rhythm of the meal — after a natural pause at the end, or immediately if the guest signals readiness." },
+  { correct: 1, explanation: "Hospitality is a team sport. A frustrated guest at any table reflects on every staff member. Step in, acknowledge the wait, and alert your colleague immediately — don't hide behind section boundaries." },
+  { correct: 2, explanation: "Honesty and accuracy build trust. Guessing about menu details risks delivering wrong information and damaging the guest's experience. It's always better to verify and return with confidence." },
+  { correct: 3, explanation: "The last moment is the most memorable. A warm, genuine farewell — not a rushed goodbye while resetting the table — is what turns a one-time visitor into a regular. Give it the attention it deserves." }
+];
+
+const qTexts = [
+  "A guest walks through the door. What should happen within the first 30 seconds?",
+  "When escorting guests to their table, what is proper etiquette?",
+  "A large table is ready to order but one guest hasn't decided yet. What do you do?",
+  "You're delivering food to a table. What is the correct approach?",
+  "How soon after food is delivered should you check back with the table?",
+  "A guest mentions a gluten intolerance when ordering. What is the correct response?",
+  "A guest says their food is cold. What do you do first?",
+  "Which of the following best describes proper table maintenance throughout a meal?",
+  "When should non-alcoholic beverages be refilled?",
+  "What is the most effective and guest-friendly way to upsell a menu item?",
+  "You believe a guest may have had too much to drink. What is the right move?",
+  "When is the right time to present the check?",
+  "You see a table in another server's section that has been waiting a long time and looks frustrated. What do you do?",
+  "A guest asks about the difference between two dishes. You're not completely sure. What do you do?",
+  "Guests are putting on their coats to leave. What is the single most important thing you can do?"
+];
+
+let current = 0, score = 0, answered = false, userAnswers = [];
+const cards = document.querySelectorAll('.q-card');
+const progressFill = document.getElementById('progressFill');
+const progressText = document.getElementById('progressText');
+const scoreText = document.getElementById('scoreText');
+
+function updateProgress() {
+  progressFill.style.width = (current / 15 * 100) + '%';
+  progressText.textContent = current < 15 ? `Question ${current + 1} of 15` : 'Complete!';
+  scoreText.textContent = `Score: ${score}`;
+}
+
+cards.forEach(card => {
+  card.querySelectorAll('.option').forEach((opt, i) => {
+    opt.addEventListener('click', () => {
+      if (answered) return;
+      answered = true;
+      const q = parseInt(card.dataset.q);
+      const correct = questions[q].correct;
+      userAnswers.push(i);
+      card.querySelectorAll('.option').forEach(o => o.classList.add('locked'));
+      const feedback = card.querySelector('.feedback');
+      const btn = card.querySelector('.btn-next');
+      if (i === correct) {
+        score++;
+        opt.classList.add('correct');
+        feedback.innerHTML = `<strong>✓ Correct</strong>${questions[q].explanation}`;
+        feedback.className = 'feedback show correct';
+      } else {
+        opt.classList.add('wrong');
+        card.querySelectorAll('.option')[correct].classList.add('reveal-correct');
+        feedback.innerHTML = `<strong>✗ Not quite</strong>${questions[q].explanation}`;
+        feedback.className = 'feedback show wrong';
+      }
+      scoreText.textContent = `Score: ${score}`;
+      btn.classList.add('show');
+    });
+  });
+  card.querySelector('.btn-next').addEventListener('click', () => {
+    card.classList.remove('active');
+    current++;
+    if (current < 15) { cards[current].classList.add('active'); answered = false; updateProgress(); }
+    else showResults();
+  });
+});
+
+function showResults() {
+  document.querySelectorAll('.progress-bar-wrap,.progress-meta').forEach(el => el.style.display = 'none');
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('scoreNum').textContent = score;
+  const pct = Math.round(score / 15 * 100);
+  document.getElementById('scoreRing').style.background = `conic-gradient(var(--gold) ${pct * 3.6}deg, var(--border) 0deg)`;
+  let label, sub, grade, gc;
+  if (score >= 14) { label = "Outstanding — Floor Ready"; sub = "You know this. Own it every shift."; grade = "A+ · Master of Service"; gc = "grade-a"; }
+  else if (score >= 12) { label = "Strong — Almost There"; sub = "Review your misses and you'll nail it next time."; grade = "A · Certified"; gc = "grade-a"; }
+  else if (score >= 10) { label = "Good Foundation"; sub = "Solid on the basics. A little more polish needed."; grade = "B · Passing"; gc = "grade-b"; }
+  else if (score >= 8) { label = "Getting There"; sub = "Some key gaps — review and retake."; grade = "C · Needs Review"; gc = "grade-c"; }
+  else { label = "Keep Studying"; sub = "Work through the review below and retake."; grade = "D · Retake Required"; gc = "grade-d"; }
+  document.getElementById('scoreLabel').textContent = label;
+  document.getElementById('scoreSub').textContent = sub;
+  const gb = document.getElementById('gradeBadge');
+  gb.textContent = grade; gb.className = 'grade-badge ' + gc;
+  const reviewItems = document.getElementById('reviewItems');
+  userAnswers.forEach((ans, i) => {
+    const correct = questions[i].correct;
+    const isRight = ans === correct;
+    const opts = cards[i].querySelectorAll('.option');
+    const div = document.createElement('div');
+    div.className = 'review-item ' + (isRight ? 'r-correct' : 'r-wrong');
+    div.innerHTML = `<div class="review-q">${isRight ? '✅' : '❌'} Q${i+1}: ${qTexts[i]}</div>
+      <div class="review-a">${isRight
+        ? `<span class="correct-ans">✓ Your answer: ${opts[correct].textContent.trim()}</span>`
+        : `<span class="your-ans">✗ You answered: ${opts[ans].textContent.trim()}</span><br><span class="correct-ans">✓ Correct: ${opts[correct].textContent.trim()}</span>`}
+      </div>`;
+    reviewItems.appendChild(div);
+  });
+}
+
+function restart() {
+  current = 0; score = 0; answered = false; userAnswers = [];
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('reviewItems').innerHTML = '';
+  document.querySelectorAll('.progress-bar-wrap,.progress-meta').forEach(el => el.style.display = '');
+  cards.forEach(card => {
+    card.classList.remove('active');
+    card.querySelectorAll('.option').forEach(o => o.classList.remove('correct','wrong','reveal-correct','locked'));
+    card.querySelector('.feedback').className = 'feedback';
+    card.querySelector('.btn-next').classList.remove('show');
+  });
+  cards[0].classList.add('active');
+  updateProgress();
+}
+
+updateProgress();
+</script>
+</body>
+</html>
