@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fremont Makers Cabinets</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --unbrindled-blue: #5a8ba7;
+            --unbrindled-gray: #4b4f54;
+            --warm-cream: #f8f5f0;
+            --font-display: 'Playfair Display', serif;
+            --font-body: 'Inter', sans-serif;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-body);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #fff;
+            color: var(--unbrindled-gray);
+            font-size: clamp(18px, 4vw, 20px); /* Fluid typography */
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: var(--font-display);
+            color: var(--unbrindled-blue);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: var(--unbrindled-blue);
+            color: #fff;
+            padding: 1rem 2rem;
+            text-decoration: none;
+            border-radius: 5px;
+            min-height: 44px; /* Minimum button height */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s ease;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: #4a758e; /* Slightly darker blue */
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 4rem 1.5rem 2rem;
+            background-color: var(--warm-cream);
+        }
+
+        .hero img {
+            max-width: 250px;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 8vw, 4rem);
+            margin-bottom: 0.5rem;
+            color: var(--unbrindled-blue);
+        }
+
+        .hero h2 {
+            font-family: var(--font-body);
+            font-size: clamp(1.2rem, 4vw, 1.8rem);
+            font-weight: normal;
+            margin-top: 0;
+            margin-bottom: 2rem;
+            color: var(--unbrindled-gray);
+        }
+
+        /* Why Fremont Makers Section */
+        .why-us {
+            padding: 3rem 1.5rem; /* Reduced top padding */
+            background-color: #fff;
+            text-align: center;
+        }
+
+        .why-us h2 {
+            font-size: clamp(2rem, 6vw, 3rem);
+            margin-bottom: 2.5rem;
+        }
+
+        .why-us-grid {
+            display: grid;
+            gap: 2rem;
+            grid-template-columns: 1fr;
+        }
+
+        @media (min-width: 768px) {
+            .why-us-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .why-us-item {
+            background-color: var(--warm-cream);
+            padding: 2rem;
+            border-radius: 8px;
+            text-align: left;
+        }
+
+        .why-us-item h3 {
+            font-family: var(--font-body);
+            color: var(--unbrindled-blue);
+            margin-top: 0;
+            font-size: clamp(1.3rem, 3vw, 1.6rem);
+        }
+        .why-us-item p {
+            font-size: clamp(1rem, 2.5vw, 1.1rem);
+            margin-bottom: 0;
+        }
+
+        /* Product Portfolio */
+        .portfolio {
+            padding: 4rem 1.5rem;
+            background-color: #f0f0f0; /* Light grey background for products */
+        }
+
+        .portfolio h2 {
+            font-size: clamp(2rem, 6vw, 3rem);
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .tab-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 2rem;
+            gap: 0.5rem;
+        }
+
+        .tab-button {
+            background-color: var(--unbrindled-gray);
+            color: #fff;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            min-height: 44px;
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
+        }
+
+        .tab-button.active {
+            background-color: var(--unbrindled-blue);
+        }
+
+        .tab-content {
+            display: none;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .tab-content.active {
+            display: grid;
+        }
+
+        .product-card {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .product-card h3 {
+            font-family: var(--font-body);
+            color: var(--unbrindled-blue);
+            margin-top: 0;
+            font-size: clamp(1.2rem, 2.8vw, 1.4rem);
+        }
+
+        .product-card .badge {
+            display: inline-block;
+            background-color: var(--unbrindled-blue);
+            color: #fff;
+            padding: 0.3rem 0.6rem;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-card p {
+            font-size: clamp(0.95rem, 2.5vw, 1.05rem);
+            margin-bottom: 1rem;
+        }
+
+        /* How It Works Section */
+        .how-it-works {
+            padding: 4rem 1.5rem;
+            background-color: var(--warm-cream);
+            text-align: center;
+        }
+
+        .how-it-works h2 {
+            font-size: clamp(2rem, 6vw, 3rem);
+            margin-bottom: 2.5rem;
+        }
+
+        .steps-grid {
+            display: grid;
+            gap: 2rem;
+            grid-template-columns: 1fr;
+        }
+
+        @media (min-width: 768px) {
+            .steps-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .step-item {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .step-item h3 {
+            color: var(--unbrindled-blue);
+            font-size: clamp(1.3rem, 3vw, 1.6rem);
+            margin-top: 0;
+        }
+
+        /* Quote Request Form */
+        .quote-form {
+            padding: 4rem 1.5rem;
+            background-color: #fff;
+        }
+
+        .quote-form h2 {
+            font-size: clamp(2rem, 6vw, 3rem);
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .form-grid {
+            display: grid;
+            gap: 1.5rem;
+            grid-template-columns: 1fr;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        @media (min-width: 600px) {
+            .form-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .form-grid .full-width {
+                grid-column: span 2;
+            }
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--unbrindled-gray);
+            font-size: clamp(1rem, 2.5vw, 1.1rem);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-family: var(--font-body);
+            font-size: clamp(0.95rem, 2.5vw, 1.05rem);
+            min-height: 44px; /* Ensure input/select/textarea adhere to min height */
+            box-sizing: border-box; /* Include padding/border in element's total width and height */
+        }
+
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .quote-form .btn {
+            width: 100%;
+            margin-top: 1rem;
+            grid-column: span 1; /* For single column layouts */
+            justify-self: center; /* Center the button on single column layout */
+            max-width: 300px; /* Limit button width */
+        }
+        @media (min-width: 600px) {
+            .quote-form .btn {
+                grid-column: span 2; /* Occupy full width in two-column layout */
+                max-width: none; /* Remove max width for full column span */
+            }
+        }
+
+
+        /* Footer */
+        .footer {
+            background-color: var(--unbrindled-gray);
+            color: #fff;
+            padding: 3rem 1.5rem;
+            text-align: center;
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
+        }
+
+        .footer p {
+            margin: 0.5rem 0;
+        }
+
+        .footer a {
+            color: #fff;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer a:hover {
+            color: var(--unbrindled-blue);
+        }
+    </style>
+</head>
+<body>
+    <header class="hero">
+        <div class="container">
+            <img src="https://offers.hotelstcloud.com/assets/fremontmakers-logo.png" alt="Fremont Makers Cabinets Logo">
+            <h1>Making Freedom. One Cabinet at a Time.</h1>
+            <h2>Wholesale cabinets for Cañon City and the Royal Gorge region — custom built or ready to ship.</h2>
+            <a href="#quote-form" class="btn">Request a Free Quote</a>
+        </div>
+    </header>
+
+    <section class="why-us">
+        <div class="container">
+            <h2>Why Fremont Makers?</h2>
+            <div class="why-us-grid">
+                <div class="why-us-item">
+                    <h3>🏠 Wholesale Pricing</h3>
+                    <p>Factory-direct cabinets starting at $1,499 for a full kitchen. No retail markup.</p>
+                </div>
+                <div class="why-us-item">
+                    <h3>🔨 Custom Built</h3>
+                    <p>We import, customize, and install. Tailored to your space, your style.</p>
+                </div>
+                <div class="why-us-item">
+                    <h3>🤝 Local & Trusted</h3>
+                    <p>Based right here in Cañon City. Part of the Unbridled family of companies.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="portfolio">
+        <div class="container">
+            <h2>Our Product Portfolio</h2>
+            <div class="tab-buttons">
+                <button class="tab-button active" data-tab="kitchen">Kitchen Cabinets</button>
+                <button class="tab-button" data-tab="bathroom">Bathroom Vanities</button>
+                <button class="tab-button" data-tab="other">Other Rooms</button>
+            </div>
+
+            <div id="kitchen" class="tab-content active">
+                <h3>Budget (RTA, from $1,249)</h3>
+                <div class="tab-content-grid product-card-grid">
+                    <div class="product-card">
+                        <h3>Bayview White Shaker</h3>
+                        <span class="badge">RTA</span>
+                        <p>Classic white shaker style, ready-to-assemble. Affordable and stylish.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>Bayview Grey Shaker</h3>
+                        <span class="badge">RTA</span>
+                        <p>Modern grey shaker cabinets, perfect for a contemporary look.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>Clear White Shaker</h3>
+                        <span class="badge">RTA</span>
+                        <p>Crisp, clean white shaker cabinets for a bright kitchen.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>Dolphin Grey Shaker</h3>
+                        <span class="badge">RTA</span>
+                        <p>Elegant dolphin grey for a sophisticated kitchen design.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>Dark Hickory Shaker</h3>
+                        <span class="badge">RTA</span>
+                        <p>Rich dark hickory finish for a warm, natural kitchen ambiance.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>Deep Blue Shaker</h3>
+                        <span class="badge">RTA</span>
+                        <p>Bold deep blue shaker cabinets for a stunning statement kitchen.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                </div>
+
+                <h3>Mid-Range (from $1,699)</h3>
+                <div class="tab-content-grid product-card-grid">
+                    <div class="product-card">
+                        <h3>Bright White Shaker</h3>
+                        <span class="badge">Pre-Assembled</span>
+                        <p>Premium bright white shaker, professionally pre-assembled.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>Dove Shaker</h3>
+                        <span class="badge">Pre-Assembled</span>
+                        <p>Soft dove grey shaker, offering subtle elegance.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>Grey Shaker</h3>
+                        <span class="badge">Pre-Assembled</span>
+                        <p>Versatile grey shaker, a popular choice for modern homes.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>Antique White Shaker</h3>
+                        <span class="badge">Pre-Assembled</span>
+                        <p>Charming antique white shaker for a timeless kitchen.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>Lancaster Charcoal</h3>
+                        <span class="badge">Pre-Assembled</span>
+                        <p>Dramatic charcoal cabinets, adding depth and sophistication.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>Lancaster Stone</h3>
+                        <span class="badge">Pre-Assembled</span>
+                        <p>Earthy stone finish, creating a serene and grounded feel.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>Midnight Blue Shaker</h3>
+                        <span class="badge">Pre-Assembled</span>
+                        <p>Deep midnight blue, a luxurious and contemporary cabinet color.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>Castle Grey Shaker</h3>
+                        <span class="badge">Pre-Assembled</span>
+                        <p>Robust castle grey for a strong and elegant kitchen presence.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>White Shaker</h3>
+                        <span class="badge">Pre-Assembled</span>
+                        <p>Classic white shaker, providing a clean and bright foundation.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>Cinder Shaker</h3>
+                        <span class="badge">Pre-Assembled</span>
+                        <p>Subtle cinder tone, offering a unique and understated appeal.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>True Black Shaker</h3>
+                        <span class="badge">Pre-Assembled</span>
+                        <p>Bold true black shaker for a dramatic and modern kitchen.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>Scandi Sage Green</h3>
+                        <span class="badge">Pre-Assembled</span>
+                        <p>Calm sage green, inspired by Scandinavian design principles.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>Charleston Antique White</h3>
+                        <span class="badge">Pre-Assembled</span>
+                        <p>Southern charm with an elegant antique white finish.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                </div>
+
+                <h3>Premium (from $2,016)</h3>
+                <div class="tab-content-grid product-card-grid">
+                    <div class="product-card">
+                        <h3>Crystal White Shaker</h3>
+                        <span class="badge">Pre-Assembled</span>
+                        <p>Luxurious crystal white, exuding purity and brilliance.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>Pearl Glaze</h3>
+                        <span class="badge">Pre-Assembled</span>
+                        <p>Iridescent pearl glaze adds a sophisticated shimmer.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>Slim White Shaker</h3>
+                        <span class="badge">Pre-Assembled</span>
+                        <p>Modern slim profile white shaker for a sleek, minimalist look.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>Navy Blue Shaker</h3>
+                        <span class="badge">Pre-Assembled</span>
+                        <p>Classic navy blue, timeless and commands attention.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>Lexington White Shaker</h3>
+                        <span class="badge">Pre-Assembled</span>
+                        <p>Refined Lexington white, blending tradition with modern lines.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>Zealand White</h3>
+                        <span class="badge">Pre-Assembled</span>
+                        <p>Pristine Zealand white, bringing a fresh, clean aesthetic.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>Hudson Pewter</h3>
+                        <span class="badge">Pre-Assembled</span>
+                        <p>Elegant Hudson pewter, a sophisticated grey with warm undertones.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                </div>
+            </div>
+
+            <div id="bathroom" class="tab-content">
+                <h3>Bathroom Vanity Styles</h3>
+                <div class="tab-content-grid product-card-grid">
+                    <div class="product-card">
+                        <h3>Bright White Shaker</h3>
+                        <span class="badge">Pre-Assembled</span>
+                        <p>Clean and bright, perfect for any bathroom style.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>Castle Grey Shaker</h3>
+                        <span class="badge">Pre-Assembled</span>
+                        <p>Sophisticated grey adds a touch of modern luxury.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>Midnight Blue Shaker</h3>
+                        <span class="badge">Pre-Assembled</span>
+                        <p>Deep, rich blue for a dramatic and elegant vanity.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>Pearl Glaze</h3>
+                        <span class="badge">Pre-Assembled</span>
+                        <p>Subtle shimmer for a glamorous bathroom centerpiece.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>Scandi Sage Green</h3>
+                        <span class="badge">Pre-Assembled</span>
+                        <p>Calming sage green, ideal for a serene bathroom retreat.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>True Black Gloss</h3>
+                        <span class="badge">Pre-Assembled</span>
+                        <p>Sleek high-gloss black for a bold contemporary look.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>Verona Gloss White</h3>
+                        <span class="badge">Pre-Assembled</span>
+                        <p>Crisp gloss white for a timeless and fresh bathroom aesthetic.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>Zealand White</h3>
+                        <span class="badge">Pre-Assembled</span>
+                        <p>Pristine white, bringing a fresh, clean aesthetic to your bathroom.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>Augusta White</h3>
+                        <span class="badge">Pre-Assembled</span>
+                        <p>Classic Augusta white, offering timeless elegance.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>Dove Shaker</h3>
+                        <span class="badge">Pre-Assembled</span>
+                        <p>Soft dove grey, for a subtle and elegant bathroom design.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                </div>
+            </div>
+
+            <div id="other" class="tab-content">
+                <h3>Cabinets for Other Rooms</h3>
+                <div class="tab-content-grid product-card-grid">
+                    <div class="product-card">
+                        <h3>Pantry Cabinets</h3>
+                        <span class="badge">Custom</span>
+                        <p>Custom-designed for optimal food storage and organization.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>Laundry Room Cabinets</h3>
+                        <span class="badge">Custom</span>
+                        <p>Durable and functional cabinets for efficient laundry spaces.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                    <div class="product-card">
+                        <h3>Garage Cabinets</h3>
+                        <span class="badge">Custom</span>
+                        <p>Heavy-duty storage solutions for a well-organized garage.</p>
+                        <a href="#quote-form" class="btn">Get a Quote</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="how-it-works">
+        <div class="container">
+            <h2>How It Works</h2>
+            <div class="steps-grid">
+                <div class="step-item">
+                    <h3>1. Tell us your vision</h3>
+                    <p>Submit a quote request with your space details.</p>
+                </div>
+                <div class="step-item">
+                    <h3>2. We design it free</h3>
+                    <p>Our team creates a custom layout within 24 hours.</p>
+                </div>
+                <div class="step-item">
+                    <h3>3. We build & deliver</h3>
+                    <p>Wholesale pricing, local installation available.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="quote-form" id="quote-form">
+        <div class="container">
+            <h2>Request a Free Quote</h2>
+            <form action="mailto:info@fremontmakers.com" method="post" enctype="text/plain" class="form-grid">
+                <div class="form-group">
+                    <label for="first-name">First Name</label>
+                    <input type="text" id="first-name" name="First Name" required>
+                </div>
+                <div class="form-group">
+                    <label for="last-name">Last Name</label>
+                    <input type="text" id="last-name" name="Last Name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="Email" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone">Phone</label>
+                    <input type="tel" id="phone" name="Phone">
+                </div>
+                <div class="form-group full-width">
+                    <label for="project-type">Project Type</label>
+                    <select id="project-type" name="Project Type" required>
+                        <option value="">Select Project Type</option>
+                        <option value="Kitchen">Kitchen</option>
+                        <option value="Bathroom">Bathroom</option>
+                        <option value="Pantry">Pantry</option>
+                        <option value="Laundry Room">Laundry Room</option>
+                        <option value="Garage">Garage</option>
+                        <option value="Custom/Other">Custom/Other</option>
+                    </select>
+                </div>
+                <div class="form-group full-width">
+                    <label for="cabinet-style">Cabinet Style Interest</label>
+                    <input type="text" id="cabinet-style" name="Cabinet Style Interest">
+                </div>
+                <div class="form-group full-width">
+                    <label for="project-timeline">Project Timeline</label>
+                    <select id="project-timeline" name="Project Timeline" required>
+                        <option value="">Select Timeline</option>
+                        <option value="ASAP">ASAP</option>
+                        <option value="1-3 months">1–3 months</option>
+                        <option value="3-6 months">3–6 months</option>
+                        <option value="Planning ahead">Planning ahead</option>
+                    </select>
+                </div>
+                <div class="form-group full-width">
+                    <label for="message">Message / Notes</label>
+                    <textarea id="message" name="Message / Notes"></textarea>
+                </div>
+                <button type="submit" class="btn">Send My Quote Request</button>
+            </form>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <p>Fremont Makers — 427 Main St., Cañon City, CO 81212</p>
+            <p>Part of the Unbridled family of companies</p>
+            <p>Phone: <a href="tel:+17203234902">(720) 323-4902</a></p>
+            <p>Email: <a href="mailto:info@fremontmakers.com">info@fremontmakers.com</a></p>
+            <p>&copy; 2026 Fremont Makers. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Smooth scrolling for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+
+            // Product portfolio tabs
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+
+                    button.classList.add('active');
+                    document.getElementById(button.dataset.tab).classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
