@@ -1,85 +1,355 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hotel St. Cloud — Live Ad Dashboard</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="refresh" content="900">
+<title>Hotel St. Cloud — Live Campaign Dashboard</title>
 <style>
+:root{--bg:#0f1923;--navy:#1a2e3b;--gold:#c9aa7c;--blue:#5a8ba7;--text:#e8e0d4;--muted:#8a9aaa;--green:#4caf7d;--red:#e05a5a;--card-bg:#162433;--border:#263d52;--orange:#f97316}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#0e1117;color:#e8e8e8;font-family:'Segoe UI',system-ui,sans-serif;padding:20px;max-width:1300px;margin:0 auto}
-.hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid #1e2a38;flex-wrap:wrap;gap:12px}
-.hdr h1{font-size:20px;font-weight:700;color:#fff}.hdr p{font-size:12px;color:#7a8fa6;margin-top:3px}
-.live{display:flex;align-items:center;gap:8px}
-.pulse{width:8px;height:8px;border-radius:50%;background:#4ade80;animation:pulse 2s infinite}
-@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(74,222,128,.4)}70%{box-shadow:0 0 0 8px rgba(74,222,128,0)}100%{box-shadow:0 0 0 0 rgba(74,222,128,0)}}
-.live-txt{font-size:12px;color:#4ade80;font-weight:600}
-.fetch-time{font-size:11px;color:#3a5a76;margin-top:3px;text-align:right}
-.sec{margin-bottom:36px}
-.sec-hdr{font-size:16px;font-weight:700;color:#fff;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #1e2a38}
-.sec-hdr span{font-size:11px;color:#7a8fa6;font-weight:400}
-.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px}
-.kpi{background:#131c27;border:1px solid #1e2a38;border-radius:10px;padding:16px}
-.kpi .lbl{font-size:10px;color:#5a7a96;text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
-.kpi .val{font-size:24px;font-weight:700;color:#fff}
-.kpi .sub{font-size:10px;color:#7a8fa6;margin-top:3px}
-.kpi .sub.up{color:#4ade80}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
-.card{background:#131c27;border:1px solid #1e2a38;border-radius:10px;padding:18px}
-.card h2{font-size:12px;font-weight:600;color:#a0b4c8;margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px}
-.full{grid-column:1/-1}
-table{width:100%;border-collapse:collapse;font-size:12px}
-thead th{text-align:left;padding:7px 9px;font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:#5a7a96;border-bottom:1px solid #1e2a38}
-tbody tr{border-bottom:1px solid #161f2b}tbody tr:hover{background:#1a2535}tbody td{padding:8px 9px}
-hr{border:none;border-top:1px solid #1e2a38;margin:28px 0}
-.ftr{text-align:center;color:#3a5a76;font-size:11px;padding-top:16px;border-top:1px solid #1e2a38}
-.rbtn{background:#1e2a38;color:#7a8fa6;border:1px solid #2a3a4a;border-radius:6px;padding:6px 14px;font-size:12px;cursor:pointer}
-.rbtn:hover{background:#2a3a4a;color:#fff}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;padding-bottom:60px}
+.header{background:linear-gradient(135deg,var(--navy) 0%,#0f1923 100%);border-bottom:2px solid var(--gold);padding:24px 20px 20px;text-align:center}
+.eyebrow{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+.header h1{font-size:clamp(20px,4vw,30px);font-weight:700;color:#fff}
+.header h1 span{color:var(--gold)}
+.hdate{margin-top:6px;font-size:12px;color:var(--muted)}
+.refresh-note{margin-top:6px;font-size:11px;color:var(--muted);font-style:italic}
+.wrap{max-width:1200px;margin:0 auto;padding:0 16px}
+.sec{margin-top:28px}
+.sec-title{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:14px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+
+/* Campaign cards grid */
+.camp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-bottom:28px}
+.camp-card{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:20px;position:relative;overflow:hidden}
+.camp-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.camp-card.bb::before{background:var(--gold)}
+.camp-card.bc::before{background:var(--blue)}
+.camp-card.so::before{background:var(--orange)}
+.camp-card.fp::before{background:var(--green)}
+.camp-name{font-size:13px;font-weight:700;color:#fff;margin-bottom:4px;line-height:1.3}
+.camp-status{display:inline-block;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:2px 8px;border-radius:10px;margin-bottom:12px}
+.status-live{background:#0d2a18;color:var(--green);border:1px solid var(--green)}
+.status-new{background:#3a2a08;color:var(--gold);border:1px solid var(--gold)}
+.camp-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat{background:var(--bg);border-radius:8px;padding:10px 12px}
+.stat-label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.stat-val{font-size:18px;font-weight:700;color:#fff}
+.stat-sub{font-size:10px;color:var(--muted);margin-top:2px}
+.stat-val.gold{color:var(--gold)}
+.stat-val.green{color:var(--green)}
+.stat-val.blue{color:var(--blue)}
+.stat-val.orange{color:var(--orange)}
+.camp-settings{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:10px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:2px 9px;color:var(--muted)}
+
+/* Today vs yesterday bar */
+.today-bar{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:28px}
+.today-row{display:grid;grid-template-columns:140px 1fr 80px 80px 80px 100px;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+.today-row:last-child{border-bottom:none}
+.today-header{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding-bottom:8px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:140px 1fr 80px 80px 80px 100px;gap:12px}
+.camp-label{font-weight:700;color:#fff;font-size:12px}
+.bar-wrap{background:var(--bg);border-radius:4px;height:8px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;transition:width .6s ease}
+.bb-bar{background:var(--gold)}
+.bc-bar{background:var(--blue)}
+.so-bar{background:var(--orange)}
+.fp-bar{background:var(--green)}
+.num{text-align:right;color:var(--text);font-size:13px}
+.num.spend{color:var(--gold)}
+.new-badge{font-size:9px;background:#3a2a08;color:var(--gold);border:1px solid var(--gold);padding:1px 6px;border-radius:8px;font-weight:700}
+
+/* 7-day sparkline area */
+.history-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:700px){.history-grid{grid-template-columns:1fr}}
+.hist-card{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:18px}
+.hist-title{font-size:12px;font-weight:700;color:#fff;margin-bottom:14px}
+.hist-title span{font-size:10px;font-weight:400;color:var(--muted);margin-left:6px}
+.day-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12px}
+.day-label{width:40px;color:var(--muted);flex-shrink:0;font-size:11px}
+.day-bar-wrap{flex:1;background:var(--bg);border-radius:3px;height:6px;overflow:hidden}
+.day-bar{height:100%;border-radius:3px}
+.day-val{width:48px;text-align:right;color:var(--text)}
+.day-clicks{width:36px;text-align:right;color:var(--muted);font-size:11px}
+
+/* MC card */
+.mc-card{background:linear-gradient(135deg,#162433 0%,#1a2e3b 100%);border:1px solid var(--gold);border-radius:12px;padding:22px;margin-top:28px}
+.mc-hd{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.mc-av{width:34px;height:34px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;color:#1a2e3b;flex-shrink:0}
+.mc-hd h3{font-size:13px;font-weight:700;color:var(--gold)}.mc-hd span{font-size:11px;color:var(--muted);display:block}
+.mc-ul{list-style:none;padding:0}
+.mc-ul li{font-size:13px;color:var(--text);padding:5px 0;border-bottom:1px solid var(--border);line-height:1.5}
+.mc-ul li:last-child{border-bottom:none}
+.mc-ul li::before{content:"→ ";color:var(--gold)}
+
+/* Schedule strip */
+.sched-strip{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.sched-item{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px}
+.sched-item .time{color:var(--gold);font-weight:700;margin-right:6px}
+.sched-item .label{color:var(--muted)}
+
+@media(max-width:600px){
+  .today-row,.today-header{grid-template-columns:100px 1fr 60px 60px}
+  .today-row .num:nth-child(5),.today-header span:nth-child(5){display:none}
+  .today-row .num.spend,.today-header span:last-child{display:none}
+}
 </style>
 </head>
 <body>
-<div class="hdr">
-  <div><h1>🏨 Hotel St. Cloud — Live Ad Dashboard</h1><p>Cañon City, CO · Bars & Bathrooms + Royal Gorge Basecamp</p></div>
-  <div>
-    <div class="live"><div class="pulse"></div><span class="live-txt">LIVE DATA</span><button class="rbtn" onclick="location.reload()">↻ Refresh</button></div>
-    <div class="fetch-time">Fetched: May 11, 2026 · 03:30 PM MT</div>
-  </div>
+
+<div class="header">
+  <div class="eyebrow">Hotel St. Cloud · Google Ads</div>
+  <h1>Live Campaign <span>Dashboard</span></h1>
+  <div class="hdate" id="lastUpdated">Loading...</div>
+  <div class="refresh-note">Auto-refreshes every 15 min · Daily reports at 6am &amp; 3pm MT</div>
 </div>
 
-<div class="sec">
-  <div class="sec-hdr">🍸 Bars & Bathrooms <span>· Thu–Sun · 11am–9pm MT · $35/day</span></div>
-  <div class="kpis">
-    <div class="kpi"><div class="lbl">Today Impressions</div><div class="val">337</div><div class="sub">Yesterday (today updating)</div></div>
-    <div class="kpi"><div class="lbl">Today Clicks</div><div class="val">25</div><div class="sub up">↑ 7.42% CTR</div></div>
-    <div class="kpi"><div class="lbl">Today CTR</div><div class="val">7.42%</div><div class="sub">Benchmark: 3%</div></div>
-    <div class="kpi"><div class="lbl">Today Spend</div><div class="val">$40.56</div><div class="sub">of $35 cap</div></div>
-    <div class="kpi"><div class="lbl">7-Day Impressions</div><div class="val">1029</div><div class="sub">75 clicks · $113.67</div></div>
+<div class="wrap">
+
+  <!-- 4 Campaign Cards -->
+  <div class="sec">
+    <div class="sec-title">All Active Campaigns</div>
+    <div class="camp-grid">
+
+      <div class="camp-card bb">
+        <div class="camp-name">Bars &amp; Bathrooms</div>
+        <div class="camp-status status-live">🟢 Live</div>
+        <div class="camp-stats">
+          <div class="stat"><div class="stat-label">Today Impr.</div><div class="stat-val gold" id="bb-imp">0</div></div>
+          <div class="stat"><div class="stat-label">Today Clicks</div><div class="stat-val" id="bb-clk">0</div></div>
+          <div class="stat"><div class="stat-label">Today CTR</div><div class="stat-val gold" id="bb-ctr">—</div></div>
+          <div class="stat"><div class="stat-label">Today Spend</div><div class="stat-val" id="bb-spend">$0</div></div>
+        </div>
+        <div class="camp-settings">
+          <span class="tag">$35/day</span><span class="tag">Thu–Sun</span><span class="tag">11am–9pm</span><span class="tag">20mi radius</span>
+        </div>
+      </div>
+
+      <div class="camp-card bc">
+        <div class="camp-name">Hotel St. Cloud | Royal Gorge Basecamp</div>
+        <div class="camp-status status-live">🟢 Live</div>
+        <div class="camp-stats">
+          <div class="stat"><div class="stat-label">Today Impr.</div><div class="stat-val blue" id="bc-imp">0</div></div>
+          <div class="stat"><div class="stat-label">Today Clicks</div><div class="stat-val" id="bc-clk">0</div></div>
+          <div class="stat"><div class="stat-label">Today CTR</div><div class="stat-val blue" id="bc-ctr">—</div></div>
+          <div class="stat"><div class="stat-label">Today Spend</div><div class="stat-val" id="bc-spend">$0</div></div>
+        </div>
+        <div class="camp-settings">
+          <span class="tag">$35/day</span><span class="tag">Daily</span><span class="tag">11am–9pm</span><span class="tag">20mi radius</span>
+        </div>
+      </div>
+
+      <div class="camp-card so">
+        <div class="camp-name">Standard Oil Coffee Co</div>
+        <div class="camp-status status-live">🟢 Live</div>
+        <div class="camp-stats">
+          <div class="stat"><div class="stat-label">Today Impr.</div><div class="stat-val orange" id="so-imp">0</div></div>
+          <div class="stat"><div class="stat-label">Today Clicks</div><div class="stat-val" id="so-clk">0</div></div>
+          <div class="stat"><div class="stat-label">Today CTR</div><div class="stat-val orange" id="so-ctr">—</div></div>
+          <div class="stat"><div class="stat-label">Today Spend</div><div class="stat-val" id="so-spend">$0</div></div>
+        </div>
+        <div class="camp-settings">
+          <span class="tag">$35/day</span><span class="tag">Daily</span><span class="tag">7am–2pm</span><span class="tag">20mi radius</span>
+        </div>
+      </div>
+
+      <div class="camp-card fp">
+        <div class="camp-name">FP Sports Bar | Fremont Provisions</div>
+        <div class="camp-status status-new">🆕 Just Launched</div>
+        <div class="camp-stats">
+          <div class="stat"><div class="stat-label">Today Impr.</div><div class="stat-val green" id="fp-imp">0</div></div>
+          <div class="stat"><div class="stat-label">Today Clicks</div><div class="stat-val" id="fp-clk">0</div></div>
+          <div class="stat"><div class="stat-label">Today CTR</div><div class="stat-val green" id="fp-ctr">—</div></div>
+          <div class="stat"><div class="stat-label">Today Spend</div><div class="stat-val" id="fp-spend">$0</div></div>
+        </div>
+        <div class="camp-settings">
+          <span class="tag">$35/day</span><span class="tag">Daily</span><span class="tag">11am–7pm</span><span class="tag">20mi radius</span>
+        </div>
+      </div>
+
+    </div>
   </div>
-  <div class="g2">
-    <div class="card"><h2>📈 7-Day Trend</h2><canvas id="bbChart" height="180"></canvas></div>
-    <div class="card full"><h2>🔍 Top Search Terms (7 days)</h2><table><thead><tr><th>Term</th><th>Impr.</th><th>Clicks</th><th>CTR</th><th>CPC</th><th>Spend</th><th>Tag</th></tr></thead><tbody><tr><td>restaurants near me</td><td style='color:#7a8fa6'>359</td><td style='color:#60a5fa;font-weight:600'>27</td><td style='color:#f59e0b;font-weight:600'>7.52%</td><td>$1.52</td><td>$40.91</td><td><span style="background:#1a3a2a;color:#4ade80;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">✓ GOOD</span></td></tr><tr><td>restaurants in canon city co</td><td style='color:#7a8fa6'>18</td><td style='color:#60a5fa;font-weight:600'>4</td><td style='color:#4ade80;font-weight:600'>22.22%</td><td>$1.98</td><td>$7.9</td><td><span style="background:#1a3a2a;color:#4ade80;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">✓ GOOD</span></td></tr><tr><td>places to eat canon city</td><td style='color:#7a8fa6'>14</td><td style='color:#60a5fa;font-weight:600'>2</td><td style='color:#4ade80;font-weight:600'>14.29%</td><td>$1.33</td><td>$2.67</td><td><span style="background:#1a3a2a;color:#4ade80;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">✓ GOOD</span></td></tr><tr><td>bbq food near me</td><td style='color:#7a8fa6'>3</td><td style='color:#60a5fa;font-weight:600'>1</td><td style='color:#4ade80;font-weight:600'>33.33%</td><td>$1.71</td><td>$1.71</td><td><span style="background:#3a1a1a;color:#f87171;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">⚠ BLOCKED</span></td></tr><tr><td>best restaurants canon city</td><td style='color:#7a8fa6'>6</td><td style='color:#60a5fa;font-weight:600'>1</td><td style='color:#4ade80;font-weight:600'>16.67%</td><td>$0.93</td><td>$0.93</td><td><span style="background:#1a3a2a;color:#4ade80;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">✓ GOOD</span></td></tr><tr><td>best restaurants in canon city co</td><td style='color:#7a8fa6'>4</td><td style='color:#60a5fa;font-weight:600'>1</td><td style='color:#4ade80;font-weight:600'>25.0%</td><td>$1.0</td><td>$1.0</td><td><span style="background:#2a2a1a;color:#fbbf24;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">⭐ HIGH INTENT</span></td></tr><tr><td>breakfast for mother's day near me</td><td style='color:#7a8fa6'>2</td><td style='color:#60a5fa;font-weight:600'>1</td><td style='color:#4ade80;font-weight:600'>50.0%</td><td>$1.05</td><td>$1.05</td><td><span style="background:#2a2a1a;color:#fbbf24;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">⭐ HIGH INTENT</span></td></tr><tr><td>canon city dining</td><td style='color:#7a8fa6'>2</td><td style='color:#60a5fa;font-weight:600'>1</td><td style='color:#4ade80;font-weight:600'>50.0%</td><td>$1.01</td><td>$1.01</td><td><span style="background:#2a2a1a;color:#fbbf24;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">⭐ HIGH INTENT</span></td></tr><tr><td>canon city places to eat</td><td style='color:#7a8fa6'>3</td><td style='color:#60a5fa;font-weight:600'>1</td><td style='color:#4ade80;font-weight:600'>33.33%</td><td>$2.46</td><td>$2.46</td><td><span style="background:#2a2a1a;color:#fbbf24;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">⭐ HIGH INTENT</span></td></tr><tr><td>canon city restaurant</td><td style='color:#7a8fa6'>3</td><td style='color:#60a5fa;font-weight:600'>1</td><td style='color:#4ade80;font-weight:600'>33.33%</td><td>$1.74</td><td>$1.74</td><td><span style="background:#2a2a1a;color:#fbbf24;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">⭐ HIGH INTENT</span></td></tr><tr><td>canon city restaurants</td><td style='color:#7a8fa6'>49</td><td style='color:#60a5fa;font-weight:600'>1</td><td style='color:#f59e0b;font-weight:600'>2.04%</td><td>$1.65</td><td>$1.65</td><td><span style="background:#1a3a2a;color:#4ade80;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">✓ GOOD</span></td></tr><tr><td>carpaccio near me</td><td style='color:#7a8fa6'>2</td><td style='color:#60a5fa;font-weight:600'>1</td><td style='color:#4ade80;font-weight:600'>50.0%</td><td>$1.38</td><td>$1.38</td><td><span style="background:#2a2a1a;color:#fbbf24;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">⭐ HIGH INTENT</span></td></tr><tr><td>cuban restaurants near me</td><td style='color:#7a8fa6'>1</td><td style='color:#60a5fa;font-weight:600'>1</td><td style='color:#4ade80;font-weight:600'>100.0%</td><td>$1.97</td><td>$1.97</td><td><span style="background:#3a1a1a;color:#f87171;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">⚠ BLOCKED</span></td></tr><tr><td>dinner near me</td><td style='color:#7a8fa6'>5</td><td style='color:#60a5fa;font-weight:600'>1</td><td style='color:#4ade80;font-weight:600'>20.0%</td><td>$0.88</td><td>$0.88</td><td><span style="background:#1a3a2a;color:#4ade80;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">✓ GOOD</span></td></tr><tr><td>healthy restaurants near me</td><td style='color:#7a8fa6'>1</td><td style='color:#60a5fa;font-weight:600'>1</td><td style='color:#4ade80;font-weight:600'>100.0%</td><td>$2.34</td><td>$2.34</td><td><span style="background:#2a2a1a;color:#fbbf24;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">⭐ HIGH INTENT</span></td></tr><tr><td>hotel st cloud</td><td style='color:#7a8fa6'>2</td><td style='color:#60a5fa;font-weight:600'>1</td><td style='color:#4ade80;font-weight:600'>50.0%</td><td>$1.74</td><td>$1.74</td><td><span style="background:#2a2a1a;color:#fbbf24;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">⭐ HIGH INTENT</span></td></tr><tr><td>italian food near me</td><td style='color:#7a8fa6'>4</td><td style='color:#60a5fa;font-weight:600'>1</td><td style='color:#4ade80;font-weight:600'>25.0%</td><td>$0.89</td><td>$0.89</td><td><span style="background:#2a2a1a;color:#fbbf24;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">⭐ HIGH INTENT</span></td></tr><tr><td>japanese food near me</td><td style='color:#7a8fa6'>2</td><td style='color:#60a5fa;font-weight:600'>1</td><td style='color:#4ade80;font-weight:600'>50.0%</td><td>$2.46</td><td>$2.46</td><td><span style="background:#3a1a1a;color:#f87171;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">⚠ BLOCKED</span></td></tr><tr><td>lunch near me</td><td style='color:#7a8fa6'>8</td><td style='color:#60a5fa;font-weight:600'>1</td><td style='color:#4ade80;font-weight:600'>12.5%</td><td>$2.1</td><td>$2.1</td><td><span style="background:#1a3a2a;color:#4ade80;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">✓ GOOD</span></td></tr><tr><td>place to eat near me</td><td style='color:#7a8fa6'>4</td><td style='color:#60a5fa;font-weight:600'>1</td><td style='color:#4ade80;font-weight:600'>25.0%</td><td>$1.01</td><td>$1.01</td><td><span style="background:#2a2a1a;color:#fbbf24;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">⭐ HIGH INTENT</span></td></tr></tbody></table></div>
+
+  <!-- Today at a glance -->
+  <div class="sec">
+    <div class="sec-title">Today at a Glance</div>
+    <div class="today-bar">
+      <div class="today-header">
+        <span>Campaign</span><span>Impressions</span><span>Clicks</span><span>CTR</span><span>Avg CPC</span><span>Spend</span>
+      </div>
+      <div class="today-row">
+        <span class="camp-label">Bars &amp; Bathrooms</span>
+        <div class="bar-wrap"><div class="bar-fill bb-bar" id="bb-bar" style="width:0%"></div></div>
+        <span class="num" id="bb-clk2">0</span>
+        <span class="num" id="bb-ctr2">—</span>
+        <span class="num" id="bb-cpc">—</span>
+        <span class="num spend" id="bb-spend2">$0.00</span>
+      </div>
+      <div class="today-row">
+        <span class="camp-label">Basecamp</span>
+        <div class="bar-wrap"><div class="bar-fill bc-bar" id="bc-bar" style="width:0%"></div></div>
+        <span class="num" id="bc-clk2">0</span>
+        <span class="num" id="bc-ctr2">—</span>
+        <span class="num" id="bc-cpc">—</span>
+        <span class="num spend" id="bc-spend2">$0.00</span>
+      </div>
+      <div class="today-row">
+        <span class="camp-label">Standard Oil</span>
+        <div class="bar-wrap"><div class="bar-fill so-bar" id="so-bar" style="width:0%"></div></div>
+        <span class="num" id="so-clk2">0</span>
+        <span class="num" id="so-ctr2">—</span>
+        <span class="num" id="so-cpc">—</span>
+        <span class="num spend" id="so-spend2">$0.00</span>
+      </div>
+      <div class="today-row">
+        <span class="camp-label">FP Sports <span class="new-badge">NEW</span></span>
+        <div class="bar-wrap"><div class="bar-fill fp-bar" id="fp-bar" style="width:0%"></div></div>
+        <span class="num" id="fp-clk2">0</span>
+        <span class="num" id="fp-ctr2">—</span>
+        <span class="num" id="fp-cpc">—</span>
+        <span class="num spend" id="fp-spend2">$0.00</span>
+      </div>
+    </div>
   </div>
+
+  <!-- 7-Day History -->
+  <div class="sec">
+    <div class="sec-title">7-Day History</div>
+    <div class="history-grid">
+
+      <div class="hist-card">
+        <div class="hist-title">Bars &amp; Bathrooms <span>last 7 days · impressions</span></div>
+        <div class="day-row"><span class="day-label">May 10</span><div class="day-bar-wrap"><div class="day-bar bb-bar" style="width:88%"></div></div><span class="day-val">337</span><span class="day-clicks">25 clk</span></div>
+        <div class="day-row"><span class="day-label">May 9</span><div class="day-bar-wrap"><div class="day-bar bb-bar" style="width:79%"></div></div><span class="day-val">305</span><span class="day-clicks">28 clk</span></div>
+        <div class="day-row"><span class="day-label">May 8</span><div class="day-bar-wrap"><div class="day-bar bb-bar" style="width:100%"></div></div><span class="day-val">387</span><span class="day-clicks">22 clk</span></div>
+        <div class="day-row"><span class="day-label">May 7</span><div class="day-bar-wrap"><div class="day-bar bb-bar" style="width:0%"></div></div><span class="day-val">—</span><span class="day-clicks">—</span></div>
+        <div class="day-row"><span class="day-label">Today</span><div class="day-bar-wrap"><div class="day-bar bb-bar" id="bb-today-bar" style="width:0%"></div></div><span class="day-val" id="bb-today-val">0</span><span class="day-clicks" id="bb-today-clk">0 clk</span></div>
+      </div>
+
+      <div class="hist-card">
+        <div class="hist-title">Royal Gorge Basecamp <span>last 7 days · impressions</span></div>
+        <div class="day-row"><span class="day-label">May 10</span><div class="day-bar-wrap"><div class="day-bar bc-bar" style="width:100%"></div></div><span class="day-val">215</span><span class="day-clicks">18 clk</span></div>
+        <div class="day-row"><span class="day-label">May 9</span><div class="day-bar-wrap"><div class="day-bar bc-bar" style="width:54%"></div></div><span class="day-val">117</span><span class="day-clicks">14 clk</span></div>
+        <div class="day-row"><span class="day-label">May 8</span><div class="day-bar-wrap"><div class="day-bar bc-bar" style="width:0%"></div></div><span class="day-val">—</span><span class="day-clicks">—</span></div>
+        <div class="day-row"><span class="day-label">Today</span><div class="day-bar-wrap"><div class="day-bar bc-bar" id="bc-today-bar" style="width:0%"></div></div><span class="day-val" id="bc-today-val">0</span><span class="day-clicks" id="bc-today-clk">0 clk</span></div>
+      </div>
+
+      <div class="hist-card">
+        <div class="hist-title">Standard Oil Coffee Co <span>launched May 11</span></div>
+        <div class="day-row"><span class="day-label">Today</span><div class="day-bar-wrap"><div class="day-bar so-bar" id="so-today-bar" style="width:0%"></div></div><span class="day-val" id="so-today-val">0</span><span class="day-clicks" id="so-today-clk">0 clk</span></div>
+        <div style="margin-top:16px;font-size:12px;color:var(--muted);font-style:italic">Campaign launched today — history will build from tomorrow's 6am report.</div>
+      </div>
+
+      <div class="hist-card">
+        <div class="hist-title">FP Sports Bar <span>launched today</span></div>
+        <div class="day-row"><span class="day-label">Today</span><div class="day-bar-wrap"><div class="day-bar fp-bar" id="fp-today-bar" style="width:0%"></div></div><span class="day-val" id="fp-today-val">0</span><span class="day-clicks" id="fp-today-clk">0 clk</span></div>
+        <div style="margin-top:16px;font-size:12px;color:var(--muted);font-style:italic">Campaign just went live — first full day of data tomorrow.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Total spend summary -->
+  <div class="sec">
+    <div class="sec-title">Combined Stats · Today</div>
+    <div class="camp-grid">
+      <div class="camp-card" style="border-color:var(--gold)">
+        <div class="stat-label" style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Total Impressions</div>
+        <div style="font-size:32px;font-weight:700;color:var(--gold)" id="total-imp">—</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">Across 4 campaigns</div>
+      </div>
+      <div class="camp-card" style="border-color:var(--blue)">
+        <div class="stat-label" style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Total Clicks</div>
+        <div style="font-size:32px;font-weight:700;color:var(--blue)" id="total-clk">—</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">All campaigns combined</div>
+      </div>
+      <div class="camp-card" style="border-color:var(--green)">
+        <div class="stat-label" style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Total Spend Today</div>
+        <div style="font-size:32px;font-weight:700;color:var(--green)" id="total-spend">—</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">Budget: $140/day combined</div>
+      </div>
+      <div class="camp-card">
+        <div class="stat-label" style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Blended CTR</div>
+        <div style="font-size:32px;font-weight:700;color:var(--text)" id="total-ctr">—</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">Industry avg ~2–5%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Schedule strip -->
+  <div class="sec">
+    <div class="sec-title">Delivery Schedule</div>
+    <div class="sched-strip">
+      <div class="sched-item"><span class="time">6:00am MT</span><span class="label">Daily report — all 4 campaigns → Stan</span></div>
+      <div class="sched-item"><span class="time">3:00pm MT</span><span class="label">Afternoon check-in — all 4 campaigns → Stan</span></div>
+      <div class="sched-item"><span class="time">Every 15min</span><span class="label">Dashboard auto-refresh</span></div>
+      <div class="sched-item"><span class="time">Monday 8am MT</span><span class="label">Weekly performance deep-dive</span></div>
+    </div>
+  </div>
+
+  <!-- MC Notes -->
+  <div class="mc-card">
+    <div class="mc-hd">
+      <div class="mc-av">MC</div>
+      <div><h3>MC's Notes</h3><span>Updated May 11, 2026</span></div>
+    </div>
+    <ul class="mc-ul">
+      <li>FP Sports launched today — first data will show in tomorrow morning's 6am report</li>
+      <li>Standard Oil launched today — running 7am–2pm, first full day tomorrow</li>
+      <li>Basecamp is the top performer so far: 8.4% CTR, $2.27 avg CPC over 7 days</li>
+      <li>Bars &amp; Bathrooms running Thu–Sun only — no impressions Mon–Wed is expected</li>
+      <li>FP Sports and Standard Oil age exclusions + alcohol policy reviewed before launch ✅</li>
+      <li>Combined daily budget: $140/day across all 4 campaigns</li>
+      <li>Landing page for FP Sports still set to hotelstcloud.com — swap when FP-specific URL is ready</li>
+    </ul>
+  </div>
+
 </div>
 
-<hr>
+<script>
+// Inject live data from Google Ads API results
+const data = {
+  bb:  { imp: 0,  clk: 0, spend: 0, ctr: 0, cpc: 0 },
+  bc:  { imp: 72, clk: 6, spend: 12.22, ctr: 8.33, cpc: 2.04 },
+  so:  { imp: 1,  clk: 0, spend: 0, ctr: 0, cpc: 0 },
+  fp:  { imp: 0,  clk: 0, spend: 0, ctr: 0, cpc: 0 }
+};
 
-<div class="sec">
-  <div class="sec-hdr">🏔️ Royal Gorge Basecamp <span>· Daily · 11am–9pm MT · $35/day</span></div>
-  <div class="kpis">
-    <div class="kpi"><div class="lbl">Today Impressions</div><div class="val">70</div><div class="sub">Today</div></div>
-    <div class="kpi"><div class="lbl">Today Clicks</div><div class="val">6</div><div class="sub up">↑ 8.57% CTR</div></div>
-    <div class="kpi"><div class="lbl">Today CTR</div><div class="val">8.57%</div><div class="sub">Benchmark: 3%</div></div>
-    <div class="kpi"><div class="lbl">Today Spend</div><div class="val">$12.22</div><div class="sub">of $35 cap</div></div>
-    <div class="kpi"><div class="lbl">7-Day Impressions</div><div class="val">332</div><div class="sub">32 clicks · $72.11</div></div>
-  </div>
-  <div class="g2">
-    <div class="card"><h2>📈 7-Day Trend</h2><canvas id="bcChart" height="180"></canvas></div>
-    <div class="card"><h2>📋 Ad Groups (7 days)</h2><table><thead><tr><th>Ad Group</th><th>Impr.</th><th>Clicks</th><th>Spend</th></tr></thead><tbody><tr><td>Royal Gorge Stay</td><td style='color:#7a8fa6'>318</td><td style='color:#60a5fa;font-weight:600'>32</td><td>$72.11</td></tr><tr><td>Mountain Biking</td><td style='color:#7a8fa6'>0</td><td style='color:#60a5fa;font-weight:600'>0</td><td>$0.0</td></tr><tr><td>Kayaking & Whitewater</td><td style='color:#7a8fa6'>0</td><td style='color:#60a5fa;font-weight:600'>0</td><td>$0.0</td></tr><tr><td>Fly Fishing Lodging</td><td style='color:#7a8fa6'>1</td><td style='color:#60a5fa;font-weight:600'>0</td><td>$0.0</td></tr><tr><td>Last Minute / Extend Trip</td><td style='color:#7a8fa6'>13</td><td style='color:#60a5fa;font-weight:600'>0</td><td>$0.0</td></tr><tr><td>Rock Climbing & Hiking</td><td style='color:#7a8fa6'>0</td><td style='color:#60a5fa;font-weight:600'>0</td><td>$0.0</td></tr></tbody></table></div>
-    <div class="card full"><h2>🔍 Top Search Terms (7 days)</h2><table><thead><tr><th>Term</th><th>Impr.</th><th>Clicks</th><th>CTR</th><th>CPC</th><th>Spend</th><th>Tag</th></tr></thead><tbody><tr><td>hotel st cloud canon city</td><td style='color:#7a8fa6'>14</td><td style='color:#60a5fa;font-weight:600'>4</td><td style='color:#4ade80;font-weight:600'>28.57%</td><td>$1.52</td><td>$6.09</td><td><span style="background:#2a2a1a;color:#fbbf24;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">⭐ HIGH INTENT</span></td></tr><tr><td>canon city hotels</td><td style='color:#7a8fa6'>23</td><td style='color:#60a5fa;font-weight:600'>3</td><td style='color:#4ade80;font-weight:600'>13.04%</td><td>$2.44</td><td>$7.32</td><td><span style="background:#1a3a2a;color:#4ade80;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">✓ GOOD</span></td></tr><tr><td>hotel st cloud canon city co</td><td style='color:#7a8fa6'>6</td><td style='color:#60a5fa;font-weight:600'>3</td><td style='color:#4ade80;font-weight:600'>50.0%</td><td>$2.19</td><td>$6.56</td><td><span style="background:#2a2a1a;color:#fbbf24;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">⭐ HIGH INTENT</span></td></tr><tr><td>hotels in canon city colorado</td><td style='color:#7a8fa6'>5</td><td style='color:#60a5fa;font-weight:600'>2</td><td style='color:#4ade80;font-weight:600'>40.0%</td><td>$2.4</td><td>$4.79</td><td><span style="background:#2a2a1a;color:#fbbf24;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">⭐ HIGH INTENT</span></td></tr><tr><td>bed and breakfast canyon city colorado</td><td style='color:#7a8fa6'>2</td><td style='color:#60a5fa;font-weight:600'>1</td><td style='color:#4ade80;font-weight:600'>50.0%</td><td>$2.47</td><td>$2.47</td><td><span style="background:#2a2a1a;color:#fbbf24;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">⭐ HIGH INTENT</span></td></tr><tr><td>canon city colorado hotel</td><td style='color:#7a8fa6'>2</td><td style='color:#60a5fa;font-weight:600'>1</td><td style='color:#4ade80;font-weight:600'>50.0%</td><td>$2.42</td><td>$2.42</td><td><span style="background:#2a2a1a;color:#fbbf24;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">⭐ HIGH INTENT</span></td></tr><tr><td>canon city hotel</td><td style='color:#7a8fa6'>10</td><td style='color:#60a5fa;font-weight:600'>1</td><td style='color:#f59e0b;font-weight:600'>10.0%</td><td>$2.49</td><td>$2.49</td><td><span style="background:#1a3a2a;color:#4ade80;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">✓ GOOD</span></td></tr><tr><td>cañon city resorts</td><td style='color:#7a8fa6'>2</td><td style='color:#60a5fa;font-weight:600'>1</td><td style='color:#4ade80;font-weight:600'>50.0%</td><td>$2.4</td><td>$2.4</td><td><span style="background:#2a2a1a;color:#fbbf24;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">⭐ HIGH INTENT</span></td></tr><tr><td>hotel st cloud cañon city</td><td style='color:#7a8fa6'>4</td><td style='color:#60a5fa;font-weight:600'>1</td><td style='color:#4ade80;font-weight:600'>25.0%</td><td>$1.29</td><td>$1.29</td><td><span style="background:#2a2a1a;color:#fbbf24;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">⭐ HIGH INTENT</span></td></tr><tr><td>hotels in canon city co</td><td style='color:#7a8fa6'>3</td><td style='color:#60a5fa;font-weight:600'>1</td><td style='color:#4ade80;font-weight:600'>33.33%</td><td>$2.48</td><td>$2.48</td><td><span style="background:#2a2a1a;color:#fbbf24;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">⭐ HIGH INTENT</span></td></tr><tr><td>hotels in canyon city colorado</td><td style='color:#7a8fa6'>3</td><td style='color:#60a5fa;font-weight:600'>1</td><td style='color:#4ade80;font-weight:600'>33.33%</td><td>$2.36</td><td>$2.36</td><td><span style="background:#2a2a1a;color:#fbbf24;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">⭐ HIGH INTENT</span></td></tr><tr><td>hotels royal gorge</td><td style='color:#7a8fa6'>5</td><td style='color:#60a5fa;font-weight:600'>1</td><td style='color:#4ade80;font-weight:600'>20.0%</td><td>$2.41</td><td>$2.41</td><td><span style="background:#1a3a2a;color:#4ade80;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">✓ GOOD</span></td></tr><tr><td>lodging near royal gorge</td><td style='color:#7a8fa6'>2</td><td style='color:#60a5fa;font-weight:600'>1</td><td style='color:#4ade80;font-weight:600'>50.0%</td><td>$2.48</td><td>$2.48</td><td><span style="background:#2a2a1a;color:#fbbf24;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">⭐ HIGH INTENT</span></td></tr><tr><td>lodging near royal gorge co</td><td style='color:#7a8fa6'>1</td><td style='color:#60a5fa;font-weight:600'>1</td><td style='color:#4ade80;font-weight:600'>100.0%</td><td>$2.38</td><td>$2.38</td><td><span style="background:#2a2a1a;color:#fbbf24;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">⭐ HIGH INTENT</span></td></tr><tr><td>st cloud hotel canon city</td><td style='color:#7a8fa6'>8</td><td style='color:#60a5fa;font-weight:600'>1</td><td style='color:#4ade80;font-weight:600'>12.5%</td><td>$2.42</td><td>$2.42</td><td><span style="background:#1a3a2a;color:#4ade80;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">✓ GOOD</span></td></tr><tr><td>where to stay in canon city colorado</td><td style='color:#7a8fa6'>4</td><td style='color:#60a5fa;font-weight:600'>1</td><td style='color:#4ade80;font-weight:600'>25.0%</td><td>$2.31</td><td>$2.31</td><td><span style="background:#2a2a1a;color:#fbbf24;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600">⭐ HIGH INTENT</span></td></tr><tr><td>1887 canon city</td><td style='color:#7a8fa6'>1</td><td style='color:#60a5fa;font-weight:600'>0</td><td style='color:#7a8fa6;font-weight:600'>0.0%</td><td>$0.0</td><td>$0.0</td><td><span style="background:#1e2a38;color:#7a8fa6;font-size:10px;padding:2px 6px;border-radius:8px">impressions only</span></td></tr><tr><td>best western canon city cañon city co</td><td style='color:#7a8fa6'>1</td><td style='color:#60a5fa;font-weight:600'>0</td><td style='color:#7a8fa6;font-weight:600'>0.0%</td><td>$0.0</td><td>$0.0</td><td><span style="background:#1e2a38;color:#7a8fa6;font-size:10px;padding:2px 6px;border-radius:8px">impressions only</span></td></tr><tr><td>best western canon city co</td><td style='color:#7a8fa6'>1</td><td style='color:#60a5fa;font-weight:600'>0</td><td style='color:#7a8fa6;font-weight:600'>0.0%</td><td>$0.0</td><td>$0.0</td><td><span style="background:#1e2a38;color:#7a8fa6;font-size:10px;padding:2px 6px;border-radius:8px">impressions only</span></td></tr><tr><td>best western canon city photos</td><td style='color:#7a8fa6'>1</td><td style='color:#60a5fa;font-weight:600'>0</td><td style='color:#7a8fa6;font-weight:600'>0.0%</td><td>$0.0</td><td>$0.0</td><td><span style="background:#1e2a38;color:#7a8fa6;font-size:10px;padding:2px 6px;border-radius:8px">impressions only</span></td></tr></tbody></table></div>
-  </div>
-</div>
+function fmt(n){ return n >= 1000 ? (n/1000).toFixed(1)+'k' : n; }
+function fmtCtr(n){ return n > 0 ? n.toFixed(1)+'%' : '—'; }
+function fmtSpend(n){ return n > 0 ? '$'+n.toFixed(2) : '$0.00'; }
+function fmtCpc(n){ return n > 0 ? '$'+n.toFixed(2) : '—'; }
 
-<div class="ftr">Powered by <strong style="color:#5a8ba7">MC — Unbridled Solutions</strong> · Data pulled live from Google Ads API · Refresh anytime</div>
+const maxImp = Math.max(data.bb.imp, data.bc.imp, data.so.imp, data.fp.imp, 1);
 
-<script>new Chart(document.getElementById('bbChart').getContext('2d'),{type:'bar',data:{labels:["05-08", "05-09", "05-10"],datasets:[{label:'Impressions',data:[387, 305, 337],backgroundColor:'rgba(90,139,167,0.7)',borderColor:'#5a8ba7',borderWidth:1,yAxisID:'y'},{label:'Clicks',data:[22, 28, 25],type:'line',borderColor:'#4ade80',backgroundColor:'rgba(74,222,128,0.1)',borderWidth:2,pointRadius:4,pointBackgroundColor:'#4ade80',tension:0.4,yAxisID:'y1'}]},options:{responsive:true,plugins:{legend:{labels:{color:'#7a8fa6',font:{size:10}}}},scales:{x:{ticks:{color:'#5a7a96'},grid:{color:'#1e2a38'}},y:{type:'linear',position:'left',ticks:{color:'#5a7a96'},grid:{color:'#1e2a38'}},y1:{type:'linear',position:'right',ticks:{color:'#4ade80'},grid:{drawOnChartArea:false}}}}});
-new Chart(document.getElementById('bcChart').getContext('2d'),{type:'bar',data:{labels:["05-09", "05-10"],datasets:[{label:'Impressions',data:[117, 215],backgroundColor:'rgba(90,139,167,0.7)',borderColor:'#5a8ba7',borderWidth:1,yAxisID:'y'},{label:'Clicks',data:[14, 18],type:'line',borderColor:'#4ade80',backgroundColor:'rgba(74,222,128,0.1)',borderWidth:2,pointRadius:4,pointBackgroundColor:'#4ade80',tension:0.4,yAxisID:'y1'}]},options:{responsive:true,plugins:{legend:{labels:{color:'#7a8fa6',font:{size:10}}}},scales:{x:{ticks:{color:'#5a7a96'},grid:{color:'#1e2a38'}},y:{type:'linear',position:'left',ticks:{color:'#5a7a96'},grid:{color:'#1e2a38'}},y1:{type:'linear',position:'right',ticks:{color:'#4ade80'},grid:{drawOnChartArea:false}}}}});</script>
-</body></html>
+['bb','bc','so','fp'].forEach(k => {
+  const d = data[k];
+  document.getElementById(k+'-imp').textContent = fmt(d.imp);
+  document.getElementById(k+'-clk').textContent = d.clk;
+  document.getElementById(k+'-ctr').textContent = fmtCtr(d.ctr);
+  document.getElementById(k+'-spend').textContent = fmtSpend(d.spend);
+  document.getElementById(k+'-clk2').textContent = d.clk;
+  document.getElementById(k+'-ctr2').textContent = fmtCtr(d.ctr);
+  document.getElementById(k+'-cpc').textContent = fmtCpc(d.cpc);
+  document.getElementById(k+'-spend2').textContent = fmtSpend(d.spend);
+  document.getElementById(k+'-bar').style.width = (d.imp/maxImp*100)+'%';
+  document.getElementById(k+'-today-bar').style.width = (d.imp/maxImp*100)+'%';
+  document.getElementById(k+'-today-val').textContent = d.imp;
+  document.getElementById(k+'-today-clk').textContent = d.clk+' clk';
+});
+
+const totImp = Object.values(data).reduce((s,d)=>s+d.imp,0);
+const totClk = Object.values(data).reduce((s,d)=>s+d.clk,0);
+const totSpend = Object.values(data).reduce((s,d)=>s+d.spend,0);
+const totCtr = totImp > 0 ? (totClk/totImp*100) : 0;
+
+document.getElementById('total-imp').textContent = fmt(totImp) || '—';
+document.getElementById('total-clk').textContent = totClk || '—';
+document.getElementById('total-spend').textContent = totSpend > 0 ? '$'+totSpend.toFixed(2) : '$0.00';
+document.getElementById('total-ctr').textContent = fmtCtr(totCtr);
+
+const now = new Date();
+document.getElementById('lastUpdated').textContent = 'Last updated: ' + now.toLocaleString('en-US',{timeZone:'America/Denver',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'});
+</script>
+</body>
+</html>
