@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FP Sports — Google Ads Preview</title>
+<style>
+  :root {
+    --bg:#0f1923; --navy:#1a2e3b; --gold:#c9aa7c; --blue:#5a8ba7;
+    --text:#e8e0d4; --muted:#8a9aaa; --green:#4caf7d; --red:#e05a5a;
+    --card-bg:#162433; --border:#263d52;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Arial, sans-serif; padding: 24px 16px; }
+  .header { text-align: center; padding: 32px 0 24px; border-bottom: 1px solid var(--border); margin-bottom: 32px; }
+  .header h1 { font-size: 1.6rem; color: var(--gold); letter-spacing: 0.04em; }
+  .header .sub { color: var(--muted); font-size: 0.9rem; margin-top: 6px; }
+  .tagline { font-style: italic; color: var(--blue); border-left: 3px solid var(--blue); padding-left: 12px; margin: 0 auto 32px; max-width: 600px; font-size: 1.05rem; }
+
+  /* Campaign meta */
+  .meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; max-width: 720px; margin: 0 auto 36px; }
+  .meta-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; }
+  .meta-card .label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+  .meta-card .val { font-size: 1rem; color: var(--gold); font-weight: 600; }
+
+  /* SERP preview */
+  .section-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 14px; }
+  .ad-preview { background: #fff; border-radius: 10px; padding: 18px 20px; max-width: 620px; margin: 0 auto 32px; }
+  .ad-preview .sponsored { font-size: 11px; color: #70757a; font-weight: 600; margin-bottom: 3px; }
+  .ad-preview .ad-url { font-size: 14px; color: #202124; margin-bottom: 2px; }
+  .ad-preview .ad-url span { color: #1e8e3e; font-size: 12px; }
+  .ad-preview .ad-headline { font-size: 20px; color: #1a0dab; line-height: 1.3; margin-bottom: 5px; }
+  .ad-preview .ad-desc { font-size: 14px; color: #4d5156; line-height: 1.5; }
+  .ad-preview .pipe { color: #70757a; padding: 0 4px; }
+
+  /* Copy lists */
+  .copy-block { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 22px 24px; max-width: 720px; margin: 0 auto 28px; }
+  .copy-block h3 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 16px; }
+  .headline-list { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 20px; }
+  .headline-list li { font-size: 0.93rem; color: var(--text); display: flex; gap: 8px; align-items: baseline; }
+  .headline-list li .num { color: var(--muted); font-size: 0.78rem; min-width: 20px; }
+  .headline-list li .chars { color: var(--muted); font-size: 0.72rem; margin-left: auto; }
+  .desc-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .desc-list li { font-size: 0.93rem; color: var(--text); display: flex; gap: 8px; align-items: flex-start; }
+  .desc-list li .num { color: var(--muted); font-size: 0.78rem; min-width: 20px; padding-top: 2px; }
+  .desc-list li .chars { color: var(--muted); font-size: 0.72rem; white-space: nowrap; margin-left: auto; padding-top: 2px; }
+
+  /* Keywords */
+  .kw-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .kw { background: var(--navy); border: 1px solid var(--border); border-radius: 20px; padding: 4px 12px; font-size: 0.82rem; color: var(--text); }
+  .kw.neg { border-color: var(--red); color: var(--red); }
+
+  /* Photo */
+  .photo-section { max-width: 720px; margin: 0 auto 32px; }
+  .photo-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .photo-card img { width: 100%; max-height: 360px; object-fit: cover; display: block; }
+  .photo-cap { padding: 12px 16px; font-size: 0.85rem; color: var(--muted); }
+  .photo-cap strong { color: var(--gold); }
+
+  /* Status badge */
+  .status { display: inline-block; background: #1a3a2a; color: var(--green); border: 1px solid var(--green); border-radius: 4px; font-size: 0.75rem; padding: 2px 8px; font-weight: 600; letter-spacing: 0.06em; }
+  .status.paused { background: #2a2a1a; color: var(--gold); border-color: var(--gold); }
+
+  .campaign-id { font-size: 0.75rem; color: var(--muted); font-family: monospace; margin-top: 4px; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 32px auto; max-width: 720px; }
+  .footer { text-align: center; font-size: 0.78rem; color: var(--muted); padding-top: 16px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Fremont Provisions — FP Sports</h1>
+  <div class="sub">Google Ads Campaign Preview · <span class="status paused">PAUSED — Pending Approval</span></div>
+</div>
+
+<p class="tagline">"Adventure by day. Cañon City's sports bar by night."</p>
+
+<!-- Meta -->
+<div class="meta-grid">
+  <div class="meta-card"><div class="label">Campaign ID</div><div class="val" style="font-size:0.85rem">23843219257</div></div>
+  <div class="meta-card"><div class="label">Daily Budget</div><div class="val">$35 / day</div></div>
+  <div class="meta-card"><div class="label">Max CPC</div><div class="val">$3.00</div></div>
+  <div class="meta-card"><div class="label">Bidding</div><div class="val">Max Clicks</div></div>
+  <div class="meta-card"><div class="label">Geo</div><div class="val">20-mi radius</div></div>
+  <div class="meta-card"><div class="label">Schedule</div><div class="val">All day</div></div>
+</div>
+
+<!-- SERP Preview -->
+<div style="max-width:720px;margin:0 auto 12px;">
+  <div class="section-title">Ad Preview — How It Looks on Google</div>
+</div>
+<div class="ad-preview">
+  <div class="sponsored">Sponsored</div>
+  <div class="ad-url"><span>fremontprovisions.com</span></div>
+  <div class="ad-headline">15 TVs. Zero Excuses. <span class="pipe">|</span> Cañon City's Sports HQ <span class="pipe">|</span> Big Screens. Scratch Kitchen.</div>
+  <div class="ad-desc">15 TVs, 86" screens, pool &amp; foosball. Scratch kitchen &amp; cocktails. Cañon City sports bar. Sports bar &amp; scratch kitchen. $5 margs Fri &amp; Sat. $5 drafts every Thursday.</div>
+</div>
+
+<div class="ad-preview" style="margin-top:-20px;">
+  <div class="sponsored">Sponsored</div>
+  <div class="ad-url"><span>fremontprovisions.com</span></div>
+  <div class="ad-headline">Trail's Done. Game's On. <span class="pipe">|</span> Pool. Foosball. Cold Drafts. <span class="pipe">|</span> $5 Margs Fri &amp; Sat</div>
+  <div class="ad-desc">After the trail, the river, or the gorge — come watch the game at Fremont Provisions. Pool tables, foosball, darts &amp; 15 TVs. Daily drink specials and a full scratch kitchen.</div>
+</div>
+
+<hr class="divider">
+
+<!-- Photo -->
+<div class="photo-section">
+  <div class="section-title">Image Asset — Cocktail Shot</div>
+  <div class="photo-card">
+    <img src="https://offers.hotelstcloud.com/assets/fp-cocktails-menu.jpg" alt="Fremont Provisions handcrafted cocktails" onerror="this.style.display='none'">
+    <div class="photo-cap"><strong>FP-cocktails-menu.jpg</strong> — Margarita + Old Fashioned with the full handcrafted cocktail menu. Best for: $5 margs / daily specials ads.</div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- Headlines -->
+<div class="copy-block">
+  <h3>15 Headlines (all ≤30 chars)</h3>
+  <ul class="headline-list">
+    <li><span class="num">1</span> 15 TVs. Zero Excuses. <span class="chars">21</span></li>
+    <li><span class="num">2</span> Cañon City's Sports HQ <span class="chars">22</span></li>
+    <li><span class="num">3</span> Trail's Done. Game's On. <span class="chars">24</span></li>
+    <li><span class="num">4</span> Big Screens. Scratch Kitchen. <span class="chars">29</span></li>
+    <li><span class="num">5</span> Pool. Foosball. Cold Drafts. <span class="chars">28</span></li>
+    <li><span class="num">6</span> Sports Bar on Main Street <span class="chars">25</span></li>
+    <li><span class="num">7</span> Watch Every Game Here <span class="chars">21</span></li>
+    <li><span class="num">8</span> $5 Margs Fri &amp; Sat <span class="chars">18</span></li>
+    <li><span class="num">9</span> $5 Drafts Every Thursday <span class="chars">24</span></li>
+    <li><span class="num">10</span> Handcrafted Cocktails. $12. <span class="chars">27</span></li>
+    <li><span class="num">11</span> 86" Screens. Big Games. <span class="chars">23</span></li>
+    <li><span class="num">12</span> Darts. Foosball. Big Screens. <span class="chars">29</span></li>
+    <li><span class="num">13</span> Fish. Ride. Watch the Game. <span class="chars">27</span></li>
+    <li><span class="num">14</span> Play Games. Watch the Game. <span class="chars">27</span></li>
+    <li><span class="num">15</span> Cañon City Sports &amp; Drinks <span class="chars">26</span></li>
+  </ul>
+</div>
+
+<!-- Descriptions -->
+<div class="copy-block">
+  <h3>4 Descriptions (all ≤90 chars)</h3>
+  <ul class="desc-list">
+    <li><span class="num">1</span> 15 TVs, 86" screens, pool &amp; foosball. Scratch kitchen &amp; cocktails. Cañon City sports bar. <span class="chars">89</span></li>
+    <li><span class="num">2</span> Sports bar &amp; scratch kitchen. $5 margs Fri &amp; Sat. $5 drafts every Thursday. <span class="chars">75</span></li>
+    <li><span class="num">3</span> After the trail, the river, or the gorge — come watch the game at Fremont Provisions. <span class="chars">85</span></li>
+    <li><span class="num">4</span> Pool tables, foosball, darts &amp; 15 TVs. Daily drink specials and a full scratch kitchen. <span class="chars">87</span></li>
+  </ul>
+</div>
+
+<!-- Keywords -->
+<div class="copy-block">
+  <h3>14 Keywords (BROAD — geo radius handles location)</h3>
+  <div class="kw-grid">
+    <span class="kw">sports bar near me</span>
+    <span class="kw">bars near me</span>
+    <span class="kw">bar and grill near me</span>
+    <span class="kw">watch the game near me</span>
+    <span class="kw">sports bar canon city</span>
+    <span class="kw">bars in canon city</span>
+    <span class="kw">restaurants canon city co</span>
+    <span class="kw">things to do canon city</span>
+    <span class="kw">dinner canon city</span>
+    <span class="kw">cocktail bar near me</span>
+    <span class="kw">happy hour near me</span>
+    <span class="kw">margaritas near me</span>
+    <span class="kw">pool table bar near me</span>
+    <span class="kw">bar with games near me</span>
+  </div>
+  <div style="margin-top:16px;"><div class="section-title" style="margin-bottom:10px;">14 Negative Keywords</div>
+  <div class="kw-grid">
+    <span class="kw neg">-japanese</span>
+    <span class="kw neg">-sushi</span>
+    <span class="kw neg">-mexican</span>
+    <span class="kw neg">-chinese</span>
+    <span class="kw neg">-bbq</span>
+    <span class="kw neg">-indian</span>
+    <span class="kw neg">-pizza</span>
+    <span class="kw neg">-thai</span>
+    <span class="kw neg">-seafood</span>
+    <span class="kw neg">-burger</span>
+    <span class="kw neg">-"fast food"</span>
+    <span class="kw neg">-karaoke</span>
+    <span class="kw neg">-nightclub</span>
+    <span class="kw neg">-"strip club"</span>
+  </div></div>
+</div>
+
+<div class="footer">
+  Campaign ID: 23843219257 · Account: LW FP (4032153396) · Status: PAUSED · Built by MC
+</div>
+
+</body>
+</html>
