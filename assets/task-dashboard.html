@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Unbridled task and project dashboard — managed by MC">
+  <title>Task Dashboard | Unbridled</title>
+  <link href="https://fonts.googleapis.com/css2?family=Azo+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue: #5a8ba7;
+      --blue-dark: #3f6a84;
+      --gray: #4b4f54;
+      --gray-light: #f5f6f7;
+      --gray-mid: #e2e4e7;
+      --white: #ffffff;
+      --red: #c0392b;
+      --orange: #d97b2b;
+      --yellow: #c9a02a;
+      --green: #2e7d4f;
+      --text: #2c2f33;
+      --text-light: #6b7280;
+      --radius: 10px;
+      --shadow: 0 2px 12px rgba(0,0,0,0.07);
+    }
+
+    body {
+      font-family: 'Azo Sans', 'Helvetica Neue', Arial, sans-serif;
+      font-size: 16px;
+      background: var(--gray-light);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* HEADER */
+    header {
+      background: var(--gray);
+      color: var(--white);
+      padding: clamp(1rem, 4vw, 2rem) clamp(1rem, 5vw, 3rem);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .elk-icon {
+      font-size: clamp(1.8rem, 4vw, 2.5rem);
+      line-height: 1;
+    }
+    .header-text h1 {
+      font-size: clamp(1.2rem, 3vw, 1.7rem);
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .header-text p {
+      font-size: clamp(0.8rem, 2vw, 0.9rem);
+      color: rgba(255,255,255,0.65);
+      margin-top: 2px;
+    }
+    .updated-badge {
+      margin-left: auto;
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.5);
+      white-space: nowrap;
+    }
+
+    /* TABS */
+    .tabs {
+      background: var(--white);
+      border-bottom: 2px solid var(--gray-mid);
+      display: flex;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab {
+      padding: 0.9rem clamp(1rem, 3vw, 1.8rem);
+      font-size: clamp(0.8rem, 2vw, 0.9rem);
+      font-weight: 500;
+      color: var(--text-light);
+      cursor: pointer;
+      white-space: nowrap;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: color 0.2s, border-color 0.2s;
+      user-select: none;
+    }
+    .tab.active {
+      color: var(--blue);
+      border-bottom-color: var(--blue);
+    }
+    .tab:hover:not(.active) {
+      color: var(--text);
+    }
+
+    /* MAIN CONTENT */
+    main {
+      max-width: 960px;
+      width: 100%;
+      margin: 0 auto;
+      padding: clamp(1rem, 4vw, 2.5rem) clamp(1rem, 4vw, 2rem);
+    }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* SECTION */
+    .section {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+    }
+    .section-header {
+      padding: clamp(0.9rem, 3vw, 1.2rem) clamp(1rem, 4vw, 1.5rem);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      border-bottom: 1px solid var(--gray-mid);
+      cursor: pointer;
+      user-select: none;
+    }
+    .section-header:hover { background: rgba(90,139,167,0.04); }
+    .priority-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-red    { background: var(--red); }
+    .dot-orange { background: var(--orange); }
+    .dot-yellow { background: var(--yellow); }
+    .dot-blue   { background: var(--blue); }
+    .dot-green  { background: var(--green); }
+    .dot-gray   { background: #9ca3af; }
+
+    .section-title {
+      font-size: clamp(0.95rem, 2.5vw, 1.05rem);
+      font-weight: 600;
+      flex: 1;
+    }
+    .status-chip {
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .chip-red    { background: #fdecea; color: var(--red); }
+    .chip-orange { background: #fef3e2; color: var(--orange); }
+    .chip-yellow { background: #fdf8e1; color: #a07d10; }
+    .chip-blue   { background: #eaf2f7; color: var(--blue-dark); }
+    .chip-green  { background: #e6f4ec; color: var(--green); }
+    .chip-gray   { background: #f3f4f6; color: #6b7280; }
+
+    .chevron {
+      font-size: 0.8rem;
+      color: var(--text-light);
+      transition: transform 0.2s;
+    }
+    .section.collapsed .chevron { transform: rotate(-90deg); }
+    .section.collapsed .section-body { display: none; }
+
+    .section-body {
+      padding: clamp(0.75rem, 3vw, 1.25rem) clamp(1rem, 4vw, 1.5rem);
+    }
+
+    /* TASK ITEMS */
+    .task-list { list-style: none; }
+    .task-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid var(--gray-mid);
+      font-size: clamp(0.85rem, 2vw, 0.95rem);
+    }
+    .task-item:last-child { border-bottom: none; }
+    .task-check {
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--gray-mid);
+      border-radius: 4px;
+      flex-shrink: 0;
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .task-check.done { background: var(--green); border-color: var(--green); color: white; font-size: 10px; }
+    .task-check.blocked { background: #fdecea; border-color: var(--red); color: var(--red); font-size: 10px; }
+    .task-text { flex: 1; }
+    .task-text.done-text { color: var(--text-light); text-decoration: line-through; }
+    .task-tag {
+      font-size: 0.72rem;
+      padding: 2px 8px;
+      border-radius: 12px;
+      background: var(--gray-light);
+      color: var(--text-light);
+      font-weight: 500;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .tag-blocker { background: #fdecea; color: var(--red); }
+    .tag-action  { background: #fef3e2; color: var(--orange); }
+    .tag-mc      { background: #eaf2f7; color: var(--blue-dark); }
+
+    /* META ROWS */
+    .meta-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.75rem;
+    }
+    .meta-pill {
+      font-size: 0.78rem;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: var(--gray-light);
+      color: var(--text-light);
+    }
+
+    /* NOTES */
+    .note-block {
+      background: #f9f9fb;
+      border-left: 3px solid var(--blue);
+      border-radius: 0 6px 6px 0;
+      padding: 0.75rem 1rem;
+      margin-top: 0.75rem;
+      font-size: clamp(0.82rem, 2vw, 0.9rem);
+      color: var(--text-light);
+    }
+    .note-block strong { color: var(--text); }
+
+    /* SUBHEADER */
+    .sub-heading {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-light);
+      margin: 1rem 0 0.4rem;
+    }
+    .sub-heading:first-child { margin-top: 0; }
+
+    /* OVERVIEW CARDS */
+    .overview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .overview-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.1rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .overview-card .card-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-light);
+    }
+    .overview-card .card-value {
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.1;
+    }
+    .overview-card .card-sub {
+      font-size: 0.78rem;
+      color: var(--text-light);
+    }
+    .card-accent-red    { border-top: 3px solid var(--red); }
+    .card-accent-orange { border-top: 3px solid var(--orange); }
+    .card-accent-blue   { border-top: 3px solid var(--blue); }
+    .card-accent-green  { border-top: 3px solid var(--green); }
+
+    /* FOOTER */
+    footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      font-size: 0.78rem;
+      color: var(--text-light);
+    }
+
+    @media (max-width: 480px) {
+      .updated-badge { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="elk-icon">🦌</div>
+  <div class="header-text">
+    <h1>Unbridled Task Dashboard</h1>
+    <p>Managed by MC · Hotel St. Cloud &amp; Unbridled Ecosystem</p>
+  </div>
+  <div class="updated-badge">Updated May 11, 2026</div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="showPanel('overview')">Overview</div>
+  <div class="tab" onclick="showPanel('lindsay')">Lindsay's List</div>
+  <div class="tab" onclick="showPanel('stan')">Stan's List</div>
+</div>
+
+<main>
+
+  <!-- OVERVIEW PANEL -->
+  <div class="panel active" id="panel-overview">
+
+    <div class="overview-grid">
+      <div class="overview-card card-accent-red">
+        <div class="card-label">🔴 High Priority</div>
+        <div class="card-value">1</div>
+        <div class="card-sub">St. Cloud Asst. Manager hire</div>
+      </div>
+      <div class="overview-card card-accent-orange">
+        <div class="card-label">🟠 Active Projects</div>
+        <div class="card-value">4</div>
+        <div class="card-sub">Jobs page, taxes, OTA pricing, ads</div>
+      </div>
+      <div class="overview-card card-accent-blue">
+        <div class="card-label">⏳ Blocked / Needs Info</div>
+        <div class="card-value">3</div>
+        <div class="card-sub">CMS access, contracts, Obsidian Sync</div>
+      </div>
+      <div class="overview-card card-accent-green">
+        <div class="card-label">✅ Completed (this week)</div>
+        <div class="card-value">0</div>
+        <div class="card-sub">Dashboard just launched today</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="priority-dot dot-red"></div>
+        <div class="section-title">Blockers — Need Your Input</div>
+        <div class="status-chip chip-red">Action Needed</div>
+        <div class="chevron">▼</div>
+      </div>
+      <div class="section-body">
+        <ul class="task-list">
+          <li class="task-item">
+            <div class="task-check blocked">!</div>
+            <div class="task-text">Who manages unbridledhospitality.com? Need CMS access to build jobs page.</div>
+            <div class="task-tag tag-blocker">Blocker</div>
+          </li>
+          <li class="task-item">
+            <div class="task-check blocked">!</div>
+            <div class="task-text">Paste the Assistant Manager job description from Indeed.</div>
+            <div class="task-tag tag-action">Lindsay</div>
+          </li>
+          <li class="task-item">
+            <div class="task-check blocked">!</div>
+            <div class="task-text">Share the Expedia contract — specifically campaign/discount language.</div>
+            <div class="task-tag tag-action">Lindsay</div>
+          </li>
+          <li class="task-item">
+            <div class="task-check blocked">!</div>
+            <div class="task-text">Confirm: when a guest books via Booking.com, does their confirmation show a tax line? Is Booking.com remitting CO/Fremont County lodging tax on your behalf?</div>
+            <div class="task-tag tag-action">Lindsay</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="priority-dot dot-blue"></div>
+        <div class="section-title">MC's Active Work</div>
+        <div class="status-chip chip-blue">In Progress</div>
+        <div class="chevron">▼</div>
+      </div>
+      <div class="section-body">
+        <ul class="task-list">
+          <li class="task-item">
+            <div class="task-check"></div>
+            <div class="task-text">Build unbridledhospitality.com jobs page with Google for Jobs schema — <em>waiting on CMS access</em></div>
+            <div class="task-tag tag-mc">MC</div>
+          </li>
+          <li class="task-item">
+            <div class="task-check"></div>
+            <div class="task-text">Audit Booking.com tax settings in Cloudbeds (property 23229145280711)</div>
+            <div class="task-tag tag-mc">MC</div>
+          </li>
+          <li class="task-item">
+            <div class="task-check"></div>
+            <div class="task-text">Pull last 90 days of bookings by channel from Cloudbeds — ADR, occupancy, net revenue per channel</div>
+            <div class="task-tag tag-mc">MC</div>
+          </li>
+          <li class="task-item">
+            <div class="task-check"></div>
+            <div class="task-text">Build OTA net rate floor model per room type — <em>waiting on Expedia contract</em></div>
+            <div class="task-tag tag-mc">MC</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- LINDSAY PANEL -->
+  <div class="panel" id="panel-lindsay">
+
+    <div class="section">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="priority-dot dot-red"></div>
+        <div class="section-title">🔴 St. Cloud Assistant Manager Hire</div>
+        <div class="status-chip chip-red">Active Search</div>
+        <div class="chevron">▼</div>
+      </div>
+      <div class="section-body">
+        <div class="meta-row">
+          <div class="meta-pill">Hotel St. Cloud</div>
+          <div class="meta-pill">Cañon City, CO</div>
+          <div class="meta-pill">Indeed posting live</div>
+        </div>
+        <p class="sub-heading">Problem</p>
+        <p style="font-size:0.9rem;color:var(--text-light);margin-bottom:0.75rem;">Indeed now charges a daily rate. Getting low-quality applicants. Goal: move to unbridledhospitality.com + Google for Jobs for free organic reach.</p>
+        <p class="sub-heading">Open Tasks</p>
+        <ul class="task-list">
+          <li class="task-item">
+            <div class="task-check blocked">!</div>
+            <div class="task-text">Who manages unbridledhospitality.com? Need CMS access.</div>
+            <div class="task-tag tag-blocker">Blocker</div>
+          </li>
+          <li class="task-item">
+            <div class="task-check blocked">!</div>
+            <div class="task-text">Paste the job description from Indeed so MC can port it.</div>
+            <div class="task-tag tag-action">Lindsay</div>
+          </li>
+          <li class="task-item">
+            <div class="task-check"></div>
+            <div class="task-text">Build individual job listing page with JSON-LD schema markup</div>
+            <div class="task-tag tag-mc">MC</div>
+          </li>
+          <li class="task-item">
+            <div class="task-check"></div>
+            <div class="task-text">Build jobs index page on unbridledhospitality.com</div>
+            <div class="task-tag tag-mc">MC</div>
+          </li>
+          <li class="task-item">
+            <div class="task-check"></div>
+            <div class="task-text">Submit sitemap to Google Search Console after launch</div>
+            <div class="task-tag tag-mc">MC</div>
+          </li>
+          <li class="task-item">
+            <div class="task-check"></div>
+            <div class="task-text">Evaluate: pause Indeed posting once new page is live?</div>
+            <div class="task-tag tag-action">Lindsay</div>
+          </li>
+          <li class="task-item">
+            <div class="task-check"></div>
+            <div class="task-text">Draft higher-quality sourcing strategy (Hcareers, LinkedIn, Culinary Agents)</div>
+            <div class="task-tag tag-mc">MC</div>
+          </li>
+        </ul>
+        <div class="note-block"><strong>Longer term:</strong> Hcareers, Culinary Agents, LinkedIn, HospitalityOnline — all worth adding once jobs page is live.</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="priority-dot dot-orange"></div>
+        <div class="section-title">🟠 Booking.com Tax Reconciliation → Cloudbeds</div>
+        <div class="status-chip chip-orange">Needs Investigation</div>
+        <div class="chevron">▼</div>
+      </div>
+      <div class="section-body">
+        <div class="meta-row">
+          <div class="meta-pill">Hotel St. Cloud</div>
+          <div class="meta-pill">Cloudbeds PMS</div>
+          <div class="meta-pill">Compliance Risk</div>
+        </div>
+        <p class="sub-heading">Key Question</p>
+        <div class="note-block">When a guest books through Booking.com — does their confirmation show a tax line? Is Booking.com remitting CO / Fremont County lodging tax on your behalf, or is that all on St. Cloud?</div>
+        <p class="sub-heading" style="margin-top:1rem;">Open Tasks</p>
+        <ul class="task-list">
+          <li class="task-item">
+            <div class="task-check blocked">!</div>
+            <div class="task-text">Confirm Booking.com tax collection model — who remits what?</div>
+            <div class="task-tag tag-action">Lindsay</div>
+          </li>
+          <li class="task-item">
+            <div class="task-check"></div>
+            <div class="task-text">Audit current Booking.com tax settings in Cloudbeds (property 23229145280711)</div>
+            <div class="task-tag tag-mc">MC</div>
+          </li>
+          <li class="task-item">
+            <div class="task-check"></div>
+            <div class="task-text">Map each tax type: Booking.com collects vs. St. Cloud collects &amp; remits</div>
+            <div class="task-tag tag-mc">MC</div>
+          </li>
+          <li class="task-item">
+            <div class="task-check"></div>
+            <div class="task-text">Verify Cloudbeds isn't double-counting taxes Booking.com already remits</div>
+            <div class="task-tag tag-mc">MC</div>
+          </li>
+          <li class="task-item">
+            <div class="task-check"></div>
+            <div class="task-text">Document correct mapping as an SOP</div>
+            <div class="task-tag tag-mc">MC</div>
+          </li>
+          <li class="task-item">
+            <div class="task-check"></div>
+            <div class="task-text">Confirm final setup with accountant / Lindsay before closing</div>
+            <div class="task-tag tag-action">Lindsay</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="priority-dot dot-orange"></div>
+        <div class="section-title">🟠 OTA Pricing Strategy — Booking.com + Expedia</div>
+        <div class="status-chip chip-orange">Analysis Needed</div>
+        <div class="chevron">▼</div>
+      </div>
+      <div class="section-body">
+        <div class="meta-row">
+          <div class="meta-pill">Booking.com — 15% commission</div>
+          <div class="meta-pill">Expedia — 18% commission</div>
+          <div class="meta-pill">Expedia can discount further</div>
+        </div>
+        <p class="sub-heading">Current Rate Markup</p>
+        <ul class="task-list">
+          <li class="task-item">
+            <div class="task-check done">✓</div>
+            <div class="task-text task-text done-text">Booking.com: +10% markup over base rate (nets ~95.5% of base after 15% commission)</div>
+          </li>
+          <li class="task-item">
+            <div class="task-check done">✓</div>
+            <div class="task-text task-text done-text">Expedia: +15% markup over base rate (nets ~94.3% of base before campaign discounts)</div>
+          </li>
+        </ul>
+        <div class="note-block" style="border-left-color: var(--red);"><strong>Risk:</strong> Expedia can run campaigns and discount further with no approval required — you could be netting 80–85 cents on the dollar with no warning.</div>
+        <p class="sub-heading" style="margin-top:1rem;">Open Tasks</p>
+        <ul class="task-list">
+          <li class="task-item">
+            <div class="task-check blocked">!</div>
+            <div class="task-text">Share Expedia contract — specifically campaign/discount language and opt-out rights</div>
+            <div class="task-tag tag-action">Lindsay</div>
+          </li>
+          <li class="task-item">
+            <div class="task-check"></div>
+            <div class="task-text">Share Booking.com contract — confirm 15% rate and parity clause</div>
+            <div class="task-tag tag-action">Lindsay</div>
+          </li>
+          <li class="task-item">
+            <div class="task-check"></div>
+            <div class="task-text">Pull last 90 days bookings by channel from Cloudbeds — ADR, occupancy, net revenue</div>
+            <div class="task-tag tag-mc">MC</div>
+          </li>
+          <li class="task-item">
+            <div class="task-check"></div>
+            <div class="task-text">Calculate actual net revenue per channel (rate minus commission minus discounts)</div>
+            <div class="task-tag tag-mc">MC</div>
+          </li>
+          <li class="task-item">
+            <div class="task-check"></div>
+            <div class="task-text">Build net rate floor model per room type</div>
+            <div class="task-tag tag-mc">MC</div>
+          </li>
+          <li class="task-item">
+            <div class="task-check"></div>
+            <div class="task-text">Draft revised OTA rate strategy with recommendations</div>
+            <div class="task-tag tag-mc">MC</div>
+          </li>
+          <li class="task-item">
+            <div class="task-check"></div>
+            <div class="task-text">Decision: keep Expedia at current terms or renegotiate / reduce reliance?</div>
+            <div class="task-tag tag-action">Lindsay + Stan</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- STAN PANEL -->
+  <div class="panel" id="panel-stan">
+
+    <div class="section">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="priority-dot dot-orange"></div>
+        <div class="section-title">🟠 Google Ads — Hotel St. Cloud</div>
+        <div class="status-chip chip-orange">Campaign Live</div>
+        <div class="chevron">▼</div>
+      </div>
+      <div class="section-body">
+        <div class="meta-row">
+          <div class="meta-pill">Road Tripper campaign — LIVE</div>
+          <div class="meta-pill">$20/day budget</div>
+          <div class="meta-pill">Thu–Sun through May 31</div>
+        </div>
+        <p class="sub-heading">Open Items</p>
+        <ul class="task-list">
+          <li class="task-item">
+            <div class="task-check blocked">!</div>
+            <div class="task-text">1887 Dining Offer campaign (ID: 23809889208) — built and ready, still PAUSED. Waiting on Stan's go-ahead.</div>
+            <div class="task-tag tag-action">Stan</div>
+          </li>
+          <li class="task-item">
+            <div class="task-check"></div>
+            <div class="task-text">Promotion extension in Google Ads — API rejected it; 2-min manual fix in UI. MC has walkthrough ready.</div>
+            <div class="task-tag tag-mc">MC ready</div>
+          </li>
+          <li class="task-item">
+            <div class="task-check"></div>
+            <div class="task-text">Print-ready QR card for bar/tables — offered, not yet built</div>
+            <div class="task-tag tag-mc">MC</div>
+          </li>
+        </ul>
+        <div class="note-block">Daily 6am analytics dashboard is running. <a href="https://offers.hotelstcloud.com/roadtripper.html" target="_blank" style="color:var(--blue);">Road Tripper promo page ↗</a></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="priority-dot dot-blue"></div>
+        <div class="section-title">🔵 Unbridled Marketing Plan</div>
+        <div class="status-chip chip-blue">Delivered</div>
+        <div class="chevron">▼</div>
+      </div>
+      <div class="section-body">
+        <div class="meta-row">
+          <div class="meta-pill">Deployed live</div>
+          <div class="meta-pill">Password: DGBDW</div>
+        </div>
+        <ul class="task-list">
+          <li class="task-item">
+            <div class="task-check done">✓</div>
+            <div class="task-text task-text done-text">Full marketing plan built and deployed</div>
+          </li>
+          <li class="task-item">
+            <div class="task-check blocked">!</div>
+            <div class="task-text">Stan hasn't directed which sections to build out — what's the next priority from the plan?</div>
+            <div class="task-tag tag-action">Stan</div>
+          </li>
+        </ul>
+        <div class="note-block"><a href="https://offers.hotelstcloud.com/assets/marketing-plan.html" target="_blank" style="color:var(--blue);">View marketing plan ↗</a> (password: DGBDW)</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="priority-dot dot-blue"></div>
+        <div class="section-title">🔵 Multi-Agent Ecosystem Architecture</div>
+        <div class="status-chip chip-blue">Planning</div>
+        <div class="chevron">▼</div>
+      </div>
+      <div class="section-body">
+        <p style="font-size:0.9rem;color:var(--text-light);margin-bottom:0.75rem;">Stan sketched a five-vertical hub-and-spoke model with MC at the center. Deferred to "come back to later."</p>
+        <ul class="task-list">
+          <li class="task-item">
+            <div class="task-check"></div>
+            <div class="task-text">Confirm if Stan has Obsidian Sync subscription — needed to connect his vault to MC's notes</div>
+            <div class="task-tag tag-action">Stan</div>
+          </li>
+          <li class="task-item">
+            <div class="task-check"></div>
+            <div class="task-text">Design standardized reporting schema for vertical agents → MC</div>
+            <div class="task-tag tag-mc">MC (when ready)</div>
+          </li>
+          <li class="task-item">
+            <div class="task-check"></div>
+            <div class="task-text">Begin building Hospitality vertical agent team</div>
+            <div class="task-tag tag-mc">MC (when ready)</div>
+          </li>
+        </ul>
+        <div class="note-block"><strong>Five verticals mapped:</strong> Unbridled Solutions (Live Events) · Unbridled Hospitality · Unbridled Holdings (Real Estate) · Emergent Brands · Shared Services</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="priority-dot dot-gray"></div>
+        <div class="section-title">⬜ Future / Backlog</div>
+        <div class="status-chip chip-gray">Someday</div>
+        <div class="chevron">▼</div>
+      </div>
+      <div class="section-body">
+        <ul class="task-list">
+          <li class="task-item">
+            <div class="task-check"></div>
+            <div class="task-text">United Airlines direct booking integration (Stan wants this eventually)</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<footer>
+  🦌 Managed by MC · Unbridled Ecosystem · <em>Doing Good by Doing Well</em>
+</footer>
+
+<script>
+  function showPanel(name) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  function toggleSection(header) {
+    header.parentElement.classList.toggle('collapsed');
+  }
+</script>
+
+</body>
+</html>
