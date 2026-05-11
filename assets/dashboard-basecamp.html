@@ -1,30 +1,283 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Royal Gorge Basecamp - Daily Dashboard</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>:root{--bg:#0f1923;--navy:#1a2e3b;--gold:#c9aa7c;--blue:#5a8ba7;--text:#e8e8e8;--muted:#8a9bb0;--card-bg:#162433;--border:#243548;--green:#4caf87;}*{box-sizing:border-box;margin:0;padding:0;}body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;padding-bottom:48px;}header{background:linear-gradient(135deg,var(--navy) 0%,#0f1923 100%);border-bottom:2px solid var(--gold);padding:28px 32px 24px;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;}header h1{font-size:1.7rem;font-weight:700;color:var(--gold);}header p{color:var(--muted);font-size:.9rem;margin-top:4px;}.badge{background:rgba(201,170,124,.15);border:1px solid var(--gold);color:var(--gold);font-size:.78rem;font-weight:600;padding:6px 14px;border-radius:20px;align-self:center;white-space:nowrap;}.container{max-width:1200px;margin:0 auto;padding:0 24px;}.section-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:600;margin:32px 0 14px;padding-bottom:8px;border-bottom:1px solid var(--border);}.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px;}.stat-card{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:22px 24px;position:relative;overflow:hidden;}.stat-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--gold);}.stat-card.blue::before{background:var(--blue);}.stat-card.green::before{background:var(--green);}.stat-card.grey::before{background:var(--muted);}.stat-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px;font-weight:600;}.stat-value{font-size:2.2rem;font-weight:700;color:var(--gold);line-height:1;}.stat-card.blue .stat-value{color:var(--blue);}.stat-card.green .stat-value{color:var(--green);}.stat-card.grey .stat-value{color:var(--muted);}.stat-sub{font-size:.78rem;color:var(--muted);margin-top:6px;}.note-banner{background:rgba(90,139,167,.12);border:1px solid var(--blue);border-radius:10px;padding:14px 20px;font-size:.88rem;color:var(--blue);margin-bottom:24px;display:flex;align-items:flex-start;gap:10px;line-height:1.5;}.budget-row{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-bottom:28px;}.budget-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;}.budget-label{font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;}.budget-amounts{font-size:.88rem;color:var(--text);}.budget-amounts strong{color:var(--gold);}.budget-bar-bg{height:10px;background:var(--border);border-radius:5px;overflow:hidden;}.budget-bar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--green),var(--gold));}.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px;}@media(max-width:700px){.charts-grid{grid-template-columns:1fr;}}.chart-card{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:22px;}.chart-title{font-size:.82rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;margin-bottom:18px;}.table-card{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:22px;margin-bottom:28px;overflow-x:auto;}.table-title{font-size:.82rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;margin-bottom:16px;}table{width:100%;border-collapse:collapse;font-size:.9rem;}th{text-align:left;padding:10px 14px;color:var(--muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);font-weight:600;}td{padding:12px 14px;border-bottom:1px solid rgba(36,53,72,.6);color:var(--text);}tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02);}td:first-child{color:var(--gold);font-weight:500;}.mc-take{background:linear-gradient(135deg,#1a2e3b 0%,#162433 100%);border:1px solid var(--gold);border-radius:12px;padding:26px 28px;margin-bottom:28px;}.mc-take h3{color:var(--gold);font-size:.85rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:16px;}.mc-take ul{list-style:none;display:flex;flex-direction:column;gap:12px;}.mc-take li{padding-left:22px;position:relative;line-height:1.6;font-size:.93rem;}.mc-take li::before{content:">";position:absolute;left:0;color:var(--gold);font-weight:700;}.rec{margin-top:18px;padding:14px 18px;background:rgba(201,170,124,.08);border-left:3px solid var(--gold);border-radius:0 8px 8px 0;font-size:.9rem;line-height:1.6;}.rec strong{color:var(--gold);}footer{border-top:1px solid var(--border);padding:20px 32px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;}footer span{font-size:.78rem;color:var(--muted);}footer strong{color:var(--gold);}@media(max-width:600px){header{padding:20px 16px 16px;}header h1{font-size:1.3rem;}.container{padding:0 16px;}.stat-value{font-size:1.8rem;}}</style>
-</head><body>
-<header><div><h1>&#127958; Royal Gorge Basecamp</h1><p>Daily Performance Dashboard &mdash; May 11, 2026</p></div><span class="badge">&#9889; EARLY DATA &mdash; CAMPAIGN JUST LAUNCHED</span></header>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv='refresh' content='900'>
+    <title>Royal Gorge Basecamp - Daily Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root{--bg:#0f1923;--navy:#1a2e3b;--gold:#c9aa7c;--blue:#5a8ba7;--text:#e8e0d4;--muted:#8a9aaa;--green:#4caf7d;--red:#e05a5a;--card-bg:#162433;--border:#263d52}
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;padding-bottom:48px;}
+        header{background:linear-gradient(135deg,var(--navy) 0%,#0f1923 100%);border-bottom:2px solid var(--gold);padding:28px 32px 24px;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+        header h1{font-size:1.7rem;font-weight:700;color:var(--gold);}
+        header p{color:var(--muted);font-size:.9rem;margin-top:4px;}
+        .badge{background:rgba(201,170,124,.15);border:1px solid var(--gold);color:var(--gold);font-size:.78rem;font-weight:600;padding:6px 14px;border-radius:20px;align-self:center;white-space:nowrap;}
+        .badge.red{background:rgba(224,90,90,.15);border:1px solid var(--red);color:var(--red);}
+        .container{max-width:1200px;margin:0 auto;padding:0 24px;}
+        .section-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:600;margin:32px 0 14px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+        .stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px;}
+        .stat-card{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:22px 24px;position:relative;overflow:hidden;}
+        .stat-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--gold);}
+        .stat-card.blue::before{background:var(--blue);}
+        .stat-card.green::before{background:var(--green);}
+        .stat-card.red::before{background:var(--red);}
+        .stat-card.grey::before{background:var(--muted);}
+        .stat-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px;font-weight:600;}
+        .stat-value{font-size:2.2rem;font-weight:700;color:var(--gold);line-height:1;}
+        .stat-card.blue .stat-value{color:var(--blue);}
+        .stat-card.green .stat-value{color:var(--green);}
+        .stat-card.red .stat-value{color:var(--red);}
+        .stat-card.grey .stat-value{color:var(--muted);}
+        .stat-sub{font-size:.78rem;color:var(--muted);margin-top:8px;}
+        .note-banner{background:var(--card-bg);border:1px solid var(--border);padding:14px 20px;border-radius:8px;display:flex;align-items:center;gap:12px;margin-bottom:24px;color:var(--muted);font-size:.85rem;}
+        .note-banner span:first-child{font-size:1.4rem;}
+        .budget-row{margin-bottom:24px;}
+        .budget-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+        .budget-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:600;}
+        .budget-amounts{font-size:.85rem;color:var(--text);}
+        .budget-bar-bg{background:var(--border);border-radius:4px;height:10px;overflow:hidden;}
+        .budget-bar-fill{height:100%;border-radius:4px;}
+        .charts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;margin-bottom:24px;}
+        .chart-card{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;}
+        .chart-title{font-size:1rem;color:var(--text);margin-bottom:15px;font-weight:600;}
+        .table-card{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-bottom:24px;}
+        .table-title{font-size:1rem;color:var(--text);margin-bottom:15px;font-weight:600;}
+        table{width:100%;border-collapse:collapse;margin-top:15px;}
+        th,td{padding:12px 10px;text-align:left;border-bottom:1px solid var(--border);font-size:.88rem;}
+        th{color:var(--muted);text-transform:uppercase;font-size:.75rem;letter-spacing:.08em;}
+        td{color:var(--text);}
+        tbody tr:last-child td{border-bottom:none;}
+        .mc-take{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:24px;}
+        .mc-take h3{font-size:1.2rem;color:var(--gold);margin-bottom:15px;}
+        .mc-take ul{list-style:none;padding-left:0;margin-bottom:20px;}
+        .mc-take ul li{margin-bottom:10px;color:var(--text);line-height:1.4;}
+        .mc-take ul li strong{color:var(--gold);}
+        .mc-take .rec{background:rgba(90,139,167,.15);border-left:4px solid var(--blue);padding:15px 20px;border-radius:4px;margin-top:20px;color:var(--blue);font-size:.9rem;}
+        .mc-take .rec strong{color:var(--blue);}
+        footer{text-align:center;padding:20px;color:var(--muted);font-size:.8rem;border-top:1px solid var(--border);margin-top:32px;display:flex;justify-content:space-between;}
+        footer span strong{color:var(--gold);}
+        .daily-history-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+        }
+        .daily-history-card h3 {
+            font-size: 1rem;
+            color: var(--text);
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        .daily-history-card ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        .daily-history-card ul li {
+            margin-bottom: 8px;
+            color: var(--text);
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div>
+        <h1>&#127958; Hotel St. Cloud | Royal Gorge Basecamp</h1>
+        <p>Status: ENABLED | Budget: $35/day | Schedule: Daily 11am–9pm MT | Launched: May 9</p>
+    </div>
+    <span class="badge">Note: Campaign launched May 9. Only 2 full days of data.</span>
+</header>
+
 <div class="container">
-<div class="section-label">Today Snapshot</div>
-<div class="note-banner"><span>&#128204;</span><span>Today ad group data is still accumulating. Numbers below reflect what Google has reported so far. Yesterday actuals are in the 14-day charts.</span></div>
-<div class="stat-row"><div class="stat-card"><div class="stat-label">Impressions</div><div class="stat-value">0</div><div class="stat-sub">Today so far</div></div><div class="stat-card blue"><div class="stat-label">Clicks</div><div class="stat-value">0</div><div class="stat-sub">Today so far</div></div><div class="stat-card green"><div class="stat-label">CTR</div><div class="stat-value">0.00%</div><div class="stat-sub">Today so far</div></div><div class="stat-card grey"><div class="stat-label">Spend</div><div class="stat-value">$0.00</div><div class="stat-sub">Today so far</div></div></div>
-<div class="budget-row"><div class="budget-header"><span class="budget-label">Daily Budget Tracker</span><span class="budget-amounts">May 10 Spend: <strong>$40.79</strong> | Budget: $35.00 | Overage: <strong style="color:#e07b6a">+$5.79</strong></span></div><div class="budget-bar-bg"><div class="budget-bar-fill" style="width:100%;background:linear-gradient(90deg,#4caf87,#e07b6a)"></div></div></div>
-<div class="section-label">History: May 9-10 (2 Active Days)</div>
-<div class="charts-grid"><div class="chart-card"><div class="chart-title">Impressions + Clicks</div><canvas id="trendChart" height="220"></canvas></div><div class="chart-card"><div class="chart-title">Daily Spend</div><canvas id="spendChart" height="220"></canvas></div></div>
-<div class="section-label">Ad Group Breakdown Today</div>
-<div class="table-card"><div class="table-title">All 6 Ad Groups</div><table><thead><tr><th>Ad Group</th><th>Impressions</th><th>Clicks</th><th>CTR</th><th>Spend</th></tr></thead><tbody><tr><td>AG1: Royal Gorge Stay</td><td>0</td><td>0</td><td>0.00%</td><td>$0.00</td></tr><tr><td>AG2: Fly Fishing Lodging</td><td>0</td><td>0</td><td>0.00%</td><td>$0.00</td></tr><tr><td>AG3: Mountain Biking</td><td>0</td><td>0</td><td>0.00%</td><td>$0.00</td></tr><tr><td>AG4: Rock Climbing + Hiking</td><td>0</td><td>0</td><td>0.00%</td><td>$0.00</td></tr><tr><td>AG5: Kayaking + Whitewater</td><td>0</td><td>0</td><td>0.00%</td><td>$0.00</td></tr><tr><td>AG6: Last Minute / Extend Trip</td><td>0</td><td>0</td><td>0.00%</td><td>$0.00</td></tr></tbody></table><p style="font-size:.78rem;color:var(--muted);margin-top:14px;">&#8987; All groups at zero today - data still accumulating.</p></div>
-<div class="section-label">MC Take</div>
-<div class="mc-take"><h3>&#127919; MC Take</h3><ul><li><strong>CTR is genuinely impressive out of the gate.</strong> May 9: 11.97%. May 10: 8.37%. Industry benchmark for travel search is 4-5%. These ads are landing. The creative and keyword match is doing its job.</li><li><strong>Spend exceeded the $35 daily budget on Day 2.</strong> May 10 hit $40.79, which is 116% of budget. Google smart bidding will overspend on high-demand days, but this needs attention before it becomes a pattern.</li><li><strong>Today is Day 3 and the ad groups are at zero right now.</strong> Normal for early morning. Come back end-of-day and the table will show which activity themes are driving interest.</li></ul><div class="rec"><strong>Recommendation:</strong> Address the budget overspend today. Either raise the daily budget to $45 to let the campaign breathe, or add a max CPC limit of $2.50. Do not throttle a hot start - but do not let it run uncapped either.</div></div></div>
+    <div class="section-label">Latest Day at a Glance (May 10)</div>
+    <div class="note-banner"><span>&#128204;</span><span>These are the latest full day performance numbers. Today's partial data is in the "Daily History" and charts below.</span></div>
+    <div class="stat-row">
+        <div class="stat-card">
+            <div class="stat-label">Impressions</div>
+            <div class="stat-value">215</div>
+            <div class="stat-sub">May 10</div>
+        </div>
+        <div class="stat-card blue">
+            <div class="stat-label">Clicks</div>
+            <div class="stat-value">18</div>
+            <div class="stat-sub">May 10</div>
+        </div>
+        <div class="stat-card green">
+            <div class="stat-label">CTR</div>
+            <div class="stat-value">8.37%</div>
+            <div class="stat-sub">May 10</div>
+        </div>
+        <div class="stat-card grey">
+            <div class="stat-label">Spend</div>
+            <div class="stat-value">$40.79</div>
+            <div class="stat-sub">May 10</div>
+        </div>
+    </div>
+
+    <div class="budget-row">
+        <div class="budget-header">
+            <span class="budget-label">Daily Budget Tracker</span>
+            <span class="budget-amounts">May 10 Spend: <strong style="color:var(--red);">$40.79</strong> | Budget: $35.00 | Overage: <strong style="color:var(--red);">+$5.79</strong></span>
+        </div>
+        <!-- Budget overage, so fill is red -->
+        <div class="budget-bar-bg">
+            <div class="budget-bar-fill" style="width:100%; background-color:var(--red);"></div>
+        </div>
+    </div>
+
+    <div class="section-label">Daily History</div>
+    <div class="daily-history-card">
+        <h3>Campaign History</h3>
+        <ul>
+            <li><strong>May 9:</strong> 117 impressions, 14 clicks, 12.0% CTR, $2.24 avg CPC, $31.32 spend</li>
+            <li><strong>May 10:</strong> 215 impressions, 18 clicks, 8.4% CTR, $2.27 avg CPC, $40.79 spend</li>
+            <li><strong>May 11 (partial):</strong> 19 impressions, 1 click, 5.3% CTR, $2.50 avg CPC, $2.50 spend</li>
+        </ul>
+        <p style="font-size:.78rem;color:var(--muted);margin-top:14px;"><strong>7-day totals:</strong> 332 impressions, 32 clicks, 9.6% CTR, $2.25 avg CPC, $72.11 spend</p>
+    </div>
+
+    <div class="section-label">Performance Trend</div>
+    <div class="charts-grid">
+        <div class="chart-card"><div class="chart-title">Impressions + Clicks</div><canvas id="trendChart" height="220"></canvas></div>
+        <div class="chart-card"><div class="chart-title">Daily Spend</div><canvas id="spendChart" height="220"></canvas></div>
+    </div>
+
+    <div class="section-label">Ad Group Breakdown (7-day)</div>
+    <div class="table-card">
+        <div class="table-title">Performance by Ad Group</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Ad Group</th>
+                    <th>Impressions</th>
+                    <th>Clicks</th>
+                    <th>CTR</th>
+                    <th>Spend</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>AG1: Royal Gorge Stay</td><td>318</td><td>32</td><td>10.1%</td><td>$72.11</td></tr>
+                <tr><td>AG2: Fly Fishing Lodging</td><td>1</td><td>0</td><td>0.0%</td><td>$0.00</td></tr>
+                <tr><td>AG3: Mountain Biking</td><td>0</td><td>0</td><td>0.0%</td><td>$0.00</td></tr>
+                <tr><td>AG4: Rock Climbing & Hiking</td><td>0</td><td>0</td><td>0.0%</td><td>$0.00</td></tr>
+                <tr><td>AG5: Kayaking & Whitewater</td><td>0</td><td>0</td><td>0.0%</td><td>$0.00</td></tr>
+                <tr><td>AG6: Last Minute / Extend Trip</td><td>13</td><td>0</td><td>0.0%</td><td>$0.00</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section-label">MC's Take</div>
+    <div class="mc-take">
+        <h3>&#127919; MC Take</h3>
+        <ul>
+            <li>🔥 AG1 (Royal Gorge Stay) is carrying the whole campaign — 318 of 332 impressions, all 32 clicks. That ad group has the right keywords.</li>
+            <li>⚠️ 5 of 6 ad groups are barely running. AG2–AG5 have near-zero impressions. Google is concentrating spend on what's working — normal at launch, but worth watching.</li>
+            <li>💡 CTR dropped from 12% (day 1) to 8.4% (day 2) — expected as Google broadens match. Still excellent.</li>
+            <li>📊 CPC is right at the $2.25–$2.50 ceiling. If impressions slow, consider raising ceiling to $3.00.</li>
+        </ul>
+        <div class="rec">
+            <strong>Recommendation:</strong> Let it run 7 days before touching anything. Check back May 16 for first real optimization window.
+        </div>
+    </div>
 </div>
-<footer><span>Royal Gorge Basecamp &middot; <strong>Hotel St. Cloud</strong> &middot; Powered by MC</span><span>Updated: 2026-05-11 | Campaign ID: 23826797937</span></footer>
+
+<footer>
+    <span>Royal Gorge Basecamp &middot; <strong>Hotel St. Cloud</strong> &middot; Powered by MC</span>
+    <span>Updated: 2026-05-11</span>
+</footer>
+
 <script>
-const labels=["May 9","May 10"];
-const impressionsData=[117,215];
-const clicksData=[14,18];
-const spendData=[31.32,40.79];
-const gc="#243548";
-const tt={backgroundColor:"#1a2e3b",borderWidth:1,titleColor:"#c9aa7c",bodyColor:"#e8e8e8"};
-new Chart(document.getElementById("trendChart").getContext("2d"),{type:"line",data:{labels,datasets:[{label:"Impressions",data:impressionsData,borderColor:"#c9aa7c",backgroundColor:"rgba(201,170,124,.12)",tension:.3,fill:true,pointBackgroundColor:"#c9aa7c",pointRadius:6,borderWidth:2},{label:"Clicks",data:clicksData,borderColor:"#5a8ba7",backgroundColor:"rgba(90,139,167,.10)",tension:.3,fill:true,pointBackgroundColor:"#5a8ba7",pointRadius:6,borderWidth:2}]},options:{responsive:true,plugins:{legend:{labels:{color:"#8a9bb0",font:{size:11}}},tooltip:{...tt,borderColor:"#c9aa7c"}},scales:{x:{ticks:{color:"#8a9bb0"},grid:{color:gc}},y:{ticks:{color:"#8a9bb0"},grid:{color:gc}}}}});
-new Chart(document.getElementById("spendChart").getContext("2d"),{type:"bar",data:{labels,datasets:[{label:"Spend",data:spendData,backgroundColor:"rgba(76,175,135,.7)",borderColor:"#4caf87",borderWidth:1,borderRadius:4}]},options:{responsive:true,plugins:{legend:{labels:{color:"#8a9bb0",font:{size:11}}},tooltip:{...tt,borderColor:"#4caf87",callbacks:{label:ctx=>" $"+ctx.parsed.y.toFixed(2)}}},scales:{x:{ticks:{color:"#8a9bb0"},grid:{color:gc}},y:{ticks:{color:"#8a9bb0",callback:v=>"$"+v},grid:{color:gc}}}}});
+    const labels = ["May 9", "May 10", "May 11"];
+    const impressionsData = [117, 215, 19];
+    const clicksData = [14, 18, 1];
+    const spendData = [31.32, 40.79, 2.50];
+    const gc = "var(--border)";
+    const tt = {backgroundColor: "var(--navy)", borderWidth: 1, titleColor: "var(--gold)", bodyColor: "var(--text)"};
+
+    new Chart(document.getElementById("trendChart").getContext("2d"), {
+        type: "line",
+        data: {
+            labels,
+            datasets: [{
+                label: "Impressions",
+                data: impressionsData,
+                borderColor: "var(--gold)",
+                backgroundColor: "rgba(201,170,124,.12)",
+                tension: .3,
+                fill: true,
+                pointBackgroundColor: "var(--gold)",
+                pointRadius: 6,
+                borderWidth: 2
+            }, {
+                label: "Clicks",
+                data: clicksData,
+                borderColor: "var(--blue)",
+                backgroundColor: "rgba(90,139,167,.10)",
+                tension: .3,
+                fill: true,
+                pointBackgroundColor: "var(--blue)",
+                pointRadius: 6,
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {labels: {color: "var(--muted)", font: {size: 11}}},
+                tooltip: {...tt, borderColor: "var(--gold)"}
+            },
+            scales: {
+                x: {
+                    ticks: {color: "var(--muted)"},
+                    grid: {color: "var(--border)"}
+                },
+                y: {
+                    ticks: {color: "var(--muted)"},
+                    grid: {color: "var(--border)"}
+                }
+            }
+        }
+    });
+
+    new Chart(document.getElementById("spendChart").getContext("2d"), {
+        type: "bar",
+        data: {
+            labels,
+            datasets: [{
+                label: "Spend",
+                data: spendData,
+                backgroundColor: "rgba(76,175,125,.7)",
+                borderColor: "var(--green)",
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {labels: {color: "var(--muted)", font: {size: 11}}},
+                tooltip: {
+                    ...tt,
+                    borderColor: "var(--green)",
+                    callbacks: {label: ctx => " $" + ctx.parsed.y.toFixed(2)}
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {color: "var(--muted)"},
+                    grid: {color: "var(--border)"}
+                },
+                y: {
+                    ticks: {color: "var(--muted)", callback: v => "$" + v},
+                    grid: {color: "var(--border)"}
+                }
+            }
+        }
+    });
 </script>
-</body></html>
+</body>
+</html>
