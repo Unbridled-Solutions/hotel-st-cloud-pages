@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Creative &amp; Content — Ecosystem Chart | Unbridled</title>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --blue:#5a8ba7; --gray:#4b4f54; --navy:#1f2b3f; --cream:#f5f4f0;
+  --gold:#ba8032; --green:#4caf7d; --border:#c8d4dc; --white:#fff;
+  --red:#c04040;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--cream);font-family:'Josefin Sans',sans-serif;font-weight:300;color:var(--gray);padding:clamp(1rem,3vw,2rem)}
+
+.header{background:var(--navy);border-radius:12px;padding:clamp(1.25rem,3vw,2rem) clamp(1.5rem,4vw,2.5rem);margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+.header h1{font-size:clamp(18px,3vw,26px);font-weight:700;color:#fff;letter-spacing:1px}
+.header h1 span{color:var(--blue)}
+.header p{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#7a9ab0;margin-top:3px}
+.elk{font-size:28px;opacity:.65}
+
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:1.5rem;align-items:center}
+.li{display:flex;align-items:center;gap:6px;font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--gray)}
+.ld{width:12px;height:12px;border-radius:50%}
+.badge{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:8px}
+.bn{background:#e8f4ed;color:var(--green);border:1px solid var(--green)}
+.bo{background:#fdf3e3;color:var(--gold);border:1px solid var(--gold)}
+
+/* Chart wrapper — scrollable on small screens */
+.chart-outer{overflow:auto;-webkit-overflow-scrolling:touch;border-radius:12px;background:var(--white);border:1px solid var(--border);padding:1rem}
+.chart-inner{position:relative;margin:0 auto}
+
+/* SVG lines sit behind nodes */
+#lines{position:absolute;top:0;left:0;pointer-events:none}
+
+/* All node cards */
+.node{position:absolute;transform:translate(-50%,-50%);border-radius:8px;padding:9px 12px;text-align:center;white-space:nowrap;line-height:1.3}
+.node .nn{font-size:12px;font-weight:600;color:var(--navy)}
+.node .nt{font-size:10px;color:var(--blue);margin-top:2px}
+.node .nb{display:inline-block;margin-top:4px;font-size:8px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:1px 6px;border-radius:6px}
+
+/* Hub */
+.node-hub{background:var(--navy);border:2px solid var(--gold);min-width:156px;padding:12px 16px}
+.node-hub .nn{color:#fff;font-size:13px}
+.node-hub .nt{color:var(--blue);font-size:11px}
+.node-hub .sub{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#7a9ab0;margin-top:4px}
+
+/* CSO */
+.node-cso{background:var(--navy);border:1.5px dashed #4a6a85;min-width:148px}
+.node-cso .nn{color:#fff;font-size:12px}
+.node-cso .nt{color:#7a9ab0;font-size:10px}
+
+/* Branch leaders */
+.node-cd{background:var(--white);border-top:3px solid var(--gold);border-left:1px solid var(--border);border-right:1px solid var(--border);border-bottom:1px solid var(--border);min-width:144px}
+.node-vp{background:var(--white);border-top:3px solid var(--blue);border-left:1px solid var(--border);border-right:1px solid var(--border);border-bottom:1px solid var(--border);min-width:144px}
+
+/* Members */
+.node-ic{background:var(--white);border:1px solid var(--border);min-width:128px;padding:7px 10px}
+.node-ic .nn{font-size:11px;font-weight:600}
+.node-ic .nt{font-size:9px;color:#7a9ab0}
+
+/* New role */
+.node-new{background:#f0faf5;border:1px solid var(--green) !important}
+.node-new .nt{color:var(--green)}
+
+/* Open position */
+.node-open{background:#fdf9f0;border:1px dashed var(--gold) !important;opacity:.85}
+.node-open .nn{color:var(--gold)}
+.node-open .nt{color:#c09040}
+
+/* Sub-member (smaller) */
+.node-sub{min-width:112px;padding:5px 8px}
+.node-sub .nn{font-size:10px}
+.node-sub .nt{font-size:9px}
+
+/* Faded */
+.node-faded{opacity:.45}
+
+/* Orbit ghost circles */
+.orbit{fill:none;stroke:#dde4ea;stroke-width:1px;stroke-dasharray:4,6}
+.orbit-sm{fill:none;stroke:#e8edf2;stroke-width:1px;stroke-dasharray:3,5}
+
+/* Spoke lines */
+.spoke{stroke-width:2.5px;fill:none}
+.spoke-leaf{stroke-width:1.5px;fill:none}
+.spoke-sub{stroke-width:1px;fill:none;stroke-dasharray:4,4}
+.spoke-cso{stroke-width:1.5px;fill:none;stroke-dasharray:6,4;stroke:#4a6a85}
+
+/* Stats, phases, mc card */
+.meta{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:1.5rem}
+.pill{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:10px 14px;text-align:center}
+.pill .pn{font-size:22px;font-weight:700;color:var(--navy);display:block}
+.pill .pl{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#8a9aaa}
+
+.phases{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:1.5rem}
+.phase{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:9px 14px;font-size:12px}
+.phase strong{display:block;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:2px}
+.ph1 strong{color:var(--blue)} .ph2 strong{color:var(--gold)} .ph3 strong{color:var(--green)}
+.ph1{border-left:3px solid var(--blue)} .ph2{border-left:3px solid var(--gold)} .ph3{border-left:3px solid var(--green)}
+
+.mc-card{background:var(--navy);border-radius:12px;padding:clamp(1.25rem,3vw,1.75rem);margin-top:1.5rem;color:#fff}
+.mc-hd{display:flex;align-items:center;gap:10px;margin-bottom:1rem}
+.mc-av{width:34px;height:34px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0}
+.mc-hd h3{font-size:13px;font-weight:700;color:var(--blue)}
+.mc-hd span{font-size:11px;color:#7a9ab0;display:block}
+.mc-sec{margin-bottom:.9rem}
+.mc-sec h4{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--blue);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #253d54}
+.mc-ul{list-style:none;padding:0}
+.mc-ul li{font-size:12px;color:#c0d0dc;padding:4px 0;border-bottom:1px solid #1a2e3b;line-height:1.55}
+.mc-ul li:last-child{border-bottom:none}
+.mc-ul li::before{content:"→ ";color:var(--blue)}
+.mc-ul li.pro::before{content:"✓ ";color:var(--green)}
+.mc-ul li.con::before{content:"△ ";color:var(--gold)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>Creative <span>&amp; Content</span> Ecosystem</h1>
+    <p>Live Events · Hub and Spoke · WIP May 2026</p>
+  </div>
+  <div class="elk">🦌</div>
+</div>
+
+<div class="meta">
+  <div class="pill"><span class="pn">23</span><span class="pl">Team Members</span></div>
+  <div class="pill"><span class="pn" style="color:var(--gold)">15</span><span class="pl">Reporting Changes</span></div>
+  <div class="pill"><span class="pn" style="color:var(--green)">4</span><span class="pl">New Roles</span></div>
+  <div class="pill"><span class="pn" style="color:var(--blue)">3</span><span class="pl">Open Positions</span></div>
+  <div class="pill"><span class="pn">4</span><span class="pl">Spokes</span></div>
+  <div class="pill"><span class="pn">3</span><span class="pl">Phases</span></div>
+</div>
+
+<div class="phases">
+  <div class="phase ph1"><strong>Phase 1 — May 15</strong>Before Paul onboards</div>
+  <div class="phase ph2"><strong>Phase 2 — June 1</strong>Full reorg announced</div>
+  <div class="phase ph3"><strong>Phase 3 — Aug 1</strong>New roles proof-of-concept</div>
+</div>
+
+<div class="legend">
+  <div class="li"><div class="ld" style="background:var(--navy)"></div>CSO / SVP Hub</div>
+  <div class="li"><div class="ld" style="background:var(--blue)"></div>VP Operations</div>
+  <div class="li"><div class="ld" style="background:var(--gold)"></div>Creative Director</div>
+  <div class="li"><div class="ld" style="background:#dde4ea"></div>Team Member</div>
+  <div class="li" style="margin-left:4px"><span class="badge bn">NEW ROLE</span></div>
+  <div class="li"><span class="badge bo">OPEN</span></div>
+</div>
+
+<div class="chart-outer">
+  <div class="chart-inner" id="chart">
+    <svg id="lines"></svg>
+    <div id="nodes"></div>
+  </div>
+</div>
+
+<div class="mc-card">
+  <div class="mc-hd">
+    <div class="mc-av">MC</div>
+    <div><h3>Ecosystem Alignment — MC's Read</h3><span>Hub + Spoke + Wheel: does this structure match the model?</span></div>
+  </div>
+  <div class="mc-sec">
+    <h4>✓ Where it supports the ecosystem model</h4>
+    <ul class="mc-ul">
+      <li class="pro"><strong>This IS the Hub + Spoke + Wheel.</strong> Allison at center. Four spokes. Each spoke's team is a wheel — autonomous, specialized, capable of expanding without touching the others.</li>
+      <li class="pro"><strong>Authority is distributed, not concentrated.</strong> Three Creative Directors each own a full creative wheel. Danielle owns ops. Nobody needs to ask the hub for routine creative decisions.</li>
+      <li class="pro"><strong>Ops is structurally separated from creative.</strong> Danielle's wheel protects creative flow from administrative drag. That's Credibility cornerstone in action.</li>
+      <li class="pro"><strong>New roles build capability, not hierarchy.</strong> Brandon → Video CD, CJ → Technical Design, Kate → Ops Support. More wheels. No new management layers. Pure ecosystem thinking.</li>
+      <li class="pro"><strong>Career paths are visible.</strong> The GD who trains with CJ before moving to a CD's wheel is an "Unusually Good Career" made tangible.</li>
+    </ul>
+  </div>
+  <div class="mc-sec">
+    <h4>△ Watch closely</h4>
+    <ul class="mc-ul">
+      <li class="con"><strong>65% reporting changes is a human moment, not just a structural one.</strong> 15 of 23 people change their spoke. The org chart is right — the comms plan is what makes this land as a call forward, not a reshuffling.</li>
+      <li class="con"><strong>Jil Cave is on two spokes simultaneously.</strong> Ty's wheel until 8/1, then moving. Clean, communicated transition plan is essential — nobody performs well in ambiguous orbit.</li>
+      <li class="con"><strong>Three open Presentation Designer positions = a concentration of risk.</strong> Until those wheels are staffed, capacity planning must account for the gap explicitly.</li>
+    </ul>
+  </div>
+  <div class="mc-sec">
+    <h4>Verdict</h4>
+    <ul class="mc-ul">
+      <li>The structure is sound and genuinely reflects the ecosystem model from the culture deck. The visual shift from hierarchy to hub-and-spoke isn't just aesthetic — it's a leadership signal. Show people this chart, not the tree. It tells a different story about who they are and how they work.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+const rad = d => d * Math.PI / 180;
+const pt = (cx, cy, r, a) => ({ x: cx + r * Math.cos(rad(a)), y: cy + r * Math.sin(rad(a)) });
+
+function fanPts(cx, cy, r, ca, n, span) {
+  if (n === 1) return [pt(cx, cy, r, ca)];
+  return Array.from({length: n}, (_, i) => pt(cx, cy, r, ca - span/2 + (i/(n-1)) * span));
+}
+
+const W = 1480, H = 1260;
+const HX = W/2, HY = 570;
+const BR = 272, LR = 128, SLR = 76;
+
+const branches = [
+  {
+    angle: -45, type: 'cd',
+    leader: { name: 'Paul Kwong', title: 'Creative Director', badge: 'new', bt: 'New · May 18' },
+    members: [
+      { name: 'Josie Young', title: 'Motion Graphics' },
+      { name: 'Matt Lazar', title: 'Graphic Designer' },
+      { name: 'Dani Sanchez', title: 'Presentation Designer' },
+      { name: 'Jordan Richart', title: 'Sr. Copywriter' }
+    ]
+  },
+  {
+    angle: 45, type: 'vp',
+    leader: { name: 'Danielle Miller', title: 'VP, C&C Operations' },
+    members: [
+      { name: 'Kate Stearman', title: 'Sr. Presentation Designer', badge: 'new', bt: 'Ops Support' },
+      { name: 'Meighan Smith', title: 'Sr. Graphic Designer' },
+      { name: 'CJ Nuzzo', title: 'Sr. Graphic Designer', badge: 'new', bt: 'Technical Design',
+        sub: [
+          { name: 'Ethan Worker', title: 'Jr. Graphic Designer' },
+          { name: 'Jil Cave', title: 'Graphic Designer' },
+          { name: 'GD — Open', title: 'Position Open', badge: 'open' }
+        ]
+      },
+      { name: 'Josh Schedlbauer', title: 'Art Director' },
+      { name: "Josh O'Brien", title: 'Dir. Show Design' }
+    ]
+  },
+  {
+    angle: 135, type: 'cd',
+    leader: { name: 'Abbie Brychel', title: 'Creative Director' },
+    members: [
+      { name: 'Ilyse Cockeram', title: 'Sr. Graphic Designer' },
+      { name: 'Gennaro Wood', title: 'Motion Graphics' },
+      { name: 'Chloe Geissing', title: 'Jr. Graphic Designer', badge: 'new', bt: 'New · May 18' },
+      { name: 'PD — Open', title: 'Presentation Designer', badge: 'open' }
+    ]
+  },
+  {
+    angle: 225, type: 'cd',
+    leader: { name: 'Ty Stark', title: 'Creative Director' },
+    members: [
+      { name: 'Brandon Emery', title: 'Content → Video CD', badge: 'new', bt: 'New · June 16',
+        sub: [{ name: 'Ariel Lynch', title: 'Assoc. Content Producer' }]
+      },
+      { name: 'Andrea Hougland', title: 'Sr. Presentation Designer',
+        sub: [{ name: 'PD — Open', title: 'Position Open', badge: 'open' }]
+      },
+      { name: 'Dana Sodd', title: 'Sr. Motion Graphics' },
+      { name: 'Brian Bjorkman', title: 'Sr. Graphic Designer' },
+      { name: 'Jil Cave (to 8/1)', title: 'Graphic Designer', faded: true }
+    ]
+  }
+];
+
+// Spoke colors
+const spokeColor = { cd: '#ba8032', vp: '#5a8ba7' };
+
+// Build SVG + nodes
+const svg = document.getElementById('lines');
+const nodesDiv = document.getElementById('nodes');
+const chart = document.getElementById('chart');
+chart.style.width = W + 'px';
+chart.style.height = H + 'px';
+svg.setAttribute('width', W);
+svg.setAttribute('height', H);
+svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+function addLine(x1,y1,x2,y2,cls,color='') {
+  const l = document.createElementNS('http://www.w3.org/2000/svg','line');
+  l.setAttribute('x1',x1); l.setAttribute('y1',y1);
+  l.setAttribute('x2',x2); l.setAttribute('y2',y2);
+  l.setAttribute('class',cls);
+  if(color) l.setAttribute('stroke',color);
+  svg.appendChild(l);
+}
+function addCircle(cx,cy,r,cls) {
+  const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  c.setAttribute('cx',cx); c.setAttribute('cy',cy); c.setAttribute('r',r);
+  c.setAttribute('class',cls);
+  svg.appendChild(c);
+}
+
+function addNode(x, y, html, extraClass='') {
+  const d = document.createElement('div');
+  d.className = 'node ' + extraClass;
+  d.style.left = x + 'px';
+  d.style.top = y + 'px';
+  d.innerHTML = html;
+  nodesDiv.appendChild(d);
+  return d;
+}
+
+// Ghost orbit circles
+addCircle(HX, HY, BR, 'orbit');  // branch leader orbit
+branches.forEach(b => {
+  const bp = pt(HX, HY, BR, b.angle);
+  addCircle(bp.x, bp.y, LR, 'orbit-sm');
+});
+
+// CSO — Tim Woodring (top, connected with dashed line)
+const CSOX = HX, CSOY = 108;
+addLine(CSOX, CSOY+30, HX, HY-38, 'spoke-cso');
+addNode(CSOX, CSOY,
+  `<div class="nn">Tim Woodring</div><div class="nt">Chief Solutions Officer</div>`,
+  'node-cso'
+);
+
+// Hub — Allison Boon
+addNode(HX, HY,
+  `<div class="nn">Allison Boon</div><div class="nt">SVP, Creative &amp; Content</div><div class="sub">HUB</div>`,
+  'node-hub'
+);
+
+// Branches
+branches.forEach(b => {
+  const color = spokeColor[b.type];
+  const lp = pt(HX, HY, BR, b.angle);
+
+  // Hub → Branch leader spoke
+  const hubEdge = pt(HX, HY, 88, b.angle);
+  const leaderEdge = pt(lp.x, lp.y, 66, b.angle + 180);
+  addLine(hubEdge.x, hubEdge.y, leaderEdge.x, leaderEdge.y, 'spoke', color);
+
+  // Branch leader node
+  const leaderClass = b.type === 'vp' ? 'node-vp' : 'node-cd';
+  let leaderHTML = `<div class="nn">${b.leader.name}</div><div class="nt">${b.leader.title}</div>`;
+  if (b.leader.badge === 'new') leaderHTML += `<div class="nb bn">${b.leader.bt}</div>`;
+  addNode(lp.x, lp.y, leaderHTML, leaderClass);
+
+  // Members
+  const n = b.members.length;
+  const span = Math.min(100, n * 22 + 20);
+  const mpts = fanPts(lp.x, lp.y, LR, b.angle, n, span);
+
+  b.members.forEach((m, i) => {
+    const mp = mpts[i];
+
+    // Line from branch leader to member
+    const fromEdge = pt(lp.x, lp.y, 62, b.angle - span/2 + (n===1?0:(i/(n-1))*span));
+    const toEdge = pt(mp.x, mp.y, 52, b.angle + 180 - span/2 + (n===1?0:(i/(n-1))*span));
+    addLine(fromEdge.x, fromEdge.y, toEdge.x, toEdge.y, 'spoke-leaf', color);
+
+    // Member node class
+    let mcls = 'node-ic';
+    if (m.badge === 'new') mcls += ' node-new';
+    if (m.badge === 'open') mcls += ' node-open';
+    if (m.faded) mcls += ' node-faded';
+
+    let mhtml = `<div class="nn">${m.name}</div><div class="nt">${m.title}</div>`;
+    if (m.badge === 'new') mhtml += `<div class="nb bn">${m.bt}</div>`;
+    if (m.badge === 'open') mhtml += `<div class="nb bo">OPEN</div>`;
+
+    addNode(mp.x, mp.y, mhtml, mcls);
+
+    // Sub-members
+    if (m.sub && m.sub.length) {
+      const subSpan = Math.min(60, m.sub.length * 22 + 10);
+      const spts = fanPts(mp.x, mp.y, SLR, b.angle, m.sub.length, subSpan);
+      m.sub.forEach((s, j) => {
+        const sp = spts[j];
+        addLine(mp.x, mp.y, sp.x, sp.y, 'spoke-sub', color);
+        let scls = 'node-ic node-sub';
+        if (s.badge === 'open') scls += ' node-open';
+        let shtml = `<div class="nn">${s.name}</div><div class="nt">${s.title}</div>`;
+        if (s.badge === 'open') shtml += `<div class="nb bo">OPEN</div>`;
+        addNode(sp.x, sp.y, shtml, scls);
+      });
+    }
+  });
+});
+</script>
+</body>
+</html>
