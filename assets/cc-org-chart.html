@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Creative &amp; Content — Org Chart | Unbridled</title>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --blue: #5a8ba7;
+  --gray: #4b4f54;
+  --navy: #1f2b3f;
+  --cream: #f5f4f0;
+  --gold: #ba8032;
+  --green: #4caf7d;
+  --light: #e8edf2;
+  --border: #c8d4dc;
+  --white: #ffffff;
+  --new: #e8f4ed;
+  --new-border: #4caf7d;
+  --open: #fdf3e3;
+  --open-border: #ba8032;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--cream);
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 300;
+  color: var(--gray);
+  padding: clamp(1rem, 4vw, 3rem);
+  min-height: 100vh;
+}
+
+/* Header */
+.header {
+  background: var(--navy);
+  border-radius: 12px;
+  padding: clamp(1.5rem, 4vw, 2.5rem) clamp(1.5rem, 4vw, 3rem);
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.header-left h1 {
+  font-size: clamp(20px, 3vw, 28px);
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: 1px;
+}
+.header-left h1 span { color: var(--blue); }
+.header-left p {
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #8a9aaa;
+  margin-top: 4px;
+}
+.elk {
+  font-size: 32px;
+  opacity: .7;
+}
+
+/* Phase pills */
+.phases {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 2rem;
+}
+.phase {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.phase strong {
+  display: block;
+  font-weight: 700;
+  color: var(--navy);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+.ph1 { border-left: 3px solid var(--blue); }
+.ph2 { border-left: 3px solid var(--gold); }
+.ph3 { border-left: 3px solid var(--green); }
+
+/* Legend */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 2rem;
+  align-items: center;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--gray);
+}
+.dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.dot-blue { background: var(--blue); }
+.dot-gray { background: var(--gray); }
+.dot-green { background: var(--green); }
+.dot-gold { background: var(--gold); }
+.dot-navy { background: var(--navy); }
+
+/* Org tree */
+.org-wrap {
+  overflow-x: auto;
+  padding-bottom: 1rem;
+}
+.org {
+  min-width: 900px;
+}
+
+/* Node base */
+.node {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: inline-block;
+  text-align: left;
+  min-width: 180px;
+  max-width: 220px;
+  vertical-align: top;
+  position: relative;
+}
+.node .name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
+  line-height: 1.3;
+  margin-bottom: 3px;
+}
+.node .title {
+  font-size: 11px;
+  color: var(--blue);
+  line-height: 1.3;
+  letter-spacing: .3px;
+}
+.node .badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 1px 7px;
+  border-radius: 10px;
+  margin-top: 5px;
+}
+.badge-new { background: var(--new); color: var(--green); border: 1px solid var(--new-border); }
+.badge-open { background: var(--open); color: var(--gold); border: 1px solid var(--open-border); }
+.badge-phase { background: #e8edf2; color: var(--blue); border: 1px solid var(--border); }
+
+/* Node variants */
+.node-cso { border-color: var(--navy); border-width: 2px; }
+.node-cso .title { color: var(--navy); }
+.node-svp { border-top: 3px solid var(--blue); }
+.node-vp { border-top: 3px solid var(--blue); }
+.node-cd { border-top: 3px solid var(--gold); }
+.node-ic { border-color: #dde4ea; }
+.node-ic .name { font-weight: 400; }
+
+/* Top level — vertical stack with connectors */
+.level-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+.connector-v {
+  width: 2px;
+  height: 28px;
+  background: var(--border);
+  margin: 0 auto;
+}
+.connector-h-wrap {
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+.connector-h {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 2px;
+  background: var(--border);
+}
+
+/* Branch layout */
+.branches {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  align-items: flex-start;
+  position: relative;
+  padding-top: 28px;
+}
+.branches::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 2px;
+  height: 28px;
+  background: var(--border);
+  transform: translateX(-50%);
+}
+
+/* Horizontal rule across branches */
+.h-rule {
+  position: absolute;
+  top: 28px;
+  height: 2px;
+  background: var(--border);
+}
+
+.branch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  position: relative;
+}
+.branch::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 2px;
+  height: 28px;
+  background: var(--border);
+  transform: translateX(-50%);
+}
+
+/* Children of a branch */
+.children {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 8px;
+  padding-left: 24px;
+  border-left: 2px solid var(--border);
+  margin-left: 10px;
+}
+.child-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  position: relative;
+}
+.child-row::before {
+  content: '';
+  position: absolute;
+  left: -24px;
+  top: 16px;
+  width: 24px;
+  height: 2px;
+  background: var(--border);
+}
+
+/* Sub-children */
+.subchildren {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-left: 16px;
+  padding-left: 20px;
+  border-left: 2px dashed var(--border);
+}
+.subchild-row {
+  position: relative;
+}
+.subchild-row::before {
+  content: '';
+  position: absolute;
+  left: -20px;
+  top: 16px;
+  width: 20px;
+  height: 2px;
+  background: var(--border);
+  border-top: 2px dashed var(--border);
+}
+
+/* Priority adds section */
+.priority-box {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--gold);
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  margin-top: 2rem;
+}
+.priority-box h3 {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 12px;
+}
+.priority-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.priority-item {
+  background: var(--open);
+  border: 1px solid var(--open-border);
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 12px;
+  color: var(--gray);
+}
+
+/* MC commentary */
+.mc-card {
+  background: var(--navy);
+  border-radius: 12px;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  margin-top: 2rem;
+  color: var(--white);
+}
+.mc-hd {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1rem;
+}
+.mc-av {
+  width: 36px; height: 36px;
+  background: var(--blue);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 13px;
+  color: var(--white);
+  flex-shrink: 0;
+}
+.mc-hd h3 { font-size: 14px; font-weight: 700; color: var(--blue); }
+.mc-hd span { font-size: 11px; color: #8a9aaa; display: block; }
+.mc-section { margin-bottom: 1rem; }
+.mc-section h4 {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #2a3d54;
+}
+.mc-ul { list-style: none; padding: 0; }
+.mc-ul li {
+  font-size: 13px;
+  font-weight: 300;
+  color: #c8d4dc;
+  padding: 5px 0;
+  border-bottom: 1px solid #1a2e3b;
+  line-height: 1.55;
+}
+.mc-ul li:last-child { border-bottom: none; }
+.mc-ul li::before { content: "→ "; color: var(--blue); }
+.mc-ul li.pro::before { content: "✓ "; color: var(--green); }
+.mc-ul li.con::before { content: "△ "; color: var(--gold); }
+
+/* Next steps */
+.next-steps {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--blue);
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  margin-top: 2rem;
+}
+.next-steps h3 {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin-bottom: 12px;
+}
+.next-steps ul { list-style: none; padding: 0; }
+.next-steps li {
+  font-size: 13px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  line-height: 1.5;
+}
+.next-steps li:last-child { border-bottom: none; }
+.next-steps li::before { content: "□ "; color: var(--blue); font-weight: 700; }
+
+/* Stats bar */
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 2rem;
+}
+.stat-pill {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 18px;
+  text-align: center;
+}
+.stat-pill .num {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--navy);
+  display: block;
+}
+.stat-pill .lbl {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #8a9aaa;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .org { min-width: 700px; }
+  .node { min-width: 150px; max-width: 180px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <h1>Creative <span>&amp; Content</span></h1>
+    <p>Live Events · Organizational Structure · WIP May 2026</p>
+  </div>
+  <div class="elk">🦌</div>
+</div>
+
+<!-- Stats -->
+<div class="stats">
+  <div class="stat-pill"><span class="num">23</span><span class="lbl">Team Members</span></div>
+  <div class="stat-pill"><span class="num">4</span><span class="lbl">Direct Reports to SVP</span></div>
+  <div class="stat-pill"><span class="num" style="color:var(--gold)">15</span><span class="lbl">Reporting Changes</span></div>
+  <div class="stat-pill"><span class="num" style="color:var(--green)">4</span><span class="lbl">New Roles</span></div>
+  <div class="stat-pill"><span class="num" style="color:var(--blue)">3</span><span class="lbl">Open Positions</span></div>
+  <div class="stat-pill"><span class="num">3</span><span class="lbl">Phases</span></div>
+</div>
+
+<!-- Phase timeline -->
+<div class="phases">
+  <div class="phase ph1"><strong>Phase 1 — May 15</strong>Before Paul onboards · Initial reporting structure live</div>
+  <div class="phase ph2"><strong>Phase 2 — June 1</strong>Full reorg announced · New positions live</div>
+  <div class="phase ph3"><strong>Phase 3 — August 1</strong>New roles feasibility / proof-of-concept complete</div>
+</div>
+
+<!-- Legend -->
+<div class="legend">
+  <div class="legend-item"><div class="dot dot-navy"></div> CSO / SVP</div>
+  <div class="legend-item"><div class="dot dot-blue"></div> VP / Director</div>
+  <div class="legend-item"><div class="dot dot-gold"></div> Creative Director</div>
+  <div class="legend-item"><div class="dot dot-gray"></div> Senior / IC</div>
+  <div class="legend-item" style="margin-left:8px">
+    <span style="background:#e8f4ed;border:1px solid #4caf7d;border-radius:10px;padding:2px 8px;font-size:10px;color:#4caf7d;font-weight:700">NEW ROLE</span>
+  </div>
+  <div class="legend-item">
+    <span style="background:#fdf3e3;border:1px solid #ba8032;border-radius:10px;padding:2px 8px;font-size:10px;color:#ba8032;font-weight:700">OPEN</span>
+  </div>
+</div>
+
+<!-- Org Chart -->
+<div class="org-wrap">
+<div class="org">
+
+  <!-- Top: Tim Woodring -->
+  <div style="display:flex;justify-content:center;margin-bottom:0">
+    <div class="node node-cso" style="border-top:3px solid var(--navy);text-align:center;min-width:220px">
+      <div class="name">Tim Woodring</div>
+      <div class="title">Chief Solutions Officer</div>
+    </div>
+  </div>
+  <div class="connector-v"></div>
+
+  <!-- SVP: Allison Boon -->
+  <div style="display:flex;justify-content:center;margin-bottom:0">
+    <div class="node node-svp" style="text-align:center;min-width:220px">
+      <div class="name">Allison Boon</div>
+      <div class="title">SVP, Creative &amp; Content</div>
+    </div>
+  </div>
+  <div class="connector-v"></div>
+
+  <!-- Horizontal connector across 4 branches -->
+  <div style="display:flex;justify-content:center;position:relative;">
+    <!-- Horizontal line -->
+    <div style="position:absolute;top:0;left:calc(12.5% + 10px);right:calc(12.5% + 10px);height:2px;background:var(--border);"></div>
+
+    <!-- 4 branches -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px;width:100%;max-width:1100px;padding-top:28px;">
+
+      <!-- Branch 1: Paul Kwong — Creative Director -->
+      <div style="display:flex;flex-direction:column;align-items:center;position:relative;">
+        <div style="position:absolute;top:-28px;left:50%;width:2px;height:28px;background:var(--border);transform:translateX(-50%)"></div>
+        <div class="node node-cd" style="width:100%">
+          <div class="name">Paul Kwong</div>
+          <div class="title">Creative Director</div>
+          <span class="badge badge-new">New · Start 5/18</span>
+        </div>
+        <div class="children" style="width:100%;margin-left:0;padding-left:16px">
+          <div class="child-row"><div class="node node-ic" style="width:100%"><div class="name">Josie Young</div><div class="title">Motion Graphics Artist</div></div></div>
+          <div class="child-row"><div class="node node-ic" style="width:100%"><div class="name">Matt Lazar</div><div class="title">Graphic Designer</div></div></div>
+          <div class="child-row"><div class="node node-ic" style="width:100%"><div class="name">Dani Sanchez</div><div class="title">Presentation Designer</div></div></div>
+          <div class="child-row"><div class="node node-ic" style="width:100%"><div class="name">Jordan Richart</div><div class="title">Sr. Copywriter</div></div></div>
+        </div>
+      </div>
+
+      <!-- Branch 2: Danielle Miller — VP C&C Ops -->
+      <div style="display:flex;flex-direction:column;align-items:center;position:relative;">
+        <div style="position:absolute;top:-28px;left:50%;width:2px;height:28px;background:var(--border);transform:translateX(-50%)"></div>
+        <div class="node node-vp" style="width:100%">
+          <div class="name">Danielle Miller</div>
+          <div class="title">VP, C&amp;C Operations</div>
+        </div>
+        <div class="children" style="width:100%;margin-left:0;padding-left:16px">
+          <div class="child-row">
+            <div style="width:100%">
+              <div class="node node-ic" style="width:100%">
+                <div class="name">Kate Stearman</div>
+                <div class="title">Sr. Presentation Designer</div>
+                <span class="badge badge-new">New Role · Ops Support</span>
+              </div>
+            </div>
+          </div>
+          <div class="child-row"><div class="node node-ic" style="width:100%"><div class="name">Meighan Smith</div><div class="title">Sr. Graphic Designer, Proposals</div></div></div>
+          <div class="child-row">
+            <div style="width:100%">
+              <div class="node node-ic" style="width:100%">
+                <div class="name">CJ Nuzzo</div>
+                <div class="title">Sr. Graphic Designer</div>
+                <span class="badge badge-new">New Role · Technical Design</span>
+              </div>
+              <div class="subchildren">
+                <div class="subchild-row"><div class="node node-ic" style="width:100%"><div class="name">Ethan Worker</div><div class="title">Jr. Graphic Designer</div></div></div>
+                <div class="subchild-row"><div class="node node-ic" style="width:100%"><div class="name">Jil Cave</div><div class="title">Graphic Designer</div></div></div>
+                <div class="subchild-row"><div class="node node-ic" style="width:100%;background:#fdf3e3;border-color:var(--gold)"><div class="name" style="color:var(--gold)">Graphic Designer*</div><div class="title" style="color:var(--gold)">Open Position</div><span class="badge badge-open">Hiring</span></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="child-row"><div class="node node-ic" style="width:100%"><div class="name">Josh Schedlbauer</div><div class="title">Art Director</div></div></div>
+          <div class="child-row"><div class="node node-ic" style="width:100%"><div class="name">Josh O'Brien</div><div class="title">Director, Show Design Solutions</div></div></div>
+        </div>
+      </div>
+
+      <!-- Branch 3: Abbie Brychel — Creative Director -->
+      <div style="display:flex;flex-direction:column;align-items:center;position:relative;">
+        <div style="position:absolute;top:-28px;left:50%;width:2px;height:28px;background:var(--border);transform:translateX(-50%)"></div>
+        <div class="node node-cd" style="width:100%">
+          <div class="name">Abbie Brychel</div>
+          <div class="title">Creative Director</div>
+        </div>
+        <div class="children" style="width:100%;margin-left:0;padding-left:16px">
+          <div class="child-row"><div class="node node-ic" style="width:100%"><div class="name">Ilyse Cockeram</div><div class="title">Sr. Graphic Designer</div></div></div>
+          <div class="child-row"><div class="node node-ic" style="width:100%"><div class="name">Gennaro Wood</div><div class="title">Motion Graphics Artist</div></div></div>
+          <div class="child-row"><div class="node node-ic" style="width:100%"><div class="name">Chloe Geissing</div><div class="title">Jr. Graphic Designer</div><span class="badge badge-new">New · 5/18</span></div></div>
+          <div class="child-row"><div class="node node-ic" style="width:100%;background:#fdf3e3;border-color:var(--gold)"><div class="name" style="color:var(--gold)">Presentation Designer</div><div class="title" style="color:var(--gold)">Open Position</div><span class="badge badge-open">Hiring</span></div></div>
+        </div>
+      </div>
+
+      <!-- Branch 4: Ty Stark — Creative Director -->
+      <div style="display:flex;flex-direction:column;align-items:center;position:relative;">
+        <div style="position:absolute;top:-28px;left:50%;width:2px;height:28px;background:var(--border);transform:translateX(-50%)"></div>
+        <div class="node node-cd" style="width:100%">
+          <div class="name">Ty Stark</div>
+          <div class="title">Creative Director</div>
+        </div>
+        <div class="children" style="width:100%;margin-left:0;padding-left:16px">
+          <div class="child-row">
+            <div style="width:100%">
+              <div class="node node-ic" style="width:100%">
+                <div class="name">Brandon Emery</div>
+                <div class="title">Content Producer → Video CD</div>
+                <span class="badge badge-new">New Role · June 16</span>
+              </div>
+              <div class="subchildren">
+                <div class="subchild-row"><div class="node node-ic" style="width:100%"><div class="name">Ariel Lynch</div><div class="title">Associate Content Producer</div></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="child-row">
+            <div style="width:100%">
+              <div class="node node-ic" style="width:100%">
+                <div class="name">Andrea Hougland</div>
+                <div class="title">Sr. Presentation Designer</div>
+              </div>
+              <div class="subchildren">
+                <div class="subchild-row"><div class="node node-ic" style="width:100%;background:#fdf3e3;border-color:var(--gold)"><div class="name" style="color:var(--gold)">Presentation Designer</div><div class="title" style="color:var(--gold)">Open Position</div><span class="badge badge-open">Hiring</span></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="child-row"><div class="node node-ic" style="width:100%"><div class="name">Dana Sodd</div><div class="title">Sr. Motion Graphics Designer</div></div></div>
+          <div class="child-row"><div class="node node-ic" style="width:100%"><div class="name">Brian Bjorkman</div><div class="title">Sr. Graphic Designer</div></div></div>
+          <div class="child-row"><div class="node node-ic" style="width:100%;opacity:.6"><div class="name">Jil Cave</div><div class="title">Graphic Designer (until 8/1)</div></div></div>
+        </div>
+      </div>
+
+    </div><!-- end grid -->
+  </div><!-- end branches -->
+
+  <!-- Intern -->
+  <div style="display:flex;justify-content:flex-start;margin-top:20px;padding-left:calc(25% + 10px)">
+    <div class="node" style="border:1.5px dashed var(--border);opacity:.7">
+      <div class="name" style="color:var(--gray)">Intern</div>
+      <div class="title">Content Development · Open</div>
+      <span class="badge badge-open">To Be Hired</span>
+    </div>
+  </div>
+
+</div><!-- end org -->
+</div><!-- end org-wrap -->
+
+<!-- Priority Adds -->
+<div class="priority-box">
+  <h3>⭐ Priority FT Adds</h3>
+  <div class="priority-grid">
+    <div class="priority-item">📐 (2) Presentation Designers</div>
+    <div class="priority-item">🎨 (1) Graphic Designer (mid-level) — trains with CJ before moving under a CD</div>
+    <div class="priority-item">✏️ (1) Intern, Content Development</div>
+  </div>
+</div>
+
+<!-- Next Steps -->
+<div class="next-steps">
+  <h3>Next Steps</h3>
+  <ul>
+    <li>JD for Jr. Graphic Designer → Nina by 5/13 for internal posting</li>
+    <li>Miller extending offer as of 5/12</li>
+    <li>Comms plan and timeline for reorg — target announcement 5/13</li>
+    <li>Update C&amp;C labor run with Carrie (new positions, salary adjustments, bonuses, off-site, training)</li>
+    <li>Finalize staffing plan for review with Stan, Tim, Diane, Carrie, Scott, Phillina, and Stephanie</li>
+  </ul>
+</div>
+
+<!-- MC Commentary -->
+<div class="mc-card">
+  <div class="mc-hd">
+    <div class="mc-av">MC</div>
+    <div>
+      <h3>MC's Assessment — Ecosystem Alignment</h3>
+      <span>Does this structure support the Ecosystems over Egosystems model?</span>
+    </div>
+  </div>
+
+  <div class="mc-section">
+    <h4>✓ Where it supports the ecosystem model</h4>
+    <ul class="mc-ul">
+      <li class="pro"><strong>Hub + Spoke + Wheel in action.</strong> Allison as SVP is the hub. The four branches (Paul, Danielle, Abbie, Ty) are the spokes. Each spoke's team is a wheel — autonomous, specialized, expandable. This is exactly the model from the culture deck.</li>
+      <li class="pro"><strong>Authority is distributed.</strong> Three Creative Directors each own their own team with full creative accountability. No single person is the bottleneck for creative output. The people closest to the work have the decision rights.</li>
+      <li class="pro"><strong>Ops is separated from creative.</strong> Danielle Miller's VP Ops branch is a smart structural move — it protects creative flow from administrative overhead. Credibility cornerstone at work.</li>
+      <li class="pro"><strong>New roles are purposeful, not hierarchical.</strong> Brandon Emery → Video CD, CJ → Technical Design, Kate → Ops Support. These expand capability without adding management layers. That's ecosystem thinking.</li>
+      <li class="pro"><strong>Succession is visible.</strong> The Graphic Designer who trains with CJ before moving under a CD is a career path, not just a hire. That's "Unusually Good Careers" from the brand strategy.</li>
+    </ul>
+  </div>
+
+  <div class="mc-section">
+    <h4>△ Where it could be strengthened</h4>
+    <ul class="mc-ul">
+      <li class="con"><strong>65% reporting changes is high disruption.</strong> 15 of 23 people changing who they report to in one reorg is a significant cultural moment. The comms plan is critical — this needs to feel like an upgrade, not a reshuffling. The Hero's Journey framing from the culture deck is the right lens here.</li>
+      <li class="con"><strong>Jil Cave appears in two branches.</strong> She's listed under both Danielle Miller/CJ Nuzzo and Ty Stark (until 8/1). That's a split reporting situation that needs a clean transition plan communicated clearly to her.</li>
+      <li class="con"><strong>The intern sits outside the structure.</strong> No clear reporting line shown. In an ecosystem model, even the intern should know their spoke and their wheel. Small detail, real impact on belonging.</li>
+      <li class="con"><strong>Three open Presentation Designer roles.</strong> That's a concentration of risk in one discipline. If the team is taking on new work before these are filled, capacity planning needs to account for it explicitly.</li>
+      <li class="con"><strong>Tim Woodring as CSO at the top.</strong> Healthy that leadership visibility is here, but make sure the SVP has genuine autonomous decision authority — the ecosystem breaks down if Tim has to approve routine creative calls.</li>
+    </ul>
+  </div>
+
+  <div class="mc-section">
+    <h4>Verdict</h4>
+    <ul class="mc-ul">
+      <li>This structure <strong>does support the ecosystem model</strong> — it distributes authority, creates clear spokes, and builds in career progression. The reorg is moving in the right direction. The risk isn't the structure. It's the transition — 15 people changing managers is a human moment that needs as much attention as the org chart itself. Get the comms plan right and this lands well.</li>
+    </ul>
+  </div>
+</div>
+
+</body>
+</html>
