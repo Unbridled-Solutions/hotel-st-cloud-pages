@@ -435,6 +435,121 @@
             }
         }
 
+        /* Upload Zone */
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 28px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s ease, background-color 0.2s ease;
+            background-color: #fafafa;
+            position: relative;
+        }
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--rust);
+            background-color: rgba(196, 64, 39, 0.04);
+        }
+        .upload-zone input[type="file"] {
+            position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+        }
+        .upload-zone-icon { font-size: 2em; margin-bottom: 8px; }
+        .upload-zone-label { font-weight: 600; color: var(--charcoal); margin-bottom: 4px; }
+        .upload-zone-hint { font-size: 0.85em; color: var(--muted); }
+
+        .upload-previews {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .upload-preview-item {
+            position: relative;
+            width: 120px;
+        }
+        .upload-preview-item img {
+            width: 120px;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            display: block;
+        }
+        .upload-preview-item .pdf-thumb {
+            width: 120px;
+            height: 90px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75em;
+            color: var(--muted);
+            gap: 4px;
+        }
+        .upload-preview-item .pdf-thumb span { font-size: 1.8em; }
+        .upload-preview-item .file-name {
+            font-size: 0.75em;
+            color: var(--muted);
+            margin-top: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .upload-preview-item .remove-btn {
+            position: absolute;
+            top: 4px; right: 4px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 22px; height: 22px;
+            font-size: 14px;
+            line-height: 22px;
+            text-align: center;
+            cursor: pointer;
+            padding: 0;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .upload-count {
+            font-size: 0.85em;
+            color: var(--rust);
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        /* I-9 docs print page */
+        .i9-docs-page {
+            display: none; /* hidden until summary */
+        }
+        .i9-docs-page.has-docs {
+            display: block;
+        }
+        @media print {
+            .i9-docs-page.has-docs {
+                display: block !important;
+                page-break-before: always;
+            }
+            .i9-doc-print-img {
+                max-width: 100%;
+                max-height: 90vh;
+                display: block;
+                margin: 0 auto 20px;
+                page-break-inside: avoid;
+            }
+            .i9-doc-print-embed {
+                width: 100%;
+                height: 90vh;
+                display: block;
+                page-break-inside: avoid;
+                margin-bottom: 20px;
+            }
+            .upload-previews, .upload-zone { display: none !important; }
+            .print-only { display: block !important; }
+        }
+
         /* Print Styles */
         @media print {
             .header { -webkit-print-color-adjust: exact; print-color-adjust: exact; background-color: var(--navy) !important; color: white !important;}
@@ -612,6 +727,21 @@
                 <div class="field-row">
                     <label for="i9Expiration">Expiration date (optional)</label>
                     <input type="date" id="i9Expiration" name="i9Expiration">
+                </div>
+
+                <div style="margin-top: 8px;">
+                    <label style="display:block; font-weight:600; margin-bottom:10px; font-size:0.95em;">
+                        Upload ID Document Photos / Scans
+                        <span style="font-weight:400; color:var(--muted);"> — these will print on a separate page in the summary</span>
+                    </label>
+                    <div class="upload-zone" id="uploadZone">
+                        <input type="file" id="i9FileInput" accept="image/*,application/pdf" multiple>
+                        <div class="upload-zone-icon">📎</div>
+                        <div class="upload-zone-label">Tap to upload or drag &amp; drop</div>
+                        <div class="upload-zone-hint">Photos, scans, or PDFs — all formats accepted</div>
+                    </div>
+                    <div class="upload-previews" id="uploadPreviews"></div>
+                    <div class="upload-count" id="uploadCount" style="display:none;"></div>
                 </div>
             </div>
         </div>
@@ -823,6 +953,15 @@
                 <button class="btn btn-secondary" onclick="window.print()">🖨️ Save as PDF / Print</button>
                 <button class="btn btn-primary" onclick="startNewHire()">Start New Hire</button>
             </div>
+
+            <!-- I-9 Documents — prints on its own page -->
+            <div class="i9-docs-page" id="i9DocsPage">
+                <div class="card" style="margin-top: 24px;">
+                    <div class="card-title">I-9 Identity Documents</div>
+                    <p style="font-size:0.9em; color:var(--muted); margin-bottom:20px;" class="no-print">These documents will appear on a separate page when you save as PDF.</p>
+                    <div id="i9DocsPrintArea"></div>
+                </div>
+            </div>
         </div>
 
 
@@ -1011,7 +1150,7 @@
                     currentStep++;
                     showStep(currentStep);
                     if (currentStep === totalSteps) {
-                        populateSummary();
+                        populateSummaryWithDocs();
                     }
                 }
             }
@@ -1077,6 +1216,148 @@
         function startNewHire() {
             location.reload(); // Simply reload the page to start over
         }
+
+        // ── I-9 Document Upload ──────────────────────────────────────────────
+        const uploadedDocs = []; // { name, type, dataUrl }
+
+        function initUpload() {
+            const input = document.getElementById('i9FileInput');
+            const zone  = document.getElementById('uploadZone');
+
+            input.addEventListener('change', () => handleFiles(input.files));
+
+            zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+            zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+            zone.addEventListener('drop', e => {
+                e.preventDefault();
+                zone.classList.remove('dragover');
+                handleFiles(e.dataTransfer.files);
+            });
+        }
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                if (!file.type.startsWith('image/') && file.type !== 'application/pdf') return;
+                const reader = new FileReader();
+                reader.onload = e => {
+                    uploadedDocs.push({ name: file.name, type: file.type, dataUrl: e.target.result });
+                    renderPreviews();
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function renderPreviews() {
+            const container = document.getElementById('uploadPreviews');
+            const countEl   = document.getElementById('uploadCount');
+            container.innerHTML = '';
+
+            uploadedDocs.forEach((doc, idx) => {
+                const wrap = document.createElement('div');
+                wrap.className = 'upload-preview-item';
+
+                if (doc.type.startsWith('image/')) {
+                    const img = document.createElement('img');
+                    img.src = doc.dataUrl;
+                    wrap.appendChild(img);
+                } else {
+                    const thumb = document.createElement('div');
+                    thumb.className = 'pdf-thumb';
+                    thumb.innerHTML = '<span>📄</span><div>PDF</div>';
+                    wrap.appendChild(thumb);
+                }
+
+                const name = document.createElement('div');
+                name.className = 'file-name';
+                name.title = doc.name;
+                name.textContent = doc.name;
+                wrap.appendChild(name);
+
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-btn';
+                removeBtn.innerHTML = '×';
+                removeBtn.title = 'Remove';
+                removeBtn.addEventListener('click', e => { e.stopPropagation(); removeDoc(idx); });
+                wrap.appendChild(removeBtn);
+
+                container.appendChild(wrap);
+            });
+
+            if (uploadedDocs.length > 0) {
+                countEl.style.display = 'block';
+                countEl.textContent = `${uploadedDocs.length} document${uploadedDocs.length > 1 ? 's' : ''} uploaded`;
+            } else {
+                countEl.style.display = 'none';
+            }
+        }
+
+        function removeDoc(idx) {
+            uploadedDocs.splice(idx, 1);
+            renderPreviews();
+        }
+
+        function populateI9DocsPage() {
+            const page    = document.getElementById('i9DocsPage');
+            const area    = document.getElementById('i9DocsPrintArea');
+            area.innerHTML = '';
+
+            if (uploadedDocs.length === 0) {
+                page.classList.remove('has-docs');
+                return;
+            }
+
+            page.classList.add('has-docs');
+
+            uploadedDocs.forEach((doc, idx) => {
+                // Label
+                const label = document.createElement('p');
+                label.style.cssText = 'font-weight:600; font-size:0.9em; margin-bottom:8px; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em;';
+                label.textContent = `Document ${idx + 1} — ${doc.name}`;
+                area.appendChild(label);
+
+                if (doc.type.startsWith('image/')) {
+                    const img = document.createElement('img');
+                    img.src = doc.dataUrl;
+                    img.className = 'i9-doc-print-img';
+                    img.style.cssText = 'max-width:100%; display:block; margin:0 auto 24px; border:1px solid #ddd; border-radius:6px;';
+                    area.appendChild(img);
+                } else {
+                    // PDF: embed for screen, note for print
+                    const embed = document.createElement('embed');
+                    embed.src = doc.dataUrl;
+                    embed.type = 'application/pdf';
+                    embed.className = 'i9-doc-print-embed no-print';
+                    embed.style.cssText = 'width:100%; height:500px; border:1px solid #ddd; border-radius:6px; margin-bottom:24px; display:block;';
+                    area.appendChild(embed);
+
+                    // Print fallback note
+                    const printNote = document.createElement('p');
+                    printNote.className = 'print-only';
+                    printNote.style.cssText = 'display:none; font-size:0.9em; color:#666; border:1px solid #ddd; padding:16px; border-radius:6px; margin-bottom:24px;';
+                    printNote.innerHTML = `📄 <strong>${doc.name}</strong> — PDF attached. See physical file or SharePoint upload.`;
+                    area.appendChild(printNote);
+                }
+
+                // Divider between docs
+                if (idx < uploadedDocs.length - 1) {
+                    const hr = document.createElement('hr');
+                    hr.style.cssText = 'border:none; border-top:1px solid #eee; margin:8px 0 24px;';
+                    area.appendChild(hr);
+                }
+            });
+        }
+
+        // Override populateSummary to also call populateI9DocsPage
+        const _origPopulateSummary = populateSummary;
+        function populateSummaryWithDocs() {
+            _origPopulateSummary();
+            populateI9DocsPage();
+        }
+
+        // Init on DOM ready
+        document.addEventListener('DOMContentLoaded', () => {
+            initUpload();
+        });
 
     </script>
 </body>
