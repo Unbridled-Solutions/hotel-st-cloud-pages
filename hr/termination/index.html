@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Employee Termination - Unbridled Hospitality Group</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --rust: #c44027;
+            --navy: #2b323a;
+            --charcoal: #333333;
+            --bg: #f5f5f5;
+            --card: #ffffff;
+            --border: #e0e0e0;
+            --green: #2e7d4f;
+            --muted: #777777;
+            --font-family: 'Montserrat', sans-serif;
+            --red-banner: #c44027;
+        }
+
+        body {
+            font-family: var(--font-family);
+            margin: 0;
+            background-color: var(--bg);
+            color: var(--charcoal);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background-color: var(--navy);
+            color: var(--card);
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header img {
+            height: 30px; /* Adjust logo size */
+            margin-right: 15px;
+        }
+
+        .header-title {
+            font-weight: 700;
+            font-size: 1.4em;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        /* Progress Bar */
+        .progress-bar-container {
+            background-color: var(--border);
+            border-radius: 20px;
+            height: 10px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: var(--rust);
+            border-radius: 20px;
+            transition: width 0.4s ease-in-out;
+        }
+
+        .progress-text {
+            text-align: right;
+            font-size: 0.9em;
+            color: var(--muted);
+            margin-top: 5px;
+            margin-bottom: 20px;
+        }
+
+        /* Steps */
+        .step {
+            display: none;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        .step-label {
+            color: var(--rust);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .step-title {
+            font-size: 2em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--charcoal);
+        }
+
+        .step-subtitle {
+            font-size: 1.1em;
+            color: var(--muted);
+            margin-bottom: 25px;
+        }
+
+        /* Cards */
+        .card {
+            background-color: var(--card);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+        
+        .card.card-alt {
+            background-color: var(--bg);
+            border: 1px dashed var(--border);
+        }
+
+        .card-title {
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9em;
+            color: var(--navy);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-subtitle {
+            color: var(--muted);
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+
+        /* Form Elements */
+        .field-row {
+            margin-bottom: 18px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .field-row label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            flex-basis: 100%;
+            font-size: 0.95em;
+        }
+
+        .field-row input[type="text"],
+        .field-row input[type="date"],
+        .field-row input[type="email"],
+        .field-row input[type="number"],
+        .field-row textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: var(--font-family);
+            font-size: 1em;
+            box-sizing: border-box;
+            transition: border-color 0.2s ease;
+        }
+
+        .field-row input:focus,
+        .field-row textarea:focus {
+            outline: none;
+            border-color: var(--rust);
+            box-shadow: 0 0 0 2px rgba(196, 64, 39, 0.2);
+        }
+        
+        .field-row input.error,
+        .field-row textarea.error {
+            border-color: var(--rust);
+            box-shadow: 0 0 0 1px var(--rust);
+        }
+
+        .field-row input::placeholder,
+        .field-row textarea::placeholder {
+            color: var(--muted);
+        }
+
+        .field-hint {
+            font-size: 0.85em;
+            color: var(--muted);
+            margin-top: 5px;
+            flex-basis: 100%;
+        }
+
+        /* Toggle Buttons */
+        .toggle-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .toggle-button {
+            padding: 12px 20px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background-color: var(--card);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em;
+            transition: all 0.2s ease;
+            user-select: none;
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        .toggle-button.active {
+            border-color: var(--rust);
+            background-color: rgba(196, 64, 39, 0.1);
+            color: var(--rust);
+        }
+
+        .toggle-button.error {
+            border-color: var(--rust);
+            box-shadow: 0 0 0 1px var(--rust);
+        }
+        
+        .radio-group-container .toggle-button {
+            flex-grow: 0;
+            width: calc(33% - 14px); /* For 3 columns, adjusting for gap */
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+        
+        .radio-group-container.no-columns .toggle-button {
+            flex-grow: 1;
+            width: auto; /* reset specific width for non-column layout */
+        }
+
+        .radio-group-container {
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 15px;
+            background-color: var(--bg);
+        }
+        .radio-group-container.error {
+             border-color: var(--rust);
+             box-shadow: 0 0 0 1px var(--rust);
+        }
+
+        .radio-group-title {
+            font-weight: 700;
+            color: var(--navy);
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+            cursor: pointer;
+        }
+        .radio-group-content {
+            display: none;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .radio-group-content.active {
+            display: flex;
+        }
+        
+        .reason-selected-text {
+            font-weight: 600;
+            color: var(--rust);
+            margin-top: -10px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+            min-height: 1.2em;
+        }
+
+        /* Navigation Buttons */
+        .nav-buttons {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 14px 25px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: var(--font-family);
+            font-size: 1em;
+            font-weight: 600;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            flex-grow: 1;
+        }
+
+        .btn-primary {
+            background-color: var(--rust);
+            color: var(--card);
+            border: 1px solid var(--rust);
+        }
+
+        .btn-primary:hover {
+            background-color: #a73622; /* darker rust */
+        }
+        
+        .btn-secondary {
+            background-color: var(--card);
+            color: var(--charcoal);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--bg);
+        }
+
+        /* Banners */
+        .done-banner {
+            background-color: var(--green);
+            color: var(--card);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .done-banner.error {
+            background-color: var(--red-banner);
+        }
+
+        .info-box {
+            background-color: #e0f2f7; 
+            border-left: 5px solid #81d4fa; 
+            padding: 15px 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+            color: var(--charcoal);
+        }
+
+        /* Summary styles */
+        .summary-section {
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 15px;
+        }
+        .summary-section:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .summary-label {
+            font-weight: 600;
+            color: var(--navy);
+            margin-bottom: 5px;
+            display: block;
+            font-size: 0.95em;
+        }
+        .summary-value {
+            margin-bottom: 15px;
+            padding-left: 10px;
+        }
+        .summary-value p {
+            margin: 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .radio-group-container .toggle-button {
+                width: calc(50% - 10px); 
+            }
+        }
+        @media (max-width: 520px) {
+            .container {
+                margin: 20px auto;
+                padding: 0 15px;
+            }
+            .header-title {
+                font-size: 1.2em;
+            }
+            .step-title {
+                font-size: 1.6em;
+            }
+            .card {
+                padding: 20px;
+            }
+            .field-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .field-row label, .field-row input, .field-row textarea, .field-row .field-hint {
+                width: 100%;
+            }
+            .toggle-group {
+                flex-direction: column;
+            }
+            .radio-group-container .toggle-button {
+                width: 100%;
+            }
+            .nav-buttons {
+                flex-direction: column-reverse;
+            }
+            .btn {
+                width: 100%;
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            .header { -webkit-print-color-adjust: exact; print-color-adjust: exact; background-color: var(--navy) !important; color: white !important;}
+            .header img { display: block; }
+            .nav, .no-print { display: none !important; }
+            .progress-bar-container, .progress-text { display: none !important; }
+            .step { display: none !important; }
+            .step.print-show { display: block !important; }
+            body { background: white; margin: 0; padding: 0; }
+            .container { max-width: 100%; margin: 0; padding: 0 20px; }
+            .card { box-shadow: none; border: 1px solid #ddd; page-break-inside: avoid; margin-bottom: 15px; }
+            .done-banner { -webkit-print-color-adjust: exact; print-color-adjust: exact; background-color: var(--red-banner) !important; color: white !important;}
+            /* Ensure text colors are preserved */
+            .card-title, .radio-group-title, .summary-label { color: var(--navy) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .field-row label { color: var(--charcoal) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .summary-value { border-bottom: 1px dotted #ccc; padding-bottom: 5px; }
+            
+            /* Print specific adjustments for readability */
+            input, textarea { border: none !important; border-bottom: 1px dotted #ccc !important; padding: 2px 0 !important; border-radius: 0 !important; background: transparent !important; }
+            .toggle-group .toggle-button {
+                border: 1px solid var(--border) !important;
+                background-color: var(--card) !important;
+                color: var(--charcoal) !important;
+                padding: 5px 10px !important;
+                display: inline-block !important;
+                margin-right: 5px;
+            }
+            .toggle-group .toggle-button.active {
+                background-color: rgba(196,64,39,0.1) !important;
+                border-color: var(--rust) !important;
+                color: var(--rust) !important;
+            }
+            .radio-group-container {
+                border: 1px solid #ddd !important; background-color: white !important;
+            }
+            .radio-group-container.error { /* Don't show red border on print */ border-color: #ddd !important; box-shadow: none; }
+            /* Force radio reasons to display selected state for print */
+            .radio-group-container .toggle-button.active { border-color: var(--rust) !important; background-color: rgba(196,64,39,0.1) !important; color: var(--rust) !important; }
+            .radio-group-content { display: flex !important; flex-wrap: wrap; }
+            .radio-group-title { margin-bottom: 10px !important; }
+            
+            .info-box { background-color: #f0f0f0 !important; border-left-color: #ccc !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="../assets/uhg-logo-white.png" alt="Unbridled Hospitality Group Logo">
+        <span class="header-title">Employee Termination</span>
+    </div>
+
+    <div class="container">
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-text" id="progressText"></div>
+
+        <!-- Step 1: Employee & Termination Info -->
+        <div class="step active" id="step1">
+            <div class="step-label">Step 1 of 4</div>
+            <h2 class="step-title">Employee & Termination Information</h2>
+            <p class="step-subtitle">Record essential details for the employee's offboarding process.</p>
+
+            <div class="card">
+                <div class="card-title">Employee Details</div>
+                <div class="field-row">
+                    <label for="employeeName">Employee Name*</label>
+                    <input type="text" id="employeeName" name="employeeName" required>
+                </div>
+                <div class="field-row">
+                    <label for="hireDate">Hire Date*</label>
+                    <input type="date" id="hireDate" name="hireDate" required>
+                </div>
+                <div class="field-row">
+                    <label for="position">Position*</label>
+                    <input type="text" id="position" name="position" required>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Termination Details</div>
+                <div class="field-row">
+                    <label for="terminationDate">Termination Date*</label>
+                    <input type="date" id="terminationDate" name="terminationDate" required>
+                </div>
+                <div class="field-row">
+                    <label for="lastDayWorked">Last Day Worked*</label>
+                    <input type="date" id="lastDayWorked" name="lastDayWorked" required>
+                </div>
+                <div class="field-row">
+                    <label>Eligible for Re-Hire?*</label>
+                    <div class="toggle-group" id="rehireToggle">
+                        <div class="toggle-button" data-value="Yes">YES</div>
+                        <div class="toggle-button" data-value="No">NO</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Reason for Termination -->
+        <div class="step" id="step2">
+            <div class="step-label">Step 2 of 4</div>
+            <h2 class="step-title">Reason for Termination</h2>
+            <p class="step-subtitle">Select the appropriate reason for the employee's termination.</p>
+
+            <div class="card">
+                <div class="card-title text-rust">REASON FOR TERMINATION **** REQUIRED ****</div>
+                <div class="reason-selected-text" id="reasonSelectedDisplay">Selected: None</div>
+
+                <div class="radio-group-container" data-group="voluntary" id="voluntaryReasons">
+                    <div class="radio-group-title">VOLUNTARY</div>
+                    <div class="radio-group-content toggle-group">
+                        <div class="toggle-button" data-value="Quit — Dissatisfied with Pay">Quit — Dissatisfied with Pay</div>
+                        <div class="toggle-button" data-value="Quit — Dissatisfied with Supervisor">Quit — Dissatisfied with Supervisor</div>
+                        <div class="toggle-button" data-value="Quit — Dissatisfied with Opportunities">Quit — Dissatisfied with Opportunities</div>
+                        <div class="toggle-button" data-value="Quit — Education / Return to School">Quit — Education / Return to School</div>
+                        <div class="toggle-button" data-value="Quit — In Lieu of Discharge">Quit — In Lieu of Discharge</div>
+                        <div class="toggle-button" data-value="Quit — Other Job">Quit — Other Job</div>
+                        <div class="toggle-button" data-value="Quit — Personal / Family Reasons">Quit — Personal / Family Reasons</div>
+                        <div class="toggle-button" data-value="Quit — Relocation / Move out of Area">Quit — Relocation / Move out of Area</div>
+                        <div class="toggle-button" data-value="Quit — Unknown / Walk off Job / Abandonment">Quit — Unknown / Walk off Job / Abandonment</div>
+                    </div>
+                </div>
+
+                <div class="radio-group-container" data-group="involuntary" id="involuntaryReasons">
+                    <div class="radio-group-title">INVOLUNTARY</div>
+                    <div class="radio-group-content toggle-group">
+                        <div class="toggle-button" data-value="Discharge — Attendance Policy">Discharge — Attendance Policy</div>
+                        <div class="toggle-button" data-value="Discharge — Dishonesty">Discharge — Dishonesty</div>
+                        <div class="toggle-button" data-value="Discharge — Drug / Alcohol Policy">Discharge — Drug / Alcohol Policy</div>
+                        <div class="toggle-button" data-value="Discharge — Safety Policy">Discharge — Safety Policy</div>
+                        <div class="toggle-button" data-value="Discharge for Misconduct">Discharge for Misconduct</div>
+                        <div class="toggle-button" data-value="Discharge Issues — No Misconduct Involved">Discharge Issues — No Misconduct Involved</div>
+                    </div>
+                </div>
+
+                <div class="radio-group-container" data-group="miscellaneous" id="miscellaneousReasons">
+                    <div class="radio-group-title">MISCELLANEOUS</div>
+                    <div class="radio-group-content toggle-group no-columns">
+                        <div class="toggle-button" data-value="Deceased">Deceased</div>
+                        <div class="toggle-button" data-value="Lack of Work — End of Assignment / Contract">Lack of Work — End of Assignment / Contract</div>
+                        <div class="toggle-button" data-value="Lack of Work — Permanent">Lack of Work — Permanent</div>
+                        <div class="toggle-button" data-value="Lack of Work — Temporary">Lack of Work — Temporary</div>
+                        <div class="toggle-button" data-value="Leave of Absence">Leave of Absence</div>
+                        <div class="toggle-button" data-value="Retirement">Retirement</div>
+                        <div class="toggle-button" data-value="Workers Comp">Workers Comp</div>
+                    </div>
+                </div>
+
+                <div class="field-row" style="margin-top: 25px;">
+                    <label for="detailedDescription">Detailed Description / Incident(s) for Termination</label>
+                    <textarea id="detailedDescription" name="detailedDescription" rows="6"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Signatures -->
+        <div class="step" id="step3">
+            <div class="step-label">Step 3 of 4</div>
+            <h2 class="step-title">Signatures</h2>
+            <p class="step-subtitle">Manager and Employee acknowledgment of the termination.</p>
+
+            <div class="card">
+                <div class="card-title">Manager Acknowledgment</div>
+                <div class="field-row">
+                    <label for="managerName">Manager Name*</label>
+                    <input type="text" id="managerName" name="managerName" required>
+                </div>
+                <div class="field-row">
+                    <label for="managerTitle">Manager Title/Property</label>
+                    <input type="text" id="managerTitle" name="managerTitle">
+                </div>
+                <div class="field-row">
+                    <label for="managerDate">Manager Date*</label>
+                    <input type="date" id="managerDate" name="managerDate" required>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Employee Acknowledgment</div>
+                 <div class="field-row">
+                    <label for="employeePrintedName">Employee Name (printed)*</label>
+                    <input type="text" id="employeePrintedName" name="employeePrintedName" required>
+                    <div class="field-hint">Employee signature confirms receipt of termination notice. If employee refused to sign, note that in the incident description.</div>
+                </div>
+                <div class="field-row">
+                    <label for="employeeSignatureDate">Employee Signature Date</label>
+                    <input type="date" id="employeeSignatureDate" name="employeeSignatureDate">
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: Summary -->
+        <div class="step print-show" id="step4">
+            <div class="done-banner error">
+                Termination Record Complete — Print or save as PDF and upload to SharePoint.
+            </div>
+            <div class="info-box no-print">
+                Next step: Save as PDF (Print → Save as PDF) and upload to the SharePoint HR folder.
+            </div>
+
+            <div class="card">
+                <div class="card-title">SUMMARY: EMPLOYEE TERMINATION RECORD</div>
+                
+                <div class="summary-section">
+                    <div class="summary-label">Employee Name:</div>
+                    <div class="summary-value" id="summaryEmployeeName"></div>
+                </div>
+                <div class="summary-section">
+                    <div class="summary-label">Hire Date:</div>
+                    <div class="summary-value" id="summaryHireDate"></div>
+                </div>
+                <div class="summary-section">
+                    <div class="summary-label">Position:</div>
+                    <div class="summary-value" id="summaryPosition"></div>
+                </div>
+                <div class="summary-section">
+                    <div class="summary-label">Termination Date:</div>
+                    <div class="summary-value" id="summaryTerminationDate"></div>
+                </div>
+                <div class="summary-section">
+                    <div class="summary-label">Last Day Worked:</div>
+                    <div class="summary-value" id="summaryLastDayWorked"></div>
+                </div>
+                <div class="summary-section">
+                    <div class="summary-label">Eligible for Re-Hire:</div>
+                    <div class="summary-value" id="summaryRehireStatus"></div>
+                </div>
+
+                <div class="summary-section">
+                    <div class="card-subtitle">REASON FOR TERMINATION</div>
+                    <div class="summary-label">Reason Selected:</div>
+                    <div class="summary-value" id="summaryTerminationReason"></div>
+                    <div class="summary-label">Detailed Description / Incidents:</div>
+                    <div class="summary-value" id="summaryDetailedDescription"></div>
+                </div>
+
+                <div class="summary-section">
+                    <div class="card-subtitle">MANAGER SIGNATURE</div>
+                    <div class="summary-label">Manager Name:</div>
+                    <div class="summary-value" id="summaryManagerName"></div>
+                    <div class="summary-label">Manager Title/Property:</div>
+                    <div class="summary-value" id="summaryManagerTitle"></div>
+                    <div class="summary-label">Manager Date:</div>
+                    <div class="summary-value" id="summaryManagerDate"></div>
+                </div>
+
+                <div class="summary-section">
+                    <div class="card-subtitle">EMPLOYEE ACKNOWLEDGMENT</div>
+                    <div class="summary-label">Employee Name (Printed):</div>
+                    <div class="summary-value" id="summaryEmployeePrintedName"></div>
+                    <div class="summary-label">Employee Signature Date:</div>
+                    <div class="summary-value" id="summaryEmployeeSignatureDate"></div>
+                </div>
+            </div>
+
+            <div class="nav-buttons no-print" style="margin-top: 30px;">
+                <button class="btn btn-secondary" onclick="window.print()">🖨️ Save as PDF / Print</button>
+                <button class="btn btn-primary" onclick="startNewTermination()">Start New Termination</button>
+            </div>
+        </div>
+
+        <div class="nav-buttons" id="navButtons">
+            <button class="btn btn-secondary" id="prevBtn" style="display: none;">Previous</button>
+            <button class="btn btn-primary" id="nextBtn">Continue</button>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        const totalSteps = 4;
+        const formData = {}; // To store all collected data
+        let selectedTerminationReason = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateProgressBar();
+            attachEventListeners();
+            // Set today's date for managerDate on load
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+            const dd = String(today.getDate()).padStart(2, '0');
+            document.getElementById('managerDate').value = `${yyyy}-${mm}-${dd}`;
+        });
+
+        function updateProgressBar() {
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const progress = (currentStep / totalSteps) * 100;
+            progressBar.style.width = `${progress}%`;
+            progressText.textContent = `Step ${currentStep} of ${totalSteps}`;
+        }
+
+        function attachEventListeners() {
+            document.getElementById('prevBtn').addEventListener('click', prevStep);
+            document.getElementById('nextBtn').addEventListener('click', nextStep);
+
+            // Toggle for Re-Hire Status
+            document.querySelectorAll('#rehireToggle .toggle-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    document.querySelectorAll('#rehireToggle .toggle-button').forEach(btn => btn.classList.remove('active', 'error'));
+                    button.classList.add('active');
+                    formData.rehireToggle = button.dataset.value;
+                });
+            });
+
+            // Termination Reason Radio Buttons
+            document.querySelectorAll('.radio-group-container .toggle-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    // Deactivate all other radio buttons first
+                    document.querySelectorAll('.radio-group-container .toggle-button').forEach(btn => btn.classList.remove('active'));
+                    // Remove error from all parent containers
+                    document.querySelectorAll('.radio-group-container').forEach(container => container.classList.remove('error'));
+
+                    // Activate clicked button
+                    button.classList.add('active');
+                    selectedTerminationReason = button.dataset.value;
+                    document.getElementById('reasonSelectedDisplay').textContent = `Selected: ${selectedTerminationReason}`;
+                });
+            });
+            
+            // Toggle Collapsible Sections (for print visibility)
+            document.querySelectorAll('.radio-group-title').forEach(title => {
+                title.addEventListener('click', () => {
+                    const content = title.nextElementSibling;
+                    // Toggle the active class to show/hide content
+                    content.classList.toggle('active');
+                });
+            });
+
+            // Remove error class on input for all fields
+            document.querySelectorAll('input, select, textarea').forEach(input => {
+                input.addEventListener('input', () => {
+                    input.classList.remove('error');
+                });
+            });
+            // Remove error class on toggle-group on click
+            document.querySelectorAll('.toggle-group').forEach(group => {
+                group.addEventListener('click', () => {
+                    group.classList.remove('error');
+                });
+            });
+        }
+
+        function showStep(stepNum) {
+            document.querySelectorAll('.step').forEach(step => {
+                step.classList.remove('active');
+            });
+            document.getElementById(`step${stepNum}`).classList.add('active');
+            currentStep = stepNum;
+            updateProgressBar();
+            
+            document.getElementById('prevBtn').style.display = (currentStep === 1) ? 'none' : 'block';
+            document.getElementById('nextBtn').style.display = (currentStep === totalSteps) ? 'none' : 'block';
+
+            // Show 'Save as PDF' buttons only on summary step
+            if (currentStep === totalSteps) {
+                document.getElementById('navButtons').style.display = 'none';
+            } else {
+                document.getElementById('navButtons').style.display = 'flex';
+            }
+        }
+
+        function validateStep(stepNum) {
+            let isValid = true;
+            const stepElement = document.getElementById(`step${stepNum}`);
+            let firstInvalidField = null;
+
+            // Clear previous errors
+            stepElement.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
+            document.querySelectorAll('.radio-group-container').forEach(container => container.classList.remove('error'));
+
+            const requiredFields = stepElement.querySelectorAll('input[required], textarea[required]');
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('error');
+                    isValid = false;
+                    if (!firstInvalidField) firstInvalidField = field;
+                }
+            });
+
+            const requiredToggles = stepElement.querySelectorAll('.toggle-group');
+            requiredToggles.forEach(group => {
+                // Only validate top-level toggle groups, not the nested reason ones initially
+                if (group.id === 'rehireToggle' && !group.querySelector('.toggle-button.active')) {
+                    Array.from(group.children).forEach(btn => btn.classList.add('error')); 
+                    isValid = false;
+                    if (!firstInvalidField) firstInvalidField = group.querySelector('.toggle-button');
+                }
+            });
+
+            if (stepNum === 2) { // Reason for Termination
+                if (!selectedTerminationReason) {
+                    alert('Please select a reason for termination.');
+                    document.getElementById('voluntaryReasons').classList.add('error');
+                    document.getElementById('involuntaryReasons').classList.add('error');
+                    document.getElementById('miscellaneousReasons').classList.add('error');
+                    isValid = false;
+                } else {
+                    // Check for detailed description if reason is Involuntary or Discharge
+                    const detailedDescriptionField = document.getElementById('detailedDescription');
+                    const involuntaryReasons = ["Discharge — Attendance Policy", "Discharge — Dishonesty", "Discharge — Drug / Alcohol Policy", "Discharge — Safety Policy", "Discharge for Misconduct", "Discharge Issues — No Misconduct Involved"];
+                    if (involuntaryReasons.includes(selectedTerminationReason) && !detailedDescriptionField.value.trim()) {
+                        detailedDescriptionField.classList.add('error');
+                        alert('Detailed Description is required for Involuntary/Discharge reasons.');
+                        isValid = false;
+                        if (!firstInvalidField) firstInvalidField = detailedDescriptionField;
+                    }
+                }
+            }
+
+            if (!isValid) {
+                if (firstInvalidField) firstInvalidField.focus();
+            }
+            return isValid;
+        }
+
+        function collectFormData() {
+            document.querySelectorAll('input:not([type="button"]), textarea').forEach(input => {
+                if (input.id) {
+                    formData[input.id] = input.value;
+                }
+            });
+            formData.rehireToggle = document.querySelector('#rehireToggle .toggle-button.active')?.dataset.value || '';
+            formData.terminationReason = selectedTerminationReason || '';
+        }
+
+        function nextStep() {
+            if (validateStep(currentStep)) {
+                collectFormData(); 
+                if (currentStep < totalSteps) {
+                    currentStep++;
+                    showStep(currentStep);
+                    if (currentStep === totalSteps) {
+                        populateSummary();
+                    }
+                }
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                showStep(currentStep);
+            }
+        }
+
+        function populateSummary() {
+            document.getElementById('summaryEmployeeName').textContent = formData.employeeName || '';
+            document.getElementById('summaryHireDate').textContent = formData.hireDate || '';
+            document.getElementById('summaryPosition').textContent = formData.position || '';
+            document.getElementById('summaryTerminationDate').textContent = formData.terminationDate || '';
+            document.getElementById('summaryLastDayWorked').textContent = formData.lastDayWorked || '';
+            document.getElementById('summaryRehireStatus').textContent = formData.rehireToggle || '';
+            document.getElementById('summaryTerminationReason').textContent = formData.terminationReason || '';
+            document.getElementById('summaryDetailedDescription').textContent = formData.detailedDescription || 'N/A';
+
+            document.getElementById('summaryManagerName').textContent = formData.managerName || '';
+            document.getElementById('summaryManagerTitle').textContent = formData.managerTitle || 'N/A';
+            document.getElementById('summaryManagerDate').textContent = formData.managerDate || '';
+            document.getElementById('summaryEmployeePrintedName').textContent = formData.employeePrintedName || 'N/A';
+            document.getElementById('summaryEmployeeSignatureDate').textContent = formData.employeeSignatureDate || 'N/A';
+        }
+
+        function startNewTermination() {
+            location.reload();
+        }
+    </script>
+</body>
+</html>
