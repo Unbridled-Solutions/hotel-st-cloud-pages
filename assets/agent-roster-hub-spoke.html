@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unbridled AI Agent Ecosystem</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0f1a;
+            --gold-accent: #c9aa7c;
+            --teal-accent: #3de8c8;
+            --blue-accent: #5a8ba7;
+            --orange-accent: #e8823d; /* Spoke 1 */
+            --purple-accent: #7a6ea8; /* Spoke 3 */
+            --green-accent: #4caf7d; /* Spoke 4 */
+            --node-size: 60px;
+            --agent-node-size: 30px;
+            --mc-node-size: 100px;
+            --glow-spread: 15px;
+            --planned-border-style: 2px dashed;
+            --live-border-style: 2px solid;
+            --text-color-light: #f0f0f0;
+            --text-color-dark: #333;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-dark);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-color-light);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow-x: hidden; /* Prevent horizontal scroll */
+            box-sizing: border-box;
+        }
+
+        #infographic-container {
+            position: relative;
+            width: 100%;
+            max-width: 1200px; /* Max width for the whole infographic */
+            min-height: 500px; /* Minimum height to ensure space for layout elements */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 50px;
+        }
+
+        #mc-node {
+            width: var(--mc-node-size);
+            height: var(--mc-node-size);
+            border-radius: 50%;
+            background-color: var(--gold-accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            z-index: 10;
+            box-shadow: 0 0 var(--glow-spread) var(--gold-accent), 0 0 calc(var(--glow-spread) * 2) rgba(201, 170, 124, 0.7);
+            animation: pulse-glow 2s infinite alternate;
+        }
+
+        #mc-node .node-label {
+             color: var(--bg-dark); /* Dark text on gold */
+             line-height: 1.2;
+        }
+
+        @keyframes pulse-glow {
+            from {
+                box-shadow: 0 0 var(--glow-spread) var(--gold-accent), 0 0 calc(var(--glow-spread) * 2) rgba(201, 170, 124, 0.7);
+            }
+            to {
+                box-shadow: 0 0 calc(var(--glow-spread) * 1.5) var(--gold-accent), 0 0 calc(var(--glow-spread) * 3) rgba(201, 170, 124, 0.9);
+            }
+        }
+
+        .spoke-hub {
+            width: var(--node-size);
+            height: var(--node-size);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 0.8em;
+            font-weight: bold;
+            line-height: 1.2;
+            z-index: 5;
+            color: var(--text-color-dark); /* Dark text on colored hubs */
+        }
+        /* Hub colors as classes */
+        .color-hub-1 { background-color: var(--orange-accent); }
+        .color-hub-2 { background-color: var(--blue-accent); }
+        .color-hub-3 { background-color: var(--purple-accent); }
+        .color-hub-4 { background-color: var(--green-accent); }
+        .color-hub-5 { background-color: var(--gold-accent); }
+
+        .agent-node {
+            width: var(--agent-node-size);
+            height: var(--agent-node-size);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            z-index: 6;
+            color: var(--bg-dark); /* Dark text on agent nodes */
+        }
+
+        .agent-node.LIVE {
+            background-color: var(--teal-accent); /* Brighter for LIVE */
+            border: var(--live-border-style) var(--teal-accent);
+            box-shadow: 0 0 8px rgba(61, 232, 200, 0.6);
+        }
+
+        .agent-node.Planned {
+            background-color: #555; /* Dimmer for Planned */
+            border: var(--planned-border-style) var(--text-color-light);
+            opacity: 0.7;
+        }
+
+        .agent-node:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+            z-index: 7;
+        }
+
+        #tooltip {
+            position: absolute;
+            background-color: rgba(30, 30, 30, 0.98);
+            border: 1px solid var(--gold-accent);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            pointer-events: none; /* Allows hover on element below */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s, visibility 0.2s;
+            max-width: 250px;
+            text-align: left;
+            z-index: 100;
+        }
+
+        #tooltip.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        #tooltip p {
+            margin: 0 0 5px 0;
+            line-height: 1.4;
+        }
+        #tooltip p:last-child {
+            margin-bottom: 0;
+        }
+        #tooltip strong {
+            color: var(--gold-accent);
+        }
+        #tooltip .status {
+            font-style: italic;
+            color: var(--teal-accent);
+        }
+        #tooltip .status.Planned {
+            color: var(--text-color-light);
+        }
+
+        #infographic-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1; /* Behind nodes */
+            pointer-events: none; /* Allow interaction with nodes */
+        }
+
+        .connection-line {
+            stroke-width: 2;
+            fill: none;
+            stroke-dasharray: 10 50; /* Adjust for particle effect */
+            animation: line-flow 30s linear infinite;
+        }
+
+        .mc-spoke-line {
+             stroke-width: 3;
+             fill: none;
+             stroke-dasharray: 10 50;
+             animation: line-flow 30s linear infinite;
+        }
+
+        @keyframes line-flow {
+            to {
+                stroke-dashoffset: -500; /* Moves the dash pattern */
+            }
+        }
+
+        #footer {
+            margin-top: 50px;
+            font-size: 0.8em;
+            color: rgba(255, 255, 255, 0.6);
+            text-align: center;
+        }
+
+
+        /* Desktop Layout specific styles - elements positioned absolutely */
+        #infographic-container.desktop-mode #mc-node,
+        #infographic-container.desktop-mode .spoke-hub,
+        #infographic-container.desktop-mode .agent-node {
+            position: absolute;
+        }
+        #infographic-container.desktop-mode #infographic-svg {
+            display: block;
+        }
+        #infographic-container.desktop-mode {
+             aspect-ratio: 1 / 1;
+        }
+
+
+        /* Mobile Layout specific styles - elements stack vertically */
+        @media (max-width: 768px) {
+            #infographic-container.mobile-mode {
+                flex-direction: column; /* Stack vertically */
+                height: auto;
+                aspect-ratio: unset;
+                width: 90%;
+            }
+
+            #infographic-container.mobile-mode #mc-node {
+                position: static; /* Let it flow in the document */
+                margin-bottom: 30px;
+                width: calc(var(--mc-node-size) * 0.8); /* Slightly smaller for mobile */
+                height: calc(var(--mc-node-size) * 0.8);
+            }
+
+            .spoke-hub-group { /* A new container for hub + agents in mobile mode */
+                width: 100%;
+                margin-bottom: 20px;
+                display: flex;
+                flex-direction: column; /* Stack hub and agents */
+                align-items: center;
+                border-bottom: 1px dotted rgba(255,255,255,0.2);
+                padding-bottom: 20px;
+            }
+            .spoke-hub-group:last-child {
+                 border-bottom: none;
+                 padding-bottom: 0;
+            }
+
+            #infographic-container.mobile-mode .spoke-hub {
+                position: static; /* Let it flow */
+                margin-bottom: 15px;
+                width: calc(var(--node-size) * 1.2);
+                height: calc(var(--node-size) * 1.2);
+                font-size: 1em;
+            }
+
+            .agent-node-container {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 15px;
+            }
+
+            #infographic-container.mobile-mode .agent-node {
+                position: static; /* Let it flow */
+                margin-right: 0;
+                width: calc(var(--agent-node-size) * 1.2);
+                height: calc(var(--agent-node-size) * 1.2);
+            }
+
+            #infographic-container.mobile-mode #infographic-svg {
+                display: none; /* Hide SVG lines on mobile for simpler layout */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="infographic-container">
+        <!-- Nodes will be added here dynamically by JS -->
+    </div>
+    <div id="tooltip"></div>
+    <div id="footer">
+        Powered by MC — Unbridled Solutions · Doing Good by Doing Well
+    </div>
+
+    <script>
+        const infographicData = {
+            center: {
+                id: 'MC',
+                name: 'Master of Ceremonies',
+                role: 'Orchestrator & Digital Chief of Staff',
+                status: 'LIVE',
+                color: '#c9aa7c'
+            },
+            spokes: [
+                {
+                    id: 'LIVE_EVENTS',
+                    hubName: 'Unbridled Solutions',
+                    color: '#e8823d', /* warm orange */
+                    agents: [
+                        { id: 'ATLAS', name: 'ATLAS', role: 'Events Strategist', description: 'RFP intake, program design, venue sourcing', status: 'Planned' },
+                        { id: 'QUILL', name: 'QUILL', role: 'Events Copywriter', description: 'Proposals, scripts, award narratives', status: 'Planned' },
+                        { id: 'WAYPOINT', name: 'WAYPOINT', role: 'Travel Coordinator', description: 'Itineraries, rooming lists, logistics', status: 'Planned' },
+                        { id: 'REEL', name: 'REEL', role: 'Media Producer', description: 'Shot lists, video briefs, post-production', status: 'Planned' }
+                    ]
+                },
+                {
+                    id: 'HOSPITALITY',
+                    hubName: 'Unbridled Hospitality Group',
+                    color: '#5a8ba7', /* Unbridled Blue */
+                    agents: [
+                        { id: 'BEACON', name: 'BEACON', role: 'Ads Strategist', description: 'Campaign strategy, keyword research', status: 'LIVE' },
+                        { id: 'INK', name: 'INK', role: 'Ads Copywriter', description: 'Headlines, descriptions, landing copy', status: 'LIVE' },
+                        { id: 'LEDGER', name: 'LEDGER', role: 'Ads Analyst', description: 'Performance analysis, reporting', status: 'LIVE' },
+                        { id: 'RUNWAY', name: 'RUNWAY', role: 'Landing Page Builder', description: 'Campaign pages, deploy pipeline', status: 'LIVE' },
+                        { id: 'HAVEN', name: 'HAVEN', role: 'Hospitality Copywriter', description: 'Menus, guest comms, experience copy', status: 'Planned' },
+                        { id: 'PULSE', name: 'PULSE', role: 'Reservations Intelligence', description: 'Cloudbeds data, rate recommendations', status: 'Planned' }
+                    ]
+                },
+                {
+                    id: 'REAL_ESTATE',
+                    hubName: 'Unbridled Holdings',
+                    color: '#7a6ea8', /* muted purple */
+                    agents: [
+                        { id: 'TERRAIN', name: 'TERRAIN', role: 'Property Analyst', description: 'Market comps, portfolio health reports', status: 'Planned' },
+                        { id: 'COVENANT', name: 'COVENANT', role: 'Lease & Contract Drafter', description: 'Leases, vendor agreements (zero retention)', status: 'Planned' },
+                        { id: 'PARCEL', name: 'PARCEL', role: 'Property Copywriter', description: 'Listings, tenant comms, marketing', status: 'Planned' }
+                    ]
+                },
+                {
+                    id: 'EMERGENT_BRANDS',
+                    hubName: 'Emergent Brands',
+                    color: '#4caf7d', /* green */
+                    agents: [
+                        { id: 'IGNITE', name: 'IGNITE', role: 'Brand Launcher', description: 'Brand guidelines, web presence, first campaign', status: 'Planned' },
+                        { id: 'SCOUT', name: 'SCOUT', role: 'Competitive Intel', description: 'Tracks competitors, delivers intel reports', status: 'LIVE' },
+                        { id: 'CURRENT', name: 'CURRENT', role: 'Growth Copywriter', description: 'Web copy, launch materials, multi-brand', status: 'Planned' }
+                    ]
+                },
+                {
+                    id: 'SHARED_SERVICES',
+                    hubName: 'Shared Services',
+                    color: '#c9aa7c', /* gold */
+                    agents: [
+                        { id: 'CIPHER', name: 'CIPHER', role: 'Brand Reviewer', description: 'Cross-cutting quality gate, all deliverables', status: 'LIVE' },
+                        { id: 'ARBITER', name: 'ARBITER', role: 'Legal Drafter', description: 'Contracts, NDAs, agreements (zero retention)', status: 'LIVE' },
+                        { id: 'SENTINEL', name: 'SENTINEL', role: 'Legal Reviewer', description: 'Risk spotting, contract review, escalation', status: 'LIVE' },
+                        { id: 'EMBER', name: 'EMBER', role: 'People & Culture', description: 'Job postings, onboarding docs, culture', status: 'Planned' },
+                        { id: 'GRID', name: 'GRID', role: 'IT Ops', description: 'Server health, cron monitoring, incident triage', status: 'Planned' }
+                    ]
+                }
+            ]
+        };
+
+        const infographicContainer = document.getElementById('infographic-container');
+        const tooltip = document.getElementById('tooltip');
+        let currentLayout = ''; // 'desktop' or 'mobile'
+
+
+        function clearInfographic() {
+            infographicContainer.innerHTML = '';
+            // Re-add MC node at the top level
+            const mcNode = document.createElement('div');
+            mcNode.id = 'mc-node';
+            mcNode.innerHTML = `<span class="node-label">${infographicData.center.id}</span>`;
+            infographicContainer.appendChild(mcNode);
+        }
+
+        function createAndAnimateLine(svgElement, x1, y1, x2, y2, className, strokeColor) {
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', x1);
+            line.setAttribute('y1', y1);
+            line.setAttribute('x2', x2);
+            line.setAttribute('y2', y2);
+            line.setAttribute('class', className);
+            line.setAttribute('style', `stroke: ${strokeColor};`); // Using style attribute for dynamic color
+            svgElement.appendChild(line);
+        }
+
+        function setupEventListeners(element) {
+            element.addEventListener('mousemove', showTooltip);
+            element.addEventListener('mouseleave', hideTooltip);
+            element.addEventListener('click', toggleTooltip); // For mobile click or accessibility
+        }
+
+        function renderDesktopLayout() {
+            if (currentLayout === 'desktop') return;
+            currentLayout = 'desktop';
+            clearInfographic(); // Clear existing layout
+
+            infographicContainer.classList.remove('mobile-mode');
+            infographicContainer.classList.add('desktop-mode');
+
+            // Set fixed size for the container for consistent positioning calculations
+            const containerCalculatedWidth = 800;
+            const containerCalculatedHeight = 800;
+            infographicContainer.style.width = containerCalculatedWidth + 'px';
+            infographicContainer.style.height = containerCalculatedHeight + 'px';
+
+
+            const mcNode = document.getElementById('mc-node');
+            // MC node needs to be in the DOM to get its offsetWidth/Height
+            // It was added in clearInfographic; ensure it's positioned after size is known
+            const mcNodeSize = mcNode.offsetWidth || 100; // Fallback in case of zero
+            const mcCenterX = containerCalculatedWidth / 2;
+            const mcCenterY = containerCalculatedHeight / 2;
+            mcNode.style.left = (mcCenterX - mcNodeSize / 2) + 'px';
+            mcNode.style.top = (mcCenterY - mcNodeSize / 2) + 'px';
+
+
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.id = 'infographic-svg';
+            infographicContainer.appendChild(svg);
+
+
+            const numSpokes = infographicData.spokes.length;
+            const baseAngle = -Math.PI / 2; // Start from top
+            const hubRadius = (Math.min(containerCalculatedWidth, containerCalculatedHeight) / 2) * 0.6; // Distance of hubs from center
+            const agentRingDistance = 80; // Distance of agents from their hub center
+
+
+            infographicData.spokes.forEach((spoke, i) => {
+                const angle = baseAngle + (i / numSpokes) * 2 * Math.PI;
+                const hubX = mcCenterX + hubRadius * Math.cos(angle);
+                const hubY = mcCenterY + hubRadius * Math.sin(angle);
+
+                let hubDiv = document.createElement('div');
+                hubDiv.className = `spoke-hub color-hub-${i + 1}`;
+                hubDiv.id = `hub-${spoke.id}`;
+                hubDiv.innerHTML = `<span class="node-label">${spoke.hubName.replace(' ', '<br>')}</span>`; // Break long names
+                infographicContainer.appendChild(hubDiv); // Append before using offsetWidth/Height
+                hubDiv.style.left = (hubX - hubDiv.offsetWidth / 2) + 'px';
+                hubDiv.style.top = (hubY - hubDiv.offsetHeight / 2) + 'px';
+
+                createAndAnimateLine(svg, mcCenterX, mcCenterY, hubX, hubY, 'mc-spoke-line', spoke.color);
+
+                const numAgents = spoke.agents.length;
+                const agentArcAngle = Math.min(Math.PI * 0.75, (numAgents -1) * (Math.PI / 6)); // Max 135 degrees arc around hub
+                const agentStartAngle = angle - agentArcAngle / 2; // Start angle for agents
+
+                spoke.agents.forEach((agent, j) => {
+                    const agentAngle = agentStartAngle + (numAgents > 1 ? (j / (numAgents - 1)) * agentArcAngle : 0);
+                    let agentX = hubX + agentRingDistance * Math.cos(agentAngle);
+                    let agentY = hubY + agentRingDistance * Math.sin(agentAngle);
+
+                    let agentDiv = document.createElement('div');
+                    agentDiv.className = `agent-node ${agent.status}`;
+                    agentDiv.id = `agent-${agent.id}`;
+                    agentDiv.innerHTML = `<span class="node-label">${agent.id}</span>`;
+                    agentDiv.dataset.name = agent.name;
+                    agentDiv.dataset.role = agent.role;
+                    agentDiv.dataset.description = agent.description;
+                    agentDiv.dataset.status = agent.status;
+                    infographicContainer.appendChild(agentDiv); // Append before using offsetWidth/Height
+                    agentDiv.style.left = (agentX - agentDiv.offsetWidth / 2) + 'px';
+                    agentDiv.style.top = (agentY - agentDiv.offsetHeight / 2) + 'px';
+
+                    createAndAnimateLine(svg, hubX, hubY, agentX, agentY, 'connection-line', spoke.color);
+                    setupEventListeners(agentDiv);
+                });
+            });
+        }
+
+        function renderMobileLayout() {
+            if (currentLayout === 'mobile') return;
+            currentLayout = 'mobile';
+            clearInfographic(); // Clear existing layout
+
+            infographicContainer.classList.remove('desktop-mode');
+            infographicContainer.classList.add('mobile-mode');
+            infographicContainer.style.width = '90%'; // Let CSS handle mobile widths
+            infographicContainer.style.height = 'auto'; // Let CSS handle mobile heights
+
+            // MC node is already in the document and styled by CSS with position:static for mobile flow
+            // No explicit positioning needed from JS for MC
+
+            infographicData.spokes.forEach((spoke, i) => {
+                const spokeHubGroup = document.createElement('div');
+                spokeHubGroup.className = 'spoke-hub-group';
+                spokeHubGroup.id = `spoke-group-${spoke.id}`;
+                infographicContainer.appendChild(spokeHubGroup);
+
+                let hubDiv = document.createElement('div');
+                hubDiv.className = `spoke-hub color-hub-${i + 1}`;
+                hubDiv.id = `hub-${spoke.id}`;
+                hubDiv.innerHTML = `<span class="node-label">${spoke.hubName.replace(' ', '<br>')}</span>`;
+                spokeHubGroup.appendChild(hubDiv);
+
+                const agentNodeContainer = document.createElement('div');
+                agentNodeContainer.className = 'agent-node-container';
+                spokeHubGroup.appendChild(agentNodeContainer);
+
+                spoke.agents.forEach(agent => {
+                    let agentDiv = document.createElement('div');
+                    agentDiv.className = `agent-node ${agent.status}`;
+                    agentDiv.id = `agent-${agent.id}`;
+                    agentDiv.innerHTML = `<span class="node-label">${agent.id}</span>`;
+                    agentDiv.dataset.name = agent.name;
+                    agentDiv.dataset.role = agent.role;
+                    agentDiv.dataset.description = agent.description;
+                    agentDiv.dataset.status = agent.status;
+                    agentNodeContainer.appendChild(agentDiv);
+                    setupEventListeners(agentDiv); // Mobile tap should toggle tooltip
+                });
+            });
+        }
+
+        function checkLayoutAndRender() {
+            if (window.matchMedia('(max-width: 768px)').matches) {
+                renderMobileLayout();
+            } else {
+                renderDesktopLayout();
+            }
+        }
+
+        // Tooltip functions
+        let timeoutId;
+        function showTooltip(e) {
+            clearTimeout(timeoutId); // Clear any pending hide
+            const agentNode = e.target.closest('.agent-node');
+            if (!agentNode) return;
+
+            const name = agentNode.dataset.name;
+            const role = agentNode.dataset.role;
+            const description = agentNode.dataset.description;
+            const status = agentNode.dataset.status;
+
+            tooltip.innerHTML = `
+                <p><strong>${name}</strong></p>
+                <p>${role}</p>
+                <p><i>${description}</i></p>
+                <p class="status ${status}">Status: ${status}</p>
+            `;
+            tooltip.classList.add('active');
+
+            // Position tooltip dynamically near mouse, adjusted for screen boundaries
+            let posX = e.clientX + 15;
+            let posY = e.clientY + 15;
+
+            // Adjust if tooltip goes off screen
+            const tooltipRect = tooltip.getBoundingClientRect();
+            if (posX + tooltipRect.width > window.innerWidth - 20) {
+                posX = e.clientX - tooltipRect.width - 15;
+            }
+            if (posY + tooltipRect.height > window.innerHeight - 20) {
+                posY = e.clientY - tooltipRect.height - 15;
+            }
+
+            tooltip.style.left = `${posX}px`;
+            tooltip.style.top = `${posY}px`;
+        }
+
+        function toggleTooltip(e) {
+             const agentNode = e.target.closest('.agent-node');
+             if (!agentNode) return;
+
+             // If tooltip is already active for this agent, hide it. Otherwise, show.
+             if (tooltip.classList.contains('active') && tooltip.dataset.agentId === agentNode.id) {
+                 hideTooltip();
+             } else {
+                 showTooltip(e);
+                 tooltip.dataset.agentId = agentNode.id;
+             }
+         }
+
+
+        function hideTooltip() {
+            // Delay hiding the tooltip to allow quick re-hover
+            timeoutId = setTimeout(() => {
+                tooltip.classList.remove('active');
+                tooltip.removeAttribute('data-agent-id');
+            }, 100);
+        }
+
+        // Event listener for clicks outside agent nodes to dismiss tooltip
+        document.addEventListener('click', (e) => {
+             if (!e.target.closest('.agent-node') && tooltip.classList.contains('active')) {
+                 hideTooltip();
+             }
+         });
+
+
+        // Initialize on load
+        window.addEventListener('load', checkLayoutAndRender);
+        // Recalculate on resize
+        window.addEventListener('resize', checkLayoutAndRender);
+
+    </script>
+</body>
+</html>
