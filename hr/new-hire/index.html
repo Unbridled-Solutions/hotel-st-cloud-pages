@@ -568,7 +568,7 @@
         </div>
 
         <div class="nav-buttons no-print" style="margin-top:30px;">
-            <button class="btn btn-secondary" onclick="window.print()">🖨️ Save as PDF / Print</button>
+            <button class="btn btn-secondary" onclick="openPrintPage()">🖨️ Save as PDF / Print</button>
             <button class="btn btn-primary" onclick="location.reload()">Start New Hire</button>
         </div>
 
@@ -911,63 +911,127 @@
     }
 
     // ── I-9 Docs Print Page ────────────────────────────────────────
-    function populateI9DocsPage() {
-        const page = document.getElementById('i9DocsPage');
-        const area = document.getElementById('i9DocsPrintArea');
-        area.innerHTML = '';
+    // ── Print: open standalone page and auto-print ─────────────────
+    function openPrintPage() {
+        const i9DocsPage = document.getElementById('i9DocsPage');
+        const hasI9Docs  = i9DocsPage.classList.contains('has-docs');
+        const i9DocsHTML = hasI9Docs
+            ? `<div style="page-break-before:always;padding:30px 0;">
+                 <h2 style="font-family:'Montserrat',sans-serif;font-size:0.9em;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#2b323a;border-bottom:1px solid #ddd;padding-bottom:10px;margin-bottom:20px;">I-9 Identity Documents</h2>
+                 ${buildI9DocsHTML()}
+               </div>`
+            : '';
 
+        const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>New Hire Onboarding \u2014 ${((formData.firstName||'') + ' ' + (formData.lastName||'')).trim()}</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--navy:#2b323a;--charcoal:#333;--border:#e0e0e0;--green:#2e7d4f;--muted:#777;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Montserrat',sans-serif;background:white;color:var(--charcoal);font-size:13px;line-height:1.6;}
+  .header{background-color:#2b323a;color:white;padding:14px 30px;display:flex;align-items:center;gap:14px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .header img{height:28px;}
+  .header-title{font-weight:700;font-size:1.2em;}
+  .header-sub{font-size:0.82em;opacity:0.7;margin-top:2px;}
+  .body{padding:24px 30px 40px;}
+  .done-banner{background-color:#2e7d4f;color:white;padding:14px 20px;border-radius:6px;font-weight:700;font-size:1em;margin-bottom:20px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .card{background:white;border:1px solid #ddd;border-radius:6px;padding:22px;margin-bottom:18px;page-break-inside:avoid;}
+  .card-title{font-weight:700;text-transform:uppercase;letter-spacing:1px;font-size:0.82em;color:#2b323a;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid #e0e0e0;}
+  .card-subtitle{color:#777;font-size:0.82em;margin:16px 0 10px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;}
+  .summary-item{margin-bottom:10px;padding-bottom:10px;border-bottom:1px dotted #e0e0e0;}
+  .summary-item:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+  .summary-item label{font-weight:700;color:#2b323a;font-size:0.8em;text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:2px;}
+  .summary-item p{margin:0;font-size:0.95em;}
+  .i9-doc-img{max-width:100%;display:block;margin:0 auto 16px;border:1px solid #ddd;border-radius:4px;page-break-inside:avoid;}
+  .doc-slot-label{font-size:0.8em;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#777;margin:0 0 8px;padding:7px 10px;background:#f5f5f5;border-left:3px solid #c44027;border-radius:0 4px 4px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .doc-file-label{font-size:0.75em;color:#999;margin:6px 0;text-transform:uppercase;letter-spacing:0.04em;}
+  @media print{body{font-size:11px;}.header{background-color:#2b323a !important;}.done-banner{background-color:#2e7d4f !important;}@page{margin:0.6in;}}
+</style>
+</head>
+<body>
+<div class="header">
+  <img src="../assets/uhg-logo-white.png" alt="Unbridled Hospitality Group">
+  <div><div class="header-title">New Hire Onboarding</div><div class="header-sub">Unbridled Hospitality Group \xb7 HR</div></div>
+</div>
+<div class="body">
+  <div class="done-banner">\u2713 Onboarding Complete \u2014 Upload this PDF to SharePoint with the signed new hire packet.</div>
+  ${buildSummaryPrintHTML()}
+  ${i9DocsHTML}
+</div>
+<script>window.onload=function(){window.focus();window.print();};<\/script>
+</body></html>`;
+
+        const blob = new Blob([html], { type: 'text/html' });
+        const url  = URL.createObjectURL(blob);
+        const win  = window.open(url, '_blank');
+        if (!win) alert('Pop-up blocked. Please allow pop-ups for this site and try again, or use Ctrl+P / Cmd+P to print this page directly.');
+    }
+
+    function buildSummaryPrintHTML() {
+        const v     = id => (formData[id] || '').trim() || '\u2014';
+        const money = id => formData[id] ? '$' + parseFloat(formData[id]).toFixed(2) : '\u2014';
+        const maskSSN = s => s ? s.replace(/(\d{3}-\d{2}-)\d{4}/, '$1XXXX') : '\u2014';
+        const addr  = ['address','city','state','zip'].map(id => v(id)).filter(x => x !== '\u2014').join(', ') || '\u2014';
+        const i9Opt = formData['i9OptionToggle'] || '\u2014';
+        let docsList = '\u2014';
+        if (i9Opt === 'List A \u2014 one document') docsList = v('i9DocNameA');
+        else if (i9Opt === 'List B + C \u2014 two documents') docsList = `List B: ${v('i9DocNameB')} / List C: ${v('i9DocNameC')}`;
+        const conf = formData.confirmations || {};
+        const ck = (b, y, n) => b ? `\u2713 ${y}` : `\u2717 ${n}`;
+        return `<div class="card">
+  <div class="card-title">New Hire Summary</div>
+  <div class="card-subtitle">Employee Information</div>
+  <div class="summary-item"><label>Full Name</label><p>${v('firstName')} ${v('lastName')}</p></div>
+  <div class="summary-item"><label>Date of Birth</label><p>${v('dob')}</p></div>
+  <div class="summary-item"><label>Phone</label><p>${v('phone')}</p></div>
+  <div class="summary-item"><label>Email</label><p>${v('email')}</p></div>
+  <div class="summary-item"><label>Address</label><p>${addr}</p></div>
+  <div class="summary-item"><label>Social Security Number</label><p>${maskSSN(formData['ssn'])}</p></div>
+  <div class="card-subtitle">Employment Details</div>
+  <div class="summary-item"><label>Hire Date</label><p>${v('hireDate')}</p></div>
+  <div class="summary-item"><label>Employment Status</label><p>${formData['employmentStatusToggle']||'\u2014'}</p></div>
+  <div class="summary-item"><label>FLSA Classification</label><p>${formData['exemptionStatusToggle']||'\u2014'}</p></div>
+  <div class="summary-item"><label>Position(s)</label><p>${v('positions')}</p></div>
+  <div class="summary-item"><label>Hourly Rate</label><p>${money('hourlyRate')}</p></div>
+  <div class="summary-item"><label>Salary</label><p>${money('salary')}</p></div>
+  <div class="card-subtitle">I-9 Documentation</div>
+  <div class="summary-item"><label>Option Used</label><p>${i9Opt}</p></div>
+  <div class="summary-item"><label>Document(s) Presented</label><p>${docsList}</p></div>
+  <div class="summary-item"><label>Document Expiration</label><p>${v('i9Expiration') !== '\u2014' ? v('i9Expiration') : 'N/A'}</p></div>
+  <div class="card-subtitle">Manager Sign-Off</div>
+  <div class="summary-item"><label>Manager Name</label><p>${v('managerName')}</p></div>
+  <div class="summary-item"><label>Manager / Location</label><p>${v('managerLocation')}</p></div>
+  <div class="summary-item"><label>Submission Date</label><p>${v('submissionDate')}</p></div>
+  <div class="summary-item"><label>Confirmations</label><p>
+    ${ck(conf.formsChecked,'All forms completed and documents collected.','Forms & documents not confirmed.')}<br>
+    ${ck(conf.ssnRecorded,'SSN recorded on Compensation Plan.','SSN not confirmed.')}<br>
+    ${ck(conf.sharepointUpload,'Documents will be uploaded to SharePoint.','SharePoint upload not confirmed.')}
+  </p></div>
+</div>`;
+    }
+
+    function buildI9DocsHTML() {
         const i9Opt = formData['i9OptionToggle'] || '';
-        const slots = i9Opt === 'List A — one document' ? ['listA']
-                    : i9Opt === 'List B + C — two documents' ? ['listB','listC']
-                    : ['listA','listB','listC'];
-
-        let totalDocs = 0;
-        slots.forEach(slot => { totalDocs += uploadedDocs[slot].length; });
-
-        if (totalDocs === 0) { page.classList.remove('has-docs'); return; }
-        page.classList.add('has-docs');
-
+        const slots = i9Opt === 'List A \u2014 one document'      ? ['listA']
+                    : i9Opt === 'List B + C \u2014 two documents' ? ['listB','listC']
+                    : [];
+        let out = '';
         slots.forEach(slot => {
-            if (uploadedDocs[slot].length === 0) return;
-
-            const header = document.createElement('h3');
-            header.style.cssText = 'font-size:1em; font-weight:700; color:#2b323a; text-transform:uppercase; letter-spacing:0.07em; margin:0 0 12px; padding-bottom:8px; border-bottom:1px solid #e0e0e0;';
-            header.textContent = SLOT_LABELS[slot];
-            area.appendChild(header);
-
-            uploadedDocs[slot].forEach((doc, idx) => {
-                const label = document.createElement('p');
-                label.style.cssText = 'font-size:0.82em; font-weight:600; color:#777; text-transform:uppercase; letter-spacing:0.05em; margin:0 0 8px;';
-                label.textContent = `File ${idx + 1} — ${doc.name}`;
-                area.appendChild(label);
-
+            if (!uploadedDocs[slot] || !uploadedDocs[slot].length) return;
+            out += `<p class="doc-slot-label">${SLOT_LABELS[slot]}</p>`;
+            uploadedDocs[slot].forEach((doc, i) => {
+                out += `<p class="doc-file-label">File ${i+1} \u2014 ${doc.name}</p>`;
                 if (doc.type.startsWith('image/')) {
-                    const img = document.createElement('img');
-                    img.src = doc.dataUrl;
-                    img.className = 'i9-doc-print-img';
-                    img.style.cssText = 'max-width:100%; display:block; margin:0 auto 20px; border:1px solid #ddd; border-radius:6px;';
-                    area.appendChild(img);
+                    out += `<img class="i9-doc-img" src="${doc.dataUrl}" alt="${doc.name}">`;
                 } else {
-                    // Screen: embed; Print: note
-                    const embed = document.createElement('embed');
-                    embed.src = doc.dataUrl;
-                    embed.type = 'application/pdf';
-                    embed.style.cssText = 'width:100%; height:480px; border:1px solid #ddd; border-radius:6px; margin-bottom:20px; display:block;';
-                    embed.className = 'no-print';
-                    area.appendChild(embed);
-
-                    const note = document.createElement('p');
-                    note.className = 'print-only';
-                    note.style.cssText = 'display:none; font-size:0.9em; color:#555; border:1px solid #ddd; padding:14px; border-radius:6px; margin-bottom:20px;';
-                    note.innerHTML = `📄 <strong>${doc.name}</strong> — PDF uploaded. See SharePoint or physical file.`;
-                    area.appendChild(note);
+                    out += `<p style="font-size:0.9em;color:#555;border:1px solid #ddd;padding:12px;border-radius:4px;margin-bottom:16px;">\uD83D\uDCC4 <strong>${doc.name}</strong> \u2014 PDF uploaded. See SharePoint or physical file.</p>`;
                 }
             });
-
-            const hr = document.createElement('hr');
-            hr.style.cssText = 'border:none; border-top:1px solid #eee; margin:4px 0 24px;';
-            area.appendChild(hr);
         });
+        return out;
     }
 </script>
 </body>
