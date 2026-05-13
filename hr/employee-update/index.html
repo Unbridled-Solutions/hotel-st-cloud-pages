@@ -18,991 +18,734 @@
             --muted: #777777;
             --font-family: 'Montserrat', sans-serif;
         }
+        * { box-sizing: border-box; }
+        body { font-family: var(--font-family); margin: 0; background-color: var(--bg); color: var(--charcoal); line-height: 1.6; }
 
-        body {
-            font-family: var(--font-family);
-            margin: 0;
-            background-color: var(--bg);
-            color: var(--charcoal);
-            line-height: 1.6;
-        }
+        .header { background-color: var(--navy); color: var(--card); padding: 15px 20px; display: flex; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .header img { height: 30px; margin-right: 15px; }
+        .header-title { font-weight: 700; font-size: 1.4em; }
 
-        /* Header */
-        .header {
-            background-color: var(--navy);
-            color: var(--card);
-            padding: 15px 20px;
-            display: flex;
-            align-items: center;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
+        .container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
 
-        .header img {
-            height: 30px; /* Adjust logo size */
-            margin-right: 15px;
-        }
+        .progress-bar-container { background-color: var(--border); border-radius: 20px; height: 10px; margin-bottom: 25px; overflow: hidden; }
+        .progress-bar { height: 100%; width: 0%; background-color: var(--rust); border-radius: 20px; transition: width 0.4s ease-in-out; }
+        .progress-text { text-align: right; font-size: 0.9em; color: var(--muted); margin-top: 5px; margin-bottom: 20px; }
 
-        .header-title {
-            font-weight: 700;
-            font-size: 1.4em;
-        }
+        .step { display: none; }
+        .step.active { display: block; }
+        .step-label { color: var(--rust); font-weight: 600; text-transform: uppercase; font-size: 0.9em; margin-bottom: 5px; }
+        .step-title { font-size: 2em; font-weight: 700; margin-bottom: 10px; color: var(--charcoal); }
+        .step-subtitle { font-size: 1.1em; color: var(--muted); margin-bottom: 25px; }
 
-        .container {
-            max-width: 900px;
-            margin: 30px auto;
-            padding: 0 20px;
+        /* Type selector cards */
+        .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 8px; }
+        .type-card {
+            background: var(--card); border: 2px solid var(--border); border-radius: 10px;
+            padding: 30px 24px; cursor: pointer; text-align: center;
+            transition: all 0.2s ease; user-select: none;
         }
-
-        /* Progress Bar */
-        .progress-bar-container {
-            background-color: var(--border);
-            border-radius: 20px;
-            height: 10px;
-            margin-bottom: 25px;
-            overflow: hidden;
-        }
-
-        .progress-bar {
-            height: 100%;
-            width: 0%;
-            background-color: var(--rust);
-            border-radius: 20px;
-            transition: width 0.4s ease-in-out;
-        }
-
-        .progress-text {
-            text-align: right;
-            font-size: 0.9em;
-            color: var(--muted);
-            margin-top: 5px;
-            margin-bottom: 20px;
-        }
-
-        /* Steps */
-        .step {
-            display: none;
-        }
-
-        .step.active {
-            display: block;
-        }
-
-        .step-label {
-            color: var(--rust);
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.9em;
-            margin-bottom: 5px;
-        }
-
-        .step-title {
-            font-size: 2em;
-            font-weight: 700;
-            margin-bottom: 10px;
-            color: var(--charcoal);
-        }
-
-        .step-subtitle {
-            font-size: 1.1em;
-            color: var(--muted);
-            margin-bottom: 25px;
-        }
+        .type-card:hover { border-color: var(--rust); background: rgba(196,64,39,0.04); }
+        .type-card.selected { border-color: var(--rust); background: rgba(196,64,39,0.08); }
+        .type-card.error { border-color: var(--rust); box-shadow: 0 0 0 2px rgba(196,64,39,0.3); }
+        .type-card .icon { font-size: 2.8em; margin-bottom: 12px; }
+        .type-card .type-name { font-weight: 700; font-size: 1.05em; color: var(--navy); margin-bottom: 6px; }
+        .type-card .type-desc { font-size: 0.88em; color: var(--muted); }
+        .type-card.selected .type-name { color: var(--rust); }
 
         /* Cards */
-        .card {
-            background-color: var(--card);
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            padding: 30px;
-            margin-bottom: 20px;
-            border: 1px solid var(--border);
-        }
-        
-        .card.card-alt {
-            background-color: var(--bg);
-            border: 1px dashed var(--border);
-        }
+        .card { background-color: var(--card); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); padding: 30px; margin-bottom: 20px; border: 1px solid var(--border); }
+        .card-title { font-weight: 700; text-transform: uppercase; letter-spacing: 1px; font-size: 0.9em; color: var(--navy); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
 
-        .card.selectable-card {
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-align: center;
-        }
-
-        .card.selectable-card.active {
-            border-color: var(--rust);
-            background-color: rgba(196, 64, 39, 0.1);
-        }
-
-        .card.selectable-card.error {
-            border-color: var(--rust);
-            box-shadow: 0 0 0 1px var(--rust);
-        }
-
-        .card-title {
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-size: 0.9em;
-            color: var(--navy);
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .card-subtitle {
-            color: var(--muted);
-            font-size: 0.9em;
-            margin-bottom: 15px;
-        }
-        
-        .card-icon {
-            font-size: 3em;
-            margin-bottom: 15px;
-            color: var(--charcoal);
-        }
-
-        /* Form Elements */
-        .field-row {
-            margin-bottom: 18px;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .field-row label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 8px;
-            flex-basis: 100%;
-            font-size: 0.95em;
-        }
-
+        /* Form fields */
+        .field-row { margin-bottom: 18px; }
+        .field-row label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.95em; }
         .field-row input[type="text"],
         .field-row input[type="date"],
-        .field-row input[type="email"],
         .field-row input[type="number"],
         .field-row textarea {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-family: var(--font-family);
-            font-size: 1em;
-            box-sizing: border-box;
-            transition: border-color 0.2s ease;
+            width: 100%; padding: 12px 15px; border: 1px solid var(--border);
+            border-radius: 6px; font-family: var(--font-family); font-size: 1em;
+            box-sizing: border-box; transition: border-color 0.2s ease;
         }
+        .field-row input:focus, .field-row textarea:focus { outline: none; border-color: var(--rust); box-shadow: 0 0 0 2px rgba(196,64,39,0.2); }
+        .field-row input.error, .field-row textarea.error { border-color: var(--rust); box-shadow: 0 0 0 1px var(--rust); }
+        .field-row input::placeholder, .field-row textarea::placeholder { color: var(--muted); }
+        .field-hint { font-size: 0.85em; color: var(--muted); margin-top: 5px; }
 
-        .field-row input:focus,
-        .field-row textarea:focus {
-            outline: none;
-            border-color: var(--rust);
-            box-shadow: 0 0 0 2px rgba(196, 64, 39, 0.2);
-        }
-        
-        .field-row input.error,
-        .field-row textarea.error {
-            border-color: var(--rust);
-            box-shadow: 0 0 0 1px var(--rust);
-        }
+        /* Two-column field layout */
+        .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px; }
+        .field-grid .field-row { margin-bottom: 0; }
+        @media (max-width: 520px) { .field-grid { grid-template-columns: 1fr; } }
 
-        .field-row input::placeholder,
-        .field-row textarea::placeholder {
-            color: var(--muted);
-        }
-
-        .field-hint {
-            font-size: 0.85em;
-            color: var(--muted);
-            margin-top: 5px;
-            flex-basis: 100%;
-        }
-
-        /* Toggle Buttons */
-        .toggle-group {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-        }
-
+        /* Toggle buttons */
+        .toggle-group { display: flex; gap: 10px; flex-wrap: wrap; }
         .toggle-button {
-            padding: 12px 20px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            background-color: var(--card);
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.9em;
-            transition: all 0.2s ease;
-            user-select: none;
-            flex-grow: 1;
-            text-align: center;
-        }
-
-        .toggle-button.active {
-            border-color: var(--rust);
-            background-color: rgba(196, 64, 39, 0.1);
-            color: var(--rust);
-        }
-
-        .toggle-button.error {
-            border-color: var(--rust);
-            box-shadow: 0 0 0 1px var(--rust);
-        }
-        
-        .toggle-group.horizontal .toggle-button {
-            flex-grow: 0;
-        }
-
-        /* Table for rates */
-        .rate-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            margin-bottom: 20px;
-        }
-        .rate-table th,
-        .rate-table td {
-            border: 1px solid var(--border);
-            padding: 10px;
-            text-align: left;
-        }
-        .rate-table th {
-            background-color: var(--bg);
-            font-weight: 600;
-            color: var(--navy);
-        }
-        .rate-table td input {
-            border: none;
-            padding: 0;
-        }
-        .rate-table .field-row {
-            margin-bottom: 0;
-        }
-
-        /* Nav Buttons */
-        .nav-buttons {
-            margin-top: 30px;
-            display: flex;
-            justify-content: space-between;
-            gap: 15px;
-        }
-
-        .btn {
-            padding: 14px 25px;
-            border-radius: 6px;
-            cursor: pointer;
+            padding: 10px 18px; border: 1px solid var(--border); border-radius: 6px;
+            background-color: var(--card); cursor: pointer; font-weight: 600;
+            font-size: 0.88em; transition: all 0.2s ease; user-select: none;
             font-family: var(--font-family);
-            font-size: 1em;
-            font-weight: 600;
-            transition: background-color 0.2s ease, border-color 0.2s ease;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-            flex-grow: 1;
         }
+        .toggle-button.active { border-color: var(--rust); background-color: rgba(196,64,39,0.1); color: var(--rust); }
+        .toggle-button.error { border-color: var(--rust); box-shadow: 0 0 0 1px var(--rust); }
 
-        .btn-primary {
-            background-color: var(--rust);
-            color: var(--card);
-            border: 1px solid var(--rust);
-        }
+        /* Rate table */
+        .rate-table { width: 100%; border-collapse: collapse; margin-bottom: 18px; }
+        .rate-table th, .rate-table td { border: 1px solid var(--border); padding: 10px 12px; text-align: left; font-size: 0.95em; }
+        .rate-table th { background-color: var(--bg); font-weight: 700; color: var(--navy); font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.05em; }
+        .rate-table td input { border: none; width: 100%; font-family: var(--font-family); font-size: 0.95em; background: transparent; padding: 0; }
+        .rate-table td input:focus { outline: none; }
 
-        .btn-primary:hover {
-            background-color: #a73622; /* darker rust */
-        }
-        
-        .btn-secondary {
-            background-color: var(--card);
-            color: var(--charcoal);
-            border: 1px solid var(--border);
-        }
+        /* Checklist */
+        .checklist-item { display: flex; align-items: center; margin-bottom: 12px; cursor: pointer; user-select: none; }
+        .checklist-checkbox { width: 20px; height: 20px; border: 2px solid var(--muted); border-radius: 4px; display: flex; justify-content: center; align-items: center; margin-right: 12px; transition: all 0.2s ease; flex-shrink: 0; }
+        .checklist-checkbox.checked { background-color: var(--green); border-color: var(--green); }
+        .checklist-checkbox.checked::after { content: '✓'; color: var(--card); font-size: 1.2em; line-height: 1; }
+        .checklist-item.error .checklist-checkbox { border-color: var(--rust); }
+        .checklist-label { font-size: 1em; color: var(--charcoal); }
 
-        .btn-secondary:hover {
-            background-color: var(--bg);
-        }
-        
-        .done-banner {
-            background-color: var(--green);
-            color: var(--card);
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            font-size: 1.2em;
-            font-weight: 600;
-            margin-bottom: 20px;
-        }
-        
-        .info-box {
-            background-color: #e0f2f7; 
-            border-left: 5px solid #81d4fa; 
-            padding: 15px 20px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            font-size: 0.95em;
-            color: var(--charcoal);
-        }
+        /* Banners */
+        .done-banner { background-color: var(--green); color: var(--card); padding: 20px; border-radius: 8px; text-align: center; font-size: 1.2em; font-weight: 600; margin-bottom: 20px; }
+        .info-box { background-color: #e8f4f8; border-left: 5px solid #81d4fa; padding: 15px 20px; border-radius: 6px; margin-bottom: 20px; font-size: 0.95em; color: var(--charcoal); }
 
-        /* Summary styles */
-        .summary-section {
-            margin-bottom: 25px;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 15px;
-        }
-        .summary-section:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-        .summary-label {
-            font-weight: 600;
-            color: var(--navy);
-            margin-bottom: 5px;
-            display: block;
-            font-size: 0.95em;
-        }
-        .summary-value {
-            margin-bottom: 15px;
-            padding-left: 10px;
-        }
-        .summary-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        .summary-table th, .summary-table td {
-            border: 1px solid var(--border);
-            padding: 8px 10px;
-            text-align: left;
-        }
-        .summary-table th {
-            background-color: var(--bg);
-            font-weight: 600;
-            color: var(--navy);
-        }
+        /* Summary */
+        .summary-item { margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px dotted var(--border); }
+        .summary-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .summary-item label { font-weight: 700; color: var(--navy); font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 3px; }
+        .summary-item p { margin: 0; font-size: 0.95em; }
+        .summary-subtitle { font-weight: 700; font-size: 0.82em; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin: 20px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+        .change-row { display: flex; align-items: center; gap: 10px; font-size: 0.95em; margin-bottom: 6px; }
+        .change-row .label { color: var(--muted); font-size: 0.85em; min-width: 140px; }
+        .change-row .arrow { color: var(--rust); font-weight: 700; }
+        .change-row .val { font-weight: 600; }
 
-        /* Responsive grid for Step 1 cards */
-        .card-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
+        /* Nav */
+        .nav-buttons { margin-top: 30px; display: flex; justify-content: space-between; gap: 15px; }
+        .btn { padding: 14px 25px; border-radius: 6px; cursor: pointer; font-family: var(--font-family); font-size: 1em; font-weight: 600; transition: all 0.2s ease; display: inline-block; text-align: center; flex-grow: 1; border: 1px solid transparent; }
+        .btn-primary { background-color: var(--rust); color: var(--card); border-color: var(--rust); }
+        .btn-primary:hover { background-color: #a73622; }
+        .btn-secondary { background-color: var(--card); color: var(--charcoal); border-color: var(--border); }
+        .btn-secondary:hover { background-color: var(--bg); }
 
         @media (max-width: 520px) {
-            .container {
-                margin: 20px auto;
-                padding: 0 15px;
-            }
-            .header-title {
-                font-size: 1.2em;
-            }
-            .step-title {
-                font-size: 1.6em;
-            }
-            .card {
-                padding: 20px;
-            }
-            .field-row {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .field-row label, .field-row input, .field-row textarea, .field-row .field-hint {
-                width: 100%;
-            }
-            .toggle-group {
-                flex-direction: column;
-            }
-            .nav-buttons {
-                flex-direction: column-reverse;
-            }
-            .btn {
-                width: 100%;
-            }
-            .card-grid {
-                grid-template-columns: 1fr;
-            }
+            .container { margin: 20px auto; padding: 0 15px; }
+            .header-title { font-size: 1.2em; }
+            .step-title { font-size: 1.6em; }
+            .card { padding: 20px; }
+            .type-grid { grid-template-columns: 1fr; }
+            .nav-buttons { flex-direction: column-reverse; }
+            .btn { width: 100%; }
         }
 
-        /* Print Styles */
         @media print {
-            .header { -webkit-print-color-adjust: exact; print-color-adjust: exact; background-color: var(--navy) !important; color: white !important;}
-            .header img { display: block; }
-            .nav, .no-print { display: none !important; }
+            .header { -webkit-print-color-adjust: exact; print-color-adjust: exact; background-color: var(--navy) !important; }
+            .nav-buttons, .no-print { display: none !important; }
             .progress-bar-container, .progress-text { display: none !important; }
             .step { display: none !important; }
             .step.print-show { display: block !important; }
-            body { background: white; margin: 0; padding: 0; }
+            body { background: white; }
             .container { max-width: 100%; margin: 0; padding: 0 20px; }
-            .card { box-shadow: none; border: 1px solid #ddd; page-break-inside: avoid; margin-bottom: 15px; }
-            .done-banner { -webkit-print-color-adjust: exact; print-color-adjust: exact; background-color: var(--green) !important; color: white !important;}
-            /* Ensure text colors are preserved */
-            .card-title, .checklist-section-title, .summary-label { color: var(--navy) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .field-row label { color: var(--charcoal) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .summary-value { border-bottom: 1px dotted #ccc; padding-bottom: 5px; }
-            
-            /* Print specific adjustments for readability */
-            input, textarea { border: none !important; border-bottom: 1px dotted #ccc !important; padding: 2px 0 !important; border-radius: 0 !important; background: transparent !important; }
-            .toggle-group .toggle-button {
-                border: 1px solid var(--border) !important;
-                background-color: var(--card) !important;
-                color: var(--charcoal) !important;
-                padding: 5px 10px !important;
-                display: inline-block !important;
-                margin-right: 5px;
-            }
-            .toggle-group .toggle-button.active {
-                background-color: rgba(196,64,39,0.1) !important;
-                border-color: var(--rust) !important;
-                color: var(--rust) !important;
-            }
-            .info-box { background-color: #e0f2f7 !important; border-left-color: #81d4fa !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            
-            /* Table print styles */
-            .rate-table {
-                border: 1px solid var(--border);
-            }
-            .rate-table th, .rate-table td {
-                background-color: white !important;
-                -webkit-print-color-adjust: exact; print-color-adjust: exact;
-            }
+            .card { box-shadow: none; border: 1px solid #ddd; page-break-inside: avoid; }
+            .done-banner { -webkit-print-color-adjust: exact; print-color-adjust: exact; background-color: var(--green) !important; }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <img src="../assets/uhg-logo-white.png" alt="Unbridled Hospitality Group Logo">
-        <span class="header-title">Employee Update</span>
-    </div>
 
-    <div class="container">
-        <div class="progress-bar-container">
-            <div class="progress-bar" id="progressBar"></div>
-        </div>
-        <div class="progress-text" id="progressText"></div>
+<div class="header">
+    <img src="../assets/uhg-logo-white.png" alt="Unbridled Hospitality Group">
+    <span class="header-title">Employee Update</span>
+</div>
 
-        <!-- Step 1: Change Type -->
-        <div class="step active" id="step1">
-            <div class="step-label">Step 1 of 4</div>
-            <h2 class="step-title">Select Change Type</h2>
-            <p class="step-subtitle">Choose the type of update you need to process for the employee.</p>
+<div class="container">
+    <div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="progress-text" id="progressText"></div>
 
-            <div class="card-grid" id="changeTypeSelection">
-                <div class="card selectable-card" data-change-type="position-status">
-                    <div class="card-icon">📋</div>
-                    <div class="card-title">Position / Status Change</div>
-                    <p>Promotion, demotion, role change, or FT/PT status change</p>
-                </div>
-                <div class="card selectable-card" data-change-type="rate-change">
-                    <div class="card-icon">💵</div>
-                    <div class="card-title">Rate Change</div>
-                    <p>Pay increase or decrease — hourly or salary adjustment</p>
-                </div>
+    <!-- ── Step 1: Change Type ──────────────────────────────────────── -->
+    <div class="step active" id="step1">
+        <div class="step-label">Step 1 of 4</div>
+        <h2 class="step-title">What type of update is this?</h2>
+        <p class="step-subtitle">Select one — you'll fill in the details on the next screen.</p>
+
+        <div class="type-grid">
+            <div class="type-card" id="card-position" onclick="selectType('position-status')">
+                <div class="icon">📋</div>
+                <div class="type-name">Position / Status Change</div>
+                <div class="type-desc">Promotion, demotion, role change, or FT/PT status change</div>
             </div>
-        </div>
-
-        <!-- Step 2: Change Details -->
-        <div class="step" id="step2">
-            <div class="step-label">Step 2 of 4</div>
-            <h2 class="step-title" id="step2Title">Change Details</h2>
-            <p class="step-subtitle" id="step2Subtitle">Enter the specific details of the employment change.</p>
-
-            <div class="card">
-                <div class="card-title">Employee & Change Information</div>
-                <div class="field-row">
-                    <label for="employeeName">Employee Name*</label>
-                    <input type="text" id="employeeName" name="employeeName" required>
-                </div>
-                <div class="field-row">
-                    <label for="dateOfChange">Date of Change*</label>
-                    <input type="date" id="dateOfChange" name="dateOfChange" required>
-                </div>
+            <div class="type-card" id="card-rate" onclick="selectType('rate-change')">
+                <div class="icon">💵</div>
+                <div class="type-name">Rate Change</div>
+                <div class="type-desc">Pay increase or decrease — hourly or salary adjustment</div>
             </div>
-
-            <!-- Position/Status Change Fields -->
-            <div class="card" id="positionStatusCard" style="display: none;">
-                <div class="card-title">Position & Status Changes</div>
-                <div class="field-row">
-                    <label for="currentPositions">Current Position(s)*</label>
-                    <input type="text" id="currentPositions" name="currentPositions">
-                    <div class="field-hint">List all current positions.</div>
-                </div>
-                <div class="field-row">
-                    <label for="newPositions">New Position(s)*</label>
-                    <input type="text" id="newPositions" name="newPositions">
-                    <div class="field-hint">List all positions after change.</div>
-                </div>
-                 <div class="field-row">
-                    <label for="previousHourlyRateStatus">Previous Hourly Rate</label>
-                    <input type="number" id="previousHourlyRateStatus" name="previousHourlyRateStatus" step="0.01">
-                </div>
-                <div class="field-row">
-                    <label for="newHourlyRateStatus">New Hourly Rate</label>
-                    <input type="number" id="newHourlyRateStatus" name="newHourlyRateStatus" step="0.01">
-                </div>
-                <div class="field-row">
-                    <label for="previousSalaryStatus">Previous Bi-Weekly Salary</label>
-                    <input type="number" id="previousSalaryStatus" name="previousSalaryStatus" step="0.01">
-                </div>
-                <div class="field-row">
-                    <label for="newSalaryStatus">New Bi-Weekly Salary</label>
-                    <input type="number" id="newSalaryStatus" name="newSalaryStatus" step="0.01">
-                </div>
-                <div class="field-row">
-                    <label>Employment Status</label>
-                    <div class="toggle-group horizontal" id="employmentStatusToggle">
-                        <div class="toggle-button" data-value="Full Time">Full Time</div>
-                        <div class="toggle-button" data-value="Part Time">Part Time</div>
-                        <div class="toggle-button" data-value="No Change">No Change</div>
-                    </div>
-                </div>
-                <div class="field-row">
-                    <label>Exemption Status</label>
-                    <div class="toggle-group horizontal" id="exemptionStatusToggle">
-                        <div class="toggle-button" data-value="Non-Exempt">Non-Exempt</div>
-                        <div class="toggle-button" data-value="Exempt">Exempt</div>
-                        <div class="toggle-button" data-value="No Change">No Change</div>
-                    </div>
-                </div>
-                <div class="field-row">
-                    <label for="reasonForChangeStatus">Reason for Change*</label>
-                    <textarea id="reasonForChangeStatus" name="reasonForChangeStatus" rows="4" required></textarea>
-                </div>
-            </div>
-
-            <!-- Rate Change Fields -->
-            <div class="card" id="rateChangeCard" style="display: none;">
-                <div class="card-title">Rate Change Details</div>
-                 <div class="field-row">
-                    <label for="rateChangePositions">Position(s)*</label>
-                    <input type="text" id="rateChangePositions" name="rateChangePositions" required>
-                </div>
-                <table class="rate-table">
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th>Previous</th>
-                            <th>New</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Hourly Rate</td>
-                            <td><input type="number" id="previousHourlyRateRate" name="previousHourlyRateRate" step="0.01"></td>
-                            <td><input type="number" id="newHourlyRateRate" name="newHourlyRateRate" step="0.01"></td>
-                        </tr>
-                        <tr>
-                            <td>Bi-Weekly Salary</td>
-                            <td><input type="number" id="previousSalaryRate" name="previousSalaryRate" step="0.01"></td>
-                            <td><input type="number" id="newSalaryRate" name="newSalaryRate" step="0.01"></td>
-                        </tr>
-                    </tbody>
-                </table>
-                <div class="field-row">
-                    <label>Employment Status</label>
-                    <div class="toggle-group horizontal" id="employmentStatusToggleRate">
-                        <div class="toggle-button" data-value="Full Time">Full Time</div>
-                        <div class="toggle-button" data-value="Part Time">Part Time</div>
-                        <div class="toggle-button" data-value="No Change">No Change</div>
-                    </div>
-                </div>
-                <div class="field-row">
-                    <label for="reasonForChangeRate">Reason for Change*</label>
-                    <textarea id="reasonForChangeRate" name="reasonForChangeRate" rows="4" required></textarea>
-                </div>
-            </div>
-        </div>
-
-        <!-- Step 3: Signatures -->
-        <div class="step" id="step3">
-            <div class="step-label">Step 3 of 4</div>
-            <h2 class="step-title">Signatures</h2>
-            <p class="step-subtitle">Manager and Employee acknowledgment of the changes.</p>
-
-            <div class="card">
-                <div class="card-title">Manager Acknowledgment</div>
-                <div class="field-row">
-                    <label for="managerName">Manager Name*</label>
-                    <input type="text" id="managerName" name="managerName" required>
-                </div>
-                <div class="field-row">
-                    <label for="managerTitle">Manager Title/Property</label>
-                    <input type="text" id="managerTitle" name="managerTitle">
-                </div>
-                <div class="field-row">
-                    <label for="managerDate">Manager Date*</label>
-                    <input type="date" id="managerDate" name="managerDate" required>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-title">Employee Acknowledgment</div>
-                <div class="field-row">
-                    <label for="employeePrintedName">Employee Name (printed)*</label>
-                    <input type="text" id="employeePrintedName" name="employeePrintedName" required>
-                    <div class="field-hint">Employee signature confirms receipt of this change. Obtain physical signature on printed form.</div>
-                </div>
-                <div class="field-row">
-                    <label for="employeeSignatureDate">Employee Signature Date</label>
-                    <input type="date" id="employeeSignatureDate" name="employeeSignatureDate">
-                </div>
-            </div>
-        </div>
-
-        <!-- Step 4: Summary -->
-        <div class="step print-show" id="step4">
-            <div class="done-banner">
-                Employee Update Complete! — Print this page or save as PDF, then upload to SharePoint.
-            </div>
-            <div class="info-box no-print">
-                Next step: Save as PDF (Print → Save as PDF) and upload to the SharePoint HR folder.
-            </div>
-
-            <div class="card">
-                <div class="card-title">SUMMARY: EMPLOYEE UPDATE RESPONSE</div>
-                
-                <div class="summary-section">
-                    <div class="summary-label">Change Type:</div>
-                    <div class="summary-value" id="summaryChangeType"></div>
-                </div>
-                <div class="summary-section">
-                    <div class="summary-label">Employee Name:</div>
-                    <div class="summary-value" id="summaryEmployeeName"></div>
-                </div>
-                 <div class="summary-section">
-                    <div class="summary-label">Date of Change:</div>
-                    <div class="summary-value" id="summaryDateOfChange"></div>
-                </div>
-
-                <!-- Conditional Summary Section for Position/Status Change -->
-                <div class="summary-section" id="summaryPositionStatus" style="display: none;">
-                    <div class="card-subtitle">POSITION / STATUS CHANGE DETAILS</div>
-                    <div class="summary-label">Current Position(s):</div>
-                    <div class="summary-value" id="summaryCurrentPositions"></div>
-                    <div class="summary-label">New Position(s):</div>
-                    <div class="summary-value" id="summaryNewPositions"></div>
-                    <div class="summary-label">Previous Hourly Rate:</div>
-                    <div class="summary-value" id="summaryPreviousHourlyRateStatus"></div>
-                    <div class="summary-label">New Hourly Rate:</div>
-                    <div class="summary-value" id="summaryNewHourlyRateStatus"></div>
-                     <div class="summary-label">Previous Bi-Weekly Salary:</div>
-                    <div class="summary-value" id="summaryPreviousSalaryStatus"></div>
-                    <div class="summary-label">New Bi-Weekly Salary:</div>
-                    <div class="summary-value" id="summaryNewSalaryStatus"></div>
-                    <div class="summary-label">Employment Status Change:</div>
-                    <div class="summary-value" id="summaryEmploymentStatus"></div>
-                    <div class="summary-label">Exemption Status Change:</div>
-                    <div class="summary-value" id="summaryExemptionStatus"></div>
-                    <div class="summary-label">Reason for Change:</div>
-                    <div class="summary-value" id="summaryReasonForChangeStatus"></div>
-                </div>
-
-                <!-- Conditional Summary Section for Rate Change -->
-                <div class="summary-section" id="summaryRateChange" style="display: none;">
-                    <div class="card-subtitle">RATE CHANGE DETAILS</div>
-                    <div class="summary-label">Position(s):</div>
-                    <div class="summary-value" id="summaryRateChangePositions"></div>
-                    <div class="summary-label">Rate Details:</div>
-                    <table class="summary-table">
-                        <thead>
-                            <tr>
-                                <th></th>
-                                <th>Previous</th>
-                                <th>New</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Hourly Rate</td>
-                                <td id="summaryPreviousHourlyRateRate"></td>
-                                <td id="summaryNewHourlyRateRate"></td>
-                            </tr>
-                            <tr>
-                                <td>Bi-Weekly Salary</td>
-                                <td id="summaryPreviousSalaryRate"></td>
-                                <td id="summaryNewSalaryRate"></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <div class="summary-label" style="margin-top: 15px;">Employment Status:</div>
-                    <div class="summary-value" id="summaryEmploymentStatusRate"></div>
-                    <div class="summary-label">Reason for Change:</div>
-                    <div class="summary-value" id="summaryReasonForChangeRate"></div>
-                </div>
-
-                <div class="summary-section">
-                    <div class="card-subtitle">MANAGER SIGNATURE</div>
-                    <div class="summary-label">Manager Name:</div>
-                    <div class="summary-value" id="summaryManagerName"></div>
-                    <div class="summary-label">Manager Title/Property:</div>
-                    <div class="summary-value" id="summaryManagerTitle"></div>
-                    <div class="summary-label">Manager Date:</div>
-                    <div class="summary-value" id="summaryManagerDate"></div>
-                </div>
-
-                <div class="summary-section">
-                    <div class="card-subtitle">EMPLOYEE ACKNOWLEDGMENT</div>
-                    <div class="summary-label">Employee Name (Printed):</div>
-                    <div class="summary-value" id="summaryEmployeePrintedName"></div>
-                    <div class="summary-label">Employee Signature Date:</div>
-                    <div class="summary-value" id="summaryEmployeeSignatureDate"></div>
-                </div>
-            </div>
-
-             <div class="nav-buttons no-print" style="margin-top: 30px;">
-                <button class="btn btn-secondary" onclick="window.print()">🖨️ Save as PDF / Print</button>
-                <button class="btn btn-primary" onclick="startNewUpdate()">Start New Update</button>
-            </div>
-        </div>
-
-        <div class="nav-buttons" id="navButtons">
-            <button class="btn btn-secondary" id="prevBtn" style="display: none;">Previous</button>
-            <button class="btn btn-primary" id="nextBtn">Continue</button>
         </div>
     </div>
 
-    <script>
-        let currentStep = 1;
-        const totalSteps = 4;
-        const formData = { }; // To store all collected data
+    <!-- ── Step 2: Change Details ───────────────────────────────────── -->
+    <div class="step" id="step2">
+        <div class="step-label">Step 2 of 4</div>
+        <h2 class="step-title" id="step2Title">Change Details</h2>
+        <p class="step-subtitle" id="step2Subtitle">Fill in the details of this update.</p>
 
-        document.addEventListener('DOMContentLoaded', () => {
-            updateProgressBar();
-            attachEventListeners();
-            // Set today's date for managerDate on load
-            const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
-            const dd = String(today.getDate()).padStart(2, '0');
-            document.getElementById('managerDate').value = `${yyyy}-${mm}-${dd}`;
+        <div class="card">
+            <div class="card-title">Employee Information</div>
+            <div class="field-grid">
+                <div class="field-row">
+                    <label for="employeeName">Employee Name *</label>
+                    <input type="text" id="employeeName" required>
+                </div>
+                <div class="field-row">
+                    <label for="dateOfChange">Effective Date *</label>
+                    <input type="date" id="dateOfChange" required>
+                </div>
+            </div>
+        </div>
+
+        <!-- Position / Status Change fields -->
+        <div class="card" id="positionStatusCard" style="display:none;">
+            <div class="card-title">Position &amp; Status Details</div>
+            <div class="field-row">
+                <label for="currentPositions">Current Position(s) *</label>
+                <input type="text" id="currentPositions" placeholder="e.g. Server">
+            </div>
+            <div class="field-row">
+                <label for="newPositions">New Position(s) *</label>
+                <input type="text" id="newPositions" placeholder="e.g. Lead Server, Trainer">
+                <div class="field-hint">List all positions after this change takes effect.</div>
+            </div>
+            <div class="field-grid">
+                <div class="field-row">
+                    <label for="prevHourly">Previous Hourly Rate</label>
+                    <input type="number" id="prevHourly" step="0.01" placeholder="0.00">
+                </div>
+                <div class="field-row">
+                    <label for="newHourly">New Hourly Rate</label>
+                    <input type="number" id="newHourly" step="0.01" placeholder="0.00">
+                </div>
+            </div>
+            <div class="field-grid">
+                <div class="field-row">
+                    <label for="prevSalary">Previous Salary</label>
+                    <input type="number" id="prevSalary" step="0.01" placeholder="0.00">
+                </div>
+                <div class="field-row">
+                    <label for="newSalary">New Salary</label>
+                    <input type="number" id="newSalary" step="0.01" placeholder="0.00">
+                </div>
+            </div>
+            <div class="field-row">
+                <label>Employment Status</label>
+                <div class="toggle-group" id="empStatusToggle">
+                    <div class="toggle-button" data-value="Full Time">Full Time</div>
+                    <div class="toggle-button" data-value="Part Time">Part Time</div>
+                    <div class="toggle-button" data-value="No Change">No Change</div>
+                </div>
+            </div>
+            <div class="field-row" style="margin-top:14px;">
+                <label>FLSA Classification</label>
+                <div class="toggle-group" id="flsaToggle">
+                    <div class="toggle-button" data-value="Non-Exempt">Non-Exempt</div>
+                    <div class="toggle-button" data-value="Exempt">Exempt</div>
+                    <div class="toggle-button" data-value="No Change">No Change</div>
+                </div>
+            </div>
+            <div class="field-row" style="margin-top:14px;">
+                <label for="posReason">Reason for Change *</label>
+                <textarea id="posReason" rows="3" placeholder="e.g. Promoted to Lead Server based on performance review and tenure."></textarea>
+            </div>
+        </div>
+
+        <!-- Rate Change fields -->
+        <div class="card" id="rateChangeCard" style="display:none;">
+            <div class="card-title">Rate Change Details</div>
+            <div class="field-row">
+                <label for="ratePositions">Position(s) *</label>
+                <input type="text" id="ratePositions" placeholder="e.g. Bartender">
+            </div>
+            <table class="rate-table">
+                <thead>
+                    <tr><th></th><th>Previous</th><th>New</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Hourly Rate</td>
+                        <td><input type="number" id="prevHourlyRate" step="0.01" placeholder="0.00"></td>
+                        <td><input type="number" id="newHourlyRate" step="0.01" placeholder="0.00"></td>
+                    </tr>
+                    <tr>
+                        <td>Salary</td>
+                        <td><input type="number" id="prevSalaryRate" step="0.01" placeholder="0.00"></td>
+                        <td><input type="number" id="newSalaryRate" step="0.01" placeholder="0.00"></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="field-row">
+                <label>Employment Status</label>
+                <div class="toggle-group" id="empStatusRateToggle">
+                    <div class="toggle-button" data-value="Full Time">Full Time</div>
+                    <div class="toggle-button" data-value="Part Time">Part Time</div>
+                    <div class="toggle-button" data-value="No Change">No Change</div>
+                </div>
+            </div>
+            <div class="field-row" style="margin-top:14px;">
+                <label for="rateReason">Reason for Change *</label>
+                <textarea id="rateReason" rows="3" placeholder="e.g. Annual merit increase — 3% based on performance review."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Step 3: Sign-Off ─────────────────────────────────────────── -->
+    <div class="step" id="step3">
+        <div class="step-label">Step 3 of 4</div>
+        <h2 class="step-title">Manager Sign-Off</h2>
+        <p class="step-subtitle">Confirm the change and submit the record.</p>
+
+        <div class="card">
+            <div class="card-title">Confirmations</div>
+            <div class="checklist-item" data-conf="reviewed">
+                <div class="checklist-checkbox"></div>
+                <span class="checklist-label">I have reviewed this change with the employee. *</span>
+            </div>
+            <div class="checklist-item" data-conf="accurate">
+                <div class="checklist-checkbox"></div>
+                <span class="checklist-label">All information entered is accurate and approved. *</span>
+            </div>
+            <div class="checklist-item" data-conf="sharepoint">
+                <div class="checklist-checkbox"></div>
+                <span class="checklist-label">I understand this form must be uploaded to SharePoint. *</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Manager Details</div>
+            <div class="field-row">
+                <label for="managerName">Manager Name *</label>
+                <input type="text" id="managerName" required>
+            </div>
+            <div class="field-row">
+                <label for="managerLocation">Manager / Location</label>
+                <input type="text" id="managerLocation" placeholder="e.g. GM — Hotel St. Cloud">
+            </div>
+            <div class="field-row">
+                <label for="submissionDate">Submission Date</label>
+                <input type="date" id="submissionDate" readonly style="background:#f9f9f9; color:var(--muted);">
+                <div class="field-hint">Auto-filled with today's date. Electronic submission constitutes manager signature for HR records.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Step 4: Summary ──────────────────────────────────────────── -->
+    <div class="step print-show" id="step4">
+        <div class="done-banner">✓ Employee Update Complete! — Save as PDF and upload to SharePoint.</div>
+        <div class="info-box no-print">
+            <strong>Next step:</strong> Click <strong>Save as PDF / Print</strong> below → Save as PDF → upload to the SharePoint HR folder.
+        </div>
+
+        <div class="card">
+            <div class="card-title">Employee Update Summary</div>
+
+            <div class="summary-item"><label>Change Type</label><p id="s-changeType"></p></div>
+            <div class="summary-item"><label>Employee Name</label><p id="s-empName"></p></div>
+            <div class="summary-item"><label>Effective Date</label><p id="s-effectiveDate"></p></div>
+
+            <!-- Position/Status detail block -->
+            <div id="s-posBlock" style="display:none;">
+                <div class="summary-subtitle">Position &amp; Status Changes</div>
+                <div class="summary-item"><label>Current Position(s)</label><p id="s-currentPos"></p></div>
+                <div class="summary-item"><label>New Position(s)</label><p id="s-newPos"></p></div>
+                <div class="summary-item" id="s-hourlyRow">
+                    <label>Hourly Rate</label>
+                    <div class="change-row"><span class="label">Previous</span><span class="val" id="s-prevH"></span><span class="arrow">→</span><span class="val" id="s-newH"></span></div>
+                </div>
+                <div class="summary-item" id="s-salaryRow">
+                    <label>Salary</label>
+                    <div class="change-row"><span class="label">Previous</span><span class="val" id="s-prevS"></span><span class="arrow">→</span><span class="val" id="s-newS"></span></div>
+                </div>
+                <div class="summary-item"><label>Employment Status</label><p id="s-empStatus"></p></div>
+                <div class="summary-item"><label>FLSA Classification</label><p id="s-flsa"></p></div>
+                <div class="summary-item"><label>Reason for Change</label><p id="s-posReason"></p></div>
+            </div>
+
+            <!-- Rate change detail block -->
+            <div id="s-rateBlock" style="display:none;">
+                <div class="summary-subtitle">Rate Change</div>
+                <div class="summary-item"><label>Position(s)</label><p id="s-ratePos"></p></div>
+                <div class="summary-item">
+                    <label>Hourly Rate</label>
+                    <div class="change-row"><span class="label">Previous</span><span class="val" id="s-prevHR"></span><span class="arrow">→</span><span class="val" id="s-newHR"></span></div>
+                </div>
+                <div class="summary-item">
+                    <label>Salary</label>
+                    <div class="change-row"><span class="label">Previous</span><span class="val" id="s-prevSR"></span><span class="arrow">→</span><span class="val" id="s-newSR"></span></div>
+                </div>
+                <div class="summary-item"><label>Employment Status</label><p id="s-empStatusRate"></p></div>
+                <div class="summary-item"><label>Reason for Change</label><p id="s-rateReason"></p></div>
+            </div>
+
+            <div class="summary-subtitle">Manager Sign-Off</div>
+            <div class="summary-item"><label>Manager Name</label><p id="s-managerName"></p></div>
+            <div class="summary-item"><label>Manager / Location</label><p id="s-managerLocation"></p></div>
+            <div class="summary-item"><label>Submission Date</label><p id="s-submissionDate"></p></div>
+            <div class="summary-item">
+                <label>Confirmations</label>
+                <p id="s-confirmations"></p>
+            </div>
+        </div>
+
+        <div class="nav-buttons no-print" style="margin-top:30px;">
+            <button class="btn btn-secondary" onclick="openPrintPage()">🖨️ Save as PDF / Print</button>
+            <button class="btn btn-primary" onclick="location.reload()">Start New Update</button>
+        </div>
+    </div>
+
+    <div class="nav-buttons" id="navButtons">
+        <button class="btn btn-secondary" id="prevBtn" style="display:none;">← Previous</button>
+        <button class="btn btn-primary" id="nextBtn">Continue →</button>
+    </div>
+</div>
+
+<script>
+    const TOTAL_STEPS = 4;
+    let currentStep = 1;
+    let selectedType = ''; // 'position-status' | 'rate-change'
+    const formData = {};
+
+    // ── Init ───────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+        updateProgressBar();
+        document.getElementById('prevBtn').addEventListener('click', prevStep);
+        document.getElementById('nextBtn').addEventListener('click', nextStep);
+        attachToggleListeners();
+        attachChecklistListeners();
+        attachInputClearErrors();
+
+        const today = new Date();
+        const pad = n => String(n).padStart(2,'0');
+        document.getElementById('submissionDate').value =
+            `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+    });
+
+    // ── Type selection ─────────────────────────────────────────────
+    function selectType(type) {
+        selectedType = type;
+        formData.changeType = type;
+
+        // Visual state
+        document.getElementById('card-position').classList.toggle('selected', type === 'position-status');
+        document.getElementById('card-rate').classList.toggle('selected', type === 'rate-change');
+        document.getElementById('card-position').classList.remove('error');
+        document.getElementById('card-rate').classList.remove('error');
+
+        // Auto-advance to step 2
+        showStep(2);
+    }
+
+    // ── Progress bar ───────────────────────────────────────────────
+    function updateProgressBar() {
+        const pct = (currentStep / TOTAL_STEPS) * 100;
+        document.getElementById('progressBar').style.width = pct + '%';
+        document.getElementById('progressText').textContent = `Step ${currentStep} of ${TOTAL_STEPS}`;
+    }
+
+    // ── Step navigation ────────────────────────────────────────────
+    function showStep(n) {
+        document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+        document.getElementById('step' + n).classList.add('active');
+        currentStep = n;
+        updateProgressBar();
+
+        document.getElementById('prevBtn').style.display = (n === 1) ? 'none' : 'block';
+        document.getElementById('nextBtn').style.display = (n === TOTAL_STEPS) ? 'none' : 'block';
+        document.getElementById('navButtons').style.display = (n === TOTAL_STEPS) ? 'none' : 'flex';
+
+        // On entering step 2, show the right detail card
+        if (n === 2) {
+            const isPos = selectedType === 'position-status';
+            document.getElementById('step2Title').textContent = isPos ? 'Position / Status Change' : 'Rate Change';
+            document.getElementById('step2Subtitle').textContent = isPos
+                ? 'Enter the details of this position or status update.'
+                : 'Enter the previous and new pay rates.';
+            document.getElementById('positionStatusCard').style.display = isPos ? 'block' : 'none';
+            document.getElementById('rateChangeCard').style.display = isPos ? 'none' : 'block';
+        }
+
+        window.scrollTo(0, 0);
+    }
+
+    function nextStep() {
+        if (!validateStep(currentStep)) return;
+        collectFormData();
+        if (currentStep < TOTAL_STEPS) {
+            const next = currentStep + 1;
+            showStep(next);
+            if (next === TOTAL_STEPS) populateSummary();
+        }
+    }
+
+    function prevStep() {
+        if (currentStep > 1) showStep(currentStep - 1);
+    }
+
+    // ── Validation ─────────────────────────────────────────────────
+    function validateStep(step) {
+        let valid = true;
+        const el = document.getElementById('step' + step);
+        el.querySelectorAll('.error').forEach(e => e.classList.remove('error'));
+
+        if (step === 1) {
+            if (!selectedType) {
+                document.getElementById('card-position').classList.add('error');
+                document.getElementById('card-rate').classList.add('error');
+                alert('Please select a change type.');
+                valid = false;
+            }
+        }
+
+        if (step === 2) {
+            ['employeeName','dateOfChange'].forEach(id => {
+                const f = document.getElementById(id);
+                if (!f.value.trim()) { f.classList.add('error'); valid = false; }
+            });
+
+            if (selectedType === 'position-status') {
+                ['currentPositions','newPositions','posReason'].forEach(id => {
+                    const f = document.getElementById(id);
+                    if (!f.value.trim()) { f.classList.add('error'); valid = false; }
+                });
+            } else if (selectedType === 'rate-change') {
+                ['ratePositions','rateReason'].forEach(id => {
+                    const f = document.getElementById(id);
+                    if (!f.value.trim()) { f.classList.add('error'); valid = false; }
+                });
+            }
+        }
+
+        if (step === 3) {
+            const mn = document.getElementById('managerName');
+            if (!mn.value.trim()) { mn.classList.add('error'); valid = false; }
+
+            el.querySelectorAll('.checklist-item[data-conf]').forEach(item => {
+                if (!item.querySelector('.checklist-checkbox').classList.contains('checked')) {
+                    item.classList.add('error'); valid = false;
+                }
+            });
+        }
+
+        if (!valid && step !== 1) alert('Please complete all required fields before continuing.');
+        return valid;
+    }
+
+    // ── Collect data ───────────────────────────────────────────────
+    function collectFormData() {
+        document.querySelectorAll('input:not([type="button"]), textarea').forEach(f => {
+            if (f.id) formData[f.id] = f.value;
+        });
+        document.querySelectorAll('.toggle-group').forEach(g => {
+            const active = g.querySelector('.toggle-button.active');
+            if (active) formData[g.id] = active.dataset.value;
+        });
+        if (currentStep === 3) {
+            formData.confirmations = {};
+            document.querySelectorAll('#step3 .checklist-item[data-conf]').forEach(item => {
+                formData.confirmations[item.dataset.conf] =
+                    item.querySelector('.checklist-checkbox').classList.contains('checked');
+            });
+        }
+    }
+
+    // ── Toggle listeners ───────────────────────────────────────────
+    function attachToggleListeners() {
+        document.querySelectorAll('.toggle-group').forEach(group => {
+            group.addEventListener('click', e => {
+                if (!e.target.classList.contains('toggle-button')) return;
+                group.querySelectorAll('.toggle-button').forEach(b => b.classList.remove('active','error'));
+                e.target.classList.add('active');
+                formData[group.id] = e.target.dataset.value;
+            });
+        });
+    }
+
+    function attachChecklistListeners() {
+        document.querySelectorAll('.checklist-item').forEach(item => {
+            item.addEventListener('click', () => {
+                item.querySelector('.checklist-checkbox').classList.toggle('checked');
+                item.classList.remove('error');
+            });
+        });
+    }
+
+    function attachInputClearErrors() {
+        document.querySelectorAll('input, textarea').forEach(f => {
+            f.addEventListener('input', () => f.classList.remove('error'));
+        });
+    }
+
+    // ── Populate summary ───────────────────────────────────────────
+    function populateSummary() {
+        // Final sweep to capture everything
+        document.querySelectorAll('input:not([type="button"]), textarea').forEach(f => {
+            if (f.id) formData[f.id] = f.value;
+        });
+        document.querySelectorAll('.toggle-group').forEach(g => {
+            const active = g.querySelector('.toggle-button.active');
+            if (active) formData[g.id] = active.dataset.value;
+        });
+        formData.confirmations = {};
+        document.querySelectorAll('#step3 .checklist-item[data-conf]').forEach(item => {
+            formData.confirmations[item.dataset.conf] =
+                item.querySelector('.checklist-checkbox').classList.contains('checked');
         });
 
-        function updateProgressBar() {
-            const progressBar = document.getElementById('progressBar');
-            const progressText = document.getElementById('progressText');
-            const progress = (currentStep / totalSteps) * 100;
-            progressBar.style.width = `${progress}%`;
-            progressText.textContent = `Step ${currentStep} of ${totalSteps}`;
+        const v = id => (formData[id] || '').trim() || '—';
+        const money = id => formData[id] ? '$' + parseFloat(formData[id]).toFixed(2) : '—';
+
+        document.getElementById('s-changeType').textContent =
+            selectedType === 'position-status' ? 'Position / Status Change' : 'Rate Change';
+        document.getElementById('s-empName').textContent = v('employeeName');
+        document.getElementById('s-effectiveDate').textContent = v('dateOfChange');
+
+        if (selectedType === 'position-status') {
+            document.getElementById('s-posBlock').style.display = 'block';
+            document.getElementById('s-rateBlock').style.display = 'none';
+            document.getElementById('s-currentPos').textContent = v('currentPositions');
+            document.getElementById('s-newPos').textContent = v('newPositions');
+            document.getElementById('s-prevH').textContent = money('prevHourly');
+            document.getElementById('s-newH').textContent = money('newHourly');
+            document.getElementById('s-prevS').textContent = money('prevSalary');
+            document.getElementById('s-newS').textContent = money('newSalary');
+            document.getElementById('s-empStatus').textContent = formData['empStatusToggle'] || '—';
+            document.getElementById('s-flsa').textContent = formData['flsaToggle'] || '—';
+            document.getElementById('s-posReason').textContent = v('posReason');
+        } else {
+            document.getElementById('s-posBlock').style.display = 'none';
+            document.getElementById('s-rateBlock').style.display = 'block';
+            document.getElementById('s-ratePos').textContent = v('ratePositions');
+            document.getElementById('s-prevHR').textContent = money('prevHourlyRate');
+            document.getElementById('s-newHR').textContent = money('newHourlyRate');
+            document.getElementById('s-prevSR').textContent = money('prevSalaryRate');
+            document.getElementById('s-newSR').textContent = money('newSalaryRate');
+            document.getElementById('s-empStatusRate').textContent = formData['empStatusRateToggle'] || '—';
+            document.getElementById('s-rateReason').textContent = v('rateReason');
         }
 
-        function attachEventListeners() {
-            document.getElementById('prevBtn').addEventListener('click', prevStep);
-            document.getElementById('nextBtn').addEventListener('click', nextStep);
+        document.getElementById('s-managerName').textContent = v('managerName');
+        document.getElementById('s-managerLocation').textContent = v('managerLocation');
+        document.getElementById('s-submissionDate').textContent = v('submissionDate');
 
-            // Step 1: Change Type Selection
-            document.querySelectorAll('#changeTypeSelection .selectable-card').forEach(card => {
-                card.addEventListener('click', () => {
-                    document.querySelectorAll('#changeTypeSelection .selectable-card').forEach(c => c.classList.remove('active', 'error'));
-                    card.classList.add('active');
-                    formData.changeType = card.dataset.changeType;
-                    // Update step 2 title based on selection
-                    if (formData.changeType === 'position-status') {
-                        document.getElementById('step2Title').textContent = 'Position / Status Change Details';
-                        document.getElementById('step2Subtitle').textContent = 'Enter details for the position, status, and/or rate adjustment.';
-                        document.getElementById('positionStatusCard').style.display = 'block';
-                        document.getElementById('rateChangeCard').style.display = 'none';
-                    } else if (formData.changeType === 'rate-change') {
-                        document.getElementById('step2Title').textContent = 'Rate Change Details';
-                        document.getElementById('step2Subtitle').textContent = 'Enter details for the employee's pay rate adjustment.';
-                        document.getElementById('positionStatusCard').style.display = 'none';
-                        document.getElementById('rateChangeCard').style.display = 'block';
-                    }
-                });
-            });
+        const conf = formData.confirmations || {};
+        const ck = (b, yes) => (b ? '✓ ' : '✗ ') + yes;
+        document.getElementById('s-confirmations').innerHTML =
+            ck(conf.reviewed, 'Change reviewed with employee.') + '<br>' +
+            ck(conf.accurate, 'All information is accurate and approved.') + '<br>' +
+            ck(conf.sharepoint, 'Form will be uploaded to SharePoint.');
+    }
 
-            // Toggle button groups
-            document.querySelectorAll('.toggle-group').forEach(group => {
-                group.addEventListener('click', (event) => {
-                    if (event.target.classList.contains('toggle-button')) {
-                        Array.from(group.children).forEach(btn => btn.classList.remove('active', 'error'));
-                        event.target.classList.add('active');
-                        // Store value immediately for toggles
-                        formData[group.id] = event.target.dataset.value;
-                    }
-                });
-            });
+    // ── Print ──────────────────────────────────────────────────────
+    function openPrintPage() {
+        // Inline logo as base64 so it renders in blob context
+        fetch('../assets/uhg-logo-white.png')
+            .then(r => r.blob())
+            .then(blob => {
+                const reader = new FileReader();
+                reader.onload = e => buildAndOpenPrint(e.target.result);
+                reader.readAsDataURL(blob);
+            })
+            .catch(() => buildAndOpenPrint('../assets/uhg-logo-white.png'));
+    }
 
-            // Remove error class on input for all fields
-            document.querySelectorAll('input, select, textarea').forEach(input => {
-                input.addEventListener('input', () => {
-                    input.classList.remove('error');
-                });
-            });
+    function buildAndOpenPrint(logoSrc) {
+        const v = id => (formData[id] || '').trim() || '—';
+        const money = id => formData[id] ? '$' + parseFloat(formData[id]).toFixed(2) : '—';
+
+        let detailsHTML = '';
+        if (selectedType === 'position-status') {
+            detailsHTML = `
+            <div class="section-title">Position &amp; Status Changes</div>
+            <div class="row"><span class="lbl">Current Position(s)</span><span>${v('currentPositions')}</span></div>
+            <div class="row"><span class="lbl">New Position(s)</span><span>${v('newPositions')}</span></div>
+            <div class="row"><span class="lbl">Hourly Rate</span><span>${money('prevHourly')} &rarr; ${money('newHourly')}</span></div>
+            <div class="row"><span class="lbl">Salary</span><span>${money('prevSalary')} &rarr; ${money('newSalary')}</span></div>
+            <div class="row"><span class="lbl">Employment Status</span><span>${formData['empStatusToggle']||'&mdash;'}</span></div>
+            <div class="row"><span class="lbl">FLSA Classification</span><span>${formData['flsaToggle']||'&mdash;'}</span></div>
+            <div class="row"><span class="lbl">Reason</span><span>${v('posReason')}</span></div>`;
+        } else {
+            detailsHTML = `
+            <div class="section-title">Rate Change</div>
+            <div class="row"><span class="lbl">Position(s)</span><span>${v('ratePositions')}</span></div>
+            <div class="row"><span class="lbl">Hourly Rate</span><span>${money('prevHourlyRate')} &rarr; ${money('newHourlyRate')}</span></div>
+            <div class="row"><span class="lbl">Salary</span><span>${money('prevSalaryRate')} &rarr; ${money('newSalaryRate')}</span></div>
+            <div class="row"><span class="lbl">Employment Status</span><span>${formData['empStatusRateToggle']||'&mdash;'}</span></div>
+            <div class="row"><span class="lbl">Reason</span><span>${v('rateReason')}</span></div>`;
         }
 
-        function showStep(stepNum) {
-            document.querySelectorAll('.step').forEach(step => {
-                step.classList.remove('active');
-            });
-            document.getElementById(`step${stepNum}`).classList.add('active');
-            currentStep = stepNum;
-            updateProgressBar();
-            
-            document.getElementById('prevBtn').style.display = (currentStep === 1) ? 'none' : 'block';
-            document.getElementById('nextBtn').style.display = (currentStep === totalSteps) ? 'none' : 'block';
+        const conf = formData.confirmations || {};
+        const ck = (b, yes) => (b ? '&#10003; ' : '&#10007; ') + yes;
 
-            // Show 'Save as PDF' buttons only on summary step
-            if (currentStep === totalSteps) {
-                document.getElementById('navButtons').style.display = 'none';
-            } else {
-                document.getElementById('navButtons').style.display = 'flex';
-            }
-        }
+        const html = `<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8">
+<title>Employee Update &mdash; ${v('employeeName')}</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Montserrat',sans-serif;background:white;color:#333;font-size:13px;line-height:1.6;}
+  .header{background:#2b323a;color:white;padding:14px 30px;display:flex;align-items:center;gap:14px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .header img{height:28px;}
+  .header-title{font-weight:700;font-size:1.2em;}
+  .header-sub{font-size:0.82em;opacity:0.7;margin-top:2px;}
+  .body{padding:24px 30px 40px;}
+  .banner{background:#2e7d4f;color:white;padding:14px 20px;border-radius:6px;font-weight:700;margin-bottom:20px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .card{border:1px solid #ddd;border-radius:6px;padding:22px;margin-bottom:18px;page-break-inside:avoid;}
+  .card-title{font-weight:700;text-transform:uppercase;letter-spacing:1px;font-size:0.82em;color:#2b323a;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid #e0e0e0;}
+  .section-title{font-weight:700;font-size:0.8em;text-transform:uppercase;letter-spacing:0.07em;color:#777;margin:16px 0 10px;padding-bottom:6px;border-bottom:1px solid #eee;}
+  .row{display:flex;margin-bottom:8px;padding-bottom:8px;border-bottom:1px dotted #eee;font-size:0.95em;}
+  .row:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+  .lbl{font-weight:700;color:#2b323a;min-width:160px;font-size:0.85em;text-transform:uppercase;letter-spacing:0.04em;padding-top:1px;}
+  @media print{body{font-size:11px;}.header{background:#2b323a !important;}.banner{background:#2e7d4f !important;}@page{margin:0.6in;}}
+</style></head><body>
+<div class="header">
+  <img src="${logoSrc}" alt="Unbridled Hospitality Group">
+  <div><div class="header-title">Employee Update</div><div class="header-sub">Unbridled Hospitality Group &middot; HR</div></div>
+</div>
+<div class="body">
+  <div class="banner">&#10003; Employee Update &mdash; ${selectedType === 'position-status' ? 'Position / Status Change' : 'Rate Change'}</div>
+  <div class="card">
+    <div class="card-title">Update Summary</div>
+    <div class="row"><span class="lbl">Change Type</span><span>${selectedType === 'position-status' ? 'Position / Status Change' : 'Rate Change'}</span></div>
+    <div class="row"><span class="lbl">Employee</span><span>${v('employeeName')}</span></div>
+    <div class="row"><span class="lbl">Effective Date</span><span>${v('dateOfChange')}</span></div>
+    ${detailsHTML}
+    <div class="section-title">Manager Sign-Off</div>
+    <div class="row"><span class="lbl">Manager</span><span>${v('managerName')}</span></div>
+    <div class="row"><span class="lbl">Manager / Location</span><span>${v('managerLocation')}</span></div>
+    <div class="row"><span class="lbl">Submission Date</span><span>${v('submissionDate')}</span></div>
+    <div class="row"><span class="lbl">Confirmations</span><span>
+      ${ck(conf.reviewed,'Change reviewed with employee.')}<br>
+      ${ck(conf.accurate,'All information is accurate and approved.')}<br>
+      ${ck(conf.sharepoint,'Form will be uploaded to SharePoint.')}
+    </span></div>
+  </div>
+</div>
+<script>
+window.onload = function() {
+  window.focus();
+  var imgs = document.querySelectorAll('img');
+  if (!imgs.length) { window.print(); return; }
+  var done = 0;
+  imgs.forEach(function(img) {
+    if (img.complete) { if (++done >= imgs.length) window.print(); }
+    else {
+      img.addEventListener('load', function() { if (++done >= imgs.length) window.print(); });
+      img.addEventListener('error', function() { if (++done >= imgs.length) window.print(); });
+    }
+  });
+};
+<\/script>
+</body></html>`;
 
-        function validateStep(stepNum) {
-            let isValid = true;
-            const stepElement = document.getElementById(`step${stepNum}`);
-            let firstInvalidField = null;
-
-            // Clear previous errors
-            stepElement.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
-            
-            if (stepNum === 1) {
-                const selectedChangeType = stepElement.querySelector('.selectable-card.active');
-                if (!selectedChangeType) {
-                    alert('Please select a change type.');
-                    document.querySelectorAll('#changeTypeSelection .selectable-card').forEach(c => c.classList.add('error'));
-                    isValid = false;
-                }
-            } else if (stepNum === 2) {
-                const requiredFields = stepElement.querySelectorAll('#employeeName[required], #dateOfChange[required]');
-                requiredFields.forEach(field => {
-                    if (!field.value.trim()) {
-                        field.classList.add('error');
-                        isValid = false;
-                        if (!firstInvalidField) firstInvalidField = field;
-                    }
-                });
-
-                if (formData.changeType === 'position-status') {
-                    const posStatusFields = document.querySelectorAll('#positionStatusCard input[required], #positionStatusCard textarea[required]');
-                    posStatusFields.forEach(field => {
-                        if (!field.value.trim()) {
-                            field.classList.add('error');
-                            isValid = false;
-                            if (!firstInvalidField) firstInvalidField = field;
-                        }
-                    });
-
-                    const employmentToggle = document.getElementById('employmentStatusToggle');
-                    if (!employmentToggle.querySelector('.toggle-button.active')) {
-                        Array.from(employmentToggle.children).forEach(btn => btn.classList.add('error'));
-                        isValid = false;
-                        if (!firstInvalidField) firstInvalidField = employmentToggle.querySelector('.toggle-button');
-                    }
-                    const exemptionToggle = document.getElementById('exemptionStatusToggle');
-                    if (!exemptionToggle.querySelector('.toggle-button.active')) {
-                        Array.from(exemptionToggle.children).forEach(btn => btn.classList.add('error'));
-                        isValid = false;
-                        if (!firstInvalidField) firstInvalidField = exemptionToggle.querySelector('.toggle-button');
-                    }
-
-                } else if (formData.changeType === 'rate-change') {
-                     const rateChangeFields = document.querySelectorAll('#rateChangeCard input[required], #rateChangeCard textarea[required]');
-                    rateChangeFields.forEach(field => {
-                        if (!field.value.trim()) {
-                            field.classList.add('error');
-                            isValid = false;
-                            if (!firstInvalidField) firstInvalidField = field;
-                        }
-                    });
-                    const employmentToggleRate = document.getElementById('employmentStatusToggleRate');
-                    if (!employmentToggleRate.querySelector('.toggle-button.active')) {
-                        Array.from(employmentToggleRate.children).forEach(btn => btn.classList.add('error'));
-                        isValid = false;
-                        if (!firstInvalidField) firstInvalidField = employmentToggleRate.querySelector('.toggle-button');
-                    }
-                }
-            } else if (stepNum === 3) {
-                const requiredFields = stepElement.querySelectorAll('input[required], textarea[required]');
-                requiredFields.forEach(field => {
-                    if (!field.value.trim()) {
-                        field.classList.add('error');
-                        isValid = false;
-                        if (!firstInvalidField) firstInvalidField = field;
-                    }
-                });
-            }
-
-            if (!isValid) {
-                alert('Please fill out all required fields and make selections.');
-                if (firstInvalidField) firstInvalidField.focus();
-            }
-            return isValid;
-        }
-
-        function collectFormData() {
-            // Collect general fields
-            document.querySelectorAll('input:not([type="button"]), textarea').forEach(input => {
-                if (input.id) {
-                    formData[input.id] = input.value;
-                }
-            });
-        }
-
-        function nextStep() {
-            if (validateStep(currentStep)) {
-                collectFormData(); // Collect data before moving to next step
-                if (currentStep < totalSteps) {
-                    currentStep++;
-                    showStep(currentStep);
-                    if (currentStep === totalSteps) {
-                        populateSummary();
-                    }
-                }
-            }
-        }
-
-        function prevStep() {
-            if (currentStep > 1) {
-                currentStep--;
-                showStep(currentStep);
-            }
-        }
-
-        function populateSummary() {
-            document.getElementById('summaryChangeType').textContent = formData.changeType === 'position-status' ? 'Position / Status Change' : 'Rate Change';
-            document.getElementById('summaryEmployeeName').textContent = formData.employeeName || '';
-            document.getElementById('summaryDateOfChange').textContent = formData.dateOfChange || '';
-
-            if (formData.changeType === 'position-status') {
-                document.getElementById('summaryPositionStatus').style.display = 'block';
-                document.getElementById('summaryRateChange').style.display = 'none';
-
-                document.getElementById('summaryCurrentPositions').textContent = formData.currentPositions || '';
-                document.getElementById('summaryNewPositions').textContent = formData.newPositions || '';
-                document.getElementById('summaryPreviousHourlyRateStatus').textContent = formData.previousHourlyRateStatus ? `$${parseFloat(formData.previousHourlyRateStatus).toFixed(2)}` : 'N/A';
-                document.getElementById('summaryNewHourlyRateStatus').textContent = formData.newHourlyRateStatus ? `$${parseFloat(formData.newHourlyRateStatus).toFixed(2)}` : 'N/A';
-                document.getElementById('summaryPreviousSalaryStatus').textContent = formData.previousSalaryStatus ? `$${parseFloat(formData.previousSalaryStatus).toFixed(2)}` : 'N/A';
-                document.getElementById('summaryNewSalaryStatus').textContent = formData.newSalaryStatus ? `$${parseFloat(formData.newSalaryStatus).toFixed(2)}` : 'N/A';
-                document.getElementById('summaryEmploymentStatus').textContent = formData.employmentStatusToggle || '';
-                document.getElementById('summaryExemptionStatus').textContent = formData.exemptionStatusToggle || '';
-                document.getElementById('summaryReasonForChangeStatus').textContent = formData.reasonForChangeStatus || '';
-
-            } else if (formData.changeType === 'rate-change') {
-                document.getElementById('summaryPositionStatus').style.display = 'none';
-                document.getElementById('summaryRateChange').style.display = 'block';
-
-                document.getElementById('summaryRateChangePositions').textContent = formData.rateChangePositions || '';
-                document.getElementById('summaryPreviousHourlyRateRate').textContent = formData.previousHourlyRateRate ? `$${parseFloat(formData.previousHourlyRateRate).toFixed(2)}` : 'N/A';
-                document.getElementById('summaryNewHourlyRateRate').textContent = formData.newHourlyRateRate ? `$${parseFloat(formData.newHourlyRateRate).toFixed(2)}` : 'N/A';
-                document.getElementById('summaryPreviousSalaryRate').textContent = formData.previousSalaryRate ? `$${parseFloat(formData.previousSalaryRate).toFixed(2)}` : 'N/A';
-                document.getElementById('summaryNewSalaryRate').textContent = formData.newSalaryRate ? `$${parseFloat(formData.newSalaryRate).toFixed(2)}` : 'N/A';
-                document.getElementById('summaryEmploymentStatusRate').textContent = formData.employmentStatusToggleRate || '';
-                document.getElementById('summaryReasonForChangeRate').textContent = formData.reasonForChangeRate || '';
-            }
-            
-            // Signatures
-            document.getElementById('summaryManagerName').textContent = formData.managerName || '';
-            document.getElementById('summaryManagerTitle').textContent = formData.managerTitle || '';
-            document.getElementById('summaryManagerDate').textContent = formData.managerDate || '';
-            document.getElementById('summaryEmployeePrintedName').textContent = formData.employeePrintedName || '';
-            document.getElementById('summaryEmployeeSignatureDate').textContent = formData.employeeSignatureDate || '';
-
-        }
-
-        function startNewUpdate() {
-            location.reload();
-        }
-    </script>
+        const blob = new Blob([html], { type: 'text/html' });
+        const url  = URL.createObjectURL(blob);
+        const win  = window.open(url, '_blank');
+        if (!win) alert('Pop-up blocked. Please allow pop-ups for this site and try again.');
+    }
+</script>
 </body>
 </html>
