@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Experience Layer Grid | Unbridled Live Events Ecosystem</title>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#5a8ba7;
+  --gray:#4b4f54;
+  --navy:#1f2b3f;
+  --cream:#f5f4f0;
+  --gold:#ba8032;
+  --green:#4caf7d;
+  --light:#e8edf2;
+  --border:#c8d4dc;
+  --white:#fff;
+  --text:#3a3e42;
+  --red:#c04040;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--cream);color:var(--text);font-family:'Josefin Sans',sans-serif;font-weight:300;font-size:16px;line-height:1.6}
+
+/* ── HEADER ── */
+.page-header{background:var(--navy);padding:clamp(3rem,6vw,5rem) clamp(1.5rem,5vw,3rem);text-align:center;position:relative;overflow:hidden}
+.page-header::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(90,139,167,.2) 0%,transparent 65%)}
+.page-header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.header-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--blue);margin-bottom:1rem}
+.header-title{font-size:clamp(28px,5vw,56px);font-weight:700;color:var(--white);line-height:1.1;margin-bottom:1rem;letter-spacing:-.5px}
+.header-title em{color:var(--gold);font-style:normal}
+.header-sub{font-size:clamp(13px,1.8vw,17px);color:#8aaabb;max-width:660px;margin:0 auto;line-height:1.65}
+
+/* ── GRID LEGEND ── */
+.legend{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;padding:1.5rem clamp(1rem,4vw,2.5rem);background:var(--white);border-bottom:1px solid var(--border)}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--gray)}
+.legend-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+.l-lead{background:var(--gold)}
+.l-contrib{background:var(--blue)}
+.l-support{background:var(--green)}
+.l-aware{background:#d0d8e0}
+.l-client{background:linear-gradient(135deg,var(--gold),var(--blue))}
+
+/* ── WRAPPER ── */
+.grid-wrapper{padding:clamp(2rem,5vw,4rem) clamp(1rem,4vw,2.5rem);overflow-x:auto}
+.grid-container{max-width:1300px;margin:0 auto}
+
+/* ── SECTION LABEL ── */
+.layer-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--blue);font-weight:700;margin:2.5rem 0 .75rem}
+.layer-label:first-child{margin-top:0}
+
+/* ── THE GRID TABLE ── */
+.xgrid{width:100%;border-collapse:separate;border-spacing:0;min-width:900px}
+
+/* Column headers (brands) */
+.xgrid thead th{padding:12px 10px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;text-align:center;border-bottom:2px solid var(--navy);position:sticky;top:0;z-index:10;background:var(--navy);color:var(--white);vertical-align:bottom}
+.xgrid thead th.row-head{background:transparent;border-bottom:2px solid var(--navy);color:var(--gray);text-align:left;min-width:200px;font-size:10px;letter-spacing:1px}
+.xgrid thead th .brand-icon{font-size:20px;display:block;margin-bottom:4px}
+.xgrid thead th .brand-abbr{font-size:9px;letter-spacing:1px;color:var(--blue);display:block;margin-top:2px}
+
+/* Row styles */
+.xgrid tbody tr:hover td{background:#f8fbfc}
+.xgrid tbody tr.group-header td{background:var(--navy);color:var(--white);font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:8px 12px;border:none}
+.xgrid tbody tr.group-header td:first-child{border-radius:0}
+
+/* Cell base */
+.xgrid td{padding:10px 12px;border-bottom:1px solid var(--border);border-right:1px solid var(--border);font-size:12px;color:var(--gray);background:var(--white);vertical-align:middle;transition:background .15s}
+.xgrid td.row-head{background:#f9fbfc;border-right:2px solid var(--border);color:var(--navy);font-weight:600;font-size:13px;min-width:200px;padding:12px 14px}
+.xgrid td.row-head .row-sub{font-size:10px;color:#9aabb8;font-weight:300;margin-top:2px;display:block;letter-spacing:.25px}
+
+/* Cell markers */
+.cell{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;text-align:center}
+.cell-dot{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin:0 auto}
+.dot-lead{background:rgba(186,128,50,.15);border:2px solid var(--gold);color:var(--gold)}
+.dot-contrib{background:rgba(90,139,167,.12);border:2px solid var(--blue);color:var(--blue)}
+.dot-support{background:rgba(76,175,125,.1);border:2px solid var(--green);color:var(--green)}
+.dot-aware{background:#f0f4f7;border:2px solid #c8d4dc;color:#8aaabb}
+.dot-cco{background:linear-gradient(135deg,rgba(186,128,50,.15),rgba(90,139,167,.12));border:2px solid var(--gold);color:var(--gold)}
+.dot-none{opacity:.25;font-size:13px;color:#c0c8d0}
+.cell-label{font-size:9px;letter-spacing:.5px;color:inherit;text-transform:uppercase;opacity:.85}
+
+/* Client experience row highlight */
+.xgrid tr.client-row td{background:#fffbf5}
+.xgrid tr.client-row td.row-head{background:#fdf6ea;border-right:2px solid var(--gold)}
+
+/* CCO row */
+.xgrid tr.cco-row td{background:#f0f5f8}
+.xgrid tr.cco-row td.row-head{background:#e8f0f5;border-right:2px solid var(--blue)}
+
+/* Section divider rows */
+.xgrid tr.section-divider td{height:8px;background:var(--cream);border:none;padding:0}
+
+/* ── CALLOUT CARDS ── */
+.callout-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:16px;padding:0 clamp(1rem,4vw,2.5rem) clamp(2rem,5vw,4rem);max-width:1300px;margin:0 auto}
+.callout{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:1.5rem;border-top:3px solid var(--blue)}
+.callout.gold{border-top-color:var(--gold)}
+.callout.green{border-top-color:var(--green)}
+.callout h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:.5rem}
+.callout p{font-size:12px;color:var(--gray);line-height:1.65}
+
+/* ── INSIGHT STRIP ── */
+.insight{background:var(--navy);padding:clamp(2rem,4vw,3rem) clamp(1.5rem,5vw,3rem);text-align:center}
+.insight blockquote{font-size:clamp(16px,2.5vw,24px);font-weight:300;color:var(--white);line-height:1.5;max-width:800px;margin:0 auto;font-style:italic}
+.insight blockquote strong{font-style:normal;color:var(--gold);font-weight:700}
+.insight cite{display:block;margin-top:1rem;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--blue);font-style:normal}
+
+/* ── FOOTER ── */
+footer{background:var(--navy);border-top:1px solid rgba(90,139,167,.2);padding:1.5rem;text-align:center}
+footer p{font-size:11px;color:#4a6a85;letter-spacing:1px}
+footer p span{color:var(--blue)}
+
+@media(max-width:768px){
+  .xgrid{font-size:11px}
+  .xgrid td{padding:8px 8px}
+  .cell-dot{width:18px;height:18px;font-size:10px}
+}
+
+@media print{
+  .page-header{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .xgrid thead th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{font-size:10px}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="page-header">
+  <div class="header-eyebrow">Live Events Ecosystem · 2026</div>
+  <h1 class="header-title">The Experience <em>Layer Grid</em></h1>
+  <p class="header-sub">How six companies, the CCO, and the client experience layer work together — who leads, who contributes, who supports, and where every interaction touches the brand promise.</p>
+</div>
+
+<!-- LEGEND -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot l-lead"></div> Leads / Owns</div>
+  <div class="legend-item"><div class="legend-dot l-contrib"></div> Contributes / Partners</div>
+  <div class="legend-item"><div class="legend-dot l-support"></div> Supports / Enables</div>
+  <div class="legend-item"><div class="legend-dot l-aware"></div> Aware / Aligned</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--navy)"></div> CCO Owns / Orchestrates</div>
+</div>
+
+<!-- GRID -->
+<div class="grid-wrapper">
+<div class="grid-container">
+<table class="xgrid">
+  <thead>
+    <tr>
+      <th class="row-head">Experience Layer / Function</th>
+      <th><span class="brand-icon">🌐</span>CCO<span class="brand-abbr">Commercial Lead</span></th>
+      <th><span class="brand-icon">🦌</span>Unbridled<span class="brand-abbr">Core</span></th>
+      <th><span class="brand-icon">✈️</span>Travel<span class="brand-abbr">Movement</span></th>
+      <th><span class="brand-icon">🎬</span>Productions<span class="brand-abbr">Show</span></th>
+      <th><span class="brand-icon">🎥</span>Media<span class="brand-abbr">Story</span></th>
+      <th><span class="brand-icon">🎁</span>Gift'd<span class="brand-abbr">Delight</span></th>
+      <th><span class="brand-icon">🚪</span>Orange Door<span class="brand-abbr">Spoke</span></th>
+    </tr>
+  </thead>
+  <tbody>
+
+    <!-- ── LAYER 1: CLIENT ACQUISITION ── -->
+    <tr class="group-header"><td colspan="8">01 · Client Acquisition &amp; First Impression</td></tr>
+
+    <tr>
+      <td class="row-head">Go-to-market strategy<span class="row-sub">Positioning, messaging, market targeting</span></td>
+      <td><div class="cell"><div class="cell-dot dot-cco">●</div><div class="cell-label">Leads</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div><div class="cell-label">Contributes</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-support">S</div><div class="cell-label">Brand story</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+    </tr>
+
+    <tr>
+      <td class="row-head">Sales pipeline &amp; RFP response<span class="row-sub">Prospecting, qualifying, proposal</span></td>
+      <td><div class="cell"><div class="cell-dot dot-cco">●</div><div class="cell-label">Orchestrates</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div><div class="cell-label">Leads</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-support">S</div></div></td>
+    </tr>
+
+    <tr>
+      <td class="row-head">Brand impression &amp; credibility<span class="row-sub">Website, case studies, thought leadership</span></td>
+      <td><div class="cell"><div class="cell-dot dot-cco">●</div><div class="cell-label">Standards</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div><div class="cell-label">Content</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-support">S</div></div></td>
+    </tr>
+
+    <tr class="section-divider"><td colspan="8"></td></tr>
+
+    <!-- ── LAYER 2: PRE-EVENT ── -->
+    <tr class="group-header"><td colspan="8">02 · Pre-Event Design &amp; Planning</td></tr>
+
+    <tr>
+      <td class="row-head">Event concept &amp; experience design<span class="row-sub">Vision, theme, attendee journey</span></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div><div class="cell-label">Leads</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div><div class="cell-label">Production</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div><div class="cell-label">Visual story</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div><div class="cell-label">Gifting layer</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-support">S</div></div></td>
+    </tr>
+
+    <tr>
+      <td class="row-head">Venue sourcing &amp; contracting<span class="row-sub">Site selection, negotiations, contracts</span></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-support">S</div><div class="cell-label">Hotel blocks</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div><div class="cell-label">Tech specs</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+    </tr>
+
+    <tr>
+      <td class="row-head">Travel &amp; accommodation planning<span class="row-sub">Room blocks, air, ground, routing</span></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-support">S</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div><div class="cell-label">Leads</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+    </tr>
+
+    <tr>
+      <td class="row-head">Gifting strategy &amp; fulfillment design<span class="row-sub">Brand moments, welcome gifts, recognition</span></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div><div class="cell-label">Leads</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+    </tr>
+
+    <tr>
+      <td class="row-head">Video &amp; content pre-production<span class="row-sub">Sizzle reels, keynote support, motion graphics</span></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-support">S</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div><div class="cell-label">Leads</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+    </tr>
+
+    <tr class="section-divider"><td colspan="8"></td></tr>
+
+    <!-- ── LAYER 3: ON-SITE ── -->
+    <tr class="group-header"><td colspan="8">03 · On-Site Execution &amp; Live Experience</td></tr>
+
+    <tr>
+      <td class="row-head">Event day operations<span class="row-sub">Run of show, staffing, logistics</span></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div><div class="cell-label">Leads</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-support">S</div><div class="cell-label">Airport/hotel</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div><div class="cell-label">Production</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div><div class="cell-label">Live capture</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div><div class="cell-label">Gifting moments</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-support">S</div></div></td>
+    </tr>
+
+    <tr>
+      <td class="row-head">Attendee experience &amp; VIP care<span class="row-sub">Welcome, hospitality, white-glove moments</span></td>
+      <td><div class="cell"><div class="cell-dot dot-cco">●</div><div class="cell-label">Champions</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-support">S</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div><div class="cell-label">Delight moments</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-support">S</div></div></td>
+    </tr>
+
+    <tr>
+      <td class="row-head">Technical production &amp; staging<span class="row-sub">AV, lighting, set design, run of show</span></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-support">S</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div><div class="cell-label">Leads</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div><div class="cell-label">Video wall/live</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+    </tr>
+
+    <tr>
+      <td class="row-head">Live video capture &amp; broadcast<span class="row-sub">Live stream, event documentation, reels</span></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-support">S</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div><div class="cell-label">Leads</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+    </tr>
+
+    <tr class="section-divider"><td colspan="8"></td></tr>
+
+    <!-- ── LAYER 4: POST-EVENT ── -->
+    <tr class="group-header"><td colspan="8">04 · Post-Event Follow-Through &amp; Retention</td></tr>
+
+    <tr>
+      <td class="row-head">Client debrief &amp; relationship stewardship<span class="row-sub">Wrap report, lessons learned, next ask</span></td>
+      <td><div class="cell"><div class="cell-dot dot-cco">●</div><div class="cell-label">Champions</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div><div class="cell-label">Final video</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div><div class="cell-label">Thank-you gift</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+    </tr>
+
+    <tr>
+      <td class="row-head">Content &amp; recap delivery<span class="row-sub">Highlight reel, recap deck, photos</span></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-support">S</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div><div class="cell-label">Leads</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-aware">~</div></div></td>
+    </tr>
+
+    <tr>
+      <td class="row-head">Renewal &amp; account growth<span class="row-sub">Next-year pitch, upsell, cross-brand expansion</span></td>
+      <td><div class="cell"><div class="cell-dot dot-cco">●</div><div class="cell-label">Orchestrates</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-support">S</div></div></td>
+    </tr>
+
+    <tr class="section-divider"><td colspan="8"></td></tr>
+
+    <!-- ── LAYER 5: ECOSYSTEM ENGINE ── -->
+    <tr class="group-header"><td colspan="8">05 · Ecosystem Engine &amp; Shared Services</td></tr>
+
+    <tr>
+      <td class="row-head">Cross-brand collaboration &amp; referrals<span class="row-sub">Routing opportunities, joint pitches</span></td>
+      <td><div class="cell"><div class="cell-dot dot-cco">●</div><div class="cell-label">Leads</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+    </tr>
+
+    <tr>
+      <td class="row-head">Financial performance &amp; P&amp;L accountability<span class="row-sub">Revenue targets, margin, unit economics</span></td>
+      <td><div class="cell"><div class="cell-dot dot-cco">●</div><div class="cell-label">Sets targets</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div><div class="cell-label">Unit P&L</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div><div class="cell-label">Unit P&L</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div><div class="cell-label">Unit P&L</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div><div class="cell-label">Unit P&L</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div><div class="cell-label">Unit P&L</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div><div class="cell-label">Unit P&L</div></div></td>
+    </tr>
+
+    <tr>
+      <td class="row-head">Culture &amp; values stewardship<span class="row-sub">Cornerstones, team member experience</span></td>
+      <td><div class="cell"><div class="cell-dot dot-cco">●</div><div class="cell-label">Holds line</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div><div class="cell-label">Culture birth</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+    </tr>
+
+    <tr>
+      <td class="row-head">Innovation &amp; new service development<span class="row-sub">Emerging capabilities, market expansion</span></td>
+      <td><div class="cell"><div class="cell-dot dot-cco">●</div><div class="cell-label">Vision</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+    </tr>
+
+    <tr>
+      <td class="row-head">People development &amp; talent growth<span class="row-sub">Hiring standards, leadership pipeline</span></td>
+      <td><div class="cell"><div class="cell-dot dot-cco">●</div><div class="cell-label">Senior hires</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div><div class="cell-label">Own team</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div><div class="cell-label">Own team</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div><div class="cell-label">Own team</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div><div class="cell-label">Own team</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div><div class="cell-label">Own team</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div><div class="cell-label">Own team</div></div></td>
+    </tr>
+
+    <!-- ── LAYER 6: CLIENT EXPERIENCE LAYER ── -->
+    <tr class="section-divider"><td colspan="8"></td></tr>
+    <tr class="group-header" style="background:linear-gradient(90deg,var(--gold),#8b5e20)"><td colspan="8">06 · The Client Experience Layer — Strategic · Effective · Enjoyable · Valuable</td></tr>
+
+    <tr class="client-row">
+      <td class="row-head">Client hears ONE voice<span class="row-sub">Unified brand, single point of truth</span></td>
+      <td><div class="cell"><div class="cell-dot dot-cco">●</div><div class="cell-label">Owns</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div><div class="cell-label">Delivers</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+    </tr>
+
+    <tr class="client-row">
+      <td class="row-head">Client feels zero friction<span class="row-sub">Complexity stays with us, not them</span></td>
+      <td><div class="cell"><div class="cell-dot dot-cco">●</div><div class="cell-label">Champions</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div></div></td>
+    </tr>
+
+    <tr class="client-row">
+      <td class="row-head">Client is genuinely delighted<span class="row-sub">Unreasonable hospitality at every touchpoint</span></td>
+      <td><div class="cell"><div class="cell-dot dot-cco">●</div><div class="cell-label">Sets standard</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div><div class="cell-label">Signature moments</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-support">S</div></div></td>
+    </tr>
+
+    <tr class="client-row">
+      <td class="row-head">Client returns &amp; refers<span class="row-sub">Retention, NPS, word-of-mouth growth</span></td>
+      <td><div class="cell"><div class="cell-dot dot-cco">●</div><div class="cell-label">Accountable</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-lead">L</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+      <td><div class="cell"><div class="cell-dot dot-contrib">C</div></div></td>
+    </tr>
+
+  </tbody>
+</table>
+</div>
+</div>
+
+<!-- INSIGHT STRIP -->
+<div class="insight">
+  <blockquote>"The client doesn't see six companies.<br>They feel <strong>one promise.</strong> Kept every time."</blockquote>
+  <cite>— Unbridled Live Events Ecosystem · The Client Experience Standard</cite>
+</div>
+
+<!-- CALLOUT CARDS -->
+<div class="callout-grid">
+  <div class="callout gold">
+    <h3>🌐 The CCO's Role in the Grid</h3>
+    <p>The CCO appears in every layer — not to manage the work, but to set the standard, champion the client, and orchestrate across brands. The gold dot means ownership of the outcome, not the execution. Presidents own execution. The CCO owns the promise.</p>
+  </div>
+  <div class="callout">
+    <h3>🦌 Unbridled as the Core</h3>
+    <p>Unbridled Solutions leads more cells than any other brand — because it is the original, the flagship, and the culture origin. But it is not a hierarchy. It is a hub. The other brands don't report to it. They collaborate with it.</p>
+  </div>
+  <div class="callout green">
+    <h3>🎁 Gift'd as the Delight Engine</h3>
+    <p>Gift'd appears in more client-facing moments than any other spoke brand. Gifting is not a product. It's a signal — "we thought about you before you arrived." That signal, repeated at every touchpoint, is what makes clients feel seen.</p>
+  </div>
+  <div class="callout" style="border-top-color:var(--navy)">
+    <h3>✈️ Travel as the Invisible Infrastructure</h3>
+    <p>Unbridled Travel does its best work when no one notices. The attendee lands, transfers, checks in, and moves through the experience without friction. That invisibility is the achievement. Travel shows up in almost every layer — quietly making everything else possible.</p>
+  </div>
+  <div class="callout" style="border-top-color:#7a5a9a">
+    <h3>🎬 Productions + 🎥 Media: The Memory Makers</h3>
+    <p>Productions creates the moment. Media preserves it. Together they ensure that what happens on-site echoes long after the event ends. A great event is felt once. A great event, well captured, is felt every time someone watches the recap.</p>
+  </div>
+  <div class="callout" style="border-top-color:var(--gray)">
+    <h3>📐 How to Read This Grid</h3>
+    <p><strong>Leads (gold)</strong> = owns the outcome for this function.<br><strong>Contributes (blue)</strong> = active partner, material input.<br><strong>Supports (green)</strong> = enables without owning.<br><strong>Aware (~)</strong> = informed and aligned, not actively involved.<br><strong>CCO (●)</strong> = orchestrates, champions, or sets the standard.</p>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2026 <span>Unbridled Solutions</span> · Live Events Ecosystem · Experience Layer Grid · Confidential · Built by MC</p>
+</footer>
+
+</body>
+</html>
