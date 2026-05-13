@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unbridled AI Agent Ecosystem</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Space+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0f1a;
+            --gold-accent: #c9aa7c;
+            --live-events-accent: #e8823d;
+            --hospitality-accent: #5a8ba7;
+            --real-estate-accent: #7a6ea8;
+            --emergent-brands-accent: #4caf7d;
+            --shared-services-accent: #c9aa7c; /* Same as gold */
+            --live-badge-bg: #3de8c8;
+            --live-badge-text: #0a0f1a; /* Dark text for bright teal */
+            --planned-badge-bg: #333d45; /* Darker grey */
+            --planned-badge-text: #a0a8b7; /* Muted text */
+            --card-bg: #1c212a; /* Slightly lighter than main bg for card depth */
+            --line-color: #333d45; /* Consistent with planned badge bg for subtlety */
+            --text-color: #f0f0f0; /* Light text for dark bg */
+            --font-inter: 'Inter', sans-serif;
+            --font-monospace: 'Space Mono', monospace;
+        }
+
+        body {
+            margin: 0;
+            padding: 2rem;
+            background-color: var(--bg-dark);
+            color: var(--text-color);
+            font-family: var(--font-inter);
+            line-height: 1.6;
+            overflow-x: hidden;
+            display: flex; /* For footer positioning */
+            flex-direction: column;
+            min-height: 100vh; /* Ensure full viewport height */
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 700;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        p {
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .org-chart-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-grow: 1; /* Allow content to grow */
+            gap: 2rem;
+            padding: 1rem;
+            max-width: 1400px; /* Limit overall width */
+            margin: 0 auto;
+        }
+
+        /* MC Card Styling */
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0px var(--gold-accent); }
+            50% { box-shadow: 0 0 15px var(--gold-accent), 0 0 30px rgba(201, 170, 124, 0.5); }
+            100% { box-shadow: 0 0 0px var(--gold-accent); }
+        }
+
+        .mc-card-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            padding-bottom: 2rem; /* Space for connector line */
+        }
+
+        .mc-card {
+            background-color: var(--card-bg);
+            border: 3px solid var(--gold-accent);
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            text-align: center;
+            max-width: 300px;
+            animation: pulse 3s infinite alternate;
+            position: relative;
+            z-index: 2; /* Bring above lines */
+        }
+
+        .mc-card h3 {
+            font-size: 2.2rem;
+            color: var(--gold-accent);
+            margin-bottom: 0.5rem;
+            line-height: 1;
+        }
+
+        .mc-card h4 {
+            font-size: 1.4rem;
+            color: var(--text-color);
+            margin-bottom: 0.3rem;
+        }
+
+        .mc-card p {
+            font-size: 1rem;
+            color: #ccc;
+            margin-bottom: 1rem;
+        }
+
+        .mc-card-wrapper::after { /* Line down from MC */
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            background-color: var(--line-color);
+            z-index: 1;
+            bottom: 0;
+            height: 2rem;
+        }
+
+        /* Departments Container */
+        .departments-container {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            width: 100%;
+            overflow-x: auto; /* For tablet horizontal scroll */
+            padding-bottom: 1rem; /* For scrollbar visibility */
+            position: relative;
+            padding-top: 2rem; /* Space for the horizontal line */
+        }
+
+        .departments-container::before { /* Horizontal line from MC to departments */
+            content: '';
+            position: absolute;
+            top: 0; /* Connects to mc-card-wrapper::after */
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 4rem); /* To span across all columns */
+            max-width: 1100px; /* Max width to match overall layout */
+            height: 4px;
+            background-color: var(--line-color);
+            z-index: 0;
+        }
+
+        /* Department Column Styling */
+        .department-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 280px; /* Minimum width for columns */
+            flex-shrink: 0; /* Do not shrink on horizontal scroll */
+            position: relative;
+            padding-top: 2rem; /* Space for vertical line from horizontal line */
+        }
+
+        .department-column::before { /* Line from horizontal line to department header */
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            background-color: var(--line-color);
+            z-index: 1;
+            top: 0;
+            height: 2rem;
+        }
+
+        .department-header {
+            background-color: var(--card-bg);
+            border: 2px solid var(--accent-color);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            text-align: center;
+            margin-bottom: 2rem; /* Space for line down to first agent */
+            width: 100%;
+            box-sizing: border-box;
+            position: relative;
+            z-index: 2; /* Above lines */
+        }
+
+        .department-header h3 {
+            font-size: 1.2rem;
+            color: var(--accent-color);
+        }
+
+        .department-header::after { /* Line from department header to first agent */
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            background-color: var(--line-color);
+            z-index: 1;
+            bottom: -2rem;
+            height: 2rem;
+        }
+
+        .agent-cards-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            width: 100%;
+        }
+
+        /* Agent Card Styling */
+        .agent-card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 1rem 1.2rem;
+            box-sizing: border-box;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            position: relative;
+            z-index: 2; /* Above lines */
+
+            /* Entrance Animation */
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInSlideUp 0.8s forwards ease-out;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+
+        .agent-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4), 0 0 15px var(--accent-color);
+        }
+
+        .agent-card:not(:last-child)::after { /* Line down from agent card to next agent */
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            background-color: var(--line-color);
+            z-index: 1;
+            bottom: -1.5rem;
+            height: 1.5rem;
+        }
+        .agent-card:last-child {
+            margin-bottom: 0; /* No line after the last agent */
+        }
+
+
+        /* Agent Card content */
+        .agent-card h3 {
+            font-family: var(--font-monospace);
+            font-size: 1.5rem;
+            color: var(--gold-accent);
+            font-weight: 700;
+            margin-top: 0;
+            margin-bottom: 0.2rem;
+        }
+
+        .agent-card h4 {
+            font-size: 1rem;
+            color: var(--text-color);
+            margin-top: 0;
+            margin-bottom: 0.2rem;
+        }
+
+        .agent-card p {
+            font-size: 0.9rem;
+            color: #ccc;
+            margin: 0;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.3em 0.6em;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-top: 0.5rem;
+        }
+
+        .badge.live {
+            background-color: var(--live-badge-bg);
+            color: var(--live-badge-text);
+            border: 1px solid var(--live-badge-bg);
+        }
+
+        .badge.planned {
+            background-color: var(--planned-badge-bg);
+            color: var(--planned-badge-text);
+            border: 1px dashed var(--planned-badge-text);
+        }
+
+        /* Staggered animation for cards */
+        @keyframes fadeInSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Set column-specific base delays for staggering */
+        .department-column {
+            counter-reset: agent-card-index; /* Reset for each column */
+        }
+        .department-column:nth-child(1) { --column-base-delay: 0.1s; }
+        .department-column:nth-child(2) { --column-base-delay: 0.2s; }
+        .department-column:nth-child(3) { --column-base-delay: 0.3s; }
+        .department-column:nth-child(4) { --column-base-delay: 0.4s; }
+        .department-column:nth-child(5) { --column-base-delay: 0.5s; }
+
+        .agent-card {
+            counter-increment: agent-card-index;
+            animation-delay: calc(var(--column-base-delay) + (counter(agent-card-index) * 0.1s));
+        }
+
+        /* Footer */
+        footer {
+            margin-top: auto; /* Push footer to bottom */
+            padding: 1.5rem;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #666;
+            border-top: 1px solid #222;
+        }
+
+        footer p {
+            margin: 0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .departments-container {
+                justify-content: flex-start; /* Align left for horizontal scroll */
+                flex-wrap: nowrap; /* Prevent wrapping generally */
+                padding-bottom: 1.5rem; /* Ensure scrollbar visibility */
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            .org-chart-container {
+                gap: 1.5rem;
+                padding: 0;
+            }
+
+            .mc-card-wrapper {
+                padding-bottom: 2.5rem; /* Longer line to reach first stacked column */
+            }
+            .mc-card-wrapper::after {
+                height: 2.5rem; /* This line goes down *from* MC */
+            }
+
+            .departments-container {
+                flex-direction: column;
+                align-items: center;
+                gap: 0; /* Gaps managed by column margins and lines */
+                overflow-x: hidden; /* No horizontal scroll on mobile */
+                padding-bottom: 0;
+                padding-top: 0; /* Line from MC comes from above */
+            }
+
+            .departments-container::before { /* Hide horizontal line on mobile */
+                display: none;
+            }
+
+            .department-column {
+                width: 90%;
+                max-width: 400px;
+                min-width: unset;
+                flex-shrink: 1;
+                margin-bottom: 2rem; /* Space after this column */
+                padding-top: 0; /* No line coming specifically *to* this column's padding-top */
+                               /* The ::before of the next column will draw the line */
+                position: relative; /* Essential for pseudo-element positioning */
+            }
+            /* Vertical line connecting department columns (from bottom of previous to top of current) */
+            .department-column:not(:first-child)::before {
+                content: '';
+                position: absolute;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 4px;
+                background-color: var(--line-color);
+                z-index: 1;
+                top: -2rem; /* Bridges the 2rem margin-bottom of the previous column */
+                height: 2rem;
+            }
+
+            .department-column:last-of-type {
+              margin-bottom: 0; /* No margin after the very last column */
+            }
+
+            /* The first department column on mobile does not need a ::before as it connects via mc-card-wrapper::after */
+            .departments-container > .department-column:first-child::before {
+                display: none;
+            }
+
+            /* Agent cards and department header lines stay the same for vertical connections within a column */
+        }
+    </style>
+</head>
+<body>
+    <div class="org-chart-container">
+        <div class="mc-card-wrapper">
+            <div class="mc-card">
+                <h3>MC</h3>
+                <h4>Master of Ceremonies</h4>
+                <p>Orchestrator & Digital Chief of Staff</p>
+                <span class="badge live">LIVE</span>
+            </div>
+        </div>
+
+        <div class="departments-container">
+            <!-- Column 1 — LIVE EVENTS (accent: #e8823d) -->
+            <div class="department-column live-events" style="--accent-color: #e8823d;">
+                <div class="department-header">
+                    <h3>Unbridled Solutions · Live Events</h3>
+                </div>
+                <div class="agent-cards-wrapper">
+                    <div class="agent-card">
+                        <h3>ATLAS</h3>
+                        <h4>Events Strategist</h4>
+                        <p>RFP intake, program design, venue sourcing</p>
+                        <span class="badge planned">PLANNED</span>
+                    </div>
+                    <div class="agent-card">
+                        <h3>QUILL</h3>
+                        <h4>Events Copywriter</h4>
+                        <p>Proposals, scripts, award narratives</p>
+                        <span class="badge planned">PLANNED</span>
+                    </div>
+                    <div class="agent-card">
+                        <h3>WAYPOINT</h3>
+                        <h4>Travel Coordinator</h4>
+                        <p>Itineraries, rooming lists, logistics</p>
+                        <span class="badge planned">PLANNED</span>
+                    </div>
+                    <div class="agent-card">
+                        <h3>REEL</h3>
+                        <h4>Media Producer</h4>
+                        <p>Shot lists, video briefs, post-production</p>
+                        <span class="badge planned">PLANNED</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Column 2 — HOSPITALITY (accent: #5a8ba7) -->
+            <div class="department-column hospitality" style="--accent-color: #5a8ba7;">
+                <div class="department-header">
+                    <h3>Unbridled Hospitality Group</h3>
+                </div>
+                <div class="agent-cards-wrapper">
+                    <div class="agent-card">
+                        <h3>BEACON</h3>
+                        <h4>Ads Strategist</h4>
+                        <p>Campaign strategy, keyword research</p>
+                        <span class="badge live">LIVE</span>
+                    </div>
+                    <div class="agent-card">
+                        <h3>INK</h3>
+                        <h4>Ads Copywriter</h4>
+                        <p>Headlines, descriptions, landing copy</p>
+                        <span class="badge live">LIVE</span>
+                    </div>
+                    <div class="agent-card">
+                        <h3>LEDGER</h3>
+                        <h4>Ads Analyst</h4>
+                        <p>Performance analysis, reporting</p>
+                        <span class="badge live">LIVE</span>
+                    </div>
+                    <div class="agent-card">
+                        <h3>RUNWAY</h3>
+                        <h4>Landing Page Builder</h4>
+                        <p>Campaign pages, deploy pipeline</p>
+                        <span class="badge live">LIVE</span>
+                    </div>
+                    <div class="agent-card">
+                        <h3>HAVEN</h3>
+                        <h4>Hospitality Copywriter</h4>
+                        <p>Menus, guest comms, experience copy</p>
+                        <span class="badge planned">PLANNED</span>
+                    </div>
+                    <div class="agent-card">
+                        <h3>PULSE</h3>
+                        <h4>Reservations Intelligence</h4>
+                        <p>Cloudbeds data, rate recommendations</p>
+                        <span class="badge planned">PLANNED</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Column 3 — REAL ESTATE (accent: #7a6ea8) -->
+            <div class="department-column real-estate" style="--accent-color: #7a6ea8;">
+                <div class="department-header">
+                    <h3>Unbridled Holdings · Real Estate</h3>
+                </div>
+                <div class="agent-cards-wrapper">
+                    <div class="agent-card">
+                        <h3>TERRAIN</h3>
+                        <h4>Property Analyst</h4>
+                        <p>Market comps, portfolio health reports</p>
+                        <span class="badge planned">PLANNED</span>
+                    </div>
+                    <div class="agent-card">
+                        <h3>COVENANT</h3>
+                        <h4>Lease & Contract Drafter</h4>
+                        <p>Leases, vendor agreements (zero retention)</p>
+                        <span class="badge planned">PLANNED</span>
+                    </div>
+                    <div class="agent-card">
+                        <h3>PARCEL</h3>
+                        <h4>Property Copywriter</h4>
+                        <p>Listings, tenant comms, marketing</p>
+                        <span class="badge planned">PLANNED</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Column 4 — EMERGENT BRANDS (accent: #4caf7d) -->
+            <div class="department-column emergent-brands" style="--accent-color: #4caf7d;">
+                <div class="department-header">
+                    <h3>Emergent Brands · Growth Portfolio</h3>
+                </div>
+                <div class="agent-cards-wrapper">
+                    <div class="agent-card">
+                        <h3>IGNITE</h3>
+                        <h4>Brand Launcher</h4>
+                        <p>Brand guidelines, web presence, first campaign</p>
+                        <span class="badge planned">PLANNED</span>
+                    </div>
+                    <div class="agent-card">
+                        <h3>SCOUT</h3>
+                        <h4>Competitive Intel</h4>
+                        <p>Tracks competitors, delivers intel reports</p>
+                        <span class="badge live">LIVE</span>
+                    </div>
+                    <div class="agent-card">
+                        <h3>CURRENT</h3>
+                        <h4>Growth Copywriter</h4>
+                        <p>Web copy, launch materials, multi-brand</p>
+                        <span class="badge planned">PLANNED</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Column 5 — SHARED SERVICES (accent: #c9aa7c) -->
+            <div class="department-column shared-services" style="--accent-color: #c9aa7c;">
+                <div class="department-header">
+                    <h3>Shared Services · Ecosystem-Wide</h3>
+                </div>
+                <div class="agent-cards-wrapper">
+                    <div class="agent-card">
+                        <h3>CIPHER</h3>
+                        <h4>Brand Reviewer</h4>
+                        <p>Cross-cutting quality gate, all deliverables</p>
+                        <span class="badge live">LIVE</span>
+                    </div>
+                    <div class="agent-card">
+                        <h3>ARBITER</h3>
+                        <h4>Legal Drafter</h4>
+                        <p>Contracts, NDAs, zero-retention model</p>
+                        <span class="badge live">LIVE</span>
+                    </div>
+                    <div class="agent-card">
+                        <h3>SENTINEL</h3>
+                        <h4>Legal Reviewer</h4>
+                        <p>Risk spotting, contract review, escalation</p>
+                        <span class="badge live">LIVE</span>
+                    </div>
+                    <div class="agent-card">
+                        <h3>EMBER</h3>
+                        <h4>People & Culture Writer</h4>
+                        <p>Job postings, onboarding, culture content</p>
+                        <span class="badge planned">PLANNED</span>
+                    </div>
+                    <div class="agent-card">
+                        <h3>GRID</h3>
+                        <h4>IT Ops Agent</h4>
+                        <p>Server health, cron monitoring, incident triage</p>
+                        <span class="badge planned">PLANNED</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Powered by MC — Unbridled Solutions · Doing Good by Doing Well</p>
+    </footer>
+</body>
+</html>
