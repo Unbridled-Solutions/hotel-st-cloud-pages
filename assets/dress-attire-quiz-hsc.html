@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dress Attire Standards Quiz | Hotel St. Cloud</title>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,300;0,400;0,600;0,700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #1f2b3f;
+  --navy: #253348;
+  --card-bg: #2a3d57;
+  --gold: #ba8032;
+  --blue: #5a8ba7;
+  --cream: #e4e2d9;
+  --text: #ddd8cf;
+  --muted: #7a90a8;
+  --green: #4caf7d;
+  --red: #c04040;
+  --border: #334d6e;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 300;
+  min-height: 100vh;
+  padding-bottom: 4rem;
+}
+
+/* ── HEADER ── */
+.header {
+  background: linear-gradient(180deg, #141e2c 0%, var(--bg) 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 2.5rem clamp(1.5rem, 5vw, 3rem) 2rem;
+  text-align: center;
+  position: relative;
+}
+.header::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.header-eyebrow {
+  font-size: 10px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin-bottom: .75rem;
+}
+.header-title {
+  font-size: clamp(24px, 4vw, 40px);
+  font-weight: 700;
+  color: var(--cream);
+  letter-spacing: .5px;
+  margin-bottom: .5rem;
+  line-height: 1.15;
+}
+.header-title em { color: var(--gold); font-style: normal; }
+.header-sub {
+  font-size: 13px;
+  color: var(--muted);
+  letter-spacing: .5px;
+  margin-bottom: 1.25rem;
+}
+.header-badge {
+  display: inline-block;
+  background: rgba(186,128,50,.12);
+  border: 1px solid rgba(186,128,50,.3);
+  border-radius: 20px;
+  padding: .3rem 1rem;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+/* ── PROGRESS ── */
+.progress-wrap {
+  max-width: 640px;
+  margin: 1.5rem auto 0;
+  padding: 0 1.5rem;
+}
+.progress-bar-bg {
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), var(--blue));
+  border-radius: 2px;
+  transition: width .4s ease;
+  width: 0%;
+}
+.progress-text {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: .5rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* ── QUIZ WRAP ── */
+.quiz-wrap {
+  max-width: 640px;
+  margin: 2.5rem auto 0;
+  padding: 0 clamp(1rem, 4vw, 1.5rem);
+}
+
+/* ── QUESTION CARD ── */
+.q-card {
+  display: none;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 2rem;
+  animation: fadeIn .3s ease;
+}
+.q-card.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+.q-number {
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: .75rem;
+}
+.q-text {
+  font-size: clamp(15px, 2.2vw, 18px);
+  font-weight: 600;
+  color: var(--cream);
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+}
+
+/* ── OPTIONS ── */
+.options { display: flex; flex-direction: column; gap: .65rem; }
+.option {
+  background: var(--navy);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: .9rem 1.1rem;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+  letter-spacing: .3px;
+  line-height: 1.4;
+}
+.option:hover:not(.locked) {
+  border-color: var(--blue);
+  background: rgba(90,139,167,.08);
+}
+.option.correct {
+  border-color: var(--green);
+  background: rgba(76,175,125,.1);
+  color: #a8e6c5;
+}
+.option.wrong {
+  border-color: var(--red);
+  background: rgba(192,64,64,.1);
+  color: #e8a0a0;
+}
+.option.reveal-correct {
+  border-color: var(--green);
+  background: rgba(76,175,125,.07);
+  color: #a8e6c5;
+}
+.option.locked { cursor: default; pointer-events: none; }
+
+/* ── FEEDBACK ── */
+.feedback {
+  display: none;
+  margin-top: 1.25rem;
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.65;
+  letter-spacing: .2px;
+}
+.feedback.correct-fb {
+  border-left: 3px solid var(--green);
+  background: rgba(76,175,125,.07);
+  color: #b8e8d0;
+}
+.feedback.wrong-fb {
+  border-left: 3px solid var(--red);
+  background: rgba(192,64,64,.07);
+  color: #e8c0c0;
+}
+.feedback-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: .4rem;
+  font-weight: 700;
+}
+.correct-fb .feedback-label { color: var(--green); }
+.wrong-fb .feedback-label { color: var(--red); }
+
+/* ── NEXT BUTTON ── */
+.btn-next {
+  display: none;
+  margin-top: 1.25rem;
+  width: 100%;
+  padding: .85rem;
+  background: var(--gold);
+  color: #1a1208;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background .2s, transform .1s;
+}
+.btn-next:hover { background: #d4953a; transform: translateY(-1px); }
+.btn-next:active { transform: translateY(0); }
+
+/* ── RESULTS ── */
+#results {
+  display: none;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 2.5rem 2rem;
+  text-align: center;
+}
+.score-ring {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  margin: 0 auto 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.score-ring::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(var(--gold) 0deg, var(--border) 0deg);
+  transition: background 1s ease;
+}
+.score-inner {
+  width: 82px;
+  height: 82px;
+  background: var(--card-bg);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+.score-num {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--gold);
+}
+.grade-badge {
+  display: inline-block;
+  padding: .35rem 1.25rem;
+  border-radius: 20px;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+.grade-a-plus { background: rgba(76,175,125,.15); color: var(--green); border: 1px solid rgba(76,175,125,.3); }
+.grade-a      { background: rgba(76,175,125,.1);  color: var(--green); border: 1px solid rgba(76,175,125,.25); }
+.grade-b      { background: rgba(186,128,50,.12); color: var(--gold);  border: 1px solid rgba(186,128,50,.3); }
+.grade-c      { background: rgba(192,64,64,.1);   color: #e08080;      border: 1px solid rgba(192,64,64,.25); }
+.grade-d      { background: rgba(192,64,64,.15);  color: #e08080;      border: 1px solid rgba(192,64,64,.35); }
+
+.result-title { font-size: 22px; font-weight: 700; color: var(--cream); margin-bottom: .5rem; }
+.result-sub   { font-size: 13px; color: var(--muted); margin-bottom: 2rem; line-height: 1.6; max-width: 440px; margin-left: auto; margin-right: auto; }
+
+.btn-retake {
+  padding: .8rem 2.5rem;
+  background: transparent;
+  color: var(--gold);
+  border: 1px solid var(--gold);
+  border-radius: 10px;
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background .2s, color .2s;
+}
+.btn-retake:hover { background: var(--gold); color: #1a1208; }
+
+/* ── REVIEW ── */
+.review-wrap {
+  margin-top: 2.5rem;
+  text-align: left;
+}
+.review-label {
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 1rem;
+  text-align: center;
+}
+.review-item {
+  background: var(--navy);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin-bottom: .75rem;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.review-item.r-correct { border-left: 3px solid var(--green); }
+.review-item.r-wrong   { border-left: 3px solid var(--red); }
+.review-q { color: var(--cream); font-weight: 600; margin-bottom: .35rem; }
+.review-ans { color: var(--muted); }
+.review-ans span.r-correct-ans { color: var(--green); }
+.review-ans span.r-wrong-ans   { color: var(--red); }
+
+/* ── FOOTER ── */
+footer {
+  text-align: center;
+  padding: 3rem 1rem 1rem;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #3a5065;
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <p class="header-eyebrow">Hotel St. Cloud &nbsp;·&nbsp; Team Member Training</p>
+  <h1 class="header-title">Dress Attire <em>Standards</em></h1>
+  <p class="header-sub">Four-Star Hospitality · Guest Experience Team</p>
+  <span class="header-badge">10 Questions · Certification Quiz</span>
+
+  <div class="progress-wrap">
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
+    <div class="progress-text">
+      <span id="progressLabel">Question 1 of 10</span>
+      <span id="scoreText">Score: 0</span>
+    </div>
+  </div>
+</header>
+
+<!-- QUIZ -->
+<div class="quiz-wrap" id="quizWrap">
+
+  <!-- Q1 -->
+  <div class="q-card active" id="q0">
+    <p class="q-number">Question 01 / 10</p>
+    <p class="q-text">A team member arrives for their front-of-house shift. Which footwear is appropriate for a four-star hotel environment?</p>
+    <div class="options">
+      <div class="option" onclick="answer(0,0,0)">Clean, white athletic sneakers</div>
+      <div class="option" onclick="answer(0,1,0)">Polished, closed-toe dress shoes in black or dark brown</div>
+      <div class="option" onclick="answer(0,2,0)">Clean sandals with a low heel</div>
+      <div class="option" onclick="answer(0,3,0)">Slip-resistant clogs in any color</div>
+    </div>
+    <div class="feedback" id="fb0"></div>
+    <button class="btn-next" id="next0" onclick="nextQ(1)">Next Question →</button>
+  </div>
+
+  <!-- Q2 -->
+  <div class="q-card" id="q1">
+    <p class="q-number">Question 02 / 10</p>
+    <p class="q-text">Which of the following best describes acceptable hair standards for a Hotel St. Cloud team member working in a guest-facing role?</p>
+    <div class="options">
+      <div class="option" onclick="answer(1,0,1)">Any style, as long as it is clean and freshly washed</div>
+      <div class="option" onclick="answer(1,1,1)">Neatly groomed; long hair tied back securely; free from the face</div>
+      <div class="option" onclick="answer(1,2,1)">Loose, natural styles only — no products or accessories</div>
+      <div class="option" onclick="answer(1,3,1)">Any style that reflects personal expression and creativity</div>
+    </div>
+    <div class="feedback" id="fb1"></div>
+    <button class="btn-next" id="next1" onclick="nextQ(2)">Next Question →</button>
+  </div>
+
+  <!-- Q3 -->
+  <div class="q-card" id="q2">
+    <p class="q-number">Question 03 / 10</p>
+    <p class="q-text">A team member's uniform shirt has a small but visible stain from a previous shift. What is the correct action?</p>
+    <div class="options">
+      <div class="option" onclick="answer(2,0,2)">Wear it — one small stain is unlikely to be noticed by guests</div>
+      <div class="option" onclick="answer(2,1,2)">Cover it with a name badge or accessory</div>
+      <div class="option" onclick="answer(2,2,2)">Report to a supervisor and obtain a clean replacement before the shift begins</div>
+      <div class="option" onclick="answer(2,3,2)">Wear a personal top that closely matches the uniform color</div>
+    </div>
+    <div class="feedback" id="fb2"></div>
+    <button class="btn-next" id="next2" onclick="nextQ(3)">Next Question →</button>
+  </div>
+
+  <!-- Q4 -->
+  <div class="q-card" id="q3">
+    <p class="q-number">Question 04 / 10</p>
+    <p class="q-text">Which jewelry standard best reflects four-star hospitality expectations for guest-facing team members?</p>
+    <div class="options">
+      <div class="option" onclick="answer(3,0,3)">No jewelry of any kind — professionalism requires a clean look</div>
+      <div class="option" onclick="answer(3,1,3)">Any jewelry is acceptable as long as it is tasteful and personally meaningful</div>
+      <div class="option" onclick="answer(3,2,3)">Subtle, minimal jewelry — small earrings, a simple ring or watch — nothing distracting or oversized</div>
+      <div class="option" onclick="answer(3,3,3)">Bold statement pieces that reflect personality and create conversation with guests</div>
+    </div>
+    <div class="feedback" id="fb3"></div>
+    <button class="btn-next" id="next3" onclick="nextQ(4)">Next Question →</button>
+  </div>
+
+  <!-- Q5 -->
+  <div class="q-card" id="q4">
+    <p class="q-number">Question 05 / 10</p>
+    <p class="q-text">A team member wants to express their personal style with visible tattoos on their hands and neck. What is the appropriate standard at Hotel St. Cloud?</p>
+    <div class="options">
+      <div class="option" onclick="answer(4,0,4)">All visible tattoos must be fully covered at all times during a shift</div>
+      <div class="option" onclick="answer(4,1,4)">Visible tattoos are welcome — personal expression is part of our culture</div>
+      <div class="option" onclick="answer(4,2,4)">Follow the property's current tattoo policy, which balances personal expression with four-star guest expectations — when in doubt, ask a supervisor</div>
+      <div class="option" onclick="answer(4,3,4)">Only tattoos with offensive content need to be covered</div>
+    </div>
+    <div class="feedback" id="fb4"></div>
+    <button class="btn-next" id="next4" onclick="nextQ(5)">Next Question →</button>
+  </div>
+
+  <!-- Q6 -->
+  <div class="q-card" id="q5">
+    <p class="q-number">Question 06 / 10</p>
+    <p class="q-text">Which statement about fragrance (perfume or cologne) is correct for a Hotel St. Cloud team member?</p>
+    <div class="options">
+      <div class="option" onclick="answer(5,0,5)">Fragrance is encouraged — it adds to a welcoming sensory experience for guests</div>
+      <div class="option" onclick="answer(5,1,5)">No fragrance of any kind should ever be worn on the job</div>
+      <div class="option" onclick="answer(5,2,5)">If worn, fragrance should be very light and subtle — it should never precede or linger after the team member</div>
+      <div class="option" onclick="answer(5,3,5)">Fragrance is only a concern in the food and beverage areas</div>
+    </div>
+    <div class="feedback" id="fb5"></div>
+    <button class="btn-next" id="next5" onclick="nextQ(6)">Next Question →</button>
+  </div>
+
+  <!-- Q7 -->
+  <div class="q-card" id="q6">
+    <p class="q-number">Question 07 / 10</p>
+    <p class="q-text">A team member is wearing their Hotel St. Cloud uniform but has paired it with a personal jacket that isn't part of the standard uniform. What applies?</p>
+    <div class="options">
+      <div class="option" onclick="answer(6,0,6)">It's fine — comfort and warmth are important for team member wellbeing</div>
+      <div class="option" onclick="answer(6,1,6)">Personal outerwear should only be worn in back-of-house areas; uniform standards apply anywhere a guest might see you</div>
+      <div class="option" onclick="answer(6,2,6)">It's acceptable as long as the jacket is a neutral color</div>
+      <div class="option" onclick="answer(6,3,6)">Personal jackets are fine during slow periods with no guests present</div>
+    </div>
+    <div class="feedback" id="fb6"></div>
+    <button class="btn-next" id="next6" onclick="nextQ(7)">Next Question →</button>
+  </div>
+
+  <!-- Q8 -->
+  <div class="q-card" id="q7">
+    <p class="q-number">Question 08 / 10</p>
+    <p class="q-text">Which best describes the standard for nails for a guest-facing team member at Hotel St. Cloud?</p>
+    <div class="options">
+      <div class="option" onclick="answer(7,0,7)">Any length and style — nails are not a guest-facing concern</div>
+      <div class="option" onclick="answer(7,1,7)">Clean, trimmed, and well-maintained; nail polish if worn should be neat and in a neutral or classic tone</div>
+      <div class="option" onclick="answer(7,2,7)">Bold nail art is encouraged as a form of self-expression</div>
+      <div class="option" onclick="answer(7,3,7)">Nails must be bare — no polish of any kind in a four-star setting</div>
+    </div>
+    <div class="feedback" id="fb7"></div>
+    <button class="btn-next" id="next7" onclick="nextQ(8)">Next Question →</button>
+  </div>
+
+  <!-- Q9 -->
+  <div class="q-card" id="q8">
+    <p class="q-number">Question 09 / 10</p>
+    <p class="q-text">A team member arrives 10 minutes before their shift wearing their full uniform but hasn't yet put on their name badge. A manager notices. What is the correct expectation?</p>
+    <div class="options">
+      <div class="option" onclick="answer(8,0,0)">The name badge is optional — guests rarely read them</div>
+      <div class="option" onclick="answer(8,1,0)">The name badge should be worn only during peak guest hours</div>
+      <div class="option" onclick="answer(8,2,0)">The name badge is a required part of the uniform and must be worn correctly positioned whenever the team member is on the floor</div>
+      <div class="option" onclick="answer(8,3,0)">The name badge only matters for new team members who guests don't yet recognize</div>
+    </div>
+    <div class="feedback" id="fb8"></div>
+    <button class="btn-next" id="next8" onclick="nextQ(9)">Next Question →</button>
+  </div>
+
+  <!-- Q10 -->
+  <div class="q-card" id="q9">
+    <p class="q-number">Question 10 / 10</p>
+    <p class="q-text">Which statement best reflects the <em>why</em> behind dress attire standards at Hotel St. Cloud?</p>
+    <div class="options">
+      <div class="option" onclick="answer(9,0,1)">Standards exist to ensure all team members look identical and interchangeable</div>
+      <div class="option" onclick="answer(9,1,1)">Our appearance is the first chapter of every guest's story with us — it signals care, credibility, and the level of experience they can expect</div>
+      <div class="option" onclick="answer(9,2,1)">Dress standards are primarily about compliance with health and safety regulations</div>
+      <div class="option" onclick="answer(9,3,1)">Standards exist to reflect the preferences of hotel management, not the guest</div>
+    </div>
+    <div class="feedback" id="fb9"></div>
+    <button class="btn-next" id="next9" onclick="showResults()">See My Results →</button>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results">
+    <div class="score-ring" id="scoreRing">
+      <div class="score-inner">
+        <span class="score-num" id="scoreNum">0</span>
+      </div>
+    </div>
+    <div class="grade-badge" id="gradeBadge"></div>
+    <h2 class="result-title" id="resultTitle"></h2>
+    <p class="result-sub" id="resultSub"></p>
+    <button class="btn-retake" onclick="restart()">Retake Quiz</button>
+
+    <div class="review-wrap">
+      <p class="review-label">Full Answer Review</p>
+      <div id="reviewItems"></div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  Hotel St. Cloud &nbsp;·&nbsp; Team Member Training &nbsp;·&nbsp; Dress Attire Standards &nbsp;·&nbsp; Cañon City, CO
+</footer>
+
+<script>
+const questions = [
+  {
+    correct: 1,
+    text: "Footwear",
+    explanation: "Polished, closed-toe dress shoes in black or dark brown are the standard. Four-star hospitality means every detail — including what's on your feet — communicates care and professionalism. Athletic shoes and sandals break the visual standard guests expect."
+  },
+  {
+    correct: 1,
+    text: "Hair Standards",
+    explanation: "Neat, clean, and away from the face is the expectation. Long hair secured back keeps a polished look and prevents it from entering a guest's personal space or food service. Personal expression matters — within a framework that puts the guest experience first."
+  },
+  {
+    correct: 2,
+    text: "Uniform Condition",
+    explanation: "A visible stain is not acceptable in a four-star environment — full stop. A stained uniform tells the guest that the details don't matter here. Always secure a clean replacement before the shift. This is the Credibility cornerstone in action."
+  },
+  {
+    correct: 2,
+    text: "Jewelry Standards",
+    explanation: "Subtle and minimal is the standard. Small earrings, a simple ring or classic watch are appropriate. Oversized or distracting pieces shift the guest's attention away from the experience and onto the team member — which is never the goal."
+  },
+  {
+    correct: 2,
+    text: "Tattoo Policy",
+    explanation: "Hotel St. Cloud balances personal expression with four-star guest expectations. The property maintains a specific policy — always check with your supervisor rather than assuming. When in doubt, defer to the policy and err toward the guest experience."
+  },
+  {
+    correct: 2,
+    text: "Fragrance",
+    explanation: "Light and subtle is the rule. Heavy fragrance in a hospitality setting can trigger allergies, interfere with the dining experience, and make guests uncomfortable. It should never arrive before you or linger after you leave. The guest's sensory experience belongs to them."
+  },
+  {
+    correct: 1,
+    text: "Personal Outerwear",
+    explanation: "The uniform standard applies everywhere a guest might see you — lobby, corridors, elevators, outdoor areas. Personal jackets and outerwear are back-of-house only. The moment you step into a guest-facing space, you represent Hotel St. Cloud fully."
+  },
+  {
+    correct: 1,
+    text: "Nail Standards",
+    explanation: "Clean, trimmed, and well-maintained is the expectation. If polish is worn, it should be neat — chips and bright nail art are distracting in a four-star service setting. Classic, neutral tones are always appropriate. This is a small detail that guests notice."
+  },
+  {
+    correct: 2,
+    text: "Name Badge",
+    explanation: "The name badge is a required part of the full uniform and should be worn correctly positioned any time you are on the floor. It's not optional, it's not seasonal, and it's not just for new team members. It connects you to the guest as a named individual — which is part of unreasonable hospitality."
+  },
+  {
+    correct: 1,
+    text: "The 'Why' Behind Standards",
+    explanation: "Our appearance is the first chapter of every guest's story with us. Before a word is spoken, a guest has already formed an impression. That impression should say: this place is exceptional, these people care, and I am in good hands. Standards are how we deliver on that promise before we open our mouths."
+  }
+];
+
+let current = 0;
+let score = 0;
+let answered = [];
+let userAnswers = [];
+
+function answer(qIdx, optIdx, correctIdx) {
+  if (answered.includes(qIdx)) return;
+  answered.push(qIdx);
+  userAnswers[qIdx] = optIdx;
+
+  const card = document.getElementById('q' + qIdx);
+  const opts = card.querySelectorAll('.option');
+  const fb   = document.getElementById('fb' + qIdx);
+  const btn  = document.getElementById('next' + qIdx);
+  const q    = questions[qIdx];
+
+  opts.forEach(o => o.classList.add('locked'));
+
+  const isCorrect = (optIdx === q.correct);
+  if (isCorrect) score++;
+
+  opts[optIdx].classList.add(isCorrect ? 'correct' : 'wrong');
+  if (!isCorrect) opts[q.correct].classList.add('reveal-correct');
+
+  fb.className = 'feedback ' + (isCorrect ? 'correct-fb' : 'wrong-fb');
+  fb.innerHTML = `<div class="feedback-label">${isCorrect ? '✓ Correct' : '✗ Incorrect'}</div>${q.explanation}`;
+  fb.style.display = 'block';
+
+  btn.style.display = 'block';
+
+  // update score display
+  document.getElementById('scoreText').textContent = 'Score: ' + score;
+}
+
+function nextQ(idx) {
+  document.getElementById('q' + (idx - 1)).classList.remove('active');
+  document.getElementById('q' + idx).classList.add('active');
+  current = idx;
+
+  const pct = (idx / 10) * 100;
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = 'Question ' + (idx + 1) + ' of 10';
+}
+
+function showResults() {
+  document.getElementById('q9').classList.remove('active');
+  document.getElementById('progressBar').style.width = '100%';
+  document.getElementById('progressLabel').textContent = 'Complete';
+
+  const results = document.getElementById('results');
+  results.style.display = 'block';
+
+  const pct = Math.round((score / 10) * 100);
+  document.getElementById('scoreNum').textContent = score + '/10';
+
+  // animate ring
+  setTimeout(() => {
+    document.getElementById('scoreRing').style.setProperty('--deg', (pct * 3.6) + 'deg');
+    document.getElementById('scoreRing').querySelector('::before');
+    const ring = document.getElementById('scoreRing');
+    ring.style.background = `conic-gradient(var(--gold) ${pct * 3.6}deg, var(--border) 0deg)`;
+  }, 100);
+
+  let grade, gradeClass, title, sub;
+  if (score === 10)      { grade = 'A+ · Outstanding';  gradeClass = 'grade-a-plus'; title = 'Exceptional Standard';   sub = 'Perfect score. You know our standards and you live them. That\'s what four-star hospitality looks like.'; }
+  else if (score >= 8)   { grade = 'A · Certified';     gradeClass = 'grade-a';      title = 'Certified';              sub = 'Strong result. You understand the expectations. Review any missed questions and carry this forward on the floor.'; }
+  else if (score >= 6)   { grade = 'B · Passing';       gradeClass = 'grade-b';      title = 'Passing';                sub = 'You\'re on the right track. Review the questions you missed and talk through the standards with your supervisor.'; }
+  else if (score >= 4)   { grade = 'C · Needs Review';  gradeClass = 'grade-c';      title = 'Needs Review';           sub = 'Some gaps to address before your next shift. Review the answer key with your supervisor and retake when ready.'; }
+  else                   { grade = 'D · Retake Required'; gradeClass = 'grade-d';    title = 'Retake Required';        sub = 'This one needs more time. Review our dress attire standards carefully and speak with your manager before your next guest-facing shift.'; }
+
+  document.getElementById('gradeBadge').className = 'grade-badge ' + gradeClass;
+  document.getElementById('gradeBadge').textContent = grade;
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultSub').textContent = sub;
+
+  // build review
+  const reviewEl = document.getElementById('reviewItems');
+  reviewEl.innerHTML = '';
+  questions.forEach((q, i) => {
+    const card = document.getElementById('q' + i);
+    const opts = card.querySelectorAll('.option');
+    const userA = userAnswers[i];
+    const correct = userA === q.correct;
+    const userText = opts[userA] ? opts[userA].textContent : '—';
+    const correctText = opts[q.correct].textContent;
+
+    const div = document.createElement('div');
+    div.className = 'review-item ' + (correct ? 'r-correct' : 'r-wrong');
+    div.innerHTML = `
+      <div class="review-q">${i + 1}. ${q.text}</div>
+      <div class="review-ans">Your answer: <span class="${correct ? 'r-correct-ans' : 'r-wrong-ans'}">${userText}</span></div>
+      ${!correct ? `<div class="review-ans">Correct answer: <span class="r-correct-ans">${correctText}</span></div>` : ''}
+    `;
+    reviewEl.appendChild(div);
+  });
+}
+
+function restart() {
+  current = 0; score = 0; answered = []; userAnswers = [];
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('reviewItems').innerHTML = '';
+  document.getElementById('progressBar').style.width = '0%';
+  document.getElementById('progressLabel').textContent = 'Question 1 of 10';
+  document.getElementById('scoreText').textContent = 'Score: 0';
+
+  document.querySelectorAll('.q-card').forEach((c, i) => {
+    c.classList.remove('active');
+    c.querySelectorAll('.option').forEach(o => {
+      o.classList.remove('correct','wrong','reveal-correct','locked');
+    });
+    const fb = document.getElementById('fb' + i);
+    if (fb) { fb.style.display = 'none'; fb.className = 'feedback'; }
+    const btn = document.getElementById('next' + i);
+    if (btn) btn.style.display = 'none';
+  });
+
+  document.getElementById('q0').classList.add('active');
+}
+</script>
+</body>
+</html>
