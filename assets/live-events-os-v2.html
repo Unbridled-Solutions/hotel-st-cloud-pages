@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Events Ecosystem OS | Unbridled</title>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#5a8ba7;
+  --gray:#4b4f54;
+  --navy:#1f2b3f;
+  --cream:#f5f4f0;
+  --gold:#ba8032;
+  --green:#4caf7d;
+  --light:#e8edf2;
+  --border:#c8d4dc;
+  --white:#fff;
+  --text:#3a3e42;
+}
+.grid-table{width:100%;border-collapse:separate;border-spacing:0;margin:2rem 0;background:var(--white);border-radius:10px;overflow:hidden}
+.grid-table th,.grid-table td{padding:10px 14px;border-bottom:1px solid var(--border);border-right:1px solid var(--border);text-align:left;font-size:13px;color:var(--gray);vertical-align:top}
+.grid-table th:last-child,.grid-table td:last-child{border-right:none}
+.grid-table tr:last-child td{border-bottom:none}
+.grid-table thead th{background:var(--navy);color:var(--white);font-weight:700;letter-spacing:.5px;text-transform:uppercase;font-size:10px}
+.grid-table thead th svg{color:var(--blue)}
+.grid-table tbody th{background:var(--cream);font-weight:600;color:var(--navy);position:sticky;left:0;z-index:1}
+.grid-table tbody tr.client-experience-row th{background:var(--gold);color:var(--navy);font-weight:700}
+.grid-table .marker{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;font-size:10px;font-weight:700;color:var(--white);margin-right:6px;flex-shrink:0}
+.marker-l{background:var(--gold);border:1px solid var(--gold)}.marker-c{background:var(--blue);border:1px solid var(--blue)}.marker-s{background:var(--green);border:1px solid var(--green)}
+.marker-a{background:#e0e0e0;border:1px solid #e0e0e0;color:var(--gray)}.marker-o{background:linear-gradient(45deg,var(--navy),var(--gold));border:1px solid var(--gold)}.marker-ni{background:#f0f0f0;border:1px solid #f0f0f0;color:var(--gray);font-size:14px}
+.grid-table td strong{display:flex;align-items:center;font-weight:400;color:var(--navy)}
+.grid-table tr.client-experience-row strong{color:var(--navy)}
+.grid-table .legend-item{display:inline-flex;align-items:center;margin-right:15px;font-size:12px;color:var(--gray)}
+.legend-item{display:inline-flex;align-items:center;margin-right:15px;font-size:12px;color:var(--navy)}
+.grid-table .legend-marker{width:18px;height:18px;border-radius:50%;margin-right:6px;display:inline-block}
+.legend-marker{width:18px;height:18px;border-radius:50%;margin-right:6px;display:inline-block;flex-shrink:0}
+.legend-marker-l{background:var(--gold);border:1px solid var(--gold)}.legend-marker-c{background:var(--blue);border:1px solid var(--blue)}.legend-marker-s{background:var(--green);border:1px solid var(--green)}
+.legend-marker-a{background:#e0e0e0;border:1px solid #e0e0e0}.legend-marker-o{background:linear-gradient(45deg,var(--navy),var(--gold));border:1px solid var(--gold)}.legend-marker-ni{background:#f0f0f0;border:1px solid #f0f0f0}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--cream);color:var(--text);font-family:'Josefin Sans',sans-serif;font-weight:300;font-size:18px;line-height:1.7}
+
+/* ── NAV ── */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(31,43,63,.97);backdrop-filter:blur(8px);border-bottom:1px solid rgba(90,139,167,.25)}
+.nav-inner{max-width:1200px;margin:0 auto;padding:0 clamp(1rem,4vw,2.5rem);display:flex;align-items:center;justify-content:space-between;height:58px;gap:1rem;flex-wrap:wrap}
+.nav-brand{font-size:13px;font-weight:700;color:var(--white);letter-spacing:2px;text-transform:uppercase;text-decoration:none;white-space:nowrap}
+.nav-brand span{color:var(--blue)}
+.nav-links{display:flex;gap:clamp(.5rem,2vw,1.5rem);flex-wrap:wrap}
+.nav-links a{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#8aaabb;text-decoration:none;transition:color .2s;white-space:nowrap}
+.nav-links a:hover{color:var(--blue)}
+
+/* ── HERO ── */
+.hero{min-height:100vh;background:var(--navy);display:flex;align-items:center;justify-content:center;text-align:center;padding:clamp(6rem,10vw,8rem) clamp(1.5rem,5vw,3rem) clamp(4rem,8vw,6rem);position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,rgba(90,139,167,.18) 0%,transparent 70%)}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.hero-eyebrow{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--blue);margin-bottom:1.5rem}
+.hero h1{font-size:clamp(32px,6vw,72px);font-weight:700;color:var(--white);line-height:1.1;margin-bottom:1.5rem;letter-spacing:-1px}
+.hero h1 em{color:var(--blue);font-style:normal}
+.hero h1 .gold{color:var(--gold)}
+.hero-sub{font-size:clamp(15px,2vw,20px);color:#8aaabb;max-width:680px;margin:0 auto 2.5rem;line-height:1.65;font-weight:300}
+.hero-quote{border-left:3px solid var(--gold);padding:.75rem 1.25rem;text-align:left;max-width:640px;margin:0 auto;font-size:15px;color:#c8d4dc;font-style:italic;line-height:1.65}
+.hero-quote cite{display:block;margin-top:.5rem;font-size:12px;font-style:normal;letter-spacing:1px;text-transform:uppercase;color:var(--gold)}
+.scroll-hint{margin-top:3rem;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#4a6a85}
+
+/* ── SECTIONS ── */
+section{padding:clamp(4rem,8vw,7rem) clamp(1.5rem,5vw,3rem)}
+.wrap{max-width:1100px;margin:0 auto}
+.eyebrow{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--blue);margin-bottom:.75rem}
+.section-title{font-size:clamp(26px,4vw,44px);font-weight:700;color:var(--navy);line-height:1.15;margin-bottom:1.25rem;letter-spacing:-.5px}
+.section-title em{color:var(--blue);font-style:normal}
+.section-title .gold{color:var(--gold)}
+.section-intro{font-size:clamp(15px,1.8vw,18px);color:var(--gray);max-width:720px;line-height:1.75;margin-bottom:3rem}
+.divider{height:1px;background:linear-gradient(90deg,var(--gold),var(--border),transparent);margin:0 0 3rem}
+
+/* ── DARK SECTIONS ── */
+.dark{background:var(--navy);color:var(--white)}
+.dark .section-title{color:var(--white)}
+.dark .section-intro{color:#8aaabb}
+.dark .eyebrow{color:var(--gold)}
+.dark .divider{background:linear-gradient(90deg,var(--gold),rgba(90,139,167,.3),transparent)}
+
+.mid{background:#f0f4f7}
+
+/* ── ECOSYSTEM BRANDS ── */
+.brands-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:20px;margin-top:2rem}
+.brand-card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:1.75rem;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.brand-card:hover{transform:translateY(-3px);box-shadow:0 8px 32px rgba(31,43,63,.1)}
+.brand-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--blue)}
+.brand-card.gold-top::before{background:var(--gold)}
+.brand-card.green-top::before{background:var(--green)}
+.brand-icon{font-size:28px;margin-bottom:.75rem;display:block;color:var(--blue)}
+.brand-name{font-size:16px;font-weight:700;color:var(--navy);margin-bottom:.25rem}
+.brand-role{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--blue);margin-bottom:.75rem}
+.brand-desc{font-size:13px;color:var(--gray);line-height:1.6}
+.brand-president{margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--border);font-size:12px;color:var(--gray)}
+.brand-president strong{color:var(--navy)}
+
+/* ── ECOSYSTEM PHILOSOPHY ── */
+.philosophy-grid{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center}
+@media(max-width:768px){.philosophy-grid{grid-template-columns:1fr}}
+.vs-block{display:grid;grid-template-columns:1fr auto 1fr;gap:1rem;align-items:start;margin:2rem 0}
+.vs-col{background:var(--white);border-radius:10px;padding:1.5rem}
+.vs-col.bad{border-top:3px solid #c04040;opacity:.75}
+.vs-col.good{border-top:3px solid var(--green)}
+.vs-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-bottom:1rem;font-weight:700}
+.vs-col.bad .vs-label{color:#c04040}
+.vs-col.good .vs-label{color:var(--green)}
+.vs-items{list-style:none;padding:0}
+.vs-items li{font-size:13px;padding:5px 0;border-bottom:1px solid var(--border);color:var(--gray);line-height:1.4}
+.vs-items li:last-child{border-bottom:none}
+.vs-items li::before{content:"✗ ";color:#c04040}
+.vs-col.good .vs-items li::before{content:"✓ ";color:var(--green)}
+.vs-divider{display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--gold);padding-top:3rem}
+
+/* ── HUB SPOKE VISUAL ── */
+.spoke-visual{position:relative;width:100%;max-width:500px;margin:0 auto;aspect-ratio:1}
+.spoke-svg{width:100%;height:100%}
+
+/* ── CCO ROLE ── */
+.role-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin:2rem 0}
+@media(max-width:640px){.role-grid{grid-template-columns:1fr}}
+.role-card{background:rgba(255,255,255,.06);border:1px solid rgba(90,139,167,.25);border-radius:10px;padding:1.75rem;text-align:center}
+.role-card .icon{font-size:36px;margin-bottom:1rem;display:block;color:var(--white)}
+.role-card h3{font-size:20px;font-weight:700;color:var(--white);margin-bottom:.5rem}
+.role-card p{font-size:13px;color:#8aaabb;line-height:1.65}
+.role-card .word{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:.5rem;display:block}
+
+.contrast-box{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:2rem 0}
+@media(max-width:540px){.contrast-box{grid-template-columns:1fr}}
+.contrast-col{border-radius:10px;padding:1.5rem}
+.contrast-col.from{background:rgba(192,64,64,.08);border:1px solid rgba(192,64,64,.2)}
+.contrast-col.to{background:rgba(76,175,125,.08);border:1px solid rgba(76,175,125,.25)}
+.contrast-col h4{font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:1rem;font-weight:700}
+.contrast-col.from h4{color:#c04040}
+.contrast-col.to h4{color:var(--green)}
+.contrast-col ul{list-style:none;padding:0}
+.contrast-col ul li{font-size:13px;color:#c8d4dc;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.06);line-height:1.4}
+.contrast-col ul li:last-child{border-bottom:none}
+.contrast-col.from ul li::before{content:"✗ ";color:#c04040}
+.contrast-col.to ul li::before{content:"✓ ";color:var(--green)}
+
+/* ── DECISION RIGHTS ── */
+.rights-table{width:100%;border-collapse:collapse;margin:1.5rem 0}
+.rights-table th{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--blue);padding:10px 14px;border-bottom:2px solid var(--border);text-align:left;background:var(--white)}
+.rights-table td{font-size:13px;padding:10px 14px;border-bottom:1px solid var(--border);color:var(--gray);vertical-align:top;background:var(--white)}
+.rights-table tr:hover td{background:#f8fafc}
+.rights-table .owner{font-weight:600;color:var(--navy);white-space:nowrap}
+.tag{display:inline-block;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:10px}
+.tag-cco{background:#e8f0f5;color:var(--blue);border:1px solid var(--blue)}
+.tag-pres{background:#f0faf5;color:var(--green);border:1px solid var(--green)}
+.tag-both{background:#fdf9f0;color:var(--gold);border:1px solid var(--gold)}
+
+/* ── SERVICES ── */
+.services-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:16px;margin:2rem 0}
+.service-card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:1.25rem 1.5rem;transition:transform .2s}
+.service-card:hover{transform:translateY(-2px)}
+.service-icon{font-size:22px;margin-bottom:.5rem;display:block}
+.service-name{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:.5rem}
+.service-items{list-style:none;padding:0}
+.service-items li{font-size:11px;color:var(--gray);padding:2px 0;line-height:1.4}
+.service-items li::before{content:"· ";color:var(--blue)}
+
+/* ── JOURNEY ── */
+.journey-steps{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr));gap:16px;margin:2rem 0;counter-reset:step}
+.journey-step{background:rgba(255,255,255,.05);border:1px solid rgba(90,139,167,.2);border-radius:10px;padding:1.25rem;position:relative;counter-increment:step}
+.journey-step::before{content:counter(step);position:absolute;top:-12px;left:16px;background:var(--gold);color:var(--navy);width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;line-height:1}
+.journey-step h4{font-size:13px;font-weight:700;color:var(--white);margin-bottom:.4rem}
+.journey-step p{font-size:12px;color:#8aaabb;line-height:1.55}
+
+/* ── VALUES ── */
+.cornerstones{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr));gap:20px;margin:2rem 0}
+.cornerstone{background:var(--white);border-radius:10px;padding:1.5rem;border-top:3px solid var(--blue)}
+.cornerstone.ch{border-top-color:var(--navy)}
+.cornerstone.cr{border-top-color:var(--gold)}
+.cornerstone.cm{border-top-color:var(--green)}
+.cornerstone h3{font-size:16px;font-weight:700;color:var(--navy);margin-bottom:.25rem}
+.cornerstone .cdef{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--blue);margin-bottom:.75rem}
+.cornerstone ul{list-style:none;padding:0}
+.cornerstone ul li{font-size:12px;color:var(--gray);padding:3px 0;line-height:1.4}
+.cornerstone ul li::before{content:"→ ";color:var(--blue)}
+
+/* ── 20/20/60 ── */
+.model-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:2rem 0}
+@media(max-width:540px){.model-grid{grid-template-columns:1fr}}
+.model-card{border-radius:10px;padding:1.75rem;text-align:center}
+.model-card.philanthropy{background:rgba(90,139,167,.12);border:1px solid rgba(90,139,167,.3)}
+.model-card.reinvest{background:rgba(186,128,50,.08);border:1px solid rgba(186,128,50,.25)}
+.model-card.people{background:rgba(76,175,125,.1);border:1px solid rgba(76,175,125,.3)}
+.model-pct{font-size:48px;font-weight:700;margin-bottom:.25rem}
+.philanthropy .model-pct{color:var(--blue)}
+.reinvest .model-pct{color:var(--gold)}
+.people .model-pct{color:var(--green)}
+.model-name{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#c8d4dc;margin-bottom:.75rem;font-weight:600}
+.model-desc{font-size:13px;color:#8aaabb;line-height:1.6}
+
+/* ── CALL TO ACTION SECTION ── */
+.cta-section{background:linear-gradient(135deg,var(--navy) 0%,#0d1a28 100%);border-top:2px solid var(--gold);padding:clamp(4rem,8vw,6rem) clamp(1.5rem,5vw,3rem);text-align:center}
+.cta-section h2{font-size:clamp(26px,4vw,44px);font-weight:700;color:var(--white);margin-bottom:1rem}
+.cta-section h2 em{color:var(--gold);font-style:normal}
+.cta-section p{font-size:clamp(15px,1.8vw,18px);color:#8aaabb;max-width:620px;margin:0 auto 2.5rem;line-height:1.7}
+.cta-pills{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+.cta-pill{background:rgba(255,255,255,.06);border:1px solid rgba(90,139,167,.3);border-radius:8px;padding:.75rem 1.25rem;font-size:13px;color:#c8d4dc;transition:border-color .2s}
+.cta-pill:hover{border-color:var(--blue)}
+.cta-pill strong{color:var(--white);display:block;font-size:11px;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px}
+
+/* ── BIG QUOTE ── */
+.big-quote{padding:clamp(3rem,6vw,5rem) clamp(1.5rem,5vw,3rem);text-align:center;background:var(--white);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.big-quote blockquote{font-size:clamp(18px,3vw,28px);font-weight:300;color:var(--navy);line-height:1.5;max-width:800px;margin:0 auto;font-style:italic}
+.big-quote blockquote strong{font-weight:700;color:var(--blue);font-style:normal}
+.big-quote cite{display:block;margin-top:1.25rem;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);font-style:normal}
+
+/* ── FOOTER ── */
+footer{background:var(--navy);border-top:1px solid rgba(90,139,167,.2);padding:2rem clamp(1.5rem,5vw,3rem);text-align:center}
+footer p{font-size:12px;color:#4a6a85;letter-spacing:1px}
+footer p span{color:var(--blue)}
+
+/* ── UTILS ── */
+.mt1{margin-top:1rem}.mt2{margin-top:2rem}.mt3{margin-top:3rem}
+.text-gold{color:var(--gold)}
+.text-blue{color:var(--blue)}
+
+@media(max-width:768px){
+  .rights-table{font-size:12px}
+  .rights-table th,.rights-table td{padding:8px 10px}
+  .nav-links{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#" class="nav-brand">Unbridled <span>Live Events</span></a>
+    <div class="nav-links">
+      <a href="#ecosystem">Ecosystem</a>
+      <a href="#philosophy">Philosophy</a>
+      <a href="#leadership">Leadership</a>
+      <a href="#decisions">Decision Rights</a>
+      <a href="#services">Services</a>
+      <a href="#experience">Experience</a>
+      <a href="#grid">Experience Grid</a>
+      <a href="#values">Values</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div>
+    <div class="hero-eyebrow">Live Events · Operating System · 2026</div>
+    <h1>Ecosystems<br>Over <em>Ego</em><span class="gold">systems.</span></h1>
+    <p class="hero-sub">A living OS for the Unbridled Live Events vertical — built to inspire the leaders who lead the leaders, and unleash the full power of six world-class companies working as one.</p>
+    <div class="hero-quote">
+      "We scale by choosing ecosystems over egosystems — a hub-and-spoke model where authority is distributed, teams are empowered, and the people closest to the work are trusted to move with speed, clarity, and ownership."
+      <cite>— Unbridled Culture Deck, 2026</cite>
+    </div>
+    <div class="scroll-hint" style="margin-top:2.5rem">↓ Scroll to explore</div>
+  </div>
+</div>
+
+<!-- SECTION 1: THE ECOSYSTEM -->
+<section id="ecosystem">
+  <div class="wrap">
+    <div class="eyebrow">Section 01</div>
+    <h2 class="section-title">The Live Events <em>Ecosystem</em></h2>
+    <p class="section-intro">Six companies. One mission. Every brand is autonomous, equity-held, and led by a President or Managing Director with full decision-making authority. Together they deliver something no single company could — a complete, connected, world-class event experience.</p>
+    <div class="divider"></div>
+    <div class="brands-grid">
+      <div class="brand-card">
+        <span class="brand-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M12 2c-1.104 0-2 .896-2 2v3c0 1.104.896 2 2 2s2-.896 2-2V4c0-1.104-.896-2-2-2z"/><path d="M9 10s-3 2-3 7c0 2 1 3 3 3h6c2 0 3-1 3-3 0-5-3-7-3-7"/><path d="M16 8l3 4M8 8l-3 4"/><path d="M16 12s2 2 2 5c0 1-1 2-2 2M8 12s-2 2-2 5c0 1 1 2 2 2"/></svg></span>
+        <div class="brand-name">Unbridled Solutions</div>
+        <div class="brand-role">The Core · Full-Service Event Management</div>
+        <div class="brand-desc">The flagship. End-to-end corporate event management, logistics, and experiential design. The original Unbridled — where the culture was born and where the standard is set.</div>
+      </div>
+      <div class="brand-card gold-top">
+        <span class="brand-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M22 16.92L11.5 7.08A2.81 2.81 0 0010 6c-1.104 0-2 .896-2 2v.92L2 17.08c-.732.732-.236 2.01.815 2.01.554 0 1.1-.219 1.49-.608l1.79-1.79M13 14h-.01M16 10h-.01M19 6h-.01"/></svg></span>
+        <div class="brand-name">Unbridled Travel</div>
+        <div class="brand-role">Spoke · Travel and Transportation</div>
+        <div class="brand-desc">Smart integration, optimized vendor negotiation, traveler management, and end-to-end support. The wheel that moves people — and does it better than anyone.</div>
+      </div>
+      <div class="brand-card">
+        <span class="brand-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M22 6L12 2 2 6l10 4 10-4zM2 6v12M22 6v12M12 10v8M2 18l10 4 10-4M5 10l-3 8M19 10l3 8"/></svg></span>
+        <div class="brand-name">Unbridled Productions</div>
+        <div class="brand-role">Spoke · Production Management</div>
+        <div class="brand-desc">End-to-end production management, strategic event mapping, technical precision, and cost transparency. The team behind the moments that take your breath away.</div>
+      </div>
+      <div class="brand-card gold-top">
+        <span class="brand-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M18 9.5l4-2.5v9l-4-2.5"/><path d="M14 13.5V6a2 2 0 00-2-2H4a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2v-7.5"/></svg></span>
+        <div class="brand-name">Unbridled Media</div>
+        <div class="brand-role">Spoke · Video and Motion Production</div>
+        <div class="brand-desc">Full-service video production, dynamic motion graphics, executive and event videos, visual cohesion. The storytellers who make live moments last forever.</div>
+      </div>
+      <div class="brand-card green-top">
+        <span class="brand-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M20 12h-8m0 0V4m0 8l7.5-7.5M12 12L4.5 4.5M20 12v8a2 2 0 01-2 2H6a2 2 0 01-2-2v-8m8-8L6 4.5 4 6M12 4L18 4.5l2 1.5M12 4.01V4z"/></svg></span>
+        <div class="brand-name">Gift'd</div>
+        <div class="brand-role">Spoke · Gifting and Experiences</div>
+        <div class="brand-desc">Personalized and on-brand gifting, exclusive experiences, comprehensive fulfillment, end-to-end logistics. The detail that makes clients feel seen — every time.</div>
+      </div>
+      <div class="brand-card gold-top">
+        <span class="brand-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M18 2h-4a2 2 0 00-2 2v16a2 2 0 002 2h4a2 2 0 002-2V4a2 2 0 00-2-2zM12 6h.01M10 22v-4a2 2 0 012-2h2"/></svg></span>
+        <div class="brand-name">Orange Door</div>
+        <div class="brand-role">Spoke · An Unbridled Company</div>
+        <div class="brand-desc">Bringing the Unbridled ecosystem's reach and expertise to a focused, distinct market. A proof point that the model can spin out new companies when the market calls for it.</div>
+      </div>
+    </div>
+    <div class="mt3" style="background:var(--white);border:1px solid var(--border);border-left:4px solid var(--gold);border-radius:8px;padding:1.25rem 1.5rem">
+      <p style="font-size:14px;color:var(--gray);line-height:1.7"><strong style="color:var(--navy)">The equity model:</strong> Each company is majority-owned by Unbridled. Each President or Managing Director holds an equity stake. They are accountable to the CCO — but they retain full autonomous decision-making authority for their business unit. This is the model that attracts best-in-class talent. It is also the model that demands a different kind of leadership at the top.</p>
+    </div>
+  </div>
+</section>
+
+<!-- BIG QUOTE -->
+<div class="big-quote">
+  <blockquote>"Customers buy us for <strong>who we are</strong>, not what we do. Everything unravels if we don't know who we are individually and collectively, or we forget our identity by not continuously cultivating the culture we've fought so hard to establish."</blockquote>
+  <cite>— Stan Bullis, Founder · The Unbridled Way</cite>
+</div>
+
+<!-- SECTION 2: PHILOSOPHY -->
+<section id="philosophy" class="dark">
+  <div class="wrap">
+    <div class="eyebrow">Section 02</div>
+    <h2 class="section-title">Why <em>Ecosystems</em> Win</h2>
+    <p class="section-intro">Command and control scales to the limit of one person's bandwidth. Ecosystems scale to the limit of the mission. Those are very different ceilings — and the companies that figured this out are the ones that built legends.</p>
+    <div class="divider"></div>
+
+    <div class="vs-block">
+      <div class="vs-col bad">
+        <div class="vs-label">Egosystem · Command and Control</div>
+        <ul class="vs-items">
+          <li>Decisions flow up before they flow out</li>
+          <li>Speed is limited by the leader's calendar</li>
+          <li>Talent is managed, not unleashed</li>
+          <li>The org exists to serve the structure</li>
+          <li>Innovation requires permission</li>
+          <li>Presidents become executors, not owners</li>
+          <li>Culture becomes compliance</li>
+        </ul>
+      </div>
+      <div class="vs-divider">→</div>
+      <div class="vs-col good">
+        <div class="vs-label">Ecosystem · Inspire · Influence · Innovate</div>
+        <ul class="vs-items">
+          <li>Decisions are made closest to the work</li>
+          <li>Speed is limited only by clarity and trust</li>
+          <li>Talent is trusted, therefore unleashed</li>
+          <li>The structure exists to serve the mission</li>
+          <li>Innovation is everyone's responsibility</li>
+          <li>Presidents own their business unit fully</li>
+          <li>Culture becomes competitive advantage</li>
+        </ul>
+      </div>
+    </div>
+
+    <div style="margin-top:3rem">
+      <div class="eyebrow" style="color:var(--blue)">Best-in-class parallels</div>
+      <div class="brands-grid" style="margin-top:1.5rem">
+        <div style="background:rgba(255,255,255,.05);border:1px solid rgba(90,139,167,.2);border-radius:10px;padding:1.5rem">
+          <div style="font-size:14px;font-weight:700;color:var(--white);margin-bottom:.5rem">Berkshire Hathaway</div>
+          <div style="font-size:12px;color:#8aaabb;line-height:1.65">Warren Buffett acquires world-class companies and leaves their management alone. "We don't tell our managers what to do." The result: 60 years of compounding no ego system has matched. That's the CCO model at its highest expression.</div>
+        </div>
+        <div style="background:rgba(255,255,255,.05);border:1px solid rgba(90,139,167,.2);border-radius:10px;padding:1.5rem">
+          <div style="font-size:14px;font-weight:700;color:var(--white);margin-bottom:.5rem">Alphabet / Google</div>
+          <div style="font-size:12px;color:#8aaabb;line-height:1.65">Waymo, DeepMind, Verily — each has its own CEO, P&L, and culture. Sundar Pichai doesn't run Waymo. He leads the leaders. The parent provides capital, talent pipeline, and brand. The companies provide innovation and execution.</div>
+        </div>
+        <div style="background:rgba(255,255,255,.05);border:1px solid rgba(90,139,167,.2);border-radius:10px;padding:1.5rem">
+          <div style="font-size:14px;font-weight:700;color:var(--white);margin-bottom:.5rem">LVMH</div>
+          <div style="font-size:12px;color:#8aaabb;line-height:1.65">75 luxury brands. Each with its own creative director and president, full creative and operational autonomy. Bernard Arnault provides scale, financing, and shared infrastructure. The brands don't lose their identity — they gain the power to grow it.</div>
+        </div>
+        <div style="background:rgba(255,255,255,.05);border:1px solid rgba(90,139,167,.2);border-radius:10px;padding:1.5rem">
+          <div style="font-size:14px;font-weight:700;color:var(--white);margin-bottom:.5rem">Virgin Group</div>
+          <div style="font-size:12px;color:#8aaabb;line-height:1.65">Richard Branson never managed Virgin Atlantic's flight schedules. His role was to inspire, protect the brand, and give each president the runway to build. Founder — not chief controller. 400+ companies. One mission.</div>
+        </div>
+        <div style="background:rgba(255,255,255,.05);border:1px solid rgba(90,139,167,.2);border-radius:10px;padding:1.5rem">
+          <div style="font-size:14px;font-weight:700;color:var(--white);margin-bottom:.5rem">Elon Musk · SpaceX, Tesla, Starlink, xAI</div>
+          <div style="font-size:12px;color:#8aaabb;line-height:1.65">Musk doesn't run Tesla's factories and SpaceX's launch teams simultaneously from a single command center. Each company has its own CEO, its own P&L, and its own culture — while sharing Musk's vision, capital network, and audacity ceiling. The relational equity he builds with his top leaders is what enables each company to move fast without waiting for permission. The CEOs who stay aren't managed. They're enrolled in a mission larger than any one company — and they wouldn't trade it.</div>
+        </div>
+        <div style="background:rgba(255,255,255,.05);border:1px solid rgba(90,139,167,.2);border-radius:10px;padding:1.5rem">
+          <div style="font-size:14px;font-weight:700;color:var(--white);margin-bottom:.5rem">Danny Meyer · Union Square Hospitality Group</div>
+          <div style="font-size:12px;color:#8aaabb;line-height:1.65">Meyer built one of America's most celebrated restaurant empires — Shake Shack, Gramercy Tavern, The Modern — on a single principle: enlightened hospitality starts with your team, not your guests. Each restaurant has its own GM, its own identity, its own culture. Meyer's role is not to run the kitchens. It is to build leaders who do. His book "Setting the Table" is the closest analog to the Unbridled model in the hospitality world — and the reason his restaurants outlast trends while competitors chase them.</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:3rem;background:rgba(186,128,50,.1);border:1px solid rgba(186,128,50,.3);border-radius:10px;padding:1.75rem">
+      <div style="font-size:13px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:.75rem">The Hub and Spoke and Wheel Model</div>
+      <p style="font-size:15px;color:#c8d4dc;line-height:1.75">The hub provides alignment and direction. Spokes connect leaders to teams. Wheels represent evolving groups that drive the business forward. As people grow, wheels expand or split into new specialties while staying connected to the hub. The result is a dynamic, adaptive system that reflects the fluid nature of business — and enables more collaborative, responsive ways of working.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 3: THE CCO ROLE -->
+<section id="leadership">
+  <div class="wrap">
+    <div class="eyebrow">Section 03</div>
+    <h2 class="section-title">The <em>Chief Commercial</em> Officer</h2>
+    <p class="section-intro">The CCO role in this ecosystem carries three distinct and equally important responsibilities — none of which are about control. They are about vision, voice, and velocity. The CCO leads the global sales function, champions the client experience above all else, and earns the right to lead Presidents not through authority but through relational equity and a future worth running toward.</p>
+    <div class="divider"></div>
+
+    <!-- Three Mandates -->
+    <div style="background:var(--navy);border-radius:12px;padding:clamp(1.5rem,4vw,2.5rem);margin-bottom:2rem">
+      <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:1.5rem">The three mandates</div>
+      <div class="role-grid">
+        <div class="role-card">
+          <span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="36" height="36"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10zM2.06 12h19.88"/></svg></span>
+          <span class="word">Lead Globally</span>
+          <h3>One Sales Organization</h3>
+          <p>The CCO leads a consolidated global sales function — a shared service, like Finance or People and Possibilities, that serves the entire ecosystem. One team. One strategy. One voice in the market. Presidents partner with it; they don't duplicate it.</p>
+        </div>
+        <div class="role-card">
+          <span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="36" height="36"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="word">Champion the Client</span>
+          <h3>The Client's Most Powerful Advocate</h3>
+          <p>The CCO owns the client experience layer — making it strategic, effective, enjoyable, and valuable at every touchpoint. This is not a soft responsibility. It is the center of everything. The client voice lives here, and Presidents honor that as the north star of all we do.</p>
+        </div>
+        <div class="role-card">
+          <span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="36" height="36"><path d="M7 10l5-5 5 5M12 5v16M3 7h4M17 7h4M5 21l-.01 0M19 21l-.01 0"/><path d="M11 21s1 1 1 1 1-1 1-1"/></svg></span>
+          <span class="word">See What's Next</span>
+          <h3>Strategic Vision Carrier</h3>
+          <p>The CCO is the conduit between the customer voice and the strategic future — translating what clients need into where the ecosystem goes next. Not reactive. Not operational. Forward-facing, always. The question is never "what happened?" It's "what's possible?"</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Global Sales as Shared Service -->
+    <div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:clamp(1.25rem,3vw,2rem);margin-bottom:2rem">
+      <div style="font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--blue);margin-bottom:1rem">The Global Sales Function</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem" class="philosophy-grid">
+        <div>
+          <p style="font-size:15px;color:var(--gray);line-height:1.75;margin-bottom:1rem">The global sales organization operates like Shared Services — one consolidated team led by a Head of Global Sales, reporting to and aligned with the CCO. It serves all six brands in the ecosystem. Presidents don't build their own sales infrastructures. They leverage this one.</p>
+          <p style="font-size:15px;color:var(--gray);line-height:1.75">This creates scale, consistency, and a unified client experience from first contact forward. The client never feels like they're navigating six separate companies. They feel Unbridled — one brand, one standard, one promise.</p>
+        </div>
+        <div>
+          <div style="background:#f5f4f0;border-radius:10px;padding:1.25rem">
+            <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--blue);margin-bottom:.75rem">What Shared Services provides</div>
+            <ul style="list-style:none;padding:0">
+              <li style="font-size:13px;color:var(--gray);padding:5px 0;border-bottom:1px solid var(--border);line-height:1.4">→ Unified go-to-market strategy across all 6 brands</li>
+              <li style="font-size:13px;color:var(--gray);padding:5px 0;border-bottom:1px solid var(--border);line-height:1.4">→ Consistent client experience from prospect to renewal</li>
+              <li style="font-size:13px;color:var(--gray);padding:5px 0;border-bottom:1px solid var(--border);line-height:1.4">→ Cross-brand pipeline visibility and opportunity routing</li>
+              <li style="font-size:13px;color:var(--gray);padding:5px 0;border-bottom:1px solid var(--border);line-height:1.4">→ Ecosystem-wide revenue intelligence and forecasting</li>
+              <li style="font-size:13px;color:var(--gray);padding:5px 0;border-bottom:1px solid var(--border);line-height:1.4">→ Client voice captured and distributed to all Presidents</li>
+              <li style="font-size:13px;color:var(--gray);padding:5px 0;line-height:1.4">→ Strategic account growth and retention programs</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Client Experience Layer -->
+    <div style="background:var(--navy);border-radius:12px;padding:clamp(1.5rem,4vw,2.5rem);margin-bottom:2rem">
+      <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:1rem">The Client Experience Layer</div>
+      <p style="font-size:15px;color:#c8d4dc;line-height:1.75;margin-bottom:1.5rem">The CCO is the most powerful client advocate in the ecosystem. Not because of title — because of presence, attention, and accountability. This means the client experience is never an afterthought assigned to account managers. It is a strategic priority owned at the highest commercial level.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:12px">
+        <div style="background:rgba(255,255,255,.05);border:1px solid rgba(90,139,167,.2);border-radius:8px;padding:1.25rem">
+          <div style="font-size:20px;margin-bottom:.5rem"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
+          <div style="font-size:13px;font-weight:700;color:var(--white);margin-bottom:.4rem">Strategic</div>
+          <div style="font-size:12px;color:#8aaabb;line-height:1.55">Every client touchpoint is intentional — designed, not accidental. The CCO ensures experience is built into the commercial strategy, not bolted on after.</div>
+        </div>
+        <div style="background:rgba(255,255,255,.05);border:1px solid rgba(90,139,167,.2);border-radius:8px;padding:1.25rem">
+          <div style="font-size:20px;margin-bottom:.5rem"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+          <div style="font-size:13px;font-weight:700;color:var(--white);margin-bottom:.4rem">Effective</div>
+          <div style="font-size:12px;color:#8aaabb;line-height:1.55">Clients feel progress, not friction. Problems are absorbed before they surface. The weight of complexity stays with us — not with them.</div>
+        </div>
+        <div style="background:rgba(255,255,255,.05);border:1px solid rgba(90,139,167,.2);border-radius:8px;padding:1.25rem">
+          <div style="font-size:20px;margin-bottom:.5rem"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/></svg></div>
+          <div style="font-size:13px;font-weight:700;color:var(--white);margin-bottom:.4rem">Enjoyable</div>
+          <div style="font-size:12px;color:#8aaabb;line-height:1.55">Working with Unbridled should feel good. Not just satisfactory — genuinely enjoyable. Character-led, warm, and human at every interaction.</div>
+        </div>
+        <div style="background:rgba(255,255,255,.05);border:1px solid rgba(90,139,167,.2);border-radius:8px;padding:1.25rem">
+          <div style="font-size:20px;margin-bottom:.5rem"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"><path d="M12 2l-8 7.5L12 22l8-12.5L12 2zM2 9h20M12 2V22"/></svg></div>
+          <div style="font-size:13px;font-weight:700;color:var(--white);margin-bottom:.4rem">Valuable</div>
+          <div style="font-size:12px;color:#8aaabb;line-height:1.55">Every interaction should leave the client better than before it. Not just served — elevated. This is unreasonable hospitality applied commercially.</div>
+        </div>
+      </div>
+      <div style="margin-top:1.25rem;padding:1.25rem;background:rgba(186,128,50,.08);border-left:3px solid var(--gold);border-radius:4px">
+        <p style="font-size:14px;color:#c8d4dc;line-height:1.7;font-style:italic">"The CCO is the conduit to the customer voice and the strategic vision of where we go next. Presidents need to honor the client experience as the center of all we do — not a department, not a metric. A way of being."</p>
+      </div>
+    </div>
+
+    <!-- Relational Equity -->
+    <div style="background:var(--navy);border-radius:12px;padding:clamp(1.5rem,4vw,2.5rem);margin-bottom:2rem">
+      <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:1rem">Leading Through Relational Equity</div>
+      <p style="font-size:15px;color:#c8d4dc;line-height:1.75;margin-bottom:1.5rem">The most powerful thing a CCO can do is make the future so compelling that every President chooses to run toward it. In an ecosystem of leaders who hold equity in their own companies, alignment isn't something you create through structure — it's something you inspire through vision, trust, and genuine investment in each other's success. The CCO earns influence by going first: building the relationship before the ask, co-creating the vision rather than delivering it, and making this ecosystem the best professional decision every President ever made.</p>
+
+      <div class="contrast-box">
+        <div class="contrast-col from">
+          <h4>Leading Through Position</h4>
+          <ul>
+            <li>Alignment comes from the org chart</li>
+            <li>Vision is delivered top-down</li>
+            <li>Leaders execute someone else's plan</li>
+            <li>Decisions happen in formal meetings</li>
+            <li>Presidents focus on their own unit</li>
+            <li>Talent performs to the standard set</li>
+            <li>The future is planned and managed</li>
+            <li>Success is measured individually</li>
+          </ul>
+        </div>
+        <div class="contrast-col to">
+          <h4>Leading Through Relational Equity</h4>
+          <ul>
+            <li>Alignment comes from shared conviction</li>
+            <li>Vision is co-created and co-owned</li>
+            <li>Leaders run toward a future they helped build</li>
+            <li>Decisions happen through trust</li>
+            <li>Presidents invest in each other's success</li>
+            <li>Talent brings their best because they believe</li>
+            <li>The future is inspired and pursued together</li>
+            <li>Success is celebrated across the whole</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Business examples -->
+      <div style="margin-top:2rem">
+        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--blue);margin-bottom:1.25rem">Leaders who built lasting legacies through vision and relational equity</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:14px">
+
+          <div style="background:rgba(255,255,255,.04);border:1px solid rgba(90,139,167,.18);border-radius:10px;padding:1.4rem">
+            <div style="font-size:13px;font-weight:700;color:var(--white);margin-bottom:.4rem">Steve Jobs · Apple</div>
+            <div style="font-size:12px;color:#8aaabb;line-height:1.65">Jobs didn't manage Jony Ive, Tim Cook, or his creative leads through authority — he enrolled them in a vision of the future so vivid they couldn't imagine being anywhere else. His famous "reality distortion field" wasn't manipulation. It was conviction. People followed because the destination was worth it, and because he made them believe they were the only team capable of getting there.</div>
+          </div>
+
+          <div style="background:rgba(255,255,255,.04);border:1px solid rgba(90,139,167,.18);border-radius:10px;padding:1.4rem">
+            <div style="font-size:13px;font-weight:700;color:var(--white);margin-bottom:.4rem">Satya Nadella · Microsoft</div>
+            <div style="font-size:12px;color:#8aaabb;line-height:1.65">When Nadella took over Microsoft, he didn't reorganize through force. He changed the story. "Mobile first, cloud first" was a vision that re-enrolled 150,000 people in a future they could believe in. The culture shifted from "know-it-alls" to "learn-it-alls" — and it happened through inspiration, not mandates. Microsoft's market cap went from $300B to over $3T. Relational equity at scale.</div>
+          </div>
+
+          <div style="background:rgba(255,255,255,.04);border:1px solid rgba(90,139,167,.18);border-radius:10px;padding:1.4rem">
+            <div style="font-size:13px;font-weight:700;color:var(--white);margin-bottom:.4rem">Howard Schultz · Starbucks</div>
+            <div style="font-size:12px;color:#8aaabb;line-height:1.65">Schultz built Starbucks by making baristas feel like partners in something meaningful — not employees in a coffee chain. He extended health benefits to part-time workers decades before it was expected. The result: loyalty that no competitor could buy, and an army of brand ambassadors who chose the mission. You can't manufacture that with a policy. You earn it.</div>
+          </div>
+
+          <div style="background:rgba(255,255,255,.04);border:1px solid rgba(90,139,167,.18);border-radius:10px;padding:1.4rem">
+            <div style="font-size:13px;font-weight:700;color:var(--white);margin-bottom:.4rem">Reed Hastings · Netflix</div>
+            <div style="font-size:12px;color:#8aaabb;line-height:1.65">Netflix's famous culture deck — "Freedom and Responsibility" — is a masterclass in relational equity. Hastings gave his leaders radical freedom and trusted them to act like owners. No approval chains. No micromanagement. Just a shared set of values and a vision for what great looks like. The people who stayed weren't the most obedient — they were the most inspired.</div>
+          </div>
+
+          <div style="background:rgba(255,255,255,.04);border:1px solid rgba(90,139,167,.18);border-radius:10px;padding:1.4rem">
+            <div style="font-size:13px;font-weight:700;color:var(--white);margin-bottom:.4rem">Pat Lencioni · The Table Group</div>
+            <div style="font-size:12px;color:#8aaabb;line-height:1.65">Lencioni's entire body of work — Five Dysfunctions, The Advantage, The Ideal Team Player — is about one thing: trust as the foundation of leadership. His research shows that teams led by authority produce output. Teams led through relational equity produce breakthroughs. The difference is whether people feel safe enough to bring their full selves to the work. Sound familiar?</div>
+          </div>
+
+          <div style="background:rgba(255,255,255,.04);border:1px solid rgba(90,139,167,.18);border-radius:10px;padding:1.4rem">
+            <div style="font-size:13px;font-weight:700;color:var(--white);margin-bottom:.4rem">Danny Meyer · Union Square Hospitality</div>
+            <div style="font-size:12px;color:#8aaabb;line-height:1.65">The godfather of "enlightened hospitality" built a restaurant empire on the principle that you take care of your team first, and they take care of guests. His GMs and leaders stayed not because of hierarchy — but because they believed in what they were building together. His book "Setting the Table" is the closest analog to the Unbridled model in the hospitality world. Culture as a commercial strategy.</div>
+          </div>
+
+        </div>
+      </div>
+
+      <div style="margin-top:1.75rem;padding:1.5rem;background:rgba(90,139,167,.08);border:1px solid rgba(90,139,167,.25);border-radius:10px;text-align:center">
+        <p style="font-size:18px;font-weight:600;color:var(--white);line-height:1.5;margin-bottom:.75rem">"Position gets people to show up.<br>Relational equity gets them to <em style="color:var(--gold);font-style:normal">believe.</em>"</p>
+        <p style="font-size:13px;color:#8aaabb;max-width:580px;margin:0 auto;line-height:1.65">The CCO earns the right to lead Presidents by investing in the relationship before the ask, by co-creating the vision instead of delivering it, and by making the future of this ecosystem so compelling that no President would choose to be anywhere else.</p>
+      </div>
+    </div>
+
+    <!-- SALIENT POINT CALLOUT -->
+    <div style="margin-top:2.5rem;background:var(--navy);border-radius:16px;padding:clamp(2rem,5vw,3.5rem);text-align:center;position:relative;overflow:hidden">
+      <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(186,128,50,.18) 0%,transparent 65%);pointer-events:none"></div>
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--gold),transparent)"></div>
+      <div style="position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(90,139,167,.4),transparent)"></div>
+      <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);margin-bottom:1.5rem">The Defining Principle</div>
+      <blockquote style="font-size:clamp(20px,3.5vw,36px);font-weight:700;color:var(--white);line-height:1.25;margin:0 auto 1.5rem;max-width:860px;letter-spacing:-.5px">
+        "The CCO's job is not to manage six companies.<br>
+        <span style="color:var(--gold)">It is to build six leaders</span><br>
+        who build companies that last hundreds of years."
+      </blockquote>
+      <div style="width:48px;height:2px;background:var(--gold);margin:0 auto 1.5rem"></div>
+      <p style="font-size:clamp(14px,1.8vw,17px);color:#8aaabb;max-width:680px;margin:0 auto 1.75rem;line-height:1.75;font-weight:300">This is way less about business fundamentals than it is about future-forward, inspired leadership. The ceiling of any single leader is one person's vision. The ceiling of a leader who builds leaders — is generational.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:1rem;max-width:700px;margin:0 auto">
+        <div style="background:rgba(255,255,255,.04);border:1px solid rgba(186,128,50,.25);border-radius:10px;padding:1.25rem">
+          <div style="font-size:22px;font-weight:700;color:var(--gold);margin-bottom:.35rem">Manage</div>
+          <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#8aaabb">Gets compliance</div>
+        </div>
+        <div style="background:rgba(186,128,50,.06);border:1px solid rgba(186,128,50,.4);border-radius:10px;padding:1.25rem">
+          <div style="font-size:22px;font-weight:700;color:var(--gold);margin-bottom:.35rem">Build Leaders</div>
+          <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#8aaabb">Gets a legacy</div>
+        </div>
+        <div style="background:rgba(255,255,255,.04);border:1px solid rgba(186,128,50,.25);border-radius:10px;padding:1.25rem">
+          <div style="font-size:22px;font-weight:700;color:var(--gold);margin-bottom:.35rem">Hundreds of Years</div>
+          <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#8aaabb">The actual ambition</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+
+<!-- SECTION 4: DECISION RIGHTS -->
+<section id="decisions" class="mid">
+  <div class="wrap">
+    <div class="eyebrow">Section 04</div>
+    <h2 class="section-title">Decision <em>Rights</em></h2>
+    <p class="section-intro">Clarity is the antidote to control. When everyone knows who owns what, control becomes unnecessary. This matrix defines the decision rights across the ecosystem — so Presidents can move fast, and the CCO can lead the whole.</p>
+    <div class="divider"></div>
+
+    <div style="overflow-x:auto;border-radius:10px;border:1px solid var(--border)">
+      <table class="rights-table">
+        <thead>
+          <tr>
+            <th>Decision</th>
+            <th>Owner</th>
+            <th>CCO Role</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Commercial strategy — brand unit</strong><br><span style="color:#9aabb8;font-size:12px">Pricing, service mix, client approach</span></td>
+            <td class="owner"><span class="tag tag-pres">President</span></td>
+            <td>Aligns with ecosystem direction. Consults on cross-brand opportunity.</td>
+          </tr>
+          <tr>
+            <td><strong>Hiring within the brand unit</strong><br><span style="color:#9aabb8;font-size:12px">Roles, offers, team structure</span></td>
+            <td class="owner"><span class="tag tag-pres">President</span></td>
+            <td>Sets cultural standards. Approves senior hires (VP+).</td>
+          </tr>
+          <tr>
+            <td><strong>Client relationships</strong><br><span style="color:#9aabb8;font-size:12px">Who to pursue, how to serve, delivery standards</span></td>
+            <td class="owner"><span class="tag tag-pres">President</span></td>
+            <td>Unlocks cross-ecosystem client introductions. Protects brand reputation.</td>
+          </tr>
+          <tr>
+            <td><strong>P&amp;L management</strong><br><span style="color:#9aabb8;font-size:12px">Margin, spend, resource allocation</span></td>
+            <td class="owner"><span class="tag tag-both">Shared</span></td>
+            <td>Sets ecosystem financial targets. Presidents manage to them.</td>
+          </tr>
+          <tr>
+            <td><strong>Cross-brand collaboration</strong><br><span style="color:#9aabb8;font-size:12px">Joint pitches, shared resources, referrals</span></td>
+            <td class="owner"><span class="tag tag-cco">CCO</span></td>
+            <td>Orchestrates. Creates conditions. Removes friction between brands.</td>
+          </tr>
+          <tr>
+            <td><strong>Ecosystem growth strategy</strong><br><span style="color:#9aabb8;font-size:12px">New companies, market expansion, acquisitions</span></td>
+            <td class="owner"><span class="tag tag-cco">CCO</span></td>
+            <td>Leads strategy. Presidents contribute market intelligence and readiness.</td>
+          </tr>
+          <tr>
+            <td><strong>Cultural standards</strong><br><span style="color:#9aabb8;font-size:12px">Values, cornerstones, team member experience</span></td>
+            <td class="owner"><span class="tag tag-both">Shared</span></td>
+            <td>Holds the line on culture. Presidents are culture carriers in their units.</td>
+          </tr>
+          <tr>
+            <td><strong>Annual compensation — President level</strong><br><span style="color:#9aabb8;font-size:12px">Base, variable, equity</span></td>
+            <td class="owner"><span class="tag tag-cco">CCO</span></td>
+            <td>Owns. Informed by unit performance and ecosystem contribution.</td>
+          </tr>
+          <tr>
+            <td><strong>Day-to-day operations</strong><br><span style="color:#9aabb8;font-size:12px">Scheduling, delivery, team management</span></td>
+            <td class="owner"><span class="tag tag-pres">President</span></td>
+            <td>Not involved. This is the President's domain entirely.</td>
+          </tr>
+          <tr>
+            <td><strong>Brand identity and positioning</strong><br><span style="color:#9aabb8;font-size:12px">How the brand shows up in market</span></td>
+            <td class="owner"><span class="tag tag-both">Shared</span></td>
+            <td>Sets ecosystem brand standards. Presidents own brand voice within units.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:12px;color:#9aabb8;margin-top:.75rem;font-style:italic">This matrix is a living document. When ambiguity arises, the answer is always: who is closest to the work and most equipped to decide?</p>
+  </div>
+</section>
+
+<!-- SECTION 5: SERVICES -->
+<section id="services">
+  <div class="wrap">
+    <div class="eyebrow">Section 05</div>
+    <h2 class="section-title">Supporting <em>Connection</em></h2>
+    <p class="section-intro">Twelve service categories. One ecosystem. The client doesn't see six companies — they feel one seamless, world-class experience. Every service below can be delivered by any combination of our brands, scaling up or down based on what the moment requires.</p>
+    <div class="divider"></div>
+    <div class="services-grid">
+      <div class="service-card">
+        <span class="service-icon">🔍</span>
+        <div class="service-name">Event Sourcing</div>
+        <ul class="service-items">
+          <li>Exclusive hotel partnerships</li>
+          <li>Buying power advantage</li>
+          <li>Strategic contracts</li>
+          <li>Maximized savings</li>
+        </ul>
+      </div>
+      <div class="service-card">
+        <span class="service-icon">📋</span>
+        <div class="service-name">Event Logistics</div>
+        <ul class="service-items">
+          <li>End-to-end planning</li>
+          <li>Seamless coordination</li>
+          <li>Smart technology</li>
+          <li>Client-first approach</li>
+        </ul>
+      </div>
+      <div class="service-card">
+        <span class="service-icon">📱</span>
+        <div class="service-name">Event Tech and Analytics</div>
+        <ul class="service-items">
+          <li>Integrated mobile apps</li>
+          <li>Custom registration builds</li>
+          <li>Smart automation</li>
+          <li>Data-driven decisions</li>
+        </ul>
+      </div>
+      <div class="service-card">
+        <span class="service-icon">✈️</span>
+        <div class="service-name">Travel and Transportation</div>
+        <ul class="service-items">
+          <li>Smart integration</li>
+          <li>Optimized vendor negotiation</li>
+          <li>Traveler management</li>
+          <li>End-to-end support</li>
+        </ul>
+      </div>
+      <div class="service-card">
+        <span class="service-icon">✨</span>
+        <div class="service-name">Experiential Design</div>
+        <ul class="service-items">
+          <li>Immersive experiences</li>
+          <li>Seamless collaboration</li>
+          <li>Innovative event enhancements</li>
+          <li>Tailored for impact</li>
+        </ul>
+      </div>
+      <div class="service-card">
+        <span class="service-icon">🏛️</span>
+        <div class="service-name">Exhibits and Trade Shows</div>
+        <ul class="service-items">
+          <li>Exhibit builds (custom or modular)</li>
+          <li>Exhibit management</li>
+          <li>Sponsorship management</li>
+        </ul>
+      </div>
+      <div class="service-card">
+        <span class="service-icon">🎁</span>
+        <div class="service-name">Gifting Experiences</div>
+        <ul class="service-items">
+          <li>Personalized and on-brand</li>
+          <li>Exclusive experiences</li>
+          <li>Comprehensive fulfillment</li>
+          <li>End-to-end logistics</li>
+        </ul>
+      </div>
+      <div class="service-card">
+        <span class="service-icon">🎨</span>
+        <div class="service-name">Creative Execution</div>
+        <ul class="service-items">
+          <li>Beyond aesthetics</li>
+          <li>Immersive storytelling</li>
+          <li>Innovative design</li>
+          <li>Aligned execution</li>
+        </ul>
+      </div>
+      <div class="service-card">
+        <span class="service-icon">📊</span>
+        <div class="service-name">Presentation Design</div>
+        <ul class="service-items">
+          <li>Strategic content development</li>
+          <li>High-impact deck design</li>
+          <li>Rehearsals and coaching</li>
+          <li>Clear workflow</li>
+        </ul>
+      </div>
+      <div class="service-card">
+        <span class="service-icon">🎥</span>
+        <div class="service-name">Video and Motion Production</div>
+        <ul class="service-items">
+          <li>Full-service production</li>
+          <li>Dynamic motion graphics</li>
+          <li>Executive and event videos</li>
+          <li>Visual cohesion</li>
+        </ul>
+      </div>
+      <div class="service-card">
+        <span class="service-icon">🎛️</span>
+        <div class="service-name">Production Management</div>
+        <ul class="service-items">
+          <li>End-to-end management</li>
+          <li>Strategic event mapping</li>
+          <li>Technical precision</li>
+          <li>Cost transparency</li>
+        </ul>
+      </div>
+      <div class="service-card">
+        <span class="service-icon">🏆</span>
+        <div class="service-name">On-Site Execution</div>
+        <ul class="service-items">
+          <li>Expert event teams</li>
+          <li>Seamless coordination</li>
+          <li>Proactive problem-solving</li>
+          <li>VIP and guest experience</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 6: THE EXPERIENCE -->
+<section id="experience" class="dark">
+  <div class="wrap">
+    <div class="eyebrow">Section 06</div>
+    <h2 class="section-title">Two <em>Journeys.</em> One Ecosystem.</h2>
+    <p class="section-intro">The culture deck names it clearly: in the Unbridled Journey, you are the hero. In the Client's Journey, you become the guide. The ecosystem is designed to support both — because when our people are unleashed, our clients experience something they can't find anywhere else.</p>
+    <div class="divider"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-bottom:3rem">
+      <div style="background:rgba(255,255,255,.05);border:1px solid rgba(90,139,167,.2);border-radius:10px;padding:1.75rem">
+        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:1rem">The Team Member Journey</div>
+        <p style="font-size:14px;color:#c8d4dc;line-height:1.7;margin-bottom:1rem">Every team member in this ecosystem is on their own Hero's Journey — Collaborating in Destiny, Growing in Authenticity, Expanding in Generosity. The ecosystem exists to unleash that, not constrain it.</p>
+        <div class="journey-steps" style="grid-template-columns:1fr;margin:1rem 0">
+          <div class="journey-step"><h4>Collaborating in Destiny</h4><p>Shared purpose. Invited into the future. Not just hired — called.</p></div>
+          <div class="journey-step"><h4>Growing in Authenticity</h4><p>Free from hidden agendas. Trusted with the truth. Developed as a whole person.</p></div>
+          <div class="journey-step"><h4>Expanding in Generosity</h4><p>Success shared. Doing good by doing well. The work means something bigger.</p></div>
+        </div>
+        <div style="font-size:12px;color:#8aaabb;margin-top:1rem;font-style:italic">Supporting programs: Unbridled Identity (therapy coverage), Leadership Development, Response Fund, Community Service PTO, 1:1 meetings, UnbridledU</div>
+      </div>
+      <div style="background:rgba(255,255,255,.05);border:1px solid rgba(90,139,167,.2);border-radius:10px;padding:1.75rem">
+        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--blue);margin-bottom:1rem">The Client's Journey</div>
+        <p style="font-size:14px;color:#c8d4dc;line-height:1.7;margin-bottom:1rem">"The journey is our clients, but the weight doesn't have to be. That's why they hire Unbridled." Every client comes to us at a moment that matters — and we step in not as the hero, but as the guide.</p>
+        <div style="margin-top:1rem">
+          <div style="padding:.75rem 0;border-bottom:1px solid rgba(90,139,167,.15)">
+            <div style="font-size:13px;font-weight:600;color:var(--white);margin-bottom:.25rem">Build with Character</div>
+            <div style="font-size:12px;color:#8aaabb">We lead with character that precedes us — creating space where clients feel welcomed, trusted, and at ease.</div>
+          </div>
+          <div style="padding:.75rem 0;border-bottom:1px solid rgba(90,139,167,.15)">
+            <div style="font-size:13px;font-weight:600;color:var(--white);margin-bottom:.25rem">Lead the Change</div>
+            <div style="font-size:12px;color:#8aaabb">We create value through intentionally crafted solutions — adapting our process to each client, connecting ideas in fresh ways.</div>
+          </div>
+          <div style="padding:.75rem 0;border-bottom:1px solid rgba(90,139,167,.15)">
+            <div style="font-size:13px;font-weight:600;color:var(--white);margin-bottom:.25rem">Expand in Credibility</div>
+            <div style="font-size:12px;color:#8aaabb">We show up, follow through, and keep showing up. Trust compounds until our reputation starts speaking for us.</div>
+          </div>
+          <div style="padding:.75rem 0">
+            <div style="font-size:13px;font-weight:600;color:var(--white);margin-bottom:.25rem">Protect Our Community</div>
+            <div style="font-size:12px;color:#8aaabb">We put others first. We offer unreasonable hospitality. We create a space where people feel seen and like they truly belong.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:rgba(186,128,50,.08);border:1px solid rgba(186,128,50,.25);border-radius:10px;padding:1.5rem;text-align:center">
+      <p style="font-size:22px;font-weight:700;color:var(--white);margin-bottom:.5rem">Deliver Exceptional. Build World-Class.</p>
+      <p style="font-size:14px;color:#8aaabb;max-width:640px;margin:0 auto">Our strategy is to create experiences so intentional and human that people do more than attend — they engage, connect, and remember what it feels like to be part of something meaningful.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 7: VALUES -->
+<section id="values">
+  <div class="wrap">
+    <div class="eyebrow">Section 07</div>
+    <h2 class="section-title">The <em>Values</em> That Drive Everything</h2>
+    <p class="section-intro">Our values are not a poster on a wall. They are the operating system beneath the operating system — the reason clients trust us, team members grow here, and the ecosystem keeps compounding. Four cornerstones. Twelve ways of being.<br>This is who we are.</p>
+    <div class="divider"></div>
+
+    <div class="cornerstones">
+      <div class="cornerstone ch">
+        <h3>Character</h3>
+        <div class="cdef">Accept responsibility · Offer influence and initiative</div>
+        <ul>
+          <li>Be Trustworthy — act with integrity and good intention</li>
+          <li>Be Hopeful — look for solutions, believe in progress</li>
+          <li>Be Influential — contribute intentionally, strengthen the whole</li>
+        </ul>
+      </div>
+      <div class="cornerstone">
+        <h3>Change</h3>
+        <div class="cdef">Implement new strategies · Challenge norms</div>
+        <ul>
+          <li>Be Flexible — adapt willingly to what the moment requires</li>
+          <li>Be Imaginative — envision what's possible beyond the present</li>
+          <li>Be Resourceful — collaborate creatively to generate solutions</li>
+        </ul>
+      </div>
+      <div class="cornerstone cr">
+        <h3>Credibility</h3>
+        <div class="cdef">Deliver exceptional · Manifest opportunity</div>
+        <ul>
+          <li>Be Committed — dedicate fully to the work and purpose</li>
+          <li>Be Knowledgeable — apply experience to deliver quality</li>
+          <li>Be Accountable — own your actions and commitments</li>
+        </ul>
+      </div>
+      <div class="cornerstone cm">
+        <h3>Community</h3>
+        <div class="cdef">Serve each other · Our partners · The greater good</div>
+        <ul>
+          <li>Be Engaged — stay attentive and participate fully</li>
+          <li>Be Caring — show genuine concern through presence and support</li>
+          <li>Be Inclusive — ensure everyone feels valued and able to contribute</li>
+        </ul>
+      </div>
+    </div>
+
+    <div style="background:var(--navy);border-radius:12px;padding:clamp(1.5rem,4vw,2.5rem);margin-top:2.5rem">
+      <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:1.5rem;text-align:center">Our Purpose · Operationalized</div>
+      <div class="model-grid">
+        <div class="model-card philanthropy">
+          <div class="model-pct">20%</div>
+          <div class="model-name">Philanthropy</div>
+          <div class="model-desc">Giving back through UnbridledACTS — grounding us in doing good and empowering radical generosity in the world.</div>
+        </div>
+        <div class="model-card reinvest">
+          <div class="model-pct">20%</div>
+          <div class="model-name">Preparedness</div>
+          <div class="model-desc">Reinvested to build stability and prepare for what's ahead — so we can fearlessly navigate disruption and opportunity.</div>
+        </div>
+        <div class="model-card people">
+          <div class="model-pct">60%</div>
+          <div class="model-name">People and Partners</div>
+          <div class="model-desc">Distributed to the people and partners driving the work — rewarding contribution, fueling growth, honoring our doing good by doing well promise.</div>
+        </div>
+      </div>
+      <blockquote style="margin:2rem auto 0;max-width:680px;text-align:center;padding:1.5rem 2rem;border-top:2px solid rgba(90,139,167,.35);border-bottom:2px solid rgba(90,139,167,.35)">
+        <p style="font-size:17px;font-weight:600;color:var(--white);line-height:1.7;font-style:italic;letter-spacing:.01em">"It's a model that treats success not as an endpoint, but as a resource — one that's reinvested, redistributed, and reimagined to create lasting value."</p>
+      </blockquote>
+    </div>
+  </div>
+</section>
+
+
+<!-- SECTION 8: EXPERIENCE LAYER GRID -->
+<section id="grid" class="dark">
+  <div class="wrap">
+    <div class="eyebrow">Section 08</div>
+    <h2 class="section-title">The Experience <em>Layer Grid</em></h2>
+    <p class="section-intro">Six brands. One client promise. This grid shows who leads, who contributes, who supports — across every function from first contact to renewal. The CCO owns the standard. Presidents own the execution. Everyone owns the outcome.</p>
+    <div class="divider"></div>
+
+    <div style="background:var(--white);border-radius:10px;padding:1.5rem;margin-bottom:1.5rem;">
+      <div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--navy);margin-bottom:.75rem;font-weight:700;">Legend</div>
+      <div style="display:flex;flex-wrap:wrap;gap:15px;">
+        <div class="legend-item"><span class="legend-marker legend-marker-o"></span>CCO Owns/Champions</div>
+        <div class="legend-item"><span class="legend-marker legend-marker-l"></span>L = Leads</div>
+        <div class="legend-item"><span class="legend-marker legend-marker-c"></span>C = Contributes</div>
+        <div class="legend-item"><span class="legend-marker legend-marker-s"></span>S = Supports</div>
+        <div class="legend-item"><span class="legend-marker legend-marker-a"></span>~ = Aware</div>
+        <div class="legend-item"><span class="legend-marker legend-marker-ni"></span>— = Not involved</div>
+      </div>
+    </div>
+
+    <table class="grid-table">
+      <thead>
+        <tr>
+          <th>Function</th>
+          <th style="width:10%">CCO</th>
+          <th style="width:10%">Unbridled</th>
+          <th style="width:10%">Travel</th>
+          <th style="width:10%">Productions</th>
+          <th style="width:10%">Media</th>
+          <th style="width:10%">Gift'd</th>
+          <th style="width:10%">Orange Door</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="background:#fafafa;">
+          <th colspan="8" style="text-align:center;text-transform:uppercase;font-size:11px;letter-spacing:1px;color:var(--navy);">GROUP 01 — Client Acquisition & First Impression</th>
+        </tr>
+        <tr>
+          <th>Go-to-market strategy</th>
+          <td><strong><span class="marker marker-o">●</span>Leads</strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+          <td><strong><span class="marker marker-s">S</span>Brand story</strong></td>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+        </tr>
+        <tr>
+          <th>Sales pipeline & RFP response</th>
+          <td><strong><span class="marker marker-o">●</span>Orchestrates</strong></td>
+          <td><strong><span class="marker marker-l">L</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-s">S</span></strong></td>
+        </tr>
+        <tr>
+          <th>Brand impression & credibility</th>
+          <td><strong><span class="marker marker-o">●</span>Standards</strong></td>
+          <td><strong><span class="marker marker-l">L</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-l">L</span>Content</strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-s">S</span></strong></td>
+        </tr>
+
+        <tr style="background:#fafafa;">
+          <th colspan="8" style="text-align:center;text-transform:uppercase;font-size:11px;letter-spacing:1px;color:var(--navy);padding-top:20px;">GROUP 02 — Pre-Event Design & Planning</th>
+        </tr>
+        <tr>
+          <th>Event concept & experience design</th>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+          <td><strong><span class="marker marker-l">L</span></strong></td>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span>Production</strong></td>
+          <td><strong><span class="marker marker-c">C</span>Visual story</strong></td>
+          <td><strong><span class="marker marker-c">C</span>Gifting layer</strong></td>
+          <td><strong><span class="marker marker-s">S</span></strong></td>
+        </tr>
+        <tr>
+          <th>Venue sourcing & contracting</th>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+          <td><strong><span class="marker marker-l">L</span></strong></td>
+          <td><strong><span class="marker marker-s">S</span></strong></td>
+          <td><strong><span class="marker marker-s">S</span></strong></td>
+          <td><strong><span class="marker marker-s">S</span></strong></td>
+          <td><strong><span class="marker marker-s">S</span></strong></td>
+          <td><strong><span class="marker marker-s">S</span></strong></td>
+        </tr>
+        <tr>
+          <th>Travel & Transportation Planning</th>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+          <td><strong><span class="marker marker-s">S</span></strong></td>
+          <td><strong><span class="marker marker-l">L</span></strong></td>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+        </tr>
+        <tr>
+          <th>Gifting strategy & fulfillment design</th>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+          <td><strong><span class="marker marker-l">L</span></strong></td>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+        </tr>
+        <tr>
+          <th>Video & content pre-production</th>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+          <td><strong><span class="marker marker-s">S</span></strong></td>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-l">L</span></strong></td>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+        </tr>
+
+        <tr style="background:#fafafa;">
+          <th colspan="8" style="text-align:center;text-transform:uppercase;font-size:11px;letter-spacing:1px;color:var(--navy);padding-top:20px;">GROUP 03 — On-Site Execution & Live Experience</th>
+        </tr>
+        <tr>
+          <th>Event day operations</th>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+          <td><strong><span class="marker marker-l">L</span></strong></td>
+          <td><strong><span class="marker marker-s">S</span>Airport/hotel</strong></td>
+          <td><strong><span class="marker marker-l">L</span>Production</strong></td>
+          <td><strong><span class="marker marker-c">C</span>Live capture</strong></td>
+          <td><strong><span class="marker marker-c">C</span>Gifting moments</strong></td>
+          <td><strong><span class="marker marker-s">S</span></strong></td>
+        </tr>
+        <tr>
+          <th>Attendee experience & VIP care</th>
+          <td><strong><span class="marker marker-o">●</span>Champions</strong></td>
+          <td><strong><span class="marker marker-l">L</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-s">S</span></strong></td>
+          <td><strong><span class="marker marker-l">L</span>Delight moments</strong></td>
+          <td><strong><span class="marker marker-s">S</span></strong></td>
+        </tr>
+        <tr>
+          <th>Technical production & staging</th>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+          <td><strong><span class="marker marker-s">S</span></strong></td>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+          <td><strong><span class="marker marker-l">L</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span>Video wall/live</strong></td>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+        </tr>
+        <tr>
+          <th>Live video capture & broadcast</th>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+          <td><strong><span class="marker marker-s">S</span></strong></td>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-l">L</span></strong></td>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+        </tr>
+
+        <tr style="background:#fafafa;">
+          <th colspan="8" style="text-align:center;text-transform:uppercase;font-size:11px;letter-spacing:1px;color:var(--navy);padding-top:20px;">GROUP 04 — Post-Event Follow-Through & Retention</th>
+        </tr>
+        <tr>
+          <th>Client debrief & relationship stewardship</th>
+          <td><strong><span class="marker marker-o">●</span>Champions</strong></td>
+          <td><strong><span class="marker marker-l">L</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span>Final video</strong></td>
+          <td><strong><span class="marker marker-c">C</span>Thank-you gift</strong></td>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+        </tr>
+        <tr>
+          <th>Content & recap delivery</th>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+          <td><strong><span class="marker marker-s">S</span></strong></td>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-l">L</span></strong></td>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+          <td><strong><span class="marker marker-a">~</span></strong></td>
+        </tr>
+        <tr>
+          <th>Renewal & account growth</th>
+          <td><strong><span class="marker marker-o">●</span>Orchestrates</strong></td>
+          <td><strong><span class="marker marker-l">L</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-s">S</span></strong></td>
+        </tr>
+
+        <tr style="background:#fafafa;">
+          <th colspan="8" style="text-align:center;text-transform:uppercase;font-size:11px;letter-spacing:1px;color:var(--navy);padding-top:20px;">GROUP 05 — Ecosystem Engine & Shared Services</th>
+        </tr>
+        <tr>
+          <th>Cross-brand collaboration & referrals</th>
+          <td><strong><span class="marker marker-o">●</span>Leads</strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+        </tr>
+        <tr>
+          <th>Financial performance & P&L</th>
+          <td><strong><span class="marker marker-o">●</span>Sets targets</strong></td>
+          <td><strong><span class="marker marker-l">L</span>Unit P&L</strong></td>
+          <td><strong><span class="marker marker-l">L</span>Unit P&L</strong></td>
+          <td><strong><span class="marker marker-l">L</span>Unit P&L</strong></td>
+          <td><strong><span class="marker marker-l">L</span>Unit P&L</strong></td>
+          <td><strong><span class="marker marker-l">L</span>Unit P&L</strong></td>
+          <td><strong><span class="marker marker-l">L</span>Unit P&L</strong></td>
+        </tr>
+        <tr>
+          <th>Culture &amp; Values Exemplar <span style="display:block;font-size:10px;font-weight:400;color:var(--blue);letter-spacing:.5px;margin-top:3px">Universal Leadership Expectation</span></th>
+          <td><strong><span class="marker marker-o">●</span>Origin &amp; Guardian</strong></td>
+          <td><strong><span class="marker marker-l">L</span>Exemplar</strong></td>
+          <td><strong><span class="marker marker-l">L</span>Exemplar</strong></td>
+          <td><strong><span class="marker marker-l">L</span>Exemplar</strong></td>
+          <td><strong><span class="marker marker-l">L</span>Exemplar</strong></td>
+          <td><strong><span class="marker marker-l">L</span>Exemplar</strong></td>
+          <td><strong><span class="marker marker-l">L</span>Exemplar</strong></td>
+        </tr>
+        <tr>
+          <td colspan="8" style="background:rgba(90,139,167,.06);border:1px solid rgba(90,139,167,.2);border-radius:8px;padding:14px 18px;font-size:13px;color:var(--navy);line-height:1.65">
+            <strong style="color:var(--blue);text-transform:uppercase;font-size:11px;letter-spacing:1.5px;display:block;margin-bottom:6px">⚑ &nbsp;Universal Leadership Characteristic</strong>
+            Culture and values are not a department. They are not a policy. They are the lived behavior of every leader in every company, every day. The CCO is the origin and the guardian — but every President, every Managing Director, every leader at every level is expected to be a visible, daily <em>exemplar</em> of who we are and what we stand for. You don't delegate culture. You model it.
+          </td>
+        </tr>
+        <tr>
+          <th>Innovation & new service development</th>
+          <td><strong><span class="marker marker-o">●</span>Vision</strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+        </tr>
+        <tr>
+          <th>People development & talent</th>
+          <td><strong><span class="marker marker-o">●</span>Senior hires</strong></td>
+          <td><strong><span class="marker marker-l">L</span>Own team</strong></td>
+          <td><strong><span class="marker marker-l">L</span>Own team</strong></td>
+          <td><strong><span class="marker marker-l">L</span>Own team</strong></td>
+          <td><strong><span class="marker marker-l">L</span>Own team</strong></td>
+          <td><strong><span class="marker marker-l">L</span>Own team</strong></td>
+          <td><strong><span class="marker marker-l">L</span>Own team</strong></td>
+        </tr>
+
+        <tr class="client-experience-row">
+          <th colspan="8" style="text-align:center;text-transform:uppercase;font-size:11px;letter-spacing:1px;color:var(--navy);padding-top:20px;">GROUP 06 — The Client Experience Layer</th>
+        </tr>
+        <tr class="client-experience-row">
+          <th>Client hears ONE voice</th>
+          <td><strong><span class="marker marker-o">●</span>Owns</strong></td>
+          <td><strong><span class="marker marker-l">L</span>Delivers</strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+        </tr>
+        <tr class="client-experience-row">
+          <th>Client feels zero friction</th>
+          <td><strong><span class="marker marker-o">●</span>Champions</strong></td>
+          <td><strong><span class="marker marker-l">L</span></strong></td>
+          <td><strong><span class="marker marker-l">L</span></strong></td>
+          <td><strong><span class="marker marker-l">L</span></strong></td>
+          <td><strong><span class="marker marker-l">L</span></strong></td>
+          <td><strong><span class="marker marker-l">L</span></strong></td>
+          <td><strong><span class="marker marker-l">L</span></strong></td>
+        </tr>
+        <tr class="client-experience-row">
+          <th>Client is genuinely delighted</th>
+          <td><strong><span class="marker marker-o">●</span>Sets standard</strong></td>
+          <td><strong><span class="marker marker-l">L</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-l">L</span>Signature moments</strong></td>
+          <td><strong><span class="marker marker-s">S</span></strong></td>
+        </tr>
+        <tr class="client-experience-row">
+          <th>Client returns & refers</th>
+          <td><strong><span class="marker marker-o">●</span>Accountable</strong></td>
+          <td><strong><span class="marker marker-l">L</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+          <td><strong><span class="marker marker-c">C</span></strong></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="margin-top:2.5rem;background:rgba(186,128,50,.12);border:1px solid rgba(186,128,50,.3);border-left:4px solid var(--gold);border-radius:8px;padding:1.25rem 1.5rem">
+      <p style="font-size:14px;color:#c8d4dc;line-height:1.7;font-style:italic">"The client never sees this grid. They feel the result. One voice. Zero friction. Genuine delight. Every time."</p>
+    </div>
+
+  </div>
+</section>
+<!-- CLOSING QUOTE -->
+<div class="big-quote" style="background:var(--navy);border-color:rgba(90,139,167,.2)">
+  <blockquote style="color:var(--white)">"Not <strong>managing</strong> six companies.<br>Building six <strong>leaders</strong> who build companies that last hundreds of years.<br>Control is a ceiling. <em style="color:var(--gold);font-style:normal">Culture is a catalyst.</em>"</blockquote>
+  <cite>— The Live Events Ecosystem OS · Unbridled · 2026</cite>
+</div>
+
+<!-- CTA -->
+<div class="cta-section">
+  <h2>The Ecosystem is <em>Already Working.</em></h2>
+  <p>Six companies. Twelve service categories. One mission. The model works when the leaders lead — and the leadership leads by inspiring, influencing, and innovating rather than directing, controlling, and managing.</p>
+  <div class="cta-pills">
+    <div class="cta-pill"><strong>Vision</strong>Unleash Authentic Connection</div>
+    <div class="cta-pill"><strong>Mission</strong>Unbridle Human Purpose and Potential</div>
+    <div class="cta-pill"><strong>Purpose</strong>Doing Good by Doing Well</div>
+    <div class="cta-pill"><strong>Strategy</strong>Ecosystems Over Egosystems</div>
+    <div class="cta-pill"><strong>Model</strong>Hub + Spoke + Wheel</div>
+    <div class="cta-pill"><strong>Standard</strong>Deliver Exceptional. Build World-Class.</div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2026 <span>Unbridled Solutions</span> · Live Events Ecosystem Operating System · Confidential · Built by MC</p>
+</footer>
+
+</body>
+</html>
