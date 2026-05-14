@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Unbridled Way — Structure Comparison</title>
+<style>
+  :root {
+    --navy: #0f1923;
+    --blue: #5a8ba7;
+    --gold: #c9aa7c;
+    --white: #f5f5f5;
+    --gray: #4b4f54;
+    --light: #1e2d3a;
+    --accent: #3de8c8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--navy);
+    color: var(--white);
+    font-family: 'Georgia', serif;
+    padding: 40px 20px;
+    min-height: 100vh;
+  }
+  h1 {
+    text-align: center;
+    font-size: 1.5rem;
+    color: var(--gold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    text-align: center;
+    color: var(--blue);
+    font-size: 0.9rem;
+    margin-bottom: 40px;
+    font-style: italic;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  @media (max-width: 680px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+  .option {
+    background: var(--light);
+    border-radius: 12px;
+    padding: 28px 24px;
+    border: 1px solid rgba(90,139,167,0.3);
+  }
+  .option-label {
+    font-family: 'Georgia', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 6px;
+  }
+  .option-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--white);
+    margin-bottom: 4px;
+  }
+  .option-desc {
+    font-size: 0.8rem;
+    color: var(--blue);
+    font-style: italic;
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+  .section-block {
+    margin-bottom: 20px;
+  }
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .section-num {
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold);
+    white-space: nowrap;
+    padding-top: 2px;
+  }
+  .section-name {
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--white);
+    line-height: 1.3;
+  }
+  .section-tagline {
+    font-size: 0.75rem;
+    color: var(--accent);
+    font-style: italic;
+    margin-bottom: 10px;
+    padding-left: 2px;
+  }
+  .chapter-list {
+    list-style: none;
+    padding: 0;
+    border-left: 2px solid rgba(90,139,167,0.3);
+    margin-left: 4px;
+  }
+  .chapter-list li {
+    padding: 5px 0 5px 14px;
+    font-size: 0.82rem;
+    color: #ccc;
+    line-height: 1.4;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    position: relative;
+  }
+  .chapter-list li:last-child { border-bottom: none; }
+  .chapter-list li .ch-num {
+    color: var(--blue);
+    font-size: 0.7rem;
+    margin-right: 6px;
+  }
+  .chapter-list li.highlight {
+    color: var(--white);
+    font-weight: bold;
+  }
+  .chapter-list li.highlight .ch-num {
+    color: var(--gold);
+  }
+  .divider {
+    border: none;
+    border-top: 1px solid rgba(90,139,167,0.2);
+    margin: 18px 0;
+  }
+  .notes-block {
+    background: rgba(0,0,0,0.2);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-top: 16px;
+    font-size: 0.78rem;
+    color: #aaa;
+    line-height: 1.6;
+    font-style: italic;
+    border-left: 3px solid var(--gold);
+  }
+  .notes-block strong {
+    color: var(--gold);
+    font-style: normal;
+  }
+  .badge {
+    display: inline-block;
+    background: rgba(201,170,124,0.15);
+    color: var(--gold);
+    border: 1px solid rgba(201,170,124,0.3);
+    border-radius: 4px;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    margin-left: 8px;
+    vertical-align: middle;
+    font-family: 'Georgia', serif;
+  }
+  .badge.new {
+    background: rgba(61,232,200,0.1);
+    color: var(--accent);
+    border-color: rgba(61,232,200,0.3);
+  }
+  .footer {
+    text-align: center;
+    margin-top: 48px;
+    color: var(--gray);
+    font-size: 0.75rem;
+    font-style: italic;
+  }
+  .thesis-bar {
+    max-width: 960px;
+    margin: 0 auto 32px;
+    background: rgba(201,170,124,0.08);
+    border: 1px solid rgba(201,170,124,0.25);
+    border-radius: 10px;
+    padding: 18px 24px;
+    text-align: center;
+  }
+  .thesis-bar p {
+    font-size: 0.9rem;
+    color: var(--gold);
+    font-style: italic;
+    line-height: 1.7;
+  }
+  .thesis-bar strong {
+    color: var(--white);
+    font-style: normal;
+  }
+</style>
+</head>
+<body>
+
+<h1>The Unbridled Way</h1>
+<p class="subtitle">Doing Good by Doing Well — Book Structure Comparison</p>
+
+<div class="thesis-bar">
+  <p>
+    <strong>Destiny</strong> is the input &nbsp;·&nbsp;
+    <strong>Authenticity</strong> is the mechanism &nbsp;·&nbsp;
+    <strong>Generosity</strong> is the output<br>
+    <em>A Collaboration of Destiny. A Culture of Authenticity. A Business of Generosity.</em>
+  </p>
+</div>
+
+<div class="grid">
+
+  <!-- OPTION A -->
+  <div class="option">
+    <div class="option-label">Option A</div>
+    <div class="option-title">Original Structure <span class="badge">Current</span></div>
+    <div class="option-desc">3 parts, 15 chapters. Narrative arc: What we are → How we operate → The journey.</div>
+
+    <div class="section-block">
+      <div class="section-header">
+        <span class="section-num">Part One</span>
+        <span class="section-name">A New Kind of Company</span>
+      </div>
+      <ul class="chapter-list">
+        <li><span class="ch-num">01</span>Doing Good by Doing Well</li>
+        <li><span class="ch-num">02</span>Ecosystems Over Egosystems</li>
+        <li><span class="ch-num">03</span>Adjacent Opportunities</li>
+        <li><span class="ch-num">04</span>Build Hundreds of Companies Lasting Hundreds of Years</li>
+      </ul>
+    </div>
+
+    <div class="section-block">
+      <div class="section-header">
+        <span class="section-num">Part Two</span>
+        <span class="section-name">The Culture</span>
+      </div>
+      <ul class="chapter-list">
+        <li><span class="ch-num">05</span>Culture Is the Strategy</li>
+        <li><span class="ch-num">06</span>Unleash Authentic Connection</li>
+        <li><span class="ch-num">07</span>Unbridle Human Purpose and Potential</li>
+        <li><span class="ch-num">08</span>People Over Positions</li>
+        <li><span class="ch-num">09</span>The Values in Action</li>
+      </ul>
+    </div>
+
+    <div class="section-block">
+      <div class="section-header">
+        <span class="section-num">Part Three</span>
+        <span class="section-name">The Journey</span>
+      </div>
+      <ul class="chapter-list">
+        <li><span class="ch-num">10</span>The Hero's Journey</li>
+        <li class="highlight"><span class="ch-num">11</span>Destiny ← writing now</li>
+        <li><span class="ch-num">12</span>Authenticity</li>
+        <li><span class="ch-num">13</span>Generosity</li>
+        <li><span class="ch-num">14</span>The Client's Journey</li>
+        <li><span class="ch-num">15</span>Supporting the Journey</li>
+      </ul>
+    </div>
+
+    <div class="notes-block">
+      <strong>Strength:</strong> Clean narrative progression. Reader understands the company before going on the journey.<br><br>
+      <strong>Risk:</strong> "The Culture" section feels like a manual. The journey starts late — Chapter 10 of 15.
+    </div>
+  </div>
+
+  <!-- OPTION B -->
+  <div class="option">
+    <div class="option-label">Option B</div>
+    <div class="option-title">Stan's New Structure <span class="badge new">Proposed</span></div>
+    <div class="option-desc">3 sections, chapter count TBD. Each section is a complete idea — not just a category.</div>
+
+    <div class="section-block">
+      <div class="section-header">
+        <span class="section-num">Section One</span>
+        <span class="section-name">Doing Good by Doing Well</span>
+      </div>
+      <div class="section-tagline">The north star. What kind of company is this and why does it exist?</div>
+      <ul class="chapter-list">
+        <li><span class="ch-num">—</span>The Origin (Habakkuk. The elk. The download.)</li>
+        <li><span class="ch-num">—</span>A New Kind of Company</li>
+        <li><span class="ch-num">—</span>Ecosystems Over Egosystems</li>
+        <li><span class="ch-num">—</span>The 20/20/60 Model</li>
+        <li><span class="ch-num">—</span>Build Hundreds of Companies</li>
+      </ul>
+    </div>
+
+    <div class="section-block">
+      <div class="section-header">
+        <span class="section-num">Section Two</span>
+        <span class="section-name">A Collaboration of Destinies</span>
+      </div>
+      <div class="section-tagline">The future is already working toward you. Be tuned in. Let go.</div>
+      <ul class="chapter-list">
+        <li><span class="ch-num">—</span>The Hero's Journey</li>
+        <li class="highlight"><span class="ch-num">—</span>Destiny ← writing now</li>
+        <li><span class="ch-num">—</span>Adjacent Opportunities (identity-driven expansion)</li>
+        <li><span class="ch-num">—</span>The Client's Destiny (their journey too)</li>
+      </ul>
+    </div>
+
+    <div class="section-block">
+      <div class="section-header">
+        <span class="section-num">Section Three</span>
+        <span class="section-name">A Culture of Authenticity</span>
+      </div>
+      <div class="section-tagline">How a company activates destiny — for itself, its team, its clients.</div>
+      <ul class="chapter-list">
+        <li><span class="ch-num">—</span>Culture Is the Strategy</li>
+        <li><span class="ch-num">—</span>People Over Positions</li>
+        <li><span class="ch-num">—</span>Unbridle Human Purpose and Potential</li>
+        <li><span class="ch-num">—</span>Authenticity (stop performing, start being)</li>
+        <li><span class="ch-num">—</span>The Values in Action</li>
+        <li><span class="ch-num">—</span>Generosity — the output</li>
+      </ul>
+    </div>
+
+    <div class="notes-block">
+      <strong>Strength:</strong> Each section stands alone as a conviction. The journey starts in Section Two — not buried in Chapter 10. Generosity lands last as the payoff.<br><br>
+      <strong>Question:</strong> Chapter numbers to be confirmed — some chapters may merge or rename.
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  The Unbridled Way: Doing Good by Doing Well &nbsp;·&nbsp; A Practitioners' Testimony &nbsp;·&nbsp; Stan Bullis<br>
+  Structure comparison prepared by MC · May 2026
+</div>
+
+</body>
+</html>
