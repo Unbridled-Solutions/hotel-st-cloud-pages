@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Google Ads Dashboard | Unbridled</title>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1923;
+  --card: #1a2a38;
+  --border: #1e3347;
+  --gold: #c9aa7c;
+  --blue: #5a8ba7;
+  --green: #4caf7d;
+  --red: #e05a5a;
+  --amber: #e0a040;
+  --text: #e8e0d4;
+  --muted: #6a8a9a;
+  --white: #f5f5f5;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Josefin Sans', sans-serif; font-weight: 300; padding: 0 0 4rem; }
+
+.topbar { background: #0a1219; border-bottom: 1px solid var(--border); padding: .75rem clamp(1rem,4vw,2rem); display: flex; align-items: center; justify-content: space-between; }
+.topbar-brand { font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--white); }
+.topbar-brand span { color: var(--blue); }
+.topbar-meta { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+
+.hero { background: linear-gradient(180deg, #0a1219 0%, var(--bg) 100%); padding: 2.5rem clamp(1rem,4vw,2rem) 1.5rem; border-bottom: 1px solid var(--border); }
+.hero-eyebrow { font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: var(--blue); margin-bottom: .5rem; }
+.hero-title { font-size: clamp(22px,4vw,36px); font-weight: 700; color: var(--white); letter-spacing: -.5px; margin-bottom: .35rem; }
+.hero-title em { color: var(--gold); font-style: normal; }
+.hero-sub { font-size: 12px; color: var(--muted); letter-spacing: 1px; }
+
+.wrap { max-width: 1060px; margin: 0 auto; padding: 0 clamp(1rem,4vw,2rem); }
+
+/* KPI STRIP */
+.kpi-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%,200px),1fr)); gap: 12px; margin: 2rem 0; }
+.kpi { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem 1.5rem; }
+.kpi-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: .5rem; }
+.kpi-value { font-size: clamp(22px,3vw,30px); font-weight: 700; color: var(--gold); line-height: 1; margin-bottom: .25rem; }
+.kpi-sub { font-size: 11px; color: var(--muted); }
+
+/* CAMPAIGN CARDS */
+.campaign-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%,460px),1fr)); gap: 16px; margin-bottom: 2rem; }
+.camp-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.camp-header { padding: 1.25rem 1.5rem .75rem; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.camp-name { font-size: 14px; font-weight: 700; color: var(--white); margin-bottom: .2rem; }
+.camp-sub { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+.status-badge { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; padding: .25rem .75rem; border-radius: 20px; white-space: nowrap; font-weight: 700; }
+.status-live { background: rgba(76,175,125,.15); color: var(--green); border: 1px solid rgba(76,175,125,.3); }
+.status-review { background: rgba(224,160,64,.15); color: var(--amber); border: 1px solid rgba(224,160,64,.3); }
+.status-early { background: rgba(90,139,167,.15); color: var(--blue); border: 1px solid rgba(90,139,167,.3); }
+
+.camp-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 0; }
+.stat { padding: .9rem 1.1rem; border-right: 1px solid var(--border); }
+.stat:last-child { border-right: none; }
+.stat-label { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: .35rem; }
+.stat-val { font-size: 18px; font-weight: 700; color: var(--white); line-height: 1; }
+.stat-val.gold { color: var(--gold); }
+.stat-val.green { color: var(--green); }
+
+/* SPARKLINE AREA */
+.camp-chart { padding: 1rem 1.5rem 1.25rem; border-top: 1px solid var(--border); }
+.chart-label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: .6rem; }
+.bars { display: flex; align-items: flex-end; gap: 4px; height: 48px; }
+.bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; }
+.bar { width: 100%; border-radius: 3px 3px 0 0; min-height: 2px; transition: height .3s; }
+.bar.impr { background: var(--blue); opacity: .7; }
+.bar.clicks { background: var(--gold); }
+.bar-date { font-size: 8px; color: var(--muted); text-align: center; margin-top: 2px; }
+
+/* INSIGHT */
+.insight { margin: 0 0 2rem; background: rgba(201,170,124,.06); border: 1px solid rgba(201,170,124,.2); border-radius: 10px; padding: 1.25rem 1.5rem; }
+.insight-label { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: .75rem; }
+.insight ul { list-style: none; padding: 0; }
+.insight ul li { font-size: 13px; color: var(--text); padding: .4rem 0; border-bottom: 1px solid rgba(255,255,255,.04); line-height: 1.55; }
+.insight ul li:last-child { border-bottom: none; }
+.insight ul li::before { content: '→ '; color: var(--gold); }
+
+.updated { text-align: center; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-top: 2rem; }
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <span class="topbar-brand">Unbridled <span>Ads</span></span>
+  <span class="topbar-meta">Google Ads · Live Dashboard</span>
+</nav>
+
+<div class="hero">
+  <div class="wrap">
+    <p class="hero-eyebrow">Hotel St. Cloud &amp; Fremont Provisions</p>
+    <h1 class="hero-title">Campaign <em>Dashboard</em></h1>
+    <p class="hero-sub">Last updated: May 14, 2026 &nbsp;·&nbsp; All times Mountain</p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- KPI STRIP -->
+  <div class="kpi-strip">
+    <div class="kpi">
+      <div class="kpi-label">7-Day Impressions</div>
+      <div class="kpi-value">2,498</div>
+      <div class="kpi-sub">Across all campaigns</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">7-Day Clicks</div>
+      <div class="kpi-value">189</div>
+      <div class="kpi-sub">Real people, real intent</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">7-Day Spend</div>
+      <div class="kpi-value">$331.19</div>
+      <div class="kpi-sub">Across active campaigns</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Avg CTR</div>
+      <div class="kpi-value">7.6%</div>
+      <div class="kpi-sub">Bars &amp; Bathrooms leading</div>
+    </div>
+  </div>
+
+  <!-- CAMPAIGN CARDS -->
+  <div class="campaign-grid">
+
+    <!-- BARS & BATHROOMS -->
+    <div class="camp-card">
+      <div class="camp-header">
+        <div>
+          <div class="camp-name">🍸 Bars &amp; Bathrooms</div>
+          <div class="camp-sub">Hotel St. Cloud · 11am–9pm MT · $50/day</div>
+        </div>
+        <span class="status-badge status-live">Live</span>
+      </div>
+      <div class="camp-stats">
+        <div class="stat"><div class="stat-label">7-Day Impr</div><div class="stat-val">1,844</div></div>
+        <div class="stat"><div class="stat-label">7-Day Clicks</div><div class="stat-val gold">133</div></div>
+        <div class="stat"><div class="stat-label">CTR</div><div class="stat-val green">7.2%</div></div>
+        <div class="stat"><div class="stat-label">7-Day Spend</div><div class="stat-val">$210.72</div></div>
+      </div>
+      <div class="camp-chart">
+        <div class="chart-label">Daily Clicks — Last 7 Days</div>
+        <div class="bars">
+          <div class="bar-wrap"><div class="bar clicks" style="height:61%"></div><div class="bar-date">May 8</div></div>
+          <div class="bar-wrap"><div class="bar clicks" style="height:78%"></div><div class="bar-date">May 9</div></div>
+          <div class="bar-wrap"><div class="bar clicks" style="height:69%"></div><div class="bar-date">May 10</div></div>
+          <div class="bar-wrap"><div class="bar clicks" style="height:61%"></div><div class="bar-date">May 11</div></div>
+          <div class="bar-wrap"><div class="bar clicks" style="height:100%"></div><div class="bar-date">May 12</div></div>
+          <div class="bar-wrap"><div class="bar clicks" style="height:4%"></div><div class="bar-date">May 13</div></div>
+          <div class="bar-wrap"><div class="bar clicks" style="height:4%"></div><div class="bar-date">Today</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROYAL GORGE BASECAMP -->
+    <div class="camp-card">
+      <div class="camp-header">
+        <div>
+          <div class="camp-name">🏔 Royal Gorge Basecamp</div>
+          <div class="camp-sub">Hotel St. Cloud · 11am–9pm MT</div>
+        </div>
+        <span class="status-badge status-live">Live</span>
+      </div>
+      <div class="camp-stats">
+        <div class="stat"><div class="stat-label">7-Day Impr</div><div class="stat-val">567</div></div>
+        <div class="stat"><div class="stat-label">7-Day Clicks</div><div class="stat-val gold">51</div></div>
+        <div class="stat"><div class="stat-label">CTR</div><div class="stat-val green">9.0%</div></div>
+        <div class="stat"><div class="stat-label">7-Day Spend</div><div class="stat-val">$108.50</div></div>
+      </div>
+      <div class="camp-chart">
+        <div class="chart-label">Daily Clicks — Last 7 Days</div>
+        <div class="bars">
+          <div class="bar-wrap"><div class="bar clicks" style="height:4%"></div><div class="bar-date">May 8</div></div>
+          <div class="bar-wrap"><div class="bar clicks" style="height:39%"></div><div class="bar-date">May 9</div></div>
+          <div class="bar-wrap"><div class="bar clicks" style="height:50%"></div><div class="bar-date">May 10</div></div>
+          <div class="bar-wrap"><div class="bar clicks" style="height:42%"></div><div class="bar-date">May 11</div></div>
+          <div class="bar-wrap"><div class="bar clicks" style="height:6%"></div><div class="bar-date">May 12</div></div>
+          <div class="bar-wrap"><div class="bar clicks" style="height:6%"></div><div class="bar-date">May 13</div></div>
+          <div class="bar-wrap"><div class="bar clicks" style="height:4%"></div><div class="bar-date">Today</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STANDARD OIL -->
+    <div class="camp-card">
+      <div class="camp-header">
+        <div>
+          <div class="camp-name">☕ Standard Oil Coffee Co</div>
+          <div class="camp-sub">7am–2pm MT · Live since May 11</div>
+        </div>
+        <span class="status-badge status-early">Early Days</span>
+      </div>
+      <div class="camp-stats">
+        <div class="stat"><div class="stat-label">7-Day Impr</div><div class="stat-val">87</div></div>
+        <div class="stat"><div class="stat-label">7-Day Clicks</div><div class="stat-val gold">5</div></div>
+        <div class="stat"><div class="stat-label">CTR</div><div class="stat-val green">5.7%</div></div>
+        <div class="stat"><div class="stat-label">7-Day Spend</div><div class="stat-val">$11.97</div></div>
+      </div>
+      <div class="camp-chart">
+        <div class="chart-label">Daily Clicks — Last 7 Days</div>
+        <div class="bars">
+          <div class="bar-wrap"><div class="bar clicks" style="height:4%"></div><div class="bar-date">May 8</div></div>
+          <div class="bar-wrap"><div class="bar clicks" style="height:4%"></div><div class="bar-date">May 9</div></div>
+          <div class="bar-wrap"><div class="bar clicks" style="height:4%"></div><div class="bar-date">May 10</div></div>
+          <div class="bar-wrap"><div class="bar clicks" style="height:4%"></div><div class="bar-date">May 11</div></div>
+          <div class="bar-wrap"><div class="bar clicks" style="height:100%"></div><div class="bar-date">May 12</div></div>
+          <div class="bar-wrap"><div class="bar clicks" style="height:67%"></div><div class="bar-date">May 13</div></div>
+          <div class="bar-wrap"><div class="bar clicks" style="height:33%"></div><div class="bar-date">Today</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FP SPORTS -->
+    <div class="camp-card">
+      <div class="camp-header">
+        <div>
+          <div class="camp-name">🏈 FP Sports Bar</div>
+          <div class="camp-sub">Fremont Provisions · Ad in review</div>
+        </div>
+        <span class="status-badge status-review">In Review</span>
+      </div>
+      <div class="camp-stats">
+        <div class="stat"><div class="stat-label">7-Day Impr</div><div class="stat-val">—</div></div>
+        <div class="stat"><div class="stat-label">7-Day Clicks</div><div class="stat-val">—</div></div>
+        <div class="stat"><div class="stat-label">CTR</div><div class="stat-val">—</div></div>
+        <div class="stat"><div class="stat-label">7-Day Spend</div><div class="stat-val">$0</div></div>
+      </div>
+      <div class="camp-chart">
+        <div class="chart-label">Awaiting ad approval — rebuilt after policy flag</div>
+        <div class="bars">
+          <div class="bar-wrap"><div class="bar clicks" style="height:2%"></div><div class="bar-date">May 8</div></div>
+          <div class="bar-wrap"><div class="bar clicks" style="height:2%"></div><div class="bar-date">May 9</div></div>
+          <div class="bar-wrap"><div class="bar clicks" style="height:2%"></div><div class="bar-date">May 10</div></div>
+          <div class="bar-wrap"><div class="bar clicks" style="height:2%"></div><div class="bar-date">May 11</div></div>
+          <div class="bar-wrap"><div class="bar clicks" style="height:2%"></div><div class="bar-date">May 12</div></div>
+          <div class="bar-wrap"><div class="bar clicks" style="height:2%"></div><div class="bar-date">May 13</div></div>
+          <div class="bar-wrap"><div class="bar clicks" style="height:2%"></div><div class="bar-date">Today</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MC INSIGHT -->
+  <div class="insight">
+    <div class="insight-label">⚡ MC's Read — May 14</div>
+    <ul>
+      <li><strong>Bars &amp; Bathrooms</strong> is the standout. 7.2% CTR on local search is excellent — the weekend (May 12) nearly maxed the budget. That's the market responding.</li>
+      <li><strong>Royal Gorge Basecamp</strong> has the highest CTR at 9.0% — people searching Royal Gorge activities are clicking. Mid-week dip is normal. Watch the weekend.</li>
+      <li><strong>Standard Oil</strong> just launched May 11 — too early to draw conclusions but early CPCs are clean and the morning time window looks right.</li>
+      <li><strong>FP Sports Bar</strong> is waiting on ad approval after a policy flag was resolved. Should clear soon — no action needed on your end.</li>
+      <li><strong>Recommendation:</strong> Let all four run through this weekend before making any budget adjustments. The May 12 data suggests weekends are where the spend earns its keep.</li>
+    </ul>
+  </div>
+
+  <p class="updated">Dashboard · May 14, 2026 · Unbridled Ecosystem · All campaigns Mountain Time</p>
+</div>
+
+</body>
+</html>
