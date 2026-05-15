@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HR Resource Hub | Unbridled + Hotel St. Cloud</title>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1923;
+  --navy: #1a2e3b;
+  --card: #162433;
+  --border: #1e3347;
+  --gold: #c9aa7c;
+  --blue: #5a8ba7;
+  --green: #4caf7d;
+  --amber: #e0a040;
+  --purple: #9b6ec8;
+  --red: #e05a5a;
+  --text: #e8e0d4;
+  --muted: #6a8a9a;
+  --white: #f5f5f5;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Josefin Sans', sans-serif; font-weight: 300; min-height: 100vh; padding-bottom: 5rem; }
+
+/* TOPBAR */
+.topbar { background: #0a1219; border-bottom: 1px solid var(--border); padding: .75rem clamp(1rem,4vw,2.5rem); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+.topbar-brand { font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--white); }
+.topbar-brand span { color: var(--blue); }
+.topbar-meta { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+
+/* HERO */
+.hero { background: linear-gradient(180deg, #0a1219 0%, var(--bg) 100%); border-bottom: 1px solid var(--border); padding: 2.5rem clamp(1rem,4vw,2.5rem) 2rem; text-align: center; position: relative; }
+.hero::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+.hero-eyebrow { font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: var(--blue); margin-bottom: .6rem; }
+.hero-title { font-size: clamp(26px,5vw,46px); font-weight: 700; color: var(--white); letter-spacing: -.5px; margin-bottom: .5rem; line-height: 1.1; }
+.hero-title em { color: var(--gold); font-style: normal; }
+.hero-sub { font-size: 13px; color: var(--muted); max-width: 540px; margin: 0 auto; line-height: 1.65; letter-spacing: .3px; }
+
+/* WRAP */
+.wrap { max-width: 1000px; margin: 0 auto; padding: 0 clamp(1rem,4vw,1.5rem); }
+
+/* SECTION */
+.section { margin: 2.5rem 0; }
+.section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 1.25rem; padding-bottom: .6rem; border-bottom: 1px solid var(--border); }
+.section-icon { font-size: 20px; }
+.section-title { font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); }
+.section-count { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-left: auto; }
+
+/* CARD GRID */
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 14px; }
+
+/* RESOURCE CARD */
+.res-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; gap: .75rem; transition: border-color .2s, transform .15s; text-decoration: none; color: inherit; position: relative; overflow: hidden; }
+.res-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.res-card:hover { border-color: var(--blue); transform: translateY(-2px); }
+
+/* Color accents per category */
+.cat-policy::before    { background: var(--blue); }
+.cat-training::before  { background: var(--gold); }
+.cat-quiz::before      { background: var(--green); }
+.cat-forms::before     { background: var(--amber); }
+.cat-tools::before     { background: var(--purple); }
+.cat-manual::before    { background: #e05a5a; }
+
+.res-icon { font-size: 26px; margin-bottom: .1rem; }
+.res-category { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+.res-title { font-size: 14px; font-weight: 700; color: var(--white); line-height: 1.3; }
+.res-desc { font-size: 12px; color: var(--muted); line-height: 1.55; flex: 1; }
+.res-footer { display: flex; align-items: center; justify-content: space-between; margin-top: .25rem; }
+.res-tag { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; padding: .2rem .7rem; border-radius: 10px; font-weight: 700; }
+.tag-live    { background: rgba(76,175,125,.12); color: var(--green); border: 1px solid rgba(76,175,125,.25); }
+.tag-quiz    { background: rgba(201,170,124,.12); color: var(--gold); border: 1px solid rgba(201,170,124,.25); }
+.tag-form    { background: rgba(224,160,64,.12); color: var(--amber); border: 1px solid rgba(224,160,64,.25); }
+.tag-tool    { background: rgba(155,110,200,.12); color: var(--purple); border: 1px solid rgba(155,110,200,.25); }
+.tag-draft   { background: rgba(90,139,167,.12); color: var(--blue); border: 1px solid rgba(90,139,167,.25); }
+.tag-doc     { background: rgba(224,90,90,.12); color: var(--red); border: 1px solid rgba(224,90,90,.25); }
+.res-arrow { font-size: 14px; color: var(--muted); }
+
+/* FOOTER */
+footer { text-align: center; padding: 3rem 1rem 1rem; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #2a4060; }
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <span class="topbar-brand">Unbridled <span>HR</span></span>
+  <span class="topbar-meta">People &amp; Possibilities · Resource Hub</span>
+</nav>
+
+<div class="hero">
+  <p class="hero-eyebrow">Unbridled + Hotel St. Cloud</p>
+  <h1 class="hero-title">HR <em>Resource Hub</em></h1>
+  <p class="hero-sub">Policies, training, quizzes, forms, and tools for the Unbridled ecosystem. Everything in one place.</p>
+</div>
+
+<div class="wrap">
+
+  <!-- POLICIES & CULTURE -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-icon">📋</span>
+      <span class="section-title">Policies &amp; Culture</span>
+      <span class="section-count">2 resources</span>
+    </div>
+    <div class="card-grid">
+
+      <a href="https://offers.hotelstcloud.com/assets/unbridled-work-from-office-policy.html" target="_blank" class="res-card cat-policy">
+        <div class="res-icon">🏢</div>
+        <div class="res-category">Policy · Unbridled Solutions</div>
+        <div class="res-title">Work From Office Policy</div>
+        <div class="res-desc">80/20 in-office policy. Tue/Wed/Thu anchor days, Mon/Fri flexible. Includes rationale, corporate comparisons (Apple, Amazon, Goldman), and a note from Stan.</div>
+        <div class="res-footer">
+          <span class="res-tag tag-live">Live</span>
+          <span class="res-arrow">→</span>
+        </div>
+      </a>
+
+      <a href="https://offers.hotelstcloud.com/assets/unbridled-way-ch1.html" target="_blank" class="res-card cat-policy">
+        <div class="res-icon">📖</div>
+        <div class="res-category">Culture · Unbridled</div>
+        <div class="res-title">Doing Good by Doing Well — Chapter 1</div>
+        <div class="res-desc">The foundational culture document. Profit and purpose as multipliers. The 20/20/60 model. The COVID story. For onboarding and culture alignment.</div>
+        <div class="res-footer">
+          <span class="res-tag tag-live">Live</span>
+          <span class="res-arrow">→</span>
+        </div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- TRAINING MANUALS -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-icon">📚</span>
+      <span class="section-title">Training Manuals</span>
+      <span class="section-count">2 resources</span>
+    </div>
+    <div class="card-grid">
+
+      <a href="https://offers.hotelstcloud.com/assets/onsite-manual-01-introduction.html" target="_blank" class="res-card cat-manual">
+        <div class="res-icon">🎪</div>
+        <div class="res-category">Manual · Unbridled Live Events</div>
+        <div class="res-title">Onsite Standards Manual — Section 01: Introduction</div>
+        <div class="res-desc">What unreasonable hospitality means at Unbridled. The four service standards (Likable, Creative, Credible, Quick to Respond). Community Cornerstones. Guidara, Disney, Ritz-Carlton quotes. 10 sections to follow.</div>
+        <div class="res-footer">
+          <span class="res-tag tag-live">Live · Section 1 of 11</span>
+          <span class="res-arrow">→</span>
+        </div>
+      </a>
+
+      <a href="https://offers.hotelstcloud.com/assets/table-service-training-hsc.html" target="_blank" class="res-card cat-training">
+        <div class="res-icon">🍽️</div>
+        <div class="res-category">Training · Hotel St. Cloud</div>
+        <div class="res-title">Table Service Training</div>
+        <div class="res-desc">Front-of-house service standards for Hotel St. Cloud. Covers greeting, seating, order sequence, allergens, upselling, complaint handling, the farewell. HSC branded.</div>
+        <div class="res-footer">
+          <span class="res-tag tag-live">Live</span>
+          <span class="res-arrow">→</span>
+        </div>
+      </a>
+
+      <a href="https://offers.hotelstcloud.com/assets/table-service-training.html" target="_blank" class="res-card cat-training">
+        <div class="res-icon">🍽️</div>
+        <div class="res-category">Training · Unbridled Hospitality</div>
+        <div class="res-title">Table Service Training — Unbridled Brand</div>
+        <div class="res-desc">Same table service curriculum in the Unbridled brand theme. Use for Unbridled-branded venues and general hospitality onboarding.</div>
+        <div class="res-footer">
+          <span class="res-tag tag-live">Live</span>
+          <span class="res-arrow">→</span>
+        </div>
+      </a>
+
+      <a href="https://offers.hotelstcloud.com/assets/table-service-training-generic.html" target="_blank" class="res-card cat-training">
+        <div class="res-icon">🍽️</div>
+        <div class="res-category">Training · Generic / Shareable</div>
+        <div class="res-title">Table Service Training — Generic</div>
+        <div class="res-desc">Unbranded version of the table service training. Safe to share externally — with vendors, partner venues, or hospitality associations.</div>
+        <div class="res-footer">
+          <span class="res-tag tag-live">Live</span>
+          <span class="res-arrow">→</span>
+        </div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- CERTIFICATION QUIZZES -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-icon">✅</span>
+      <span class="section-title">Certification Quizzes</span>
+      <span class="section-count">2 resources</span>
+    </div>
+    <div class="card-grid">
+
+      <a href="https://offers.hotelstcloud.com/assets/dress-attire-quiz-hsc.html" target="_blank" class="res-card cat-quiz">
+        <div class="res-icon">👔</div>
+        <div class="res-category">Quiz · Hotel St. Cloud</div>
+        <div class="res-title">Dress Attire Standards — Certification Quiz</div>
+        <div class="res-desc">10-question scored quiz on four-star dress standards. Covers footwear, hair, uniform condition, jewelry, fragrance, nails, name badge, tattoo policy, and the why behind standards. Instant scoring with grade badge.</div>
+        <div class="res-footer">
+          <span class="res-tag tag-quiz">10 Questions · Scored</span>
+          <span class="res-arrow">→</span>
+        </div>
+      </a>
+
+      <a href="https://offers.hotelstcloud.com/assets/table-service-training-hsc.html" target="_blank" class="res-card cat-quiz">
+        <div class="res-icon">🧾</div>
+        <div class="res-category">Quiz · Hotel St. Cloud</div>
+        <div class="res-title">Table Service Standards — Certification Quiz</div>
+        <div class="res-desc">15-question scored quiz on front-of-house service standards. Allergen handling, alcohol service, upselling, complaint resolution, and more. Pass/fail with full answer review.</div>
+        <div class="res-footer">
+          <span class="res-tag tag-quiz">15 Questions · Scored</span>
+          <span class="res-arrow">→</span>
+        </div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- HR FORMS & TOOLS -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-icon">📝</span>
+      <span class="section-title">HR Forms &amp; Tools</span>
+      <span class="section-count">4 resources</span>
+    </div>
+    <div class="card-grid">
+
+      <a href="https://offers.hotelstcloud.com/hr/new-hire/" target="_blank" class="res-card cat-forms">
+        <div class="res-icon">🆕</div>
+        <div class="res-category">Form · All Companies</div>
+        <div class="res-title">New Hire Form</div>
+        <div class="res-desc">Submit new team member information for onboarding. Triggers HR workflow across the Unbridled ecosystem.</div>
+        <div class="res-footer">
+          <span class="res-tag tag-form">HR Form</span>
+          <span class="res-arrow">→</span>
+        </div>
+      </a>
+
+      <a href="https://offers.hotelstcloud.com/hr/employee-update/" target="_blank" class="res-card cat-forms">
+        <div class="res-icon">✏️</div>
+        <div class="res-category">Form · All Companies</div>
+        <div class="res-title">Employee Update Form</div>
+        <div class="res-desc">Submit changes to an existing team member's record — role, compensation, department, manager, or status updates.</div>
+        <div class="res-footer">
+          <span class="res-tag tag-form">HR Form</span>
+          <span class="res-arrow">→</span>
+        </div>
+      </a>
+
+      <a href="https://offers.hotelstcloud.com/hr/termination/" target="_blank" class="res-card cat-forms">
+        <div class="res-icon">📤</div>
+        <div class="res-category">Form · All Companies</div>
+        <div class="res-title">Termination Form</div>
+        <div class="res-desc">Initiate offboarding for a departing team member. Captures last day, reason, equipment return, and final pay details.</div>
+        <div class="res-footer">
+          <span class="res-tag tag-form">HR Form</span>
+          <span class="res-arrow">→</span>
+        </div>
+      </a>
+
+      <a href="https://offers.hotelstcloud.com/assets/room-capacity-calculator.html" target="_blank" class="res-card cat-tools">
+        <div class="res-icon">📐</div>
+        <div class="res-category">Tool · Live Events</div>
+        <div class="res-title">Room Capacity Calculator</div>
+        <div class="res-desc">Enter room dimensions and instantly calculate capacity for rounds of 8, rounds of 10, theater, classroom, and chevron seating. Essential for event planning and venue proposals.</div>
+        <div class="res-footer">
+          <span class="res-tag tag-tool">Planning Tool</span>
+          <span class="res-arrow">→</span>
+        </div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- HOSPITALITY TOOLS -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-icon">🍷</span>
+      <span class="section-title">Hospitality Tools</span>
+      <span class="section-count">1 resource</span>
+    </div>
+    <div class="card-grid">
+
+      <a href="https://offers.hotelstcloud.com/wine-finder/" target="_blank" class="res-card cat-tools">
+        <div class="res-icon">🍷</div>
+        <div class="res-category">Tool · Hotel St. Cloud</div>
+        <div class="res-title">Wine Finder App</div>
+        <div class="res-desc">Interactive wine pairing and selection tool for Hotel St. Cloud team members and guests. Helps staff confidently guide guests through the wine list by flavor profile, varietal, and food pairing.</div>
+        <div class="res-footer">
+          <span class="res-tag tag-tool">Guest-Facing Tool</span>
+          <span class="res-arrow">→</span>
+        </div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- JOB DESCRIPTIONS -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-icon">💼</span>
+      <span class="section-title">Job Descriptions</span>
+      <span class="section-count">1 resource</span>
+    </div>
+    <div class="card-grid">
+
+      <a href="#" target="_blank" class="res-card cat-forms" style="opacity:.7;cursor:default">
+        <div class="res-icon">🏨</div>
+        <div class="res-category">Job Description · Hotel St. Cloud</div>
+        <div class="res-title">GM / F&amp;B Director — Hotel St. Cloud</div>
+        <div class="res-desc">Full job description for the General Manager and Food &amp; Beverage Director role. Includes About the Region (Cañon City), Fremont Public House, Frontier New American identity, and executive P&amp;L requirements.</div>
+        <div class="res-footer">
+          <span class="res-tag tag-doc">.docx — Download</span>
+          <span class="res-arrow">↓</span>
+        </div>
+      </a>
+
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  Unbridled + Hotel St. Cloud &nbsp;·&nbsp; HR Resource Hub &nbsp;·&nbsp; People &amp; Possibilities &nbsp;·&nbsp; 2026
+</footer>
+
+</body>
+</html>
