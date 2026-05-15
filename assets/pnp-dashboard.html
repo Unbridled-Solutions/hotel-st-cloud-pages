@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="refresh" content="300">
+<title>PNP Registrations Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1923; --navy: #1a2e3b; --card: #162433; --border: #1e3347;
+  --gold: #c9aa7c; --blue: #5a8ba7; --green: #4caf7d; --amber: #e0a040;
+  --purple: #9b6ec8; --text: #e8e0d4; --muted: #6a8a9a; --white: #f5f5f5;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Josefin Sans', sans-serif; font-weight: 300; min-height: 100vh; padding-bottom: 4rem; }
+
+.topbar { background: #0a1219; border-bottom: 1px solid var(--border); padding: .75rem clamp(1rem,4vw,2rem); display: flex; align-items: center; justify-content: space-between; }
+.topbar-brand { font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--white); }
+.topbar-brand span { color: var(--gold); }
+.topbar-right { display: flex; align-items: center; gap: 1rem; }
+.btn-refresh { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; background: transparent; border: 1px solid var(--border); color: var(--muted); padding: .3rem .85rem; border-radius: 6px; cursor: pointer; font-family: 'Josefin Sans', sans-serif; transition: all .2s; }
+.btn-refresh:hover { border-color: var(--blue); color: var(--blue); }
+
+.hero { background: linear-gradient(180deg, #0a1219 0%, var(--bg) 100%); border-bottom: 1px solid var(--border); padding: 1.75rem clamp(1rem,4vw,2rem) 1.5rem; position: relative; }
+.hero::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+.hero-title { font-size: clamp(20px,3.5vw,32px); font-weight: 700; color: var(--white); letter-spacing: -.5px; margin-bottom: .25rem; }
+.hero-title em { color: var(--gold); font-style: normal; }
+.hero-sub { font-size: 11px; color: var(--muted); letter-spacing: 1px; }
+
+.wrap { max-width: 1100px; margin: 0 auto; padding: 0 clamp(1rem,4vw,1.5rem); }
+
+/* KPI STRIP */
+.kpi-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 10px; margin: 1.5rem 0; }
+.kpi { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.1rem; }
+.kpi-val { font-size: 28px; font-weight: 700; line-height: 1; margin-bottom: .2rem; }
+.kpi-lbl { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+.kpi.k-total .kpi-val { color: var(--gold); }
+.kpi.k-t1 .kpi-val { color: var(--blue); }
+.kpi.k-t2 .kpi-val { color: var(--green); }
+.kpi.k-t3 .kpi-val { color: var(--amber); }
+.kpi.k-t4 .kpi-val { color: var(--purple); }
+.kpi.k-hotel .kpi-val { color: var(--white); }
+
+/* FILTER BAR */
+.filter-bar { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.filter-btn { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; padding: .3rem 1rem; border-radius: 20px; border: 1px solid var(--border); color: var(--muted); background: transparent; cursor: pointer; font-family: 'Josefin Sans', sans-serif; transition: all .2s; }
+.filter-btn:hover { border-color: var(--blue); color: var(--blue); }
+.filter-btn.active { background: var(--gold); color: #1a1208; border-color: var(--gold); font-weight: 700; }
+
+/* TABLE */
+.table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tbl th { padding: .65rem 1rem; text-align: left; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); font-weight: 400; white-space: nowrap; }
+.tbl td { padding: .8rem 1rem; border-bottom: 1px solid rgba(255,255,255,.04); vertical-align: top; line-height: 1.4; }
+.tbl tr:last-child td { border-bottom: none; }
+.tbl tr:hover td { background: rgba(255,255,255,.02); }
+.td-name { font-weight: 600; color: var(--white); }
+.td-email { color: var(--blue); font-size: 12px; }
+.td-muted { color: var(--muted); font-size: 12px; }
+
+.type-badge { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; padding: .2rem .65rem; border-radius: 10px; font-weight: 700; white-space: nowrap; }
+.t1 { background: rgba(90,139,167,.15); color: var(--blue); border: 1px solid rgba(90,139,167,.3); }
+.t2 { background: rgba(76,175,125,.12); color: var(--green); border: 1px solid rgba(76,175,125,.25); }
+.t3 { background: rgba(224,160,64,.12); color: var(--amber); border: 1px solid rgba(224,160,64,.25); }
+.t4 { background: rgba(155,110,200,.12); color: var(--purple); border: 1px solid rgba(155,110,200,.25); }
+
+.hotel-yes { font-size: 11px; color: var(--green); }
+.hotel-no { font-size: 11px; color: var(--muted); }
+
+.empty-state { text-align: center; padding: 3rem 1rem; color: var(--muted); }
+.loading { text-align: center; padding: 2.5rem 1rem; color: var(--muted); font-size: 13px; letter-spacing: 1px; }
+
+.updated { text-align: center; margin-top: 1.5rem; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+
+/* overflow on mobile */
+@media (max-width: 700px) {
+  .table-wrap { overflow-x: auto; }
+  .tbl th:nth-child(n+5), .tbl td:nth-child(n+5) { display: none; }
+}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <span class="topbar-brand">PNP <span>2026</span> · Admin</span>
+  <div class="topbar-right">
+    <button class="btn-refresh" onclick="loadData()">↻ Refresh</button>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="wrap">
+    <h1 class="hero-title"><em>PNP 2026</em> — Registrations</h1>
+    <p class="hero-sub" id="lastUpdated">Loading...</p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="kpi-strip">
+    <div class="kpi k-total"><div class="kpi-val" id="kTotal">—</div><div class="kpi-lbl">Total Registered</div></div>
+    <div class="kpi k-t1"><div class="kpi-val" id="kT1">—</div><div class="kpi-lbl">Full Event</div></div>
+    <div class="kpi k-t2"><div class="kpi-val" id="kT2">—</div><div class="kpi-lbl">Reception</div></div>
+    <div class="kpi k-t3"><div class="kpi-val" id="kT3">—</div><div class="kpi-lbl">Breakfast</div></div>
+    <div class="kpi k-t4"><div class="kpi-val" id="kT4">—</div><div class="kpi-lbl">Meetings</div></div>
+    <div class="kpi k-hotel"><div class="kpi-val" id="kHotel">—</div><div class="kpi-lbl">Hotel Rooms</div></div>
+  </div>
+
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="filter('all', this)">All</button>
+    <button class="filter-btn" onclick="filter('Type 1', this)">Type 1 · Full Event</button>
+    <button class="filter-btn" onclick="filter('Type 2', this)">Type 2 · Reception</button>
+    <button class="filter-btn" onclick="filter('Type 3', this)">Type 3 · Breakfast</button>
+    <button class="filter-btn" onclick="filter('Type 4', this)">Type 4 · Meetings</button>
+    <button class="filter-btn" onclick="filter('hotel', this)">🏨 Hotel Room Needed</button>
+  </div>
+
+  <div class="table-wrap">
+    <div class="loading" id="loadingState">Loading registrations...</div>
+    <table class="tbl" id="regTable" style="display:none">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email / Phone</th>
+          <th>Type</th>
+          <th>T-Shirt</th>
+          <th>Hotel</th>
+          <th>Dietary</th>
+          <th>Registered</th>
+        </tr>
+      </thead>
+      <tbody id="regBody"></tbody>
+    </table>
+    <div class="empty-state" id="emptyState" style="display:none">No registrations yet — share the registration link to get started.</div>
+  </div>
+
+  <p class="updated" id="refreshNote">Auto-refreshes every 5 minutes</p>
+</div>
+
+<script>
+const BASE_ID = 'appUUjLXEUwlyx23M';
+const TABLE   = 'PNP%20Registrations';
+// Fetched via proxy to keep key server-side
+// For the dashboard we'll use a read-only public share or the proxy
+
+let allRecords = [];
+let activeFilter = 'all';
+
+async function loadData() {
+  try {
+    const res = await fetch('/api/pnp/records');
+    if (!res.ok) throw new Error('Failed to load');
+    const data = await res.json();
+    allRecords = data.records || [];
+    render();
+    document.getElementById('lastUpdated').textContent =
+      'Last updated: ' + new Date().toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit',timeZoneName:'short'});
+  } catch(e) {
+    document.getElementById('loadingState').textContent = 'Unable to load — check connection.';
+  }
+}
+
+function filter(type, btn) {
+  activeFilter = type;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function typeBadge(t) {
+  if (!t) return '<span class="td-muted">—</span>';
+  if (t.includes('1')) return `<span class="type-badge t1">Full Event</span>`;
+  if (t.includes('2')) return `<span class="type-badge t2">Reception</span>`;
+  if (t.includes('3')) return `<span class="type-badge t3">Breakfast</span>`;
+  if (t.includes('4')) return `<span class="type-badge t4">Meetings</span>`;
+  return `<span class="td-muted">${t}</span>`;
+}
+
+function render() {
+  const loading  = document.getElementById('loadingState');
+  const table    = document.getElementById('regTable');
+  const empty    = document.getElementById('emptyState');
+  const body     = document.getElementById('regBody');
+
+  let filtered = allRecords;
+  if (activeFilter === 'hotel') {
+    filtered = allRecords.filter(r => r.fields['Hotel Room Needed']);
+  } else if (activeFilter !== 'all') {
+    filtered = allRecords.filter(r => (r.fields['Attendee Type'] || '').includes(activeFilter.replace('Type ','')));
+  }
+
+  // KPIs
+  document.getElementById('kTotal').textContent = allRecords.length;
+  document.getElementById('kT1').textContent = allRecords.filter(r => (r.fields['Attendee Type']||'').includes('1')).length;
+  document.getElementById('kT2').textContent = allRecords.filter(r => (r.fields['Attendee Type']||'').includes('2')).length;
+  document.getElementById('kT3').textContent = allRecords.filter(r => (r.fields['Attendee Type']||'').includes('3')).length;
+  document.getElementById('kT4').textContent = allRecords.filter(r => (r.fields['Attendee Type']||'').includes('4')).length;
+  document.getElementById('kHotel').textContent = allRecords.filter(r => r.fields['Hotel Room Needed']).length;
+
+  loading.style.display = 'none';
+
+  if (filtered.length === 0) {
+    table.style.display = 'none';
+    empty.style.display = 'block';
+    empty.textContent = activeFilter === 'all'
+      ? 'No registrations yet — share the registration link to get started.'
+      : 'No registrations match this filter.';
+    return;
+  }
+
+  empty.style.display = 'none';
+  table.style.display = 'table';
+
+  body.innerHTML = filtered.map(r => {
+    const f = r.fields;
+    const date = f['Registered At']
+      ? new Date(f['Registered At']).toLocaleDateString('en-US', {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})
+      : '—';
+    return `<tr>
+      <td>
+        <div class="td-name">${f['Full Name'] || '—'}</div>
+        ${f['Address'] ? `<div class="td-muted">${f['Address'].split('\n')[0]}</div>` : ''}
+      </td>
+      <td>
+        <div class="td-email">${f['Email'] || '—'}</div>
+        <div class="td-muted">${f['Phone'] || ''}</div>
+      </td>
+      <td>${typeBadge(f['Attendee Type'])}</td>
+      <td><span class="td-muted">${f['T-Shirt Size'] || '—'}</span></td>
+      <td>${f['Hotel Room Needed'] ? '<span class="hotel-yes">✓ Yes</span>' : '<span class="hotel-no">No</span>'}</td>
+      <td><span class="td-muted" style="font-size:11px">${f['Dietary Restrictions'] || '—'}</span></td>
+      <td><span class="td-muted" style="font-size:11px">${date}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+loadData();
+</script>
+</body>
+</html>
