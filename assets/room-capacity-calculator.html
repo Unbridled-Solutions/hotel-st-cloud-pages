@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Room Capacity Calculator | Unbridled</title>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1923;
+  --navy: #1a2e3b;
+  --card: #162433;
+  --border: #1e3347;
+  --gold: #c9aa7c;
+  --blue: #5a8ba7;
+  --green: #4caf7d;
+  --text: #e8e0d4;
+  --muted: #6a8a9a;
+  --white: #f5f5f5;
+  --input-bg: #0d1a26;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: 'Josefin Sans', sans-serif; font-weight: 300; min-height: 100vh; padding-bottom: 4rem; }
+
+/* TOPBAR */
+.topbar { background: #0a1219; border-bottom: 1px solid var(--border); padding: .75rem clamp(1rem,4vw,2.5rem); display: flex; align-items: center; justify-content: space-between; }
+.topbar-brand { font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--white); }
+.topbar-brand span { color: var(--blue); }
+.topbar-meta { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+
+/* HERO */
+.hero { background: linear-gradient(180deg, #0a1219 0%, var(--bg) 100%); border-bottom: 1px solid var(--border); padding: 2.5rem clamp(1rem,4vw,2.5rem) 2rem; text-align: center; position: relative; }
+.hero::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+.hero-eyebrow { font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: var(--blue); margin-bottom: .6rem; }
+.hero-title { font-size: clamp(26px,5vw,48px); font-weight: 700; color: var(--white); letter-spacing: -.5px; margin-bottom: .5rem; line-height: 1.1; }
+.hero-title em { color: var(--gold); font-style: normal; }
+.hero-sub { font-size: 13px; color: var(--muted); max-width: 520px; margin: 0 auto; line-height: 1.6; letter-spacing: .3px; }
+
+/* WRAP */
+.wrap { max-width: 860px; margin: 0 auto; padding: 0 clamp(1rem,4vw,1.5rem); }
+
+/* INPUT CARD */
+.input-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 2rem 2.25rem; margin: 2rem 0 1.5rem; }
+.input-label { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 1.25rem; display: block; }
+
+.dims { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+@media (max-width: 480px) { .dims { grid-template-columns: 1fr; } }
+
+.field { display: flex; flex-direction: column; gap: .4rem; }
+.field label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+.field-wrap { position: relative; }
+.field input { width: 100%; background: var(--input-bg); border: 1px solid var(--border); border-radius: 8px; padding: .85rem 3rem .85rem 1rem; font-family: 'Josefin Sans', sans-serif; font-size: 20px; font-weight: 600; color: var(--white); outline: none; transition: border-color .2s; }
+.field input:focus { border-color: var(--blue); }
+.field-unit { position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); pointer-events: none; }
+
+.sqft-display { background: var(--input-bg); border: 1px solid var(--border); border-radius: 8px; padding: .75rem 1rem; display: flex; align-items: center; justify-content: space-between; }
+.sqft-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+.sqft-val { font-size: 22px; font-weight: 700; color: var(--gold); }
+.sqft-sub { font-size: 10px; color: var(--muted); }
+
+/* RESULTS */
+.results-label { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin: 2rem 0 1rem; }
+
+.results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 14px; margin-bottom: 2rem; }
+
+.result-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; position: relative; overflow: hidden; transition: border-color .2s; }
+.result-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.rc-rounds8::before { background: var(--gold); }
+.rc-rounds10::before { background: #e8c87a; }
+.rc-theater::before { background: var(--blue); }
+.rc-classroom::before { background: var(--green); }
+.rc-chevron::before { background: #9b6ec8; }
+
+.result-icon { font-size: 28px; margin-bottom: .75rem; display: block; }
+.result-style { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: .35rem; }
+.result-name { font-size: 15px; font-weight: 700; color: var(--white); margin-bottom: 1rem; line-height: 1.25; }
+.result-count { font-size: 52px; font-weight: 700; line-height: 1; margin-bottom: .25rem; }
+.rc-rounds8 .result-count { color: var(--gold); }
+.rc-rounds10 .result-count { color: #e8c87a; }
+.rc-theater .result-count { color: var(--blue); }
+.rc-classroom .result-count { color: var(--green); }
+.rc-chevron .result-count { color: #9b6ec8; }
+.result-unit { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: .75rem; }
+.result-note { font-size: 11px; color: var(--muted); line-height: 1.5; border-top: 1px solid var(--border); padding-top: .6rem; margin-top: .6rem; }
+
+/* ZERO STATE */
+.zero-state { text-align: center; padding: 3rem 1rem; color: var(--muted); font-size: 13px; letter-spacing: .5px; }
+.zero-icon { font-size: 36px; margin-bottom: .75rem; display: block; opacity: .4; }
+
+/* REFERENCE TABLE */
+.ref-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 2rem; }
+.ref-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); }
+.ref-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.ref-table th { padding: .6rem 1.25rem; text-align: left; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); font-weight: 400; }
+.ref-table td { padding: .75rem 1.25rem; border-bottom: 1px solid rgba(255,255,255,.04); color: var(--text); line-height: 1.4; }
+.ref-table tr:last-child td { border-bottom: none; }
+.ref-table td:first-child { font-weight: 600; color: var(--white); }
+.ref-table td:nth-child(2) { color: var(--muted); font-size: 12px; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; vertical-align: middle; flex-shrink: 0; }
+
+/* DISCLAIMER */
+.disclaimer { background: rgba(90,139,167,.06); border: 1px solid rgba(90,139,167,.2); border-radius: 10px; padding: 1rem 1.25rem; font-size: 12px; color: var(--muted); line-height: 1.65; margin-bottom: 2rem; }
+.disclaimer strong { color: var(--blue); }
+
+footer { text-align: center; padding: 2.5rem 1rem 1rem; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #2a4060; }
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <span class="topbar-brand">Unbridled <span>Live Events</span></span>
+  <span class="topbar-meta">Room Capacity Calculator</span>
+</nav>
+
+<div class="hero">
+  <p class="hero-eyebrow">Event Planning Tool</p>
+  <h1 class="hero-title">Room <em>Capacity</em> Calculator</h1>
+  <p class="hero-sub">Enter your room dimensions and instantly see capacity across every seating configuration — rounds, theater, classroom, and chevron.</p>
+</div>
+
+<div class="wrap">
+
+  <!-- INPUT -->
+  <div class="input-card">
+    <span class="input-label">Room Dimensions</span>
+    <div class="dims">
+      <div class="field">
+        <label>Length</label>
+        <div class="field-wrap">
+          <input type="number" id="length" placeholder="0" min="0" oninput="calculate()" />
+          <span class="field-unit">ft</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Width</label>
+        <div class="field-wrap">
+          <input type="number" id="width" placeholder="0" min="0" oninput="calculate()" />
+          <span class="field-unit">ft</span>
+        </div>
+      </div>
+    </div>
+    <div class="sqft-display">
+      <div>
+        <div class="sqft-label">Total Square Footage</div>
+        <div class="sqft-sub">Gross area — calculations use ~80% usable space</div>
+      </div>
+      <div class="sqft-val" id="sqftDisplay">—</div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results-label">Capacity by Seating Style</div>
+
+  <div id="zeroState" class="zero-state">
+    <span class="zero-icon">📐</span>
+    Enter room dimensions above to see capacity
+  </div>
+
+  <div id="resultsGrid" class="results-grid" style="display:none">
+
+    <div class="result-card rc-rounds8">
+      <span class="result-icon">🪑</span>
+      <div class="result-style">Banquet</div>
+      <div class="result-name">Rounds of 8</div>
+      <div class="result-count" id="r8">—</div>
+      <div class="result-unit">Guests</div>
+      <div class="result-note" id="r8-tables">12 sq ft per person · 60" round tables</div>
+    </div>
+
+    <div class="result-card rc-rounds10">
+      <span class="result-icon">🪑</span>
+      <div class="result-style">Banquet</div>
+      <div class="result-name">Rounds of 10</div>
+      <div class="result-count" id="r10">—</div>
+      <div class="result-unit">Guests</div>
+      <div class="result-note" id="r10-tables">11 sq ft per person · 72" round tables</div>
+    </div>
+
+    <div class="result-card rc-theater">
+      <span class="result-icon">🎭</span>
+      <div class="result-style">General Session</div>
+      <div class="result-name">Theater Style</div>
+      <div class="result-count" id="theater">—</div>
+      <div class="result-unit">Guests</div>
+      <div class="result-note">7 sq ft per person · Rows of chairs, no tables · Maximum capacity</div>
+    </div>
+
+    <div class="result-card rc-classroom">
+      <span class="result-icon">📚</span>
+      <div class="result-style">Training / Session</div>
+      <div class="result-name">Classroom Style</div>
+      <div class="result-count" id="classroom">—</div>
+      <div class="result-unit">Guests</div>
+      <div class="result-note">18 sq ft per person · Chairs + tables, one side · Full writing surface</div>
+    </div>
+
+    <div class="result-card rc-chevron">
+      <span class="result-icon">〈〉</span>
+      <div class="result-style">Angled / Herringbone</div>
+      <div class="result-name">Chevron Style</div>
+      <div class="result-count" id="chevron">—</div>
+      <div class="result-unit">Guests</div>
+      <div class="result-note">20 sq ft per person · V-shaped rows angled toward stage · Enhanced sightlines</div>
+    </div>
+
+  </div>
+
+  <!-- REFERENCE TABLE -->
+  <div class="ref-card">
+    <div class="ref-header">Style Guide — When to Use Each Setup</div>
+    <table class="ref-table">
+      <thead>
+        <tr>
+          <th>Style</th>
+          <th>Density</th>
+          <th>Best For</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="dot" style="background:var(--gold)"></span>Rounds of 8</td>
+          <td>12 sq ft / person</td>
+          <td>Galas, awards dinners, social events — full dining service, conversation-focused</td>
+        </tr>
+        <tr>
+          <td><span class="dot" style="background:#e8c87a"></span>Rounds of 10</td>
+          <td>11 sq ft / person</td>
+          <td>Higher-capacity banquets — slightly tighter, works well for shorter meal functions</td>
+        </tr>
+        <tr>
+          <td><span class="dot" style="background:var(--blue)"></span>Theater</td>
+          <td>7 sq ft / person</td>
+          <td>General sessions, keynotes, ceremonies — maximum heads in seats, no tables</td>
+        </tr>
+        <tr>
+          <td><span class="dot" style="background:var(--green)"></span>Classroom</td>
+          <td>18 sq ft / person</td>
+          <td>Training, breakouts, workshops — full writing surface, extended sessions</td>
+        </tr>
+        <tr>
+          <td><span class="dot" style="background:#9b6ec8"></span>Chevron</td>
+          <td>20 sq ft / person</td>
+          <td>General sessions with interaction — angled rows improve sightlines and engagement</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="disclaimer">
+    <strong>Planning note:</strong> These calculations use approximately 80% of gross square footage to account for staging, AV, service aisles, registration tables, and egress requirements. Always verify with your venue operations team — fire code occupancy limits and specific room features (columns, service doors, pre-function areas) may affect actual capacity. For precise room diagrams, use a CAD layout tool.
+  </div>
+
+</div>
+
+<footer>Unbridled Live Events &nbsp;·&nbsp; Room Capacity Calculator &nbsp;·&nbsp; Planning Tool</footer>
+
+<script>
+function calculate() {
+  const len = parseFloat(document.getElementById('length').value) || 0;
+  const wid = parseFloat(document.getElementById('width').value) || 0;
+
+  const sqft = len * wid;
+  const sqftDisplay = document.getElementById('sqftDisplay');
+  const zeroState = document.getElementById('zeroState');
+  const resultsGrid = document.getElementById('resultsGrid');
+
+  if (!len || !wid || sqft <= 0) {
+    sqftDisplay.textContent = '—';
+    zeroState.style.display = 'block';
+    resultsGrid.style.display = 'none';
+    return;
+  }
+
+  sqftDisplay.textContent = sqft.toLocaleString() + ' sq ft';
+
+  // Use 80% of gross sq ft for usable space
+  const usable = sqft * 0.80;
+
+  // Density standards (sq ft per person)
+  const densities = {
+    r8:       12,   // Rounds of 8  — 60" tables
+    r10:      11,   // Rounds of 10 — 72" tables
+    theater:   7,   // Theater style
+    classroom: 18,  // Classroom style
+    chevron:   20   // Chevron/herringbone style
+  };
+
+  const counts = {};
+  for (const [key, density] of Object.entries(densities)) {
+    counts[key] = Math.floor(usable / density);
+  }
+
+  // Update counts
+  document.getElementById('r8').textContent       = counts.r8.toLocaleString();
+  document.getElementById('r10').textContent      = counts.r10.toLocaleString();
+  document.getElementById('theater').textContent  = counts.theater.toLocaleString();
+  document.getElementById('classroom').textContent = counts.classroom.toLocaleString();
+  document.getElementById('chevron').textContent  = counts.chevron.toLocaleString();
+
+  // Table counts for rounds
+  const tables8  = Math.floor(counts.r8 / 8);
+  const tables10 = Math.floor(counts.r10 / 10);
+  document.getElementById('r8-tables').textContent  = `12 sq ft per person · ${tables8} tables of 8 · 60" rounds`;
+  document.getElementById('r10-tables').textContent = `11 sq ft per person · ${tables10} tables of 10 · 72" rounds`;
+
+  zeroState.style.display = 'none';
+  resultsGrid.style.display = 'grid';
+}
+</script>
+</body>
+</html>
