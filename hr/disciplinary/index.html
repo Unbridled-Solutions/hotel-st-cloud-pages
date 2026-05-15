@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Employee Disciplinary Action - Unbridled Hospitality Group</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --rust: #c44027;
+            --navy: #2b323a;
+            --charcoal: #333333;
+            --bg: #f5f5f5;
+            --card: #ffffff;
+            --border: #e0e0e0;
+            --green: #2e7d4f;
+            --muted: #777777;
+            --font-family: 'Montserrat', sans-serif;
+            --amber: #d97706;
+        }
+
+        body {
+            font-family: var(--font-family);
+            margin: 0;
+            background-color: var(--bg);
+            color: var(--charcoal);
+            line-height: 1.6;
+        }
+
+        .header {
+            background-color: var(--navy);
+            color: var(--card);
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header img {
+            height: 30px;
+            margin-right: 15px;
+        }
+
+        .header-title {
+            font-weight: 700;
+            font-size: 1.4em;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        /* Progress Bar */
+        .progress-bar-container {
+            background-color: var(--border);
+            border-radius: 20px;
+            height: 10px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: var(--rust);
+            border-radius: 20px;
+            transition: width 0.4s ease-in-out;
+        }
+
+        .progress-text {
+            text-align: right;
+            font-size: 0.9em;
+            color: var(--muted);
+            margin-top: 5px;
+            margin-bottom: 20px;
+        }
+
+        /* Steps */
+        .step { display: none; }
+        .step.active { display: block; }
+
+        .step-label {
+            color: var(--rust);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .step-title {
+            font-size: 2em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--charcoal);
+        }
+
+        .step-subtitle {
+            font-size: 1.1em;
+            color: var(--muted);
+            margin-bottom: 25px;
+        }
+
+        /* Cards */
+        .card {
+            background-color: var(--card);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 30px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .card-title {
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9em;
+            color: var(--navy);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* Form Elements */
+        .field-row {
+            margin-bottom: 18px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .field-row label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            flex-basis: 100%;
+            font-size: 0.95em;
+        }
+
+        .field-row input[type="text"],
+        .field-row input[type="date"],
+        .field-row input[type="email"],
+        .field-row textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: var(--font-family);
+            font-size: 1em;
+            box-sizing: border-box;
+            transition: border-color 0.2s ease;
+        }
+
+        .field-row input:focus,
+        .field-row textarea:focus {
+            outline: none;
+            border-color: var(--rust);
+            box-shadow: 0 0 0 2px rgba(196,64,39,0.2);
+        }
+
+        .field-row input.error,
+        .field-row textarea.error {
+            border-color: var(--rust);
+            box-shadow: 0 0 0 1px var(--rust);
+        }
+
+        .field-row input::placeholder,
+        .field-row textarea::placeholder {
+            color: var(--muted);
+        }
+
+        .field-hint {
+            font-size: 0.85em;
+            color: var(--muted);
+            margin-top: 5px;
+            flex-basis: 100%;
+        }
+
+        /* Warning Level Buttons */
+        .warning-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .warning-button {
+            padding: 14px 20px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            background-color: var(--card);
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.9em;
+            transition: all 0.2s ease;
+            user-select: none;
+            flex: 1;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .warning-button.active-first {
+            border-color: var(--amber);
+            background-color: rgba(217,119,6,0.1);
+            color: var(--amber);
+        }
+
+        .warning-button.active-second {
+            border-color: var(--rust);
+            background-color: rgba(196,64,39,0.1);
+            color: var(--rust);
+        }
+
+        .warning-button.active-final {
+            border-color: var(--navy);
+            background-color: rgba(43,50,58,0.1);
+            color: var(--navy);
+        }
+
+        .warning-button.error {
+            border-color: var(--rust);
+            box-shadow: 0 0 0 1px var(--rust);
+        }
+
+        /* Checkbox Grid */
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.15s ease, border-color 0.15s ease;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        .checkbox-item:hover {
+            background-color: #fafafa;
+        }
+
+        .checkbox-item.checked {
+            background-color: rgba(196,64,39,0.06);
+            border-color: var(--rust);
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            margin-top: 2px;
+            accent-color: var(--rust);
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+
+        /* Toggle Buttons (re-hire style) */
+        .toggle-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .toggle-button {
+            padding: 12px 20px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background-color: var(--card);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em;
+            transition: all 0.2s ease;
+            user-select: none;
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        .toggle-button.active {
+            border-color: var(--rust);
+            background-color: rgba(196,64,39,0.1);
+            color: var(--rust);
+        }
+
+        .toggle-button.error {
+            border-color: var(--rust);
+            box-shadow: 0 0 0 1px var(--rust);
+        }
+
+        /* Nav Buttons */
+        .nav-buttons {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 14px 25px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: var(--font-family);
+            font-size: 1em;
+            font-weight: 600;
+            transition: background-color 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            flex-grow: 1;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background-color: var(--rust);
+            color: var(--card);
+            border-color: var(--rust);
+        }
+
+        .btn-primary:hover { background-color: #a73622; }
+
+        .btn-secondary {
+            background-color: var(--card);
+            color: var(--charcoal);
+            border-color: var(--border);
+        }
+
+        .btn-secondary:hover { background-color: var(--bg); }
+
+        /* Done Banner */
+        .done-banner {
+            background-color: var(--rust);
+            color: var(--card);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .info-box {
+            background-color: #e0f2f7;
+            border-left: 5px solid #81d4fa;
+            padding: 15px 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+            color: var(--charcoal);
+        }
+
+        /* Summary */
+        .summary-section {
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 15px;
+        }
+
+        .summary-section:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .summary-label {
+            font-weight: 600;
+            color: var(--navy);
+            margin-bottom: 4px;
+            display: block;
+            font-size: 0.95em;
+        }
+
+        .summary-value {
+            margin-bottom: 12px;
+            padding-left: 10px;
+        }
+
+        .summary-value p { margin: 0; }
+
+        .warning-badge {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-first  { background: rgba(217,119,6,0.15); color: var(--amber); }
+        .badge-second { background: rgba(196,64,39,0.15); color: var(--rust); }
+        .badge-final  { background: rgba(43,50,58,0.15);  color: var(--navy); }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .checkbox-grid { grid-template-columns: 1fr; }
+            .warning-group { flex-direction: column; }
+            .nav-buttons { flex-direction: column-reverse; }
+            .btn { width: 100%; }
+            .container { padding: 0 15px; }
+            .step-title { font-size: 1.6em; }
+            .card { padding: 20px; }
+        }
+
+        /* Print */
+        @media print {
+            .header { -webkit-print-color-adjust: exact; print-color-adjust: exact; background-color: var(--navy) !important; color: white !important; }
+            .no-print, .nav-buttons { display: none !important; }
+            .progress-bar-container, .progress-text { display: none !important; }
+            .step { display: none !important; }
+            .step.print-show { display: block !important; }
+            body { background: white; }
+            .container { max-width: 100%; margin: 0; padding: 0 20px; }
+            .card { box-shadow: none; border: 1px solid #ddd; page-break-inside: avoid; }
+            .done-banner { -webkit-print-color-adjust: exact; print-color-adjust: exact; background-color: var(--rust) !important; color: white !important; }
+            .card-title, .summary-label { color: var(--navy) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            input, textarea { border: none !important; border-bottom: 1px dotted #ccc !important; padding: 2px 0 !important; border-radius: 0 !important; background: transparent !important; }
+            .checkbox-item { border: 1px solid #ccc !important; }
+            .checkbox-item.checked { background-color: rgba(196,64,39,0.06) !important; border-color: var(--rust) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .warning-button { border: 2px solid #ccc !important; background: white !important; color: var(--charcoal) !important; }
+            .warning-button.active-first { border-color: var(--amber) !important; color: var(--amber) !important; background: rgba(217,119,6,0.1) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .warning-button.active-second { border-color: var(--rust) !important; color: var(--rust) !important; background: rgba(196,64,39,0.1) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .warning-button.active-final { border-color: var(--navy) !important; color: var(--navy) !important; background: rgba(43,50,58,0.1) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="../assets/uhg-logo-white.png" alt="Unbridled Hospitality Group Logo">
+        <span class="header-title">Employee Disciplinary Action</span>
+    </div>
+
+    <div class="container">
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-text" id="progressText"></div>
+
+        <!-- Step 1: Employee Info & Warning Level -->
+        <div class="step active" id="step1">
+            <div class="step-label">Step 1 of 4</div>
+            <h2 class="step-title">Employee & Incident Information</h2>
+            <p class="step-subtitle">Basic details and warning level for this disciplinary action.</p>
+
+            <div class="card">
+                <div class="card-title">Employee Details</div>
+                <div class="field-row">
+                    <label for="employeeName">Employee Name*</label>
+                    <input type="text" id="employeeName" name="employeeName" required>
+                </div>
+                <div class="field-row">
+                    <label for="position">Position*</label>
+                    <input type="text" id="position" name="position" required>
+                </div>
+                <div class="field-row">
+                    <label for="dateOfIncident">Date of Incident*</label>
+                    <input type="date" id="dateOfIncident" name="dateOfIncident" required>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Warning Level*</div>
+                <div class="warning-group" id="warningLevelGroup">
+                    <div class="warning-button" data-value="First Warning" data-active-class="active-first">⚠️ First Warning</div>
+                    <div class="warning-button" data-value="Second Warning" data-active-class="active-second">🔴 Second Warning</div>
+                    <div class="warning-button" data-value="Final Warning" data-active-class="active-final">⛔ Final Warning</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Reason for Disciplinary Action -->
+        <div class="step" id="step2">
+            <div class="step-label">Step 2 of 4</div>
+            <h2 class="step-title">Reason for Disciplinary Action</h2>
+            <p class="step-subtitle">Select all that apply, then describe the incident in detail.</p>
+
+            <div class="card">
+                <div class="card-title">Reason(s) — Select All That Apply*</div>
+                <div class="checkbox-grid" id="reasonsGrid">
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="Improper call off"> Improper call off
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="Tardiness"> Tardiness
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="Insubordination / refusal to follow manager instruction"> Insubordination / refusal to follow manager instruction
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="Intentional damage or theft of company / personal property"> Intentional damage or theft of company / personal property
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="Violence or physical threats to guests, vendors, management, or other team members"> Violence or physical threats to guests, vendors, management, or other team members
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="Harassment towards guests, vendors, management, or other team members"> Harassment towards guests, vendors, management, or other team members
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="Possession of, or being under the influence of alcohol on premises"> Possession of, or being under the influence of alcohol on premises
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="Possession of, or being under the influence of illegal drugs"> Possession of, or being under the influence of illegal drugs
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="Inhospitable behavior"> Inhospitable behavior
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="Violation of dress / appearance policy"> Violation of dress / appearance policy
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="Violation of liquor laws, including overserving a guest or serving alcohol to a minor"> Violation of liquor laws, including overserving a guest or serving alcohol to a minor
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="Violation of health code or other unsanitary practices"> Violation of health code or other unsanitary practices
+                    </label>
+                    <label class="checkbox-item" style="grid-column: 1 / -1;">
+                        <input type="checkbox" value="Other" id="otherCheckbox"> Other (description provided below)
+                    </label>
+                </div>
+                <div class="field-row" style="margin-top: 20px;">
+                    <label for="incidentDescription">Detailed Description of Incident*</label>
+                    <textarea id="incidentDescription" name="incidentDescription" rows="6" placeholder="Describe what happened, when, where, and any relevant context..."></textarea>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Witness Information</div>
+                <p style="font-size: 0.9em; color: var(--muted); margin-top: 0; margin-bottom: 18px;">If a witness was present during the incident, record their details below. Leave blank if not applicable.</p>
+                <div class="field-row">
+                    <label for="witnessName">Witness Name</label>
+                    <input type="text" id="witnessName" name="witnessName" placeholder="Full name">
+                </div>
+                <div class="field-row">
+                    <label for="witnessTitle">Witness Title / Role</label>
+                    <input type="text" id="witnessTitle" name="witnessTitle" placeholder="e.g. Shift Supervisor, Front Desk Agent">
+                </div>
+                <div class="field-row">
+                    <label for="witnessContact">Witness Contact (optional)</label>
+                    <input type="text" id="witnessContact" name="witnessContact" placeholder="Phone or email">
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Signatures -->
+        <div class="step" id="step3">
+            <div class="step-label">Step 3 of 4</div>
+            <h2 class="step-title">Signatures</h2>
+            <p class="step-subtitle">Manager and employee acknowledgment of this disciplinary action.</p>
+
+            <div class="card">
+                <div class="card-title">Manager Sign-Off</div>
+                <div class="field-row">
+                    <label for="managerName">Manager Name (Printed)*</label>
+                    <input type="text" id="managerName" name="managerName" required>
+                </div>
+                <div class="field-row">
+                    <label for="managerTitle">Manager Title / Property</label>
+                    <input type="text" id="managerTitle" name="managerTitle">
+                </div>
+                <div class="field-row">
+                    <label for="managerDate">Date*</label>
+                    <input type="date" id="managerDate" name="managerDate" required>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Employee Acknowledgment</div>
+                <div class="field-row">
+                    <label for="employeePrintedName">Employee Name (Printed)*</label>
+                    <input type="text" id="employeePrintedName" name="employeePrintedName" required>
+                    <div class="field-hint">Employee signature confirms receipt of this disciplinary notice. If the employee refused to sign, note that in the incident description.</div>
+                </div>
+                <div class="field-row">
+                    <label for="employeeSignatureDate">Employee Signature Date</label>
+                    <input type="date" id="employeeSignatureDate" name="employeeSignatureDate">
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: Summary -->
+        <div class="step print-show" id="step4">
+            <div class="done-banner">
+                ⚠️ Disciplinary Action Form Complete — Print or save as PDF and upload to SharePoint.
+            </div>
+            <div class="info-box no-print">
+                <strong>Next step:</strong> Click <strong>Save as PDF / Print</strong> below → Save as PDF → upload to the SharePoint HR folder.
+            </div>
+
+            <div class="card">
+                <div class="card-title">SUMMARY: EMPLOYEE DISCIPLINARY ACTION RECORD</div>
+
+                <div class="summary-section">
+                    <div class="summary-label">Employee Name:</div>
+                    <div class="summary-value" id="summaryEmployeeName"></div>
+                </div>
+                <div class="summary-section">
+                    <div class="summary-label">Position:</div>
+                    <div class="summary-value" id="summaryPosition"></div>
+                </div>
+                <div class="summary-section">
+                    <div class="summary-label">Date of Incident:</div>
+                    <div class="summary-value" id="summaryDateOfIncident"></div>
+                </div>
+                <div class="summary-section">
+                    <div class="summary-label">Warning Level:</div>
+                    <div class="summary-value" id="summaryWarningLevel"></div>
+                </div>
+
+                <div class="summary-section">
+                    <div class="card-title" style="margin-bottom: 12px;">REASON FOR DISCIPLINARY ACTION</div>
+                    <div class="summary-label">Reason(s) Selected:</div>
+                    <div class="summary-value" id="summaryReasons"></div>
+                    <div class="summary-label">Incident Description:</div>
+                    <div class="summary-value" id="summaryIncidentDescription"></div>
+                </div>
+
+                <div class="summary-section">
+                    <div class="card-title" style="margin-bottom: 12px;">WITNESS</div>
+                    <div class="summary-label">Witness Name:</div>
+                    <div class="summary-value" id="summaryWitnessName"></div>
+                    <div class="summary-label">Witness Title / Role:</div>
+                    <div class="summary-value" id="summaryWitnessTitle"></div>
+                    <div class="summary-label">Witness Contact:</div>
+                    <div class="summary-value" id="summaryWitnessContact"></div>
+                </div>
+
+                <div class="summary-section">
+                    <div class="card-title" style="margin-bottom: 12px;">MANAGER SIGN-OFF</div>
+                    <div class="summary-label">Manager Name:</div>
+                    <div class="summary-value" id="summaryManagerName"></div>
+                    <div class="summary-label">Manager Title / Property:</div>
+                    <div class="summary-value" id="summaryManagerTitle"></div>
+                    <div class="summary-label">Date:</div>
+                    <div class="summary-value" id="summaryManagerDate"></div>
+                </div>
+
+                <div class="summary-section">
+                    <div class="card-title" style="margin-bottom: 12px;">EMPLOYEE ACKNOWLEDGMENT</div>
+                    <div class="summary-label">Employee Name (Printed):</div>
+                    <div class="summary-value" id="summaryEmployeePrintedName"></div>
+                    <div class="summary-label">Employee Signature Date:</div>
+                    <div class="summary-value" id="summaryEmployeeSignatureDate"></div>
+                </div>
+            </div>
+
+            <div class="nav-buttons no-print" style="margin-top: 30px;">
+                <button class="btn btn-secondary" onclick="window.print()">🖨️ Save as PDF / Print</button>
+                <button class="btn btn-primary" onclick="startNew()">Start New Form</button>
+            </div>
+        </div>
+
+        <div class="nav-buttons" id="navButtons">
+            <button class="btn btn-secondary" id="prevBtn" style="display: none;">← Previous</button>
+            <button class="btn btn-primary" id="nextBtn">Continue →</button>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        const totalSteps = 4;
+        const formData = {};
+        let selectedWarningLevel = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateProgressBar();
+
+            // Auto-fill today's date
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            document.getElementById('managerDate').value = `${yyyy}-${mm}-${dd}`;
+
+            attachEventListeners();
+        });
+
+        function updateProgressBar() {
+            const progress = (currentStep / totalSteps) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+            document.getElementById('progressText').textContent = `Step ${currentStep} of ${totalSteps}`;
+        }
+
+        function attachEventListeners() {
+            document.getElementById('prevBtn').addEventListener('click', prevStep);
+            document.getElementById('nextBtn').addEventListener('click', nextStep);
+
+            // Warning level buttons
+            document.querySelectorAll('.warning-button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.warning-button').forEach(b => {
+                        b.classList.remove('active-first', 'active-second', 'active-final', 'error');
+                    });
+                    btn.classList.add(btn.dataset.activeClass);
+                    selectedWarningLevel = btn.dataset.value;
+                });
+            });
+
+            // Checkbox items — visual toggle
+            document.querySelectorAll('.checkbox-item').forEach(item => {
+                const cb = item.querySelector('input[type="checkbox"]');
+                cb.addEventListener('change', () => {
+                    item.classList.toggle('checked', cb.checked);
+                });
+            });
+
+            // Clear errors on input
+            document.querySelectorAll('input, textarea').forEach(input => {
+                input.addEventListener('input', () => input.classList.remove('error'));
+            });
+        }
+
+        function getSelectedReasons() {
+            const checked = document.querySelectorAll('#reasonsGrid input[type="checkbox"]:checked');
+            return Array.from(checked).map(cb => cb.value);
+        }
+
+        function validateStep(stepNum) {
+            let isValid = true;
+            const stepEl = document.getElementById(`step${stepNum}`);
+            stepEl.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
+
+            // Required text/date fields
+            stepEl.querySelectorAll('input[required], textarea[required]').forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('error');
+                    isValid = false;
+                }
+            });
+
+            if (stepNum === 1) {
+                if (!selectedWarningLevel) {
+                    document.querySelectorAll('.warning-button').forEach(b => b.classList.add('error'));
+                    isValid = false;
+                }
+            }
+
+            if (stepNum === 2) {
+                const reasons = getSelectedReasons();
+                if (reasons.length === 0) {
+                    document.getElementById('reasonsGrid').style.outline = '2px solid var(--rust)';
+                    document.getElementById('reasonsGrid').style.borderRadius = '6px';
+                    isValid = false;
+                    alert('Please select at least one reason for the disciplinary action.');
+                } else {
+                    document.getElementById('reasonsGrid').style.outline = '';
+                }
+
+                const desc = document.getElementById('incidentDescription');
+                if (!desc.value.trim()) {
+                    desc.classList.add('error');
+                    isValid = false;
+                }
+            }
+
+            if (!isValid) {
+                const first = stepEl.querySelector('.error');
+                if (first) first.focus();
+            }
+
+            return isValid;
+        }
+
+        function collectFormData() {
+            document.querySelectorAll('input:not([type="checkbox"]):not([type="button"]), textarea').forEach(input => {
+                if (input.id) formData[input.id] = input.value;
+            });
+            formData.warningLevel = selectedWarningLevel || '';
+            formData.reasons = getSelectedReasons();
+        }
+
+        function showStep(stepNum) {
+            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+            document.getElementById(`step${stepNum}`).classList.add('active');
+            currentStep = stepNum;
+            updateProgressBar();
+            document.getElementById('prevBtn').style.display = currentStep === 1 ? 'none' : 'block';
+            document.getElementById('nextBtn').style.display = currentStep === totalSteps ? 'none' : 'block';
+            document.getElementById('navButtons').style.display = currentStep === totalSteps ? 'none' : 'flex';
+            window.scrollTo(0, 0);
+        }
+
+        function nextStep() {
+            if (validateStep(currentStep)) {
+                collectFormData();
+                if (currentStep < totalSteps) {
+                    currentStep++;
+                    showStep(currentStep);
+                    if (currentStep === totalSteps) populateSummary();
+                }
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                showStep(currentStep);
+            }
+        }
+
+        function populateSummary() {
+            document.getElementById('summaryEmployeeName').textContent = formData.employeeName || '';
+            document.getElementById('summaryPosition').textContent = formData.position || '';
+            document.getElementById('summaryDateOfIncident').textContent = formData.dateOfIncident || '';
+
+            // Warning badge
+            const wl = formData.warningLevel || '';
+            let badgeClass = '';
+            if (wl === 'First Warning') badgeClass = 'badge-first';
+            else if (wl === 'Second Warning') badgeClass = 'badge-second';
+            else if (wl === 'Final Warning') badgeClass = 'badge-final';
+            document.getElementById('summaryWarningLevel').innerHTML = wl
+                ? `<span class="warning-badge ${badgeClass}">${wl}</span>`
+                : '';
+
+            // Reasons
+            const reasons = formData.reasons || [];
+            const ul = document.createElement('ul');
+            ul.style.margin = '4px 0';
+            ul.style.paddingLeft = '18px';
+            reasons.forEach(r => {
+                const li = document.createElement('li');
+                li.textContent = r;
+                ul.appendChild(li);
+            });
+            document.getElementById('summaryReasons').innerHTML = '';
+            document.getElementById('summaryReasons').appendChild(ul);
+
+            document.getElementById('summaryIncidentDescription').textContent = formData.incidentDescription || 'N/A';
+
+            document.getElementById('summaryWitnessName').textContent = formData.witnessName || 'N/A';
+            document.getElementById('summaryWitnessTitle').textContent = formData.witnessTitle || 'N/A';
+            document.getElementById('summaryWitnessContact').textContent = formData.witnessContact || 'N/A';
+
+            document.getElementById('summaryManagerName').textContent = formData.managerName || '';
+            document.getElementById('summaryManagerTitle').textContent = formData.managerTitle || 'N/A';
+            document.getElementById('summaryManagerDate').textContent = formData.managerDate || '';
+            document.getElementById('summaryEmployeePrintedName').textContent = formData.employeePrintedName || '';
+            document.getElementById('summaryEmployeeSignatureDate').textContent = formData.employeeSignatureDate || 'N/A';
+        }
+
+        function startNew() {
+            location.reload();
+        }
+    </script>
+</body>
+</html>
