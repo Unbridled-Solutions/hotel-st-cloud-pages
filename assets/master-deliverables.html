@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master Deliverables | Unbridled · Stan Bullis</title>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0f1923;--navy:#1a2e3b;--card:#162433;--border:#1e3347;
+  --gold:#c9aa7c;--gold-light:#e0c99a;--blue:#5a8ba7;--green:#4caf7d;
+  --red:#e05a5a;--amber:#e0a040;--text:#e8e0d4;--muted:#6a8a9a;--white:#f5f5f5;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-serif;font-weight:300;min-height:100vh;padding-bottom:5rem}
+
+.topbar{background:#0a1219;border-bottom:1px solid var(--border);padding:.75rem clamp(1rem,4vw,2rem);display:flex;align-items:center;justify-content:space-between}
+.topbar-brand{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--white)}
+.topbar-brand span{color:var(--gold)}
+.topbar-date{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+
+.hero{background:linear-gradient(180deg,#0a1219 0%,var(--bg) 100%);border-bottom:1px solid var(--border);padding:2.5rem clamp(1rem,4vw,2rem) 2rem;position:relative}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.hero-eyebrow{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:.5rem}
+.hero-title{font-size:clamp(24px,4vw,40px);font-weight:700;color:var(--white);letter-spacing:-.5px;line-height:1.1;margin-bottom:.5rem}
+.hero-title em{color:var(--gold);font-style:normal}
+.hero-sub{font-size:13px;color:var(--muted);line-height:1.6;max-width:560px}
+
+.wrap{max-width:900px;margin:0 auto;padding:0 clamp(1rem,4vw,1.5rem)}
+
+.section{margin:2.5rem 0}
+.section-header{display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;padding-bottom:.6rem;border-bottom:1px solid var(--border)}
+.section-icon{font-size:16px}
+.section-title{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);font-weight:700}
+.section-count{font-size:10px;letter-spacing:1px;color:var(--muted);margin-left:auto}
+
+.item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem;margin-bottom:.6rem;display:flex;align-items:flex-start;gap:1rem;transition:border-color .2s}
+.item:hover{border-color:var(--blue)}
+.item-body{flex:1;min-width:0}
+.item-title{font-size:14px;font-weight:600;color:var(--white);margin-bottom:.2rem;line-height:1.3}
+.item-desc{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:.5rem}
+.item-meta{display:flex;align-items:center;flex-wrap:wrap;gap:.5rem}
+.item-link{font-size:11px;color:var(--blue);text-decoration:none;letter-spacing:.5px;transition:color .2s}
+.item-link:hover{color:var(--gold)}
+.item-week{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.item-actions{display:flex;flex-direction:column;align-items:flex-end;gap:.4rem;flex-shrink:0}
+
+.badge{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:.2rem .65rem;border-radius:10px;font-weight:700;white-space:nowrap}
+.badge-live{background:rgba(76,175,125,.12);color:var(--green);border:1px solid rgba(76,175,125,.25)}
+.badge-in-progress{background:rgba(224,160,64,.12);color:var(--amber);border:1px solid rgba(224,160,64,.25)}
+.badge-draft{background:rgba(90,139,167,.12);color:var(--blue);border:1px solid rgba(90,139,167,.25)}
+.badge-paused{background:rgba(224,90,90,.12);color:var(--red);border:1px solid rgba(224,90,90,.25)}
+
+/* Book chapter items get a gold left accent */
+.item.book{border-left:3px solid var(--gold)}
+
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:.4rem}
+.dot-live{background:var(--green)}
+.dot-progress{background:var(--amber)}
+.dot-draft{background:var(--blue)}
+
+.updated-note{text-align:center;margin-top:2rem;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+.updated-note span{color:var(--gold)}
+
+/* Book outline section */
+.outline-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.2rem 1.4rem;margin-bottom:.6rem}
+.outline-section-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:.6rem}
+.outline-section-title{font-size:15px;font-weight:700;color:var(--white);margin-bottom:.5rem}
+.outline-chapter{font-size:12px;color:var(--muted);padding:.2rem 0 .2rem .75rem;border-left:2px solid var(--border);margin:.2rem 0;display:flex;align-items:center;gap:.5rem}
+.outline-chapter.done{color:var(--text);border-color:var(--gold)}
+.outline-chapter.done::before{content:'✓';font-size:10px;color:var(--green);font-weight:700}
+.outline-chapter.in-progress::before{content:'◐';font-size:10px;color:var(--amber);font-weight:700}
+.outline-chapter a{color:var(--blue);text-decoration:none;font-size:11px;margin-left:.5rem}
+.outline-chapter a:hover{color:var(--gold)}
+
+@media(max-width:600px){
+  .item{flex-direction:column;gap:.5rem}
+  .item-actions{flex-direction:row;align-items:center}
+}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <span class="topbar-brand">Unbridled <span>·</span> Stan Bullis</span>
+  <span class="topbar-date" id="dateStamp">Week of May 12, 2026</span>
+</nav>
+
+<div class="hero">
+  <div class="wrap">
+    <p class="hero-eyebrow">Master Deliverables</p>
+    <h1 class="hero-title">Everything We've <em>Built</em></h1>
+    <p class="hero-sub">One page. Every tool, page, campaign, and chapter we've shipped — plus what's still in motion. Updated every Monday. Tell MC what to add or remove.</p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- ───────────────────── BOOK PROJECT ───────────────────── -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-icon">📖</span>
+      <span class="section-title">The Unbridled Way · Book Project</span>
+      <span class="section-count">2 of ~12 chapters drafted</span>
+    </div>
+
+    <!-- Book Outline -->
+    <div class="outline-card">
+      <div class="outline-section-label">Approved Structure</div>
+      <div class="outline-section-title">The Unbridled Way: Doing Good by Doing Well</div>
+
+      <div style="margin-top:.75rem;display:grid;gap:.75rem">
+        <!-- Section 1 -->
+        <div>
+          <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:.3rem">Section 1 · The Framework</div>
+          <div class="outline-chapter done">Doing Good by Doing Well <span style="color:var(--muted);font-size:11px;margin-left:.25rem">— intro + philosophy</span> <a href="#ch1">↓ below</a></div>
+        </div>
+        <!-- Section 2 -->
+        <div>
+          <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:.3rem">Section 2 · A Collaboration of Destinies</div>
+          <div class="outline-chapter in-progress">Destiny — OrangeDoor, Jesse &amp; the Mansion, Jonathan Weald <a href="https://offers.hotelstcloud.com/assets/unbridled-way-destiny.html" target="_blank">↗ Live Draft</a></div>
+          <div class="outline-chapter">The Adjacent Opportunity</div>
+          <div class="outline-chapter">The Client's Destiny</div>
+          <div class="outline-chapter">The Hero's Journey</div>
+        </div>
+        <!-- Section 3 -->
+        <div>
+          <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:.3rem">Section 3 · A Culture of Authenticity</div>
+          <div class="outline-chapter">The Authenticity Chapter (TBD)</div>
+          <div class="outline-chapter">The Authenticity Chapter (TBD)</div>
+          <div class="outline-chapter">The Authenticity Chapter (TBD)</div>
+        </div>
+        <!-- Section 4 -->
+        <div>
+          <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:.3rem">Section 4 · A Business of Generosity</div>
+          <div class="outline-chapter">20/20/60 — The Model</div>
+          <div class="outline-chapter">UnbridledACTS</div>
+          <div class="outline-chapter">What Good Looks Like</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chapter 1 -->
+    <div id="ch1" class="item book">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Chapter: Doing Good by Doing Well</div>
+        <div class="item-desc">The opening framework chapter — philosophy, 20/20/60 model, and the core thesis that doing good and doing well aren't in tension, they're the same move.</div>
+        <div class="item-meta">
+          <span class="item-week">Week of May 12</span>
+        </div>
+      </div>
+      <div class="item-actions">
+        <span class="badge badge-live">Drafted</span>
+      </div>
+    </div>
+
+    <!-- Chapter 2 -->
+    <div class="item book">
+      <div class="dot dot-progress"></div>
+      <div class="item-body">
+        <div class="item-title">Chapter: Destiny</div>
+        <div class="item-desc">Stories: OrangeDoor, 51% sale, group home, Jesse & Sheedy Mansion, Jonathan Weald. Three core stories that show how destiny and business intersect.</div>
+        <div class="item-meta">
+          <a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-destiny.html" target="_blank">↗ Read Draft</a>
+          <span class="item-week">Week of May 12</span>
+        </div>
+      </div>
+      <div class="item-actions">
+        <span class="badge badge-in-progress">In Progress</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────── HOTEL ST. CLOUD — TRAINING ───────────────────── -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-icon">🎓</span>
+      <span class="section-title">Hotel St. Cloud · Training & Certification</span>
+      <span class="section-count">2 tools</span>
+    </div>
+
+    <div class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Table Service Certification Quiz</div>
+        <div class="item-desc">15-question scored quiz. Team member enters name, takes quiz, submits score to Airtable. If they fail — no retake button. Manager pushes a retake from the dashboard. Shareable link for Sling weekly drops.</div>
+        <div class="item-meta">
+          <a class="item-link" href="https://offers.hotelstcloud.com/assets/table-service-training-hsc.html" target="_blank">↗ Team Quiz Link</a>
+          <span class="item-week">Week of May 12</span>
+        </div>
+      </div>
+      <div class="item-actions">
+        <span class="badge badge-live">Live</span>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Quiz Tally Dashboard — Manager View</div>
+        <div class="item-desc">Real-time tally of who took the quiz and how they scored. Pass/fail, missed questions per person, and a "Push Retake" button that copies a pre-filled link for Sling. Auto-refreshes every 60 seconds.</div>
+        <div class="item-meta">
+          <a class="item-link" href="https://offers.hotelstcloud.com/assets/quiz-tally-dashboard.html" target="_blank">↗ Manager Dashboard</a>
+          <span class="item-week">Week of May 12</span>
+        </div>
+      </div>
+      <div class="item-actions">
+        <span class="badge badge-live">Live</span>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Four-Star Hotel Dress Attire Quiz</div>
+        <div class="item-desc">Interactive dress code standards quiz for Hotel St. Cloud team members. Scored, with feedback per question.</div>
+        <div class="item-meta">
+          <a class="item-link" href="https://offers.hotelstcloud.com/assets/dress-attire-quiz-hsc.html" target="_blank">↗ Open Quiz</a>
+          <span class="item-week">Week of May 12</span>
+        </div>
+      </div>
+      <div class="item-actions">
+        <span class="badge badge-live">Live</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────── HOTEL ST. CLOUD — HOSPITALITY OPS ───────────────────── -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-icon">🏨</span>
+      <span class="section-title">Hotel St. Cloud · Hospitality Operations</span>
+      <span class="section-count">3 tools</span>
+    </div>
+
+    <div class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Onsite Standards Manual — Introduction</div>
+        <div class="item-desc">Chapter 1 of the full onsite manual. Draws on Will Guidara (Unreasonable Hospitality), Disney, Four Seasons, Danny Meyer, and Ritz-Carlton. Unbridled voice throughout.</div>
+        <div class="item-meta">
+          <a class="item-link" href="https://offers.hotelstcloud.com/assets/onsite-manual-01-introduction.html" target="_blank">↗ Read Introduction</a>
+          <span class="item-week">Week of May 12</span>
+        </div>
+      </div>
+      <div class="item-actions">
+        <span class="badge badge-in-progress">Ch. 1 of Many</span>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">HR Hub</div>
+        <div class="item-desc">Central HR resource page — job postings, handbooks, offer letters, and team tools. Curated to remove sensitive docs.</div>
+        <div class="item-meta">
+          <a class="item-link" href="https://offers.hotelstcloud.com/assets/hr-hub.html" target="_blank">↗ HR Hub</a>
+          <span class="item-week">Week of May 12</span>
+        </div>
+      </div>
+      <div class="item-actions">
+        <span class="badge badge-live">Live</span>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Room Capacity Calculator</div>
+        <div class="item-desc">Interactive room capacity planning tool for Live Events. Select room, setup style, and instantly see max safe capacity.</div>
+        <div class="item-meta">
+          <a class="item-link" href="https://offers.hotelstcloud.com/assets/room-capacity-calculator.html" target="_blank">↗ Open Calculator</a>
+          <span class="item-week">Week of May 12</span>
+        </div>
+      </div>
+      <div class="item-actions">
+        <span class="badge badge-live">Live</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────── GOOGLE ADS & MARKETING ───────────────────── -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-icon">📣</span>
+      <span class="section-title">Google Ads & Marketing</span>
+      <span class="section-count">4 items</span>
+    </div>
+
+    <div class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Bars & Bathrooms — Google Ads Campaign</div>
+        <div class="item-desc">Live campaign targeting 15-mile radius around Cañon City. $50/day, Thu–Sun, maximize clicks. 270+ impressions, 14 clicks, 5.2% CTR. QR promo: 5% off drinks, day-specific codes.</div>
+        <div class="item-meta">
+          <a class="item-link" href="https://offers.hotelstcloud.com/roadtripper.html" target="_blank">↗ QR Landing Page</a>
+          <a class="item-link" href="https://offers.hotelstcloud.com/assets/live-dashboard.html" target="_blank">↗ Ads Dashboard</a>
+          <span class="item-week">Week of May 5</span>
+        </div>
+      </div>
+      <div class="item-actions">
+        <span class="badge badge-live">Live · $50/day</span>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="dot dot-progress"></div>
+      <div class="item-body">
+        <div class="item-title">Hotel St. Cloud | Royal Gorge Basecamp — Campaign</div>
+        <div class="item-desc">20-mile radius. Hook: "You came for the gorge. Stay for everything else." Targeting mid-trip adventurers — fly fishing, biking, climbing, kayaking. Landing page: hotelstcloud.com.</div>
+        <div class="item-meta">
+          <span class="item-week">Week of May 12</span>
+        </div>
+      </div>
+      <div class="item-actions">
+        <span class="badge badge-in-progress">Building</span>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Google Ads Performance Dashboard</div>
+        <div class="item-desc">Daily visual dashboard delivered at 6 AM MT. Charts, CTR, spend, impressions, recommendations. Covers all active campaigns.</div>
+        <div class="item-meta">
+          <a class="item-link" href="https://offers.hotelstcloud.com/assets/live-dashboard.html" target="_blank">↗ View Dashboard</a>
+          <span class="item-week">Week of May 5</span>
+        </div>
+      </div>
+      <div class="item-actions">
+        <span class="badge badge-live">Daily · 6 AM MT</span>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Marketing Plan & Strategy Doc</div>
+        <div class="item-desc">Full campaign strategy, UX mockups, all 15 ad headline previews. Password protected.</div>
+        <div class="item-meta">
+          <a class="item-link" href="https://offers.hotelstcloud.com/assets/marketing-plan.html" target="_blank">↗ Marketing Plan</a>
+          <a class="item-link" href="https://offers.hotelstcloud.com/assets/road-tripper-ux.html" target="_blank">↗ UX Mockup</a>
+          <a class="item-link" href="https://offers.hotelstcloud.com/assets/ad-headlines-preview.html" target="_blank">↗ Ad Previews</a>
+          <span class="item-week">Week of May 5</span>
+        </div>
+      </div>
+      <div class="item-actions">
+        <span class="badge badge-live">Live</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────── LIVE EVENTS OS ───────────────────── -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-icon">🎪</span>
+      <span class="section-title">Live Events Ecosystem OS</span>
+      <span class="section-count">1 tool</span>
+    </div>
+
+    <div class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Live Events OS — v2</div>
+        <div class="item-desc">Web-based operating system for all Live Events brands (Unbridled, Productions, Media, Gift'd, Travel). CCO framed as "Culture & Values Exemplar Lead" — relational equity, not command-and-control.</div>
+        <div class="item-meta">
+          <a class="item-link" href="https://offers.hotelstcloud.com/assets/live-events-os-v2.html" target="_blank">↗ Open OS v2</a>
+          <span class="item-week">Week of May 12</span>
+        </div>
+      </div>
+      <div class="item-actions">
+        <span class="badge badge-live">Live · v2</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────── PNP EVENT ───────────────────── -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-icon">🎟️</span>
+      <span class="section-title">PNP Event Registration</span>
+      <span class="section-count">2 tools</span>
+    </div>
+
+    <div class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">PNP Registration Form</div>
+        <div class="item-desc">Public self-registration for PNP attendees. Captures name, address, phone, email, dietary restrictions, hotel room needed, t-shirt size, and attendance type (All, Welcome Reception, Breakfast, Meetings).</div>
+        <div class="item-meta">
+          <a class="item-link" href="https://offers.hotelstcloud.com/assets/pnp-register.html" target="_blank">↗ Registration Form</a>
+          <span class="item-week">Week of May 12</span>
+        </div>
+      </div>
+      <div class="item-actions">
+        <span class="badge badge-live">Live</span>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">PNP Admin Dashboard</div>
+        <div class="item-desc">Manager view of all registrants. Sortable by name, attendance type, hotel room needed. Backed by Airtable, secured via Cloudflare Worker.</div>
+        <div class="item-meta">
+          <a class="item-link" href="https://offers.hotelstcloud.com/assets/pnp-dashboard.html" target="_blank">↗ Admin Dashboard</a>
+          <span class="item-week">Week of May 12</span>
+        </div>
+      </div>
+      <div class="item-actions">
+        <span class="badge badge-live">Live</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────── POLICIES & OPS ───────────────────── -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-icon">📋</span>
+      <span class="section-title">Policies & Operations</span>
+      <span class="section-count">2 docs</span>
+    </div>
+
+    <div class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Work From Office Policy</div>
+        <div class="item-desc">80% in-office, 20% remote. Tues/Wed/Thurs required in-office. Mon/Fri optional WFH. Unbridled voice, culture-forward.</div>
+        <div class="item-meta">
+          <a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-work-from-office-policy.html" target="_blank">↗ Read Policy</a>
+          <span class="item-week">Week of May 12</span>
+        </div>
+      </div>
+      <div class="item-actions">
+        <span class="badge badge-live">Live</span>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">ERP Research & Recommendation</div>
+        <div class="item-desc">Detailed opinionated report on NetSuite OneWorld, Microsoft Dynamics 365, and Sage Intacct for a 32-company ecosystem. Recommendation: NetSuite OneWorld.</div>
+        <div class="item-meta">
+          <span class="item-week">Week of May 12</span>
+          <span style="font-size:11px;color:var(--muted)">— Report delivered via Telegram</span>
+        </div>
+      </div>
+      <div class="item-actions">
+        <span class="badge badge-live">Delivered</span>
+      </div>
+    </div>
+  </div>
+
+  <p class="updated-note">Last updated: <span>Week of May 12, 2026</span> · MC adds to this every Monday · Tell MC what to remove</p>
+
+</div>
+
+<script>
+// Show current week label dynamically
+const d = new Date();
+const monday = new Date(d);
+monday.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+const label = monday.toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'});
+document.getElementById('dateStamp').textContent = 'Week of ' + label;
+</script>
+
+</body>
+</html>
