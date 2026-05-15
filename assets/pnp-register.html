@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PNP Event Registration</title>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&family=Lora:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1923; --navy: #1a2e3b; --card: #162433; --border: #1e3347;
+  --gold: #c9aa7c; --blue: #5a8ba7; --green: #4caf7d; --red: #e05a5a;
+  --text: #e8e0d4; --muted: #6a8a9a; --white: #f5f5f5; --input-bg: #0d1a26;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Josefin Sans', sans-serif; font-weight: 300; min-height: 100vh; padding-bottom: 4rem; }
+
+.topbar { background: #0a1219; border-bottom: 1px solid var(--border); padding: .75rem clamp(1rem,4vw,2.5rem); display: flex; align-items: center; justify-content: space-between; }
+.topbar-brand { font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--white); }
+.topbar-brand span { color: var(--gold); }
+
+.hero { background: linear-gradient(180deg, #0a1219 0%, var(--bg) 100%); border-bottom: 1px solid var(--border); padding: 2.5rem clamp(1rem,4vw,2.5rem) 2rem; text-align: center; position: relative; }
+.hero::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+.hero-eyebrow { font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: var(--blue); margin-bottom: .5rem; }
+.hero-title { font-size: clamp(28px,5vw,48px); font-weight: 700; color: var(--white); letter-spacing: -.5px; margin-bottom: .4rem; line-height: 1.1; }
+.hero-title em { color: var(--gold); font-style: normal; }
+.hero-sub { font-size: 13px; color: var(--muted); max-width: 480px; margin: 0 auto; line-height: 1.65; }
+
+.wrap { max-width: 640px; margin: 0 auto; padding: 0 clamp(1rem,4vw,1.5rem); }
+
+.form-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 2rem 2.25rem; margin: 2rem 0; }
+.form-section-label { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 1.25rem; display: block; padding-bottom: .6rem; border-bottom: 1px solid var(--border); }
+
+.field-group { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+@media (max-width: 480px) { .field-group { grid-template-columns: 1fr; } }
+.field-full { margin-bottom: 1rem; }
+
+.field { display: flex; flex-direction: column; gap: .35rem; }
+.field label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+.field label .req { color: var(--gold); margin-left: 2px; }
+
+.field input,
+.field select,
+.field textarea {
+  background: var(--input-bg); border: 1px solid var(--border); border-radius: 8px;
+  padding: .75rem 1rem; font-family: 'Josefin Sans', sans-serif; font-size: 14px;
+  font-weight: 400; color: var(--white); outline: none; transition: border-color .2s; width: 100%;
+}
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--blue); }
+.field select option { background: var(--navy); }
+.field textarea { resize: vertical; min-height: 80px; }
+
+/* Attendee type cards */
+.type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+@media (max-width: 480px) { .type-grid { grid-template-columns: 1fr; } }
+.type-card { position: relative; }
+.type-card input[type="radio"] { position: absolute; opacity: 0; pointer-events: none; }
+.type-label { display: block; background: var(--input-bg); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.1rem; cursor: pointer; transition: border-color .2s, background .2s; }
+.type-card input:checked + .type-label { border-color: var(--gold); background: rgba(201,170,124,.08); }
+.type-icon { font-size: 20px; margin-bottom: .4rem; display: block; }
+.type-name { font-size: 12px; font-weight: 700; color: var(--white); margin-bottom: .2rem; }
+.type-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
+
+/* Checkbox toggle */
+.toggle-field { display: flex; align-items: center; justify-content: space-between; background: var(--input-bg); border: 1px solid var(--border); border-radius: 8px; padding: .85rem 1rem; margin-bottom: 1rem; }
+.toggle-label { font-size: 13px; color: var(--text); }
+.toggle-label small { display: block; font-size: 11px; color: var(--muted); margin-top: 2px; }
+.toggle { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; cursor: pointer; inset: 0; background: var(--border); border-radius: 24px; transition: .3s; }
+.toggle-slider::before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; bottom: 3px; background: var(--muted); border-radius: 50%; transition: .3s; }
+.toggle input:checked + .toggle-slider { background: var(--blue); }
+.toggle input:checked + .toggle-slider::before { transform: translateX(20px); background: var(--white); }
+
+/* Size selector */
+.size-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1rem; }
+.size-opt { position: relative; }
+.size-opt input { position: absolute; opacity: 0; pointer-events: none; }
+.size-btn { display: block; background: var(--input-bg); border: 1px solid var(--border); border-radius: 6px; padding: .45rem .9rem; font-family: 'Josefin Sans', sans-serif; font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer; transition: all .2s; }
+.size-opt input:checked + .size-btn { border-color: var(--gold); color: var(--gold); background: rgba(201,170,124,.08); }
+
+/* Submit */
+.btn-submit { width: 100%; padding: 1rem; background: var(--gold); color: #1a1208; border: none; border-radius: 10px; font-family: 'Josefin Sans', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: background .2s, transform .1s; margin-top: .5rem; }
+.btn-submit:hover { background: #d4b584; transform: translateY(-1px); }
+.btn-submit:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+/* States */
+.msg { display: none; border-radius: 10px; padding: 1.25rem 1.5rem; margin: 1rem 0; font-size: 14px; line-height: 1.55; text-align: center; }
+.msg.success { background: rgba(76,175,125,.1); border: 1px solid rgba(76,175,125,.3); color: #a8e6c5; }
+.msg.error { background: rgba(224,90,90,.1); border: 1px solid rgba(224,90,90,.3); color: #e8a0a0; }
+
+footer { text-align: center; padding: 2rem 1rem; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #2a4060; }
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <span class="topbar-brand">PNP <span>2026</span></span>
+  <span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)">Event Registration</span>
+</nav>
+
+<div class="hero">
+  <p class="hero-eyebrow">Unbridled · Three-Day Event</p>
+  <h1 class="hero-title"><em>PNP</em> 2026</h1>
+  <p class="hero-sub">Register below. Choose your attendee type and we'll take care of the rest.</p>
+</div>
+
+<div class="wrap">
+<form id="regForm">
+
+  <div class="form-card">
+    <span class="form-section-label">Your Information</span>
+
+    <div class="field-group">
+      <div class="field">
+        <label>Full Name <span class="req">*</span></label>
+        <input type="text" name="fullName" placeholder="Jane Smith" required />
+      </div>
+      <div class="field">
+        <label>Email <span class="req">*</span></label>
+        <input type="email" name="email" placeholder="jane@company.com" required />
+      </div>
+    </div>
+
+    <div class="field-group">
+      <div class="field">
+        <label>Phone <span class="req">*</span></label>
+        <input type="tel" name="phone" placeholder="(555) 000-0000" required />
+      </div>
+      <div class="field">
+        <label>Company / Organization</label>
+        <input type="text" name="company" placeholder="Acme Corp" />
+      </div>
+    </div>
+
+    <div class="field field-full">
+      <label>Address</label>
+      <textarea name="address" placeholder="Street, City, State, ZIP"></textarea>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <span class="form-section-label">Attendee Type <span class="req" style="color:var(--gold)">*</span></span>
+
+    <div class="type-grid">
+      <div class="type-card">
+        <input type="radio" name="attendeeType" id="t1" value="Type 1 — Full Event" required />
+        <label class="type-label" for="t1">
+          <span class="type-icon">🎫</span>
+          <div class="type-name">Type 1 — Full Event</div>
+          <div class="type-desc">Attending everything across all three days</div>
+        </label>
+      </div>
+      <div class="type-card">
+        <input type="radio" name="attendeeType" id="t2" value="Type 2 — Welcome Reception Only" />
+        <label class="type-label" for="t2">
+          <span class="type-icon">🥂</span>
+          <div class="type-name">Type 2 — Welcome Reception</div>
+          <div class="type-desc">Welcome reception only</div>
+        </label>
+      </div>
+      <div class="type-card">
+        <input type="radio" name="attendeeType" id="t3" value="Type 3 — Breakfast Only" />
+        <label class="type-label" for="t3">
+          <span class="type-icon">🍳</span>
+          <div class="type-name">Type 3 — Breakfast</div>
+          <div class="type-desc">Breakfast session only</div>
+        </label>
+      </div>
+      <div class="type-card">
+        <input type="radio" name="attendeeType" id="t4" value="Type 4 — Meetings Only" />
+        <label class="type-label" for="t4">
+          <span class="type-icon">📋</span>
+          <div class="type-name">Type 4 — Meetings</div>
+          <div class="type-desc">Meetings and sessions only</div>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <span class="form-section-label">Preferences &amp; Logistics</span>
+
+    <div class="field field-full">
+      <label>Dietary Restrictions / Allergies</label>
+      <textarea name="dietary" placeholder="Vegetarian, gluten-free, nut allergy, etc. Leave blank if none."></textarea>
+    </div>
+
+    <div class="toggle-field">
+      <div class="toggle-label">
+        Hotel Room Needed
+        <small>We'll follow up with room block details</small>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" name="hotelRoom" id="hotelToggle" />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <div class="field">
+      <label>T-Shirt Size</label>
+    </div>
+    <div class="size-grid">
+      <div class="size-opt"><input type="radio" name="tshirtSize" id="sXS" value="XS"><label class="size-btn" for="sXS">XS</label></div>
+      <div class="size-opt"><input type="radio" name="tshirtSize" id="sS" value="S"><label class="size-btn" for="sS">S</label></div>
+      <div class="size-opt"><input type="radio" name="tshirtSize" id="sM" value="M"><label class="size-btn" for="sM">M</label></div>
+      <div class="size-opt"><input type="radio" name="tshirtSize" id="sL" value="L"><label class="size-btn" for="sL">L</label></div>
+      <div class="size-opt"><input type="radio" name="tshirtSize" id="sXL" value="XL"><label class="size-btn" for="sXL">XL</label></div>
+      <div class="size-opt"><input type="radio" name="tshirtSize" id="s2XL" value="2XL"><label class="size-btn" for="s2XL">2XL</label></div>
+      <div class="size-opt"><input type="radio" name="tshirtSize" id="s3XL" value="3XL"><label class="size-btn" for="s3XL">3XL</label></div>
+    </div>
+  </div>
+
+  <div class="msg success" id="msgSuccess">
+    🎉 You're registered! We'll be in touch with event details soon.
+  </div>
+  <div class="msg error" id="msgError">
+    Something went wrong. Please try again or email us directly.
+  </div>
+
+  <button type="submit" class="btn-submit" id="submitBtn">Register for PNP 2026 →</button>
+
+</form>
+</div>
+
+<footer>PNP 2026 · Unbridled · Doing Good by Doing Well</footer>
+
+<script>
+document.getElementById('regForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting…';
+
+  const fd = new FormData(this);
+  const payload = {
+    fullName:     fd.get('fullName'),
+    email:        fd.get('email'),
+    phone:        fd.get('phone'),
+    company:      fd.get('company'),
+    address:      fd.get('address'),
+    attendeeType: fd.get('attendeeType'),
+    dietary:      fd.get('dietary'),
+    hotelRoom:    document.getElementById('hotelToggle').checked ? 'yes' : 'no',
+    tshirtSize:   fd.get('tshirtSize') || '',
+  };
+
+  try {
+    const res = await fetch('/api/pnp/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      document.getElementById('msgSuccess').style.display = 'block';
+      document.getElementById('msgError').style.display = 'none';
+      this.reset();
+      btn.textContent = '✓ Registered';
+    } else {
+      throw new Error(data.error || 'Unknown error');
+    }
+  } catch(err) {
+    document.getElementById('msgError').style.display = 'block';
+    document.getElementById('msgError').textContent = '⚠ ' + err.message;
+    btn.disabled = false;
+    btn.textContent = 'Try Again →';
+  }
+});
+</script>
+</body>
+</html>
