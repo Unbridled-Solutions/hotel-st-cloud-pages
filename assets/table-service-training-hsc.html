@@ -583,7 +583,7 @@ body{
       <div id="tallyError" style="display:none;margin-top:16px;padding:14px 16px;background:rgba(192,64,64,.08);border:1px solid rgba(192,64,64,.3);border-radius:2px;font-size:13px;color:#e07070;line-height:1.5"></div>
     </div>
 
-    <button class="btn-restart" onclick="restart()">Retake Quiz</button>
+    <button class="btn-restart" id="retakeBtn" onclick="restart()" style="display:none">Retake Quiz</button>
     <div class="review" id="reviewSection">
       <div class="review-title">Answer Review</div>
       <div id="reviewItems"></div>
@@ -764,6 +764,8 @@ function showResults() {
   document.getElementById('scoreSub').textContent = sub;
   const gb = document.getElementById('gradeBadge');
   gb.textContent = grade; gb.className = 'grade-badge ' + gc;
+  // Only show retake button if they passed (score >= 10)
+  document.getElementById('retakeBtn').style.display = score >= 10 ? 'inline-block' : 'none';
   const reviewItems = document.getElementById('reviewItems');
   userAnswers.forEach((ans, i) => {
     const correct = questions[i].correct;
