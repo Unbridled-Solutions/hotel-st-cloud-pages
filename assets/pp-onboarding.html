@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>People & Possibilities — MC Onboarding</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #1a2535;
+            --blue: #5a8ba7;
+            --orange: #c44027;
+            --cream: #f0ede6;
+            --white: #ffffff;
+            --gray: #4b4f54;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--cream);
+            color: var(--navy);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: var(--white);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 700px;
+            box-sizing: border-box;
+            margin-top: 20px;
+        }
+
+        .header-band {
+            background-color: var(--orange);
+            margin: -30px -30px 30px -30px;
+            padding: 28px 30px 24px 30px;
+            border-radius: 8px 8px 0 0;
+            text-align: center;
+        }
+
+        .header-band h1 {
+            color: var(--white);
+            margin: 0 0 6px 0;
+            font-size: 22px;
+            letter-spacing: 0.3px;
+        }
+
+        .header-band p {
+            color: rgba(255,255,255,0.88);
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-bottom: 30px;
+            height: 8px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: var(--orange);
+            border-radius: 5px;
+            transition: width 0.4s ease-in-out;
+        }
+
+        .step-label {
+            font-size: 12px;
+            color: var(--gray);
+            text-align: right;
+            margin-top: -22px;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            color: var(--navy);
+            text-align: center;
+            margin-bottom: 24px;
+            font-size: 20px;
+        }
+
+        .form-step {
+            display: none;
+        }
+
+        .form-step.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 22px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .hint {
+            font-size: 13px;
+            color: var(--gray);
+            margin: 0 0 10px 0;
+            line-height: 1.5;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+            font-family: 'Inter', sans-serif;
+            color: var(--navy);
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--orange);
+            box-shadow: 0 0 0 2px rgba(196,64,39,0.12);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .checkbox-group,
+        .radio-group {
+            margin-top: 10px;
+        }
+
+        .checkbox-group label,
+        .radio-group label {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            font-weight: 400;
+            cursor: pointer;
+            line-height: 1.4;
+        }
+
+        .checkbox-group input[type="checkbox"],
+        .radio-group input[type="radio"] {
+            margin-right: 10px;
+            margin-top: 3px;
+            flex-shrink: 0;
+            accent-color: var(--orange);
+        }
+
+        .other-input {
+            margin-top: 10px;
+            padding-left: 25px;
+            display: none;
+        }
+
+        .section-divider {
+            border: none;
+            border-top: 1px solid #e8e8e8;
+            margin: 24px 0;
+        }
+
+        .section-title {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--orange);
+            margin-bottom: 14px;
+        }
+
+        .btn-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+
+        button {
+            background-color: var(--orange);
+            color: var(--white);
+            padding: 12px 28px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #a8351f;
+        }
+
+        button.btn-back {
+            background-color: transparent;
+            color: var(--gray);
+            border: 1px solid #ccc;
+        }
+
+        button.btn-back:hover {
+            background-color: #f5f5f5;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            color: #d9534f;
+            font-size: 13px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        input.error,
+        textarea.error,
+        select.error {
+            border-color: #d9534f;
+        }
+
+        /* Completion screen */
+        .completion-screen {
+            text-align: center;
+            display: none;
+            padding: 40px 20px;
+        }
+
+        .completion-icon {
+            font-size: 56px;
+            margin-bottom: 16px;
+        }
+
+        .completion-screen h2 {
+            color: var(--navy);
+            font-size: 26px;
+            margin-bottom: 12px;
+        }
+
+        .completion-screen p {
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--gray);
+            margin-bottom: 12px;
+        }
+
+        .field-summary {
+            background-color: var(--cream);
+            padding: 20px;
+            border-radius: 6px;
+            text-align: left;
+            margin-top: 28px;
+        }
+
+        .field-summary h3 {
+            margin-top: 0;
+            font-size: 15px;
+            color: var(--navy);
+        }
+
+        .field-summary p {
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--navy);
+        }
+
+        .acknowledgment-box {
+            background-color: #fff8f6;
+            border: 1px solid #f0c8be;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 22px;
+        }
+
+        .acknowledgment-box label {
+            display: flex;
+            align-items: flex-start;
+            font-weight: 400;
+            cursor: pointer;
+            line-height: 1.5;
+        }
+
+        .acknowledgment-box input[type="checkbox"] {
+            margin-right: 10px;
+            margin-top: 3px;
+            flex-shrink: 0;
+            accent-color: var(--orange);
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .container { padding: 0 0 20px 0; }
+            .header-band { margin: 0 0 20px 0; border-radius: 0; padding: 24px 20px 20px; }
+            .container > *:not(.header-band) { padding: 0 20px; }
+            .progress-bar-container { margin: 0 20px 20px; width: calc(100% - 40px); }
+            .step-label { padding: 0 20px; }
+            .btn-group { flex-direction: column; gap: 10px; }
+            button { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="header-band">
+        <h1>People &amp; Possibilities</h1>
+        <p>Let's get you set up with your MC agent. This takes about 5 minutes.</p>
+    </div>
+
+    <div class="progress-bar-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="step-label" id="stepLabel">Step 1 of 6</div>
+
+    <form id="ppForm">
+
+        <!-- ── STEP 1: About You ── -->
+        <div class="form-step active" data-step="1">
+            <h2>Step 1: About You</h2>
+
+            <div class="form-group">
+                <label for="fullName">Full Name <span style="color:#d9534f;">*</span></label>
+                <input type="text" id="fullName" name="fullName" required>
+                <div class="error-message">Full name is required.</div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Work Email <span style="color:#d9534f;">*</span></label>
+                <input type="email" id="email" name="email" required>
+                <div class="error-message">A valid email address is required.</div>
+            </div>
+
+            <div class="form-group">
+                <label for="yourRole">Your Role / Title <span style="color:#d9534f;">*</span></label>
+                <input type="text" id="yourRole" name="yourRole" required placeholder="e.g. HR Business Partner, P&amp;P Manager">
+                <div class="error-message">Your role is required.</div>
+            </div>
+
+            <div class="form-group">
+                <label for="companyEntity">Which Unbridled company or team are you with? <span style="color:#d9534f;">*</span></label>
+                <select id="companyEntity" name="companyEntity" required>
+                    <option value="">Select a company</option>
+                    <option value="Unbridled (Live Events)">Unbridled (Live Events)</option>
+                    <option value="Unbridled Productions">Unbridled Productions</option>
+                    <option value="Unbridled Media">Unbridled Media</option>
+                    <option value="Gift'd">Gift'd</option>
+                    <option value="Unbridled Travel">Unbridled Travel</option>
+                    <option value="Hotel St. Cloud">Hotel St. Cloud</option>
+                    <option value="Unbridled Holdings">Unbridled Holdings</option>
+                    <option value="BeUnbridled">BeUnbridled</option>
+                    <option value="Across multiple entities">Across multiple entities</option>
+                    <option value="Other">Other</option>
+                </select>
+                <div class="error-message">Please select your company.</div>
+            </div>
+
+            <div class="form-group">
+                <label for="teamSize">How many people are you responsible for supporting?</label>
+                <select id="teamSize" name="teamSize">
+                    <option value="">Select range</option>
+                    <option value="1-10">1–10</option>
+                    <option value="11-25">11–25</option>
+                    <option value="26-50">26–50</option>
+                    <option value="51-100">51–100</option>
+                    <option value="100+">100+</option>
+                </select>
+            </div>
+
+            <div class="btn-group">
+                <span></span>
+                <button type="button" class="next-btn">Next →</button>
+            </div>
+        </div>
+
+        <!-- ── STEP 2: What's Eating Your Time ── -->
+        <div class="form-step" data-step="2">
+            <h2>Step 2: What's Eating Your Time?</h2>
+            <p class="hint">This is the most important step. The more specific you are, the faster MC gets to work.</p>
+
+            <div class="form-group">
+                <label for="biggestTimeEater">What takes the most time on your plate right now? <span style="color:#d9534f;">*</span></label>
+                <textarea id="biggestTimeEater" name="biggestTimeEater" rows="4" required minlength="20" placeholder="e.g. Writing job descriptions from scratch every time, chasing down managers for performance review input, fielding the same benefits questions over and over..."></textarea>
+                <div class="error-message">Please tell us what's eating your time (at least 20 characters).</div>
+            </div>
+
+            <div class="form-group">
+                <label for="oneThingChangeWeek">If MC could do ONE thing automatically that would change your week — what is it? <span style="color:#d9534f;">*</span></label>
+                <textarea id="oneThingChangeWeek" name="oneThingChangeWeek" rows="4" required minlength="20" placeholder="Be specific. This becomes MC's first mission."></textarea>
+                <div class="error-message">Please describe the one thing that would change your week (at least 20 characters).</div>
+            </div>
+
+            <div class="form-group">
+                <label for="wishSomeoneHandled">What do you wish someone else just handled for you?</label>
+                <textarea id="wishSomeoneHandled" name="wishSomeoneHandled" rows="3" placeholder="e.g. Drafting offer letters, scheduling interviews, building out onboarding checklists..."></textarea>
+            </div>
+
+            <div class="btn-group">
+                <button type="button" class="btn-back prev-btn">← Back</button>
+                <button type="button" class="next-btn">Next →</button>
+            </div>
+        </div>
+
+        <!-- ── STEP 3: Use Cases ── -->
+        <div class="form-step" data-step="3">
+            <h2>Step 3: How You'll Use MC</h2>
+            <p class="hint">Check everything that applies — even things you're not sure about yet. MC will prioritize based on your answers.</p>
+
+            <div class="form-group">
+                <div class="section-title">Recruiting &amp; Hiring</div>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" name="useCases" value="Drafting job descriptions"> Drafting job descriptions</label>
+                    <label><input type="checkbox" name="useCases" value="Interview guides and screening questions"> Interview guides &amp; screening questions</label>
+                    <label><input type="checkbox" name="useCases" value="Offer letter drafting"> Offer letter drafting</label>
+                    <label><input type="checkbox" name="useCases" value="Candidate follow-up communications"> Candidate follow-up communications</label>
+                    <label><input type="checkbox" name="useCases" value="Scheduling interview coordination"> Scheduling &amp; interview coordination</label>
+                </div>
+
+                <hr class="section-divider">
+                <div class="section-title">Onboarding &amp; Offboarding</div>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" name="useCases" value="New employee onboarding checklists"> New employee onboarding checklists</label>
+                    <label><input type="checkbox" name="useCases" value="Offboarding checklists and documentation"> Offboarding checklists &amp; documentation</label>
+                    <label><input type="checkbox" name="useCases" value="Day 1 welcome communications"> Day 1 welcome communications</label>
+                    <label><input type="checkbox" name="useCases" value="Benefits enrollment guidance"> Benefits enrollment guidance</label>
+                </div>
+
+                <hr class="section-divider">
+                <div class="section-title">Performance &amp; Development</div>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" name="useCases" value="Performance review prep and summaries (Lattice)"> Performance review prep &amp; summaries (Lattice)</label>
+                    <label><input type="checkbox" name="useCases" value="Goal-setting frameworks and templates"> Goal-setting frameworks &amp; templates</label>
+                    <label><input type="checkbox" name="useCases" value="Manager coaching prompts and talking points"> Manager coaching prompts &amp; talking points</label>
+                    <label><input type="checkbox" name="useCases" value="PIP documentation drafting"> PIP documentation drafting</label>
+                </div>
+
+                <hr class="section-divider">
+                <div class="section-title">Policy &amp; Documentation</div>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" name="useCases" value="Policy writing and updates"> Policy writing &amp; updates</label>
+                    <label><input type="checkbox" name="useCases" value="Employee handbook maintenance"> Employee handbook maintenance</label>
+                    <label><input type="checkbox" name="useCases" value="Employment notices and compliance documents"> Employment notices &amp; compliance documents</label>
+                    <label><input type="checkbox" name="useCases" value="Legal document generation (Rocket Lawyer)"> Legal document generation (Rocket Lawyer)</label>
+                </div>
+
+                <hr class="section-divider">
+                <div class="section-title">Benefits &amp; Payroll Support</div>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" name="useCases" value="Benefits Q&A routing (MyCigna, VSP, T. Rowe Price)"> Benefits Q&amp;A routing (MyCigna, VSP, T. Rowe Price)</label>
+                    <label><input type="checkbox" name="useCases" value="PTO and time-off question handling"> PTO &amp; time-off question handling</label>
+                    <label><input type="checkbox" name="useCases" value="Payroll and tax question routing"> Payroll &amp; tax question routing</label>
+                    <label><input type="checkbox" name="useCases" value="Expense policy Q&A"> Expense policy Q&amp;A</label>
+                </div>
+
+                <hr class="section-divider">
+                <div class="section-title">Culture &amp; Engagement</div>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" name="useCases" value="Cornerstones and Ways of Being Q&A"> Cornerstones &amp; Ways of Being Q&amp;A</label>
+                    <label><input type="checkbox" name="useCases" value="Celebration and recognition drafts"> Celebration &amp; recognition drafts</label>
+                    <label><input type="checkbox" name="useCases" value="Employee communications and announcements"> Employee communications &amp; announcements</label>
+                    <label><input type="checkbox" name="useCases" value="Community service and Unbridled ACTS coordination"> Community service &amp; Unbridled ACTS coordination</label>
+                </div>
+
+                <hr class="section-divider">
+                <div class="section-title">Meeting &amp; Admin Support</div>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" name="useCases" value="Meeting notes and follow-up summaries"> Meeting notes &amp; follow-up summaries</label>
+                    <label><input type="checkbox" name="useCases" value="Headcount and org chart tracking"> Headcount &amp; org chart tracking</label>
+                    <label><input type="checkbox" name="useCases" value="Reporting and data summaries (UKG, Lattice)"> Reporting &amp; data summaries (UKG, Lattice)</label>
+                    <label><input type="checkbox" name="useCases" value="Other">Other</label>
+                    <input type="text" name="useCasesOther" class="other-input" placeholder="Describe other use cases...">
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button type="button" class="btn-back prev-btn">← Back</button>
+                <button type="button" class="next-btn">Next →</button>
+            </div>
+        </div>
+
+        <!-- ── STEP 4: Tools to Connect ── -->
+        <div class="form-step" data-step="4">
+            <h2>Step 4: Tools to Connect</h2>
+            <p class="hint">Check everything you use. MC will integrate with these to pull data, draft documents, and take action where you allow it.</p>
+
+            <div class="form-group">
+                <div class="section-title">P&amp;P Core Systems</div>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" name="tools" value="UKG"> UKG (HRIS &amp; timekeeping)</label>
+                    <label><input type="checkbox" name="tools" value="Lattice"> Lattice (performance &amp; goals)</label>
+                    <label><input type="checkbox" name="tools" value="Vantagepoint"> Vantagepoint</label>
+                    <label><input type="checkbox" name="tools" value="Rocket Lawyer"> Rocket Lawyer (legal docs)</label>
+                    <label><input type="checkbox" name="tools" value="PTO Exchange"> PTO Exchange</label>
+                </div>
+
+                <hr class="section-divider">
+                <div class="section-title">Benefits Platforms</div>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" name="tools" value="MyCigna"> MyCigna (medical, dental)</label>
+                    <label><input type="checkbox" name="tools" value="VSP"> VSP (vision)</label>
+                    <label><input type="checkbox" name="tools" value="T. Rowe Price"> T. Rowe Price (401K)</label>
+                    <label><input type="checkbox" name="tools" value="Rocky Mountain Reserve"> Rocky Mountain Reserve</label>
+                </div>
+
+                <hr class="section-divider">
+                <div class="section-title">Productivity &amp; Communication</div>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" name="tools" value="Microsoft 365 / SharePoint"> Microsoft 365 / SharePoint</label>
+                    <label><input type="checkbox" name="tools" value="Google Workspace"> Google Workspace</label>
+                    <label><input type="checkbox" name="tools" value="Slack"> Slack</label>
+                    <label><input type="checkbox" name="tools" value="Zoom"> Zoom</label>
+                    <label><input type="checkbox" name="tools" value="Other">Other</label>
+                    <input type="text" name="toolsOther" class="other-input" placeholder="e.g. Greenhouse, Workday, DocuSign...">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="toolPriority">Which ONE tool would you most want MC connected to first?</label>
+                <input type="text" id="toolPriority" name="toolPriority" placeholder="e.g. Lattice, UKG, SharePoint...">
+            </div>
+
+            <div class="btn-group">
+                <button type="button" class="btn-back prev-btn">← Back</button>
+                <button type="button" class="next-btn">Next →</button>
+            </div>
+        </div>
+
+        <!-- ── STEP 5: Guardrails ── -->
+        <div class="form-step" data-step="5">
+            <h2>Step 5: Guardrails</h2>
+            <p class="hint">MC is here to help — not to replace human judgment on the hard stuff. Help us define where the line is.</p>
+
+            <div class="form-group">
+                <label>Which topics should MC always escalate to a human? (Check all that apply)</label>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" name="escalate" value="Terminations and involuntary separations"> Terminations &amp; involuntary separations</label>
+                    <label><input type="checkbox" name="escalate" value="Legal claims, complaints, or investigations"> Legal claims, complaints, or investigations</label>
+                    <label><input type="checkbox" name="escalate" value="Accommodation requests (ADA, religious, etc.)"> Accommodation requests (ADA, religious, etc.)</label>
+                    <label><input type="checkbox" name="escalate" value="Salary decisions and compensation changes"> Salary decisions &amp; compensation changes</label>
+                    <label><input type="checkbox" name="escalate" value="Sensitive employee relations issues"> Sensitive employee relations issues</label>
+                    <label><input type="checkbox" name="escalate" value="Anything related to FMLA or leave of absence"> Anything related to FMLA or leave of absence</label>
+                    <label><input type="checkbox" name="escalate" value="Other">Other</label>
+                    <input type="text" name="escalateOther" class="other-input" placeholder="Describe other escalation scenarios...">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="escalateTo">When MC needs to escalate — who should it loop in?</label>
+                <input type="text" id="escalateTo" name="escalateTo" placeholder="e.g. You, your manager, Legal team, Lindsay Wyss...">
+            </div>
+
+            <div class="form-group">
+                <label for="hardLimits">Anything MC should be explicitly kept out of? Any hard limits?</label>
+                <textarea id="hardLimits" name="hardLimits" rows="3" placeholder="e.g. Don't access individual salary data, don't communicate directly with employees without my approval, don't make commitments on behalf of the company..."></textarea>
+            </div>
+
+            <div class="btn-group">
+                <button type="button" class="btn-back prev-btn">← Back</button>
+                <button type="button" class="next-btn">Next →</button>
+            </div>
+        </div>
+
+        <!-- ── STEP 6: Voice + Access ── -->
+        <div class="form-step" data-step="6">
+            <h2>Step 6: Voice &amp; Access</h2>
+
+            <div class="form-group">
+                <label for="communicationStyle">How does your team communicate? <span style="color:#d9534f;">*</span></label>
+                <select id="communicationStyle" name="communicationStyle" required>
+                    <option value="">Select a style</option>
+                    <option value="Warm and human — people first, always">Warm and human — people first, always</option>
+                    <option value="Direct and concise — respect everyone's time">Direct and concise — respect everyone's time</option>
+                    <option value="Formal and professional — this is HR">Formal and professional — this is HR</option>
+                    <option value="Casual and friendly — we're not stuffy">Casual and friendly — we're not stuffy</option>
+                </select>
+                <div class="error-message">Communication style is required.</div>
+            </div>
+
+            <div class="form-group">
+                <label for="cornerstones">Which Unbridled Cornerstones feel most central to your team's work?</label>
+                <p class="hint">Be Worthy, Be Flexible, Be Committed, Be Engaged, Be Imaginative, Be Knowledgeable, Be Caring, Be Resourceful, Be Accountable, Be Inclusive</p>
+                <input type="text" id="cornerstones" name="cornerstones" placeholder="e.g. Be Caring, Be Accountable, Be Inclusive">
+            </div>
+
+            <div class="form-group">
+                <label for="neverSayOrDo">Anything MC should NEVER say or do?</label>
+                <textarea id="neverSayOrDo" name="neverSayOrDo" rows="3" placeholder="e.g. Never be legalistic or cold when talking about people. Never give a definitive legal answer. Never reach out to employees directly without my sign-off."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="telegramUsername">Your Telegram username <span style="color:#d9534f;">*</span></label>
+                <p class="hint">This is how MC will reach you. <strong>To find yours:</strong> Open Telegram → Settings → your username appears under your name (starts with @). Don't have one? Go to Settings → Edit Profile → Username.</p>
+                <input type="text" id="telegramUsername" name="telegramUsername" required pattern="^@[a-zA-Z0-9_]{5,}$" placeholder="@yourusername">
+                <div class="error-message">A valid Telegram username starting with @ is required.</div>
+            </div>
+
+            <div class="form-group">
+                <label for="anythingElse">Anything else MC should know before getting started?</label>
+                <textarea id="anythingElse" name="anythingElse" rows="3" placeholder="Team quirks, current priorities, upcoming big moments (open enrollment, re-org, busy season)..."></textarea>
+            </div>
+
+            <hr class="section-divider">
+
+            <div class="acknowledgment-box">
+                <label>
+                    <input type="checkbox" id="aiPolicyAck" name="aiPolicyAck" required>
+                    I've reviewed the <strong>AI Team Member Recruiting &amp; Interviewing Policy</strong> and understand MC's role in P&amp;P workflows, including what requires human judgment and sign-off.
+                </label>
+                <div class="error-message" id="aiPolicyAckError">Please acknowledge the AI policy before submitting.</div>
+            </div>
+
+            <div class="btn-group">
+                <button type="button" class="btn-back prev-btn">← Back</button>
+                <button type="submit">Submit →</button>
+            </div>
+        </div>
+
+    </form>
+
+    <!-- Completion Screen -->
+    <div class="completion-screen" id="completionScreen">
+        <div class="completion-icon">🤝</div>
+        <h2>You're all set.</h2>
+        <p>MC is being configured for the P&amp;P team. You'll get a Telegram message within 24 hours once everything is ready.</p>
+        <p style="font-size:14px;">In the meantime — nothing to do. We've got it from here.</p>
+        <div class="field-summary" id="submissionSummary"></div>
+    </div>
+
+</div>
+
+<script>
+    const form = document.getElementById('ppForm');
+    const formSteps = form.querySelectorAll('.form-step');
+    const progressBar = document.getElementById('progressBar');
+    const stepLabel = document.getElementById('stepLabel');
+    const completionScreen = document.getElementById('completionScreen');
+    const submissionSummary = document.getElementById('submissionSummary');
+    const totalSteps = formSteps.length;
+    let currentStep = 0;
+
+    function updateProgress() {
+        const pct = ((currentStep + 1) / totalSteps) * 100;
+        progressBar.style.width = pct + '%';
+        stepLabel.textContent = `Step ${currentStep + 1} of ${totalSteps}`;
+    }
+
+    function showStep(idx) {
+        formSteps.forEach((s, i) => s.classList.toggle('active', i === idx));
+        currentStep = idx;
+        updateProgress();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function validateStep(idx) {
+        const step = formSteps[idx];
+        const required = step.querySelectorAll('input:required, textarea:required, select:required');
+        let valid = true;
+
+        // Clear previous errors
+        step.querySelectorAll('.error-message').forEach(e => e.style.display = 'none');
+        step.querySelectorAll('.error').forEach(e => e.classList.remove('error'));
+
+        required.forEach(input => {
+            if (!input.checkValidity()) {
+                valid = false;
+                input.classList.add('error');
+                const err = input.nextElementSibling;
+                if (err && err.classList.contains('error-message')) err.style.display = 'block';
+            }
+        });
+
+        // Telegram username custom validation
+        const tg = step.querySelector('#telegramUsername');
+        if (tg && tg.value && !tg.value.match(/^@[a-zA-Z0-9_]{5,}$/)) {
+            valid = false;
+            tg.classList.add('error');
+            const err = tg.nextElementSibling;
+            if (err && err.classList.contains('error-message')) err.style.display = 'block';
+        }
+
+        // AI policy checkbox (step 6)
+        const ack = step.querySelector('#aiPolicyAck');
+        if (ack && !ack.checked) {
+            valid = false;
+            document.getElementById('aiPolicyAckError').style.display = 'block';
+        }
+
+        // "Other" text fields for checkboxes
+        ['useCases', 'tools', 'escalate'].forEach(name => {
+            const otherCb = step.querySelector(`input[name="${name}"][value="Other"]`);
+            const otherTxt = step.querySelector(`input[name="${name}Other"]`);
+            if (otherCb && otherCb.checked && otherTxt && otherTxt.value.trim() === '') {
+                valid = false;
+                otherTxt.classList.add('error');
+            }
+        });
+
+        return valid;
+    }
+
+    // Navigation
+    form.addEventListener('click', e => {
+        if (e.target.classList.contains('next-btn')) {
+            if (validateStep(currentStep) && currentStep < totalSteps - 1) {
+                showStep(currentStep + 1);
+            }
+        } else if (e.target.classList.contains('prev-btn')) {
+            if (currentStep > 0) showStep(currentStep - 1);
+        }
+    });
+
+    // Submit
+    form.addEventListener('submit', e => {
+        e.preventDefault();
+        if (!validateStep(currentStep)) return;
+
+        const fd = new FormData(form);
+        const data = {};
+
+        for (let [key, value] of fd.entries()) {
+            if (data[key]) {
+                data[key] = Array.isArray(data[key]) ? [...data[key], value] : [data[key], value];
+            } else {
+                data[key] = value;
+            }
+        }
+
+        // Consolidate checkbox groups
+        ['useCases', 'tools', 'escalate'].forEach(name => {
+            const checked = Array.from(form.querySelectorAll(`input[name="${name}"]:checked`)).map(cb => cb.value);
+            const otherTxt = form.querySelector(`input[name="${name}Other"]`);
+            if (otherTxt && otherTxt.value.trim()) {
+                const idx = checked.indexOf('Other');
+                if (idx > -1) checked[idx] = `Other: ${otherTxt.value.trim()}`;
+                else checked.push(`Other: ${otherTxt.value.trim()}`);
+            }
+            data[name] = checked.join(', ');
+            delete data[`${name}Other`];
+        });
+
+        // Tag the submission type
+        data['formType'] = 'pp-onboarding';
+
+        // Submit to Cloudflare Worker
+        fetch('https://pp-onboarding.unbridled.workers.dev', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(r => r.json())
+        .then(result => {
+            if (result.success) {
+                console.log('Submitted:', result.id);
+            } else {
+                console.error('Submission error:', result.error);
+            }
+        })
+        .catch(err => console.error('Network error:', err));
+
+        displayCompletion(data);
+    });
+
+    function displayCompletion(data) {
+        form.style.display = 'none';
+        completionScreen.style.display = 'block';
+        progressBar.style.width = '100%';
+        stepLabel.textContent = 'Submitted ✓';
+
+        const labels = {
+            fullName: 'Full Name',
+            email: 'Work Email',
+            yourRole: 'Role / Title',
+            companyEntity: 'Company / Team',
+            teamSize: 'Team Size',
+            biggestTimeEater: 'Biggest time sink',
+            oneThingChangeWeek: 'One thing that would change your week',
+            wishSomeoneHandled: 'Wish someone else handled',
+            useCases: 'Use Cases',
+            tools: 'Tools to Connect',
+            toolPriority: 'Priority integration',
+            escalate: 'Always escalate',
+            escalateTo: 'Escalate to',
+            hardLimits: 'Hard limits',
+            communicationStyle: 'Communication Style',
+            cornerstones: 'Cornerstones',
+            neverSayOrDo: 'Never say or do',
+            telegramUsername: 'Telegram Username',
+            anythingElse: 'Anything else',
+        };
+
+        let html = '<h3>Your Submission Summary</h3>';
+        for (const key in data) {
+            if (key === 'aiPolicyAck' || key === 'formType') continue;
+            const label = labels[key] || key;
+            const val = Array.isArray(data[key]) ? data[key].join(', ') : data[key];
+            if (val) html += `<p><strong>${label}:</strong> ${val}</p>`;
+        }
+        submissionSummary.innerHTML = html;
+    }
+
+    // Toggle "Other" text inputs for checkbox groups
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', e => {
+            if (e.target.value === 'Other') {
+                const otherInput = e.target.closest('.checkbox-group').querySelector('input[type="text"].other-input');
+                if (otherInput) {
+                    otherInput.style.display = e.target.checked ? 'block' : 'none';
+                    otherInput.required = e.target.checked;
+                    if (!e.target.checked) otherInput.value = '';
+                }
+            }
+        });
+    });
+
+    // Init
+    showStep(0);
+</script>
+</body>
+</html>
