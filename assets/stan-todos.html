@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="refresh" content="300">
+<title>Stan's List | Unbridled</title>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1923;
+  --navy: #1a2e3b;
+  --card: #162433;
+  --border: #1e3347;
+  --gold: #c9aa7c;
+  --blue: #5a8ba7;
+  --green: #4caf7d;
+  --red: #e05a5a;
+  --amber: #e0a040;
+  --text: #e8e0d4;
+  --muted: #6a8a9a;
+  --white: #f5f5f5;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Josefin Sans', sans-serif; font-weight: 300; min-height: 100vh; padding-bottom: 4rem; }
+
+.topbar { background: #0a1219; border-bottom: 1px solid var(--border); padding: .75rem clamp(1rem,4vw,2rem); display: flex; align-items: center; justify-content: space-between; }
+.topbar-brand { font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--white); }
+.topbar-brand span { color: var(--blue); }
+.topbar-meta { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+
+.hero { background: linear-gradient(180deg, #0a1219 0%, var(--bg) 100%); border-bottom: 1px solid var(--border); padding: 2rem clamp(1rem,4vw,2rem) 1.5rem; position: relative; }
+.hero::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+.hero-eyebrow { font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: var(--blue); margin-bottom: .5rem; }
+.hero-title { font-size: clamp(24px,4vw,38px); font-weight: 700; color: var(--white); letter-spacing: -.5px; margin-bottom: .35rem; }
+.hero-title em { color: var(--gold); font-style: normal; }
+.hero-sub { font-size: 11px; color: var(--muted); letter-spacing: 1px; }
+
+.wrap { max-width: 700px; margin: 0 auto; padding: 0 clamp(1rem,4vw,1.5rem); }
+
+.summary-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 1.75rem 0; }
+.sum-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: .9rem 1rem; text-align: center; }
+.sum-val { font-size: 24px; font-weight: 700; color: var(--gold); line-height: 1; margin-bottom: .2rem; }
+.sum-lbl { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+
+.section-label { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin: 1.75rem 0 .75rem; padding-bottom: .5rem; border-bottom: 1px solid var(--border); }
+
+.todo-item { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: .65rem; display: flex; align-items: flex-start; gap: 1rem; }
+.todo-item.status-in_progress { border-left: 3px solid var(--gold); }
+.todo-item.status-pending { border-left: 3px solid var(--border); }
+.todo-item.status-completed { border-left: 3px solid var(--green); opacity: .6; }
+.todo-item.status-cancelled { border-left: 3px solid var(--red); opacity: .45; }
+
+.todo-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.status-in_progress .todo-dot { background: var(--gold); }
+.status-pending .todo-dot { background: var(--border); border: 1px solid var(--muted); }
+.status-completed .todo-dot { background: var(--green); }
+.status-cancelled .todo-dot { background: var(--red); }
+
+.todo-content { flex: 1; font-size: 14px; color: var(--text); line-height: 1.5; }
+.status-completed .todo-content { text-decoration: line-through; color: var(--muted); }
+.status-cancelled .todo-content { text-decoration: line-through; color: var(--muted); }
+
+.todo-badge { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; padding: .2rem .65rem; border-radius: 10px; font-weight: 700; white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+.badge-inprogress { background: rgba(201,170,124,.15); color: var(--gold); border: 1px solid rgba(201,170,124,.3); }
+.badge-pending { background: rgba(90,139,167,.1); color: var(--blue); border: 1px solid rgba(90,139,167,.25); }
+.badge-completed { background: rgba(76,175,125,.1); color: var(--green); border: 1px solid rgba(76,175,125,.25); }
+.badge-cancelled { background: rgba(224,90,90,.1); color: var(--red); border: 1px solid rgba(224,90,90,.2); }
+
+.empty-state { text-align: center; padding: 3rem 1rem; color: var(--muted); }
+.empty-icon { font-size: 36px; margin-bottom: .75rem; display: block; opacity: .4; }
+.empty-text { font-size: 13px; letter-spacing: .5px; }
+
+.updated { text-align: center; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-top: 2.5rem; }
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <span class="topbar-brand">Stan <span>Bullis</span></span>
+  <span class="topbar-meta">Live Task List</span>
+</nav>
+
+<div class="hero">
+  <div class="wrap">
+    <p class="hero-eyebrow">Unbridled · Daily Operations</p>
+    <h1 class="hero-title">Stan's <em>List</em></h1>
+    <p class="hero-sub" id="lastUpdated">Loading...</p>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="summary-strip">
+    <div class="sum-card"><div class="sum-val" id="countTotal">0</div><div class="sum-lbl">Total</div></div>
+    <div class="sum-card"><div class="sum-val" id="countProgress" style="color:var(--gold)">0</div><div class="sum-lbl">In Progress</div></div>
+    <div class="sum-card"><div class="sum-val" id="countPending" style="color:var(--blue)">0</div><div class="sum-lbl">Pending</div></div>
+    <div class="sum-card"><div class="sum-val" id="countDone" style="color:var(--green)">0</div><div class="sum-lbl">Done Today</div></div>
+  </div>
+
+  <div id="todoList"></div>
+
+  <p class="updated" id="refreshNote">Page refreshes every 5 minutes</p>
+</div>
+
+<script>
+// Todo data is injected by the cron job below
+const TODOS = __TODO_DATA__;
+
+function render() {
+  const list = document.getElementById('todoList');
+  const now = new Date();
+  document.getElementById('lastUpdated').textContent =
+    'Updated: ' + now.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'}) +
+    ' · ' + now.toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit', timeZoneName:'short'});
+
+  if (!TODOS || TODOS.length === 0) {
+    list.innerHTML = '<div class="empty-state"><span class="empty-icon">✓</span><div class="empty-text">All clear — no items on the list right now.<br>Tell MC what to add.</div></div>';
+    return;
+  }
+
+  const inProgress = TODOS.filter(t => t.status === 'in_progress');
+  const pending    = TODOS.filter(t => t.status === 'pending');
+  const completed  = TODOS.filter(t => t.status === 'completed');
+  const cancelled  = TODOS.filter(t => t.status === 'cancelled');
+
+  document.getElementById('countTotal').textContent    = TODOS.length;
+  document.getElementById('countProgress').textContent = inProgress.length;
+  document.getElementById('countPending').textContent  = pending.length;
+  document.getElementById('countDone').textContent     = completed.length;
+
+  let html = '';
+
+  if (inProgress.length) {
+    html += '<div class="section-label">In Progress</div>';
+    inProgress.forEach(t => {
+      html += `<div class="todo-item status-in_progress">
+        <div class="todo-dot"></div>
+        <div class="todo-content">${t.content}</div>
+        <span class="todo-badge badge-inprogress">Active</span>
+      </div>`;
+    });
+  }
+
+  if (pending.length) {
+    html += '<div class="section-label">Up Next</div>';
+    pending.forEach(t => {
+      html += `<div class="todo-item status-pending">
+        <div class="todo-dot"></div>
+        <div class="todo-content">${t.content}</div>
+        <span class="todo-badge badge-pending">Pending</span>
+      </div>`;
+    });
+  }
+
+  if (completed.length) {
+    html += '<div class="section-label">Completed</div>';
+    completed.forEach(t => {
+      html += `<div class="todo-item status-completed">
+        <div class="todo-dot"></div>
+        <div class="todo-content">${t.content}</div>
+        <span class="todo-badge badge-completed">Done ✓</span>
+      </div>`;
+    });
+  }
+
+  if (cancelled.length) {
+    html += '<div class="section-label">Cancelled</div>';
+    cancelled.forEach(t => {
+      html += `<div class="todo-item status-cancelled">
+        <div class="todo-dot"></div>
+        <div class="todo-content">${t.content}</div>
+        <span class="todo-badge badge-cancelled">Cancelled</span>
+      </div>`;
+    });
+  }
+
+  list.innerHTML = html;
+}
+
+render();
+</script>
+</body>
+</html>
