@@ -58,6 +58,10 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .score-bar{height:100%;border-radius:3px;transition:width .4s}
 
 .incorrect-cell{font-size:11px;color:var(--muted);line-height:1.5;max-width:260px}
+.btn-push{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:.3rem .8rem;border-radius:20px;border:1px solid var(--amber);color:var(--amber);background:transparent;cursor:pointer;font-family:'Josefin Sans',sans-serif;transition:all .2s;white-space:nowrap}
+.btn-push:hover{background:var(--amber);color:#1a1208}
+.btn-push.copied{border-color:var(--green);color:var(--green)}
+.btn-push.copied:hover{background:var(--green);color:#0a1a12}
 
 .empty-state{text-align:center;padding:3rem 1rem;color:var(--muted);font-size:13px}
 .loading{text-align:center;padding:2.5rem 1rem;color:var(--muted);font-size:13px;letter-spacing:1px}
@@ -109,6 +113,7 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
           <th>Status</th>
           <th>Missed Questions</th>
           <th>Date Taken</th>
+          <th>Action</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -189,6 +194,10 @@ function render() {
       ? new Date(f['Taken At']).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})
       : '—';
     const incorrect = (f['Incorrect Questions'] || '').trim();
+    const retakeUrl = 'https://offers.hotelstcloud.com/assets/table-service-training-hsc.html?name=' + encodeURIComponent(f['Team Member Name'] || '');
+    const actionCell = f['Passed']
+      ? '<td></td>'
+      : `<td><button class="btn-push" onclick="pushRetake(this,'${retakeUrl.replace(/'/g,"\\'")}')">⟳ Push Retake</button></td>`;
     return `<tr>
       <td><div class="td-name">${f['Team Member Name'] || '—'}</div></td>
       <td><div class="td-muted" style="font-size:11px">${(f['Quiz Title'] || '—').replace(' · Week of ', '<br><span style="color:var(--muted)">Week of </span>')}</div></td>
@@ -201,8 +210,24 @@ function render() {
       <td>${f['Passed'] ? '<span class="pass-badge pass-yes">✓ Passed</span>' : '<span class="pass-badge pass-no">Retake</span>'}</td>
       <td><div class="incorrect-cell">${incorrect === 'None — perfect score!' ? '<span style="color:var(--green)">🎯 Perfect</span>' : incorrect || '—'}</div></td>
       <td><div class="td-muted" style="font-size:11px">${date}</div></td>
+      ${actionCell}
     </tr>`;
   }).join('');
+}
+
+function pushRetake(btn, url) {
+  // Copy retake link to clipboard so manager can paste into Sling
+  navigator.clipboard.writeText(url).then(() => {
+    btn.textContent = '✓ Link Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '⟳ Push Retake';
+      btn.classList.remove('copied');
+    }, 3000);
+  }).catch(() => {
+    // Fallback: open a prompt with the URL pre-selected
+    window.prompt('Copy this retake link and paste into Sling:', url);
+  });
 }
 
 loadData();

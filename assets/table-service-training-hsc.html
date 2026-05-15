@@ -697,6 +697,16 @@ async function submitTally() {
 
 let current = 0, score = 0, answered = false, userAnswers = [];
 const cards = document.querySelectorAll('.q-card');
+
+// Auto-fill name from URL param (used when manager pushes a retake link)
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const prefilledName = params.get('name');
+  if (prefilledName) {
+    const nameInput = document.getElementById('participantName');
+    if (nameInput) nameInput.value = decodeURIComponent(prefilledName);
+  }
+})();
 const progressFill = document.getElementById('progressFill');
 const progressText = document.getElementById('progressText');
 const scoreText = document.getElementById('scoreText');
