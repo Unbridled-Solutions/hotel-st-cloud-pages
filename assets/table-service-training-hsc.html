@@ -318,14 +318,32 @@ body{
 </div>
 
 <div class="wrap">
-  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill"></div></div>
-  <div class="progress-meta">
+
+  <!-- NAME ENTRY SCREEN -->
+  <div id="nameScreen" style="background:var(--card-bg);border:1px solid var(--border);border-top:2px solid var(--gold);border-radius:2px;padding:36px 28px;margin:32px 0;animation:fadein .3s ease">
+    <div style="font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:16px">Before We Begin</div>
+    <div style="font-size:18px;font-weight:600;color:var(--cream);margin-bottom:8px;line-height:1.5">What's your name?</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:24px">Your score will be recorded so your manager can see who has completed this week's certification.</div>
+    <input type="text" id="participantName" placeholder="First and Last Name" autocomplete="name"
+      style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:2px;padding:14px 16px;font-family:'Josefin Sans',sans-serif;font-size:15px;font-weight:400;color:var(--cream);outline:none;margin-bottom:16px;transition:border-color .2s"
+      onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'"
+      onkeydown="if(event.key==='Enter')startQuiz()"
+    />
+    <button onclick="startQuiz()"
+      style="background:var(--gold);color:#1a1208;border:none;border-radius:2px;padding:14px 32px;font-family:'Josefin Sans',sans-serif;font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:background .2s;width:100%"
+      onmouseover="this.style.background='#d4a054'" onmouseout="this.style.background='var(--gold)'">
+      Start Certification →
+    </button>
+  </div>
+
+  <div class="progress-bar-wrap" style="display:none"><div class="progress-bar-fill" id="progressFill"></div></div>
+  <div class="progress-meta" style="display:none">
     <span id="progressText">Question 1 of 15</span>
     <span id="scoreText">Score: 0</span>
   </div>
 
   <!-- Q1 -->
-  <div class="q-card active" data-q="0">
+  <div class="q-card" data-q="0">
     <div class="q-num">Question 1 of 15 · Greeting &amp; First Impressions</div>
     <div class="q-text">A guest walks through the door. What should happen within the first 30 seconds?</div>
     <div class="options">
@@ -546,6 +564,25 @@ body{
     <div class="grade-badge" id="gradeBadge"></div>
     <div class="score-sub" id="scoreSub"></div>
     <br>
+
+    <!-- TALLY SUBMISSION BLOCK -->
+    <div id="tallyBlock" style="background:var(--bg);border:1px solid var(--border);border-radius:2px;padding:24px 28px;margin:20px 0;text-align:left">
+      <div style="font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:12px">Submit Your Score</div>
+      <div style="font-size:14px;color:var(--muted);margin-bottom:20px;line-height:1.6">
+        Tap below to record your result. Your manager will see your name, score, and which questions you missed.
+      </div>
+      <div id="tallyName" style="font-size:15px;font-weight:600;color:var(--cream);margin-bottom:16px"></div>
+      <button id="submitTallyBtn" onclick="submitTally()"
+        style="background:var(--gold);color:#1a1208;border:none;border-radius:2px;padding:12px 28px;font-family:'Josefin Sans',sans-serif;font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:background .2s;width:100%"
+        onmouseover="this.style.background='#d4a054'" onmouseout="this.style.background='var(--gold)'">
+        Submit My Score →
+      </button>
+      <div id="tallyConfirm" style="display:none;margin-top:16px;padding:14px 16px;background:rgba(76,175,125,.08);border:1px solid rgba(76,175,125,.3);border-radius:2px;font-size:13px;color:#6fcf97;line-height:1.5">
+        ✓ Score submitted. Your manager has been notified. Good work.
+      </div>
+      <div id="tallyError" style="display:none;margin-top:16px;padding:14px 16px;background:rgba(192,64,64,.08);border:1px solid rgba(192,64,64,.3);border-radius:2px;font-size:13px;color:#e07070;line-height:1.5"></div>
+    </div>
+
     <button class="btn-restart" onclick="restart()">Retake Quiz</button>
     <div class="review" id="reviewSection">
       <div class="review-title">Answer Review</div>
@@ -595,6 +632,68 @@ const qTexts = [
   "A guest asks about the difference between two dishes and you're not completely sure. What do you do?",
   "Guests are putting on their coats to leave. What is the single most important thing you can do?"
 ];
+
+let participantNameValue = '';
+
+function startQuiz() {
+  const name = document.getElementById('participantName').value.trim();
+  if (!name) {
+    document.getElementById('participantName').style.borderColor = 'var(--red)';
+    document.getElementById('participantName').placeholder = 'Please enter your name first';
+    return;
+  }
+  participantNameValue = name;
+  document.getElementById('nameScreen').style.display = 'none';
+  document.querySelector('.progress-bar-wrap').style.display = '';
+  document.querySelector('.progress-meta').style.display = '';
+  cards[0].classList.add('active');
+  updateProgress();
+}
+
+async function submitTally() {
+  const btn = document.getElementById('submitTallyBtn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting…';
+
+  const incorrectList = [];
+  userAnswers.forEach((ans, i) => {
+    if (ans !== questions[i].correct) {
+      incorrectList.push(`Q${i+1}: ${qTexts[i]}`);
+    }
+  });
+
+  const payload = {
+    quizType: 'table-service',
+    participantName: participantNameValue,
+    quizTitle: 'Table Service Certification · Week of ' + new Date().toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}),
+    score: score,
+    totalQuestions: 15,
+    percentage: Math.round(score / 15 * 100),
+    grade: document.getElementById('gradeBadge').textContent,
+    passed: score >= 10,
+    incorrectQuestions: incorrectList.join('\n') || 'None — perfect score!',
+    takenAt: new Date().toISOString()
+  };
+
+  try {
+    const res = await fetch('/api/pnp/quiz-result', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('tallyConfirm').style.display = 'block';
+      document.getElementById('tallyError').style.display = 'none';
+      btn.style.display = 'none';
+    } else throw new Error(data.error || 'Submission failed');
+  } catch(err) {
+    document.getElementById('tallyError').style.display = 'block';
+    document.getElementById('tallyError').textContent = '⚠ ' + err.message + ' — please screenshot your score and share with your manager.';
+    btn.disabled = false;
+    btn.textContent = 'Try Again →';
+  }
+}
 
 let current = 0, score = 0, answered = false, userAnswers = [];
 const cards = document.querySelectorAll('.q-card');
@@ -646,6 +745,13 @@ function showResults() {
   document.querySelectorAll('.progress-bar-wrap,.progress-meta').forEach(el => el.style.display = 'none');
   document.getElementById('results').style.display = 'block';
   document.getElementById('scoreNum').textContent = score;
+  // Populate tally name
+  document.getElementById('tallyName').textContent = '📋 Submitting as: ' + participantNameValue;
+  document.getElementById('tallyConfirm').style.display = 'none';
+  document.getElementById('tallyError').style.display = 'none';
+  document.getElementById('submitTallyBtn').style.display = '';
+  document.getElementById('submitTallyBtn').disabled = false;
+  document.getElementById('submitTallyBtn').textContent = 'Submit My Score →';
   const pct = Math.round(score / 15 * 100);
   document.getElementById('scoreRing').style.background = `conic-gradient(var(--gold) ${pct * 3.6}deg, var(--border) 0deg)`;
   let label, sub, grade, gc;
@@ -676,9 +782,13 @@ function showResults() {
 
 function restart() {
   current = 0; score = 0; answered = false; userAnswers = [];
+  participantNameValue = '';
   document.getElementById('results').style.display = 'none';
   document.getElementById('reviewItems').innerHTML = '';
-  document.querySelectorAll('.progress-bar-wrap,.progress-meta').forEach(el => el.style.display = '');
+  document.getElementById('nameScreen').style.display = 'block';
+  document.getElementById('participantName').value = '';
+  document.querySelector('.progress-bar-wrap').style.display = 'none';
+  document.querySelector('.progress-meta').style.display = 'none';
   cards.forEach(card => {
     card.classList.remove('active');
     card.querySelectorAll('.option').forEach(o => o.classList.remove('correct','wrong','reveal-correct','locked'));
