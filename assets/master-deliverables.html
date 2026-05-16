@@ -614,12 +614,12 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
     </div>
 
     <div style="font-size:11px;color:var(--muted);margin-bottom:1rem;line-height:1.6;padding:.6rem .8rem;background:rgba(201,170,124,.06);border:1px solid rgba(201,170,124,.15);border-radius:8px">
-      💡 <strong style="color:var(--gold)">How to add contacts:</strong> Just tell MC "add [Name] to my call list" — I'll pull the number from what I know or ask you once and save it. Tap any name to dial directly from your phone.
+      💡 <strong style="color:var(--gold)">Add a call:</strong> Type or paste a name below, or tap the gold mic and speak it.
     </div>
 
     <!-- Quick-add bar: type, paste, or speak a name -->
     <div style="display:flex;gap:.5rem;margin-bottom:1rem;align-items:center">
-      <input id="callNameInput" type="text" placeholder="Type, paste, or speak a name…"
+      <input id="callNameInput" type="text" placeholder="Type or paste a name…"
         style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(201,170,124,.25);border-radius:8px;padding:.55rem .9rem;color:var(--white);font-size:13px;outline:none;font-family:inherit"
         onkeydown="if(event.key==='Enter')quickAddCall()"
         onfocus="this.style.borderColor='var(--gold)'"
@@ -631,9 +631,8 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
         ➕ Add
       </button>
       <button onclick="speakCallName()" id="callMicBtn" title="Speak a name"
-        style="background:rgba(201,170,124,.1);border:1px solid rgba(201,170,124,.2);border-radius:8px;padding:.55rem .75rem;color:var(--muted);font-size:15px;cursor:pointer;transition:all .2s"
-        onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='rgba(201,170,124,.2)'">
-        🎤
+        style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#a07840);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 3px 14px rgba(201,170,124,.35);flex-shrink:0;transition:all .2s;-webkit-tap-highlight-color:transparent">
+        🎙️
       </button>
     </div>
 
@@ -802,7 +801,7 @@ document.getElementById('dateStamp').textContent = 'Week of ' + label;
 const PINNED_CALLS = [
   { id: 'pinned-lindsay', name: 'Lindsay Wiss',  phone: '(303) 217-1067', role: 'Chief of Staff, Cañon City Unbridled' },
   { id: 'pinned-justin',  name: 'Justin Farr',   phone: '(956) 367-0188', role: 'Operations & Tech, Unbridled' },
-  { id: 'pinned-cindy',   name: 'Cindy Bullis',  phone: '',               role: '' },
+  { id: 'pinned-cindy',   name: 'Cindy Bullis',  phone: '(303) 513-1486', role: '' },
 ];
 
 // Runtime state — hidden cards, extra cards added this session, edited numbers/names
@@ -1161,33 +1160,61 @@ function speakCallName() {
   const btn = document.getElementById('callMicBtn');
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) { showToast('⚠ Speech not supported', 'Try typing or pasting instead', 3000); return; }
+
   const rec = new SpeechRecognition();
   rec.lang = 'en-US';
   rec.interimResults = false;
   rec.maxAlternatives = 1;
+
+  // Go red while listening
+  btn.style.background = 'linear-gradient(135deg,var(--red),#a03030)';
+  btn.style.animation = 'pulse-mic 1.2s infinite';
   btn.textContent = '🔴';
-  btn.style.borderColor = 'var(--red)';
+
+  function resetBtn() {
+    btn.style.background = 'linear-gradient(135deg,var(--gold),#a07840)';
+    btn.style.animation = 'none';
+    btn.textContent = '🎙️';
+  }
+
   rec.onresult = e => {
     const spoken = e.results[0][0].transcript.trim();
-    // Strip command words, keep the name
+    resetBtn();
+
+    // Remove command: "remove [name]" or "delete [name]"
+    const removeMatch = spoken.match(/^(?:remove|delete|done with)\s+(.+)/i);
+    if (removeMatch) {
+      const name = removeMatch[1].trim();
+      const si = sessionCards.findIndex(c => c.name.toLowerCase().includes(name.toLowerCase()));
+      if (si !== -1) {
+        const gone = sessionCards.splice(si, 1)[0];
+        renderCalls();
+        showToast('🗑 Removed', gone.name, 3000);
+      } else {
+        const pinned = PINNED_CALLS.find(p => p.name.toLowerCase().includes(name.toLowerCase()));
+        if (pinned) {
+          hiddenIds.add(pinned.id);
+          renderCalls();
+          showToast('🗑 Removed for this session', pinned.name, 3000);
+        } else {
+          showToast('⚠ Couldn\'t find', '"' + name + '" on your list', 3000);
+        }
+      }
+      return;
+    }
+
+    // Add command — strip verb prefixes, keep the name
     const name = spoken
       .replace(/^(call|add|phone|dial|ring)\s+/i, '')
       .replace(/\s+(to\s+(my\s+)?call\s+list)$/i, '')
       .trim();
+
     document.getElementById('callNameInput').value = name;
-    btn.textContent = '🎤';
-    btn.style.borderColor = 'rgba(201,170,124,.2)';
     quickAddCall();
   };
-  rec.onerror = () => {
-    btn.textContent = '🎤';
-    btn.style.borderColor = 'rgba(201,170,124,.2)';
-    showToast('⚠ Couldn\'t hear that', 'Try again or type the name', 3000);
-  };
-  rec.onend = () => {
-    btn.textContent = '🎤';
-    btn.style.borderColor = 'rgba(201,170,124,.2)';
-  };
+
+  rec.onerror = () => { resetBtn(); showToast('⚠ Couldn\'t hear that', 'Try again', 3000); };
+  rec.onend   = () => { resetBtn(); };
   rec.start();
 }
 
