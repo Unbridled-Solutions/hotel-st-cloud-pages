@@ -851,6 +851,8 @@ function saveInlineNumber(id) {
   if (card) {
     card.phone = fmt;
     saveCalls(calls);
+    // ── Save to persistent contacts DB ──
+    upsertContact(card.name, fmt, card.role);
     renderCalls();
   }
 }
@@ -883,6 +885,7 @@ function renderCalls() {
         ${c.note ? `<div class="call-note">📝 ${c.note}</div>` : ''}
       </div>
       ${callBtn}
+      ${c.phone ? `<button class="btn-call-trash" onclick="exportVCard('${c.name.replace(/'/g,"\\'")}','${c.phone}','${(c.role||'').replace(/'/g,"\\'")}' )" title="Save to Apple Contacts" style="opacity:.6;font-size:12px;padding:.2rem .4rem">📇</button>` : ''}
       <button class="btn-call-trash" onclick="removeCall('${c.id}')" title="Remove">🗑</button>
     </div>`;
   }).join('');
@@ -908,6 +911,60 @@ renderCalls();
 const BOT_TOKEN = '8673964185:AAEW-bpYDGzfa1Ir2FJtWvx-kUPkT1HgXNI';
 const CHAT_ID   = '1588031229';
 
+// ── Persistent contacts database (localStorage) ───────────────
+const CONTACTS_DB_KEY = 'mc_contacts_db';
+
+function getContactsDB() {
+  return JSON.parse(localStorage.getItem(CONTACTS_DB_KEY) || '[]');
+}
+function saveContactsDB(arr) {
+  localStorage.setItem(CONTACTS_DB_KEY, JSON.stringify(arr));
+}
+
+// Upsert: add or update a contact by name match
+function upsertContact(name, phone, role) {
+  const db = getContactsDB();
+  const lower = name.toLowerCase();
+  const idx = db.findIndex(c => c.name.toLowerCase() === lower);
+  if (idx !== -1) {
+    if (phone) db[idx].phone = phone;
+    if (role)  db[idx].role  = role;
+  } else {
+    db.unshift({ name, phone: phone || '', role: role || '', added: new Date().toISOString() });
+  }
+  saveContactsDB(db);
+}
+
+// Look up by name (fuzzy first-name / last-name match)
+function lookupContact(spoken) {
+  const lower = spoken.toLowerCase();
+  const db = getContactsDB();
+  // Exact first
+  let match = db.find(c => c.name.toLowerCase() === lower);
+  if (match) return match;
+  // First name or last name
+  match = db.find(c => {
+    const parts = c.name.toLowerCase().split(' ');
+    return parts.some(p => lower.includes(p) || p.includes(lower));
+  });
+  return match || null;
+}
+
+// Export a single contact as vCard and trigger download → iOS "Add to Contacts"
+function exportVCard(name, phone, role) {
+  const tel = phone ? phone.replace(/\D/g,'') : '';
+  const org = role  ? `ORG:${role}\n` : '';
+  const telLine = tel ? `TEL;TYPE=CELL:+1${tel.replace(/^1/,'')}\n` : '';
+  const vcf = `BEGIN:VCARD\nVERSION:3.0\nFN:${name}\nN:${name.split(' ').reverse().join(';')}\n${org}${telLine}END:VCARD`;
+  const blob = new Blob([vcf], { type: 'text/vcard' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = name.replace(/\s+/g,'_') + '.vcf';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 // ── Known contacts directory ──────────────────────────────────
 const DIRECTORY = [
   { name: 'Lindsay Wyss',  phone: '',  role: 'Chief of Staff, Cañon City Unbridled',  aliases: ['lindsay','lindsey','wyss','lyndsey'] },
@@ -915,6 +972,17 @@ const DIRECTORY = [
   { name: 'Scott',         phone: '',  role: 'CCO, Live Events',                       aliases: ['scott','cco'] },
   { name: 'Jenny Farr',    phone: '',  role: 'BeUnbridled Client',                     aliases: ['jenny','ruby'] },
 ];
+
+// Merge DIRECTORY into contacts DB on load (no overwrite if already there)
+(function seedDB() {
+  DIRECTORY.forEach(c => {
+    const db = getContactsDB();
+    if (!db.find(d => d.name.toLowerCase() === c.name.toLowerCase())) {
+      db.push({ name: c.name, phone: c.phone || '', role: c.role || '', added: new Date().toISOString() });
+      saveContactsDB(db);
+    }
+  });
+})();
 
 // ── Fuzzy name match ──────────────────────────────────────────
 function findContact(spoken) {
@@ -1104,14 +1172,24 @@ function speakCallName() {
 
 function addCallCard(name, phone, role, note) {
   const calls = getCalls();
+  // If no phone provided, check contacts DB first
+  if (!phone) {
+    const dbContact = lookupContact(name);
+    if (dbContact && dbContact.phone) {
+      phone = dbContact.phone;
+      role  = role || dbContact.role;
+    }
+  }
   // Don't add exact duplicate name
   if (calls.find(c => c.name.toLowerCase() === name.toLowerCase())) {
     showToast('Already on your call list', name, 2500);
     resetBtn();
     return;
   }
-  calls.unshift({ id: 'call-' + Date.now(), name, phone, role, note });
+  calls.unshift({ id: 'call-' + Date.now(), name, phone: phone || '', role: role || '', note: note || '' });
   saveCalls(calls);
+  // ── Upsert into persistent contacts DB ──
+  upsertContact(name, phone || '', role || '');
   renderCalls();
 }
 
