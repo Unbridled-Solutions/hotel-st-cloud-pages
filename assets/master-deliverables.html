@@ -816,80 +816,161 @@ renderCalls();
 </div>
 
 <script>
-// ─── MC MIC / VOICE-TO-TELEGRAM ────────────────────────────────
+// ─── MC MIC — SMART VOICE COMMANDS ────────────────────────────
 const BOT_TOKEN = '8673964185:AAEW-bpYDGzfa1Ir2FJtWvx-kUPkT1HgXNI';
-const CHAT_ID   = '1588031229'; // Stan's Telegram ID
+const CHAT_ID   = '1588031229';
 
-let recognition = null;
-let isListening = false;
+// ── Known contacts directory ──────────────────────────────────
+const DIRECTORY = [
+  { name: 'Lindsay Wyss',      phone: '(719) 470-3710', role: 'Chief of Staff, Cañon City Unbridled',  aliases: ['lindsay','lindsey','wyss','lyndsey'] },
+  { name: 'Justin Farr',       phone: '(970) 412-7170', role: 'Operations & Tech, Unbridled',          aliases: ['justin','farr'] },
+  { name: 'Scott',             phone: '',               role: 'CCO, Live Events',                      aliases: ['scott','cco'] },
+  { name: 'Jenny Farr',        phone: '',               role: 'BeUnbridled Client / Ruby',             aliases: ['jenny','ruby'] },
+];
 
-function showToast(msg, transcript = '', duration = 0) {
+// ── Fuzzy name match ──────────────────────────────────────────
+function findContact(spoken) {
+  const lower = spoken.toLowerCase();
+  return DIRECTORY.find(c =>
+    c.aliases.some(a => lower.includes(a)) ||
+    lower.includes(c.name.toLowerCase().split(' ')[0]) ||
+    lower.includes(c.name.toLowerCase().split(' ')[1] || '')
+  );
+}
+
+// ── Parse voice command ───────────────────────────────────────
+function parseCommand(text) {
+  const t = text.toLowerCase().trim();
+  // "call [name]" or "add [name] to my call list" or "I need to call [name]"
+  const callPatterns = [
+    /^(?:call|phone|dial|ring)\s+(.+)/i,
+    /^(?:add|put)\s+(.+?)\s+(?:to\s+)?(?:my\s+)?(?:call\s+list|calls)/i,
+    /^i\s+need\s+to\s+call\s+(.+)/i,
+    /^(?:remind me to\s+)?call\s+(.+)/i,
+  ];
+  for (const pat of callPatterns) {
+    const m = text.match(pat);
+    if (m) return { action: 'call', name: m[1].trim() };
+  }
+  // "remove [name] from calls" or "done with [name]"
+  const removePatterns = [
+    /^(?:remove|delete|done with|finished with)\s+(.+?)(?:\s+from\s+(?:my\s+)?(?:call\s+list|calls))?$/i,
+  ];
+  for (const pat of removePatterns) {
+    const m = text.match(pat);
+    if (m) return { action: 'remove', name: m[1].trim() };
+  }
+  return { action: 'forward', text };
+}
+
+// ── Execute command ───────────────────────────────────────────
+function executeCommand(cmd, rawText) {
+  if (cmd.action === 'call') {
+    const contact = findContact(cmd.name);
+    if (contact) {
+      addCallCard(contact.name, contact.phone, contact.role, '');
+      showToast('✅ Added to call list!', contact.name + (contact.phone ? ' · ' + contact.phone : ' · no number on file'), 4000);
+      resetBtn();
+    } else {
+      // Unknown person — forward to MC to look up
+      forwardToMC(rawText, '📞 Unknown contact — forwarding to MC to look up number');
+    }
+    return;
+  }
+  if (cmd.action === 'remove') {
+    const contact = findContact(cmd.name);
+    const calls = getCalls();
+    const match = calls.find(c => c.name.toLowerCase().includes(cmd.name.toLowerCase()) ||
+      (contact && c.name === contact.name));
+    if (match) {
+      removeCall(match.id);
+      showToast('✅ Removed from call list', match.name, 3000);
+      resetBtn();
+    } else {
+      showToast('⚠ Couldn\'t find that name in your call list', '', 3000);
+      resetBtn();
+    }
+    return;
+  }
+  // Default: forward to MC on Telegram
+  forwardToMC(rawText, 'Sending to MC…');
+}
+
+function addCallCard(name, phone, role, note) {
+  const calls = getCalls();
+  // Don't add duplicate
+  if (calls.find(c => c.name === name)) return;
+  calls.unshift({ id: 'call-' + Date.now(), name, phone, role, note });
+  saveCalls(calls);
+  renderCalls();
+}
+
+async function forwardToMC(text, toastMsg) {
+  const btn = document.getElementById('mc-mic-btn');
+  btn.classList.add('sending');
+  btn.textContent = '⏳';
+  showToast(toastMsg, '"' + text + '"');
+  const msg = '🎙️ [Master Deliverables]\n' + text;
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: CHAT_ID, text: msg })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      showToast('✓ Sent to MC!', '"' + text + '"', 4000);
+      btn.textContent = '✓';
+      setTimeout(resetBtn, 4000);
+    } else throw new Error(data.description);
+  } catch {
+    showToast('⚠ Could not reach MC — check connection', '', 4000);
+    resetBtn();
+  }
+}
+
+function resetBtn() {
+  const btn = document.getElementById('mc-mic-btn');
+  setTimeout(() => {
+    btn.textContent = '🎙️';
+    btn.classList.remove('listening','sending');
+  }, 100);
+}
+
+// ── Toast helpers ─────────────────────────────────────────────
+function showToast(msg, sub = '', duration = 0) {
   const toast = document.getElementById('mc-toast');
   document.getElementById('mc-toast-msg').textContent = msg;
-  document.getElementById('mc-transcript').textContent = transcript;
+  document.getElementById('mc-transcript').textContent = sub;
   toast.classList.add('visible');
-  if (duration) setTimeout(() => toast.classList.remove('visible'), duration);
+  if (duration) setTimeout(hideToast, duration);
 }
 function hideToast() {
   document.getElementById('mc-toast').classList.remove('visible');
 }
 
-async function sendToMC(text) {
-  const btn = document.getElementById('mc-mic-btn');
-  btn.classList.remove('listening');
-  btn.classList.add('sending');
-  btn.textContent = '⏳';
-  showToast('Sending to MC…', '"' + text + '"');
-
-  const msg = '🎙️ [Master Deliverables page]\n' + text;
-  try {
-    const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: CHAT_ID, text: msg })
-    });
-    const data = await res.json();
-    if (data.ok) {
-      showToast('✓ Sent to MC!', '"' + text + '"', 3500);
-      btn.textContent = '✓';
-      setTimeout(() => { btn.textContent = '🎙️'; btn.classList.remove('sending'); }, 3500);
-    } else {
-      throw new Error(data.description || 'Send failed');
-    }
-  } catch(err) {
-    showToast('⚠ Could not send — check connection.', '', 4000);
-    btn.textContent = '🎙️';
-    btn.classList.remove('sending');
-  }
-}
+// ── Speech recognition ────────────────────────────────────────
+let recognition = null;
+let isListening = false;
 
 function toggleMic() {
-  // Check browser support
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) {
-    showToast('⚠ Voice not supported in this browser. Use Safari on iPhone or Chrome on Android.', '', 4000);
+    showToast('⚠ Use Safari on iPhone or Chrome on Android for voice', '', 4000);
     return;
   }
-
   const btn = document.getElementById('mc-mic-btn');
-
-  if (isListening) {
-    // Stop
-    if (recognition) recognition.stop();
-    return;
-  }
+  if (isListening) { if (recognition) recognition.stop(); return; }
 
   recognition = new SR();
   recognition.lang = 'en-US';
   recognition.continuous = false;
   recognition.interimResults = true;
-  recognition.maxAlternatives = 1;
 
   recognition.onstart = () => {
     isListening = true;
     btn.classList.add('listening');
     btn.textContent = '🔴';
-    showToast('Listening… speak your message');
+    showToast('Listening…', 'Say "call [name]" or ask MC anything');
   };
 
   recognition.onresult = (e) => {
@@ -898,7 +979,10 @@ function toggleMic() {
     if (e.results[e.results.length - 1].isFinal) {
       const final = e.results[e.results.length - 1][0].transcript.trim();
       recognition.stop();
-      sendToMC(final);
+      isListening = false;
+      btn.classList.remove('listening');
+      const cmd = parseCommand(final);
+      executeCommand(cmd, final);
     }
   };
 
@@ -906,19 +990,15 @@ function toggleMic() {
     isListening = false;
     btn.classList.remove('listening');
     btn.textContent = '🎙️';
-    if (e.error === 'not-allowed') {
-      showToast('⚠ Microphone access denied. Allow mic in browser settings.', '', 4000);
-    } else if (e.error !== 'aborted') {
-      showToast('⚠ Mic error: ' + e.error, '', 3000);
-    } else {
-      hideToast();
-    }
+    if (e.error === 'not-allowed') showToast('⚠ Mic access denied — allow in browser settings', '', 4000);
+    else if (e.error !== 'aborted') showToast('⚠ Mic error: ' + e.error, '', 3000);
+    else hideToast();
   };
 
   recognition.onend = () => {
     isListening = false;
     btn.classList.remove('listening');
-    if (!btn.classList.contains('sending')) {
+    if (!btn.classList.contains('sending') && btn.textContent === '🔴') {
       btn.textContent = '🎙️';
       hideToast();
     }
