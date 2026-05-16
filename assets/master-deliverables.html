@@ -1220,9 +1220,10 @@ function speakCallName() {
 
 async function forwardToMC(text, toastMsg) {
   const btn = document.getElementById('mc-mic-btn');
+  btn.classList.remove('listening');
   btn.classList.add('sending');
   btn.textContent = '⏳';
-  showToast(toastMsg, '"' + text + '"');
+  showToast('Sending to MC…', '', 0);
   const msg = '🎙️ [Master Deliverables]\n' + text;
   try {
     const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -1231,12 +1232,12 @@ async function forwardToMC(text, toastMsg) {
     });
     const data = await res.json();
     if (data.ok) {
-      showToast('✓ Sent to MC!', '"' + text + '"', 4000);
+      showToast('✅ Sent to MC', '', 3500);
       btn.textContent = '✓';
-      setTimeout(resetBtn, 4000);
+      setTimeout(resetBtn, 3500);
     } else throw new Error(data.description);
-  } catch {
-    showToast('⚠ Could not reach MC — check connection', '', 4000);
+  } catch(err) {
+    showToast('⚠ Couldn\'t reach MC — check connection', '', 4000);
     resetBtn();
   }
 }
@@ -1253,7 +1254,7 @@ function resetBtn() {
 function showToast(msg, sub = '', duration = 0) {
   const toast = document.getElementById('mc-toast');
   document.getElementById('mc-toast-msg').textContent = msg;
-  document.getElementById('mc-transcript').textContent = sub;
+  document.getElementById('mc-transcript').textContent = '';  // never show transcript
   toast.classList.add('visible');
   if (duration) setTimeout(hideToast, duration);
 }
@@ -1272,47 +1273,69 @@ function toggleMic() {
     return;
   }
   const btn = document.getElementById('mc-mic-btn');
-  if (isListening) { if (recognition) recognition.stop(); return; }
+
+  // Tap again to cancel
+  if (isListening) {
+    if (recognition) recognition.abort();
+    isListening = false;
+    resetBtn();
+    hideToast();
+    return;
+  }
 
   recognition = new SR();
   recognition.lang = 'en-US';
   recognition.continuous = false;
-  recognition.interimResults = true;
+  recognition.interimResults = false;  // iOS Safari: interimResults=true can prevent isFinal
 
   recognition.onstart = () => {
     isListening = true;
     btn.classList.add('listening');
     btn.textContent = '🔴';
-    showToast('Listening…', 'Say "call [name]" or ask MC anything');
+    showToast('Listening…', '', 0);
   };
 
   recognition.onresult = (e) => {
-    // Don't show interim transcript — just keep "Listening…" clean
-    if (e.results[e.results.length - 1].isFinal) {
-      const final = e.results[e.results.length - 1][0].transcript.trim();
-      recognition.stop();
-      isListening = false;
-      btn.classList.remove('listening');
-      const cmd = parseCommand(final);
-      executeCommand(cmd, final);
+    // Grab best result — works on both iOS (no isFinal) and Chrome
+    let final = '';
+    for (let i = 0; i < e.results.length; i++) {
+      if (e.results[i].isFinal || e.results.length === 1) {
+        final = e.results[i][0].transcript.trim();
+        break;
+      }
     }
+    if (!final && e.results.length > 0) {
+      final = e.results[e.results.length - 1][0].transcript.trim();
+    }
+    if (!final) return;
+
+    isListening = false;
+    // Don't reset btn yet — let executeCommand/forwardToMC control the state
+    const cmd = parseCommand(final);
+    executeCommand(cmd, final);
   };
 
   recognition.onerror = (e) => {
     isListening = false;
-    btn.classList.remove('listening');
-    btn.textContent = '🎙️';
-    if (e.error === 'not-allowed') showToast('⚠ Mic access denied — allow in browser settings', '', 4000);
-    else if (e.error !== 'aborted') showToast('⚠ Mic error: ' + e.error, '', 3000);
-    else hideToast();
+    resetBtn();
+    if (e.error === 'not-allowed') {
+      showToast('⚠ Mic access denied', 'Go to Settings → Safari → Microphone → Allow', 5000);
+    } else if (e.error === 'no-speech') {
+      showToast('⚠ No speech detected', 'Tap and speak clearly', 3000);
+    } else if (e.error !== 'aborted') {
+      showToast('⚠ Mic error: ' + e.error, '', 3000);
+    } else {
+      hideToast();
+    }
   };
 
   recognition.onend = () => {
     isListening = false;
-    btn.classList.remove('listening');
-    if (!btn.classList.contains('sending') && btn.textContent === '🔴') {
-      btn.textContent = '🎙️';
-      hideToast();
+    // Only reset if not already in sending state
+    const btn2 = document.getElementById('mc-mic-btn');
+    if (!btn2.classList.contains('sending')) {
+      btn2.classList.remove('listening');
+      if (btn2.textContent === '🔴') btn2.textContent = '🎙️';
     }
   };
 
