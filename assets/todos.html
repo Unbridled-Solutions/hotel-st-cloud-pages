@@ -96,9 +96,69 @@
 
   .footer { text-align: center; color: #3a5a76; font-size: 11px; padding-top: 18px; border-top: 1px solid #1e2a38; margin-top: 10px; }
   .footer strong { color: #5a8ba7; }
+
+  /* Mic / quick-add bar */
+  .mic-bar {
+    display: flex; gap: .5rem; align-items: center;
+    margin-bottom: 18px;
+    background: #131c27; border: 1px solid #1e2a38;
+    border-radius: 12px; padding: 10px 14px;
+  }
+  .mic-bar input {
+    flex: 1; background: transparent; border: none; outline: none;
+    color: #e8e8e8; font-size: 13px; font-family: inherit;
+  }
+  .mic-bar input::placeholder { color: #3a5a76; }
+  .mic-add-btn {
+    background: rgba(90,139,167,.2); border: 1px solid rgba(90,139,167,.4);
+    border-radius: 8px; padding: .4rem .85rem; color: #5a8ba7;
+    font-size: 12px; font-weight: 700; cursor: pointer; transition: all .2s; white-space: nowrap;
+  }
+  .mic-add-btn:hover { background: rgba(90,139,167,.35); }
+  .mic-speak-btn {
+    background: rgba(201,170,124,.1); border: 1px solid rgba(201,170,124,.2);
+    border-radius: 8px; padding: .4rem .7rem; font-size: 15px;
+    cursor: pointer; transition: all .2s; color: #7a8fa6;
+  }
+  .mic-speak-btn:hover { border-color: #c9aa7c; }
+  .mic-speak-btn.listening { border-color: #f87171; color: #f87171; animation: pulse .8s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .mc-toast {
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+    background: #1a2a3a; border: 1px solid #2a4a6a; border-radius: 10px;
+    padding: 10px 20px; font-size: 12px; color: #60a5fa;
+    box-shadow: 0 4px 20px rgba(0,0,0,.5); z-index: 9999;
+    opacity: 0; transition: opacity .3s; pointer-events: none; white-space: nowrap;
+  }
+  .mc-toast.show { opacity: 1; }
+  /* Quick-add items */
+  .quick-item {
+    background: #0e1520; border: 1px dashed #2a4a6a;
+    border-radius: 10px; padding: 13px 16px; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 14px; transition: all .2s;
+  }
+  .quick-item .qi-text { flex: 1; font-size: 13px; color: #e8e8e8; }
+  .qi-delete { background: none; border: none; cursor: pointer; color: #5a6a7a; font-size: 15px; transition: color .2s; }
+  .qi-delete:hover { color: #f87171; }
+  #quickSection { margin-bottom: 28px; }
+  #quickSection .cat-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 </style>
 </head>
 <body>
+
+<!-- Mic / quick-add bar -->
+<div class="mic-bar">
+  <input id="todoInput" type="text" placeholder="Speak, type, or paste a to-do — or say 'delete [task]'…"
+    onkeydown="if(event.key==='Enter')quickAddTodo()" />
+  <button class="mic-add-btn" onclick="quickAddTodo()">➕ Add</button>
+  <button class="mic-speak-btn" id="todoMicBtn" onclick="speakTodo()" title="Speak a to-do">🎤</button>
+</div>
+
+<!-- Quick-added items (stored in localStorage) -->
+<div id="quickSection"></div>
+
+<!-- Toast -->
+<div class="mc-toast" id="mcToast"></div>
 
 <div class="header">
   <div>
@@ -269,6 +329,116 @@ async function loadTodos() {
   document.getElementById('syncBar').className = 'sync-bar' + (hasChanges ? ' visible' : '');
   render();
 }
+
+// ── Quick-add to-dos (localStorage) ────────────────────────────────────────
+const QUICK_KEY = 'mc_quick_todos';
+
+function getQuickTodos() {
+  return JSON.parse(localStorage.getItem(QUICK_KEY) || '[]');
+}
+function saveQuickTodos(arr) {
+  localStorage.setItem(QUICK_KEY, JSON.stringify(arr));
+}
+
+function renderQuickSection() {
+  const items = getQuickTodos();
+  const sec = document.getElementById('quickSection');
+  if (items.length === 0) { sec.innerHTML = ''; return; }
+  sec.innerHTML = `
+    <div class="cat-header">
+      <span class="cat-icon">✏️</span>
+      <span class="cat-title" style="color:#c9aa7c">My Quick Adds</span>
+      <span class="cat-count" style="background:#1e2a38;color:#7a8fa6;font-size:11px;padding:2px 8px;border-radius:10px">${items.length}</span>
+    </div>
+    ${items.map((t, i) => `
+      <div class="quick-item" id="qi-${i}">
+        <span class="qi-text">${t.text}</span>
+        <span style="font-size:10px;color:#3a5a76;flex-shrink:0">${t.date}</span>
+        <button class="qi-delete" onclick="deleteQuickTodo(${i})" title="Delete">🗑</button>
+      </div>`).join('')}
+  `;
+}
+
+function deleteQuickTodo(idx) {
+  const items = getQuickTodos();
+  const removed = items.splice(idx, 1);
+  saveQuickTodos(items);
+  renderQuickSection();
+  showMcToast('🗑 Removed: ' + (removed[0] ? removed[0].text : ''));
+}
+
+function quickAddTodo() {
+  const input = document.getElementById('todoInput');
+  const raw = (input.value || '').trim();
+  if (!raw) { input.focus(); return; }
+
+  // Delete command: "delete [text]" or "remove [text]"
+  const delMatch = raw.match(/^(?:delete|remove)\s+(.+)/i);
+  if (delMatch) {
+    const target = delMatch[1].toLowerCase();
+    const items = getQuickTodos();
+    const idx = items.findIndex(t => t.text.toLowerCase().includes(target));
+    if (idx !== -1) {
+      deleteQuickTodo(idx);
+    } else {
+      showMcToast('⚠ Couldn\'t find "' + delMatch[1] + '" in your quick adds');
+    }
+    input.value = '';
+    return;
+  }
+
+  // Add new item
+  const items = getQuickTodos();
+  items.unshift({
+    text: raw,
+    date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  });
+  saveQuickTodos(items);
+  renderQuickSection();
+  showMcToast('✅ Added to your list');
+  input.value = '';
+  input.blur();
+}
+
+function speakTodo() {
+  const btn = document.getElementById('todoMicBtn');
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { showMcToast('⚠ Speech not supported — try typing'); return; }
+  const rec = new SR();
+  rec.lang = 'en-US';
+  rec.interimResults = false;
+  rec.maxAlternatives = 1;
+  btn.classList.add('listening');
+  btn.textContent = '🔴';
+  rec.onresult = e => {
+    const spoken = e.results[0][0].transcript.trim();
+    document.getElementById('todoInput').value = spoken;
+    btn.classList.remove('listening');
+    btn.textContent = '🎤';
+    quickAddTodo();
+  };
+  rec.onerror = () => {
+    btn.classList.remove('listening');
+    btn.textContent = '🎤';
+    showMcToast('⚠ Couldn\'t hear that — try again');
+  };
+  rec.onend = () => {
+    btn.classList.remove('listening');
+    btn.textContent = '🎤';
+  };
+  rec.start();
+}
+
+let toastTimer;
+function showMcToast(msg) {
+  const t = document.getElementById('mcToast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+renderQuickSection();
 
 loadTodos();
 </script>
