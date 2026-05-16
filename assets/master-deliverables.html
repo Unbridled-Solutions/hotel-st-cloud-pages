@@ -93,7 +93,15 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .todo-check:checked + .todo-label{text-decoration:line-through;color:var(--muted)}
 .todo-date{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);flex-shrink:0}
 
-/* Call list */
+/* MC Mic button */
+#mc-mic-btn{position:fixed;bottom:2rem;right:1.5rem;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#a07840);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 20px rgba(0,0,0,.5);z-index:1000;transition:all .2s;-webkit-tap-highlight-color:transparent}
+#mc-mic-btn:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(201,170,124,.4)}
+#mc-mic-btn.listening{background:linear-gradient(135deg,var(--red),#a03030);animation:pulse-mic 1.2s infinite}
+#mc-mic-btn.sending{background:linear-gradient(135deg,var(--blue),#3a6a8a);animation:none}
+@keyframes pulse-mic{0%,100%{box-shadow:0 4px 20px rgba(224,90,90,.4)}50%{box-shadow:0 4px 32px rgba(224,90,90,.8)}}
+#mc-toast{position:fixed;bottom:6.5rem;right:1.5rem;background:#1e3347;border:1px solid var(--border);border-radius:10px;padding:.6rem 1rem;font-size:12px;color:var(--text);max-width:240px;display:none;z-index:1001;line-height:1.5;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+#mc-toast.visible{display:block}
+#mc-transcript{font-style:italic;color:var(--gold);font-size:11px;margin-top:.3rem}
 .call-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.85rem 1.2rem;margin-bottom:.5rem;display:flex;align-items:center;gap:1rem;transition:border-color .2s}
 .call-card:hover{border-color:var(--green)}
 .call-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--navy),var(--border));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--gold);flex-shrink:0;letter-spacing:0}
@@ -798,6 +806,126 @@ wireTrashButtons();
 applyDeleted();
 renderArchive();
 renderCalls();
+</script>
+
+<!-- MC Mic Button -->
+<button id="mc-mic-btn" title="Talk to MC" onclick="toggleMic()">🎙️</button>
+<div id="mc-toast">
+  <div id="mc-toast-msg">Listening… speak your message</div>
+  <div id="mc-transcript"></div>
+</div>
+
+<script>
+// ─── MC MIC / VOICE-TO-TELEGRAM ────────────────────────────────
+const BOT_TOKEN = '8673964185:AAEW-bpYDGzfa1Ir2FJtWvx-kUPkT1HgXNI';
+const CHAT_ID   = '1588031229'; // Stan's Telegram ID
+
+let recognition = null;
+let isListening = false;
+
+function showToast(msg, transcript = '', duration = 0) {
+  const toast = document.getElementById('mc-toast');
+  document.getElementById('mc-toast-msg').textContent = msg;
+  document.getElementById('mc-transcript').textContent = transcript;
+  toast.classList.add('visible');
+  if (duration) setTimeout(() => toast.classList.remove('visible'), duration);
+}
+function hideToast() {
+  document.getElementById('mc-toast').classList.remove('visible');
+}
+
+async function sendToMC(text) {
+  const btn = document.getElementById('mc-mic-btn');
+  btn.classList.remove('listening');
+  btn.classList.add('sending');
+  btn.textContent = '⏳';
+  showToast('Sending to MC…', '"' + text + '"');
+
+  const msg = '🎙️ [Master Deliverables page]\n' + text;
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: CHAT_ID, text: msg })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      showToast('✓ Sent to MC!', '"' + text + '"', 3500);
+      btn.textContent = '✓';
+      setTimeout(() => { btn.textContent = '🎙️'; btn.classList.remove('sending'); }, 3500);
+    } else {
+      throw new Error(data.description || 'Send failed');
+    }
+  } catch(err) {
+    showToast('⚠ Could not send — check connection.', '', 4000);
+    btn.textContent = '🎙️';
+    btn.classList.remove('sending');
+  }
+}
+
+function toggleMic() {
+  // Check browser support
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    showToast('⚠ Voice not supported in this browser. Use Safari on iPhone or Chrome on Android.', '', 4000);
+    return;
+  }
+
+  const btn = document.getElementById('mc-mic-btn');
+
+  if (isListening) {
+    // Stop
+    if (recognition) recognition.stop();
+    return;
+  }
+
+  recognition = new SR();
+  recognition.lang = 'en-US';
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.maxAlternatives = 1;
+
+  recognition.onstart = () => {
+    isListening = true;
+    btn.classList.add('listening');
+    btn.textContent = '🔴';
+    showToast('Listening… speak your message');
+  };
+
+  recognition.onresult = (e) => {
+    const interim = Array.from(e.results).map(r => r[0].transcript).join('');
+    document.getElementById('mc-transcript').textContent = '"' + interim + '"';
+    if (e.results[e.results.length - 1].isFinal) {
+      const final = e.results[e.results.length - 1][0].transcript.trim();
+      recognition.stop();
+      sendToMC(final);
+    }
+  };
+
+  recognition.onerror = (e) => {
+    isListening = false;
+    btn.classList.remove('listening');
+    btn.textContent = '🎙️';
+    if (e.error === 'not-allowed') {
+      showToast('⚠ Microphone access denied. Allow mic in browser settings.', '', 4000);
+    } else if (e.error !== 'aborted') {
+      showToast('⚠ Mic error: ' + e.error, '', 3000);
+    } else {
+      hideToast();
+    }
+  };
+
+  recognition.onend = () => {
+    isListening = false;
+    btn.classList.remove('listening');
+    if (!btn.classList.contains('sending')) {
+      btn.textContent = '🎙️';
+      hideToast();
+    }
+  };
+
+  recognition.start();
+}
 </script>
 
 </body>
