@@ -796,147 +796,90 @@ const label = monday.toLocaleDateString('en-US', {month:'long', day:'numeric', y
 document.getElementById('dateStamp').textContent = 'Week of ' + label;
 
 // ─── CALL LIST ─────────────────────────────────────────────────
-const CALLS_KEY = 'mc_call_list';
+// All contacts are hardcoded here — immune to Safari localStorage wipes.
+// To add/change a number permanently: tell MC and it gets updated in the code.
 
-// ── PINNED contacts ────────────────────────────────────────────
-// These ALWAYS appear. Numbers saved here survive Safari wipes.
-// To permanently add a number: edit the `phone` field directly.
-// To remember a number entered by the user across sessions we use
-// a separate key that outlasts the short-lived mc_call_list.
-const PINNED_NUMS_KEY = 'mc_pinned_nums'; // {id: formattedPhone}
-
-function getPinnedNums() {
-  try { return JSON.parse(localStorage.getItem(PINNED_NUMS_KEY) || '{}'); } catch { return {}; }
-}
-function savePinnedNum(id, phone) {
-  const n = getPinnedNums(); n[id] = phone;
-  localStorage.setItem(PINNED_NUMS_KEY, JSON.stringify(n));
-}
-function clearPinnedNum(id) {
-  const n = getPinnedNums(); delete n[id];
-  localStorage.setItem(PINNED_NUMS_KEY, JSON.stringify(n));
-}
-
-// ── Source of truth for pinned contacts ──────────────────────
-// Edit phone here to hardcode a number permanently in the page.
 const PINNED_CALLS = [
   { id: 'pinned-lindsay', name: 'Lindsay Wyss', phone: '',               role: 'Chief of Staff, Cañon City Unbridled' },
   { id: 'pinned-justin',  name: 'Justin Farr',  phone: '(956) 367-0188', role: 'Operations & Tech, Unbridled' },
   { id: 'pinned-cindy',   name: 'Cindy',        phone: '',               role: '' },
 ];
 
-function getPinnedWithNums() {
-  const saved = getPinnedNums();
-  return PINNED_CALLS.map(p => ({
-    ...p,
-    phone: saved[p.id] || p.phone, // saved num wins over hardcoded blank
-    pinned: true
-  }));
-}
+// Runtime state — hidden cards, extra cards added this session, edited numbers/names
+let hiddenIds   = new Set();
+let sessionCards = [];  // [{id, name, phone, role}] added via quick-add bar this session
+let editingId     = null;
+let editingNameId = null;
 
-function getCalls() {
-  try { return JSON.parse(localStorage.getItem(CALLS_KEY) || '[]'); } catch { return []; }
-}
-function saveCalls(arr) {
-  localStorage.setItem(CALLS_KEY, JSON.stringify(arr));
-}
-function removeCall(id) {
-  const calls = getCalls().filter(c => c.id !== id);
-  saveCalls(calls);
-  renderCalls();
-}
-
-// ── Format phone digits → (xxx) xxx-xxxx ─────────────────────
 function fmtPhone(raw) {
-  const d = raw.replace(/\D/g,'');
+  const d = (raw||'').replace(/\D/g,'');
   if (d.length === 10) return `(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`;
-  if (d.length === 11 && d[0] === '1') return `(${d.slice(1,4)}) ${d.slice(4,7)}-${d.slice(7)}`;
+  if (d.length === 11 && d[0]==='1') return `(${d.slice(1,4)}) ${d.slice(4,7)}-${d.slice(7)}`;
   return raw;
 }
 
-// ── Inline edit state (tracked in JS, not DOM queries) ────────
-let editingId = null;
-
-function openEdit(id) {
-  editingId = id;
+// ── Trash / restore ───────────────────────────────────────────
+function removeCall(id) {
+  hiddenIds.add(id);
   renderCalls();
-  setTimeout(() => {
-    const inp = document.getElementById('numinput-' + id);
-    if (inp) inp.focus();
-  }, 30);
 }
-function cancelEdit() {
+function restoreAll() {
+  hiddenIds.clear();
+  sessionCards = [];
   editingId = null;
+  editingNameId = null;
   renderCalls();
 }
+
+// ── Number edit ───────────────────────────────────────────────
+function openEdit(id) {
+  editingId = id; editingNameId = null;
+  renderCalls();
+  setTimeout(() => document.getElementById('numinput-'+id)?.focus(), 30);
+}
+function cancelEdit() { editingId = null; renderCalls(); }
 function saveEdit(id) {
-  const inp = document.getElementById('numinput-' + id);
-  if (!inp) return;
-  const raw = inp.value.trim();
+  const raw = document.getElementById('numinput-'+id)?.value.trim();
   if (!raw) { cancelEdit(); return; }
   const fmt = fmtPhone(raw);
-
-  const pinned = PINNED_CALLS.find(p => p.id === id);
-  if (pinned) {
-    savePinnedNum(id, fmt);
-  } else {
-    const calls = getCalls();
-    const card = calls.find(c => c.id === id);
-    if (card) { card.phone = fmt; saveCalls(calls); }
+  const p = PINNED_CALLS.find(p=>p.id===id);
+  if (p) { p.phone = fmt; }
+  else {
+    const s = sessionCards.find(c=>c.id===id);
+    if (s) s.phone = fmt;
   }
-  editingId = null;
-  renderCalls();
+  editingId = null; renderCalls();
 }
 function pasteIntoEdit(id) {
-  if (navigator.clipboard && navigator.clipboard.readText) {
-    navigator.clipboard.readText().then(t => {
-      const inp = document.getElementById('numinput-' + id);
-      if (inp) { inp.value = t.trim(); inp.focus(); }
-    }).catch(() => { document.getElementById('numinput-' + id)?.focus(); });
-  } else {
-    document.getElementById('numinput-' + id)?.focus();
-  }
-}
-function clearNum(id) {
-  const pinned = PINNED_CALLS.find(p => p.id === id);
-  if (pinned) {
-    clearPinnedNum(id);
-  } else {
-    const calls = getCalls();
-    const card = calls.find(c => c.id === id);
-    if (card) { card.phone = ''; saveCalls(calls); }
-  }
-  editingId = null;
-  renderCalls();
+  navigator.clipboard?.readText().then(t => {
+    const inp = document.getElementById('numinput-'+id);
+    if (inp) { inp.value = t.trim(); inp.focus(); }
+  }).catch(()=>{ document.getElementById('numinput-'+id)?.focus(); });
 }
 
-// ── Name edit state ───────────────────────────────────────────
-let editingNameId = null;
-
+// ── Name edit ─────────────────────────────────────────────────
 function openNameEdit(id) {
-  editingNameId = id;
+  editingNameId = id; editingId = null;
   renderCalls();
-  setTimeout(() => document.getElementById('nameinput-' + id)?.focus(), 30);
+  setTimeout(() => document.getElementById('nameinput-'+id)?.focus(), 30);
 }
-function cancelNameEdit() {
-  editingNameId = null;
-  renderCalls();
-}
+function cancelNameEdit() { editingNameId = null; renderCalls(); }
 function saveName(id) {
-  const inp = document.getElementById('nameinput-' + id);
-  if (!inp) return;
-  const name = inp.value.trim();
+  const name = document.getElementById('nameinput-'+id)?.value.trim();
   if (!name) { cancelNameEdit(); return; }
-
-  const pinned = PINNED_CALLS.find(p => p.id === id);
-  if (pinned) {
-    pinned.name = name; // in-memory for session; page refresh resets to default
-  } else {
-    const calls = getCalls();
-    const card = calls.find(c => c.id === id);
-    if (card) { card.name = name; saveCalls(calls); }
+  const p = PINNED_CALLS.find(p=>p.id===id);
+  if (p) { p.name = name; }
+  else {
+    const s = sessionCards.find(c=>c.id===id);
+    if (s) s.name = name;
   }
-  editingNameId = null;
+  editingNameId = null; renderCalls();
+}
+
+// ── Add new card (from quick-add bar) ─────────────────────────
+function addSessionCard(name, phone, role) {
+  const id = 'sess-' + Date.now();
+  sessionCards.push({ id, name: name||'', phone: phone||'', role: role||'' });
   renderCalls();
 }
 
@@ -945,54 +888,49 @@ function renderCalls() {
   const list = document.getElementById('calls-list');
   if (!list) return;
 
-  const pinned = getPinnedWithNums();
-  const stored = getCalls().filter(s =>
-    !PINNED_CALLS.find(p => p.name.toLowerCase() === s.name.toLowerCase())
-  );
-  const all = [...pinned, ...stored];
+  const all = [
+    ...PINNED_CALLS.map(p => ({ ...p, pinned: true })),
+    ...sessionCards.map(s => ({ ...s, pinned: false }))
+  ].filter(c => !hiddenIds.has(c.id));
 
   function makeCard(c) {
-    const initials = c.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+    const initials = c.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase()||'?';
     const tel = (c.phone||'').replace(/\D/g,'');
 
-    // Name field: tap to edit
+    // Name
     const nameHtml = editingNameId === c.id
-      ? `<span class="call-name-edit">
+      ? `<span style="display:flex;align-items:center;gap:.3rem">
            <input id="nameinput-${c.id}" value="${c.name.replace(/"/g,'&quot;')}"
-             style="background:rgba(255,255,255,.07);border:1px solid var(--gold);border-radius:6px;padding:.2rem .5rem;color:var(--white);font-size:13px;font-family:inherit;width:140px"
-             onkeydown="if(event.key==='Enter')saveName('${c.id}');if(event.key==='Escape')cancelNameEdit()" />
-           <button onclick="saveName('${c.id}')" style="background:none;border:none;color:var(--green);cursor:pointer;font-size:13px">✓</button>
-           <button onclick="cancelNameEdit()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px">✕</button>
+             style="background:rgba(255,255,255,.07);border:1px solid var(--gold);border-radius:6px;padding:.2rem .5rem;color:var(--white);font-size:13px;font-family:inherit;width:130px"
+             onkeydown="if(event.key==='Enter')saveName('${c.id}');if(event.key==='Escape')cancelNameEdit()"/>
+           <button onclick="saveName('${c.id}')" style="background:none;border:none;color:var(--green);cursor:pointer;font-size:14px">✓</button>
+           <button onclick="cancelNameEdit()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px">✕</button>
          </span>`
-      : `<span class="call-name" onclick="openNameEdit('${c.id}')" title="Tap to edit name" style="cursor:pointer">${c.name}${c.pinned?'<span style="font-size:9px;color:var(--muted);margin-left:4px">📌</span>':''}</span>`;
+      : `<div class="call-name" onclick="openNameEdit('${c.id}')" style="cursor:pointer" title="Tap to edit name">${c.name||'—'}</div>`;
 
-    // Phone / number field
+    // Phone
     let phoneHtml;
     if (editingId === c.id) {
-      phoneHtml = `
-        <span class="inline-number-form" style="display:flex;align-items:center;gap:.3rem;flex-wrap:wrap">
-          <input id="numinput-${c.id}" type="tel" value="${(c.phone||'').replace(/"/g,'&quot;')}"
-            placeholder="Type or paste…"
-            style="background:rgba(255,255,255,.07);border:1px solid var(--gold);border-radius:6px;padding:.3rem .6rem;color:var(--white);font-size:12px;font-family:inherit;width:130px"
-            onkeydown="if(event.key==='Enter')saveEdit('${c.id}');if(event.key==='Escape')cancelEdit()" />
-          <button onclick="pasteIntoEdit('${c.id}')" title="Paste" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px">📋</button>
-          <button onclick="saveEdit('${c.id}')" style="background:none;border:none;color:var(--green);cursor:pointer;font-size:13px;font-weight:700">Save</button>
-          <button onclick="cancelEdit()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px">✕</button>
-          ${c.phone?`<button onclick="clearNum('${c.id}')" title="Clear number" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:11px;opacity:.6">Clear</button>`:''}
-        </span>`;
+      phoneHtml = `<span style="display:flex;align-items:center;gap:.3rem;flex-wrap:wrap">
+        <input id="numinput-${c.id}" type="tel" value="${(c.phone||'').replace(/"/g,'&quot;')}" placeholder="Type or paste…"
+          style="background:rgba(255,255,255,.07);border:1px solid var(--gold);border-radius:6px;padding:.3rem .6rem;color:var(--white);font-size:12px;font-family:inherit;width:130px"
+          onkeydown="if(event.key==='Enter')saveEdit('${c.id}');if(event.key==='Escape')cancelEdit()"/>
+        <button onclick="pasteIntoEdit('${c.id}')" title="Paste" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px">📋</button>
+        <button onclick="saveEdit('${c.id}')" style="background:none;border:none;color:var(--green);cursor:pointer;font-weight:700;font-size:13px">Save</button>
+        <button onclick="cancelEdit()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px">✕</button>
+      </span>`;
     } else if (c.phone) {
-      phoneHtml = `<a class="btn-call" href="tel:${tel}" onclick="event.stopPropagation()">📞 ${c.phone}</a>`;
+      phoneHtml = `<a class="btn-call" href="tel:${tel}">📞 ${c.phone}</a>`;
     } else {
       phoneHtml = `<span class="btn-no-number" onclick="openEdit('${c.id}')">📞 No number — tap to add</span>`;
     }
 
-    const vcardBtn = (c.phone && editingId !== c.id)
-      ? `<button class="btn-call-trash" onclick="exportVCard('${c.name.replace(/'/g,"\\'")}','${c.phone}','${(c.role||'').replace(/'/g,"\\'")}' )" title="Save to Apple Contacts" style="opacity:.55;font-size:12px;padding:.2rem .4rem">📇</button>`
-      : '';
-    const editPhoneBtn = (c.phone && editingId !== c.id)
-      ? `<button class="btn-call-trash" onclick="openEdit('${c.id}')" title="Edit number" style="opacity:.45;font-size:12px;padding:.2rem .4rem">✏️</button>`
-      : '';
-    const trashBtn = c.pinned ? '' : `<button class="btn-call-trash" onclick="removeCall('${c.id}')" title="Remove">🗑</button>`;
+    const editBtn  = (c.phone && editingId!==c.id)
+      ? `<button class="btn-call-trash" onclick="openEdit('${c.id}')" title="Edit number" style="opacity:.45;font-size:12px">✏️</button>` : '';
+    const vcardBtn = (c.phone && editingId!==c.id)
+      ? `<button class="btn-call-trash" onclick="exportVCard('${c.name.replace(/'/g,"\\'")}','${c.phone}','${(c.role||'').replace(/'/g,"\\'")}' )" title="Save to Apple Contacts" style="opacity:.55;font-size:12px">📇</button>` : '';
+    // Trash on EVERY card — pinned just hides for this session
+    const trashBtn = `<button class="btn-call-trash" onclick="removeCall('${c.id}')" title="Remove">🗑</button>`;
 
     return `<div class="call-card">
       <div class="call-avatar">${initials}</div>
@@ -1000,15 +938,14 @@ function renderCalls() {
         ${nameHtml}
         <div class="call-role" style="font-size:11px;color:var(--muted)">${c.role||''}</div>
       </div>
-      ${phoneHtml}
-      ${editPhoneBtn}
-      ${vcardBtn}
-      ${trashBtn}
+      ${phoneHtml}${editBtn}${vcardBtn}${trashBtn}
     </div>`;
   }
 
-  list.innerHTML = all.length ? all.map(makeCard).join('') :
-    '<div style="text-align:center;padding:2rem 1rem;color:var(--muted);font-size:13px">No calls queued yet.</div>';
+  const hasHidden = hiddenIds.size > 0;
+  list.innerHTML = (all.length ? all.map(makeCard).join('') :
+    '<div style="text-align:center;padding:1.5rem 1rem;color:var(--muted);font-size:13px">No calls queued.</div>')
+    + (hasHidden ? `<div style="text-align:right;margin-top:.5rem"><button onclick="restoreAll()" style="background:none;border:none;color:var(--blue);font-size:11px;cursor:pointer;letter-spacing:.5px">↩ Restore all</button></div>` : '');
 }
 
 // Init
@@ -1163,71 +1100,35 @@ function parseCommand(text) {
 // ── Execute command ───────────────────────────────────────────
 function executeCommand(cmd, rawText) {
   if (cmd.action === 'call') {
-    const contact = findContact(cmd.name);
-    if (contact) {
-      addCallCard(contact.name, contact.phone, contact.role, '');
-      showToast('✅ Added to call list!', contact.name + (contact.phone ? ' · ' + contact.phone : ' · no number on file'), 4000);
-      resetBtn();
+    const name = cmd.name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    const existing = [...PINNED_CALLS, ...sessionCards].find(c => c.name.toLowerCase() === name.toLowerCase());
+    if (existing) {
+      showToast('Already on your list', name, 2500);
     } else {
-      // Not in directory — add to list anyway, forward to MC to get number
-      const displayName = cmd.name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-      addCallCard(displayName, '', '', '');
-      showToast('✅ Added — asking MC for number', displayName + ' · forwarding to MC', 4000);
-      forwardToMC('Please look up the phone number for ' + displayName + ' and add to call list on master deliverables page.', 'Asking MC for number…');
+      addSessionCard(name, '', '');
+      showToast('✅ Added', name + ' · tap the card to add a number', 3500);
     }
-    return;
-  }
-  if (cmd.action === 'addnumber') {
-    // Convert spoken word numbers to digits ("seven one nine" → "719")
-    const wordToDigit = {'zero':'0','one':'1','two':'2','three':'3','four':'4',
-      'five':'5','six':'6','seven':'7','eight':'8','nine':'9','oh':'0'};
-    const spokenNorm = cmd.number.toLowerCase().replace(/\b(zero|one|two|three|four|five|six|seven|eight|nine|oh)\b/g, m => wordToDigit[m]);
-    const digits = spokenNorm.replace(/\D/g,'');
-    const fmt = digits.length === 10
-      ? `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`
-      : digits.length === 11 && digits[0] === '1'
-        ? `(${digits.slice(1,4)}) ${digits.slice(4,7)}-${digits.slice(7)}`
-        : cmd.number.trim();
-
-    // Search call list first (catches anyone added via voice even if not in directory)
-    const calls = getCalls();
-    const cardMatch = calls.find(c => c.name.toLowerCase().includes(cmd.name.toLowerCase()));
-    const dirMatch = findContact(cmd.name);
-    const target = cardMatch || (dirMatch ? { name: dirMatch.name } : null);
-
-    if (target) {
-      // Update call card on list
-      if (cardMatch) {
-        cardMatch.phone = fmt;
-        saveCalls(calls);
-        renderCalls();
-      }
-      // Update directory entry if found
-      if (dirMatch) dirMatch.phone = fmt;
-      showToast('✅ Number saved!', target.name + ' · ' + fmt, 4000);
-      resetBtn();
-    } else {
-      showToast('⚠ Couldn\'t find that name on your call list', 'Say "call [name]" first, then add the number', 4000);
-      resetBtn();
-    }
-    return;
+    resetBtn(); return;
   }
   if (cmd.action === 'remove') {
-    const contact = findContact(cmd.name);
-    const calls = getCalls();
-    const match = calls.find(c =>
-      c.name.toLowerCase().includes(cmd.name.toLowerCase()) ||
-      (contact && c.name === contact.name)
-    );
-    if (match) {
-      removeCall(match.id);
-      showToast('✅ Removed from call list', match.name, 3000);
-      resetBtn();
-    } else {
-      showToast('⚠ Couldn\'t find that name in your call list', '', 3000);
-      resetBtn();
+    // Try session cards first
+    const si = sessionCards.findIndex(c => c.name.toLowerCase().includes(cmd.name.toLowerCase()));
+    if (si !== -1) {
+      const removed = sessionCards.splice(si, 1)[0];
+      renderCalls();
+      showToast('✅ Removed', removed.name, 3000);
+      resetBtn(); return;
     }
-    return;
+    // Try pinned (just hide)
+    const pinned = PINNED_CALLS.find(p => p.name.toLowerCase().includes(cmd.name.toLowerCase()));
+    if (pinned) {
+      hiddenIds.add(pinned.id);
+      renderCalls();
+      showToast('✅ Removed for this session', pinned.name, 3000);
+      resetBtn(); return;
+    }
+    showToast('⚠ Couldn\'t find that name', '', 3000);
+    resetBtn(); return;
   }
   // Default: forward to MC on Telegram
   forwardToMC(rawText, 'Sending to MC…');
@@ -1238,21 +1139,21 @@ function quickAddCall() {
   const input = document.getElementById('callNameInput');
   const name = (input.value || '').trim();
   if (!name) { input.focus(); return; }
-  // Check known directory first
-  const contact = CALL_DIRECTORY.find(c =>
-    c.name.toLowerCase().includes(name.toLowerCase()) ||
-    name.toLowerCase().includes(c.name.toLowerCase().split(' ')[0])
-  );
-  if (contact) {
-    addCallCard(contact.name, contact.phone, contact.role, '');
-    showToast('✅ Added to call list!', contact.name + (contact.phone ? ' · ' + contact.phone : ' · no number on file'), 4000);
-  } else {
-    addCallCard(name, '', '', '');
-    showToast('➕ Added — no number on file', 'Tap the card to add a number', 4000);
-    forwardToMC('Please look up the phone number for ' + name + ' and add to call list on master deliverables page.', '');
+  // Don't add duplicate (check pinned + session)
+  const allNames = [...PINNED_CALLS, ...sessionCards].map(c => c.name.toLowerCase());
+  if (allNames.includes(name.toLowerCase())) {
+    showToast('Already on your call list', name, 2500);
+    input.value = ''; return;
   }
+  addSessionCard(name, '', '');
+  showToast('➕ Added', name + ' — tap the card to add a number', 3500);
   input.value = '';
   input.blur();
+}
+
+function addCallCard(name, phone, role) {
+  // Compatibility shim — route through addSessionCard
+  addSessionCard(name, phone||'', role||'');
 }
 
 // Mic button dedicated to speaking a name into the call box
@@ -1288,29 +1189,6 @@ function speakCallName() {
     btn.style.borderColor = 'rgba(201,170,124,.2)';
   };
   rec.start();
-}
-
-function addCallCard(name, phone, role, note) {
-  const calls = getCalls();
-  // If no phone provided, check contacts DB first
-  if (!phone) {
-    const dbContact = lookupContact(name);
-    if (dbContact && dbContact.phone) {
-      phone = dbContact.phone;
-      role  = role || dbContact.role;
-    }
-  }
-  // Don't add exact duplicate name
-  if (calls.find(c => c.name.toLowerCase() === name.toLowerCase())) {
-    showToast('Already on your call list', name, 2500);
-    resetBtn();
-    return;
-  }
-  calls.unshift({ id: 'call-' + Date.now(), name, phone: phone || '', role: role || '', note: note || '' });
-  saveCalls(calls);
-  // ── Upsert into persistent contacts DB ──
-  upsertContact(name, phone || '', role || '');
-  renderCalls();
 }
 
 async function forwardToMC(text, toastMsg) {
