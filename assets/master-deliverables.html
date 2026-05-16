@@ -117,6 +117,8 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .inline-number-input{background:var(--navy);border:1px solid var(--blue);border-radius:6px;padding:.3rem .6rem;font-size:13px;color:var(--white);font-family:'Josefin Sans',sans-serif;width:140px;outline:none}
 .inline-number-input:focus{border-color:var(--gold)}
 .btn-save-number{background:var(--green);border:none;border-radius:6px;padding:.3rem .65rem;font-size:11px;font-weight:700;color:#0a1a12;cursor:pointer;font-family:'Josefin Sans',sans-serif;letter-spacing:.5px}
+.btn-paste-number{background:var(--navy);border:1px solid var(--border);border-radius:6px;padding:.3rem .5rem;font-size:13px;cursor:pointer;transition:all .2s}
+.btn-paste-number:hover{border-color:var(--gold)}
 .btn-cancel-number{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:.2rem}
 .btn-call-trash{background:none;border:none;cursor:pointer;padding:.2rem .3rem;color:var(--muted);font-size:13px;opacity:.4;transition:all .2s;flex-shrink:0}
 .btn-call-trash:hover{color:var(--red);opacity:1}
@@ -791,10 +793,22 @@ function editNumber(id) {
   document.getElementById('numform-' + id).style.display = 'flex';
   const noBtn = document.querySelector(`[onclick="editNumber('${id}')"]`);
   if (noBtn) noBtn.style.display = 'none';
-  setTimeout(() => {
+  setTimeout(() => { const inp = document.getElementById('numinput-' + id); if (inp) inp.focus(); }, 50);
+}
+function pasteNumber(id) {
+  if (navigator.clipboard && navigator.clipboard.readText) {
+    navigator.clipboard.readText().then(text => {
+      const inp = document.getElementById('numinput-' + id);
+      if (inp) { inp.value = text.trim(); inp.focus(); }
+    }).catch(() => {
+      const inp = document.getElementById('numinput-' + id);
+      if (inp) inp.focus();
+    });
+  } else {
+    // Fallback — just focus the field so the user can paste manually
     const inp = document.getElementById('numinput-' + id);
     if (inp) inp.focus();
-  }, 50);
+  }
 }
 function cancelNumber(id) {
   document.getElementById('numform-' + id).style.display = 'none';
@@ -836,7 +850,8 @@ function renderCalls() {
       ? `<a class="btn-call" href="tel:${tel}">📞 ${c.phone}</a>`
       : `<span class="btn-no-number" onclick="editNumber('${c.id}')">📞 No number on file — tap to add</span>
          <span class="inline-number-form" id="numform-${c.id}" style="display:none">
-           <input class="inline-number-input" id="numinput-${c.id}" type="tel" placeholder="Enter number…" onkeydown="if(event.key==='Enter')saveInlineNumber('${c.id}')">
+           <input class="inline-number-input" id="numinput-${c.id}" type="tel" placeholder="Type or paste number…" onkeydown="if(event.key==='Enter')saveInlineNumber('${c.id}')">
+           <button class="btn-paste-number" onclick="pasteNumber('${c.id}')" title="Paste from clipboard">📋</button>
            <button class="btn-save-number" onclick="saveInlineNumber('${c.id}')">Save</button>
            <button class="btn-cancel-number" onclick="cancelNumber('${c.id}')">✕</button>
          </span>`;
