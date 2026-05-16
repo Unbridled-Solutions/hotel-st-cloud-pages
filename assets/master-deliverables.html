@@ -798,6 +798,42 @@ document.getElementById('dateStamp').textContent = 'Week of ' + label;
 // ─── CALL LIST ─────────────────────────────────────────────────
 const CALLS_KEY = 'mc_call_list';
 
+// ── PINNED contacts ────────────────────────────────────────────
+// These ALWAYS appear. Numbers saved here survive Safari wipes.
+// To permanently add a number: edit the `phone` field directly.
+// To remember a number entered by the user across sessions we use
+// a separate key that outlasts the short-lived mc_call_list.
+const PINNED_NUMS_KEY = 'mc_pinned_nums'; // {id: formattedPhone}
+
+function getPinnedNums() {
+  try { return JSON.parse(localStorage.getItem(PINNED_NUMS_KEY) || '{}'); } catch { return {}; }
+}
+function savePinnedNum(id, phone) {
+  const n = getPinnedNums(); n[id] = phone;
+  localStorage.setItem(PINNED_NUMS_KEY, JSON.stringify(n));
+}
+function clearPinnedNum(id) {
+  const n = getPinnedNums(); delete n[id];
+  localStorage.setItem(PINNED_NUMS_KEY, JSON.stringify(n));
+}
+
+// ── Source of truth for pinned contacts ──────────────────────
+// Edit phone here to hardcode a number permanently in the page.
+const PINNED_CALLS = [
+  { id: 'pinned-lindsay', name: 'Lindsay Wyss', phone: '',               role: 'Chief of Staff, Cañon City Unbridled' },
+  { id: 'pinned-justin',  name: 'Justin Farr',  phone: '(956) 367-0188', role: 'Operations & Tech, Unbridled' },
+  { id: 'pinned-cindy',   name: 'Cindy',        phone: '',               role: '' },
+];
+
+function getPinnedWithNums() {
+  const saved = getPinnedNums();
+  return PINNED_CALLS.map(p => ({
+    ...p,
+    phone: saved[p.id] || p.phone, // saved num wins over hardcoded blank
+    pinned: true
+  }));
+}
+
 function getCalls() {
   try { return JSON.parse(localStorage.getItem(CALLS_KEY) || '[]'); } catch { return []; }
 }
@@ -809,110 +845,170 @@ function removeCall(id) {
   saveCalls(calls);
   renderCalls();
 }
-function editNumber(id) {
-  document.getElementById('numform-' + id).style.display = 'flex';
-  const noBtn = document.querySelector(`[onclick="editNumber('${id}')"]`);
-  if (noBtn) noBtn.style.display = 'none';
-  setTimeout(() => { const inp = document.getElementById('numinput-' + id); if (inp) inp.focus(); }, 50);
+
+// ── Format phone digits → (xxx) xxx-xxxx ─────────────────────
+function fmtPhone(raw) {
+  const d = raw.replace(/\D/g,'');
+  if (d.length === 10) return `(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`;
+  if (d.length === 11 && d[0] === '1') return `(${d.slice(1,4)}) ${d.slice(4,7)}-${d.slice(7)}`;
+  return raw;
 }
-function pasteNumber(id) {
-  if (navigator.clipboard && navigator.clipboard.readText) {
-    navigator.clipboard.readText().then(text => {
-      const inp = document.getElementById('numinput-' + id);
-      if (inp) { inp.value = text.trim(); inp.focus(); }
-    }).catch(() => {
-      const inp = document.getElementById('numinput-' + id);
-      if (inp) inp.focus();
-    });
-  } else {
-    // Fallback — just focus the field so the user can paste manually
+
+// ── Inline edit state (tracked in JS, not DOM queries) ────────
+let editingId = null;
+
+function openEdit(id) {
+  editingId = id;
+  renderCalls();
+  setTimeout(() => {
     const inp = document.getElementById('numinput-' + id);
     if (inp) inp.focus();
-  }
+  }, 30);
 }
-function cancelNumber(id) {
-  document.getElementById('numform-' + id).style.display = 'none';
-  const noBtn = document.querySelector(`[onclick="editNumber('${id}')"]`);
-  if (noBtn) noBtn.style.display = '';
+function cancelEdit() {
+  editingId = null;
+  renderCalls();
 }
-function saveInlineNumber(id) {
+function saveEdit(id) {
   const inp = document.getElementById('numinput-' + id);
   if (!inp) return;
   const raw = inp.value.trim();
-  if (!raw) return;
-  const digits = raw.replace(/\D/g,'');
-  const fmt = digits.length === 10
-    ? `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`
-    : digits.length === 11 && digits[0] === '1'
-      ? `(${digits.slice(1,4)}) ${digits.slice(4,7)}-${digits.slice(7)}`
-      : raw;
+  if (!raw) { cancelEdit(); return; }
+  const fmt = fmtPhone(raw);
 
-  // Handle pinned contacts — save to contacts DB (persists across sessions)
   const pinned = PINNED_CALLS.find(p => p.id === id);
   if (pinned) {
-    pinned.phone = fmt; // update in-memory for current session
-    upsertContact(pinned.name, fmt, pinned.role);
-    renderCalls();
-    return;
+    savePinnedNum(id, fmt);
+  } else {
+    const calls = getCalls();
+    const card = calls.find(c => c.id === id);
+    if (card) { card.phone = fmt; saveCalls(calls); }
   }
-
-  // Handle localStorage contacts
-  const calls = getCalls();
-  const card = calls.find(c => c.id === id);
-  if (card) {
-    card.phone = fmt;
-    saveCalls(calls);
-    upsertContact(card.name, fmt, card.role);
-    renderCalls();
+  editingId = null;
+  renderCalls();
+}
+function pasteIntoEdit(id) {
+  if (navigator.clipboard && navigator.clipboard.readText) {
+    navigator.clipboard.readText().then(t => {
+      const inp = document.getElementById('numinput-' + id);
+      if (inp) { inp.value = t.trim(); inp.focus(); }
+    }).catch(() => { document.getElementById('numinput-' + id)?.focus(); });
+  } else {
+    document.getElementById('numinput-' + id)?.focus();
   }
 }
+function clearNum(id) {
+  const pinned = PINNED_CALLS.find(p => p.id === id);
+  if (pinned) {
+    clearPinnedNum(id);
+  } else {
+    const calls = getCalls();
+    const card = calls.find(c => c.id === id);
+    if (card) { card.phone = ''; saveCalls(calls); }
+  }
+  editingId = null;
+  renderCalls();
+}
 
+// ── Name edit state ───────────────────────────────────────────
+let editingNameId = null;
+
+function openNameEdit(id) {
+  editingNameId = id;
+  renderCalls();
+  setTimeout(() => document.getElementById('nameinput-' + id)?.focus(), 30);
+}
+function cancelNameEdit() {
+  editingNameId = null;
+  renderCalls();
+}
+function saveName(id) {
+  const inp = document.getElementById('nameinput-' + id);
+  if (!inp) return;
+  const name = inp.value.trim();
+  if (!name) { cancelNameEdit(); return; }
+
+  const pinned = PINNED_CALLS.find(p => p.id === id);
+  if (pinned) {
+    pinned.name = name; // in-memory for session; page refresh resets to default
+  } else {
+    const calls = getCalls();
+    const card = calls.find(c => c.id === id);
+    if (card) { card.name = name; saveCalls(calls); }
+  }
+  editingNameId = null;
+  renderCalls();
+}
+
+// ── Render ────────────────────────────────────────────────────
 function renderCalls() {
   const list = document.getElementById('calls-list');
   if (!list) return;
 
-  // Merge: pinned always first, then localStorage additions (skip dupes)
-  const stored = getCalls();
-  const allCalls = [
-    ...PINNED_CALLS.map(p => {
-      // Check if user saved a number for this pinned contact via localStorage
-      const saved = getContactsDB().find(d => d.name.toLowerCase() === p.name.toLowerCase());
-      return { ...p, phone: (saved && saved.phone) ? saved.phone : p.phone, pinned: true };
-    }),
-    ...stored.filter(s => !PINNED_CALLS.find(p => p.name.toLowerCase() === s.name.toLowerCase()))
-  ];
+  const pinned = getPinnedWithNums();
+  const stored = getCalls().filter(s =>
+    !PINNED_CALLS.find(p => p.name.toLowerCase() === s.name.toLowerCase())
+  );
+  const all = [...pinned, ...stored];
 
   function makeCard(c) {
-    const initials = c.name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
-    const tel = (c.phone || '').replace(/\D/g,'');
-    const callBtn = c.phone
-      ? `<a class="btn-call" href="tel:${tel}">📞 ${c.phone}</a>`
-      : `<span class="btn-no-number" onclick="editNumber('${c.id}')">📞 No number on file — tap to add</span>
-         <span class="inline-number-form" id="numform-${c.id}" style="display:none">
-           <input class="inline-number-input" id="numinput-${c.id}" type="tel" placeholder="Type or paste number…" onkeydown="if(event.key==='Enter')saveInlineNumber('${c.id}')">
-           <button class="btn-paste-number" onclick="pasteNumber('${c.id}')" title="Paste from clipboard">📋</button>
-           <button class="btn-save-number" onclick="saveInlineNumber('${c.id}')">Save</button>
-           <button class="btn-cancel-number" onclick="cancelNumber('${c.id}')">✕</button>
-         </span>`;
-    const vcardBtn = c.phone
-      ? `<button class="btn-call-trash" onclick="exportVCard('${c.name.replace(/'/g,"\\'")}','${c.phone}','${(c.role||'').replace(/'/g,"\\'")}' )" title="Save to Apple Contacts" style="opacity:.6;font-size:12px;padding:.2rem .4rem">📇</button>`
+    const initials = c.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+    const tel = (c.phone||'').replace(/\D/g,'');
+
+    // Name field: tap to edit
+    const nameHtml = editingNameId === c.id
+      ? `<span class="call-name-edit">
+           <input id="nameinput-${c.id}" value="${c.name.replace(/"/g,'&quot;')}"
+             style="background:rgba(255,255,255,.07);border:1px solid var(--gold);border-radius:6px;padding:.2rem .5rem;color:var(--white);font-size:13px;font-family:inherit;width:140px"
+             onkeydown="if(event.key==='Enter')saveName('${c.id}');if(event.key==='Escape')cancelNameEdit()" />
+           <button onclick="saveName('${c.id}')" style="background:none;border:none;color:var(--green);cursor:pointer;font-size:13px">✓</button>
+           <button onclick="cancelNameEdit()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px">✕</button>
+         </span>`
+      : `<span class="call-name" onclick="openNameEdit('${c.id}')" title="Tap to edit name" style="cursor:pointer">${c.name}${c.pinned?'<span style="font-size:9px;color:var(--muted);margin-left:4px">📌</span>':''}</span>`;
+
+    // Phone / number field
+    let phoneHtml;
+    if (editingId === c.id) {
+      phoneHtml = `
+        <span class="inline-number-form" style="display:flex;align-items:center;gap:.3rem;flex-wrap:wrap">
+          <input id="numinput-${c.id}" type="tel" value="${(c.phone||'').replace(/"/g,'&quot;')}"
+            placeholder="Type or paste…"
+            style="background:rgba(255,255,255,.07);border:1px solid var(--gold);border-radius:6px;padding:.3rem .6rem;color:var(--white);font-size:12px;font-family:inherit;width:130px"
+            onkeydown="if(event.key==='Enter')saveEdit('${c.id}');if(event.key==='Escape')cancelEdit()" />
+          <button onclick="pasteIntoEdit('${c.id}')" title="Paste" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px">📋</button>
+          <button onclick="saveEdit('${c.id}')" style="background:none;border:none;color:var(--green);cursor:pointer;font-size:13px;font-weight:700">Save</button>
+          <button onclick="cancelEdit()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px">✕</button>
+          ${c.phone?`<button onclick="clearNum('${c.id}')" title="Clear number" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:11px;opacity:.6">Clear</button>`:''}
+        </span>`;
+    } else if (c.phone) {
+      phoneHtml = `<a class="btn-call" href="tel:${tel}" onclick="event.stopPropagation()">📞 ${c.phone}</a>`;
+    } else {
+      phoneHtml = `<span class="btn-no-number" onclick="openEdit('${c.id}')">📞 No number — tap to add</span>`;
+    }
+
+    const vcardBtn = (c.phone && editingId !== c.id)
+      ? `<button class="btn-call-trash" onclick="exportVCard('${c.name.replace(/'/g,"\\'")}','${c.phone}','${(c.role||'').replace(/'/g,"\\'")}' )" title="Save to Apple Contacts" style="opacity:.55;font-size:12px;padding:.2rem .4rem">📇</button>`
       : '';
-    // Pinned contacts don't get a trash button — they're permanent
+    const editPhoneBtn = (c.phone && editingId !== c.id)
+      ? `<button class="btn-call-trash" onclick="openEdit('${c.id}')" title="Edit number" style="opacity:.45;font-size:12px;padding:.2rem .4rem">✏️</button>`
+      : '';
     const trashBtn = c.pinned ? '' : `<button class="btn-call-trash" onclick="removeCall('${c.id}')" title="Remove">🗑</button>`;
+
     return `<div class="call-card">
       <div class="call-avatar">${initials}</div>
       <div class="call-body">
-        <div class="call-name">${c.name}${c.pinned ? ' <span style="font-size:9px;color:var(--muted);letter-spacing:1px">📌</span>' : ''}</div>
-        <div class="call-role">${c.role || ''}</div>
-        ${c.note ? `<div class="call-note">📝 ${c.note}</div>` : ''}
+        ${nameHtml}
+        <div class="call-role" style="font-size:11px;color:var(--muted)">${c.role||''}</div>
       </div>
-      ${callBtn}
+      ${phoneHtml}
+      ${editPhoneBtn}
       ${vcardBtn}
       ${trashBtn}
     </div>`;
   }
 
-  list.innerHTML = allCalls.map(makeCard).join('');
+  list.innerHTML = all.length ? all.map(makeCard).join('') :
+    '<div style="text-align:center;padding:2rem 1rem;color:var(--muted);font-size:13px">No calls queued yet.</div>';
 }
 
 // Init
@@ -995,14 +1091,6 @@ const DIRECTORY = [
   { name: 'Justin Farr',   phone: '(956) 367-0188', role: 'Operations & Tech, Unbridled',           aliases: ['justin','farr'] },
   { name: 'Scott',         phone: '',              role: 'CCO, Live Events',                       aliases: ['scott','cco'] },
   { name: 'Jenny Farr',    phone: '',              role: 'BeUnbridled Client',                     aliases: ['jenny','ruby'] },
-];
-
-// ── PINNED contacts — always shown, immune to localStorage wipes ──────────
-// Edit here to permanently update names / numbers.
-const PINNED_CALLS = [
-  { id: 'pinned-lindsay', name: 'Lindsay Wyss', phone: '',              role: 'Chief of Staff, Cañon City Unbridled' },
-  { id: 'pinned-justin',  name: 'Justin Farr',  phone: '(956) 367-0188', role: 'Operations & Tech, Unbridled' },
-  { id: 'pinned-cindy',   name: 'Cindy',        phone: '',              role: 'Contact — tap to add number' },
 ];
 
 // Merge DIRECTORY into contacts DB on load (no overwrite if already there)
