@@ -850,7 +850,8 @@ function findContact(spoken) {
 // ── Parse voice command ───────────────────────────────────────
 function parseCommand(text) {
   const t = text.toLowerCase().trim();
-  // "call [name]" or "add [name] to my call list" or "I need to call [name]"
+
+  // "call [name]" / "add [name] to my call list"
   const callPatterns = [
     /^(?:call|phone|dial|ring)\s+(.+)/i,
     /^(?:add|put)\s+(.+?)\s+(?:to\s+)?(?:my\s+)?(?:call\s+list|calls)/i,
@@ -861,7 +862,24 @@ function parseCommand(text) {
     const m = text.match(pat);
     if (m) return { action: 'call', name: m[1].trim() };
   }
-  // "remove [name] from calls" or "done with [name]"
+
+  // "[name]'s number is [number]" / "add number [number] for [name]"
+  const numberPatterns = [
+    /^(.+?)(?:'s| his| her)?\s+(?:number|phone|cell|mobile)\s+is\s+([\d\s\-\.\(\)]+)/i,
+    /^(?:the\s+)?(?:number|phone|cell|mobile)\s+for\s+(.+?)\s+is\s+([\d\s\-\.\(\)]+)/i,
+    /^(?:add|save|update)\s+(?:number\s+)?([\d\s\-\.\(\)]+)\s+for\s+(.+)/i,
+  ];
+  for (let i = 0; i < numberPatterns.length; i++) {
+    const m = text.match(numberPatterns[i]);
+    if (m) {
+      // first two patterns: name then number; third: number then name
+      const name = i < 2 ? m[1].trim() : m[2].trim();
+      const number = i < 2 ? m[2].trim() : m[1].trim();
+      return { action: 'addnumber', name, number };
+    }
+  }
+
+  // "remove/done with [name]"
   const removePatterns = [
     /^(?:remove|delete|done with|finished with)\s+(.+?)(?:\s+from\s+(?:my\s+)?(?:call\s+list|calls))?$/i,
   ];
@@ -869,6 +887,7 @@ function parseCommand(text) {
     const m = text.match(pat);
     if (m) return { action: 'remove', name: m[1].trim() };
   }
+
   return { action: 'forward', text };
 }
 
@@ -886,11 +905,40 @@ function executeCommand(cmd, rawText) {
     }
     return;
   }
+  if (cmd.action === 'addnumber') {
+    const contact = findContact(cmd.name);
+    // Format number cleanly
+    const digits = cmd.number.replace(/\D/g,'');
+    const fmt = digits.length === 10
+      ? `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`
+      : cmd.number.trim();
+    if (contact) {
+      // Update in directory
+      contact.phone = fmt;
+      // Update any existing call card in the list
+      const calls = getCalls();
+      const existing = calls.find(c => c.name === contact.name);
+      if (existing) {
+        existing.phone = fmt;
+        saveCalls(calls);
+        renderCalls();
+      }
+      showToast('✅ Number saved!', contact.name + ' · ' + fmt, 4000);
+    } else {
+      // Unknown name — forward to MC
+      forwardToMC(rawText, 'Forwarding number to MC to save…');
+      return;
+    }
+    resetBtn();
+    return;
+  }
   if (cmd.action === 'remove') {
     const contact = findContact(cmd.name);
     const calls = getCalls();
-    const match = calls.find(c => c.name.toLowerCase().includes(cmd.name.toLowerCase()) ||
-      (contact && c.name === contact.name));
+    const match = calls.find(c =>
+      c.name.toLowerCase().includes(cmd.name.toLowerCase()) ||
+      (contact && c.name === contact.name)
+    );
     if (match) {
       removeCall(match.id);
       showToast('✅ Removed from call list', match.name, 3000);
@@ -983,8 +1031,7 @@ function toggleMic() {
   };
 
   recognition.onresult = (e) => {
-    const interim = Array.from(e.results).map(r => r[0].transcript).join('');
-    document.getElementById('mc-transcript').textContent = '"' + interim + '"';
+    // Don't show interim transcript — just keep "Listening…" clean
     if (e.results[e.results.length - 1].isFinal) {
       const final = e.results[e.results.length - 1][0].transcript.trim();
       recognition.stop();
