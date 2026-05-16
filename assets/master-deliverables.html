@@ -660,6 +660,11 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
     <span style="margin-left:auto;font-size:10px;color:var(--muted)">Items you've removed — tap Restore to bring back</span>
   </button>
   <div id="archiveList"></div>
+  <div style="margin-top:.75rem;text-align:right">
+    <a href="archive.html" style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--blue);text-decoration:none;transition:color .2s" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--blue)'">
+      📋 View full archive →
+    </a>
+  </div>
 </div>
 
 <!-- Restore snackbar -->
@@ -687,7 +692,9 @@ function deleteItem(id, label) {
   el.classList.add('item-deleted');
   lastDeleted = { id, label };
   const archive = getArchive();
-  if (!archive.find(a => a.id === id)) archive.push({ id, label });
+  if (!archive.find(a => a.id === id)) {
+    archive.push({ id, label, date: new Date().toISOString(), source: 'Master Deliverables' });
+  }
   saveArchive(archive);
   showRestore(label);
   renderArchive();
