@@ -909,30 +909,38 @@ function executeCommand(cmd, rawText) {
     return;
   }
   if (cmd.action === 'addnumber') {
-    const contact = findContact(cmd.name);
-    // Format number cleanly
-    const digits = cmd.number.replace(/\D/g,'');
+    // Convert spoken word numbers to digits ("seven one nine" → "719")
+    const wordToDigit = {'zero':'0','one':'1','two':'2','three':'3','four':'4',
+      'five':'5','six':'6','seven':'7','eight':'8','nine':'9','oh':'0'};
+    const spokenNorm = cmd.number.toLowerCase().replace(/\b(zero|one|two|three|four|five|six|seven|eight|nine|oh)\b/g, m => wordToDigit[m]);
+    const digits = spokenNorm.replace(/\D/g,'');
     const fmt = digits.length === 10
       ? `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`
-      : cmd.number.trim();
-    if (contact) {
-      // Update in directory
-      contact.phone = fmt;
-      // Update any existing call card in the list
-      const calls = getCalls();
-      const existing = calls.find(c => c.name === contact.name);
-      if (existing) {
-        existing.phone = fmt;
+      : digits.length === 11 && digits[0] === '1'
+        ? `(${digits.slice(1,4)}) ${digits.slice(4,7)}-${digits.slice(7)}`
+        : cmd.number.trim();
+
+    // Search call list first (catches anyone added via voice even if not in directory)
+    const calls = getCalls();
+    const cardMatch = calls.find(c => c.name.toLowerCase().includes(cmd.name.toLowerCase()));
+    const dirMatch = findContact(cmd.name);
+    const target = cardMatch || (dirMatch ? { name: dirMatch.name } : null);
+
+    if (target) {
+      // Update call card on list
+      if (cardMatch) {
+        cardMatch.phone = fmt;
         saveCalls(calls);
         renderCalls();
       }
-      showToast('✅ Number saved!', contact.name + ' · ' + fmt, 4000);
+      // Update directory entry if found
+      if (dirMatch) dirMatch.phone = fmt;
+      showToast('✅ Number saved!', target.name + ' · ' + fmt, 4000);
+      resetBtn();
     } else {
-      // Unknown name — forward to MC
-      forwardToMC(rawText, 'Forwarding number to MC to save…');
-      return;
+      showToast('⚠ Couldn\'t find that name on your call list', 'Say "call [name]" first, then add the number', 4000);
+      resetBtn();
     }
-    resetBtn();
     return;
   }
   if (cmd.action === 'remove') {
