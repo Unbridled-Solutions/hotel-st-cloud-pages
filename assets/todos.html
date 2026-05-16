@@ -6,7 +6,9 @@
 <title>MC Daily To-Do — Unbridled</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #0e1117; color: #e8e8e8; font-family: 'Segoe UI', system-ui, sans-serif; padding: 24px; max-width: 900px; margin: 0 auto; }
+  body { background: #0e1117; color: #e8e8e8; font-family: 'Segoe UI', system-ui, sans-serif; }
+
+  .page-wrap { max-width: 900px; margin: 0 auto; padding: 24px; }
 
   .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; padding-bottom: 16px; border-bottom: 1px solid #1e2a38; flex-wrap: wrap; gap: 12px; }
   .header h1 { font-size: 20px; font-weight: 700; color: #fff; }
@@ -101,8 +103,15 @@
   .mic-bar {
     display: flex; gap: .5rem; align-items: center;
     margin-bottom: 18px;
-    background: #131c27; border: 1px solid #1e2a38;
-    border-radius: 12px; padding: 10px 14px;
+    background: #0e1117;
+    border-bottom: 1px solid #1e2a38;
+    padding: 12px 24px;
+    position: sticky; top: 0; z-index: 100;
+    max-width: 900px; margin-left: auto; margin-right: auto;
+    /* subtle blur so content sliding under looks clean */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    background: rgba(14,17,23,.92);
   }
   .mic-bar input {
     flex: 1; background: transparent; border: none; outline: none;
@@ -154,11 +163,13 @@
   <button class="mic-speak-btn" id="todoMicBtn" onclick="speakTodo()" title="Speak a to-do">🎤</button>
 </div>
 
-<!-- Quick-added items (stored in localStorage) -->
-<div id="quickSection"></div>
-
 <!-- Toast -->
 <div class="mc-toast" id="mcToast"></div>
+
+<div class="page-wrap">
+
+<!-- Quick-added items (stored in localStorage) -->
+<div id="quickSection"></div>
 
 <div class="header">
   <div>
@@ -192,6 +203,8 @@
 <div class="footer">
   Maintained by <strong>MC — Unbridled Solutions</strong> · Updated daily 6am MT · <span id="footer-updated">—</span>
 </div>
+
+</div><!-- end .page-wrap -->
 
 <script>
 let masterData = null;
