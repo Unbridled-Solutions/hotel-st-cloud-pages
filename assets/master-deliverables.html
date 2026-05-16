@@ -791,6 +791,9 @@ function renderCalls() {
   list.innerHTML = calls.map(c => {
     const initials = c.name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
     const tel = c.phone.replace(/\D/g,'');
+    const callBtn = c.phone
+      ? `<a class="btn-call" href="tel:${tel}">📞 ${c.phone}</a>`
+      : `<span class="btn-call" style="opacity:.45;cursor:default;background:none;border-color:var(--border);color:var(--muted)">📞 No number on file</span>`;
     return `<div class="call-card">
       <div class="call-avatar">${initials}</div>
       <div class="call-body">
@@ -798,7 +801,7 @@ function renderCalls() {
         <div class="call-role">${c.role || ''}</div>
         ${c.note ? `<div class="call-note">📝 ${c.note}</div>` : ''}
       </div>
-      <a class="btn-call" href="tel:${tel}">📞 ${c.phone}</a>
+      ${callBtn}
       <button class="btn-call-trash" onclick="removeCall('${c.id}')" title="Remove">🗑</button>
     </div>`;
   }).join('');
@@ -826,10 +829,10 @@ const CHAT_ID   = '1588031229';
 
 // ── Known contacts directory ──────────────────────────────────
 const DIRECTORY = [
-  { name: 'Lindsay Wyss',      phone: '(719) 470-3710', role: 'Chief of Staff, Cañon City Unbridled',  aliases: ['lindsay','lindsey','wyss','lyndsey'] },
-  { name: 'Justin Farr',       phone: '(970) 412-7170', role: 'Operations & Tech, Unbridled',          aliases: ['justin','farr'] },
-  { name: 'Scott',             phone: '',               role: 'CCO, Live Events',                      aliases: ['scott','cco'] },
-  { name: 'Jenny Farr',        phone: '',               role: 'BeUnbridled Client / Ruby',             aliases: ['jenny','ruby'] },
+  { name: 'Lindsay Wyss',  phone: '',  role: 'Chief of Staff, Cañon City Unbridled',  aliases: ['lindsay','lindsey','wyss','lyndsey'] },
+  { name: 'Justin Farr',   phone: '',  role: 'Operations & Tech, Unbridled',           aliases: ['justin','farr'] },
+  { name: 'Scott',         phone: '',  role: 'CCO, Live Events',                       aliases: ['scott','cco'] },
+  { name: 'Jenny Farr',    phone: '',  role: 'BeUnbridled Client',                     aliases: ['jenny','ruby'] },
 ];
 
 // ── Fuzzy name match ──────────────────────────────────────────
