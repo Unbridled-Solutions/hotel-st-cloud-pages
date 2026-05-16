@@ -111,6 +111,13 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .call-note{font-size:11px;color:var(--amber);margin-top:.2rem}
 .btn-call{display:inline-flex;align-items:center;gap:.4rem;background:rgba(76,175,125,.1);border:1px solid rgba(76,175,125,.3);border-radius:20px;padding:.35rem .9rem;font-size:12px;font-weight:600;color:var(--green);text-decoration:none;letter-spacing:.5px;transition:all .2s;white-space:nowrap;flex-shrink:0}
 .btn-call:hover{background:rgba(76,175,125,.2);border-color:var(--green)}
+.btn-no-number{font-size:11px;color:var(--muted);border:1px dashed var(--border);border-radius:20px;padding:.35rem .8rem;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0}
+.btn-no-number:hover{border-color:var(--gold);color:var(--gold)}
+.inline-number-form{display:flex;align-items:center;gap:.4rem;flex-shrink:0}
+.inline-number-input{background:var(--navy);border:1px solid var(--blue);border-radius:6px;padding:.3rem .6rem;font-size:13px;color:var(--white);font-family:'Josefin Sans',sans-serif;width:140px;outline:none}
+.inline-number-input:focus{border-color:var(--gold)}
+.btn-save-number{background:var(--green);border:none;border-radius:6px;padding:.3rem .65rem;font-size:11px;font-weight:700;color:#0a1a12;cursor:pointer;font-family:'Josefin Sans',sans-serif;letter-spacing:.5px}
+.btn-cancel-number{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:.2rem}
 .btn-call-trash{background:none;border:none;cursor:pointer;padding:.2rem .3rem;color:var(--muted);font-size:13px;opacity:.4;transition:all .2s;flex-shrink:0}
 .btn-call-trash:hover{color:var(--red);opacity:1}
 .outline-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.2rem 1.4rem;margin-bottom:.6rem}
@@ -780,6 +787,40 @@ function removeCall(id) {
   saveCalls(calls);
   renderCalls();
 }
+function editNumber(id) {
+  document.getElementById('numform-' + id).style.display = 'flex';
+  const noBtn = document.querySelector(`[onclick="editNumber('${id}')"]`);
+  if (noBtn) noBtn.style.display = 'none';
+  setTimeout(() => {
+    const inp = document.getElementById('numinput-' + id);
+    if (inp) inp.focus();
+  }, 50);
+}
+function cancelNumber(id) {
+  document.getElementById('numform-' + id).style.display = 'none';
+  const noBtn = document.querySelector(`[onclick="editNumber('${id}')"]`);
+  if (noBtn) noBtn.style.display = '';
+}
+function saveInlineNumber(id) {
+  const inp = document.getElementById('numinput-' + id);
+  if (!inp) return;
+  const raw = inp.value.trim();
+  if (!raw) return;
+  const digits = raw.replace(/\D/g,'');
+  const fmt = digits.length === 10
+    ? `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`
+    : digits.length === 11 && digits[0] === '1'
+      ? `(${digits.slice(1,4)}) ${digits.slice(4,7)}-${digits.slice(7)}`
+      : raw;
+  const calls = getCalls();
+  const card = calls.find(c => c.id === id);
+  if (card) {
+    card.phone = fmt;
+    saveCalls(calls);
+    renderCalls();
+  }
+}
+
 function renderCalls() {
   const list = document.getElementById('calls-list');
   if (!list) return;
@@ -793,7 +834,12 @@ function renderCalls() {
     const tel = c.phone.replace(/\D/g,'');
     const callBtn = c.phone
       ? `<a class="btn-call" href="tel:${tel}">📞 ${c.phone}</a>`
-      : `<span class="btn-call" style="opacity:.45;cursor:default;background:none;border-color:var(--border);color:var(--muted)">📞 No number on file</span>`;
+      : `<span class="btn-no-number" onclick="editNumber('${c.id}')">📞 No number on file — tap to add</span>
+         <span class="inline-number-form" id="numform-${c.id}" style="display:none">
+           <input class="inline-number-input" id="numinput-${c.id}" type="tel" placeholder="Enter number…" onkeydown="if(event.key==='Enter')saveInlineNumber('${c.id}')">
+           <button class="btn-save-number" onclick="saveInlineNumber('${c.id}')">Save</button>
+           <button class="btn-cancel-number" onclick="cancelNumber('${c.id}')">✕</button>
+         </span>`;
     return `<div class="call-card">
       <div class="call-avatar">${initials}</div>
       <div class="call-body">
