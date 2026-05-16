@@ -835,11 +835,13 @@ const DIRECTORY = [
 // ── Fuzzy name match ──────────────────────────────────────────
 function findContact(spoken) {
   const lower = spoken.toLowerCase();
-  return DIRECTORY.find(c =>
-    c.aliases.some(a => lower.includes(a)) ||
-    lower.includes(c.name.toLowerCase().split(' ')[0]) ||
-    lower.includes(c.name.toLowerCase().split(' ')[1] || '')
-  );
+  return DIRECTORY.find(c => {
+    if (c.aliases.some(a => lower.includes(a))) return true;
+    const parts = c.name.toLowerCase().split(' ');
+    if (lower.includes(parts[0])) return true;
+    if (parts[1] && lower.includes(parts[1])) return true;  // only match last name if it exists
+    return false;
+  });
 }
 
 // ── Parse voice command ───────────────────────────────────────
