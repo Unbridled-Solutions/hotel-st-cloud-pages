@@ -638,14 +638,7 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
     </div>
 
     <div id="calls-list">
-      <!-- Contacts will be added here by MC as Stan requests them -->
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;margin-bottom:.5rem">
-        <div>
-          <div style="font-weight:600;font-size:14px;color:var(--text)">Justin Farr</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:2px">956-367-0188</div>
-        </div>
-        <a href="tel:+19563670188" style="background:var(--gold);color:#000;font-weight:700;font-size:12px;padding:.4rem .9rem;border-radius:6px;text-decoration:none;letter-spacing:.3px">📞 Call</a>
-      </div>
+      <!-- Pinned contacts rendered by JS — never wiped -->
     </div>
   </div>
 
@@ -853,12 +846,22 @@ function saveInlineNumber(id) {
     : digits.length === 11 && digits[0] === '1'
       ? `(${digits.slice(1,4)}) ${digits.slice(4,7)}-${digits.slice(7)}`
       : raw;
+
+  // Handle pinned contacts — save to contacts DB (persists across sessions)
+  const pinned = PINNED_CALLS.find(p => p.id === id);
+  if (pinned) {
+    pinned.phone = fmt; // update in-memory for current session
+    upsertContact(pinned.name, fmt, pinned.role);
+    renderCalls();
+    return;
+  }
+
+  // Handle localStorage contacts
   const calls = getCalls();
   const card = calls.find(c => c.id === id);
   if (card) {
     card.phone = fmt;
     saveCalls(calls);
-    // ── Save to persistent contacts DB ──
     upsertContact(card.name, fmt, card.role);
     renderCalls();
   }
@@ -867,14 +870,21 @@ function saveInlineNumber(id) {
 function renderCalls() {
   const list = document.getElementById('calls-list');
   if (!list) return;
-  const calls = getCalls();
-  if (calls.length === 0) {
-    list.innerHTML = '<div style="text-align:center;padding:2rem 1rem;color:var(--muted);font-size:13px">No calls queued yet. Tell MC who you need to call and I\'ll add them with tap-to-dial links.</div>';
-    return;
-  }
-  list.innerHTML = calls.map(c => {
+
+  // Merge: pinned always first, then localStorage additions (skip dupes)
+  const stored = getCalls();
+  const allCalls = [
+    ...PINNED_CALLS.map(p => {
+      // Check if user saved a number for this pinned contact via localStorage
+      const saved = getContactsDB().find(d => d.name.toLowerCase() === p.name.toLowerCase());
+      return { ...p, phone: (saved && saved.phone) ? saved.phone : p.phone, pinned: true };
+    }),
+    ...stored.filter(s => !PINNED_CALLS.find(p => p.name.toLowerCase() === s.name.toLowerCase()))
+  ];
+
+  function makeCard(c) {
     const initials = c.name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
-    const tel = c.phone.replace(/\D/g,'');
+    const tel = (c.phone || '').replace(/\D/g,'');
     const callBtn = c.phone
       ? `<a class="btn-call" href="tel:${tel}">📞 ${c.phone}</a>`
       : `<span class="btn-no-number" onclick="editNumber('${c.id}')">📞 No number on file — tap to add</span>
@@ -884,18 +894,25 @@ function renderCalls() {
            <button class="btn-save-number" onclick="saveInlineNumber('${c.id}')">Save</button>
            <button class="btn-cancel-number" onclick="cancelNumber('${c.id}')">✕</button>
          </span>`;
+    const vcardBtn = c.phone
+      ? `<button class="btn-call-trash" onclick="exportVCard('${c.name.replace(/'/g,"\\'")}','${c.phone}','${(c.role||'').replace(/'/g,"\\'")}' )" title="Save to Apple Contacts" style="opacity:.6;font-size:12px;padding:.2rem .4rem">📇</button>`
+      : '';
+    // Pinned contacts don't get a trash button — they're permanent
+    const trashBtn = c.pinned ? '' : `<button class="btn-call-trash" onclick="removeCall('${c.id}')" title="Remove">🗑</button>`;
     return `<div class="call-card">
       <div class="call-avatar">${initials}</div>
       <div class="call-body">
-        <div class="call-name">${c.name}</div>
+        <div class="call-name">${c.name}${c.pinned ? ' <span style="font-size:9px;color:var(--muted);letter-spacing:1px">📌</span>' : ''}</div>
         <div class="call-role">${c.role || ''}</div>
         ${c.note ? `<div class="call-note">📝 ${c.note}</div>` : ''}
       </div>
       ${callBtn}
-      ${c.phone ? `<button class="btn-call-trash" onclick="exportVCard('${c.name.replace(/'/g,"\\'")}','${c.phone}','${(c.role||'').replace(/'/g,"\\'")}' )" title="Save to Apple Contacts" style="opacity:.6;font-size:12px;padding:.2rem .4rem">📇</button>` : ''}
-      <button class="btn-call-trash" onclick="removeCall('${c.id}')" title="Remove">🗑</button>
+      ${vcardBtn}
+      ${trashBtn}
     </div>`;
-  }).join('');
+  }
+
+  list.innerHTML = allCalls.map(makeCard).join('');
 }
 
 // Init
@@ -974,10 +991,18 @@ function exportVCard(name, phone, role) {
 
 // ── Known contacts directory ──────────────────────────────────
 const DIRECTORY = [
-  { name: 'Lindsay Wyss',  phone: '',  role: 'Chief of Staff, Cañon City Unbridled',  aliases: ['lindsay','lindsey','wyss','lyndsey'] },
-  { name: 'Justin Farr',   phone: '',  role: 'Operations & Tech, Unbridled',           aliases: ['justin','farr'] },
-  { name: 'Scott',         phone: '',  role: 'CCO, Live Events',                       aliases: ['scott','cco'] },
-  { name: 'Jenny Farr',    phone: '',  role: 'BeUnbridled Client',                     aliases: ['jenny','ruby'] },
+  { name: 'Lindsay Wyss',  phone: '',              role: 'Chief of Staff, Cañon City Unbridled',  aliases: ['lindsay','lindsey','wyss','lyndsey'] },
+  { name: 'Justin Farr',   phone: '(956) 367-0188', role: 'Operations & Tech, Unbridled',           aliases: ['justin','farr'] },
+  { name: 'Scott',         phone: '',              role: 'CCO, Live Events',                       aliases: ['scott','cco'] },
+  { name: 'Jenny Farr',    phone: '',              role: 'BeUnbridled Client',                     aliases: ['jenny','ruby'] },
+];
+
+// ── PINNED contacts — always shown, immune to localStorage wipes ──────────
+// Edit here to permanently update names / numbers.
+const PINNED_CALLS = [
+  { id: 'pinned-lindsay', name: 'Lindsay Wyss', phone: '',              role: 'Chief of Staff, Cañon City Unbridled' },
+  { id: 'pinned-justin',  name: 'Justin Farr',  phone: '(956) 367-0188', role: 'Operations & Tech, Unbridled' },
+  { id: 'pinned-cindy',   name: 'Cindy',        phone: '',              role: 'Contact — tap to add number' },
 ];
 
 // Merge DIRECTORY into contacts DB on load (no overwrite if already there)
