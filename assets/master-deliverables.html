@@ -93,7 +93,18 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .todo-check:checked + .todo-label{text-decoration:line-through;color:var(--muted)}
 .todo-date{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);flex-shrink:0}
 
-/* Book outline section */
+/* Call list */
+.call-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.85rem 1.2rem;margin-bottom:.5rem;display:flex;align-items:center;gap:1rem;transition:border-color .2s}
+.call-card:hover{border-color:var(--green)}
+.call-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--navy),var(--border));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--gold);flex-shrink:0;letter-spacing:0}
+.call-body{flex:1;min-width:0}
+.call-name{font-size:14px;font-weight:600;color:var(--white);margin-bottom:.15rem}
+.call-role{font-size:11px;color:var(--muted);line-height:1.3}
+.call-note{font-size:11px;color:var(--amber);margin-top:.2rem}
+.btn-call{display:inline-flex;align-items:center;gap:.4rem;background:rgba(76,175,125,.1);border:1px solid rgba(76,175,125,.3);border-radius:20px;padding:.35rem .9rem;font-size:12px;font-weight:600;color:var(--green);text-decoration:none;letter-spacing:.5px;transition:all .2s;white-space:nowrap;flex-shrink:0}
+.btn-call:hover{background:rgba(76,175,125,.2);border-color:var(--green)}
+.btn-call-trash{background:none;border:none;cursor:pointer;padding:.2rem .3rem;color:var(--muted);font-size:13px;opacity:.4;transition:all .2s;flex-shrink:0}
+.btn-call-trash:hover{color:var(--red);opacity:1}
 .outline-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.2rem 1.4rem;margin-bottom:.6rem}
 .outline-section-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:.6rem}
 .outline-section-title{font-size:15px;font-weight:700;color:var(--white);margin-bottom:.5rem}
@@ -577,6 +588,26 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 
   <p class="updated-note">Last updated: <span>Week of May 12, 2026</span> · MC adds to this every Monday · Tap 🗑 to remove any item · Tell MC what to add</p>
 
+  <!-- ───────────────────── CALLS TO MAKE ───────────────────── -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-icon">📞</span>
+      <span class="section-title">Calls to Make</span>
+      <span class="section-count">Tap a name to call · tell MC who to add</span>
+    </div>
+
+    <div style="font-size:11px;color:var(--muted);margin-bottom:1rem;line-height:1.6;padding:.6rem .8rem;background:rgba(201,170,124,.06);border:1px solid rgba(201,170,124,.15);border-radius:8px">
+      💡 <strong style="color:var(--gold)">How to add contacts:</strong> Just tell MC "add [Name] to my call list" — I'll pull the number from what I know or ask you once and save it. Tap any name to dial directly from your phone.
+    </div>
+
+    <div id="calls-list">
+      <!-- Contacts will be added here by MC as Stan requests them -->
+      <div style="text-align:center;padding:2rem 1rem;color:var(--muted);font-size:13px">
+        No calls queued yet. Tell MC who you need to call and I'll add them with tap-to-dial links.
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- Archive section -->
@@ -723,11 +754,50 @@ monday.setDate(d.getDate() - ((d.getDay() + 6) % 7));
 const label = monday.toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'});
 document.getElementById('dateStamp').textContent = 'Week of ' + label;
 
+// ─── CALL LIST ─────────────────────────────────────────────────
+const CALLS_KEY = 'mc_call_list';
+
+function getCalls() {
+  try { return JSON.parse(localStorage.getItem(CALLS_KEY) || '[]'); } catch { return []; }
+}
+function saveCalls(arr) {
+  localStorage.setItem(CALLS_KEY, JSON.stringify(arr));
+}
+function removeCall(id) {
+  const calls = getCalls().filter(c => c.id !== id);
+  saveCalls(calls);
+  renderCalls();
+}
+function renderCalls() {
+  const list = document.getElementById('calls-list');
+  if (!list) return;
+  const calls = getCalls();
+  if (calls.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:2rem 1rem;color:var(--muted);font-size:13px">No calls queued yet. Tell MC who you need to call and I\'ll add them with tap-to-dial links.</div>';
+    return;
+  }
+  list.innerHTML = calls.map(c => {
+    const initials = c.name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
+    const tel = c.phone.replace(/\D/g,'');
+    return `<div class="call-card">
+      <div class="call-avatar">${initials}</div>
+      <div class="call-body">
+        <div class="call-name">${c.name}</div>
+        <div class="call-role">${c.role || ''}</div>
+        ${c.note ? `<div class="call-note">📝 ${c.note}</div>` : ''}
+      </div>
+      <a class="btn-call" href="tel:${tel}">📞 ${c.phone}</a>
+      <button class="btn-call-trash" onclick="removeCall('${c.id}')" title="Remove">🗑</button>
+    </div>`;
+  }).join('');
+}
+
 // Init
 loadTodos();
 wireTrashButtons();
 applyDeleted();
 renderArchive();
+renderCalls();
 </script>
 
 </body>
