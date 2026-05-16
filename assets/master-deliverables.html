@@ -900,8 +900,11 @@ function executeCommand(cmd, rawText) {
       showToast('✅ Added to call list!', contact.name + (contact.phone ? ' · ' + contact.phone : ' · no number on file'), 4000);
       resetBtn();
     } else {
-      // Unknown person — forward to MC to look up
-      forwardToMC(rawText, '📞 Unknown contact — forwarding to MC to look up number');
+      // Not in directory — add to list anyway, forward to MC to get number
+      const displayName = cmd.name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+      addCallCard(displayName, '', '', '');
+      showToast('✅ Added — asking MC for number', displayName + ' · forwarding to MC', 4000);
+      forwardToMC('Please look up the phone number for ' + displayName + ' and add to call list on master deliverables page.', 'Asking MC for number…');
     }
     return;
   }
@@ -955,8 +958,12 @@ function executeCommand(cmd, rawText) {
 
 function addCallCard(name, phone, role, note) {
   const calls = getCalls();
-  // Don't add duplicate
-  if (calls.find(c => c.name === name)) return;
+  // Don't add exact duplicate name
+  if (calls.find(c => c.name.toLowerCase() === name.toLowerCase())) {
+    showToast('Already on your call list', name, 2500);
+    resetBtn();
+    return;
+  }
   calls.unshift({ id: 'call-' + Date.now(), name, phone, role, note });
   saveCalls(calls);
   renderCalls();
