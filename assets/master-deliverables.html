@@ -71,6 +71,18 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 #restoreBar{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:#1e3347;border:1px solid var(--gold);border-radius:8px;padding:.6rem 1.2rem;font-size:12px;color:var(--text);display:none;align-items:center;gap:.75rem;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.5)}
 #restoreBar button{background:none;border:none;color:var(--gold);cursor:pointer;font-size:12px;font-family:'Josefin Sans',sans-serif;font-weight:700;letter-spacing:1px;text-transform:uppercase}
 
+/* Archive section */
+.archive-toggle{display:flex;align-items:center;gap:.6rem;cursor:pointer;padding:.6rem 0;border:none;background:none;color:var(--muted);font-family:'Josefin Sans',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;width:100%;margin-top:1.5rem}
+.archive-toggle:hover{color:var(--text)}
+.archive-toggle .caret{font-size:10px;transition:transform .2s;display:inline-block}
+.archive-toggle.open .caret{transform:rotate(90deg)}
+.archive-count{background:rgba(106,138,154,.15);border:1px solid var(--border);border-radius:10px;padding:.1rem .5rem;font-size:10px;color:var(--muted);margin-left:.25rem}
+#archiveList{display:none;margin-top:.5rem}
+.archive-item{background:rgba(22,36,51,.5);border:1px solid var(--border);border-radius:10px;padding:.7rem 1rem;margin-bottom:.4rem;display:flex;align-items:center;gap:.75rem;opacity:.6}
+.archive-item-label{flex:1;font-size:12px;color:var(--muted);line-height:1.3}
+.btn-restore{background:none;border:1px solid var(--border);cursor:pointer;padding:.2rem .65rem;border-radius:20px;color:var(--muted);font-size:10px;letter-spacing:1px;text-transform:uppercase;font-family:'Josefin Sans',sans-serif;transition:all .2s;white-space:nowrap}
+.btn-restore:hover{border-color:var(--blue);color:var(--blue)}
+
 /* To-do list styles */
 .todo-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.85rem 1.2rem;margin-bottom:.5rem;display:flex;align-items:center;gap:.9rem;transition:border-color .2s}
 .todo-item:hover{border-color:var(--blue)}
@@ -563,6 +575,17 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 
 </div>
 
+<!-- Archive section -->
+<div class="wrap" style="padding-bottom:3rem">
+  <button class="archive-toggle" id="archiveToggle" onclick="toggleArchive()">
+    <span class="caret">▶</span>
+    <span>🗄 Archive</span>
+    <span class="archive-count" id="archiveCount">0 items</span>
+    <span style="margin-left:auto;font-size:10px;color:var(--muted)">Items you've removed — tap Restore to bring back</span>
+  </button>
+  <div id="archiveList"></div>
+</div>
+
 <!-- Restore snackbar -->
 <div id="restoreBar">
   <span id="restoreMsg">Item removed</span>
@@ -570,15 +593,15 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 </div>
 
 <script>
-// ─── TRASH CAN LOGIC ───────────────────────────────────────────
-const DELETED_KEY = 'mc_deleted_items';
+// ─── ARCHIVE / TRASH LOGIC ─────────────────────────────────────
+const DELETED_KEY = 'mc_deleted_items'; // [{id, label}]
 let lastDeleted = null;
 let restoreTimer = null;
 
-function getDeleted() {
+function getArchive() {
   try { return JSON.parse(localStorage.getItem(DELETED_KEY) || '[]'); } catch { return []; }
 }
-function saveDeleted(arr) {
+function saveArchive(arr) {
   localStorage.setItem(DELETED_KEY, JSON.stringify(arr));
 }
 
@@ -587,25 +610,30 @@ function deleteItem(id, label) {
   if (!el) return;
   el.classList.add('item-deleted');
   lastDeleted = { id, label };
-  const deleted = getDeleted();
-  if (!deleted.includes(id)) deleted.push(id);
-  saveDeleted(deleted);
+  const archive = getArchive();
+  if (!archive.find(a => a.id === id)) archive.push({ id, label });
+  saveArchive(archive);
   showRestore(label);
+  renderArchive();
+}
+
+function restoreItem(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('item-deleted');
+  const archive = getArchive().filter(a => a.id !== id);
+  saveArchive(archive);
+  if (lastDeleted && lastDeleted.id === id) { lastDeleted = null; hideRestore(); }
+  renderArchive();
 }
 
 function restoreLast() {
   if (!lastDeleted) return;
-  const el = document.getElementById(lastDeleted.id);
-  if (el) el.classList.remove('item-deleted');
-  const deleted = getDeleted().filter(d => d !== lastDeleted.id);
-  saveDeleted(deleted);
-  lastDeleted = null;
-  hideRestore();
+  restoreItem(lastDeleted.id);
 }
 
 function showRestore(label) {
   const bar = document.getElementById('restoreBar');
-  document.getElementById('restoreMsg').textContent = '"' + label.substring(0,40) + (label.length > 40 ? '…' : '') + '" removed';
+  document.getElementById('restoreMsg').textContent = '"' + label.substring(0,38) + (label.length > 38 ? '…' : '') + '" archived';
   bar.style.display = 'flex';
   clearTimeout(restoreTimer);
   restoreTimer = setTimeout(hideRestore, 5000);
@@ -614,10 +642,33 @@ function hideRestore() {
   document.getElementById('restoreBar').style.display = 'none';
 }
 
-// Apply saved deletions on load
+function renderArchive() {
+  const archive = getArchive();
+  const list = document.getElementById('archiveList');
+  const count = document.getElementById('archiveCount');
+  count.textContent = archive.length + (archive.length === 1 ? ' item' : ' items');
+  if (archive.length === 0) {
+    list.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:.5rem 0">Nothing archived yet. Tap 🗑 on any item to archive it.</div>';
+    return;
+  }
+  list.innerHTML = archive.map(a => `
+    <div class="archive-item">
+      <span class="archive-item-label">${a.label}</span>
+      <button class="btn-restore" onclick="restoreItem('${a.id}')">↩ Restore</button>
+    </div>`).join('');
+}
+
+function toggleArchive() {
+  const btn = document.getElementById('archiveToggle');
+  const list = document.getElementById('archiveList');
+  const isOpen = btn.classList.toggle('open');
+  list.style.display = isOpen ? 'block' : 'none';
+}
+
+// Apply saved archive on load — hide items that are archived
 function applyDeleted() {
-  getDeleted().forEach(id => {
-    const el = document.getElementById(id);
+  getArchive().forEach(a => {
+    const el = document.getElementById(a.id);
     if (el) el.classList.add('item-deleted');
   });
 }
@@ -631,7 +682,7 @@ function wireTrashButtons() {
     if (actionsEl && !actionsEl.querySelector('.btn-trash')) {
       const btn = document.createElement('button');
       btn.className = 'btn-trash';
-      btn.title = 'Remove from list';
+      btn.title = 'Archive this item';
       btn.innerHTML = '🗑';
       btn.onclick = () => deleteItem(el.id, label);
       actionsEl.appendChild(btn);
@@ -672,6 +723,7 @@ document.getElementById('dateStamp').textContent = 'Week of ' + label;
 loadTodos();
 wireTrashButtons();
 applyDeleted();
+renderArchive();
 </script>
 
 </body>
