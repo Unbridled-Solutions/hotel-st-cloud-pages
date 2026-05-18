@@ -5,292 +5,116 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Always &amp; Never · Unbridled</title>
 <style>
-/* Use system sans-serif so PDF renders without Google Fonts */
 :root{
   --navy:#1e2d3e;
   --blue:#4a8ab0;
   --white:#ffffff;
-  --black:#1a1a1a;
-  --arrow:#4a8ab0;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;font-family:'Arial','Helvetica Neue',Helvetica,sans-serif}
 
+/* Outer grid — two equal columns, full viewport height */
 .page{
-  display:flex;
+  display:grid;
+  grid-template-columns:1fr 1fr;
   min-height:100vh;
-  width:100%;
 }
 
-/* LEFT COLUMN */
-.col-always{
-  width:50%;
-  background:var(--white);
-  padding:clamp(3rem,6vw,5rem) clamp(2.5rem,5vw,4.5rem);
+/* Shared inner layout for both columns */
+.col{
   display:flex;
   flex-direction:column;
-  justify-content:center;
+  padding:5rem 4.5rem 4rem;
 }
+.col-always{ background:var(--white); }
+.col-never{  background:var(--navy); }
 
-/* RIGHT COLUMN */
-.col-never{
-  width:50%;
-  background:var(--navy);
-  padding:clamp(3rem,6vw,5rem) clamp(2.5rem,5vw,4.5rem);
+/* Logo — sits ABOVE the header row so it doesn't displace content */
+.logo-row{
+  height:3rem;        /* fixed height reserved for logo on right; empty on left */
+  margin-bottom:1.5rem;
   display:flex;
-  flex-direction:column;
-  justify-content:center;
-  position:relative;
+  align-items:center;
+  justify-content:flex-end;
 }
-
-/* LOGO */
-.logo{
-  position:absolute;
-  top:clamp(1.5rem,3vw,2.5rem);
-  right:clamp(1.5rem,3vw,2.5rem);
-  width:clamp(48px,5vw,72px);
-  opacity:.9;
+.logo-row img{
+  width:60px;
+  opacity:.95;
 }
+/* Left logo-row is empty — same height, keeps headers aligned */
 
-/* HEADERS */
+/* Headers */
 .col-header{
-  font-size:clamp(28px,4.5vw,52px);
+  font-size:clamp(32px,3.8vw,52px);
   font-weight:900;
-  line-height:1.05;
-  margin-bottom:clamp(2rem,4vw,3.5rem);
+  line-height:1;
+  margin-bottom:2.5rem;
   letter-spacing:-0.5px;
 }
-.col-always .col-header{color:var(--blue)}
-.col-never .col-header{color:var(--white)}
+.col-always .col-header{ color:var(--blue) }
+.col-never  .col-header{ color:var(--white) }
 
-/* ITEMS LIST */
+/* Item list */
 .items{
   display:flex;
   flex-direction:column;
-  gap:clamp(1rem,2vw,1.6rem);
-}
-
-/* SINGLE ITEM ROW */
-.item{
-  display:flex;
-  align-items:center;
-  gap:0;
-}
-
-/* ITEM TEXT */
-.item-text{
-  font-size:clamp(12px,1.4vw,16px);
-  font-weight:700;
-  line-height:1.35;
-  color:var(--black);
-}
-.col-never .item-text{
-  color:var(--white);
-}
-
-/* ARROW — spans both columns */
-/* We can't really span with a two-column layout, so we use a visual trick:
-   left item has a right-facing dash, right item starts after.
-   For the real arrow effect we use a full-width wrapper approach instead. */
-
-/* ──────────────────────────────────────────────
-   FULL-WIDTH PAIRED ROW APPROACH
-   Each "pair" is one row spanning the whole page
-────────────────────────────────────────────── */
-.page{display:block}
-
-.header-row{
-  display:flex;
-  width:100%;
-}
-.header-always{
-  width:50%;
-  background:var(--white);
-  padding:clamp(3rem,6vw,5rem) clamp(2.5rem,5vw,4.5rem) clamp(1.5rem,3vw,2.5rem);
-}
-.header-never{
-  width:50%;
-  background:var(--navy);
-  padding:clamp(3rem,6vw,5rem) clamp(2.5rem,5vw,4.5rem) clamp(1.5rem,3vw,2.5rem);
-  position:relative;
-}
-
-.pairs{
-  width:100%;
-}
-.pair-row{
-  display:flex;
-  width:100%;
-  align-items:stretch;
-}
-/* last row gets bottom padding */
-.pair-row:last-child .cell{
-  padding-bottom:clamp(3rem,6vw,5rem);
-}
-/* ensure all rows have equal height so arrows center correctly */
-.pair-row{
-  align-items:stretch;
-}
-.cell{
-  min-height:clamp(3.5rem,5vw,5rem);
-}
-
-.cell{
-  width:50%;
-  padding:clamp(.5rem,1vw,.75rem) clamp(2.5rem,5vw,4.5rem);
-  display:flex;
-  align-items:center;
-  position:relative;
-}
-.cell-always{background:var(--white)}
-.cell-never{background:var(--navy)}
-
-/* item bold text */
-.cell-text{
-  font-size:clamp(11.5px,1.3vw,15.5px);
-  font-weight:700;
-  line-height:1.4;
-  color:var(--black);
+  gap:1.2rem;
   flex:1;
 }
-.cell-never .cell-text{color:var(--white)}
-
-/* ARROW: right edge of always cell → left edge of never cell */
-.cell-always::after{
-  content:'';
-  position:absolute;
-  right:-1px;
-  top:50%;
-  transform:translateY(-50%);
-  width:clamp(60px,8vw,100px);
-  height:1.5px;
-  background:var(--arrow);
-  z-index:10;
+.item-text{
+  font-size:clamp(13px,1.25vw,16px);
+  font-weight:700;
+  line-height:1.45;
 }
-/* arrowhead */
-.cell-always::before{
-  content:'';
-  position:absolute;
-  right:clamp(59px,calc(8vw - 1px),99px);
-  top:50%;
-  transform:translateY(-50%) rotate(0deg);
-  border-top:5px solid transparent;
-  border-bottom:5px solid transparent;
-  border-left:8px solid var(--arrow);
-  z-index:11;
-}
-
-/* Unbridled elk logo SVG inline */
-.elk-wrap{
-  position:absolute;
-  top:clamp(1.5rem,3vw,2.5rem);
-  right:clamp(1.5rem,3vw,2.5rem);
-}
+.col-always .item-text{ color:#1a1a1a }
+.col-never  .item-text{ color:#ffffff }
 
 @media(max-width:640px){
-  .header-row,.pair-row{flex-direction:column}
-  .header-always,.header-never,.cell-always,.cell-never{width:100%}
-  .cell-always::after,.cell-always::before{display:none}
-  .cell{padding:clamp(.5rem,2vw,1rem) clamp(1.25rem,5vw,2.5rem)}
+  .page{grid-template-columns:1fr}
+  .col{padding:3rem 2rem}
 }
-
 @media print{
   html,body{height:auto}
-  .pair-row:last-child .cell{padding-bottom:2.5rem}
 }
 </style>
 </head>
 <body>
+<div class="page">
 
-<!-- HEADER ROW -->
-<div class="header-row">
-  <div class="header-always">
-    <div class="col-header" style="color:var(--blue)">I will always</div>
-  </div>
-  <div class="header-never">
-    <div class="elk-wrap">
-      <img src="logos/unbridled-elk-icon-white.png" alt="Unbridled" style="width:clamp(48px,5vw,72px);opacity:.9">
-    </div>
-    <div class="col-header" style="color:var(--white)">I will never</div>
-  </div>
-</div>
-
-<!-- PAIRED ROWS -->
-<div class="pairs">
-
-  <div class="pair-row">
-    <div class="cell cell-always">
-      <div class="cell-text">…be clear of my expectations and give regular, helpful feedback.</div>
-    </div>
-    <div class="cell cell-never">
-      <div class="cell-text">…discourage feedback or input from those I am working with.</div>
+  <!-- LEFT -->
+  <div class="col col-always">
+    <div class="logo-row"><!-- empty, reserves same height as logo row on right --></div>
+    <div class="col-header">I will always</div>
+    <div class="items">
+      <div class="item-text">…be clear of my expectations and give regular, helpful feedback.</div>
+      <div class="item-text">…prioritize connection and be courageous to speak up when disconnected.</div>
+      <div class="item-text">…own my contribution to any problem that exists between us.</div>
+      <div class="item-text">…be careful to tell you about me and not tell you about you.</div>
+      <div class="item-text">…listen with the intent of learning/understanding and can adjust.</div>
+      <div class="item-text">…assume the best about your heart, character, and motives.</div>
+      <div class="item-text">…always approach my problems with you to you and not others.</div>
+      <div class="item-text">…first, control myself, tell myself what to do — and will do it.</div>
     </div>
   </div>
 
-  <div class="pair-row">
-    <div class="cell cell-always">
-      <div class="cell-text">…prioritize connection and be courageous to speak up when disconnected.</div>
+  <!-- RIGHT -->
+  <div class="col col-never">
+    <div class="logo-row">
+      <img src="logos/unbridled-elk-icon-white.png" alt="Unbridled">
     </div>
-    <div class="cell cell-never">
-      <div class="cell-text">…manage distance in my relationship with you.</div>
-    </div>
-  </div>
-
-  <div class="pair-row">
-    <div class="cell cell-always">
-      <div class="cell-text">…own my contribution to any problem that exists between us.</div>
-    </div>
-    <div class="cell cell-never">
-      <div class="cell-text">…act like I have nothing to do with our problem.</div>
-    </div>
-  </div>
-
-  <div class="pair-row">
-    <div class="cell cell-always">
-      <div class="cell-text">…be careful to tell you about me and not tell you about you.</div>
-    </div>
-    <div class="cell cell-never">
-      <div class="cell-text">…try to convince you of who you are or what you are trying to do.</div>
-    </div>
-  </div>
-
-  <div class="pair-row">
-    <div class="cell cell-always">
-      <div class="cell-text">…listen with the intent of learning/understanding and can adjust.</div>
-    </div>
-    <div class="cell cell-never">
-      <div class="cell-text">…stop listening when I feel uncomfortable or disagree.</div>
-    </div>
-  </div>
-
-  <div class="pair-row">
-    <div class="cell cell-always">
-      <div class="cell-text">…assume the best about your heart, character, and motives.</div>
-    </div>
-    <div class="cell cell-never">
-      <div class="cell-text">…develop a story about you without you.</div>
-    </div>
-  </div>
-
-  <div class="pair-row">
-    <div class="cell cell-always">
-      <div class="cell-text">…always approach my problems with you to you and not others.</div>
-    </div>
-    <div class="cell cell-never">
-      <div class="cell-text">…participate in harmful gossip about you, and redirect those who do.</div>
-    </div>
-  </div>
-
-  <div class="pair-row">
-    <div class="cell cell-always">
-      <div class="cell-text">…first, control myself, tell myself what to do — and will do it.</div>
-    </div>
-    <div class="cell cell-never">
-      <div class="cell-text">…self-justify, act defensive, blame, or rationalize being out of control.</div>
+    <div class="col-header">I will never</div>
+    <div class="items">
+      <div class="item-text">…discourage feedback or input from those I am working with.</div>
+      <div class="item-text">…manage distance in my relationship with you.</div>
+      <div class="item-text">…act like I have nothing to do with our problem.</div>
+      <div class="item-text">…try to convince you of who you are or what you are trying to do.</div>
+      <div class="item-text">…stop listening when I feel uncomfortable or disagree.</div>
+      <div class="item-text">…develop a story about you without you.</div>
+      <div class="item-text">…participate in harmful gossip about you, and redirect those who do.</div>
+      <div class="item-text">…self-justify, act defensive, blame, or rationalize being out of control.</div>
     </div>
   </div>
 
 </div>
-
 </body>
 </html>
