@@ -4,117 +4,133 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Always &amp; Never · Unbridled</title>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,300;0,400;0,600;0,700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --navy:#1e2d3e;
-  --blue:#4a8ab0;
-  --white:#ffffff;
+  --blue:#5a8ba7;
+  --gray:#4b4f54;
+  --navy:#1f2b3f;
+  --cream:#f5f4f0;
+  --gold:#ba8032;
+  --white:#fff;
+  --text:#3a3e42;
+  --border:#c8d4dc;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;font-family:'Arial','Helvetica Neue',Helvetica,sans-serif}
+html{scroll-behavior:smooth}
+body{background:var(--navy);color:var(--text);font-family:'Josefin Sans',sans-serif;font-weight:300;font-size:16px;line-height:1.7;min-height:100vh;display:flex;flex-direction:column;justify-content:center}
 
-/* Outer grid — two equal columns, full viewport height */
-.page{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  min-height:100vh;
-}
+/* ── NAV ── */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(31,43,63,.97);backdrop-filter:blur(8px);border-bottom:1px solid rgba(90,139,167,.25)}
+.nav-inner{max-width:1100px;margin:0 auto;padding:0 clamp(1rem,4vw,2.5rem);display:flex;align-items:center;justify-content:space-between;height:54px}
+.nav-brand{font-size:12px;font-weight:700;color:var(--white);letter-spacing:2px;text-transform:uppercase;text-decoration:none}
+.nav-brand span{color:var(--blue)}
+.nav-meta{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#4a6a85}
 
-/* Shared inner layout for both columns */
-.col{
-  display:flex;
-  flex-direction:column;
-  padding:5rem 4.5rem 4rem;
-}
-.col-always{ background:var(--white); }
-.col-never{  background:var(--navy); }
+/* ── MAIN CONTENT ── */
+.page{max-width:1100px;margin:0 auto;padding:clamp(6rem,10vw,8rem) clamp(1.5rem,4vw,3rem) clamp(3rem,6vw,5rem)}
 
-/* Logo — sits ABOVE the header row so it doesn't displace content */
-.logo-row{
-  height:3rem;        /* fixed height reserved for logo on right; empty on left */
-  margin-bottom:1.5rem;
-  display:flex;
-  align-items:center;
-  justify-content:flex-end;
-}
-.logo-row img{
-  width:60px;
-  opacity:.95;
-}
-/* Left logo-row is empty — same height, keeps headers aligned */
+/* ── HEADER ── */
+.eyebrow{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:.75rem}
+.section-title{font-size:clamp(28px,4vw,48px);font-weight:700;color:var(--white);line-height:1.1;margin-bottom:.75rem;letter-spacing:-.5px}
+.section-intro{font-size:clamp(14px,1.6vw,16px);color:#8aaabb;max-width:680px;line-height:1.75;margin-bottom:3rem;font-weight:300}
+.divider{height:1px;background:linear-gradient(90deg,var(--gold),rgba(90,139,167,.3),transparent);margin:0 0 3rem}
 
-/* Headers */
-.col-header{
-  font-size:clamp(32px,3.8vw,52px);
-  font-weight:900;
-  line-height:1;
-  margin-bottom:2.5rem;
-  letter-spacing:-0.5px;
-}
-.col-always .col-header{ color:var(--blue) }
-.col-never  .col-header{ color:var(--white) }
+/* ── TWO COLUMN SPLIT ── */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:0;border-radius:12px;overflow:hidden;border:1px solid rgba(90,139,167,.2);align-items:stretch}
+.col-l,.col-r{display:flex;flex-direction:column}
+@media(max-width:640px){.split{grid-template-columns:1fr}}
 
-/* Item list */
-.items{
-  display:flex;
-  flex-direction:column;
-  gap:1.2rem;
-  flex:1;
-}
-.item-text{
-  font-size:clamp(13px,1.25vw,16px);
-  font-weight:700;
-  line-height:1.45;
-}
-.col-always .item-text{ color:#1a1a1a }
-.col-never  .item-text{ color:#ffffff }
+/* LEFT — cream/white */
+.col-l{background:var(--white);padding:clamp(2.5rem,5vw,4rem)}
+/* RIGHT — dark navy */
+.col-r{background:#162232;padding:clamp(2.5rem,5vw,4rem);position:relative}
 
-@media(max-width:640px){
-  .page{grid-template-columns:1fr}
-  .col{padding:3rem 2rem}
-}
+/* Logo in right column */
+.col-logo{position:absolute;top:1.75rem;right:2rem}
+.col-logo img{width:52px;opacity:.9}
+
+/* Column headers */
+.col-head{font-size:clamp(22px,3vw,36px);font-weight:700;letter-spacing:-.5px;line-height:1;margin-bottom:2rem}
+.col-l .col-head{color:var(--blue)}
+.col-r .col-head{color:var(--white)}
+
+/* Item rows */
+.items{display:flex;flex-direction:column;gap:.85rem}
+.item{font-size:clamp(13px,1.3vw,15px);font-weight:600;line-height:1.5;padding:.6rem 0;border-bottom:1px solid rgba(200,212,220,.2)}
+.item:last-child{border-bottom:none}
+.col-l .item{color:var(--text);border-bottom-color:var(--border)}
+.col-r .item{color:#c8d4dc}
+
+/* ── FOOTER ── */
+.foot{text-align:center;margin-top:3rem;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#3a5a70}
+
 @media print{
-  html,body{height:auto}
+  .nav{display:none}
+  body{background:var(--navy)}
+  .page{padding-top:3rem}
 }
 </style>
 </head>
 <body>
-<div class="page">
 
-  <!-- LEFT -->
-  <div class="col col-always">
-    <div class="logo-row"><!-- empty, reserves same height as logo row on right --></div>
-    <div class="col-header">I will always</div>
-    <div class="items">
-      <div class="item-text">…be clear of my expectations and give regular, helpful feedback.</div>
-      <div class="item-text">…prioritize connection and be courageous to speak up when disconnected.</div>
-      <div class="item-text">…own my contribution to any problem that exists between us.</div>
-      <div class="item-text">…be careful to tell you about me and not tell you about you.</div>
-      <div class="item-text">…listen with the intent of learning/understanding and can adjust.</div>
-      <div class="item-text">…assume the best about your heart, character, and motives.</div>
-      <div class="item-text">…always approach my problems with you to you and not others.</div>
-      <div class="item-text">…first, control myself, tell myself what to do — and will do it.</div>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="live-events-os.html" class="nav-brand">Unbridled <span>·</span> Live Events</a>
+    <div class="nav-meta">Relational Commitments</div>
+  </div>
+</nav>
+
+<main class="page">
+
+  <div class="eyebrow">Unbridled Solutions · Live Events Ecosystem</div>
+  <h1 class="section-title">Always &amp; Never</h1>
+  <p class="section-intro">These are not aspirations. They are commitments — the guardrails that define how we treat each other in every season, especially the hard ones. They apply in every direction: leader to leader, president to team, CCO to ecosystem.</p>
+  <div class="divider"></div>
+
+  <div class="split">
+
+    <!-- LEFT -->
+    <div class="col-l">
+      <div class="col-head">I will always…</div>
+      <div class="items">
+        <div class="item">…be clear of my expectations and give regular, helpful feedback.</div>
+        <div class="item">…prioritize connection and be courageous to speak up when disconnected.</div>
+        <div class="item">…own my contribution to any problem that exists between us.</div>
+        <div class="item">…be careful to tell you about me and not tell you about you.</div>
+        <div class="item">…listen with the intent of learning and understanding, and can adjust.</div>
+        <div class="item">…assume the best about your heart, character, and motives.</div>
+        <div class="item">…always approach my problems with you to you, and not others.</div>
+        <div class="item">…first, control myself, tell myself what to do — and will do it.</div>
+      </div>
     </div>
+
+    <!-- RIGHT -->
+    <div class="col-r">
+      <div class="col-logo">
+        <img src="logos/unbridled-elk-icon-white.png" alt="Unbridled">
+      </div>
+      <div class="col-head">I will never…</div>
+      <div class="items">
+        <div class="item">…discourage feedback or input from those I am working with.</div>
+        <div class="item">…manage distance in my relationship with you.</div>
+        <div class="item">…act like I have nothing to do with our problem.</div>
+        <div class="item">…try to convince you of who you are or what you are trying to do.</div>
+        <div class="item">…stop listening when I feel uncomfortable or disagree.</div>
+        <div class="item">…develop a story about you without you.</div>
+        <div class="item">…participate in harmful gossip about you, and will redirect those who do.</div>
+        <div class="item">…self-justify, act defensive, blame, or rationalize being out of control.</div>
+      </div>
+    </div>
+
   </div>
 
-  <!-- RIGHT -->
-  <div class="col col-never">
-    <div class="logo-row">
-      <img src="logos/unbridled-elk-icon-white.png" alt="Unbridled">
-    </div>
-    <div class="col-header">I will never</div>
-    <div class="items">
-      <div class="item-text">…discourage feedback or input from those I am working with.</div>
-      <div class="item-text">…manage distance in my relationship with you.</div>
-      <div class="item-text">…act like I have nothing to do with our problem.</div>
-      <div class="item-text">…try to convince you of who you are or what you are trying to do.</div>
-      <div class="item-text">…stop listening when I feel uncomfortable or disagree.</div>
-      <div class="item-text">…develop a story about you without you.</div>
-      <div class="item-text">…participate in harmful gossip about you, and redirect those who do.</div>
-      <div class="item-text">…self-justify, act defensive, blame, or rationalize being out of control.</div>
-    </div>
-  </div>
+  <div class="foot">In every direction · In every season · Especially the hard ones</div>
 
-</div>
+</main>
+
+<!-- BACK BUTTON -->
+<a href="javascript:history.back()" title="Go back" style="position:fixed;bottom:1.25rem;left:1.25rem;z-index:9999;background:#1f2b3f;color:#ba8032;border:1px solid #ba8032;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:20px;box-shadow:0 2px 12px rgba(0,0,0,.35);opacity:.92">←</a>
+
 </body>
 </html>
