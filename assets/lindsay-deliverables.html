@@ -1,0 +1,527 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lindsay Wyss · Deliverables · Unbridled</title>
+    <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg:#0f1923; --navy:#1a2e3b; --card:#162433; --border:#1e3347;
+            --gold:#c9aa7c; --gold-light:#e0c99a; --blue:#5a8ba7; --green:#4caf7d;
+            --red:#e05a5a; --amber:#e0a040; --text:#e8e0d4; --muted:#6a8a9a; --white:#f5f5f5;
+        }
+        body {
+            background:var(--bg); color:var(--text); font-family:'Josefin Sans',sans-serif;
+            font-weight:300; line-height:1.6; margin:0; padding:0;
+            display:flex; flex-direction:column; min-height:100vh;
+        }
+        a { color:var(--gold); text-decoration:none; }
+        a:hover { text-decoration:underline; }
+        .container { max-width:1000px; margin:0 auto; padding:20px; }
+
+        /* HEADER */
+        .header-nav {
+            display:flex; justify-content:space-between; align-items:center;
+            padding:20px; border-bottom:1px solid var(--border);
+            font-size:0.9em; color:var(--muted);
+        }
+        .header-nav .date { font-weight:400; color:var(--text); }
+
+        .hero {
+            text-align:left; padding:60px 20px; border-bottom:1px solid var(--border);
+            margin-bottom:40px;
+        }
+        .hero-eyebrow {
+            color:var(--muted); font-size:0.9em; letter-spacing:1px;
+            text-transform:uppercase; margin-bottom:10px;
+        }
+        .hero-title {
+            font-size:2.8em; font-weight:600; line-height:1.2; margin-bottom:15px;
+            color:var(--text);
+        }
+        .hero-title em {
+            font-style:normal; color:var(--gold);
+        }
+        .hero-subtitle {
+            font-size:1.1em; color:var(--muted); max-width:700px;
+        }
+        /* MAIN CONTENT */
+        main { flex-grow:1; }
+        .section-title {
+            font-size:1.8em; font-weight:600; color:var(--gold);
+            margin-bottom:30px; padding-left:20px;
+        }
+        .item-grid {
+            display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+            gap:25px; padding:0 20px; margin-bottom:60px;
+        }
+        .item {
+            background:var(--card); border:1px solid var(--border);
+            border-radius:8px; padding:20px; display:flex;
+            flex-direction:column; position:relative;
+            box-shadow:0 4px 8px rgba(0,0,0,0.2);
+        }
+        .dot {
+            width:10px; height:10px; border-radius:50%;
+            position:absolute; top:20px; right:20px;
+        }
+        .dot-live { background:var(--green); }
+        .dot-progress { background:var(--amber); }
+        .dot-draft { background:var(--blue); }
+        .dot-paused { background:var(--red); }
+
+        .item-title {
+            font-size:1.3em; font-weight:600; color:var(--text);
+            margin-bottom:10px; line-height:1.3;
+        }
+        .item-desc {
+            font-size:0.95em; color:var(--muted); flex-grow:1;
+            margin-bottom:15px;
+        }
+        .item-meta {
+            display:flex; justify-content:space-between; align-items:center;
+            margin-top:10px; font-size:0.85em;
+        }
+        .item-link { color:var(--gold); font-weight:400; }
+        .item-week { color:var(--muted); }
+
+        .item-actions { margin-top:15px; display:flex; justify-content:flex-end; }
+        .badge {
+            font-size:0.75em; font-weight:600; padding:5px 10px;
+            border-radius:4px; text-transform:uppercase;
+        }
+        .badge-live { background:var(--green); color:var(--white); }
+        .badge-in-progress { background:var(--amber); color:white; }
+        .badge-draft { background:var(--blue); color:var(--white); }
+        .badge-paused { background:var(--red); color:var(--white); }
+
+        /* FOOTER */
+        .footer {
+            background:var(--navy); color:var(--muted);
+            padding:40px 20px; text-align:center;
+            margin-top:auto; /* Pushes footer to the bottom */
+            border-top:1px solid var(--border);
+            font-size:0.9em;
+        }
+        .footer-logo { max-height:40px; margin-bottom:15px; filter:grayscale(100%) brightness(150%); }
+        .footer-text { margin-bottom:10px; }
+        .footer a { color:var(--muted); }
+        .footer a:hover { color:var(--gold); }
+
+        @media (max-width: 768px) {
+            .hero-title { font-size:2em; }
+            .item-grid { grid-template-columns:1fr; }
+            .section-title { font-size:1.5em; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-nav container">
+            <div class="nav-left">UNBRIDLED · LINDSAY WYSS</div>
+            <div class="nav-right date" id="current-date"></div>
+        </div>
+        <div class="hero container">
+            <div class="hero-eyebrow">CHIEF OF STAFF · DELIVERABLES</div>
+            <h1 class="hero-title">Everything We've <em>Built</em></h1>
+            <p class="hero-subtitle">One page. Every project, tool, campaign, and system we've worked on together — plus what's next. Your personal work record with MC.</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <section>
+            <h2 class="section-title">🎯 Ops & Intelligence</h2>
+            <div class="item-grid">
+                <div class="item">
+                    <div class="dot dot-live"></div>
+                    <div class="item-body">
+                        <div class="item-title">Live Google Ads Performance Analyzer</div>
+                        <div class="item-desc">Real-time interactive P&L analyzer for Hotel St. Cloud Google Ads — spend vs. revenue, break-even, margin by campaign. Built with real Cloudbeds revenue data inputs.</div>
+                        <div class="item-meta">
+                            <span class="item-week">Week of May 19</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <span class="badge badge-live">Live</span>
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="dot dot-live"></div>
+                    <div class="item-body">
+                        <div class="item-title">Weekly Google Ads Report — Automated</div>
+                        <div class="item-desc">Auto-runs every Monday morning. Pulls live campaign data, formats performance summary, delivers to Lindsay by 8am MT.</div>
+                        <div class="item-meta">
+                            <span class="item-week">Week of May 10</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <span class="badge badge-live">Live</span>
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="dot dot-live"></div>
+                    <div class="item-body">
+                        <div class="item-title">Live Events Ecosystem OS</div>
+                        <div class="item-desc">Full operating system for Scott's 6 live events companies — CCO playbook, team structure, culture model, service matrix, 4 Cornerstones framework.</div>
+                        <div class="item-meta">
+                            <a href="https://offers.hotelstcloud.com/assets/live-events-os.html" class="item-link" target="_blank">↗ View Live</a>
+                            <span class="item-week">Week of May 15</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <span class="badge badge-live">Live</span>
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="dot dot-live"></div>
+                    <div class="item-body">
+                        <div class="item-title">Unbridled Org Chart</div>
+                        <div class="item-desc">Hub-and-spoke visual of the full Unbridled agent + team ecosystem. Stan's explicit preference: hub-spoke, not a hierarchy tree.</div>
+                        <div class="item-meta">
+                            <a href="https://offers.hotelstcloud.com/assets/unbridled-org-chart.html" class="item-link" target="_blank">↗ View Live</a>
+                            <span class="item-week">Week of May 14</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <span class="badge badge-live">Live</span>
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="dot dot-live"></div>
+                    <div class="item-body">
+                        <div class="item-title">Competitive SWOT Analysis — Live Events</div>
+                        <div class="item-desc">Full competitor research and SWOT — Opus Agency, Bishop-McCann, M&IW. PDF report format.</div>
+                        <div class="item-meta">
+                            <a href="https://offers.hotelstcloud.com/assets/Unbridled-Competitive-SWOT-May2026.pdf" class="item-link" target="_blank">↗ View Live</a>
+                            <span class="item-week">Week of May 15</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <span class="badge badge-live">Live</span>
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="dot dot-live"></div>
+                    <div class="item-body">
+                        <div class="item-title">MC In Action — Internal One-Pager</div>
+                        <div class="item-desc">Polished internal overview of what MC has built for Stan and Lindsay. Designed for Unbridled leadership skeptics. Evidence-first.</div>
+                        <div class="item-meta">
+                            <a href="https://offers.hotelstcloud.com/assets/mc-in-action.html" class="item-link" target="_blank">↗ View Live</a>
+                            <span class="item-week">Week of May 19</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <span class="badge badge-live">Live</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="section-title">🏨 Hotel St. Cloud — Tools & Campaigns</h2>
+            <div class="item-grid">
+                <div class="item">
+                    <div class="dot dot-live"></div>
+                    <div class="item-body">
+                        <div class="item-title">Table Service Certification Quiz</div>
+                        <div class="item-desc">15-question scored quiz for team members. Submits scores to Airtable. Managers can push retakes via the tally dashboard.</div>
+                        <div class="item-meta">
+                            <a href="https://offers.hotelstcloud.com/assets/table-service-training-hsc.html" class="item-link" target="_blank">↗ View Live</a>
+                            <span class="item-week">Week of May 12</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <span class="badge badge-live">Live</span>
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="dot dot-live"></div>
+                    <div class="item-body">
+                        <div class="item-title">Quiz Tally Dashboard — Manager View</div>
+                        <div class="item-desc">Real-time manager dashboard showing all quiz scores, pass/fail status, retake buttons. Auto-refreshes every 60 seconds.</div>
+                        <div class="item-meta">
+                            <a href="https://offers.hotelstcloud.com/assets/quiz-tally-dashboard.html" class="item-link" target="_blank">↗ View Live</a>
+                            <span class="item-week">Week of May 12</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <span class="badge badge-live">Live</span>
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="dot dot-live"></div>
+                    <div class="item-body">
+                        <div class="item-title">Four-Star Dress Attire Quiz</div>
+                        <div class="item-desc">Interactive scored dress code quiz for Hotel St. Cloud team. Per-question feedback, branded.</div>
+                        <div class="item-meta">
+                            <a href="https://offers.hotelstcloud.com/assets/dress-attire-quiz-hsc.html" class="item-link" target="_blank">↗ View Live</a>
+                            <span class="item-week">Week of May 12</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <span class="badge badge-live">Live</span>
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="dot dot-live"></div>
+                    <div class="item-body">
+                        <div class="item-title">HR Hub</div>
+                        <div class="item-desc">Central HR resource page — job postings, handbooks, offer letters, team tools. Curated for staff-facing use.</div>
+                        <div class="item-meta">
+                            <a href="https://offers.hotelstcloud.com/assets/hr-hub.html" class="item-link" target="_blank">↗ View Live</a>
+                            <span class="item-week">Week of May 12</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <span class="badge badge-live">Live</span>
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="dot dot-live"></div>
+                    <div class="item-body">
+                        <div class="item-title">GM / F&B Director — Search Firm Intake Brief</div>
+                        <div class="item-desc">Confidential headhunter brief for the HSC GM/F&B search. Role overview, deal-breakers, comp structure, culture fit — built for outside search firms.</div>
+                        <div class="item-meta">
+                            <a href="https://offers.hotelstcloud.com/assets/hsc-gm-fb-headhunter-intake.html" class="item-link" target="_blank">↗ View Live</a>
+                            <span class="item-week">Week of May 15</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <span class="badge badge-live">Live</span>
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="dot dot-draft"></div>
+                    <div class="item-body">
+                        <div class="item-title">Road Trip Pit Stop — Google Ads Campaign</div>
+                        <div class="item-desc">Drafted Google Ads campaign for Hotel St. Cloud targeting road trippers. Luxurious bathrooms + cocktail stop angle. Approved headlines & descriptions.</div>
+                        <div class="item-meta">
+                            <span class="item-week">Week of May 14</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <span class="badge badge-draft">Draft</span>
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="dot dot-live"></div>
+                    <div class="item-body">
+                        <div class="item-title">Standard Oil Coffee Co. — Ad Campaign</div>
+                        <div class="item-desc">Full Google Ads campaign launched. Campaign ID 23843147683. $35/day, 7am–2pm, 20-mile geo-target Cañon City. 16 keywords, 10 image assets, 15 headlines live.</div>
+                        <div class="item-meta">
+                            <span class="item-week">Week of May 11</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <span class="badge badge-live">Live</span>
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="dot dot-live"></div>
+                    <div class="item-body">
+                        <div class="item-title">Room Capacity Calculator</div>
+                        <div class="item-desc">Interactive tool for Live Events teams to plan room capacity by selecting room and setup style.</div>
+                        <div class="item-meta">
+                            <a href="https://offers.hotelstcloud.com/assets/room-capacity-calculator.html" class="item-link" target="_blank">↗ View Live</a>
+                            <span class="item-week">Week of May 12</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <span class="badge badge-live">Live</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="section-title">👥 People & Culture</h2>
+            <div class="item-grid">
+                <div class="item">
+                    <div class="dot dot-live"></div>
+                    <div class="item-body">
+                        <div class="item-title">Hiring Form</div>
+                        <div class="item-desc">Structured new hire intake form. Part of the HR Hub.</div>
+                        <div class="item-meta">
+                            <a href="https://offers.hotelstcloud.com/assets/hr-hub.html" class="item-link" target="_blank">↗ View Live</a>
+                            <span class="item-week">Week of May 12</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <span class="badge badge-live">Live</span>
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="dot dot-live"></div>
+                    <div class="item-body">
+                        <div class="item-title">Disciplinary Action Form</div>
+                        <div class="item-desc">Digital disciplinary form for Hotel St. Cloud managers. Deployed and live.</div>
+                        <div class="item-meta">
+                            <a href="https://offers.hotelstcloud.com/hr/disciplinary/" class="item-link" target="_blank">↗ View Live</a>
+                            <span class="item-week">Week of May 15</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <span class="badge badge-live">Live</span>
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="dot dot-live"></div>
+                    <div class="item-body">
+                        <div class="item-title">Termination Form — With Witness Section</div>
+                        <div class="item-desc">Updated termination form with witness field added. Part of the HR suite.</div>
+                        <div class="item-meta">
+                            <a href="https://offers.hotelstcloud.com/hr/termination/" class="item-link" target="_blank">↗ View Live</a>
+                            <span class="item-week">Week of May 15</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <span class="badge badge-live">Live</span>
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="dot dot-live"></div>
+                    <div class="item-body">
+                        <div class="item-title">Unbridled Marketing Plan</div>
+                        <div class="item-desc">Comprehensive marketing plan for Unbridled Solutions — strategic foundation, content pillars, channel strategy, 90-day launch, quick wins. Culture and service forward.</div>
+                        <div class="item-meta">
+                            <a href="https://offers.hotelstcloud.com/assets/marketing-plan.html" class="item-link" target="_blank">↗ View Live</a>
+                            <span class="item-week">Week of May 14</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <span class="badge badge-live">Live</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="section-title">🤖 Systems & Automation</h2>
+            <div class="item-grid">
+                <div class="item">
+                    <div class="dot dot-live"></div>
+                    <div class="item-body">
+                        <div class="item-title">Daily MC Briefing — Lindsay</div>
+                        <div class="item-desc">Automated morning briefing delivered to Lindsay every weekday at 8am MT. Status updates, active projects, flagged items.</div>
+                        <div class="item-meta">
+                            <span class="item-week">Week of May 10</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <span class="badge badge-live">Live</span>
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="dot dot-live"></div>
+                    <div class="item-body">
+                        <div class="item-title">Master Deliverables Dashboard — Stan</div>
+                        <div class="item-desc">Stan's full deliverables tracker — every tool, page, campaign, and chapter. Updated weekly.</div>
+                        <div class="item-meta">
+                            <a href="https://offers.hotelstcloud.com/assets/master-deliverables.html" class="item-link" target="_blank">↗ View Live</a>
+                            <span class="item-week">Week of May 10</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <span class="badge badge-live">Live</span>
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="dot dot-live"></div>
+                    <div class="item-body">
+                        <div class="item-title">Stan's Playbook</div>
+                        <div class="item-desc">How-to guide for working with MC — voice memos, task flow, what MC handles vs. what Stan drives.</div>
+                        <div class="item-meta">
+                            <a href="https://offers.hotelstcloud.com/assets/stan-playbook.html" class="item-link" target="_blank">↗ View Live</a>
+                            <span class="item-week">Week of May 16</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <span class="badge badge-live">Live</span>
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="dot dot-live"></div>
+                    <div class="item-body">
+                        <div class="item-title">Live Ads Dashboard</div>
+                        <div class="item-desc">Auto-refreshing Google Ads performance dashboard. Updates every 15 minutes. Hotel St. Cloud campaign metrics live.</div>
+                        <div class="item-meta">
+                            <a href="https://offers.hotelstcloud.com/assets/live-dashboard.html" class="item-link" target="_blank">↗ View Live</a>
+                            <span class="item-week">Week of May 10</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <span class="badge badge-live">Live</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="section-title">🔜 In Motion / What's Next</h2>
+            <div class="item-grid">
+                <div class="item">
+                    <div class="dot dot-live"></div>
+                    <div class="item-body">
+                        <div class="item-title">Lindsay Deliverables Dashboard</div>
+                        <div class="item-desc">This page. Your personal record of everything we've built together. Will be updated weekly.</div>
+                        <div class="item-meta">
+                            <span class="item-week">Week of May 19</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <span class="badge badge-live">Live</span>
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="dot dot-progress"></div>
+                    <div class="item-body">
+                        <div class="item-title">Google Ads Finance Analyzer — Full Build</div>
+                        <div class="item-desc">Lindsay pulling real financial figures from finance to plug into the analyzer. Full P&L model incoming.</div>
+                        <div class="item-meta">
+                            <span class="item-week">Week of May 19</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <span class="badge badge-in-progress">In Progress</span>
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="dot dot-progress"></div>
+                    <div class="item-body">
+                        <div class="item-title">Fremont Makers Website</div>
+                        <div class="item-desc">Full brand website for Fremont Makers. In progress — waiting on cabinet line images from wholesale rep. Launch target June 1.</div>
+                        <div class="item-meta">
+                            <span class="item-week">Week of May 15</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <span class="badge badge-in-progress">In Progress</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <img src="https://offers.hotelstcloud.com/assets/logos/unbridled-elk-icon-white.png" alt="Unbridled Elk Logo" class="footer-logo">
+            <p class="footer-text">Built by MC · For Lindsay Wyss · Chief of Staff · Unbridled Solutions</p>
+            <p class="footer-text">Updated May 19, 2026</p>
+            <p class="footer-text"><a href="https://offers.hotelstcloud.com/assets/lindsay-deliverables.html">https://offers.hotelstcloud.com/assets/lindsay-deliverables.html</a></p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const dateElement = document.getElementById('current-date');
+            if (dateElement) {
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                const today = new Date();
+                dateElement.textContent = today.toLocaleDateString('en-US', options);
+            }
+        });
+    </script>
+</body>
+</html>
