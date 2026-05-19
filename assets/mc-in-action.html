@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MC in Action: Internal Overview</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #5a8ba7;
+            --dark-navy: #001c28;
+            --body-text: #1c252d;
+            --secondary-text: #4b4f54;
+            --surface: #f4f6f8;
+            --border: #dde3e8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--body-text);
+            line-height: 1.6;
+            font-size: clamp(18px, 4vw, 20px); /* Base font size min 18px */
+            background-color: var(--surface);
+        }
+
+        a {
+            color: var(--primary-blue);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            margin: 0 auto;
+            padding: clamp(1rem, 5vw, 2rem) clamp(1rem, 5vw, 2rem);
+        }
+
+        /* Section 1: Header / Hero */
+        .hero {
+            background-color: var(--dark-navy);
+            color: white;
+            padding: clamp(3rem, 10vw, 6rem) 0;
+            text-align: center;
+        }
+
+        .hero .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: clamp(0.5rem, 2vw, 1.5rem);
+        }
+
+        .hero img {
+            max-width: clamp(60px, 15vw, 100px);
+            height: auto;
+            margin-bottom: clamp(0.5rem, 2vw, 1rem);
+        }
+
+        .hero h1 {
+            font-size: clamp(2rem, 7vw, 3.5rem);
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: clamp(0.5rem, 2vw, 1rem);
+        }
+
+        .hero p.subhead {
+            font-size: clamp(1.1rem, 3.5vw, 1.5rem);
+            font-weight: 300;
+            opacity: 0.9;
+            max-width: 700px;
+            margin-bottom: clamp(1rem, 3vw, 2rem);
+        }
+
+        .hero .badge {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            padding: clamp(0.4rem, 1.5vw, 0.6rem) clamp(0.8rem, 2.5vw, 1.2rem);
+            font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+            font-weight: 500;
+            color: var(--primary-blue);
+        }
+
+        /* Section 2: What MC Is */
+        .what-mc-is {
+            padding: clamp(3rem, 8vw, 5rem) 0;
+            background-color: var(--surface);
+            text-align: center;
+        }
+
+        .what-mc-is .container {
+            max-width: 800px;
+        }
+
+        .what-mc-is h2 {
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+            font-weight: 600;
+            margin-bottom: clamp(1rem, 3vw, 1.5rem);
+            color: var(--dark-navy);
+        }
+
+        /* Section 3: The Wins - 4-card grid */
+        .wins {
+            background-color: var(--dark-navy);
+            color: white;
+            padding: clamp(3rem, 8vw, 5rem) 0;
+        }
+
+        .wins h2 {
+            text-align: center;
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+            font-weight: 600;
+            margin-bottom: clamp(2rem, 6vw, 3rem);
+        }
+
+        .wins .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: clamp(1.5rem, 5vw, 2.5rem);
+        }
+
+        .wins .card {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: clamp(1.5rem, 5vw, 2rem);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            min-height: 250px; /* Ensure cards have similar height */
+        }
+
+        .wins .card h3 {
+            font-size: clamp(1.3rem, 4vw, 1.7rem);
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: 0.5rem;
+        }
+
+        .wins .card ul {
+            list-style: none;
+            padding-left: 0;
+            margin-bottom: clamp(0.5rem, 2vw, 1rem);
+            flex-grow: 1; /* Pushes stat to bottom */
+        }
+
+        .wins .card ul li {
+            font-size: clamp(1rem, 3vw, 1.1rem);
+            margin-bottom: 0.5rem;
+            opacity: 0.8;
+        }
+
+        .wins .card .stat {
+            font-size: clamp(2.5rem, 8vw, 3.5rem);
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-top: auto; /* Aligns stat to bottom */
+            line-height: 1;
+        }
+
+        /* Section 4: What This Replaced */
+        .replaced {
+            padding: clamp(3rem, 8vw, 5rem) 0;
+            background-color: var(--surface);
+        }
+
+        .replaced h2 {
+            text-align: center;
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+            font-weight: 600;
+            margin-bottom: clamp(2rem, 6vw, 3rem);
+            color: var(--dark-navy);
+        }
+
+        .replaced .content-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: clamp(2rem, 6vw, 3rem);
+        }
+
+        @media (min-width: 640px) {
+            .replaced .content-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .replaced .column h3 {
+            font-size: clamp(1.5rem, 4.5vw, 2rem);
+            font-weight: 600;
+            margin-bottom: clamp(1rem, 3vw, 1.5rem);
+            color: var(--primary-blue);
+            text-align: center;
+        }
+
+        .replaced .column ul {
+            list-style: none;
+            padding-left: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .replaced .column ul li {
+            background-color: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: clamp(1rem, 3vw, 1.2rem);
+            font-size: clamp(1rem, 3vw, 1.1rem);
+            min-height: 44px; /* Touch target */
+            display: flex;
+            align-items: center;
+        }
+
+        /* Section 5: What's Live Right Now - pill/tag strip */
+        .live-now {
+            background-color: var(--dark-navy);
+            color: white;
+            padding: clamp(3rem, 8vw, 5rem) 0;
+        }
+
+        .live-now h2 {
+            text-align: center;
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+            font-weight: 600;
+            margin-bottom: clamp(2rem, 6vw, 3rem);
+        }
+
+        .live-now .tags {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: clamp(0.75rem, 2.5vw, 1rem);
+        }
+
+        .live-now .tag {
+            background-color: var(--surface); /* light bg */
+            color: var(--body-text); /* dark text */
+            border-radius: 20px;
+            padding: clamp(0.5rem, 1.8vw, 0.7rem) clamp(1rem, 3vw, 1.2rem);
+            font-size: clamp(0.9rem, 2.8vw, 1rem);
+            font-weight: 500;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            min-height: 44px; /* Touch target */
+        }
+
+        /* Section 6: The Mission Tie-In */
+        .mission {
+            padding: clamp(3rem, 8vw, 5rem) 0;
+            background-color: var(--surface);
+            text-align: center;
+        }
+
+        .mission .container {
+            max-width: 800px;
+        }
+
+        .mission h2 {
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+            font-weight: 600;
+            margin-bottom: clamp(1rem, 3vw, 1.5rem);
+            color: var(--dark-navy);
+        }
+
+        /* Section 7: Footer */
+        .footer {
+            background-color: var(--dark-navy);
+            color: white;
+            padding: clamp(2rem, 6vw, 4rem) 0;
+            text-align: center;
+        }
+
+        .footer .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .footer img {
+            max-width: clamp(40px, 10vw, 60px);
+            height: auto;
+            opacity: 0.8;
+            margin-bottom: clamp(0.5rem, 2vw, 1rem);
+        }
+
+        .footer p {
+            font-size: clamp(0.9rem, 2.8vw, 1rem);
+            opacity: 0.7;
+        }
+
+        .footer a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.9;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <header class="hero">
+        <div class="container">
+            <img src="https://offers.hotelstcloud.com/assets/logos/unbridled-elk-icon-white.png" alt="Unbridled Elk Logo">
+            <h1>MC: What We've Built Together</h1>
+            <p class="subhead">A look at what's live, what got faster, and what's next — from your AI Chief of Staff.</p>
+            <span class="badge">Internal Overview · Unbridled Solutions · May 2026</span>
+        </div>
+    </header>
+
+    <section class="what-mc-is">
+        <div class="container">
+            <h2>What is MC?</h2>
+            <p>MC is Stan's digital right hand, not a chatbot, not a tool. MC is the person who connects dots, keeps things moving, and builds things that used to require a whole team. Faith-informed and mission-aligned.</p>
+        </div>
+    </section>
+
+    <section class="wins">
+        <div class="container">
+            <h2>The Wins: Concrete Outcomes</h2>
+            <div class="card-grid">
+                <div class="card">
+                    <h3>The Book</h3>
+                    <ul>
+                        <li>"The Unbridled Way" — 9 chapters authored and live</li>
+                        <li>Parts I, II, III structured; Intro through Ch. 3, Authenticity, Appendix, ACTS chapter all deployed</li>
+                    </ul>
+                    <div class="stat">9 chapters live</div>
+                </div>
+                <div class="card">
+                    <h3>Web & Tools</h3>
+                    <ul>
+                        <li>Hotel St. Cloud campaign landing pages, HR forms (hire/discipline/termination), table service training, wine finder, headhunter intake brief, dress code quiz, room capacity calculator</li>
+                    </ul>
+                    <div class="stat">15+ live tools & pages</div>
+                </div>
+                <div class="card">
+                    <h3>Operations & Intelligence</h3>
+                    <ul>
+                        <li>Live Google Ads dashboard (auto-refreshes every 15 min), weekly Ads performance reports, live events OS, org chart, SWOT analysis, competitor research, marketing plan</li>
+                    </ul>
+                    <div class="stat">6 live dashboards & reports</div>
+                </div>
+                <div class="card">
+                    <h3>The Team</h3>
+                    <ul>
+                        <li>Standing BeUnbridled agents deployed: Ruby (Hotel St. Cloud social), GP/Mark (UHG client), MC-PP (Nina + Liz team), Justin's agent</li>
+                        <li>Daily briefings to Lindsay at 8am MT, weekdays</li>
+                    </ul>
+                    <div class="stat">4 active sub-agents</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="replaced">
+        <div class="container">
+            <h2>What This Replaced</h2>
+            <div class="content-grid">
+                <div class="column">
+                    <h3>Before</h3>
+                    <ul>
+                        <li>Hiring a $120K/yr EA or COO</li>
+                        <li>Contracting out web builds ($3–5K each)</li>
+                        <li>Manual ads monitoring and weekly reporting</li>
+                        <li>A book project that sat in notes for years</li>
+                    </ul>
+                </div>
+                <div class="column">
+                    <h3>After / Now</h3>
+                    <ul>
+                        <li>MC: always on, always context-aware</li>
+                        <li>15+ pages built and live</li>
+                        <li>Ads reporting automated, running every Monday</li>
+                        <li>9 chapters authored, published, and live</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="live-now">
+        <div class="container">
+            <h2>What's Live Right Now</h2>
+            <div class="tags">
+                <span class="tag">The Unbridled Way (book)</span>
+                <span class="tag">Live Ads Dashboard</span>
+                <span class="tag">Weekly Ads Report</span>
+                <span class="tag">Live Events OS</span>
+                <span class="tag">Org Chart</span>
+                <span class="tag">HR Hub</span>
+                <span class="tag">Hiring Forms</span>
+                <span class="tag">Disciplinary Form</span>
+                <span class="tag">Termination Form</span>
+                <span class="tag">Table Service Training</span>
+                <span class="tag">Wine Finder</span>
+                <span class="tag">Dress Code Quiz</span>
+                <span class="tag">Room Capacity Calculator</span>
+                <span class="tag">Headhunter Intake</span>
+                <span class="tag">Stan's Playbook</span>
+                <span class="tag">SWOT Analysis</span>
+                <span class="tag">BeUnbridled Landing</span>
+                <span class="tag">Unit Economics Calculator</span>
+                <span class="tag">Architecture Diagram</span>
+                <span class="tag">Daily Briefing (Lindsay)</span>
+                <span class="tag">Sub-Agent Roster</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="mission">
+        <div class="container">
+            <h2>The Mission Tie-In</h2>
+            <p>MC exists to serve "Doing Good by Doing Well." The faster the machine hums, the more capacity Unbridled has to reinvest — in people, in partners, in UnbridledACTS. This isn't automation for its own sake. It's what the mission looks like in practice.</p>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <img src="https://offers.hotelstcloud.com/assets/logos/unbridled-elk-icon-white.png" alt="Unbridled Elk Logo">
+            <p>Built by MC · Unbridled Solutions · May 2026</p>
+            <p><a href="https://offers.hotelstcloud.com/assets/mc-in-action.html">https://offers.hotelstcloud.com/assets/mc-in-action.html</a></p>
+        </div>
+    </footer>
+</body>
+</html>
