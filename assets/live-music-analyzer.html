@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Live Music ROI and Licensing Analyzer for Hotel St. Cloud">
+  <title>Live Music Analyzer | Hotel St. Cloud</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:    #0d1b2a;
+      --blue:    #1e4d7b;
+      --sky:     #3a7bd5;
+      --teal:    #2a9d8f;
+      --gold:    #e9c46a;
+      --coral:   #e76f51;
+      --green:   #4caf7d;
+      --red:     #e05252;
+      --amber:   #f59e0b;
+      --light:   #f4f7fb;
+      --white:   #ffffff;
+      --gray:    #6b7280;
+      --midgray: #9ca3af;
+      --border:  #dde3ec;
+      --text:    #1a202c;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      font-size: 17px;
+      color: var(--text);
+      background: var(--light);
+      line-height: 1.6;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: var(--navy);
+      color: var(--white);
+      padding: clamp(2rem, 5vw, 3rem) clamp(1.25rem, 5vw, 3rem);
+    }
+    .header-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .header-eyebrow {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #93c5fd;
+      margin-bottom: 0.4rem;
+    }
+    .header h1 {
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 800;
+      line-height: 1.15;
+    }
+    .header h1 span { color: var(--gold); }
+    .header-sub {
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.6);
+      margin-top: 0.4rem;
+    }
+    .tab-nav {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 1.5rem;
+    }
+    .tab-nav button {
+      padding: 0.55em 1.2em;
+      border-radius: 100px;
+      border: 1.5px solid rgba(255,255,255,0.2);
+      background: transparent;
+      color: rgba(255,255,255,0.7);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .tab-nav button.active {
+      background: var(--sky);
+      border-color: var(--sky);
+      color: var(--white);
+    }
+    .tab-nav button:hover:not(.active) {
+      border-color: rgba(255,255,255,0.4);
+      color: var(--white);
+    }
+
+    /* ── MAIN LAYOUT ── */
+    .main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: clamp(1.5rem, 4vw, 2.5rem) clamp(1.25rem, 3vw, 2rem);
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      padding: clamp(1.25rem, 3vw, 2rem);
+      margin-bottom: 1.25rem;
+    }
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .card-title .icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.95rem;
+      flex-shrink: 0;
+    }
+
+    /* ── FORM ELEMENTS ── */
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+      gap: 1rem;
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .field label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--gray);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+    .field input, .field select {
+      padding: 0.6rem 0.85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--white);
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+    .field input:focus, .field select:focus {
+      outline: none;
+      border-color: var(--sky);
+    }
+    .field .hint {
+      font-size: 0.75rem;
+      color: var(--midgray);
+    }
+    .prefix-input {
+      position: relative;
+    }
+    .prefix-input span {
+      position: absolute;
+      left: 0.7rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray);
+      font-size: 0.9rem;
+      pointer-events: none;
+    }
+    .prefix-input input {
+      padding-left: 1.6rem;
+    }
+
+    /* ── RESULTS ── */
+    .results-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .stat-box {
+      background: var(--navy);
+      border-radius: 12px;
+      padding: 1.1rem 1.1rem 0.9rem;
+      color: var(--white);
+      text-align: center;
+    }
+    .stat-box.green { background: #064e3b; }
+    .stat-box.red   { background: #7f1d1d; }
+    .stat-box.amber { background: #78350f; }
+    .stat-box.blue  { background: #1e3a5f; }
+    .stat-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.55);
+      margin-bottom: 0.3rem;
+    }
+    .stat-value {
+      font-size: clamp(1.3rem, 3vw, 1.8rem);
+      font-weight: 800;
+      line-height: 1.1;
+    }
+    .stat-sub {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.5);
+      margin-top: 0.2rem;
+    }
+
+    /* ── VERDICT ── */
+    .verdict-box {
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.25rem;
+      border-left: 5px solid;
+    }
+    .verdict-box.positive { background: #f0fdf4; border-color: var(--green); }
+    .verdict-box.negative { background: #fef2f2; border-color: var(--red); }
+    .verdict-box.neutral  { background: #fffbeb; border-color: var(--amber); }
+    .verdict-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+    }
+    .verdict-box.positive .verdict-title { color: #064e3b; }
+    .verdict-box.negative .verdict-title { color: #7f1d1d; }
+    .verdict-box.neutral  .verdict-title { color: #78350f; }
+    .verdict-body {
+      font-size: 0.88rem;
+      line-height: 1.55;
+    }
+    .verdict-box.positive .verdict-body { color: #065f46; }
+    .verdict-box.negative .verdict-body { color: #991b1b; }
+    .verdict-box.neutral  .verdict-body { color: #92400e; }
+
+    /* ── BREAKDOWN TABLE ── */
+    .breakdown {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    .breakdown th {
+      text-align: left;
+      padding: 0.5rem 0.75rem;
+      background: var(--light);
+      color: var(--gray);
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+    .breakdown td {
+      padding: 0.6rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    .breakdown tr:last-child td { border-bottom: none; }
+    .breakdown .label { color: var(--text); font-weight: 500; }
+    .breakdown .amount { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .breakdown .positive-amt { color: var(--green); }
+    .breakdown .negative-amt { color: var(--red); }
+    .breakdown .total-row td { font-weight: 700; font-size: 0.95rem; background: var(--light); }
+    .breakdown .section-row td {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--midgray);
+      padding-top: 1rem;
+      padding-bottom: 0.25rem;
+    }
+
+    /* ── LICENSING PANEL ── */
+    .pro-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .pro-card {
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .pro-header {
+      padding: 0.85rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .pro-name { font-size: 1.1rem; font-weight: 800; }
+    .pro-status {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.25em 0.65em;
+      border-radius: 100px;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+    .pro-body { padding: 1rem; }
+    .pro-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 0.3rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.85rem;
+    }
+    .pro-row:last-child { border-bottom: none; }
+    .pro-row .pro-key { color: var(--gray); }
+    .pro-row .pro-val { font-weight: 600; color: var(--text); }
+
+    /* PRO color themes */
+    .pro-bmi .pro-header   { background: #eff6ff; }
+    .pro-bmi .pro-name     { color: #1d4ed8; }
+    .pro-sesac .pro-header { background: #fdf4ff; }
+    .pro-sesac .pro-name   { color: #7e22ce; }
+    .pro-ascap .pro-header { background: #fff7ed; }
+    .pro-ascap .pro-name   { color: #c2410c; }
+    .pro-gmr .pro-header   { background: #f0fdf4; }
+    .pro-gmr .pro-name     { color: #166534; }
+
+    .status-active   { background: #dcfce7; color: #166534; }
+    .status-incoming { background: #fef9c3; color: #854d0e; }
+    .status-pending  { background: #fee2e2; color: #991b1b; }
+    .status-optional { background: #f3f4f6; color: #374151; }
+
+    .total-licensing {
+      background: var(--navy);
+      color: var(--white);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .total-licensing .tl-label { font-size: 0.85rem; color: rgba(255,255,255,0.6); }
+    .total-licensing .tl-amount { font-size: 2rem; font-weight: 800; color: var(--gold); }
+    .total-licensing .tl-sub { font-size: 0.8rem; color: rgba(255,255,255,0.45); margin-top: 0.15rem; }
+
+    /* ── INFO BOXES ── */
+    .info-box {
+      background: var(--light);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .info-box h3 {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 0.6rem;
+    }
+    .info-box ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+    .info-box li {
+      font-size: 0.85rem;
+      color: var(--text);
+      padding-left: 1.2rem;
+      position: relative;
+      line-height: 1.45;
+    }
+    .info-box li::before {
+      content: '→';
+      position: absolute;
+      left: 0;
+      color: var(--sky);
+      font-size: 0.75rem;
+    }
+    .info-box li strong { color: var(--navy); }
+    .info-box.warning { border-color: var(--amber); background: #fffbeb; }
+    .info-box.warning h3 { color: #78350f; }
+    .info-box.warning li { color: #92400e; }
+    .info-box.warning li::before { color: var(--amber); }
+    .info-box.tip { border-color: var(--teal); background: #f0fdfa; }
+    .info-box.tip h3 { color: #134e4a; }
+    .info-box.tip li { color: #0f766e; }
+    .info-box.tip li::before { color: var(--teal); }
+
+    /* ── CALC BUTTON ── */
+    .calc-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--sky);
+      color: var(--white);
+      border: none;
+      padding: 0.75rem 1.75rem;
+      border-radius: 100px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      margin-top: 0.75rem;
+    }
+    .calc-btn:hover { background: var(--blue); }
+    .calc-btn:active { transform: scale(0.98); }
+
+    /* ── ANNUALIZED TOGGLE ── */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--gray);
+    }
+    .toggle-row label { cursor: pointer; }
+    input[type="checkbox"] { accent-color: var(--sky); width: 16px; height: 16px; }
+
+    /* ── SECTION HEADER ── */
+    .section-hdr {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* ── SENSITIVITY TABLE ── */
+    .sensitivity {
+      overflow-x: auto;
+      margin-top: 0.5rem;
+    }
+    .sens-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      min-width: 420px;
+    }
+    .sens-table th {
+      background: var(--navy);
+      color: rgba(255,255,255,0.7);
+      padding: 0.5rem 0.65rem;
+      text-align: center;
+      font-weight: 600;
+    }
+    .sens-table td {
+      padding: 0.45rem 0.65rem;
+      text-align: center;
+      border: 1px solid var(--border);
+      font-variant-numeric: tabular-nums;
+    }
+    .sens-table .row-label { text-align: left; font-weight: 600; color: var(--navy); }
+    .cell-green { background: #dcfce7; color: #166534; font-weight: 600; }
+    .cell-red   { background: #fee2e2; color: #991b1b; font-weight: 600; }
+    .cell-amber { background: #fef9c3; color: #854d0e; font-weight: 600; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      .header-inner { flex-direction: column; align-items: flex-start; }
+      .total-licensing { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="header">
+  <div class="header-inner">
+    <div>
+      <div class="header-eyebrow">Hotel St. Cloud · Internal Tool</div>
+      <h1>Live Music <span>Analyzer</span></h1>
+      <div class="header-sub">ROI calculator + licensing guide for Friday and Saturday live music</div>
+    </div>
+  </div>
+  <div class="tab-nav">
+    <button class="active" onclick="showTab('roi', this)">📊 ROI Calculator</button>
+    <button onclick="showTab('licensing', this)">🎵 Licensing Guide</button>
+    <button onclick="showTab('negotiate', this)">💬 Negotiation Playbook</button>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- TAB 1: ROI CALCULATOR                        -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="roi" class="tab-panel active">
+
+    <!-- COSTS -->
+    <div class="card">
+      <div class="card-title">
+        <div class="icon" style="background:#fee2e2;">💸</div>
+        Cost Inputs — Per Music Night
+      </div>
+      <div class="field-grid">
+        <div class="field">
+          <label>Musician Fee(s)</label>
+          <div class="prefix-input"><span>$</span><input type="number" id="musician_fee" value="350" min="0"></div>
+          <div class="hint">Total paid to artist(s) per show</div>
+        </div>
+        <div class="field">
+          <label>Sound Tech / Equipment</label>
+          <div class="prefix-input"><span>$</span><input type="number" id="sound_cost" value="0" min="0"></div>
+          <div class="hint">Rental or tech labor if applicable</div>
+        </div>
+        <div class="field">
+          <label>Extra Staff Labor</label>
+          <div class="prefix-input"><span>$</span><input type="number" id="labor_cost" value="80" min="0"></div>
+          <div class="hint">Additional bartenders, security, etc.</div>
+        </div>
+        <div class="field">
+          <label>Marketing / Promotion</label>
+          <div class="prefix-input"><span>$</span><input type="number" id="marketing_cost" value="25" min="0"></div>
+          <div class="hint">Social posts, boosted content, etc.</div>
+        </div>
+        <div class="field">
+          <label>Annual Licensing (all PROs)</label>
+          <div class="prefix-input"><span>$</span><input type="number" id="annual_licensing" value="1390" min="0"></div>
+          <div class="hint">Default: BMI $655 + SESAC $735. Add ASCAP ~$500 when required.</div>
+        </div>
+        <div class="field">
+          <label>Shows Per Year</label>
+          <input type="number" id="shows_per_year" value="100" min="1"></div>
+          <div class="hint" style="padding-left:0; margin-top:-0.5rem; font-size:0.75rem; color:var(--midgray);">Used to prorate annual licensing per show</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REVENUE -->
+    <div class="card">
+      <div class="card-title">
+        <div class="icon" style="background:#dcfce7;">💰</div>
+        Revenue Inputs — Per Music Night
+      </div>
+      <div class="field-grid">
+        <div class="field">
+          <label>Avg. Guests on Music Night</label>
+          <input type="number" id="music_guests" value="65" min="0">
+          <div class="hint">Headcount during music event</div>
+        </div>
+        <div class="field">
+          <label>Avg. Guests on Non-Music Night</label>
+          <input type="number" id="base_guests" value="38" min="0">
+          <div class="hint">Baseline Friday/Saturday without music</div>
+        </div>
+        <div class="field">
+          <label>Avg. F&amp;B Spend Per Guest</label>
+          <div class="prefix-input"><span>$</span><input type="number" id="spend_per_guest" value="28" min="0"></div>
+          <div class="hint">Drinks + food avg. per head</div>
+        </div>
+        <div class="field">
+          <label>Gross Profit Margin on F&amp;B</label>
+          <div class="prefix-input"><span>%</span><input type="number" id="fb_margin" value="65" min="0" max="100"></div>
+          <div class="hint">Typical bar: 65–80%, food: 60–70%</div>
+        </div>
+        <div class="field">
+          <label>Cover Charge (if any)</label>
+          <div class="prefix-input"><span>$</span><input type="number" id="cover_charge" value="0" min="0"></div>
+          <div class="hint">Per person, or $0 if none</div>
+        </div>
+        <div class="field">
+          <label>Cover Charge Guests</label>
+          <input type="number" id="cover_guests" value="0" min="0">
+          <div class="hint">How many guests pay the cover</div>
+        </div>
+      </div>
+      <button class="calc-btn" onclick="calculate()">⚡ Calculate ROI</button>
+    </div>
+
+    <!-- RESULTS (hidden until calculated) -->
+    <div id="results" style="display:none;">
+
+      <div class="results-strip" id="stat_boxes"></div>
+
+      <div id="verdict_box" class="verdict-box">
+        <div class="verdict-title" id="verdict_title"></div>
+        <div class="verdict-body" id="verdict_body"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <div class="icon" style="background:#eff6ff;">📋</div>
+          Per-Night Breakdown
+        </div>
+        <table class="breakdown" id="breakdown_table"></table>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <div class="icon" style="background:#f5f3ff;">📅</div>
+          Annualized View
+        </div>
+        <div class="toggle-row">
+          <input type="checkbox" id="annual_toggle" onchange="calculate()" checked>
+          <label for="annual_toggle">Show annual numbers (based on shows per year)</label>
+        </div>
+        <table class="breakdown" id="annual_table"></table>
+      </div>
+
+      <!-- SENSITIVITY ANALYSIS -->
+      <div class="card">
+        <div class="card-title">
+          <div class="icon" style="background:#fff7ed;">🎯</div>
+          Sensitivity: Net Profit vs. Attendance and Spend
+        </div>
+        <p style="font-size:0.85rem; color:var(--gray); margin-bottom:1rem;">How does net profit change as guest count and per-person spend shift? Green = profitable. Red = losing money.</p>
+        <div class="sensitivity">
+          <table class="sens-table" id="sens_table"></table>
+        </div>
+      </div>
+
+      <!-- BREAK-EVEN -->
+      <div class="card">
+        <div class="card-title">
+          <div class="icon" style="background:#f0fdf4;">🔢</div>
+          Break-Even Analysis
+        </div>
+        <div id="breakeven_content"></div>
+      </div>
+
+      <!-- COMMUNITY VALUE -->
+      <div class="card">
+        <div class="card-title">
+          <div class="icon" style="background:#fdf4ff;">🌱</div>
+          Intangible Value — What the Numbers Don't Capture
+        </div>
+        <div class="info-box tip">
+          <h3>Community &amp; Brand ROI (Hard to Quantify — But Real)</h3>
+          <ul>
+            <li><strong>Social media lift:</strong> Live music nights generate 2–5x more organic social content than typical nights — guest posts, stories, check-ins. That's free reach.</li>
+            <li><strong>Repeat visit pull:</strong> Venues with regular live music programs see higher weekly return rates. Guests build a habit around your schedule.</li>
+            <li><strong>Brand positioning:</strong> For a boutique hotel like Hotel St. Cloud, live music signals a living, breathing property — not just rooms and a bar. It earns press, word-of-mouth, and loyalty that a promotional offer cannot.</li>
+            <li><strong>Artist partnerships:</strong> Local artists bring their own audiences. A regular Friday act with 200 Instagram followers who post your venue every week is meaningful earned media.</li>
+            <li><strong>Hotel occupancy halo:</strong> Weekend live music can influence room booking decisions — guests planning a stay may choose your property specifically because Friday night has something happening.</li>
+          </ul>
+        </div>
+        <div class="info-box warning">
+          <h3>Red Flags to Watch</h3>
+          <ul>
+            <li><strong>Music nights with lower per-person spend than non-music nights</strong> — this happens when music attracts ambient crowd without driving consumption.</li>
+            <li><strong>High artist fees + no uplift in headcount</strong> — paying $500+ for an act that doesn't move the needle on attendance is a straight loss.</li>
+            <li><strong>Cover charges that suppress walk-ins</strong> — in markets without a live music culture, covers can deter casual guests who would have spent $40+ anyway.</li>
+            <li><strong>Licensing costs outpacing music revenue</strong> — if you're paying $2,000+ annually in PRO fees for 2 music nights/week with minimal incremental revenue, the math is upside down.</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- TAB 2: LICENSING GUIDE                       -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="licensing" class="tab-panel">
+
+    <div class="section-hdr">🎵 The Four PROs You Need to Know</div>
+
+    <div class="pro-grid">
+      <!-- BMI -->
+      <div class="pro-card pro-bmi">
+        <div class="pro-header">
+          <div class="pro-name">BMI</div>
+          <span class="pro-status status-active">✓ Licensed</span>
+        </div>
+        <div class="pro-body">
+          <div class="pro-row"><span class="pro-key">Full Name</span><span class="pro-val">Broadcast Music, Inc.</span></div>
+          <div class="pro-row"><span class="pro-key">Structure</span><span class="pro-val">Non-profit</span></div>
+          <div class="pro-row"><span class="pro-key">Catalog Size</span><span class="pro-val">25M+ works</span></div>
+          <div class="pro-row"><span class="pro-key">Your Annual Fee</span><span class="pro-val">$655</span></div>
+          <div class="pro-row"><span class="pro-key">Notable Roster</span><span class="pro-val">Taylor Swift, Beyoncé, country, hip-hop</span></div>
+          <div class="pro-row"><span class="pro-key">Rate Basis</span><span class="pro-val">Capacity, music type, frequency</span></div>
+        </div>
+      </div>
+
+      <!-- SESAC -->
+      <div class="pro-card pro-sesac">
+        <div class="pro-header">
+          <div class="pro-name">SESAC</div>
+          <span class="pro-status status-incoming">⚠ Incoming</span>
+        </div>
+        <div class="pro-body">
+          <div class="pro-row"><span class="pro-key">Full Name</span><span class="pro-val">Society of European Stage Authors &amp; Composers</span></div>
+          <div class="pro-row"><span class="pro-key">Structure</span><span class="pro-val">For-profit (invite only)</span></div>
+          <div class="pro-row"><span class="pro-key">Catalog</span><span class="pro-val">Smaller but curated — higher per-track royalties</span></div>
+          <div class="pro-row"><span class="pro-key">Quoted Fee</span><span class="pro-val">$735/year</span></div>
+          <div class="pro-row"><span class="pro-key">Notable Roster</span><span class="pro-val">Bob Dylan, Neil Diamond, Rush, Adele (some works)</span></div>
+          <div class="pro-row"><span class="pro-key">Note</span><span class="pro-val">Most aggressive in pursuing unlicensed venues</span></div>
+        </div>
+      </div>
+
+      <!-- ASCAP -->
+      <div class="pro-card pro-ascap">
+        <div class="pro-header">
+          <div class="pro-name">ASCAP</div>
+          <span class="pro-status status-pending">! Not Yet</span>
+        </div>
+        <div class="pro-body">
+          <div class="pro-row"><span class="pro-key">Full Name</span><span class="pro-val">American Society of Composers, Authors &amp; Publishers</span></div>
+          <div class="pro-row"><span class="pro-key">Structure</span><span class="pro-val">Non-profit (member-owned)</span></div>
+          <div class="pro-row"><span class="pro-key">Catalog</span><span class="pro-val">Massive — classical, jazz, pop, film scores</span></div>
+          <div class="pro-row"><span class="pro-key">Estimated Fee</span><span class="pro-val">~$450–$600/year (similar to BMI)</span></div>
+          <div class="pro-row"><span class="pro-key">Notable Roster</span><span class="pro-val">Lady Gaga, Alicia Keys, Bruno Mars, most film composers</span></div>
+          <div class="pro-row"><span class="pro-key">Reality</span><span class="pro-val">They will come. Budget for it now.</span></div>
+        </div>
+      </div>
+
+      <!-- GMR -->
+      <div class="pro-card pro-gmr">
+        <div class="pro-header">
+          <div class="pro-name">GMR</div>
+          <span class="pro-status status-optional">? Monitor</span>
+        </div>
+        <div class="pro-body">
+          <div class="pro-row"><span class="pro-key">Full Name</span><span class="pro-val">Global Music Rights</span></div>
+          <div class="pro-row"><span class="pro-key">Structure</span><span class="pro-val">For-profit (invite only, founded by Irving Azoff)</span></div>
+          <div class="pro-row"><span class="pro-key">Catalog</span><span class="pro-val">Small but high-profile</span></div>
+          <div class="pro-row"><span class="pro-key">Estimated Fee</span><span class="pro-val">$200–$400/year for small venues</span></div>
+          <div class="pro-row"><span class="pro-key">Notable Roster</span><span class="pro-val">Eagles, John Lennon, Bruno Mars, The Weekend</span></div>
+          <div class="pro-row"><span class="pro-key">Aggressiveness</span><span class="pro-val">Growing — budget for this within 2 years</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOTAL LICENSING COST -->
+    <div class="total-licensing">
+      <div>
+        <div class="tl-label">Your Current Annual Licensing Cost</div>
+        <div class="tl-amount">$655</div>
+        <div class="tl-sub">BMI only (licensed)</div>
+      </div>
+      <div>
+        <div class="tl-label">With SESAC (incoming)</div>
+        <div class="tl-amount">$1,390</div>
+        <div class="tl-sub">BMI + SESAC</div>
+      </div>
+      <div>
+        <div class="tl-label">Full Compliance (all 4 PROs)</div>
+        <div class="tl-amount">~$2,200</div>
+        <div class="tl-sub">BMI + SESAC + ASCAP + GMR estimated</div>
+      </div>
+    </div>
+
+    <!-- LEGAL REALITY -->
+    <div class="section-hdr" style="margin-top:1.5rem;">⚖️ Legal Reality</div>
+
+    <div class="info-box warning">
+      <h3>What Happens If You Don't License</h3>
+      <ul>
+        <li><strong>$750–$30,000 per infringed song</strong> in statutory damages under federal copyright law.</li>
+        <li><strong>Up to $150,000 per song</strong> if willful infringement is proven — playing a song after receiving a demand letter likely qualifies.</li>
+        <li>PROs employ <strong>field representatives who visit venues</strong> — they're not sending random letters. They know what you play.</li>
+        <li>Small venues are not immune. Settlement pressure alone — even without going to court — can cost $5,000–$15,000 in legal fees and settlements.</li>
+        <li>Colorado has no state-level exemptions. Federal copyright applies everywhere.</li>
+      </ul>
+    </div>
+
+    <div class="info-box">
+      <h3>What Licensing Actually Covers</h3>
+      <ul>
+        <li><strong>Live performances</strong> by musicians playing songs in that PRO's catalog</li>
+        <li><strong>Recorded background music</strong> (streaming, radio, DJ, between sets)</li>
+        <li><strong>Karaoke</strong> (yes, this requires a license — same rules apply)</li>
+        <li>One blanket license covers <em>unlimited</em> plays from that PRO's catalog — you don't pay per song</li>
+        <li>The license follows the <strong>venue, not the musician</strong> — the artist performing isn't responsible for the venue's compliance</li>
+      </ul>
+    </div>
+
+    <div class="info-box tip">
+      <h3>Legitimate Ways to Reduce Licensing Exposure</h3>
+      <ul>
+        <li><strong>Book artists who play their own original music</strong> — if the artist owns the songs and isn't filing with a PRO, no license required for those works. Ask artists directly.</li>
+        <li><strong>Public domain sessions</strong> — traditional folk, old blues, pre-1928 compositions. Complicated by modern arrangements which can still be copyrighted.</li>
+        <li><strong>Curate your playlist between sets</strong> — use a licensed service like Soundtrack Your Brand or Cloud Cover Music (~$35–$50/month) for recorded background music. This keeps you off PRO radar for the recorded portion.</li>
+        <li><strong>Track what's actually played</strong> — if you can demonstrate you only use music from the PRO you're licensed with (BMI only), you have a factual defense. Hard to maintain in practice.</li>
+      </ul>
+    </div>
+
+    <!-- COLORADO SPECIFIC -->
+    <div class="section-hdr" style="margin-top:1.5rem;">📍 Colorado-Specific Notes</div>
+    <div class="info-box">
+      <h3>What Colorado Does and Doesn't Require</h3>
+      <ul>
+        <li><strong>No state-specific music licensing law</strong> — federal copyright applies, managed by the PROs.</li>
+        <li><strong>Noise ordinances</strong> apply locally in Cañon City — separate from licensing, but relevant to outdoor or amplified live music. Worth a check with the city.</li>
+        <li><strong>Liquor license</strong> is unrelated to music licensing but PROs are aware that venues with alcohol licenses are higher-revenue targets — affects their rate calculations.</li>
+        <li><strong>No recent high-profile enforcement actions</strong> against Colorado venues specifically — but this means nothing. PROs are systematic, not random.</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- TAB 3: NEGOTIATION PLAYBOOK                  -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="negotiate" class="tab-panel">
+
+    <div class="section-hdr">💬 Is It a Racket? Yes and No.</div>
+    <div class="info-box">
+      <h3>The Honest Assessment</h3>
+      <ul>
+        <li>PRO licensing is <strong>a legal requirement</strong>, not optional — but the rates published are <strong>starting points, not take-it-or-leave-it numbers</strong>.</li>
+        <li>The system is genuinely opaque and feels like protection money — because structurally, it kind of is. That doesn't mean you don't pay. It means you <strong>negotiate intelligently</strong>.</li>
+        <li>Your leverage is real: small venues, limited music use, and the ability to credibly say "we'll only book artists playing original music" all affect what a PRO will actually settle for.</li>
+        <li>The PRO's incentive is <strong>volume over enforcement</strong> — they'd rather have you locked in at a negotiated rate than spend legal resources chasing $735.</li>
+      </ul>
+    </div>
+
+    <div class="section-hdr" style="margin-top:1.5rem;">🎯 SESAC Negotiation — Right Now</div>
+    <div class="info-box tip">
+      <h3>How to Push Back on the $735 Quote</h3>
+      <ul>
+        <li><strong>Don't pay the first number.</strong> Call, don't email. Ask for the rate worksheet and what factors drove their quote for your venue specifically.</li>
+        <li><strong>Counter with your actual music use:</strong> "We host live music 2 nights/week. Our venue capacity is [X]. We do not charge a cover. We would like a rate that reflects limited, incidental use." Lower usage = lower rate.</li>
+        <li><strong>Ask about a trial rate:</strong> Some PROs offer a 3–6 month introductory rate for venues new to their license. SESAC has done this.</li>
+        <li><strong>Use BMI as a benchmark:</strong> "We're paying BMI $655 for a much larger catalog. Your quote of $735 for a smaller, curated catalog doesn't track. We'd expect something closer to $400–$500."</li>
+        <li><strong>Mention you're evaluating your live music program</strong> — a credible signal that you might reduce or eliminate music entirely. A $400 license beats $0.</li>
+        <li><strong>Escalate if needed:</strong> Ask to speak with a regional manager. Front-line reps have limited negotiating authority. Managers often have discretion of 20–30% off published rates.</li>
+        <li><strong>Target: $450–$550 for SESAC</strong> based on comparable small venue reports. $735 is high for a boutique hotel with 2 music nights/week.</li>
+      </ul>
+    </div>
+
+    <div class="section-hdr" style="margin-top:1.5rem;">📋 ASCAP — Get Ahead of It</div>
+    <div class="info-box">
+      <h3>Don't Wait for ASCAP to Find You</h3>
+      <ul>
+        <li>Proactively contacting ASCAP (before they contact you) often results in <strong>lower rates and better terms</strong> — you're a new customer vs. an enforcement target.</li>
+        <li>Use the same leverage: limited use, small venue, no cover charge, willingness to audit your setlists.</li>
+        <li>Estimated rate for a venue your size: <strong>$450–$600/year</strong>. Push for the low end.</li>
+        <li>Ask specifically about their <strong>"background music" rate vs. "live entertainment" rate</strong> — if your music nights are ambient/background in nature (lower volume, conversational setting), you may qualify for the lower tier.</li>
+      </ul>
+    </div>
+
+    <div class="section-hdr" style="margin-top:1.5rem;">🧾 Know Your Rate Factors</div>
+    <div class="info-box">
+      <h3>What PROs Use to Calculate Your Rate</h3>
+      <ul>
+        <li><strong>Venue capacity</strong> — the single biggest factor. Know your licensed capacity and don't overstate it.</li>
+        <li><strong>Music frequency</strong> — nights per week with live or recorded music. 2 nights/week vs. 7 nights/week is a significant rate difference.</li>
+        <li><strong>Music type</strong> — live entertainment rates are higher than background music rates. Know which tier applies to you.</li>
+        <li><strong>Cover charge</strong> — if you charge a cover, your rate goes up. If you don't, say so explicitly in every negotiation.</li>
+        <li><strong>Gross revenue</strong> — some PROs (especially ASCAP) tie rates to a percentage of music-attributable revenue. Ask how they calculate it for your venue type.</li>
+        <li><strong>Hours of music per week</strong> — fewer hours = lower rate. Track this.</li>
+      </ul>
+    </div>
+
+    <div class="section-hdr" style="margin-top:1.5rem;">📞 Scripts That Work</div>
+
+    <div class="card" style="margin-bottom:1rem;">
+      <div class="card-title" style="margin-bottom:0.75rem;">Opening the Negotiation Call</div>
+      <div style="background:var(--light); border-radius:8px; padding:1rem; font-size:0.88rem; line-height:1.65; color:var(--text); font-style:italic;">
+        "Hi, I'm calling about a license quote we received for Hotel St. Cloud in Cañon City, Colorado. We're a boutique hotel — we have a bar and restaurant where we host live music on Friday and Saturday evenings. We're not a concert venue. We have capacity for roughly [X] guests and we don't charge a cover. I'd like to understand how this rate was calculated and whether there's a tier that better fits our actual use case."
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:1rem;">
+      <div class="card-title" style="margin-bottom:0.75rem;">Pushing Back on the Rate</div>
+      <div style="background:var(--light); border-radius:8px; padding:1rem; font-size:0.88rem; line-height:1.65; color:var(--text); font-style:italic;">
+        "We're already licensed with BMI at $655 a year for a significantly larger catalog. The quote we received for [SESAC/ASCAP] doesn't reflect the limited scope of our music use — two nights a week, no cover, ambient live music in a hotel bar setting. We're committed to compliance, but we'd need a rate that reflects our actual use. What's the floor for a venue of our size and frequency?"
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="margin-bottom:0.75rem;">If They Won't Budge</div>
+      <div style="background:var(--light); border-radius:8px; padding:1rem; font-size:0.88rem; line-height:1.65; color:var(--text); font-style:italic;">
+        "We appreciate the conversation. Before we commit, we're reviewing our entire live music program — including whether to continue it. If the licensing structure makes the economics untenable, we may move to a format where artists play only original music, which wouldn't require a license with you. I'd like to give you the first opportunity to offer a rate that keeps us as a licensed venue. Can you take this back to a manager?"
+      </div>
+    </div>
+
+    <div class="info-box warning" style="margin-top:1rem;">
+      <h3>What Not to Do</h3>
+      <ul>
+        <li><strong>Don't ignore SESAC or ASCAP demand letters.</strong> Once you've been formally contacted, non-response reads as willful infringement. That's when the $150K/song exposure kicks in.</li>
+        <li><strong>Don't pay without negotiating.</strong> The published rate is rarely the final rate for small venues.</li>
+        <li><strong>Don't claim you only play unlicensed music unless it's 100% true.</strong> A field rep who catches one BMI song during an unlicensed set will cite every PRO simultaneously.</li>
+        <li><strong>Don't conflate the musician's license with yours.</strong> If an artist has a publishing deal, that doesn't cover your venue's public performance rights. These are separate legal buckets.</li>
+      </ul>
+    </div>
+
+    <div class="info-box" style="margin-top:1rem;">
+      <h3>Recommended Annual Process</h3>
+      <ul>
+        <li>Every January, review your license agreements and confirm rates haven't auto-escalated.</li>
+        <li>Keep a simple log of music nights, artist names, and whether they played original vs. covered songs. This is your factual defense if ever challenged.</li>
+        <li>When a new PRO contacts you, treat it as a negotiation — not a bill. Response time: within 30 days to avoid appearing in willful non-compliance.</li>
+        <li>Budget $2,200–$2,500/year for full PRO compliance (all four). If your live music ROI supports it, this is a cost of doing business — not a crisis.</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function showTab(id, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    btn.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function fmt(n, decimals = 0) {
+    if (isNaN(n)) return '—';
+    const abs = Math.abs(n);
+    const str = abs.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    return (n < 0 ? '-$' : '$') + str;
+  }
+
+  function fmtPct(n) {
+    if (!isFinite(n)) return '—';
+    return (n >= 0 ? '+' : '') + n.toFixed(1) + '%';
+  }
+
+  function val(id) {
+    return parseFloat(document.getElementById(id).value) || 0;
+  }
+
+  function calculate() {
+    // INPUTS
+    const musicianFee   = val('musician_fee');
+    const soundCost     = val('sound_cost');
+    const laborCost     = val('labor_cost');
+    const marketingCost = val('marketing_cost');
+    const annualLicensing = val('annual_licensing');
+    const showsPerYear  = Math.max(1, val('shows_per_year'));
+    const licPerShow    = annualLicensing / showsPerYear;
+
+    const musicGuests   = val('music_guests');
+    const baseGuests    = val('base_guests');
+    const spendPerGuest = val('spend_per_guest');
+    const fbMargin      = val('fb_margin') / 100;
+    const coverCharge   = val('cover_charge');
+    const coverGuests   = val('cover_guests');
+
+    // REVENUE
+    const baseFBRevenue  = baseGuests * spendPerGuest * fbMargin;
+    const musicFBRevenue = musicGuests * spendPerGuest * fbMargin;
+    const incrementalFB  = musicFBRevenue - baseFBRevenue;
+    const coverRevenue   = coverCharge * coverGuests;
+    const totalRevenue   = incrementalFB + coverRevenue;
+
+    // COSTS
+    const directCosts = musicianFee + soundCost + laborCost + marketingCost + licPerShow;
+    const netProfit   = totalRevenue - directCosts;
+    const roi         = directCosts > 0 ? (netProfit / directCosts) * 100 : 0;
+
+    // ANNUAL
+    const showToggle = document.getElementById('annual_toggle').checked;
+    const mult = showToggle ? showsPerYear : 1;
+    const annualNet = netProfit * showsPerYear;
+
+    // STAT BOXES
+    const boxes = [
+      { label: 'Incremental Revenue', value: fmt(totalRevenue), sub: 'vs. non-music baseline', cls: totalRevenue >= 0 ? 'blue' : 'red' },
+      { label: 'Total Cost Per Show', value: fmt(directCosts), sub: `incl. ${fmt(licPerShow)} licensing/show`, cls: '' },
+      { label: 'Net Profit Per Night', value: fmt(netProfit), sub: netProfit >= 0 ? 'Above baseline' : 'Below baseline', cls: netProfit > 0 ? 'green' : netProfit < -50 ? 'red' : 'amber' },
+      { label: 'ROI Per Night', value: fmtPct(roi), sub: `${fmt(annualNet)}/yr net`, cls: roi > 20 ? 'green' : roi < 0 ? 'red' : 'amber' },
+    ];
+    document.getElementById('stat_boxes').innerHTML = boxes.map(b =>
+      `<div class="stat-box ${b.cls}"><div class="stat-label">${b.label}</div><div class="stat-value">${b.value}</div><div class="stat-sub">${b.sub}</div></div>`
+    ).join('');
+
+    // VERDICT
+    const vBox = document.getElementById('verdict_box');
+    const vTitle = document.getElementById('verdict_title');
+    const vBody  = document.getElementById('verdict_body');
+    vBox.className = 'verdict-box';
+    if (netProfit > 100) {
+      vBox.classList.add('positive');
+      vTitle.textContent = '✅ Live music is earning its keep.';
+      vBody.textContent = `At ${fmt(netProfit)} net profit per night, the program is generating meaningful return above the baseline. The intangible community and brand value is pure upside from here. Focus on which acts drive the best attendance lift and double down on those.`;
+    } else if (netProfit >= 0) {
+      vBox.classList.add('neutral');
+      vTitle.textContent = '⚠️ Live music is roughly breaking even.';
+      vBody.textContent = `${fmt(netProfit)}/night is above water, but not by much. Look at whether you can increase headcount, nudge spend-per-guest, or reduce musician fees before concluding it's worth continuing at this margin. The brand value may still justify it — but track it closely.`;
+    } else {
+      vBox.classList.add('negative');
+      vTitle.textContent = '🚨 Live music is losing money on paper.';
+      vBody.textContent = `${fmt(netProfit)}/night below baseline means the program isn't covering its costs. Before cutting it, audit the inputs: Is the baseline attendance estimate accurate? Are there cover charges you could introduce? Could you negotiate musician fees down? The intangible brand value may justify a small loss — but this gap warrants action.`;
+    }
+
+    // BREAKDOWN TABLE
+    const brRows = [
+      ['section', 'REVENUE'],
+      ['item', 'Music Night F&B (gross margin)', fmt(musicFBRevenue), 'positive-amt'],
+      ['item', `Baseline Night F&B (${baseGuests} guests × ${fmt(spendPerGuest)} × ${(fbMargin*100).toFixed(0)}% margin)`, fmt(baseFBRevenue), 'negative-amt'],
+      ['item', 'Incremental F&B vs. Baseline', fmt(incrementalFB), incrementalFB >= 0 ? 'positive-amt' : 'negative-amt'],
+      ['item', 'Cover Charge Revenue', fmt(coverRevenue), 'positive-amt'],
+      ['total', 'Total Incremental Revenue', fmt(totalRevenue), totalRevenue >= 0 ? 'positive-amt' : 'negative-amt'],
+      ['section', 'COSTS'],
+      ['item', 'Musician Fee', fmt(musicianFee), 'negative-amt'],
+      ['item', 'Sound / Equipment', fmt(soundCost), 'negative-amt'],
+      ['item', 'Extra Labor', fmt(laborCost), 'negative-amt'],
+      ['item', 'Marketing', fmt(marketingCost), 'negative-amt'],
+      ['item', `Licensing (${fmt(annualLicensing)}/yr ÷ ${showsPerYear} shows)`, fmt(licPerShow), 'negative-amt'],
+      ['total', 'Total Cost Per Show', fmt(directCosts), 'negative-amt'],
+      ['section', 'BOTTOM LINE'],
+      ['total', 'Net Profit Per Night', fmt(netProfit), netProfit >= 0 ? 'positive-amt' : 'negative-amt'],
+      ['total', 'ROI', fmtPct(roi), roi >= 0 ? 'positive-amt' : 'negative-amt'],
+    ];
+
+    document.getElementById('breakdown_table').innerHTML =
+      `<thead><tr><th>Item</th><th class="amount">Amount</th></tr></thead><tbody>` +
+      brRows.map(r => {
+        if (r[0] === 'section') return `<tr class="section-row"><td colspan="2">${r[1]}</td></tr>`;
+        const cls = r[0] === 'total' ? 'total-row' : '';
+        return `<tr class="${cls}"><td class="label">${r[1]}</td><td class="amount ${r[3]}">${r[2]}</td></tr>`;
+      }).join('') + '</tbody>';
+
+    // ANNUAL TABLE
+    const annualRows = [
+      ['item', `Shows per Year`, showsPerYear.toString(), ''],
+      ['item', 'Annual Incremental Revenue', fmt(totalRevenue * showsPerYear), 'positive-amt'],
+      ['item', 'Annual Direct Costs (musicians, labor, marketing, sound)', fmt((musicianFee + soundCost + laborCost + marketingCost) * showsPerYear), 'negative-amt'],
+      ['item', 'Annual Licensing (all PROs, current)', fmt(annualLicensing), 'negative-amt'],
+      ['total', 'Annual Net Profit', fmt(annualNet), annualNet >= 0 ? 'positive-amt' : 'negative-amt'],
+      ['item', 'Full Compliance Cost (est. all 4 PROs ~$2,200)', '~$2,200', 'negative-amt'],
+      ['total', 'Annual Net w/ Full PRO Compliance', fmt(annualNet - (2200 - annualLicensing)), (annualNet - (2200 - annualLicensing)) >= 0 ? 'positive-amt' : 'negative-amt'],
+    ];
+    document.getElementById('annual_table').innerHTML =
+      `<thead><tr><th>Annual View</th><th class="amount">Amount</th></tr></thead><tbody>` +
+      annualRows.map(r => {
+        const cls = r[0] === 'total' ? 'total-row' : '';
+        return `<tr class="${cls}"><td class="label">${r[1]}</td><td class="amount ${r[3]}">${r[2]}</td></tr>`;
+      }).join('') + '</tbody>';
+
+    // SENSITIVITY TABLE
+    const spends = [18, 22, 28, 35, 45];
+    const counts = [25, 38, 50, 65, 80, 100];
+    let sensHtml = '<thead><tr><th>Guests →</th>';
+    counts.forEach(c => sensHtml += `<th>${c}</th>`);
+    sensHtml += '</tr></thead><tbody>';
+    spends.forEach(sp => {
+      sensHtml += `<tr><td class="row-label">$${sp}/guest</td>`;
+      counts.forEach(c => {
+        const incFB = (c * sp * fbMargin) - baseFBRevenue;
+        const net = incFB + coverRevenue - directCosts;
+        const cls = net > 50 ? 'cell-green' : net < 0 ? 'cell-red' : 'cell-amber';
+        sensHtml += `<td class="${cls}">${fmt(net)}</td>`;
+      });
+      sensHtml += '</tr>';
+    });
+    sensHtml += '</tbody>';
+    document.getElementById('sens_table').innerHTML = sensHtml;
+
+    // BREAKEVEN
+    const fixedCosts = directCosts;
+    const marginPerGuest = spendPerGuest * fbMargin;
+    const beGuests = marginPerGuest > 0 ? Math.ceil((fixedCosts + baseFBRevenue) / (spendPerGuest * fbMargin)) : '∞';
+    const currentLift = musicGuests - baseGuests;
+    const beSpend = musicGuests > 0 ? ((fixedCosts + baseFBRevenue) / musicGuests / fbMargin).toFixed(2) : '∞';
+
+    document.getElementById('breakeven_content').innerHTML = `
+      <div class="field-grid" style="gap:1rem;">
+        <div class="stat-box ${typeof beGuests === 'number' && musicGuests >= beGuests ? 'green' : 'amber'}">
+          <div class="stat-label">Break-Even Guests</div>
+          <div class="stat-value">${beGuests}</div>
+          <div class="stat-sub">You currently have ${musicGuests} (${typeof beGuests === 'number' ? (musicGuests >= beGuests ? '✓ above' : '✗ below') : '—'} break-even)</div>
+        </div>
+        <div class="stat-box ${parseFloat(beSpend) <= spendPerGuest ? 'green' : 'amber'}">
+          <div class="stat-label">Break-Even Spend/Guest</div>
+          <div class="stat-value">$${beSpend}</div>
+          <div class="stat-sub">Current avg: ${fmt(spendPerGuest)} (${parseFloat(beSpend) <= spendPerGuest ? '✓ above' : '✗ below'} target)</div>
+        </div>
+        <div class="stat-box blue">
+          <div class="stat-label">Attendance Lift</div>
+          <div class="stat-value">+${currentLift}</div>
+          <div class="stat-sub">Music night vs. baseline (${Math.round((currentLift/Math.max(baseGuests,1))*100)}% lift)</div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // Auto-calculate on load with defaults
+  window.addEventListener('DOMContentLoaded', () => setTimeout(calculate, 100));
+</script>
+</body>
+</html>
