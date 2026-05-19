@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Casey's C3 2026 · Production Runsheet</title>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0f14;
+  --card:#0f1923;
+  --border:#1a2e3b;
+  --gold:#c9aa7c;
+  --blue:#5a8ba7;
+  --green:#4caf7d;
+  --red:#e87a7a;
+  --purple:#9b6ec8;
+  --text:#e8e0d4;
+  --muted:#5a7a8a;
+  --white:#f5f5f5;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-serif;font-weight:300;font-size:14px;line-height:1.6}
+
+/* NAV */
+.nav{background:#06090d;border-bottom:1px solid var(--border);padding:.85rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.nav-brand{font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--white)}
+.nav-brand span{color:var(--gold)}
+.nav-meta{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+.nav-links{display:flex;gap:1.25rem;flex-wrap:wrap}
+.nav-links a{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s}
+.nav-links a:hover{color:var(--gold)}
+
+/* HERO */
+.hero{background:linear-gradient(180deg,#06090d 0%,var(--bg) 100%);border-bottom:1px solid var(--border);padding:2.5rem 1.5rem 2rem;text-align:center;position:relative}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.hero-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--blue);margin-bottom:.5rem}
+.hero-title{font-size:clamp(28px,5vw,52px);font-weight:700;color:var(--white);letter-spacing:-.5px;line-height:1.05;margin-bottom:.4rem}
+.hero-title span{color:var(--gold)}
+.hero-sub{font-size:12px;color:var(--muted);letter-spacing:.5px}
+.hero-badges{display:flex;flex-wrap:wrap;gap:.6rem;justify-content:center;margin-top:1.25rem}
+.badge{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:.3rem .9rem;border-radius:20px;border:1px solid}
+.badge-gold{color:var(--gold);border-color:rgba(201,170,124,.3);background:rgba(201,170,124,.08)}
+.badge-blue{color:var(--blue);border-color:rgba(90,139,167,.3);background:rgba(90,139,167,.08)}
+.badge-green{color:var(--green);border-color:rgba(76,175,125,.3);background:rgba(76,175,125,.08)}
+
+/* WRAP */
+.wrap{max-width:1100px;margin:0 auto;padding:0 1.25rem}
+
+/* SECTION HEADER */
+.section-head{display:flex;align-items:center;gap:.75rem;margin:2.5rem 0 1.25rem;padding-bottom:.6rem;border-bottom:1px solid var(--border)}
+.section-icon{font-size:20px}
+.section-title{font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--white)}
+.section-sub{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-left:auto}
+
+/* CREW GRID */
+.crew-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:12px;margin-bottom:2rem}
+.crew-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.1rem 1.25rem;border-top:3px solid var(--blue)}
+.crew-card.gold{border-top-color:var(--gold)}
+.crew-card.green{border-top-color:var(--green)}
+.crew-card.purple{border-top-color:var(--purple)}
+.crew-name{font-size:14px;font-weight:700;color:var(--white);margin-bottom:.2rem}
+.crew-role{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+
+/* KEY FACTS */
+.facts{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:12px;margin-bottom:2rem}
+.fact{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem 1.25rem;display:flex;gap:.75rem;align-items:flex-start}
+.fact-icon{font-size:18px;flex-shrink:0;margin-top:.1em}
+.fact-label{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:.2rem}
+.fact-val{font-size:13px;font-weight:600;color:var(--white);line-height:1.4}
+
+/* SHOW FLOW TABLE */
+.flow-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:1.5rem}
+.flow-header{background:#06090d;padding:.85rem 1.25rem;display:flex;align-items:center;gap:.75rem;border-bottom:1px solid var(--border)}
+.flow-header-title{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--white)}
+.flow-header-date{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-left:auto}
+.flow-table{width:100%;border-collapse:collapse}
+.flow-table th{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:.6rem 1rem;text-align:left;border-bottom:1px solid var(--border)}
+.flow-table td{padding:.7rem 1rem;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:top}
+.flow-table tr:last-child td{border-bottom:none}
+.flow-table tr:hover td{background:rgba(255,255,255,.02)}
+.time-cell{font-size:12px;font-weight:600;color:var(--gold);white-space:nowrap;width:130px}
+.item-cell{font-size:13px;color:var(--text);line-height:1.5}
+.item-cell strong{color:var(--white);font-weight:600}
+.presenter-cell{font-size:11px;color:var(--blue);white-space:nowrap}
+.type-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;flex-shrink:0;vertical-align:middle}
+
+/* DAY TABS */
+.tabs{display:flex;gap:.5rem;margin-bottom:0;flex-wrap:wrap}
+.tab{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:.45rem 1rem;border-radius:6px 6px 0 0;cursor:pointer;border:1px solid var(--border);border-bottom:none;color:var(--muted);background:transparent;transition:all .2s}
+.tab.active{color:var(--gold);background:var(--card);border-color:var(--border)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* VENDOR TABLE */
+.vendor-table{width:100%;border-collapse:collapse}
+.vendor-table th{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:.6rem 1rem;text-align:left;border-bottom:1px solid var(--border)}
+.vendor-table td{padding:.7rem 1rem;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px;color:var(--text)}
+.vendor-table tr:last-child td{border-bottom:none}
+.vendor-table td:first-child{font-weight:600;color:var(--white)}
+
+/* MEALS */
+.meal-row{display:flex;gap:1rem;padding:.85rem 1.25rem;border-bottom:1px solid rgba(255,255,255,.04);align-items:flex-start}
+.meal-row:last-child{border-bottom:none}
+.meal-date{font-size:11px;font-weight:600;color:var(--gold);min-width:90px;flex-shrink:0}
+.meal-time{font-size:11px;color:var(--muted);min-width:110px;flex-shrink:0}
+.meal-function{font-size:12px;font-weight:600;color:var(--white)}
+.meal-location{font-size:11px;color:var(--muted)}
+.meal-count{font-size:11px;color:var(--green);margin-left:auto;flex-shrink:0;font-weight:600}
+
+/* LIVE BADGE */
+.live-pill{display:inline-flex;align-items:center;gap:.4rem;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--green);background:rgba(76,175,125,.1);border:1px solid rgba(76,175,125,.3);border-radius:12px;padding:.2rem .7rem}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* UPDATE BADGE */
+.updated{font-size:10px;color:var(--muted);letter-spacing:.5px;text-align:center;padding:.75rem;border-top:1px solid var(--border);margin-top:2rem}
+
+@media(max-width:600px){
+  .hero-title{font-size:26px}
+  .facts{grid-template-columns:1fr}
+  .crew-grid{grid-template-columns:1fr 1fr}
+  .time-cell{width:90px;font-size:11px}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div>
+    <div class="nav-brand">Casey's <span>C3</span> 2026</div>
+  </div>
+  <div class="nav-links">
+    <a href="#crew">Crew</a>
+    <a href="#day1">Day 1</a>
+    <a href="#day2">Day 2</a>
+    <a href="#day3">Day 3</a>
+    <a href="#sponsor">Sponsor Dinner</a>
+    <a href="#vendors">Vendors</a>
+    <a href="#meals">Meals</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">Unbridled Productions · Production Runsheet</div>
+  <h1 class="hero-title">Casey's <span>Commitment Conference</span></h1>
+  <div class="hero-sub">Kansas City Convention Center &nbsp;·&nbsp; May 4–6, 2026 &nbsp;·&nbsp; Kansas City, MO</div>
+  <div class="hero-badges">
+    <div class="badge badge-gold">Live Dates: May 4–6</div>
+    <div class="badge badge-blue">KCCC Grand Ballroom + Expo Hall</div>
+    <div class="badge badge-green"><span class="live-dot" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:4px"></span>Always Latest Version</div>
+  </div>
+</div>
+
+<div class="wrap" style="padding-top:2rem">
+
+  <!-- CREW -->
+  <div id="crew">
+    <div class="section-head">
+      <span class="section-icon">👥</span>
+      <span class="section-title">Production Crew</span>
+      <span class="section-sub">Unbridled Productions</span>
+    </div>
+    <div class="crew-grid">
+      <div class="crew-card gold">
+        <div class="crew-name">Alex Fowler</div>
+        <div class="crew-role">Producer</div>
+      </div>
+      <div class="crew-card gold">
+        <div class="crew-name">Justin Hamblen</div>
+        <div class="crew-role">Production Manager</div>
+      </div>
+      <div class="crew-card">
+        <div class="crew-name">Gail Costello</div>
+        <div class="crew-role">Show Caller</div>
+      </div>
+      <div class="crew-card">
+        <div class="crew-name">Preston Perrin</div>
+        <div class="crew-role">Graphics Op (GFX)</div>
+      </div>
+      <div class="crew-card">
+        <div class="crew-name">Ally Prock</div>
+        <div class="crew-role">Prompter Operator</div>
+      </div>
+      <div class="crew-card green">
+        <div class="crew-name">Jamie Brownstone</div>
+        <div class="crew-role">Pizza Competition</div>
+      </div>
+      <div class="crew-card green">
+        <div class="crew-name">Andrew Erusha</div>
+        <div class="crew-role">Pizza Competition PM</div>
+      </div>
+      <div class="crew-card purple">
+        <div class="crew-name">Ian Novelo</div>
+        <div class="crew-role">Breakouts PM</div>
+      </div>
+      <div class="crew-card">
+        <div class="crew-name">FOH Productions</div>
+        <div class="crew-role">AV Vendor</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KEY FACTS -->
+  <div class="section-head">
+    <span class="section-icon">📋</span>
+    <span class="section-title">Event Details</span>
+  </div>
+  <div class="facts">
+    <div class="fact">
+      <div class="fact-icon">📍</div>
+      <div>
+        <div class="fact-label">Venue</div>
+        <div class="fact-val">Kansas City Convention Center<br><span style="color:var(--muted);font-size:11px">Grand Ballroom 2501A-C · Expo Hall</span></div>
+      </div>
+    </div>
+    <div class="fact">
+      <div class="fact-icon">📅</div>
+      <div>
+        <div class="fact-label">Event Dates</div>
+        <div class="fact-val">May 4–6, 2026<br><span style="color:var(--muted);font-size:11px">Load-In: May 1–3 · Load-Out: May 6</span></div>
+      </div>
+    </div>
+    <div class="fact">
+      <div class="fact-icon">🎙️</div>
+      <div>
+        <div class="fact-label">Keynote Speaker</div>
+        <div class="fact-val">Eric Boles<br><span style="color:var(--muted);font-size:11px">Day 3 · 9:36 AM</span></div>
+      </div>
+    </div>
+    <div class="fact">
+      <div class="fact-icon">🏗️</div>
+      <div>
+        <div class="fact-label">Rigging</div>
+        <div class="fact-val">HMX Live<br><span style="color:var(--muted);font-size:11px">Rigging Call: 8:00 AM May 1</span></div>
+      </div>
+    </div>
+    <div class="fact">
+      <div class="fact-icon">⚡</div>
+      <div>
+        <div class="fact-label">Power & Internet</div>
+        <div class="fact-val">Smart City</div>
+      </div>
+    </div>
+    <div class="fact">
+      <div class="fact-icon">🔒</div>
+      <div>
+        <div class="fact-label">Loading Dock</div>
+        <div class="fact-val">KCCC Grand Ballroom Dock<br><span style="color:var(--muted);font-size:11px">Security: TBD</span></div>
+      </div>
+    </div>
+    <div class="fact">
+      <div class="fact-icon">🏨</div>
+      <div>
+        <div class="fact-label">Breakout Hotels</div>
+        <div class="fact-val">Loews · Marriott · Hilton<br><span style="color:var(--muted);font-size:11px">Crew: see Rooming Grid</span></div>
+      </div>
+    </div>
+    <div class="fact">
+      <div class="fact-icon">🍕</div>
+      <div>
+        <div class="fact-label">Pizza Competition</div>
+        <div class="fact-val">KCCC Expo Hall<br><span style="color:var(--muted);font-size:11px">Pre-Rig: Apr 30 – May 2</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REHEARSALS -->
+  <div class="section-head">
+    <span class="section-icon">🎬</span>
+    <span class="section-title">Pre-Show Rehearsals</span>
+    <span class="section-sub">Ankeny, Iowa — Casey's Support Center (SSC)</span>
+  </div>
+  <div class="flow-card">
+    <div class="flow-header">
+      <span class="flow-header-title">Rehearsal Schedule</span>
+      <span class="flow-header-date">Apr 6–8 · Apr 20–22 · Apr 28–29</span>
+    </div>
+    <table class="flow-table">
+      <thead><tr><th>Date</th><th>Activity</th><th>Staff</th></tr></thead>
+      <tbody>
+        <tr><td class="time-cell">Apr 6</td><td class="item-cell">Travel to Ankeny</td><td class="presenter-cell">Jamie, Joel, Graphics, Prompter</td></tr>
+        <tr><td class="time-cell">Apr 7</td><td class="item-cell">Rehearsal #1 — SSC</td><td class="presenter-cell">See separate rehearsal schedule</td></tr>
+        <tr><td class="time-cell">Apr 8</td><td class="item-cell">Rehearsal #1 cont. → Travel Home</td><td class="presenter-cell">Check out before rehearsal</td></tr>
+        <tr><td class="time-cell">Apr 20</td><td class="item-cell">Travel to Ankeny · Set up Rehearsal Room</td><td class="presenter-cell">Alex, Bryan, Graphics, Prompter</td></tr>
+        <tr><td class="time-cell">Apr 21</td><td class="item-cell">7:20 AM lobby · 8:30–4:30 PM Rehearsal #2</td><td class="presenter-cell">See separate rehearsal schedule</td></tr>
+        <tr><td class="time-cell">Apr 22</td><td class="item-cell">8:30 AM – Rehearsal #2 cont. → Travel Home</td><td class="presenter-cell">Last flight out</td></tr>
+        <tr><td class="time-cell">Apr 28–29</td><td class="item-cell">Final Rehearsals #3 — SSC</td><td class="presenter-cell">Full production team</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- LOAD-IN -->
+  <div class="section-head">
+    <span class="section-icon">🚛</span>
+    <span class="section-title">Load-In Schedule</span>
+    <span class="section-sub">KCCC · Apr 30 – May 3</span>
+  </div>
+  <div class="flow-card">
+    <table class="flow-table">
+      <thead><tr><th>Date</th><th>Activity</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td class="time-cell">Apr 30</td><td class="item-cell">Crew travel to Kansas City</td><td class="presenter-cell">Pizza Pre-Rig begins</td></tr>
+        <tr><td class="time-cell">May 1</td><td class="item-cell"><strong>GS Load-In Begins</strong><br>7:00 AM – 7:00 PM</td><td class="presenter-cell">Rigging Call: 8:00 AM · Truck Unload: 8:00 AM</td></tr>
+        <tr><td class="time-cell">May 2</td><td class="item-cell">GS Load-In cont. · Pizza Pre-Rig cont.</td><td class="presenter-cell">Crew Call: 8:00 AM</td></tr>
+        <tr><td class="time-cell">May 3</td><td class="item-cell">GS Finishing Touches · Rehearsals begin<br>Breakouts Load-In</td><td class="presenter-cell">Crew Call: 7:00 AM · Rehearsal Ready: 7:00 AM</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SHOW FLOWS -->
+  <div class="section-head">
+    <span class="section-icon">🎭</span>
+    <span class="section-title">General Session Show Flows</span>
+    <span class="section-sub">KCCC Grand Ballroom 2501A-C</span>
+  </div>
+
+  <!-- DAY 1 -->
+  <div id="day1" class="flow-card">
+    <div class="flow-header">
+      <span class="flow-header-title">Day 1 — General Session</span>
+      <span class="flow-header-date">Monday · May 4, 2026</span>
+    </div>
+    <table class="flow-table">
+      <thead><tr><th>Time</th><th>Item</th><th>Presenter</th></tr></thead>
+      <tbody>
+        <tr><td class="time-cell">7:30 AM</td><td class="item-cell">Doors Open</td><td class="presenter-cell"></td></tr>
+        <tr><td class="time-cell">7:45 AM</td><td class="item-cell"><strong>Doors Open</strong></td><td class="presenter-cell"></td></tr>
+        <tr><td class="time-cell">8:00 AM</td><td class="item-cell"><strong>Impact Opener</strong> — Video</td><td class="presenter-cell"></td></tr>
+        <tr><td class="time-cell">8:01 AM</td><td class="item-cell"><strong>All In to Win</strong> — Presentation</td><td class="presenter-cell">Darren Rebelez</td></tr>
+        <tr><td class="time-cell">8:26 AM</td><td class="item-cell">All In to Win — Interstitial Video</td><td class="presenter-cell"></td></tr>
+        <tr><td class="time-cell">8:28 AM</td><td class="item-cell"><strong>Challenge Accepted</strong> — Presentation</td><td class="presenter-cell">Ena Williams</td></tr>
+        <tr><td class="time-cell">8:33 AM</td><td class="item-cell"><strong>Evolving Leadership Panel</strong></td><td class="presenter-cell">Ena Williams + Panel</td></tr>
+        <tr><td class="time-cell">8:53 AM</td><td class="item-cell">The Future is in Our Hands — Interstitial</td><td class="presenter-cell"></td></tr>
+        <tr><td class="time-cell">8:56 AM</td><td class="item-cell"><strong>The Pace of Change</strong> — Presentation</td><td class="presenter-cell">Chris Boling</td></tr>
+        <tr><td class="time-cell">9:11 AM</td><td class="item-cell">DVP Play-On / Division Cheer Off</td><td class="presenter-cell">All DVPs</td></tr>
+        <tr><td class="time-cell">9:16 AM</td><td class="item-cell">Brand Video — Interstitial</td><td class="presenter-cell"></td></tr>
+        <tr><td class="time-cell">9:19 AM</td><td class="item-cell"><strong>Boosting Your Business</strong> — Presentation</td><td class="presenter-cell">Tom Brennan</td></tr>
+        <tr><td class="time-cell">9:49 AM</td><td class="item-cell">The Final Table — Video</td><td class="presenter-cell"></td></tr>
+        <tr><td class="time-cell">9:52 AM</td><td class="item-cell"><strong>Walk-Out / Break</strong></td><td class="presenter-cell"></td></tr>
+        <tr><td class="time-cell">10:00 AM</td><td class="item-cell">Doors Open — Session 2</td><td class="presenter-cell"></td></tr>
+        <tr><td class="time-cell">10:15 AM</td><td class="item-cell"><strong>One Standard. One Method. Every Pizza Perfect.</strong><br>PF&DB Educational Session — All Divisions</td><td class="presenter-cell">Brad Haga</td></tr>
+        <tr><td class="time-cell">11:30 AM</td><td class="item-cell"><strong>Clear Room</strong></td><td class="presenter-cell"></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- DAY 2 -->
+  <div id="day2" class="flow-card">
+    <div class="flow-header">
+      <span class="flow-header-title">Day 2 — General Session + Breakouts</span>
+      <span class="flow-header-date">Tuesday · May 5, 2026</span>
+    </div>
+    <table class="flow-table">
+      <thead><tr><th>Time</th><th>Item</th><th>Presenter / Location</th></tr></thead>
+      <tbody>
+        <tr><td class="time-cell">7:00 AM</td><td class="item-cell">Crew Call — GS</td><td class="presenter-cell">Becca, Andrea, Dani, Dana, Ty, Brandon</td></tr>
+        <tr><td class="time-cell">7:30 AM</td><td class="item-cell">Doors Open — GS</td><td class="presenter-cell">Grand Ballroom</td></tr>
+        <tr><td class="time-cell">8:00 AM</td><td class="item-cell"><strong>General Session</strong></td><td class="presenter-cell">8:00 AM – 10:00 AM</td></tr>
+        <tr><td class="time-cell">8:15 AM</td><td class="item-cell"><strong>Maximizing Your Team</strong><br>D2 (322) & D3 (300)</td><td class="presenter-cell">City Beautiful D/E, Loews · TJ Heller</td></tr>
+        <tr><td class="time-cell">8:15 AM</td><td class="item-cell"><strong>Building Effective Teams</strong><br>D1 (260) & D4 (297)</td><td class="presenter-cell">Neptune, Loews · Sherrie Hart / Wesley Smith</td></tr>
+        <tr><td class="time-cell">10:00 AM</td><td class="item-cell"><strong>Maximizing Your Team — Session 2</strong><br>D1 & D4</td><td class="presenter-cell">City Beautiful D/E · Michelle Means</td></tr>
+        <tr><td class="time-cell">10:00 AM</td><td class="item-cell"><strong>Building Effective Teams — Session 2</strong><br>D2 & D3</td><td class="presenter-cell">Neptune · Hailey Duff / Tara Antle</td></tr>
+        <tr><td class="time-cell">11:30 AM</td><td class="item-cell">Expo Hall Open · Crew Lunch (walk-away)</td><td class="presenter-cell"></td></tr>
+        <tr><td class="time-cell">12:00 PM</td><td class="item-cell"><strong>L&D Rehearsals</strong></td><td class="presenter-cell">City Beautiful D/E · Neptune D/E</td></tr>
+        <tr><td class="time-cell">1:00 PM</td><td class="item-cell">PC Crew Call</td><td class="presenter-cell">Becca, Ty, Brandon</td></tr>
+        <tr><td class="time-cell">1:30 PM</td><td class="item-cell">GS Team Builds Scenic for Division Dinners</td><td class="presenter-cell">Amanda, Ian, Alex, Justin, Marcus, Sydney, Prest, James</td></tr>
+        <tr><td class="time-cell">1:45 PM</td><td class="item-cell">Expo Hall Open</td><td class="presenter-cell"></td></tr>
+        <tr><td class="time-cell">3:30 PM</td><td class="item-cell">Pizza Competition Rehearsals</td><td class="presenter-cell">Expo Hall</td></tr>
+        <tr><td class="time-cell">3:30 PM</td><td class="item-cell">Division Dinner Rehearsals</td><td class="presenter-cell"></td></tr>
+        <tr><td class="time-cell">5:00 PM</td><td class="item-cell"><strong>Supplier / Sponsor Dinner</strong></td><td class="presenter-cell">See Sponsor Dinner Show Flow ↓</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- DAY 3 -->
+  <div id="day3" class="flow-card">
+    <div class="flow-header">
+      <span class="flow-header-title">Day 3 — General Session (Closing)</span>
+      <span class="flow-header-date">Wednesday · May 6, 2026</span>
+    </div>
+    <table class="flow-table">
+      <thead><tr><th>Time</th><th>Item</th><th>Presenter</th></tr></thead>
+      <tbody>
+        <tr><td class="time-cell">7:30 AM</td><td class="item-cell">Crew Call</td><td class="presenter-cell">Becca, Ty, Dana, Dani, Andrea, Brandon</td></tr>
+        <tr><td class="time-cell">8:00 AM</td><td class="item-cell">Keynote Speaker Rehearsal</td><td class="presenter-cell">Eric Boles · 8:00–8:30 AM</td></tr>
+        <tr><td class="time-cell">8:30 AM</td><td class="item-cell">GS Close Rehearsal</td><td class="presenter-cell">Chris Boling · 8:30–9:15 AM</td></tr>
+        <tr><td class="time-cell">9:15 AM</td><td class="item-cell">All In Sculpture Setup — GS</td><td class="presenter-cell"></td></tr>
+        <tr><td class="time-cell">9:15 AM</td><td class="item-cell">Doors Open</td><td class="presenter-cell"></td></tr>
+        <tr><td class="time-cell">9:30 AM</td><td class="item-cell"><strong>General Session & Keynote Opens</strong></td><td class="presenter-cell">9:30 AM – 10:45 AM</td></tr>
+        <tr><td class="time-cell">9:31 AM</td><td class="item-cell">Stinger Open</td><td class="presenter-cell"></td></tr>
+        <tr><td class="time-cell">9:31 AM</td><td class="item-cell"><strong>Final Day Kickoff</strong></td><td class="presenter-cell">Darren Rebelez</td></tr>
+        <tr><td class="time-cell">9:36 AM</td><td class="item-cell"><strong>Keynote: Eric Boles</strong> (8 slides)</td><td class="presenter-cell">Eric Boles · 45 min</td></tr>
+        <tr><td class="time-cell">10:21 AM</td><td class="item-cell">C3 '26 Highlights Recap — Video</td><td class="presenter-cell"></td></tr>
+        <tr><td class="time-cell">10:26 AM</td><td class="item-cell"><strong>Closing</strong></td><td class="presenter-cell">Chris Boling · 15 min</td></tr>
+        <tr><td class="time-cell">10:41 AM</td><td class="item-cell"><strong>Walk-Out</strong></td><td class="presenter-cell"></td></tr>
+        <tr><td class="time-cell">10:45 AM</td><td class="item-cell">GS Load-Out Begins</td><td class="presenter-cell">Boxed lunches provided at 1:00 PM</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SPONSOR DINNER -->
+  <div id="sponsor" class="flow-card">
+    <div class="flow-header">
+      <span class="flow-header-title">Sponsor / Supplier Dinner Show Flow</span>
+      <span class="flow-header-date">Tuesday · May 5, 2026</span>
+    </div>
+    <table class="flow-table">
+      <thead><tr><th>Time</th><th>Item</th><th>Presenter / Notes</th></tr></thead>
+      <tbody>
+        <tr><td class="time-cell">5:50 PM</td><td class="item-cell">Doors Open — Pre-Event Music</td><td class="presenter-cell">Spotify playlist</td></tr>
+        <tr><td class="time-cell">6:05 PM</td><td class="item-cell"><strong>Welcome</strong></td><td class="presenter-cell">Jeff Houghton (Host)</td></tr>
+        <tr><td class="time-cell">6:06 PM</td><td class="item-cell">Dinner Service (35 min)</td><td class="presenter-cell">Mic: Jeff Houghton, Darren, Tom, Chris Stewart, Eric Long, Brad Haga</td></tr>
+        <tr><td class="time-cell">6:41 PM</td><td class="item-cell">Jeff Intro → Darren</td><td class="presenter-cell">Jeff Houghton</td></tr>
+        <tr><td class="time-cell">6:42 PM</td><td class="item-cell"><strong>Executive Welcome + Toast</strong></td><td class="presenter-cell">Darren Rebelez · 5x champagne glasses on stage</td></tr>
+        <tr><td class="time-cell">6:43 PM</td><td class="item-cell"><strong>Sponsorship Address</strong></td><td class="presenter-cell">Tom Brennan · Casey's stats, new sponsors, 50+ yr history</td></tr>
+        <tr><td class="time-cell">6:49 PM</td><td class="item-cell"><strong>Award #1: Commitment</strong> — PepsiCo 🏆</td><td class="presenter-cell">Brad Haga · Nominees: PepsiCo, Phillip Morris, Westrock</td></tr>
+        <tr><td class="time-cell">6:54 PM</td><td class="item-cell"><strong>Award #2: Authenticity</strong> — Keurig Dr. Pepper 🏆</td><td class="presenter-cell">Chris Stewart · Nominees: Altria, Anheuser-Busch, Keurig Dr. Pepper</td></tr>
+        <tr><td class="time-cell">6:59 PM</td><td class="item-cell"><strong>Award #3: Respect</strong> — General Mills 🏆</td><td class="presenter-cell">Eric Long · Nominees: Burke, General Mills, Reynolds</td></tr>
+        <tr><td class="time-cell">7:04 PM</td><td class="item-cell"><strong>Award #4: Evolving</strong> — David's 🏆</td><td class="presenter-cell">Brad Haga · Nominees: David's, Sazerac, Sunny Sky</td></tr>
+        <tr><td class="time-cell">7:09 PM</td><td class="item-cell"><strong>Award #5: Service</strong> — Monster Energy 🏆</td><td class="presenter-cell">Chris Stewart · Nominees: Mondelez, Monster Energy, Rich's</td></tr>
+        <tr><td class="time-cell">7:14 PM</td><td class="item-cell"><strong>Award #6: Supplier MVP</strong> — Gabe Landry (Altria) 🏆</td><td class="presenter-cell">Eric Long · Nominees: Gabe Landry, Jessica McMillan, Amy Thompson, Cale Truhlsen</td></tr>
+        <tr><td class="time-cell">7:19 PM</td><td class="item-cell">Suppliers of the Year Teaser · Final Congratulations</td><td class="presenter-cell">Tom Brennan → Jeff Houghton</td></tr>
+        <tr><td class="time-cell">7:21 PM</td><td class="item-cell"><strong>Closing</strong></td><td class="presenter-cell">Jeff Houghton</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- VENDORS -->
+  <div id="vendors">
+    <div class="section-head">
+      <span class="section-icon">🔧</span>
+      <span class="section-title">Vendors & Partners</span>
+    </div>
+    <div class="flow-card">
+      <table class="vendor-table">
+        <thead><tr><th>Company</th><th>Role</th><th>Location</th></tr></thead>
+        <tbody>
+          <tr><td>FOH Productions</td><td>General Session AV Vendor</td><td>KCCC Grand Ballroom</td></tr>
+          <tr><td>Smart City</td><td>Power & Internet</td><td>KCCC</td></tr>
+          <tr><td>HMX Live</td><td>GS Rigging</td><td>KCCC Grand Ballroom</td></tr>
+          <tr><td>Andrew Douglas, SRC</td><td>Production Rigger</td><td>KCCC</td></tr>
+          <tr><td>Kansas City Convention Center (KCCC)</td><td>Venue — General Session + Expo Hall</td><td>Kansas City, MO</td></tr>
+          <tr><td>Loews</td><td>Breakout Venue + Hotel</td><td>Kansas City, MO</td></tr>
+          <tr><td>Marriott</td><td>Breakout Venue + Hotel</td><td>Kansas City, MO</td></tr>
+          <tr><td>Hilton</td><td>Hotel</td><td>Kansas City, MO</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MEALS -->
+  <div id="meals">
+    <div class="section-head">
+      <span class="section-icon">🍽️</span>
+      <span class="section-title">Crew Meals — GS Team</span>
+      <span class="section-sub">Backstage Grand Ballroom 2501A-C · Count ~43–50</span>
+    </div>
+    <div class="flow-card">
+      <div class="meal-row">
+        <div class="meal-date">May 1–2</div>
+        <div class="meal-time">7:00 AM – 10:00 PM</div>
+        <div><div class="meal-function">Crew Beverage Break (all day)</div><div class="meal-location">Coffee, tea, soda, water — refresh throughout</div></div>
+        <div class="meal-count">50 pax</div>
+      </div>
+      <div class="meal-row">
+        <div class="meal-date">May 3</div>
+        <div class="meal-time">11:30 AM – 1:00 PM</div>
+        <div><div class="meal-function">Crew Lunch — SW Boulevard Buffet</div><div class="meal-location">Fajita chicken, rice, beans, tortillas, tres leches · ⚠️ 1 vegan, 1 GF, 1 no pork</div></div>
+        <div class="meal-count">43 pax</div>
+      </div>
+      <div class="meal-row">
+        <div class="meal-date">May 4</div>
+        <div class="meal-time">6:00 – 7:30 AM</div>
+        <div><div class="meal-function">Crew Breakfast Buffet</div><div class="meal-location">Eggs, french toast, bacon, bagels, fruit, coffee · ⚠️ 1 vegan, 1 GF, 1 no pork, 1 dairy free</div></div>
+        <div class="meal-count">43 pax</div>
+      </div>
+      <div class="meal-row">
+        <div class="meal-date">May 5</div>
+        <div class="meal-time">6:30 – 7:15 PM</div>
+        <div><div class="meal-function">Crew Dinner — Italian Buffet</div><div class="meal-location">Chicken piccata, beef medallions, pasta, tiramisu · ⚠️ 1 vegan, 1 GF, 1 no pork, 1 dairy free</div></div>
+        <div class="meal-count">43 pax</div>
+      </div>
+      <div class="meal-row">
+        <div class="meal-date">May 6</div>
+        <div class="meal-time">12:00 – 1:00 PM</div>
+        <div><div class="meal-function">Crew Lunch — Wraps & Salad Buffet</div><div class="meal-location">Fried chicken caesar, turkey avocado, veggie wraps · to-go containers available · ⚠️ 1 vegan, 1 GF</div></div>
+        <div class="meal-count">35 pax</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BREAKOUT SESSIONS -->
+  <div class="section-head">
+    <span class="section-icon">📚</span>
+    <span class="section-title">Educational Breakout Sessions</span>
+    <span class="section-sub">Loews — May 5</span>
+  </div>
+  <div class="flow-card">
+    <table class="vendor-table">
+      <thead><tr><th>Session</th><th>Time</th><th>Location</th><th>Divisions</th><th>Presenter(s)</th></tr></thead>
+      <tbody>
+        <tr><td>Maximizing Your Team</td><td>8:15 – 9:45 AM</td><td>City Beautiful D/E</td><td>D2 (322) & D3 (300)</td><td>TJ Heller / Julie Burke</td></tr>
+        <tr><td>Building Effective Teams</td><td>8:15 – 9:45 AM</td><td>Neptune</td><td>D1 (260) & D4 (297)</td><td>Sherrie Hart / Wesley Smith / Hailey Duff / Tara Antle</td></tr>
+        <tr><td>Maximizing Your Team</td><td>10:00 – 11:15 AM</td><td>City Beautiful D/E</td><td>D1 & D4</td><td>Michelle Means / Julie Burke</td></tr>
+        <tr><td>Building Effective Teams</td><td>10:00 – 11:15 AM</td><td>Neptune</td><td>D2 & D3</td><td>Hailey Duff / Tara Antle</td></tr>
+        <tr><td>Mastering Controllable Expenses</td><td>TBD</td><td>TBD</td><td>All</td><td>TBD</td></tr>
+        <tr><td>Stocking Success: Inventory Excellence</td><td>TBD</td><td>TBD</td><td>All</td><td>TBD</td></tr>
+        <tr><td>Kitchen Momentum: Streamline for Success</td><td>TBD</td><td>TBD</td><td>All</td><td>TBD</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="updated">
+    Unbridled Productions &nbsp;·&nbsp; Casey's C3 2026 &nbsp;·&nbsp; Production Runsheet &nbsp;·&nbsp;
+    <span class="live-pill"><span class="live-dot"></span>Always Latest Version</span>
+    &nbsp;·&nbsp; Share this link — updates auto-refresh for all crew
+  </div>
+
+</div>
+
+<script>
+// Auto-update "last updated" timestamp
+document.addEventListener('DOMContentLoaded', () => {
+  const el = document.querySelector('.updated');
+  if (el) {
+    const now = new Date();
+    const opts = {timeZone:'America/Denver', month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit'};
+    el.innerHTML += `&nbsp;·&nbsp; Page loaded: ${now.toLocaleString('en-US', opts)} MT`;
+  }
+});
+</script>
+
+</body>
+</html>
