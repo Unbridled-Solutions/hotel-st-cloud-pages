@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Business of Generosity · The Unbridled Way</title>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Lora:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#1f2b3f;
+  --blue:#5a8ba7;
+  --gray:#4b4f54;
+  --cream:#f7f5f0;
+  --gold:#ba8032;
+  --green:#4caf7d;
+  --purple:#7b6fa0;
+  --border:#ddd8cf;
+  --white:#fff;
+  --text:#2e3338;
+  --light-text:#7a8490;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--cream);color:var(--text);font-family:'Lora',serif;font-size:18px;line-height:1.85}
+
+/* TOP BAR */
+.topbar{background:var(--navy);padding:.75rem clamp(1.5rem,5vw,3rem);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar-brand{font-family:'Josefin Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--white);text-decoration:none}
+.topbar-brand span{color:var(--blue)}
+.topbar-meta{font-family:'Josefin Sans',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#4a6a85}
+
+/* OPENER */
+.chapter-opener{min-height:95vh;background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:clamp(5rem,10vw,8rem) clamp(1.5rem,6vw,4rem);position:relative;overflow:hidden}
+.chapter-opener::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,rgba(123,111,160,.12) 0%,transparent 65%)}
+.chapter-opener::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.chapter-eyebrow{font-family:'Josefin Sans',sans-serif;font-size:10px;letter-spacing:5px;text-transform:uppercase;color:var(--blue);margin-bottom:1.5rem}
+.chapter-number{font-family:'Josefin Sans',sans-serif;font-size:clamp(80px,15vw,160px);font-weight:700;color:rgba(123,111,160,.07);line-height:1;position:absolute;top:50%;left:50%;transform:translate(-50%,-60%);letter-spacing:-5px;pointer-events:none;user-select:none}
+.chapter-title{font-family:'Josefin Sans',sans-serif;font-size:clamp(32px,6vw,72px);font-weight:700;color:var(--white);line-height:1.08;letter-spacing:-1px;margin-bottom:1.5rem;position:relative}
+.chapter-title em{color:var(--gold);font-style:normal}
+.chapter-subtitle{font-family:'Lora',serif;font-size:clamp(16px,2vw,21px);color:#8aaabb;max-width:660px;line-height:1.65;font-style:italic;position:relative}
+.scroll-hint{margin-top:3rem;font-family:'Josefin Sans',sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#3a5a70;position:relative;animation:nudge 2s ease-in-out infinite}
+@keyframes nudge{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
+
+/* READING LAYOUT */
+.chapter-body{max-width:740px;margin:0 auto;padding:clamp(4rem,8vw,7rem) clamp(1.5rem,5vw,2.5rem)}
+
+/* SECTION BREAK — internal h1-style marker */
+.section-break{text-align:center;margin:5rem 0 4rem;padding-top:4rem;border-top:1px solid var(--border)}
+.section-break-eyebrow{font-family:'Josefin Sans',sans-serif;font-size:10px;letter-spacing:5px;text-transform:uppercase;color:var(--gold);margin-bottom:1rem}
+.section-break-title{font-family:'Josefin Sans',sans-serif;font-size:clamp(26px,4vw,48px);font-weight:700;color:var(--navy);letter-spacing:-1px;line-height:1.1;margin-bottom:.75rem}
+.section-break-title em{color:var(--blue);font-style:normal}
+.section-break-sub{font-family:'Lora',serif;font-size:clamp(15px,2vw,18px);font-style:italic;color:var(--light-text);max-width:540px;margin:0 auto;line-height:1.7}
+
+/* TYPOGRAPHY */
+.dropcap::first-letter{font-family:'Josefin Sans',sans-serif;font-size:5.5em;font-weight:700;float:left;line-height:.78;padding-right:.12em;margin-top:.08em;color:var(--navy)}
+p{margin-bottom:1.65rem;color:var(--text)}
+p.lead{font-size:clamp(18px,2.2vw,22px);color:var(--navy);font-weight:400;line-height:1.75;margin-bottom:2rem}
+h2{font-family:'Josefin Sans',sans-serif;font-size:clamp(22px,3vw,32px);font-weight:700;color:var(--navy);letter-spacing:-.5px;margin:3.5rem 0 1.25rem;line-height:1.2}
+h2 em{color:var(--blue);font-style:normal}
+h3{font-family:'Josefin Sans',sans-serif;font-size:13px;font-weight:700;color:var(--blue);letter-spacing:1.5px;margin:2.5rem 0 1rem;text-transform:uppercase}
+
+/* PULL QUOTES */
+.pullquote{border-left:4px solid var(--gold);padding:1.25rem 1.75rem;margin:3rem 0;background:rgba(186,128,50,.04);border-radius:0 8px 8px 0}
+.pullquote p{font-size:clamp(18px,2.5vw,24px);font-style:italic;color:var(--navy);line-height:1.55;margin:0;font-weight:400}
+.pullquote cite{display:block;margin-top:.75rem;font-family:'Josefin Sans',sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);font-style:normal}
+
+/* CALLOUT */
+.callout{background:var(--navy);border-radius:12px;padding:clamp(1.75rem,4vw,2.75rem);margin:3rem 0;position:relative;overflow:hidden}
+.callout::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--blue))}
+.callout-eyebrow{font-family:'Josefin Sans',sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:1rem}
+.callout p{color:#c8d4dc;margin-bottom:1rem;font-size:16px;line-height:1.8}
+.callout p:last-child{margin-bottom:0}
+.callout strong{color:var(--white)}
+
+/* IMPACT TOTALS */
+.impact-total{background:var(--navy);border-radius:16px;padding:clamp(2rem,5vw,3.5rem);margin:3rem 0;text-align:center;position:relative;overflow:hidden}
+.impact-total::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--blue),var(--gold))}
+.impact-total-num{font-family:'Josefin Sans',sans-serif;font-size:clamp(52px,10vw,96px);font-weight:700;color:var(--gold);line-height:1;margin-bottom:.5rem}
+.impact-total-label{font-family:'Josefin Sans',sans-serif;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#4a6a85;margin-bottom:1.5rem}
+.impact-total p{font-family:'Lora',serif;font-size:16px;color:#8aaabb;line-height:1.7;max-width:480px;margin:0 auto;font-style:italic}
+
+/* STAT GRIDS */
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:3rem 0}
+@media(max-width:600px){.stat-grid{grid-template-columns:1fr 1fr}}
+.stat-block{background:var(--white);border-radius:12px;padding:1.5rem 1.25rem;text-align:center;border-top:3px solid var(--gold)}
+.stat-number{font-family:'Josefin Sans',sans-serif;font-size:clamp(28px,5vw,44px);font-weight:700;color:var(--navy);line-height:1;margin-bottom:.35rem}
+.stat-label{font-family:'Josefin Sans',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--light-text);line-height:1.4}
+.stat-source{font-family:'Josefin Sans',sans-serif;font-size:9px;letter-spacing:1px;color:var(--border);margin-top:.4rem}
+
+/* PROGRAM CARDS */
+.program-card{background:var(--white);border-radius:16px;padding:clamp(2rem,4vw,2.75rem);margin:2.5rem 0;border-left:5px solid var(--blue);box-shadow:0 2px 16px rgba(0,0,0,.05)}
+.program-card.gold{border-left-color:var(--gold)}
+.program-card.green{border-left-color:var(--green)}
+.program-card.purple{border-left-color:var(--purple)}
+.program-card.teal{border-left-color:#4abcb0}
+.program-header{display:flex;align-items:flex-start;gap:1rem;margin-bottom:1.25rem}
+.program-icon{font-size:28px;line-height:1;flex-shrink:0;margin-top:.1em}
+.program-name{font-family:'Josefin Sans',sans-serif;font-size:clamp(18px,2.5vw,24px);font-weight:700;color:var(--navy);line-height:1.15;margin-bottom:.25rem}
+.program-location{font-family:'Josefin Sans',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--light-text)}
+.program-card p{font-size:16px;color:var(--gray);line-height:1.75;margin-bottom:1rem}
+.program-card p:last-child{margin-bottom:0}
+.prog-stats{display:flex;flex-wrap:wrap;gap:1rem;margin:1.25rem 0}
+.prog-stat{background:var(--cream);border-radius:8px;padding:.6rem 1rem;text-align:center;min-width:100px}
+.prog-stat-num{font-family:'Josefin Sans',sans-serif;font-size:20px;font-weight:700;color:var(--navy)}
+.prog-stat-lbl{font-family:'Josefin Sans',sans-serif;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--light-text);margin-top:.15rem}
+.person-quote{background:rgba(90,139,167,.05);border-radius:12px;padding:1.5rem 1.75rem;margin:1.5rem 0;border-top:2px solid rgba(90,139,167,.2)}
+.person-quote p{font-size:15px;font-style:italic;color:var(--navy);line-height:1.7;margin:0}
+.person-quote cite{display:block;margin-top:.6rem;font-family:'Josefin Sans',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--blue);font-style:normal}
+
+/* FAITHFUL STEPS BANNER */
+.faithful-banner{background:linear-gradient(135deg,var(--navy) 0%,#2a3f5f 100%);border-radius:16px;padding:clamp(2rem,5vw,3.5rem);margin:4rem 0;text-align:center;position:relative;overflow:hidden}
+.faithful-banner::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(186,128,50,.15) 0%,transparent 60%)}
+.faithful-banner-eyebrow{font-family:'Josefin Sans',sans-serif;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);margin-bottom:1rem;position:relative}
+.faithful-banner h2{font-family:'Josefin Sans',sans-serif;font-size:clamp(28px,5vw,52px);font-weight:700;color:var(--white);letter-spacing:-1px;margin:0 0 1rem;position:relative}
+.faithful-banner p{font-family:'Lora',serif;font-size:clamp(15px,2vw,18px);color:#8aaabb;max-width:520px;margin:0 auto;line-height:1.7;font-style:italic;position:relative}
+
+/* RESEARCH BLOCK */
+.research-block{background:rgba(90,139,167,.05);border-radius:12px;padding:1.75rem 2rem;margin:2.5rem 0;border-left:4px solid var(--blue)}
+.research-label{font-family:'Josefin Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--blue);margin-bottom:.75rem;font-weight:700}
+.research-block p{font-size:15px;color:var(--gray);line-height:1.75;margin-bottom:.75rem}
+.research-block p:last-child{margin-bottom:0}
+.research-block em{color:var(--navy);font-style:normal;font-weight:600}
+.citation{font-family:'Josefin Sans',sans-serif;font-size:10px;color:var(--light-text);letter-spacing:.5px;margin-top:.5rem;display:block}
+
+/* PERSON CARD */
+.person-card{background:var(--white);border-radius:16px;padding:clamp(2rem,4vw,3rem);margin:3.5rem 0;border-left:5px solid var(--blue);box-shadow:0 2px 20px rgba(0,0,0,.06)}
+.person-name{font-family:'Josefin Sans',sans-serif;font-size:clamp(20px,3vw,28px);font-weight:700;color:var(--navy);margin-bottom:.25rem}
+.person-role{font-family:'Josefin Sans',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--blue);margin-bottom:1.5rem}
+.person-card p{font-size:16px;color:var(--gray);line-height:1.8;margin-bottom:1rem}
+.person-card p:last-child{margin-bottom:0}
+
+/* SCRIPTURE */
+.scripture{background:rgba(90,139,167,.06);border-radius:12px;padding:2rem 2.25rem;margin:3rem 0;border-top:2px solid rgba(90,139,167,.25)}
+.scripture-ref{font-family:'Josefin Sans',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--blue);margin-bottom:1rem}
+.scripture p{font-size:clamp(16px,2vw,20px);font-style:italic;color:var(--navy);line-height:1.7;margin:0}
+
+/* DIVIDER */
+.divider{text-align:center;margin:3.5rem 0;color:var(--gold);font-size:14px;letter-spacing:.5em}
+
+/* REFLECTION */
+.reflection{background:var(--navy);border-radius:16px;padding:clamp(2rem,5vw,3.5rem);margin:5rem 0 2rem}
+.reflection::before{content:'';display:block;height:2px;background:linear-gradient(90deg,var(--gold),transparent);margin-bottom:2.5rem}
+.reflection-eyebrow{font-family:'Josefin Sans',sans-serif;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);margin-bottom:2rem}
+.reflection-q{display:flex;gap:1.25rem;margin-bottom:2rem;align-items:flex-start}
+.reflection-q:last-child{margin-bottom:0}
+.q-num{font-family:'Josefin Sans',sans-serif;font-size:22px;font-weight:700;color:var(--gold);line-height:1;flex-shrink:0;width:2rem;text-align:center;padding-top:.1em}
+.q-text{font-family:'Lora',serif;font-size:clamp(15px,1.8vw,18px);font-style:italic;color:#c8d4dc;line-height:1.7}
+.q-sub{display:block;font-family:'Josefin Sans',sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#4a6a85;font-style:normal;margin-top:.5rem}
+
+/* NAV */
+.chapter-nav{display:flex;justify-content:space-between;align-items:center;padding:2.5rem clamp(1.5rem,5vw,3rem);border-top:1px solid var(--border);margin-top:4rem}
+.nav-link{font-family:'Josefin Sans',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--blue);text-decoration:none}
+.nav-link:hover{color:var(--gold)}
+.nav-count{font-family:'Josefin Sans',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--light-text)}
+
+@media(max-width:600px){.stat-grid{grid-template-columns:1fr 1fr}.prog-stats{gap:.65rem}}
+@media print{.topbar,.chapter-nav,.scroll-hint{display:none}body{font-size:14px}.chapter-opener{min-height:auto;padding:3rem 1.5rem}}
+</style>
+</head>
+<body>
+
+<a href="javascript:history.back()" title="Go back" style="position:fixed;bottom:1.25rem;left:1.25rem;z-index:9999;background:#1f2b3f;color:#ba8032;border:1px solid #ba8032;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:20px;box-shadow:0 2px 12px rgba(0,0,0,.35);opacity:.92" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.92">←</a>
+
+<nav class="topbar">
+  <a href="unbridled-way-toc.html" class="topbar-brand">The Unbridled Way <span>·</span> Stan Bullis</a>
+  <div class="topbar-meta">Part III · A Business of Generosity</div>
+</nav>
+
+<header class="chapter-opener">
+  <div class="chapter-number">III</div>
+  <div class="chapter-eyebrow">Part Three · A Business of Generosity</div>
+  <h1 class="chapter-title">The Proof<br>Is in the <em>People</em></h1>
+  <p class="chapter-subtitle">Twenty-five years. $10.5 million. Six communities on three continents. And one truth that no annual report can capture: the most powerful generosity is the kind nobody counts.</p>
+  <div class="scroll-hint">↓ &nbsp; keep reading</div>
+</header>
+
+<main class="chapter-body">
+
+  <!-- ═══════════════════════════════════════════
+       SECTION 1: THE LONELINESS EPIDEMIC
+       Sets the human problem before the solution
+  ════════════════════════════════════════════ -->
+
+  <p class="lead">We are in the middle of a loneliness epidemic. That is not a metaphor, and it is not hyperbole. In 2023, U.S. Surgeon General Vivek Murthy declared it a public health crisis — and the numbers behind that declaration are worth sitting with before we talk about anything else.</p>
+
+  <p class="dropcap">Approximately half of American adults report experiencing loneliness. Not occasionally. Chronically. Cigna's longitudinal research found that figure climbed from 46% to 58% between 2018 and 2023 — twelve points in five years. That means when you look around a room of any size, more than half the people in it are carrying something invisible and heavy, something that does not show up in a performance review or a quarterly report.</p>
+
+  <p>Here is what that loneliness actually costs a human body. In 2010, Dr. Julianne Holt-Lunstad published a meta-analysis in <em>PLOS Medicine</em> — 148 studies, over 300,000 participants — and found that people with adequate social relationships had a 50% greater likelihood of survival than those with poor ones. The mortality equivalent of chronic loneliness: smoking fifteen cigarettes a day. More dangerous than obesity. More dangerous than physical inactivity.</p>
+
+  <p>Add this: in 1978, psychologists Pauline Clance and Suzanne Imes identified the "impostor phenomenon" — the experience of believing you are not as competent as others perceive you to be. They initially studied high-achieving women. The follow-on research found it everywhere. Current estimates: roughly 70% of people experience it at some meaningful point in their lives. Three quarters of the people you lead, work alongside, and love are quietly convinced they are frauds. They are performing. And underneath the performance, they are exhausted.</p>
+
+  <div class="stat-grid">
+    <div class="stat-block">
+      <div class="stat-number">58%</div>
+      <div class="stat-label">of Americans chronically lonely</div>
+      <div class="stat-source">Cigna, 2023</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-number">50%</div>
+      <div class="stat-label">lower survival odds for the socially isolated</div>
+      <div class="stat-source">Holt-Lunstad, PLOS Medicine, 2010</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-number">70%</div>
+      <div class="stat-label">experience impostor syndrome at some point</div>
+      <div class="stat-source">Clance & Imes, 1978 — widely replicated</div>
+    </div>
+  </div>
+
+  <p>Now hold all of that in one hand. And in the other, hold this question: what if one person — one person — simply refused to believe the worst about you? What if one person saw through the performance, looked past the inconsistencies, and kept showing up anyway? What would that do to the loop?</p>
+
+  <p>Robert Rosenthal and Lenore Jacobson answered that question in a classroom in 1968. They told elementary school teachers that certain randomly-selected students had been identified as "intellectual bloomers" poised for significant growth. Eight months later, those students showed measurably greater IQ gains than their peers. The teachers hadn't tutored them differently. They had simply <em>expected more</em> — and that expectation, transmitted through tone, attention, and warmth, changed outcomes. This became known as the Pygmalion Effect: belief in another person's potential becomes, in part, a self-fulfilling prophecy.</p>
+
+  <div class="research-block">
+    <div class="research-label">The Research · Psychological Safety & Team Performance</div>
+    <p>Amy Edmondson at Harvard found that the single most important factor in team performance is <em>psychological safety</em> — the shared belief that you will not be punished for speaking up, taking a risk, or admitting a mistake. Google's Project Aristotle confirmed it across 180 teams: psychological safety was the #1 predictor of effectiveness, more important than individual talent, resources, or structure.</p>
+    <span class="citation">Edmondson, A. (1999). Administrative Science Quarterly, 44(2). · Rozovsky, J. (2015). Google re:Work.</span>
+  </div>
+
+  <p>One person who genuinely believes in you doesn't just feel good. It changes your neurochemistry — oxytocin rises, threat responses quiet, the prefrontal cortex engages. You literally think more clearly. You take more initiative. You become more of who you actually are.</p>
+
+  <p>That is the backdrop for everything that follows in this section. It is why what we built with UnbridledACTS matters. It is why Lindsay Wyss matters. And it is why Lorelei and Megg matter. The numbers are impressive. The people are the point.</p>
+
+  <div class="divider">✦</div>
+
+  <!-- ═══════════════════════════════════════════
+       SECTION 2: UNBRIDLEDACTS — THE NUMBERS
+  ════════════════════════════════════════════ -->
+
+  <div class="section-break">
+    <div class="section-break-eyebrow">Twenty-Five Years · $10.5 Million</div>
+    <div class="section-break-title">The <em>Proof</em> Is in the People</div>
+    <p class="section-break-sub">Anyone can write a mission statement. What's harder — and what most companies never do — is let people look behind the curtain twenty-five years later and see if it's still true.</p>
+  </div>
+
+  <p>UnbridledACTS is our 501(c)3. Funded by twenty percent of net profits from thirty-plus Unbridled companies — not what's left over after expenses, not the surplus from a good quarter. The <em>first</em> twenty percent, before anything else gets distributed. That's the discipline. That's the commitment we made when the company was small and kept when it got bigger.</p>
+
+  <p>In 2025 — our twenty-fifth year — UnbridledACTS invested <strong>$1,627,713</strong> directly into human lives. Not overhead. Not administration. People.</p>
+
+  <div class="impact-total">
+    <div class="impact-total-num">$10.5M</div>
+    <div class="impact-total-label">Given directly to causes since founding</div>
+    <p>Not to institutions. Not to government programs. Directly to the humans in front of us — one meal, one counseling session, one housing placement, one family at a time.</p>
+  </div>
+
+  <div class="pullquote">
+    <p>"Faithfulness: the quality of being loyal and steadfast; unwavering."</p>
+    <cite>UnbridledACTS 2025 Theme — Faithful Steps</cite>
+  </div>
+
+  <p>That was our theme in 2025. Not growth. Not scale. Faithfulness. There's a different kind of greatness — the kind that shows up in the same places year after year, with the same people, long after the novelty has worn off. That's what UnbridledACTS is. Twenty-five years of faithful steps.</p>
+
+  <div class="stat-grid">
+    <div class="stat-block">
+      <div class="stat-number">25</div>
+      <div class="stat-label">Years Operating</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-number">$1.6M</div>
+      <div class="stat-label">Invested in 2025</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-number">30+</div>
+      <div class="stat-label">Companies Contributing</div>
+    </div>
+  </div>
+
+  <h2>Six Communities. One Commitment.</h2>
+
+  <p>UnbridledACTS doesn't operate through intermediaries. We don't write a check to a large institution and call it generosity. We go. We send people. We build relationships. We come back. The work is slow, direct, and deeply personal — which is exactly what makes it work.</p>
+
+  <div class="program-card">
+    <div class="program-header">
+      <div class="program-icon">🏠</div>
+      <div>
+        <div class="program-name">The Eagle's Nest</div>
+        <div class="program-location">Colorado · Healing Retreat Home</div>
+      </div>
+    </div>
+    <p>Every organization needs a place where people can exhale. The Eagle's Nest is ours. A retreat and healing home near Denver — the physical center of gravity for everything UnbridledACTS does. Teams come here. Families come here. People who are carrying things they can't put down anywhere else come here.</p>
+    <p>In 2025, the Nest hosted over a hundred gatherings. Retreats built around Life Model Works principles. Family service trips. Team offsites where people got quiet enough to hear themselves think. Countless meals shared around a table — which turns out to be one of the most powerful things you can do for a human being.</p>
+    <div class="prog-stats">
+      <div class="prog-stat"><div class="prog-stat-num">100+</div><div class="prog-stat-lbl">Gatherings in 2025</div></div>
+    </div>
+    <div class="person-quote">
+      <p>"The Nest was more than a place to stay; it was a space that helped bring our families closer."</p>
+      <cite>Liz Hunt · Director of Learning & Development</cite>
+    </div>
+  </div>
+
+  <div class="program-card gold">
+    <div class="program-header">
+      <div class="program-icon">🌍</div>
+      <div>
+        <div class="program-name">Mizizi</div>
+        <div class="program-location">Jinja & Kayunga, Uganda · Holistic Family Transformation</div>
+      </div>
+    </div>
+    <p>The word means "roots" in Swahili. Not intervention, not rescue — roots. Deep, slow, lasting transformation for families living in poverty in Uganda. Bev Harris founded this work out of the same conviction we built the company on: that two are better than one, and that real change happens in relationship, not in programs.</p>
+    <p>In 2025, Mizizi reached a milestone that only comes from fourteen years of faithfulness. The children who entered this program as kids are now adults — lawyers, IT professionals — walking alongside the families behind them. Third-generation impact. The investment we made over a decade ago is multiplying on its own.</p>
+    <div class="prog-stats">
+      <div class="prog-stat"><div class="prog-stat-num">$147K</div><div class="prog-stat-lbl">Invested in 2025</div></div>
+      <div class="prog-stat"><div class="prog-stat-num">14+</div><div class="prog-stat-lbl">Years of Relationship</div></div>
+      <div class="prog-stat"><div class="prog-stat-num">10</div><div class="prog-stat-lbl">Children in New Homeschool</div></div>
+    </div>
+    <div class="person-quote">
+      <p>"Our dream has always been to live out the truth that two are better than one."</p>
+      <cite>Bev Harris · Mizizi Founder</cite>
+    </div>
+    <p style="font-size:15px;color:var(--light-text);margin-top:1rem;margin-bottom:0"><em>Moreen faced a severe HIV battle in 2025 and came through. Julius built HIV care systems that now serve the broader community. Esther built her own home and is teaching neighbors to farm. Jackson is expanding a youth scholarship program. These aren't case studies. These are people we know by name.</em></p>
+  </div>
+
+  <div class="program-card green">
+    <div class="program-header">
+      <div class="program-icon">💙</div>
+      <div>
+        <div class="program-name">Love Hard</div>
+        <div class="program-location">San Diego, CA · Families Who Have Lost a Child</div>
+      </div>
+    </div>
+    <p>Jen and John Kamins lost their son Cash. Instead of collapsing inward, they built an organization for every family who has stood in that same impossible place. Love Hard supports grieving families with grants, counseling, and retreats — and partners with Ronald McDonald House and Project Sol Flower to go further than they could alone.</p>
+    <p>In 2025, they ran a 5K that raised $33,000 and drew 281 runners. They covered $3,600 in grief counseling. They supported seven families. Small numbers, maybe, by the metrics most people use. But there is no small number when the person being served just lost a child.</p>
+    <div class="prog-stats">
+      <div class="prog-stat"><div class="prog-stat-num">7</div><div class="prog-stat-lbl">Families Supported</div></div>
+      <div class="prog-stat"><div class="prog-stat-num">281</div><div class="prog-stat-lbl">5K Runners</div></div>
+      <div class="prog-stat"><div class="prog-stat-num">$33K</div><div class="prog-stat-lbl">5K Raised</div></div>
+    </div>
+    <div class="person-quote">
+      <p>"You pulled us from a hole we didn't know how we were going to climb out of, especially at a time when our grief over the loss of our son was so fresh."</p>
+      <cite>Love Hard Family Grant Recipient</cite>
+    </div>
+  </div>
+
+  <div class="program-card purple">
+    <div class="program-header">
+      <div class="program-icon">🌎</div>
+      <div>
+        <div class="program-name">Transforma</div>
+        <div class="program-location">San José, Costa Rica · Refugees & Survivors</div>
+      </div>
+    </div>
+    <p>Vanessa Pavely built Transforma to serve the people most societies have decided to forget: refugees, Nicaraguan immigrants living in ultra-poverty, survivors of the sex trade and domestic violence. Partners since 2019. In that time we've sent twenty-one volunteers on four service trips and given $265,000 directly to families who had almost nothing.</p>
+    <div class="prog-stats">
+      <div class="prog-stat"><div class="prog-stat-num">$265K</div><div class="prog-stat-lbl">Given to Families</div></div>
+      <div class="prog-stat"><div class="prog-stat-num">21</div><div class="prog-stat-lbl">U.S. Volunteers</div></div>
+      <div class="prog-stat"><div class="prog-stat-num">4</div><div class="prog-stat-lbl">Service Trips</div></div>
+    </div>
+    <div class="person-quote">
+      <p>"Together, we are loving people to life — creating a community where the lost and forgotten are seen."</p>
+      <cite>Vanessa Pavely · Transforma Founder</cite>
+    </div>
+  </div>
+
+  <div class="program-card teal">
+    <div class="program-header">
+      <div class="program-icon">🏘️</div>
+      <div>
+        <div class="program-name">Fremont County</div>
+        <div class="program-location">Cañon City, CO · Housing, Recovery & Mental Health</div>
+      </div>
+    </div>
+    <p>When we made the decision to invest in Cañon City — the buildings, the hotel, the coffee shop, the event spaces — we weren't just betting on real estate. We were betting on a community. And a bet on a community means you have to care about all of it. Not just the beautiful parts.</p>
+    <p>Our Fremont County initiative is a long-term housing and recovery commitment. It's early. It's hard. And we're in it.</p>
+    <div class="prog-stats">
+      <div class="prog-stat"><div class="prog-stat-num">$20K</div><div class="prog-stat-lbl">Invested in 2025</div></div>
+    </div>
+  </div>
+
+  <div class="program-card">
+    <div class="program-header">
+      <div class="program-icon">🧠</div>
+      <div>
+        <div class="program-name">Identity Fund</div>
+        <div class="program-location">Internal · Team Members & Extended Family</div>
+      </div>
+    </div>
+    <p>This one doesn't make the press release. It doesn't get a spotlight at the gala. But it might be the most important thing we do — and it connects directly to the loneliness and impostor syndrome data we opened with.</p>
+    <p>The Identity Fund covers fifty percent of the cost of professional counseling for our team members and their extended family. No questions asked about why. No stigma. No performance review tied to whether you went. You go because you're human and humans need help processing the weight of being alive. We've covered over $865,000 in counseling costs for more than two hundred people.</p>
+    <div class="prog-stats">
+      <div class="prog-stat"><div class="prog-stat-num">$865K</div><div class="prog-stat-lbl">Cumulative Investment</div></div>
+      <div class="prog-stat"><div class="prog-stat-num">200+</div><div class="prog-stat-lbl">People Served</div></div>
+      <div class="prog-stat"><div class="prog-stat-num">50%</div><div class="prog-stat-lbl">Counseling Coverage</div></div>
+    </div>
+  </div>
+
+  <div class="program-card gold">
+    <div class="program-header">
+      <div class="program-icon">🤝</div>
+      <div>
+        <div class="program-name">Response Fund</div>
+        <div class="program-location">National · Crisis Response for Team & Community</div>
+      </div>
+    </div>
+    <p>Sometimes people don't need a program. They need someone to show up with a check before the lights go off or the car gets repossessed or the medical bill sends everything sideways. The Response Fund is our rapid-response arm — direct grants to individuals in acute crisis, no bureaucracy, no three-month waiting list.</p>
+    <div class="prog-stats">
+      <div class="prog-stat"><div class="prog-stat-num">$350K</div><div class="prog-stat-lbl">Cumulative Grants</div></div>
+      <div class="prog-stat"><div class="prog-stat-num">154</div><div class="prog-stat-lbl">Applicants Served</div></div>
+      <div class="prog-stat"><div class="prog-stat-num">$71K</div><div class="prog-stat-lbl">Distributed in 2025</div></div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <div class="callout-eyebrow">The Model in Motion</div>
+    <p><strong>20% Philanthropy</strong> — First fruits, always. Not surplus. Not what's left. The first slice. UnbridledACTS is funded before the business takes its share.</p>
+    <p><strong>20% Reinvestment</strong> — Stored for the lean years. Joseph's model. Hold the seed so you can scatter in famine when the soil is most fertile and everyone else has stopped planting.</p>
+    <p><strong>60% People & Partners</strong> — The team, the partners, the ecosystem. Competitive pay. Real benefits. A business of generosity starts with how you treat the people closest to you.</p>
+  </div>
+
+  <div class="faithful-banner">
+    <div class="faithful-banner-eyebrow">2025 Annual Theme · UnbridledACTS</div>
+    <h2>Faithful Steps</h2>
+    <p>"Steward what you have toward its highest and best use. Not every year is about growth. Some years are about depth."</p>
+  </div>
+
+  <div class="pullquote">
+    <p>"What would it look like if businesses did what governments are supposed to do — but far more efficiently and effectively?"</p>
+    <cite>Stan Bullis · Founder, Unbridled</cite>
+  </div>
+
+  <p>The $10.5 million didn't happen because we had an unusually good year. It happened because we showed up the same way for twenty-five years in a row. The generosity isn't a cost. It's the engine.</p>
+
+  <div class="divider">✦</div>
+
+  <!-- ═══════════════════════════════════════════
+       SECTION 3: THE GENEROSITY NOBODY COUNTS
+  ════════════════════════════════════════════ -->
+
+  <div class="section-break">
+    <div class="section-break-eyebrow">The Generosity Nobody Counts</div>
+    <div class="section-break-title">One Person Who <em>Believes</em></div>
+    <p class="section-break-sub">Money is the easy part. The generosity that changes a life is rarely financial. It's the person who sees through the performance — and keeps believing anyway.</p>
+  </div>
+
+  <p>There is a scene in Forrest Gump I have never been able to shake. Jenny doesn't have it all together. She carries her own wounds. She is not standing there as a polished example of someone who figured life out. But in that moment on the road, she sees something in Forrest that Forrest cannot yet see in himself. And she calls him toward it.</p>
+
+  <p><em>Run, Forrest. Run.</em></p>
+
+  <p>He ran. He broke the braces off his legs. And then, as only Forrest can tell it: <em>I just kept running.</em></p>
+
+  <p>That is generosity of spirit. It costs nothing financially. It requires something rarer: the willingness to see the best in someone and say it out loud. To believe in a person's mission so completely that their inconsistencies become irrelevant. Not because you are blind to the gaps, but because you have decided the destination matters more than the detours.</p>
+
+  <h2>Her Name Is Lindsay</h2>
+
+  <div class="person-card">
+    <div class="person-name">Lindsay Wyss</div>
+    <div class="person-role">Chief of Staff · General Manager, Hotel St. Cloud · Ten Years and Counting</div>
+    <p>Lindsay is one of those people who makes Cindy and me fearless. That is the only word for it. She believes so deeply in the mission — in what we are trying to do and who we are trying to become — that she is willing to overlook the things that are incongruent. The things that look like a double standard from the outside. The gaps between who we aspire to be and who we are on a hard Tuesday in March.</p>
+    <p>I cannot stress enough what it means to have someone like that. Every day — literally every day — knowing that she has your back is not just comforting. It is fuel. Neurologically, relationally, organizationally. It is what makes it possible to keep going when the profit and loss is telling a story you don't want to read.</p>
+    <p>She ran when we asked her to run. And when we started in Cañon City, she came back. People like that don't come back because of the compensation package.</p>
+  </div>
+
+  <p>For nearly twenty years, Unbridled did the live events and incentive work for Red Robin. Lindsay's father, Ray, had been a VP there — his title was something like Chief Purchaser of Fabulous Things. I walked onto a plane and ran right into him across the aisle. Before we landed he said: <em>Will you do me a favor? Will you interview my daughter Lindsay?</em></p>
+
+  <p>What Ray didn't fully explain was that Lindsay had grown up going on the trips we designed. She knew the Unbridled way before she knew what to call it. We interviewed her. We hired her on the spot. From day one it was symbiotic — she was almost finishing my sentences.</p>
+
+  <div class="callout">
+    <div class="callout-eyebrow">The Arc</div>
+    <p>Lindsay was instrumental in building <strong>Unbridled Wealth</strong>. Instrumental in building <strong>Unbridled Solutions</strong>. Now she is my Chief of Staff and the General Manager of Hotel St. Cloud.</p>
+    <p>Her husband is the assistant principal of the high school. A mother of three. A family making daily, ground-level impact on Main Street — she running the economic engine for hope and hospitality, he raising up the next generation and keeping them in Cañon City.</p>
+    <p><strong>That is a family living out Doing Good by Doing Well</strong> — not as a corporate framework, but as a way of being alive in the world.</p>
+  </div>
+
+  <div class="pullquote">
+    <p>"The power of one person who believes in you — unconditionally, regardless of your faults and mistakes — is an exponent to what you're called to."</p>
+    <cite>Stan Bullis · Founder, Unbridled</cite>
+  </div>
+
+  <div class="divider">✦</div>
+
+  <!-- ═══════════════════════════════════════════
+       SECTION 4: LORELEI AND MEGG
+       [ PLACEHOLDER — STAN'S STORY GOES HERE ]
+  ════════════════════════════════════════════ -->
+
+  <div class="section-break">
+    <div class="section-break-eyebrow">The Closing Story</div>
+    <div class="section-break-title">Lorelei<br>and <em>Megg</em></div>
+    <p class="section-break-sub">[ Stan — drop the story here. I'll weave it in and write the prose around it. ]</p>
+  </div>
+
+  <!-- STORY GOES HERE -->
+
+  <div class="divider">✦</div>
+
+  <!-- ═══════════════════════════════════════════
+       CLOSING + SCRIPTURE
+  ════════════════════════════════════════════ -->
+
+  <h2>The Generosity That Lasts</h2>
+
+  <p>There are two kinds of generosity in this section. The first kind has numbers attached — $10.5 million, $865,000 in counseling, 154 families in crisis reached, Uganda and Costa Rica and Cañon City and San Diego. The model produces it. The twenty percent was always the first allocation, not the last, and twenty-five years of that discipline compounds into something that looks like a miracle if you don't know how it started.</p>
+
+  <p>The second kind has no number. It is the generosity of one person who sees through the performance and calls you higher anyway. Who stays. Who comes back. Who cheers not for the quarterly result, but for the race.</p>
+
+  <p>Both kinds are essential. Both are outputs of the same model — a business that decided, long before it had much to give, that generosity was the engine, not the exhaust.</p>
+
+  <div class="scripture">
+    <div class="scripture-ref">Hebrews 12:1 · NIV</div>
+    <p>"Therefore, since we are surrounded by such a great cloud of witnesses, let us throw off everything that hinders and the sin that so easily entangles. And let us run with perseverance the race marked out for us."</p>
+  </div>
+
+  <p>Lindsay is part of that cloud for me. So is everyone named in these pages. The families in Uganda. The runners at a 5K for a boy named Cash. The women at the Eagle's Nest who finally exhaled. The two hundred people who went to counseling because we made it possible and safe. Lorelei and Megg.</p>
+
+  <p>They are all witnesses. And they are all running their own race — in part because someone showed up and said: <em>I believe in you. Go.</em></p>
+
+  <!-- REFLECTION — single unified block for all of Part III -->
+  <div class="reflection">
+    <div class="reflection-eyebrow">Reflection · Part III · A Business of Generosity</div>
+
+    <div class="reflection-q">
+      <div class="q-num">1</div>
+      <div class="q-text">
+        If your business set aside the first twenty percent — before bonuses, before reinvestment, before anything else — what would that discipline change about how you run it?
+        <span class="q-sub">Be honest. The constraint is the point.</span>
+      </div>
+    </div>
+
+    <div class="reflection-q">
+      <div class="q-num">2</div>
+      <div class="q-text">
+        Is there a Lindsay in your life — someone who believed in you before you believed in yourself, who stayed through the inconsistencies? Have you told them what that meant?
+        <span class="q-sub">Name them. Then call them.</span>
+      </div>
+    </div>
+
+    <div class="reflection-q">
+      <div class="q-num">3</div>
+      <div class="q-text">
+        Who in your world is waiting for someone to say: <em>I see you. I believe in you. Go.</em> — and are you willing to be that person?
+        <span class="q-sub">The Pygmalion Effect is real. Your belief in someone changes what they become.</span>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<nav class="chapter-nav">
+  <a href="unbridled-way-authenticity-intro.html" class="nav-link">← Part II · Authenticity</a>
+  <div class="nav-count">Part III of III</div>
+  <a href="unbridled-way-toc.html" class="nav-link">Table of Contents →</a>
+</nav>
+
+</body>
+</html>
