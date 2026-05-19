@@ -149,6 +149,36 @@ footer { text-align: center; padding: 2.5rem 1rem 1rem; font-size: 10px; letter-
     </div>
   </div>
 
+  <!-- STAGE INPUT -->
+  <div class="input-card" style="margin-top:0;margin-bottom:1.5rem;border-top:2px solid var(--gold)">
+    <span class="input-label">Stage Dimensions <span style="color:var(--muted);font-size:9px;letter-spacing:1px;font-weight:300;text-transform:none">&nbsp;— optional, leave blank if no stage</span></span>
+    <div class="dims">
+      <div class="field">
+        <label>Stage Length</label>
+        <div class="field-wrap">
+          <input type="number" id="stageLength" placeholder="0" min="0" oninput="calculate()" />
+          <span class="field-unit">ft</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Stage Depth</label>
+        <div class="field-wrap">
+          <input type="number" id="stageWidth" placeholder="0" min="0" oninput="calculate()" />
+          <span class="field-unit">ft</span>
+        </div>
+      </div>
+    </div>
+    <div id="stageDisplay" style="display:none">
+      <div class="sqft-display">
+        <div>
+          <div class="sqft-label">Stage Footprint Deducted</div>
+          <div class="sqft-sub">Subtracted from usable floor before calculating seats</div>
+        </div>
+        <div class="sqft-val" id="stageSqft" style="color:#e87a7a">—</div>
+      </div>
+    </div>
+  </div>
+
   <!-- RESULTS -->
   <div class="results-label">Capacity by Seating Style</div>
 
@@ -259,23 +289,36 @@ footer { text-align: center; padding: 2.5rem 1rem 1rem; font-size: 10px; letter-
 function calculate() {
   const len = parseFloat(document.getElementById('length').value) || 0;
   const wid = parseFloat(document.getElementById('width').value) || 0;
+  const stageLen = parseFloat(document.getElementById('stageLength').value) || 0;
+  const stageWid = parseFloat(document.getElementById('stageWidth').value) || 0;
 
   const sqft = len * wid;
+  const stageSqft = stageLen * stageWid;
   const sqftDisplay = document.getElementById('sqftDisplay');
   const zeroState = document.getElementById('zeroState');
   const resultsGrid = document.getElementById('resultsGrid');
+  const stageDisplay = document.getElementById('stageDisplay');
 
   if (!len || !wid || sqft <= 0) {
     sqftDisplay.textContent = '—';
     zeroState.style.display = 'block';
     resultsGrid.style.display = 'none';
+    stageDisplay.style.display = 'none';
     return;
   }
 
   sqftDisplay.textContent = sqft.toLocaleString() + ' sq ft';
 
-  // Use 80% of gross sq ft for usable space
-  const usable = sqft * 0.80;
+  // Show stage deduction if stage dimensions entered
+  if (stageSqft > 0) {
+    stageDisplay.style.display = 'block';
+    document.getElementById('stageSqft').textContent = '−' + stageSqft.toLocaleString() + ' sq ft';
+  } else {
+    stageDisplay.style.display = 'none';
+  }
+
+  // Use 80% of gross sq ft for usable space, then subtract stage footprint
+  const usable = Math.max(0, (sqft * 0.80) - stageSqft);
 
   // Density standards (sq ft per person)
   const densities = {
@@ -292,11 +335,11 @@ function calculate() {
   }
 
   // Update counts
-  document.getElementById('r8').textContent       = counts.r8.toLocaleString();
-  document.getElementById('r10').textContent      = counts.r10.toLocaleString();
-  document.getElementById('theater').textContent  = counts.theater.toLocaleString();
+  document.getElementById('r8').textContent        = counts.r8.toLocaleString();
+  document.getElementById('r10').textContent       = counts.r10.toLocaleString();
+  document.getElementById('theater').textContent   = counts.theater.toLocaleString();
   document.getElementById('classroom').textContent = counts.classroom.toLocaleString();
-  document.getElementById('chevron').textContent  = counts.chevron.toLocaleString();
+  document.getElementById('chevron').textContent   = counts.chevron.toLocaleString();
 
   // Table counts for rounds
   const tables8  = Math.floor(counts.r8 / 8);
