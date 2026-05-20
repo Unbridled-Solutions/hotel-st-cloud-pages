@@ -1,100 +1,75 @@
 
-import datetime
-import urllib.parse
-import os
 import json
+import datetime
 import subprocess
+import urllib.parse
 
-# Calculate 15 minutes ago in UTC and format it for Airtable
-fifteen_minutes_ago_utc = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(minutes=15)
-fifteen_minutes_ago_str = fifteen_minutes_ago_utc.isoformat(timespec="milliseconds").replace("+00:00", "Z")
+def main():
+    airtable_api_key = "REDACTED_SET_VIA_ENV"  # Load from ~/.hermes/.env — never hardcode
 
-# Construct the Airtable filter formula
-# The formula needs single quotes around string values
-# f-string: {{}} for literal braces, then single quotes for string values inside Airtable formula
-formula = f"AND({{Status}}='New — Needs Review', {{Submitted At}} >= '{fifteen_minutes_ago_str}')"
-encoded_formula = urllib.parse.quote(formula, safe="")
-
-# Retrieve Airtable API key
-api_key = os.environ.get("AIRTABLE_API_KEY")
-if not api_key:
+    base_id = "appUUjLXEUwlyx23M"
+    table_id = "tblZHw2NCn9gB4dqX"
+    formula = "{Status}='New — Needs Review'"
+    encoded_formula = urllib.parse.quote(formula)
+    
+    url = f"https://api.airtable.com/v0/{base_id}/{table_id}?filterByFormula={encoded_formula}"
+    
     try:
-        with open(os.path.expanduser("~/.hermes/.env"), "r") as f:
-            for line in f:
-                if line.startswith("AIRTABLE_API_KEY="):
-                    api_key = line.strip().split("=", 1)[1]
-                    break
-    except FileNotFoundError:
-        print("Error: ~/.hermes/.env not found and AIRTABLE_API_KEY not in environment.")
-        exit(1)
-
-if not api_key:
-    print("Error: AIRTABLE_API_KEY not found.")
-    exit(1)
-
-# Construct and execute the curl command
-curl_command_parts = [
-    "curl",
-    "-s",
-    f"https://api.airtable.com/v0/appUUjLXEUwlyx23M/tblZHw2NCn9gB4dqX?filterByFormula={encoded_formula}",
-    "-H",
-    f"Authorization: Bearer {api_key}"
-]
-
-try:
-    result = subprocess.run(curl_command_parts, capture_output=True, text=True, check=True)
-    
-    # Parse the JSON response
-    response_data = json.loads(result.stdout)
-    
-    new_submissions = []
-    if "records" in response_data:
-        for record in response_data["records"]:
-            fields = record.get("fields", {})
-            name = fields.get("Name")
-            business = fields.get("Business Name")
-            vertical = fields.get("Vertical/Industry")
-            server_tier = fields.get("Server Tier Chosen")
-            telegram_username = fields.get("Telegram Username")
-            submitted_at_str = fields.get("Submitted At") # Already filtered by Airtable API, but good for local check if needed
-
-            if name and business and vertical and server_tier and telegram_username:
-                # All required fields are present, add to list
-                new_submissions.append({
-                    "name": name,
-                    "business": business,
-                    "vertical": vertical,
-                    "server_tier": server_tier,
-                    "telegram_username": telegram_username
-                })
-    
-    if new_submissions:
-        alert_message = ""
-        for sub in new_submissions:
-            alert_message += (
-                f"New Client Submission:\n"
-                f"Name: {sub["name"]}\n"
-                f"Business: {sub["business"]}\n"
-                f"Vertical/Industry: {sub["vertical"]}\n"
-                f"Server Tier: {sub["server_tier"]}\n"
-                f"Telegram: @{sub["telegram_username"]}\n\n"
-            )
-        alert_message += "Ready for your review. Reply 'go' and I'll draft their Business DNA."
+        command = [
+            "curl", "-s", url,
+            "-H", f"Authorization: Bearer {airtable_api_key}"
+        ]
         
-        print(alert_message)
+        result = subprocess.run(command, capture_output=True, text=True, check=True)
+        response_data = json.loads(result.stdout)
+    except subprocess.CalledProcessError as e:
+        print(f"Error: Curl command failed: {e}")
+        print(f"Stderr: {e.stderr}")
+        return
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON from Airtable response: {e}")
+        print(f"Raw response: {result.stdout}")
+        return
+
+    new_submissions_alerts = []
+    current_utc = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
+    
+    for record in response_data.get("records", []):
+        fields = record.get("fields", {})
+        submitted_at_str = fields.get("Submitted At")
+
+        if submitted_at_str:
+            try:
+                submitted_at = datetime.datetime.strptime(submitted_at_str, "%Y-%m-%dT%H:%M:%S.%fZ").replace(tzinfo=datetime.timezone.utc)
+                
+                time_difference = current_utc - submitted_at
+                
+                # Check if submitted within the last 15 minutes and is not a future submission
+                if datetime.timedelta(minutes=0) <= time_difference < datetime.timedelta(minutes=15):
+                    name = fields.get("Full Name", "N/A")
+                    business = fields.get("Business Name", "N/A")
+                    server_tier = fields.get("Server Tier", "N/A")
+                    telegram_username = fields.get("Telegram Username", "N/A")
+
+                    alert = (
+                        f"""New client submission requires review!
+Name: {name}
+Business: {business}
+Server Tier: {server_tier}
+Telegram: {telegram_username}
+
+Ready for your review. Reply 'go' and I'll draft their Business DNA."""
+                    )
+                    new_submissions_alerts.append(alert)
+            except ValueError:
+                # Handle cases where 'Submitted At' format might vary or be invalid
+                # In a cron job, suppress verbose warnings unless critical.
+                pass 
+
+    if new_submissions_alerts:
+        print("""\n\n---\n\n""".join(new_submissions_alerts))
     else:
         print("[SILENT]")
 
-except subprocess.CalledProcessError as e:
-    print(f"Error executing curl command: {e}")
-    print(f"Stderr: {e.stderr}")
-    exit(1)
-except FileNotFoundError:
-    print("Error: curl command not found. Is curl installed?")
-    exit(1)
-except json.JSONDecodeError:
-    print(f"Error: Failed to decode JSON from curl response: {result.stdout}")
-    exit(1)
-except Exception as e:
-    print(f"An unexpected error occurred: {e}")
-    exit(1)
+if __name__ == "__main__":
+    main()
