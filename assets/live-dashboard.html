@@ -2,435 +2,396 @@
 <html lang="en">
 <head>
   <meta name="robots" content="noindex, nofollow">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hotel St. Cloud — Live Campaign Dashboard</title>
-<style>
-:root{--bg:#0f1923;--navy:#1a2e3b;--gold:#c9aa7c;--blue:#5a8ba7;--text:#e8e0d4;--muted:#8a9aaa;--green:#4caf7d;--red:#e05a5a;--card-bg:#162433;--border:#263d52;--orange:#f97316}
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;padding-bottom:60px}
-.header{background:linear-gradient(135deg,var(--navy) 0%,#0f1923 100%);border-bottom:2px solid var(--gold);padding:24px 20px 20px;text-align:center}
-.eyebrow{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
-.header h1{font-size:clamp(20px,4vw,30px);font-weight:700;color:#fff}
-.header h1 span{color:var(--gold)}
-.hdate{margin-top:6px;font-size:12px;color:var(--muted)}
-.header-actions{margin-top:12px;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
-.refresh-btn{display:inline-flex;align-items:center;gap:6px;background:var(--gold);color:#0f1923;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:7px 18px;border-radius:20px;border:none;cursor:pointer;transition:opacity .2s}
-.refresh-btn:hover{opacity:.85}
-.refresh-btn svg{width:13px;height:13px}
-.refresh-note{font-size:11px;color:var(--muted);font-style:italic}
-.wrap{max-width:1200px;margin:0 auto;padding:0 16px}
-.sec{margin-top:28px}
-.sec-title{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:14px;padding-bottom:6px;border-bottom:1px solid var(--border)}
-
-.camp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:14px}
-.camp-card{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:20px;position:relative;overflow:hidden}
-.camp-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
-.cc-bb::before{background:var(--gold)}
-.cc-bc::before{background:var(--blue)}
-.cc-so::before{background:var(--orange)}
-.cc-fp::before{background:var(--green)}
-.cc-lp::before{background:#9b6ec8}
-.camp-name{font-size:13px;font-weight:700;color:#fff;margin-bottom:4px;line-height:1.35}
-.camp-status{display:inline-flex;align-items:center;gap:5px;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:2px 9px;border-radius:10px;margin-bottom:14px}
-.s-live{background:#0d2a18;color:var(--green);border:1px solid var(--green)}
-.s-sleep{background:#1a2030;color:var(--muted);border:1px solid var(--border)}
-.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.stat{background:var(--bg);border-radius:8px;padding:10px 12px}
-.stat-lbl{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
-.stat-val{font-size:20px;font-weight:700;color:#fff;line-height:1.1}
-.stat-val.gold{color:var(--gold)}.stat-val.blue{color:var(--blue)}.stat-val.green{color:var(--green)}.stat-val.orange{color:var(--orange)}.stat-val.purple{color:#9b6ec8}.stat-val.muted{color:var(--muted)}
-.stat-sub{font-size:10px;color:var(--muted);margin-top:2px}
-.camp-tags{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;gap:5px}
-.tag{font-size:10px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:2px 9px;color:var(--muted)}
-
-.totals-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-@media(max-width:600px){.totals-grid{grid-template-columns:repeat(2,1fr)}}
-.total-card{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:18px;text-align:center}
-.total-card.t-imp{border-color:var(--gold)}.total-card.t-clk{border-color:var(--blue)}.total-card.t-spend{border-color:var(--green)}.total-card.t-ctr{border-color:var(--muted)}
-.total-lbl{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
-.total-val{font-size:30px;font-weight:700}
-.total-val.gold{color:var(--gold)}.total-val.blue{color:var(--blue)}.total-val.green{color:var(--green)}.total-val.white{color:var(--text)}.total-val.muted{color:var(--muted)}
-.total-sub{font-size:11px;color:var(--muted);margin-top:4px}
-
-.bar-table{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;overflow:hidden}
-.bt-header{display:grid;grid-template-columns:200px 1fr 64px 64px 72px 90px;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
-.bt-row{display:grid;grid-template-columns:200px 1fr 64px 64px 72px 90px;gap:10px;padding:13px 16px;border-bottom:1px solid var(--border);align-items:center;font-size:13px}
-.bt-row:last-child{border-bottom:none}
-.bt-name{font-weight:700;color:#fff;font-size:12px;line-height:1.3}
-.bar-wrap{background:var(--bg);border-radius:3px;height:7px;overflow:hidden}
-.bar-fill{height:100%;border-radius:3px}
-.fill-bb{background:var(--gold)}.fill-bc{background:var(--blue)}.fill-so{background:var(--orange)}.fill-fp{background:var(--green)}.fill-lp{background:#9b6ec8}
-.bt-num{text-align:right;color:var(--text)}
-.bt-spend{text-align:right;color:var(--gold);font-weight:600}
-.bt-zero{color:var(--muted)}
-@media(max-width:640px){
-  .bt-header,.bt-row{grid-template-columns:110px 1fr 50px 54px}
-  .bt-header span:nth-child(n+5),.bt-row>*:nth-child(n+5){display:none}
-}
-
-.hist-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-@media(max-width:680px){.hist-grid{grid-template-columns:1fr}}
-.hist-card{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:18px}
-.hist-name{font-size:13px;font-weight:700;color:#fff;margin-bottom:3px}
-.hist-sub{font-size:11px;color:var(--muted);margin-bottom:14px}
-.day-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
-.day-lbl{width:46px;font-size:11px;color:var(--muted);flex-shrink:0}
-.day-bar-wrap{flex:1;background:var(--bg);border-radius:3px;height:6px;overflow:hidden}
-.day-bar{height:100%;border-radius:3px}
-.day-imp{width:36px;text-align:right;font-size:12px;color:var(--text)}
-.day-clk{width:42px;text-align:right;font-size:11px;color:var(--muted)}
-.day-best .day-imp{color:var(--gold);font-weight:700}
-
-.mc-card{background:linear-gradient(135deg,#162433 0%,#1a2e3b 100%);border:1px solid var(--gold);border-radius:12px;padding:22px;margin-top:28px}
-.mc-hd{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-.mc-av{width:34px;height:34px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;color:#1a2e3b;flex-shrink:0}
-.mc-hd h3{font-size:13px;font-weight:700;color:var(--gold)}.mc-hd span{font-size:11px;color:var(--muted);display:block}
-.mc-ul{list-style:none;padding:0}
-.mc-ul li{font-size:13px;color:var(--text);padding:5px 0;border-bottom:1px solid var(--border);line-height:1.55}
-.mc-ul li:last-child{border-bottom:none}
-.mc-ul li::before{content:"→ ";color:var(--gold)}
-.sched-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
-.sched-pill{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:7px 14px;font-size:12px}
-.sched-pill .t{color:var(--gold);font-weight:700;margin-right:6px}
-.sched-pill .l{color:var(--muted)}
-
-/* Spinning refresh icon */
-@keyframes spin{to{transform:rotate(360deg)}}
-.spinning{animation:spin .7s linear infinite}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hotel St. Cloud — Ads Dashboard</title>
+  <style>
+    :root{--bg:#0f1923;--navy:#1a2e3b;--gold:#c9aa7c;--blue:#5a8ba7;--text:#e8e0d4;--muted:#8a9aaa;--green:#4caf7d;--red:#e05a5a;--card-bg:#162433;--border:#263d52;--orange:#f97316}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;padding-bottom:60px}
+    .header{background:linear-gradient(135deg,var(--navy) 0%,#0f1923 100%);border-bottom:2px solid var(--gold);padding:24px 20px 20px;text-align:center}
+    .eyebrow{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+    .header h1{font-size:clamp(20px,4vw,28px);font-weight:700;color:#fff}
+    .header h1 span{color:var(--gold)}
+    .hdate{margin-top:6px;font-size:12px;color:var(--muted)}
+    .wrap{max-width:1200px;margin:0 auto;padding:0 16px}
+    .sec{margin-top:28px}
+    .sec-title{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:14px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+    .camp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+    .camp-card{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:20px;position:relative;overflow:hidden}
+    .camp-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+    .cc-bb::before{background:var(--gold)}
+    .cc-bc::before{background:var(--blue)}
+    .cc-so::before{background:var(--orange)}
+    .cc-fp::before{background:var(--green)}
+    .cc-lp::before{background:#9b6ec8}
+    .camp-name{font-size:13px;font-weight:700;color:#fff;margin-bottom:4px;line-height:1.4}
+    .camp-status{display:inline-flex;align-items:center;gap:5px;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:2px 9px;border-radius:10px;margin-bottom:14px;background:#0d2a18;color:var(--green);border:1px solid var(--green)}
+    .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .stat{background:var(--bg);border-radius:8px;padding:10px 12px}
+    .stat-lbl{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+    .stat-val{font-size:20px;font-weight:700;line-height:1.1}
+    .stat-val.white{color:#fff}.stat-val.gold{color:var(--gold)}.stat-val.green{color:var(--green)}
+    .stat-sub{font-size:10px;color:var(--muted);margin-top:2px}
+    .camp-tags{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;gap:5px}
+    .tag{font-size:10px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:2px 9px;color:var(--muted)}
+    .totals-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    @media(max-width:600px){.totals-grid{grid-template-columns:repeat(2,1fr)}}
+    .total-card{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:18px;text-align:center}
+    .total-card.t-imp{border-color:var(--gold)}.total-card.t-clk{border-color:var(--blue)}.total-card.t-spend{border-color:var(--green)}.total-card.t-conv{border-color:#9b6ec8}
+    .total-lbl{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+    .total-val{font-size:30px;font-weight:700}
+    .total-sub{font-size:11px;color:var(--muted);margin-top:4px}
+    .bar-table{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    .bt-header{display:grid;grid-template-columns:180px 1fr 64px 64px 72px 70px;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+    .bt-row{display:grid;grid-template-columns:180px 1fr 64px 64px 72px 70px;gap:10px;padding:13px 16px;border-bottom:1px solid var(--border);align-items:center;font-size:13px}
+    .bt-row:last-child{border-bottom:none}
+    .bt-name{font-weight:700;font-size:12px;line-height:1.3}
+    @media(max-width:700px){.bt-header,.bt-row{grid-template-columns:1fr;gap:4px;font-size:11px}}
+    .mc-card{background:var(--card-bg);border:1px solid var(--gold);border-radius:12px;padding:20px}
+    .mc-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+    .mc-text{font-size:14px;line-height:1.7;color:var(--text)}
+    .updated-badge{display:inline-block;background:var(--navy);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:11px;color:var(--muted);margin-top:8px}
+    .footer{text-align:center;margin-top:40px;padding:20px;font-size:11px;color:var(--muted);border-top:1px solid var(--border)}
+  </style>
 </head>
 <body>
-<a href="javascript:history.back()" title="Go back" style="position:fixed;bottom:1.25rem;left:1.25rem;z-index:9999;background:#1f2b3f;color:#ba8032;border:1px solid #ba8032;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:20px;box-shadow:0 2px 12px rgba(0,0,0,.35);opacity:.92;transition:opacity .2s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.92">←</a>
 
 <div class="header">
-  <div class="eyebrow">Hotel St. Cloud · Google Ads</div>
-  <h1>Live Campaign <span>Dashboard</span></h1>
-  <div class="hdate" id="lastUpdated">Sunday May 25, 2026 — Updated now · Mountain Time</div>
-  <div class="header-actions">
-    <button class="refresh-btn" onclick="refreshDashboard()">
-      <svg id="refreshIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="23 4 23 10 17 10"></polyline>
-        <polyline points="1 20 1 14 7 14"></polyline>
-        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-      </svg>
-      Refresh Now
-    </button>
-    <div class="refresh-note">Reports at 6am &amp; 3pm MT · Auto-refreshes every 15 min</div>
-  </div>
+  <div class="eyebrow">Hotel St. Cloud · Unbridled Ecosystem</div>
+  <h1>Campaign <span>Dashboard</span></h1>
+  <div class="hdate">Rolling 7-Day Performance · May 19–25, 2026</div>
+  <div class="updated-badge">Updated 7:04 PM MT · May 26, 2026</div>
 </div>
 
 <div class="wrap">
 
-  <!-- TODAY -->
+  <!-- TOTALS STRIP -->
   <div class="sec">
-    <div class="sec-title">7-Day Stats — May 18–24, 2026</div>
-    <div class="camp-grid">
-
-      <div class="camp-card cc-fp">
-        <div class="camp-name">FP Sports Bar | Fremont Provisions</div>
-        <div class="camp-status s-live">🟢 Live</div>
-        <div class="stat-grid">
-          <div class="stat"><div class="stat-lbl">7-Day Impr</div><div class="stat-val green">3,955</div><div class="stat-sub">strong volume</div></div>
-          <div class="stat"><div class="stat-lbl">7-Day Clicks</div><div class="stat-val green">219</div><div class="stat-sub">5.54% CTR</div></div>
-          <div class="stat"><div class="stat-lbl">Avg CPC</div><div class="stat-val green">$1.66</div><div class="stat-sub">efficient</div></div>
-          <div class="stat"><div class="stat-lbl">7-Day Spend</div><div class="stat-val">$363.29</div><div class="stat-sub">of $35/day</div></div>
-        </div>
-        <div class="camp-tags">
-          <span class="tag">$35/day</span><span class="tag">ENABLED</span><span class="tag">20mi</span>
-        </div>
-      </div>
-        <div class="camp-tags">
-          <span class="tag">$35/day</span><span class="tag">Enabled Today</span><span class="tag">20mi</span>
-        </div>
-      </div>
-
-      <div class="camp-card cc-bb">
-        <div class="camp-name">Bars &amp; Bathrooms</div>
-        <div class="camp-status s-live">🟢 Live</div>
-        <div class="stat-grid">
-          <div class="stat"><div class="stat-lbl">7-Day Impr</div><div class="stat-val gold">3,429</div><div class="stat-sub">steady volume</div></div>
-          <div class="stat"><div class="stat-lbl">7-Day Clicks</div><div class="stat-val gold">211</div><div class="stat-sub">6.15% CTR</div></div>
-          <div class="stat"><div class="stat-lbl">Avg CPC</div><div class="stat-val gold">$1.61</div><div class="stat-sub">cost efficient</div></div>
-          <div class="stat"><div class="stat-lbl">7-Day Spend</div><div class="stat-val">$340.13</div><div class="stat-sub">of $50/day</div></div>
-        </div>
-        <div class="camp-tags">
-          <span class="tag">$50/day</span><span class="tag">Thu–Sun</span><span class="tag">20mi</span>
-        </div>
-      </div>
-        <div class="camp-tags">
-          <span class="tag">$50/day</span><span class="tag">Daily</span><span class="tag">20mi</span>
-        </div>
-      </div>
-
-      <div class="camp-card cc-bc">
-        <div class="camp-name">Royal Gorge Basecamp</div>
-        <div class="camp-status s-live">🟢 Live</div>
-        <div class="stat-grid">
-          <div class="stat"><div class="stat-lbl">7-Day Impr</div><div class="stat-val blue">1,403</div><div class="stat-sub">solid reach</div></div>
-          <div class="stat"><div class="stat-lbl">7-Day Clicks</div><div class="stat-val blue">123</div><div class="stat-sub">8.77% CTR</div></div>
-          <div class="stat"><div class="stat-lbl">Avg CPC</div><div class="stat-val blue">$2.33</div><div class="stat-sub">premium intent</div></div>
-          <div class="stat"><div class="stat-lbl">7-Day Spend</div><div class="stat-val">$286.29</div><div class="stat-sub">of $35/day</div></div>
-        </div>
-        <div class="camp-tags">
-          <span class="tag">$35/day</span><span class="tag">Daily</span><span class="tag">20mi</span>
-        </div>
-      </div>
-        <div class="camp-tags">
-          <span class="tag">$35/day</span><span class="tag">Daily</span><span class="tag">20mi</span>
-        </div>
-      </div>
-
-      <div class="camp-card cc-lp">
-        <div class="camp-name">Local Proximity &amp; Through Traffic</div>
-        <div class="camp-status s-live">🟢 Live</div>
-        <div class="stat-grid">
-          <div class="stat"><div class="stat-lbl">7-Day Impr</div><div class="stat-val purple">817</div><div class="stat-sub">high-intent local</div></div>
-          <div class="stat"><div class="stat-lbl">7-Day Clicks</div><div class="stat-val purple">164</div><div class="stat-sub">20.1% CTR 🔥</div></div>
-          <div class="stat"><div class="stat-lbl">Avg CPC</div><div class="stat-val purple">$3.22</div><div class="stat-sub">worth every cent</div></div>
-          <div class="stat"><div class="stat-lbl">7-Day Spend</div><div class="stat-val">$527.70</div><div class="stat-sub">of $80/day</div></div>
-        </div>
-        <div class="camp-tags">
-          <span class="tag">$80/day</span><span class="tag">Daily</span><span class="tag">20mi</span>
-        </div>
-      </div>
-        <div class="camp-tags">
-          <span class="tag">Daily</span><span class="tag">20mi</span>
-        </div>
-      </div>
-
-      <div class="camp-card cc-so">
-        <div class="camp-name">Standard Oil Coffee Co</div>
-        <div class="camp-status s-live">🟢 Live</div>
-        <div class="stat-grid">
-          <div class="stat"><div class="stat-lbl">7-Day Impr</div><div class="stat-val orange">583</div><div class="stat-sub">ramping up</div></div>
-          <div class="stat"><div class="stat-lbl">7-Day Clicks</div><div class="stat-val orange">19</div><div class="stat-sub">3.26% CTR</div></div>
-          <div class="stat"><div class="stat-lbl">Avg CPC</div><div class="stat-val orange">$1.88</div><div class="stat-sub">low cost</div></div>
-          <div class="stat"><div class="stat-lbl">7-Day Spend</div><div class="stat-val">$35.80</div><div class="stat-sub">of $25/day</div></div>
-        </div>
-        <div class="camp-tags">
-          <span class="tag">$25/day</span><span class="tag">Coffee Hours</span><span class="tag">20mi</span>
-        </div>
-      </div>
-        <div class="camp-tags">
-          <span class="tag">$35/day</span><span class="tag">7am–2pm</span><span class="tag">20mi</span>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- TOTALS TODAY -->
-  <div class="sec">
-    <div class="sec-title">7-Day Totals — May 18–24</div>
+    <div class="sec-title">Portfolio Summary — Last 7 Days</div>
     <div class="totals-grid">
       <div class="total-card t-imp">
-        <div class="total-lbl">Total Impressions</div>
-        <div class="total-val gold">10,187</div>
-        <div class="total-sub">all 5 campaigns · 7 days</div>
+        <div class="total-lbl">Impressions</div>
+        <div class="total-val" style="color:var(--gold)">10,377</div>
+        <div class="total-sub">5 active campaigns</div>
       </div>
       <div class="total-card t-clk">
-        <div class="total-lbl">Total Clicks</div>
-        <div class="total-val blue">736</div>
-        <div class="total-sub">all campaigns · 7 days</div>
+        <div class="total-lbl">Clicks</div>
+        <div class="total-val" style="color:var(--blue)">765</div>
+        <div class="total-sub">Avg CTR 7.4%</div>
       </div>
       <div class="total-card t-spend">
         <div class="total-lbl">Total Spend</div>
-        <div class="total-val green">$1,553</div>
-        <div class="total-sub">7-day total spend</div>
+        <div class="total-val" style="color:var(--green)">$1,598</div>
+        <div class="total-sub">$228/day avg</div>
       </div>
-      <div class="total-card t-ctr">
-        <div class="total-lbl">Blended CTR</div>
-        <div class="total-val white">7.2%</div>
-        <div class="total-sub">industry avg ~2–5%</div>
+      <div class="total-card t-conv">
+        <div class="total-lbl">Conversions</div>
+        <div class="total-val" style="color:#9b6ec8">10</div>
+        <div class="total-sub">CPA $160</div>
       </div>
     </div>
   </div>
 
-  <!-- 7-DAY COMPARISON TABLE -->
+  <!-- CAMPAIGN CARDS -->
   <div class="sec">
-    <div class="sec-title">7-Day · Side by Side</div>
+    <div class="sec-title">Campaign Performance</div>
+    <div class="camp-grid">
+      
+<div class="camp-card cc-lp">
+  <div class="camp-name">Local Proximity<br>& Through Traffic</div>
+  <div class="camp-status s-live">● LIVE</div>
+  <div class="stat-grid">
+    <div class="stat">
+      <div class="stat-lbl">Impressions</div>
+      <div class="stat-val white">831</div>
+      <div class="stat-sub">7-day total</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">Clicks <span style="color:#8a9aaa">→</span></div>
+      <div class="stat-val" style="color:#9b6ec8">165</div>
+      <div class="stat-sub">7-day total</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">CTR</div>
+      <div class="stat-val green">19.9%</div>
+      <div class="stat-sub">avg CPC $3.23</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">Spend</div>
+      <div class="stat-val gold">$533</div>
+      <div class="stat-sub">CPA $355.41</div>
+    </div>
+  </div>
+  <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div>
+      <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Clicks / day</div>
+      <div style="display:flex;align-items:flex-end;gap:3px;height:40px;padding-top:4px"><div style="width:10px;height:23px;background:#9b6ec8;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:33px;background:#9b6ec8;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:32px;background:#9b6ec8;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:36px;background:#9b6ec8;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:28px;background:#9b6ec8;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:32px;background:#9b6ec8;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:27px;background:#9b6ec8;border-radius:2px 2px 0 0;opacity:1"></div></div>
+    </div>
+    <div>
+      <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Spend / day</div>
+      <div style="display:flex;align-items:flex-end;gap:3px;height:40px;padding-top:4px"><div style="width:10px;height:17px;background:#9b6ec8;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:28px;background:#9b6ec8;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:36px;background:#9b6ec8;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:25px;background:#9b6ec8;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:27px;background:#9b6ec8;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:26px;background:#9b6ec8;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:21px;background:#9b6ec8;border-radius:2px 2px 0 0;opacity:1"></div></div>
+    </div>
+  </div>
+  <div class="camp-tags"><span class="tag">Hotel Stays</span><span class="tag">Highway 50</span><span class="tag">Drive Market</span></div>
+</div>
+
+<div class="camp-card cc-bb">
+  <div class="camp-name">Bars & Bathrooms</div>
+  <div class="camp-status s-live">● LIVE</div>
+  <div class="stat-grid">
+    <div class="stat">
+      <div class="stat-lbl">Impressions</div>
+      <div class="stat-val white">3,579</div>
+      <div class="stat-sub">7-day total</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">Clicks <span style="color:#4caf7d">↑</span></div>
+      <div class="stat-val" style="color:#c9aa7c">213</div>
+      <div class="stat-sub">7-day total</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">CTR</div>
+      <div class="stat-val green">6.0%</div>
+      <div class="stat-sub">avg CPC $1.65</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">Spend</div>
+      <div class="stat-val gold">$352</div>
+      <div class="stat-sub">CPA $70.43</div>
+    </div>
+  </div>
+  <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div>
+      <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Clicks / day</div>
+      <div style="display:flex;align-items:flex-end;gap:3px;height:40px;padding-top:4px"><div style="width:10px;height:14px;background:#c9aa7c;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:21px;background:#c9aa7c;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:27px;background:#c9aa7c;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:36px;background:#c9aa7c;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:35px;background:#c9aa7c;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:26px;background:#c9aa7c;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:25px;background:#c9aa7c;border-radius:2px 2px 0 0;opacity:1"></div></div>
+    </div>
+    <div>
+      <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Spend / day</div>
+      <div style="display:flex;align-items:flex-end;gap:3px;height:40px;padding-top:4px"><div style="width:10px;height:13px;background:#c9aa7c;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:29px;background:#c9aa7c;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:31px;background:#c9aa7c;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:36px;background:#c9aa7c;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:31px;background:#c9aa7c;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:21px;background:#c9aa7c;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:29px;background:#c9aa7c;border-radius:2px 2px 0 0;opacity:1"></div></div>
+    </div>
+  </div>
+  <div class="camp-tags"><span class="tag">Speakeasy</span><span class="tag">Cocktails</span><span class="tag">Dining</span></div>
+</div>
+
+<div class="camp-card cc-fp">
+  <div class="camp-name">FP Sports Bar<br>| Fremont Provisions</div>
+  <div class="camp-status s-live">● LIVE</div>
+  <div class="stat-grid">
+    <div class="stat">
+      <div class="stat-lbl">Impressions</div>
+      <div class="stat-val white">3,859</div>
+      <div class="stat-sub">7-day total</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">Clicks <span style="color:#8a9aaa">→</span></div>
+      <div class="stat-val" style="color:#4caf7d">221</div>
+      <div class="stat-sub">7-day total</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">CTR</div>
+      <div class="stat-val green">5.7%</div>
+      <div class="stat-sub">avg CPC $1.55</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">Spend</div>
+      <div class="stat-val gold">$342</div>
+      <div class="stat-sub">CPA $342.28</div>
+    </div>
+  </div>
+  <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div>
+      <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Clicks / day</div>
+      <div style="display:flex;align-items:flex-end;gap:3px;height:40px;padding-top:4px"><div style="width:10px;height:33px;background:#4caf7d;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:34px;background:#4caf7d;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:31px;background:#4caf7d;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:27px;background:#4caf7d;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:24px;background:#4caf7d;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:36px;background:#4caf7d;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:29px;background:#4caf7d;border-radius:2px 2px 0 0;opacity:1"></div></div>
+    </div>
+    <div>
+      <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Spend / day</div>
+      <div style="display:flex;align-items:flex-end;gap:3px;height:40px;padding-top:4px"><div style="width:10px;height:36px;background:#4caf7d;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:35px;background:#4caf7d;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:29px;background:#4caf7d;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:19px;background:#4caf7d;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:19px;background:#4caf7d;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:19px;background:#4caf7d;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:16px;background:#4caf7d;border-radius:2px 2px 0 0;opacity:1"></div></div>
+    </div>
+  </div>
+  <div class="camp-tags"><span class="tag">Sports Bar</span><span class="tag">Game Day</span><span class="tag">Cañon City</span></div>
+</div>
+
+<div class="camp-card cc-bc">
+  <div class="camp-name">Hotel St. Cloud<br>| Royal Gorge Basecamp</div>
+  <div class="camp-status s-live">● LIVE</div>
+  <div class="stat-grid">
+    <div class="stat">
+      <div class="stat-lbl">Impressions</div>
+      <div class="stat-val white">1,480</div>
+      <div class="stat-sub">7-day total</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">Clicks <span style="color:#4caf7d">↑</span></div>
+      <div class="stat-val" style="color:#5a8ba7">141</div>
+      <div class="stat-sub">7-day total</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">CTR</div>
+      <div class="stat-val green">9.5%</div>
+      <div class="stat-sub">avg CPC $2.33</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">Spend</div>
+      <div class="stat-val gold">$328</div>
+      <div class="stat-sub">CPA $131.35</div>
+    </div>
+  </div>
+  <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div>
+      <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Clicks / day</div>
+      <div style="display:flex;align-items:flex-end;gap:3px;height:40px;padding-top:4px"><div style="width:10px;height:12px;background:#5a8ba7;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:18px;background:#5a8ba7;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:19px;background:#5a8ba7;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:26px;background:#5a8ba7;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:17px;background:#5a8ba7;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:32px;background:#5a8ba7;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:36px;background:#5a8ba7;border-radius:2px 2px 0 0;opacity:1"></div></div>
+    </div>
+    <div>
+      <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Spend / day</div>
+      <div style="display:flex;align-items:flex-end;gap:3px;height:40px;padding-top:4px"><div style="width:10px;height:13px;background:#5a8ba7;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:20px;background:#5a8ba7;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:21px;background:#5a8ba7;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:26px;background:#5a8ba7;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:17px;background:#5a8ba7;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:33px;background:#5a8ba7;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:36px;background:#5a8ba7;border-radius:2px 2px 0 0;opacity:1"></div></div>
+    </div>
+  </div>
+  <div class="camp-tags"><span class="tag">Hotel Stays</span><span class="tag">Royal Gorge</span><span class="tag">Adventure</span></div>
+</div>
+
+<div class="camp-card cc-so">
+  <div class="camp-name">Standard Oil<br>Coffee Co</div>
+  <div class="camp-status s-live">● LIVE</div>
+  <div class="stat-grid">
+    <div class="stat">
+      <div class="stat-lbl">Impressions</div>
+      <div class="stat-val white">628</div>
+      <div class="stat-sub">7-day total</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">Clicks <span style="color:#4caf7d">↑</span></div>
+      <div class="stat-val" style="color:#f97316">25</div>
+      <div class="stat-sub">7-day total</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">CTR</div>
+      <div class="stat-val green">4.0%</div>
+      <div class="stat-sub">avg CPC $1.69</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">Spend</div>
+      <div class="stat-val gold">$42</div>
+      <div class="stat-sub">CPA —</div>
+    </div>
+  </div>
+  <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div>
+      <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Clicks / day</div>
+      <div style="display:flex;align-items:flex-end;gap:3px;height:40px;padding-top:4px"><div style="width:10px;height:6px;background:#f97316;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:6px;background:#f97316;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:24px;background:#f97316;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:18px;background:#f97316;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:36px;background:#f97316;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:24px;background:#f97316;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:36px;background:#f97316;border-radius:2px 2px 0 0;opacity:1"></div></div>
+    </div>
+    <div>
+      <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Spend / day</div>
+      <div style="display:flex;align-items:flex-end;gap:3px;height:40px;padding-top:4px"><div style="width:10px;height:7px;background:#f97316;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:8px;background:#f97316;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:29px;background:#f97316;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:23px;background:#f97316;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:36px;background:#f97316;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:24px;background:#f97316;border-radius:2px 2px 0 0;opacity:0.55"></div><div style="width:10px;height:22px;background:#f97316;border-radius:2px 2px 0 0;opacity:1"></div></div>
+    </div>
+  </div>
+  <div class="camp-tags"><span class="tag">Specialty Coffee</span><span class="tag">Main Street</span><span class="tag">Café</span></div>
+</div>
+
+    </div>
+  </div>
+
+  <!-- SPEND TABLE -->
+  <div class="sec">
+    <div class="sec-title">Budget Allocation</div>
     <div class="bar-table">
       <div class="bt-header">
-        <span>Campaign</span><span>Impressions</span><span>Clicks</span><span>CTR</span><span>Avg CPC</span><span>Spend</span>
+        <div>Campaign</div>
+        <div>Spend Share</div>
+        <div>Impr</div>
+        <div>Clicks</div>
+        <div>CTR</div>
+        <div>Conv</div>
       </div>
-      <div class="bt-row">
-        <span class="bt-name">Local Proximity</span>
-        <div class="bar-wrap"><div class="bar-fill fill-lp" style="width:21%"></div></div>
-        <span class="bt-num">164</span>
-        <span class="bt-num">20.1% 🔥</span>
-        <span class="bt-num">$3.22</span>
-        <span class="bt-spend">$527.70</span>
-      </div>
-      <div class="bt-row">
-        <span class="bt-name">FP Sports Bar</span>
-        <div class="bar-wrap"><div class="bar-fill fill-fp" style="width:100%"></div></div>
-        <span class="bt-num">219</span>
-        <span class="bt-num">5.54%</span>
-        <span class="bt-num">$1.66</span>
-        <span class="bt-spend">$363.29</span>
-      </div>
-      <div class="bt-row">
-        <span class="bt-name">Bars &amp; Bathrooms</span>
-        <div class="bar-wrap"><div class="bar-fill fill-bb" style="width:87%"></div></div>
-        <span class="bt-num">211</span>
-        <span class="bt-num">6.15%</span>
-        <span class="bt-num">$1.61</span>
-        <span class="bt-spend">$340.13</span>
-      </div>
-      <div class="bt-row">
-        <span class="bt-name">Royal Gorge Basecamp</span>
-        <div class="bar-wrap"><div class="bar-fill fill-bc" style="width:79%"></div></div>
-        <span class="bt-num">123</span>
-        <span class="bt-num">8.77%</span>
-        <span class="bt-num">$2.33</span>
-        <span class="bt-spend">$286.29</span>
-      </div>
-      <div class="bt-row">
-        <span class="bt-name">Standard Oil</span>
-        <div class="bar-wrap"><div class="bar-fill fill-so" style="width:10%"></div></div>
-        <span class="bt-num">19</span>
-        <span class="bt-num">3.26%</span>
-        <span class="bt-num">$1.88</span>
-        <span class="bt-spend">$35.80</span>
-      </div>
+      
+<div class="bt-row">
+  <div class="bt-name" style="color:#9b6ec8">Local Proximity</div>
+  <div>
+    <div style="background:var(--border);border-radius:4px;height:6px;width:100%">
+      <div style="background:#9b6ec8;width:33%;height:6px;border-radius:4px"></div>
+    </div>
+    <div style="font-size:10px;color:var(--muted);margin-top:3px">$533.11 · 33% of total</div>
+  </div>
+  <div style="color:#fff;font-weight:700">831</div>
+  <div style="color:#9b6ec8;font-weight:700">165</div>
+  <div style="color:var(--green)">19.9%</div>
+  <div style="color:var(--gold)">1.5</div>
+</div>
+
+<div class="bt-row">
+  <div class="bt-name" style="color:#c9aa7c">Bars & Bathrooms</div>
+  <div>
+    <div style="background:var(--border);border-radius:4px;height:6px;width:100%">
+      <div style="background:#c9aa7c;width:22%;height:6px;border-radius:4px"></div>
+    </div>
+    <div style="font-size:10px;color:var(--muted);margin-top:3px">$352.13 · 22% of total</div>
+  </div>
+  <div style="color:#fff;font-weight:700">3,579</div>
+  <div style="color:#c9aa7c;font-weight:700">213</div>
+  <div style="color:var(--green)">6.0%</div>
+  <div style="color:var(--gold)">5.0</div>
+</div>
+
+<div class="bt-row">
+  <div class="bt-name" style="color:#4caf7d">FP Sports Bar</div>
+  <div>
+    <div style="background:var(--border);border-radius:4px;height:6px;width:100%">
+      <div style="background:#4caf7d;width:21%;height:6px;border-radius:4px"></div>
+    </div>
+    <div style="font-size:10px;color:var(--muted);margin-top:3px">$342.28 · 21% of total</div>
+  </div>
+  <div style="color:#fff;font-weight:700">3,859</div>
+  <div style="color:#4caf7d;font-weight:700">221</div>
+  <div style="color:var(--green)">5.7%</div>
+  <div style="color:var(--gold)">1.0</div>
+</div>
+
+<div class="bt-row">
+  <div class="bt-name" style="color:#5a8ba7">Royal Gorge Basecamp</div>
+  <div>
+    <div style="background:var(--border);border-radius:4px;height:6px;width:100%">
+      <div style="background:#5a8ba7;width:20%;height:6px;border-radius:4px"></div>
+    </div>
+    <div style="font-size:10px;color:var(--muted);margin-top:3px">$328.37 · 20% of total</div>
+  </div>
+  <div style="color:#fff;font-weight:700">1,480</div>
+  <div style="color:#5a8ba7;font-weight:700">141</div>
+  <div style="color:var(--green)">9.5%</div>
+  <div style="color:var(--gold)">2.5</div>
+</div>
+
+<div class="bt-row">
+  <div class="bt-name" style="color:#f97316">Standard Oil Coffee</div>
+  <div>
+    <div style="background:var(--border);border-radius:4px;height:6px;width:100%">
+      <div style="background:#f97316;width:2%;height:6px;border-radius:4px"></div>
+    </div>
+    <div style="font-size:10px;color:var(--muted);margin-top:3px">$42.17 · 2% of total</div>
+  </div>
+  <div style="color:#fff;font-weight:700">628</div>
+  <div style="color:#f97316;font-weight:700">25</div>
+  <div style="color:var(--green)">4.0%</div>
+  <div style="color:var(--gold)">—</div>
+</div>
+
     </div>
   </div>
 
-  <!-- 7-DAY HISTORY -->
+  <!-- MC TAKE -->
   <div class="sec">
-    <div class="sec-title">7-Day History — May 18–24</div>
-    <div class="hist-grid">
-
-      <div class="hist-card">
-        <div class="hist-name">Bars &amp; Bathrooms</div>
-        <div class="hist-sub">3,429 impr · 211 clicks · $340 spent · peak: May 22</div>
-        <div class="day-row"><span class="day-lbl">May 18</span><div class="day-bar-wrap"><div class="day-bar fill-bb" style="width:54%"></div></div><span class="day-imp">348</span><span class="day-clk">27 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 19</span><div class="day-bar-wrap"><div class="day-bar fill-bb" style="width:53%"></div></div><span class="day-imp">343</span><span class="day-clk">17 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 20</span><div class="day-bar-wrap"><div class="day-bar fill-bb" style="width:74%"></div></div><span class="day-imp">475</span><span class="day-clk">25 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 21</span><div class="day-bar-wrap"><div class="day-bar fill-bb" style="width:86%"></div></div><span class="day-imp">550</span><span class="day-clk">31 clk</span></div>
-        <div class="day-row day-best"><span class="day-lbl">May 22</span><div class="day-bar-wrap"><div class="day-bar fill-bb" style="width:100%"></div></div><span class="day-imp">637</span><span class="day-clk">41 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 23</span><div class="day-bar-wrap"><div class="day-bar fill-bb" style="width:98%"></div></div><span class="day-imp">630</span><span class="day-clk">40 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 24</span><div class="day-bar-wrap"><div class="day-bar fill-bb" style="width:70%"></div></div><span class="day-imp">446</span><span class="day-clk">30 clk</span></div>
-      </div>
-
-      <div class="hist-card">
-        <div class="hist-name">FP Sports Bar | Fremont Provisions</div>
-        <div class="hist-sub">3,955 impr · 219 clicks · $363 spent · peak: May 20</div>
-        <div class="day-row"><span class="day-lbl">May 18</span><div class="day-bar-wrap"><div class="day-bar fill-fp" style="width:74%"></div></div><span class="day-imp">528</span><span class="day-clk">28 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 19</span><div class="day-bar-wrap"><div class="day-bar fill-fp" style="width:92%"></div></div><span class="day-imp">649</span><span class="day-clk">34 clk</span></div>
-        <div class="day-row day-best"><span class="day-lbl">May 20</span><div class="day-bar-wrap"><div class="day-bar fill-fp" style="width:100%"></div></div><span class="day-imp">705</span><span class="day-clk">35 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 21</span><div class="day-bar-wrap"><div class="day-bar fill-fp" style="width:76%"></div></div><span class="day-imp">536</span><span class="day-clk">32 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 22</span><div class="day-bar-wrap"><div class="day-bar fill-fp" style="width:59%"></div></div><span class="day-imp">417</span><span class="day-clk">28 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 23</span><div class="day-bar-wrap"><div class="day-bar fill-fp" style="width:84%"></div></div><span class="day-imp">596</span><span class="day-clk">25 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 24</span><div class="day-bar-wrap"><div class="day-bar fill-fp" style="width:74%"></div></div><span class="day-imp">524</span><span class="day-clk">37 clk</span></div>
-      </div>
-
-      <div class="hist-card">
-        <div class="hist-name">Royal Gorge Basecamp</div>
-        <div class="hist-sub">1,403 impr · 123 clicks · $286 spent · trending up ↑</div>
-        <div class="day-row"><span class="day-lbl">May 18</span><div class="day-bar-wrap"><div class="day-bar fill-bc" style="width:61%"></div></div><span class="day-imp">174</span><span class="day-clk">13 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 19</span><div class="day-bar-wrap"><div class="day-bar fill-bc" style="width:51%"></div></div><span class="day-imp">146</span><span class="day-clk">11 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 20</span><div class="day-bar-wrap"><div class="day-bar fill-bc" style="width:51%"></div></div><span class="day-imp">147</span><span class="day-clk">16 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 21</span><div class="day-bar-wrap"><div class="day-bar fill-bc" style="width:67%"></div></div><span class="day-imp">190</span><span class="day-clk">17 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 22</span><div class="day-bar-wrap"><div class="day-bar fill-bc" style="width:66%"></div></div><span class="day-imp">189</span><span class="day-clk">23 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 23</span><div class="day-bar-wrap"><div class="day-bar fill-bc" style="width:100%"></div></div><span class="day-imp">283</span><span class="day-clk">15 clk</span></div>
-        <div class="day-row day-best"><span class="day-lbl">May 24</span><div class="day-bar-wrap"><div class="day-bar fill-bc" style="width:96%"></div></div><span class="day-imp">274</span><span class="day-clk">28 clk</span></div>
-      </div>
-
-      <div class="hist-card">
-        <div class="hist-name">Standard Oil Coffee Co</div>
-        <div class="hist-sub">583 impr · 19 clicks · $36 spent · building momentum</div>
-        <div class="day-row"><span class="day-lbl">May 18</span><div class="day-bar-wrap"><div class="day-bar fill-so" style="width:39%"></div></div><span class="day-imp">65</span><span class="day-clk">0 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 19</span><div class="day-bar-wrap"><div class="day-bar fill-so" style="width:43%"></div></div><span class="day-imp">72</span><span class="day-clk">1 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 20</span><div class="day-bar-wrap"><div class="day-bar fill-so" style="width:29%"></div></div><span class="day-imp">49</span><span class="day-clk">1 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 21</span><div class="day-bar-wrap"><div class="day-bar fill-so" style="width:23%"></div></div><span class="day-imp">38</span><span class="day-clk">4 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 22</span><div class="day-bar-wrap"><div class="day-bar fill-so" style="width:34%"></div></div><span class="day-imp">56</span><span class="day-clk">3 clk</span></div>
-        <div class="day-row day-best"><span class="day-lbl">May 23</span><div class="day-bar-wrap"><div class="day-bar fill-so" style="width:100%"></div></div><span class="day-imp">164</span><span class="day-clk">6 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 24</span><div class="day-bar-wrap"><div class="day-bar fill-so" style="width:84%"></div></div><span class="day-imp">139</span><span class="day-clk">4 clk</span></div>
-      </div>
-
-    </div>
-  </div>
-
-      <div class="hist-card">
-        <div class="hist-name">FP Sports Bar | Fremont Provisions</div>
-        <div class="hist-sub">2,843 impr · 110 clicks · $295 spent · best: May 17</div>
-        <div class="day-row"><span class="day-lbl">May 14</span><div class="day-bar-wrap"><div class="day-bar fill-fp" style="width:2%"></div></div><span class="day-imp">12</span><span class="day-clk">1 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 15</span><div class="day-bar-wrap"><div class="day-bar fill-fp" style="width:10%"></div></div><span class="day-imp">73</span><span class="day-clk">1 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 16</span><div class="day-bar-wrap"><div class="day-bar fill-fp" style="width:76%"></div></div><span class="day-imp">552</span><span class="day-clk">32 clk</span></div>
-        <div class="day-row day-best"><span class="day-lbl">May 17</span><div class="day-bar-wrap"><div class="day-bar fill-fp" style="width:100%"></div></div><span class="day-imp">727</span><span class="day-clk">32 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 18</span><div class="day-bar-wrap"><div class="day-bar fill-fp" style="width:73%"></div></div><span class="day-imp">528</span><span class="day-clk">28 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 19</span><div class="day-bar-wrap"><div class="day-bar fill-fp" style="width:89%"></div></div><span class="day-imp">649</span><span class="day-clk">34 clk</span></div>
-        <div class="day-row"><span class="day-lbl">Today</span><div class="day-bar-wrap"><div class="day-bar fill-fp" style="width:42%"></div></div><span class="day-imp">304</span><span class="day-clk">12 clk</span></div>
-      </div>
-
-      <div class="hist-card">
-        <div class="hist-name">Royal Gorge Basecamp</div>
-        <div class="hist-sub">937 impr · 73 clicks · $179 spent · 13%+ CTR</div>
-        <div class="day-row"><span class="day-lbl">May 14</span><div class="day-bar-wrap"><div class="day-bar fill-bc" style="width:55%"></div></div><span class="day-imp">106</span><span class="day-clk">8 clk</span></div>
-        <div class="day-row day-best"><span class="day-lbl">May 15</span><div class="day-bar-wrap"><div class="day-bar fill-bc" style="width:75%"></div></div><span class="day-imp">142</span><span class="day-clk">14 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 16</span><div class="day-bar-wrap"><div class="day-bar fill-bc" style="width:75%"></div></div><span class="day-imp">143</span><span class="day-clk">7 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 17</span><div class="day-bar-wrap"><div class="day-bar fill-bc" style="width:85%"></div></div><span class="day-imp">161</span><span class="day-clk">13 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 18</span><div class="day-bar-wrap"><div class="day-bar fill-bc" style="width:92%"></div></div><span class="day-imp">174</span><span class="day-clk">13 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 19</span><div class="day-bar-wrap"><div class="day-bar fill-bc" style="width:77%"></div></div><span class="day-imp">146</span><span class="day-clk">11 clk</span></div>
-        <div class="day-row"><span class="day-lbl">Today</span><div class="day-bar-wrap"><div class="day-bar fill-bc" style="width:34%"></div></div><span class="day-imp">65</span><span class="day-clk">10 clk</span></div>
-      </div>
-
-      <div class="hist-card">
-        <div class="hist-name">Standard Oil Coffee Co</div>
-        <div class="hist-sub">474 impr · 9 clicks · $18 spent · building</div>
-        <div class="day-row"><span class="day-lbl">May 14</span><div class="day-bar-wrap"><div class="day-bar fill-so" style="width:14%"></div></div><span class="day-imp">20</span><span class="day-clk">1 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 15</span><div class="day-bar-wrap"><div class="day-bar fill-so" style="width:24%"></div></div><span class="day-imp">34</span><span class="day-clk">1 clk</span></div>
-        <div class="day-row day-best"><span class="day-lbl">May 16</span><div class="day-bar-wrap"><div class="day-bar fill-so" style="width:63%"></div></div><span class="day-imp">90</span><span class="day-clk">2 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 17</span><div class="day-bar-wrap"><div class="day-bar fill-so" style="width:100%"></div></div><span class="day-imp">144</span><span class="day-clk">3 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 18</span><div class="day-bar-wrap"><div class="day-bar fill-so" style="width:45%"></div></div><span class="day-imp">65</span><span class="day-clk">0 clk</span></div>
-        <div class="day-row"><span class="day-lbl">May 19</span><div class="day-bar-wrap"><div class="day-bar fill-so" style="width:50%"></div></div><span class="day-imp">72</span><span class="day-clk">1 clk</span></div>
-        <div class="day-row"><span class="day-lbl">Today</span><div class="day-bar-wrap"><div class="day-bar fill-so" style="width:34%"></div></div><span class="day-imp">49</span><span class="day-clk">1 clk</span></div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- MC NOTES -->
-  <div class="mc-card">
-    <div class="mc-hd">
-      <div class="mc-av">MC</div>
-      <div><h3>MC's Read — May 25</h3><span>7-Day Review · May 18–24</span></div>
-    </div>
-    <ul class="mc-ul">
-      <li><strong>Local Proximity is your secret weapon</strong> — 164 clicks at 20.1% CTR with $527 spend. That's people literally near the hotel clicking through. Highest CTR of any campaign by a mile.</li>
-      <li><strong>FP Sports Bar is your volume leader</strong> — 3,955 impressions and 219 clicks in 7 days. The bids and keyword expansion from last week are paying off. Momentum is real.</li>
-      <li><strong>Royal Gorge Basecamp is trending up</strong> — May 24 was the best day yet (274 impr, 28 clicks, 10.2% CTR). The gorge is bringing in the right people.</li>
-      <li><strong>Bars &amp; Bathrooms stays consistent</strong> — 3,429 impressions, 211 clicks, 6.15% CTR. The workhorse is working. Peak was May 22 (637 impr). Solid weekend performance.</li>
-      <li><strong>Standard Oil is building</strong> — went from 65 impressions on May 18 to 164 on May 23. Still low spend ($36 total) but the trend is right. More time needed before judgment.</li>
-      <li><strong>$1,553 total 7-day spend across all 5 campaigns</strong> — healthy cadence. Local Proximity is eating the most ($528) but delivering elite CTR that justifies every dollar.</li>
-    </ul>
-    <div class="sched-wrap">
-      <div class="sched-pill"><span class="t">6am MT</span><span class="l">Morning report — all campaigns</span></div>
-      <div class="sched-pill"><span class="t">3pm MT</span><span class="l">Afternoon check-in</span></div>
-      <div class="sched-pill"><span class="t">Mon 8am MT</span><span class="l">Weekly deep-dive</span></div>
+    <div class="mc-card">
+      <div class="mc-label">🦌 MC's Take</div>
+      <div class="mc-text">Local Proximity is burning the most budget ($533) but has the strongest CTR at 19.9% — high-intent, close-in traffic worth every dollar. Bars &amp; Bathrooms is your efficiency leader: 5 conversions on $352, best CPA in the portfolio. Basecamp is trending up — clicks accelerating the last 3 days. FP Sports Bar is delivering volume (most impressions) but conversions need attention. Standard Oil is early-stage — impressions picking up, give it another week before judging. Total portfolio: 10,377 impressions, 765 clicks, $1598 spent, 10 conversions this week.</div>
     </div>
   </div>
 
 </div>
 
-<script>
-function refreshDashboard() {
-  const icon = document.getElementById('refreshIcon');
-  icon.classList.add('spinning');
-  setTimeout(() => {
-    window.location.reload();
-  }, 400);
-}
+<div class="footer">
+  Hotel St. Cloud · Google Ads Dashboard · Data via Google Ads API · Refreshes daily 6am MT<br>
+  <a href="https://ads.google.com" style="color:var(--blue);text-decoration:none">Google Ads Console</a> &nbsp;·&nbsp;
+  <a href="https://offers.hotelstcloud.com" style="color:var(--blue);text-decoration:none">offers.hotelstcloud.com</a>
+</div>
 
-// Update timestamp on load
-(function() {
-  const el = document.getElementById('lastUpdated');
-  const now = new Date();
-  const opts = {timeZone:'America/Denver', weekday:'long', month:'long', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit'};
-  el.textContent = now.toLocaleString('en-US', opts) + ' MT';
-})();
-</script>
 </body>
 </html>
