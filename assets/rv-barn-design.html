@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RV Barn — Design Specification for TJ's Log &amp; Timber</title>
+  <style>
+    :root {
+      --ink: #1a1a1a;
+      --muted: #5a5a5a;
+      --border: #d0cec8;
+      --surface: #faf9f7;
+      --white: #ffffff;
+      --log: #6b4c2a;
+      --log-dark: #3d2a14;
+      --accent: #5a8ba7;
+      --rule: #e8e4dd;
+      --label-bg: #f3f1ed;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Georgia, serif;
+      background: var(--surface);
+      color: var(--ink);
+      font-size: clamp(13px, 1.8vw, 15px);
+      line-height: 1.65;
+    }
+    .page {
+      width: 100%;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: clamp(20px, 5vw, 52px);
+    }
+
+    /* ── HEADER ── */
+    .header {
+      border-top: 4px solid var(--log);
+      padding-top: clamp(18px, 4vw, 30px);
+      margin-bottom: clamp(24px, 5vw, 40px);
+    }
+    .eyebrow {
+      font-family: 'Courier New', monospace;
+      font-size: clamp(9px, 1.5vw, 11px);
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--log);
+      margin-bottom: 6px;
+    }
+    h1 {
+      font-size: clamp(22px, 5vw, 34px);
+      font-weight: normal;
+      line-height: 1.2;
+      margin-bottom: 4px;
+    }
+    .sub {
+      font-size: clamp(12px, 1.8vw, 14px);
+      color: var(--muted);
+      font-style: italic;
+    }
+    .meta {
+      margin-top: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 24px;
+      font-family: 'Courier New', monospace;
+      font-size: clamp(10px, 1.5vw, 12px);
+      color: var(--muted);
+    }
+    .meta strong { color: var(--ink); }
+
+    /* ── SECTION ── */
+    .section { margin-bottom: clamp(28px, 5vw, 44px); }
+    .section-title {
+      font-family: 'Courier New', monospace;
+      font-size: clamp(9px, 1.4vw, 11px);
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--log);
+      margin-bottom: 14px;
+      padding-bottom: 7px;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    /* ── SPEC GRID ── */
+    .spec-grid {
+      display: grid;
+      grid-template-columns: clamp(120px, 26vw, 170px) 1fr;
+    }
+    .spec-label, .spec-value {
+      padding: clamp(7px, 1.3vw, 10px) clamp(10px, 1.8vw, 14px);
+      border-bottom: 1px solid var(--rule);
+      vertical-align: top;
+    }
+    .spec-label {
+      font-family: 'Courier New', monospace;
+      font-size: clamp(9px, 1.4vw, 11px);
+      color: var(--muted);
+      background: var(--label-bg);
+      letter-spacing: .03em;
+    }
+    .spec-value {
+      font-size: clamp(12px, 1.6vw, 14px);
+      background: var(--white);
+    }
+    .spec-value strong { color: var(--log); }
+    @media (max-width: 520px) {
+      .spec-grid { grid-template-columns: 1fr; }
+      .spec-label { border-bottom: none; padding-bottom: 2px; background: var(--surface); font-size: 10px; }
+      .spec-value { padding-top: 2px; }
+    }
+
+    /* ── DIAGRAM WRAP ── */
+    .diagram-wrap {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: clamp(14px, 3vw, 24px);
+      margin-bottom: clamp(16px, 3vw, 24px);
+    }
+    .diagram-title {
+      font-family: 'Courier New', monospace;
+      font-size: clamp(9px, 1.4vw, 11px);
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    svg { display: block; width: 100%; height: auto; }
+
+    /* ── NOTES LIST ── */
+    .notes-list { list-style: none; padding: 0; }
+    .notes-list li {
+      display: grid;
+      grid-template-columns: clamp(7rem, 15vw, 9rem) 1fr;
+      gap: 0 clamp(.75rem, 2vw, 1.25rem);
+      align-items: start;
+      padding: clamp(7px, 1.3vw, 10px) 0;
+      border-bottom: 1px solid var(--rule);
+      font-size: clamp(12px, 1.6vw, 14px);
+    }
+    .notes-list li:last-child { border-bottom: none; }
+    .nk {
+      font-family: 'Courier New', monospace;
+      font-size: clamp(9px, 1.3vw, 11px);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      padding-top: .15em;
+      line-height: 1.4;
+    }
+    @media (max-width: 460px) {
+      .notes-list li { grid-template-columns: 1fr; gap: 2px 0; }
+      .nk { font-size: 10px; }
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      margin-top: clamp(28px, 5vw, 48px);
+      padding-top: 14px;
+      border-top: 1px solid var(--rule);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 6px;
+      font-family: 'Courier New', monospace;
+      font-size: clamp(9px, 1.3vw, 11px);
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="eyebrow">Design Specification — Preliminary</div>
+    <h1>Log RV Storage Barn</h1>
+    <div class="sub">Prepared for TJ's Log &amp; Timber — estimating and fabrication review</div>
+    <div class="meta">
+      <span><strong>Client:</strong> Stan Bullis</span>
+      <span><strong>Date:</strong> May 2026</span>
+      <span><strong>Revision:</strong> 2 — All items confirmed</span>
+    </div>
+  </header>
+
+  <!-- BUILDING SPECIFICATIONS -->
+  <section class="section">
+    <div class="section-title">Building Specifications — All Confirmed</div>
+    <div class="spec-grid">
+
+      <div class="spec-label">Footprint</div>
+      <div class="spec-value"><strong>20 ft wide × 40 ft deep</strong> (800 sq ft). The 20 ft wall is the front face — garage door wall. The 40 ft dimension runs back from the front.</div>
+
+      <div class="spec-label">Log Size</div>
+      <div class="spec-value"><strong>12-inch diameter</strong> full-round logs.</div>
+
+      <div class="spec-label">Log Style</div>
+      <div class="spec-value"><strong>Chinked construction.</strong> Chinking compound between all log courses. Match chinking color to existing home.</div>
+
+      <div class="spec-label">Log Species</div>
+      <div class="spec-value">Match existing home — honey/amber tone. Confirm species with TJ's (likely Western Red Cedar, Engelmann Spruce, or Lodgepole Pine).</div>
+
+      <div class="spec-label">Garage Door</div>
+      <div class="spec-value"><strong>12 ft high × 16 ft wide</strong>, centered on the <strong>20 ft front wall.</strong> Overhead sectional door (roll-up or sectional). Leaves approximately 2 ft of log wall on each side.</div>
+
+      <div class="spec-label">Personnel Door</div>
+      <div class="spec-value"><strong>36" door, rear wall, right side.</strong> Standard entry door, no sidelights.</div>
+
+      <div class="spec-label">Windows</div>
+      <div class="spec-value">None. Interior lighting via electrical only.</div>
+
+      <div class="spec-label">Roof Style</div>
+      <div class="spec-value"><strong>Gable roof</strong> — pitch to match existing home (est. 8:12–10:12 per site photo). <strong>Dark charcoal/navy standing seam metal</strong> matching existing residence. Ridge runs along the 40 ft length. Align roofline with adjacent attached garage.</div>
+
+      <div class="spec-label">Wall Height</div>
+      <div class="spec-value">Minimum <strong>14 ft sidewall</strong> to accommodate 12 ft door + header + top plate logs. Manufacturer to confirm based on log course stacking.</div>
+
+      <div class="spec-label">Foundation</div>
+      <div class="spec-value"><strong>Slab on grade</strong> — monolithic concrete. Coordinate thickness and reinforcement with local contractor per code.</div>
+
+      <div class="spec-label">Interior</div>
+      <div class="spec-value">Open bay — no partition walls. Electrical rough-in (lighting, outlets) by separate contractor after structure is set.</div>
+
+      <div class="spec-label">Site</div>
+      <div class="spec-value">Sited <strong>immediately to the left of the attached two-car garage</strong> on existing log home. Colorado high country — lake setting, mountain backdrop. Barn must read as unified compound with existing structure.</div>
+
+    </div>
+  </section>
+
+  <!-- DIAGRAMS -->
+  <section class="section">
+    <div class="section-title">Drawings (Not to Scale)</div>
+
+    <!-- FLOOR PLAN — PORTRAIT (20ft narrow x 40ft deep) -->
+    <div class="diagram-wrap">
+      <div class="diagram-title">Floor Plan — Top View · 20 ft Wide × 40 ft Deep · Garage Door on 20 ft Front Wall</div>
+      <svg viewBox="0 0 400 600" xmlns="http://www.w3.org/2000/svg">
+        <rect width="400" height="600" fill="#faf9f7"/>
+
+        <!-- Building: x=80–300 (220px = 20ft), y=50–490 (440px = 40ft) -->
+
+        <!-- Outer wall body -->
+        <rect x="80" y="50" width="220" height="440" fill="#e8ddd0" stroke="#6b4c2a" stroke-width="2"/>
+        <!-- Floor interior -->
+        <rect x="94" y="64" width="192" height="412" fill="#f5f0e8"/>
+
+        <!-- Log course tick marks on left wall -->
+        <g stroke="#c9b89a" stroke-width="1" stroke-dasharray="5,4">
+          <line x1="80" y1="84"  x2="94" y2="84"/>  <line x1="80" y1="104" x2="94" y2="104"/>
+          <line x1="80" y1="124" x2="94" y2="124"/> <line x1="80" y1="144" x2="94" y2="144"/>
+          <line x1="80" y1="164" x2="94" y2="164"/> <line x1="80" y1="184" x2="94" y2="184"/>
+          <line x1="80" y1="204" x2="94" y2="204"/> <line x1="80" y1="224" x2="94" y2="224"/>
+          <line x1="80" y1="244" x2="94" y2="244"/> <line x1="80" y1="264" x2="94" y2="264"/>
+          <line x1="80" y1="284" x2="94" y2="284"/> <line x1="80" y1="304" x2="94" y2="304"/>
+          <line x1="80" y1="324" x2="94" y2="324"/> <line x1="80" y1="344" x2="94" y2="344"/>
+          <line x1="80" y1="364" x2="94" y2="364"/> <line x1="80" y1="384" x2="94" y2="384"/>
+          <line x1="80" y1="404" x2="94" y2="404"/> <line x1="80" y1="424" x2="94" y2="424"/>
+          <line x1="80" y1="444" x2="94" y2="444"/> <line x1="80" y1="464" x2="94" y2="464"/>
+        </g>
+        <!-- Log course tick marks on right wall -->
+        <g stroke="#c9b89a" stroke-width="1" stroke-dasharray="5,4">
+          <line x1="286" y1="84"  x2="300" y2="84"/>  <line x1="286" y1="104" x2="300" y2="104"/>
+          <line x1="286" y1="124" x2="300" y2="124"/> <line x1="286" y1="144" x2="300" y2="144"/>
+          <line x1="286" y1="164" x2="300" y2="164"/> <line x1="286" y1="184" x2="300" y2="184"/>
+          <line x1="286" y1="204" x2="300" y2="204"/> <line x1="286" y1="224" x2="300" y2="224"/>
+          <line x1="286" y1="244" x2="300" y2="244"/> <line x1="286" y1="264" x2="300" y2="264"/>
+          <line x1="286" y1="284" x2="300" y2="284"/> <line x1="286" y1="304" x2="300" y2="304"/>
+          <line x1="286" y1="324" x2="300" y2="324"/> <line x1="286" y1="344" x2="300" y2="344"/>
+          <line x1="286" y1="364" x2="300" y2="364"/> <line x1="286" y1="384" x2="300" y2="384"/>
+          <line x1="286" y1="404" x2="300" y2="404"/> <line x1="286" y1="424" x2="300" y2="424"/>
+          <line x1="286" y1="444" x2="300" y2="444"/> <line x1="286" y1="464" x2="300" y2="464"/>
+        </g>
+
+        <!-- FRONT WALL — garage door on 20ft face -->
+        <!-- Full wall -->
+        <rect x="80" y="50" width="220" height="14" fill="#6b4c2a"/>
+        <!-- Door opening: 16ft of 20ft. Scale: 220px = 20ft, so 16ft = 176px, 2ft = 22px each side -->
+        <!-- Left stub: 80–102 (22px), Opening: 102–278 (176px), Right stub: 278–300 (22px) -->
+        <rect x="102" y="50" width="176" height="14" fill="#faf9f7"/>
+        <!-- Hatch lines across door opening -->
+        <line x1="102" y1="50" x2="278" y2="50" stroke="#3d2a14" stroke-width="2"/>
+        <line x1="102" y1="55" x2="278" y2="55" stroke="#3d2a14" stroke-width="1" stroke-dasharray="10,5" opacity=".5"/>
+        <line x1="102" y1="60" x2="278" y2="60" stroke="#3d2a14" stroke-width="1" stroke-dasharray="10,5" opacity=".35"/>
+        <line x1="102" y1="64" x2="278" y2="64" stroke="#3d2a14" stroke-width="1" stroke-dasharray="10,5" opacity=".25"/>
+        <!-- Label -->
+        <text x="190" y="45" text-anchor="middle" font-family="Courier New,monospace" font-size="9" fill="#6b4c2a">GARAGE DOOR · 12H × 16W</text>
+
+        <!-- REAR WALL — personnel door right side -->
+        <rect x="80" y="476" width="220" height="14" fill="#6b4c2a"/>
+        <!-- Door opening right side: 36" ≈ 33px from right wall stub -->
+        <!-- Right stub: 290–300 (10px), Door: 257–290 (33px) -->
+        <rect x="257" y="476" width="33" height="14" fill="#faf9f7"/>
+        <!-- Door swing arc -->
+        <path d="M257,476 L257,490" stroke="#3d2a14" stroke-width="1.5"/>
+        <path d="M290,476 L290,490" stroke="#3d2a14" stroke-width="1.5"/>
+        <path d="M290,476 A33,33 0 0,0 257,476" stroke="#3d2a14" stroke-width="1" fill="none" stroke-dasharray="4,3"/>
+        <!-- Label -->
+        <text x="274" y="507" text-anchor="middle" font-family="Courier New,monospace" font-size="9" fill="#6b4c2a">36" DOOR · RIGHT</text>
+
+        <!-- SIDE WALLS solid overlay -->
+        <rect x="80" y="50" width="14" height="440" fill="#6b4c2a"/>
+        <rect x="286" y="50" width="14" height="440" fill="#6b4c2a"/>
+
+        <!-- RV footprint (approx 8.5ft wide × 35ft long = 94px × 385px) -->
+        <!-- Centered x: 94 + (192–94)/2 = 94+49 = 143. Width 94px: 143–237 -->
+        <!-- Y: 70 to 455 (385px) -->
+        <rect x="143" y="70" width="94" height="380" rx="5" fill="none" stroke="#bbb" stroke-width="1.5" stroke-dasharray="8,4"/>
+        <!-- RV front cab indicator -->
+        <rect x="143" y="70" width="94" height="28" rx="4" fill="#e8e4dd" stroke="#bbb" stroke-width="1"/>
+        <text x="190" y="253" text-anchor="middle" font-family="Courier New,monospace" font-size="11" fill="#c0b8ac">R V</text>
+        <text x="190" y="268" text-anchor="middle" font-family="Courier New,monospace" font-size="8"  fill="#c0b8ac">approx. footprint</text>
+        <!-- Arrow showing RV pulls in from front -->
+        <path d="M190,86 L190,96" stroke="#bbb" stroke-width="1.5" marker-end="url(#arr)"/>
+
+        <defs>
+          <marker id="arr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 Z" fill="#bbb"/>
+          </marker>
+        </defs>
+
+        <!-- DIMENSION: 20ft wide (top) -->
+        <line x1="80" y1="36" x2="300" y2="36" stroke="#5a8ba7" stroke-width="1"/>
+        <polygon points="80,36 88,32 88,40" fill="#5a8ba7"/>
+        <polygon points="300,36 292,32 292,40" fill="#5a8ba7"/>
+        <text x="190" y="32" text-anchor="middle" font-family="Courier New,monospace" font-size="10" fill="#5a8ba7">20 ft WIDE</text>
+
+        <!-- DIMENSION: 40ft deep (right side) -->
+        <line x1="316" y1="50" x2="316" y2="490" stroke="#5a8ba7" stroke-width="1"/>
+        <polygon points="316,50 312,58 320,58" fill="#5a8ba7"/>
+        <polygon points="316,490 312,482 320,482" fill="#5a8ba7"/>
+        <text x="358" y="274" text-anchor="middle" font-family="Courier New,monospace" font-size="10" fill="#5a8ba7" transform="rotate(90,358,274)">40 ft DEEP</text>
+
+        <!-- FRONT / REAR labels -->
+        <text x="190" y="18" text-anchor="middle" font-family="Courier New,monospace" font-size="9" fill="#aaa" letter-spacing="2">▲  FRONT  (GARAGE DOOR)</text>
+        <text x="190" y="590" text-anchor="middle" font-family="Courier New,monospace" font-size="9" fill="#aaa" letter-spacing="2">▼  REAR  (PERSONNEL DOOR)</text>
+      </svg>
+    </div>
+
+    <!-- FRONT ELEVATION — 20ft face with garage door -->
+    <div class="diagram-wrap">
+      <div class="diagram-title">Front Elevation — 20 ft Garage Door Face</div>
+      <svg viewBox="0 0 480 300" xmlns="http://www.w3.org/2000/svg">
+        <rect width="480" height="300" fill="#eef3f6"/>
+        <!-- Ground -->
+        <line x1="0" y1="236" x2="480" y2="236" stroke="#c8b89a" stroke-width="2"/>
+
+        <!-- ROOF — steep gable ~9:12 pitch -->
+        <!-- Building: x=60–420 (360px = 20ft). Wall top: y=115. Ridge: higher/steeper -->
+        <!-- 9:12 pitch on 10ft half-span: rise = 10 * 9/12 = 7.5ft ≈ 7.5 * (360/20) = 135px above plate -->
+        <!-- Ridge y = 115 – 135 = -20 ... too tall. Scale down: use ~70px rise for diagram -->
+        <polygon points="60,115 240,42 420,115" fill="#1c1c1c" stroke="#111" stroke-width="1.5"/>
+        <!-- Ridge cap -->
+        <line x1="236" y1="42" x2="244" y2="42" stroke="#444" stroke-width="3"/>
+
+        <!-- LEFT LOG WALL STUB (2ft = 36px) -->
+        <rect x="60" y="115" width="36" height="121" fill="#8B6340" stroke="#5a3e1e" stroke-width="1.5"/>
+        <!-- log courses left stub -->
+        <g stroke="#5a3e1e" stroke-width=".8" opacity=".55">
+          <line x1="60" y1="127" x2="96" y2="127"/>
+          <line x1="60" y1="140" x2="96" y2="140"/>
+          <line x1="60" y1="153" x2="96" y2="153"/>
+          <line x1="60" y1="166" x2="96" y2="166"/>
+          <line x1="60" y1="179" x2="96" y2="179"/>
+          <line x1="60" y1="192" x2="96" y2="192"/>
+          <line x1="60" y1="205" x2="96" y2="205"/>
+          <line x1="60" y1="218" x2="96" y2="218"/>
+          <!-- chinking lines (lighter between log courses) -->
+          <line x1="61" y1="133" x2="95" y2="133" stroke="#d4c0a0" stroke-width=".5"/>
+          <line x1="61" y1="146" x2="95" y2="146" stroke="#d4c0a0" stroke-width=".5"/>
+          <line x1="61" y1="159" x2="95" y2="159" stroke="#d4c0a0" stroke-width=".5"/>
+          <line x1="61" y1="172" x2="95" y2="172" stroke="#d4c0a0" stroke-width=".5"/>
+          <line x1="61" y1="185" x2="95" y2="185" stroke="#d4c0a0" stroke-width=".5"/>
+          <line x1="61" y1="198" x2="95" y2="198" stroke="#d4c0a0" stroke-width=".5"/>
+          <line x1="61" y1="211" x2="95" y2="211" stroke="#d4c0a0" stroke-width=".5"/>
+          <line x1="61" y1="224" x2="95" y2="224" stroke="#d4c0a0" stroke-width=".5"/>
+        </g>
+
+        <!-- RIGHT LOG WALL STUB (2ft = 36px) -->
+        <rect x="384" y="115" width="36" height="121" fill="#8B6340" stroke="#5a3e1e" stroke-width="1.5"/>
+        <g stroke="#5a3e1e" stroke-width=".8" opacity=".55">
+          <line x1="384" y1="127" x2="420" y2="127"/>
+          <line x1="384" y1="140" x2="420" y2="140"/>
+          <line x1="384" y1="153" x2="420" y2="153"/>
+          <line x1="384" y1="166" x2="420" y2="166"/>
+          <line x1="384" y1="179" x2="420" y2="179"/>
+          <line x1="384" y1="192" x2="420" y2="192"/>
+          <line x1="384" y1="205" x2="420" y2="205"/>
+          <line x1="384" y1="218" x2="420" y2="218"/>
+          <line x1="385" y1="133" x2="419" y2="133" stroke="#d4c0a0" stroke-width=".5"/>
+          <line x1="385" y1="146" x2="419" y2="146" stroke="#d4c0a0" stroke-width=".5"/>
+          <line x1="385" y1="159" x2="419" y2="159" stroke="#d4c0a0" stroke-width=".5"/>
+          <line x1="385" y1="172" x2="419" y2="172" stroke="#d4c0a0" stroke-width=".5"/>
+          <line x1="385" y1="185" x2="419" y2="185" stroke="#d4c0a0" stroke-width=".5"/>
+          <line x1="385" y1="198" x2="419" y2="198" stroke="#d4c0a0" stroke-width=".5"/>
+          <line x1="385" y1="211" x2="419" y2="211" stroke="#d4c0a0" stroke-width=".5"/>
+          <line x1="385" y1="224" x2="419" y2="224" stroke="#d4c0a0" stroke-width=".5"/>
+        </g>
+
+        <!-- GARAGE DOOR — 16ft opening (288px of 360px total) centered -->
+        <rect x="96" y="115" width="288" height="121" fill="#222" stroke="#111" stroke-width="1.5"/>
+        <!-- Panel grid lines -->
+        <g stroke="#3a3a3a" stroke-width=".8">
+          <!-- Horizontal panel dividers (4 panels) -->
+          <line x1="96" y1="145" x2="384" y2="145"/>
+          <line x1="96" y1="175" x2="384" y2="175"/>
+          <line x1="96" y1="205" x2="384" y2="205"/>
+          <!-- Vertical section dividers -->
+          <line x1="168" y1="115" x2="168" y2="236"/>
+          <line x1="240" y1="115" x2="240" y2="236"/>
+          <line x1="312" y1="115" x2="312" y2="236"/>
+        </g>
+        <!-- Door hardware -->
+        <circle cx="168" cy="190" r="4" fill="#555"/>
+        <circle cx="312" cy="190" r="4" fill="#555"/>
+
+        <!-- Header log -->
+        <rect x="60" y="108" width="360" height="9" fill="#7a5530" stroke="#4a3010" stroke-width="1"/>
+
+        <!-- Foundation -->
+        <rect x="60" y="234" width="360" height="12" fill="#b0a898" stroke="#8a8070" stroke-width="1"/>
+
+        <!-- DIMENSION: 20ft width -->
+        <line x1="60" y1="256" x2="420" y2="256" stroke="#5a8ba7" stroke-width="1"/>
+        <polygon points="60,256 68,252 68,260" fill="#5a8ba7"/>
+        <polygon points="420,256 412,252 412,260" fill="#5a8ba7"/>
+        <text x="240" y="270" text-anchor="middle" font-family="Courier New,monospace" font-size="10" fill="#5a8ba7">20 ft</text>
+
+        <!-- DIMENSION: door width 16ft -->
+        <line x1="96" y1="248" x2="384" y2="248" stroke="#888" stroke-width="1" stroke-dasharray="3,2"/>
+        <polygon points="96,248 104,244 104,252" fill="#888"/>
+        <polygon points="384,248 376,244 376,252" fill="#888"/>
+        <text x="240" y="244" text-anchor="middle" font-family="Courier New,monospace" font-size="9" fill="#888">16 ft door</text>
+
+        <!-- DIMENSION: wall height left side -->
+        <line x1="44" y1="115" x2="44" y2="236" stroke="#5a8ba7" stroke-width="1"/>
+        <polygon points="44,115 40,123 48,123" fill="#5a8ba7"/>
+        <polygon points="44,236 40,228 48,228" fill="#5a8ba7"/>
+        <text x="36" y="180" text-anchor="middle" font-family="Courier New,monospace" font-size="9" fill="#5a8ba7" transform="rotate(-90,36,180)">~14 ft wall</text>
+
+        <!-- DIMENSION: door height -->
+        <line x1="436" y1="115" x2="436" y2="236" stroke="#888" stroke-width="1" stroke-dasharray="3,2"/>
+        <polygon points="436,115 432,123 440,123" fill="#888"/>
+        <polygon points="436,236 432,228 440,228" fill="#888"/>
+        <text x="452" y="180" text-anchor="middle" font-family="Courier New,monospace" font-size="9" fill="#888" transform="rotate(90,452,180)">12 ft door</text>
+
+        <!-- Labels -->
+        <text x="240" y="60" text-anchor="middle" font-family="Courier New,monospace" font-size="8" fill="#888" letter-spacing="1">DARK CHARCOAL STANDING SEAM METAL</text>
+        <text x="78" y="103" text-anchor="middle" font-family="Courier New,monospace" font-size="7" fill="#8B6340">12" CHINKED</text>
+        <text x="402" y="103" text-anchor="middle" font-family="Courier New,monospace" font-size="7" fill="#8B6340">12" CHINKED</text>
+      </svg>
+    </div>
+
+    <!-- SIDE ELEVATION — shows 40ft depth -->
+    <div class="diagram-wrap">
+      <div class="diagram-title">Side Elevation (Right) — 40 ft Depth · No Windows</div>
+      <svg viewBox="0 0 680 300" xmlns="http://www.w3.org/2000/svg">
+        <rect width="680" height="300" fill="#eef3f6"/>
+        <line x1="0" y1="236" x2="680" y2="236" stroke="#c8b89a" stroke-width="2"/>
+
+        <!-- Side view: building x=60–620 (560px = 40ft), wall top y=115 -->
+        <!-- Roof: gable peak at front (x=60), ridge along top -->
+        <!-- For side view, roof is a simple slope from peak (left) to rear plate (right) -->
+        <!-- Front peak y=42, rear y=115, sloping ridge line -->
+        <polygon points="60,115 60,42 620,42 620,115" fill="none"/>
+        <!-- Roof surface (one slope visible from side) -->
+        <polygon points="60,42 620,42 620,115 60,115" fill="#1c1c1c" stroke="#111" stroke-width="1.5" opacity="0"/>
+        <!-- Side roof profile: ridge at top, slopes down to eaves -->
+        <!-- From this side we see the right slope -->
+        <polygon points="60,115 340,38 620,115" fill="#1c1c1c" stroke="#111" stroke-width="1.5"/>
+        <!-- Overhang suggestion -->
+        <line x1="50" y1="120" x2="630" y2="120" stroke="#333" stroke-width="2"/>
+
+        <!-- LONG SIDE WALL — 40ft, full log -->
+        <rect x="60" y="115" width="560" height="121" fill="#8B6340" stroke="#5a3e1e" stroke-width="1.5"/>
+        <!-- horizontal log courses across full length -->
+        <g stroke="#5a3e1e" stroke-width=".8" opacity=".5">
+          <line x1="60" y1="127" x2="620" y2="127"/>
+          <line x1="60" y1="140" x2="620" y2="140"/>
+          <line x1="60" y1="153" x2="620" y2="153"/>
+          <line x1="60" y1="166" x2="620" y2="166"/>
+          <line x1="60" y1="179" x2="620" y2="179"/>
+          <line x1="60" y1="192" x2="620" y2="192"/>
+          <line x1="60" y1="205" x2="620" y2="205"/>
+          <line x1="60" y1="218" x2="620" y2="218"/>
+        </g>
+        <!-- Chinking lines -->
+        <g stroke="#d4c0a0" stroke-width=".5" opacity=".7">
+          <line x1="61" y1="133" x2="619" y2="133"/>
+          <line x1="61" y1="146" x2="619" y2="146"/>
+          <line x1="61" y1="159" x2="619" y2="159"/>
+          <line x1="61" y1="172" x2="619" y2="172"/>
+          <line x1="61" y1="185" x2="619" y2="185"/>
+          <line x1="61" y1="198" x2="619" y2="198"/>
+          <line x1="61" y1="211" x2="619" y2="211"/>
+          <line x1="61" y1="224" x2="619" y2="224"/>
+        </g>
+
+        <!-- NO WINDOWS label band -->
+        <text x="340" y="183" text-anchor="middle" font-family="Courier New,monospace" font-size="10" fill="#c0a880" letter-spacing="2" opacity=".6">NO WINDOWS</text>
+
+        <!-- Header log -->
+        <rect x="60" y="108" width="560" height="9" fill="#7a5530" stroke="#4a3010" stroke-width="1"/>
+        <!-- Foundation -->
+        <rect x="60" y="234" width="560" height="12" fill="#b0a898" stroke="#8a8070" stroke-width="1"/>
+
+        <!-- DIMENSION: 40ft depth -->
+        <line x1="60" y1="256" x2="620" y2="256" stroke="#5a8ba7" stroke-width="1"/>
+        <polygon points="60,256 68,252 68,260" fill="#5a8ba7"/>
+        <polygon points="620,256 612,252 612,260" fill="#5a8ba7"/>
+        <text x="340" y="270" text-anchor="middle" font-family="Courier New,monospace" font-size="10" fill="#5a8ba7">40 ft DEEP</text>
+
+        <!-- FRONT / REAR direction labels -->
+        <text x="68" y="108" font-family="Courier New,monospace" font-size="8" fill="#aaa">◀ FRONT</text>
+        <text x="560" y="108" font-family="Courier New,monospace" font-size="8" fill="#aaa">REAR ▶</text>
+
+        <!-- Roof label -->
+        <text x="340" y="58" text-anchor="middle" font-family="Courier New,monospace" font-size="8" fill="#888" letter-spacing="1">8:12–10:12 PITCH · STANDING SEAM METAL</text>
+      </svg>
+    </div>
+
+    <!-- REAR ELEVATION -->
+    <div class="diagram-wrap">
+      <div class="diagram-title">Rear Elevation — 20 ft Back Wall · 36" Personnel Door Right Side</div>
+      <svg viewBox="0 0 480 300" xmlns="http://www.w3.org/2000/svg">
+        <rect width="480" height="300" fill="#eef3f6"/>
+        <line x1="0" y1="236" x2="480" y2="236" stroke="#c8b89a" stroke-width="2"/>
+
+        <!-- ROOF gable -->
+        <polygon points="60,115 240,42 420,115" fill="#1c1c1c" stroke="#111" stroke-width="1.5"/>
+
+        <!-- FULL REAR LOG WALL -->
+        <rect x="60" y="115" width="360" height="121" fill="#8B6340" stroke="#5a3e1e" stroke-width="1.5"/>
+        <g stroke="#5a3e1e" stroke-width=".8" opacity=".5">
+          <line x1="60" y1="127" x2="420" y2="127"/>
+          <line x1="60" y1="140" x2="420" y2="140"/>
+          <line x1="60" y1="153" x2="420" y2="153"/>
+          <line x1="60" y1="166" x2="420" y2="166"/>
+          <line x1="60" y1="179" x2="420" y2="179"/>
+          <line x1="60" y1="192" x2="420" y2="192"/>
+          <line x1="60" y1="205" x2="420" y2="205"/>
+          <line x1="60" y1="218" x2="420" y2="218"/>
+        </g>
+        <!-- Chinking -->
+        <g stroke="#d4c0a0" stroke-width=".5" opacity=".7">
+          <line x1="61" y1="133" x2="419" y2="133"/>
+          <line x1="61" y1="146" x2="419" y2="146"/>
+          <line x1="61" y1="159" x2="419" y2="159"/>
+          <line x1="61" y1="172" x2="419" y2="172"/>
+          <line x1="61" y1="185" x2="419" y2="185"/>
+          <line x1="61" y1="198" x2="419" y2="198"/>
+          <line x1="61" y1="211" x2="419" y2="211"/>
+          <line x1="61" y1="224" x2="419" y2="224"/>
+        </g>
+
+        <!-- PERSONNEL DOOR — RIGHT SIDE -->
+        <!-- 2ft right stub = 36px. Door = 36" ≈ 50px. Right stub: 384–420, Door: 334–384 -->
+        <rect x="334" y="163" width="50" height="73" fill="#3a2510" stroke="#2a1a08" stroke-width="1.5" rx="1"/>
+        <!-- Door panels -->
+        <rect x="338" y="167" width="20" height="30" rx="1" fill="none" stroke="#5a3e1e" stroke-width=".8"/>
+        <rect x="360" y="167" width="20" height="30" rx="1" fill="none" stroke="#5a3e1e" stroke-width=".8"/>
+        <!-- Door header -->
+        <rect x="334" y="158" width="50" height="7" fill="#7a5530" stroke="#4a3010" stroke-width=".8"/>
+        <!-- Knob -->
+        <circle cx="340" cy="202" r="3" fill="#999"/>
+
+        <!-- Header log -->
+        <rect x="60" y="108" width="360" height="9" fill="#7a5530" stroke="#4a3010" stroke-width="1"/>
+        <!-- Foundation -->
+        <rect x="60" y="234" width="360" height="12" fill="#b0a898" stroke="#8a8070" stroke-width="1"/>
+
+        <!-- Door dimension -->
+        <line x1="334" y1="248" x2="384" y2="248" stroke="#888" stroke-width="1" stroke-dasharray="3,2"/>
+        <polygon points="334,248 342,244 342,252" fill="#888"/>
+        <polygon points="384,248 376,244 376,252" fill="#888"/>
+        <text x="359" y="262" text-anchor="middle" font-family="Courier New,monospace" font-size="9" fill="#888">36" · right</text>
+
+        <!-- Width dimension -->
+        <line x1="60" y1="270" x2="420" y2="270" stroke="#5a8ba7" stroke-width="1"/>
+        <polygon points="60,270 68,266 68,274" fill="#5a8ba7"/>
+        <polygon points="420,270 412,266 412,274" fill="#5a8ba7"/>
+        <text x="240" y="284" text-anchor="middle" font-family="Courier New,monospace" font-size="10" fill="#5a8ba7">20 ft</text>
+
+        <!-- Roof label -->
+        <text x="240" y="60" text-anchor="middle" font-family="Courier New,monospace" font-size="8" fill="#888" letter-spacing="1">DARK CHARCOAL STANDING SEAM METAL</text>
+      </svg>
+    </div>
+
+  </section>
+
+  <!-- OPEN ITEMS -->
+  <section class="section">
+    <div class="section-title">For TJ's — Items to Confirm</div>
+    <ul class="notes-list">
+      <li>
+        <span class="nk">Wall Height</span>
+        <span>14 ft sidewall estimated. Manufacturer to verify based on 12" log course stacking to achieve 12 ft door clearance.</span>
+      </li>
+      <li>
+        <span class="nk">Log Species</span>
+        <span>Match existing home. Confirm species (likely Western Red Cedar, Engelmann Spruce, or Lodgepole Pine) and finish to existing structure.</span>
+      </li>
+      <li>
+        <span class="nk">Chinking Color</span>
+        <span>Match chinking compound color to existing home. Client to confirm or provide sample.</span>
+      </li>
+      <li>
+        <span class="nk">Roof Pitch</span>
+        <span>Estimated 8:12–10:12 to match existing home. Confirm exact pitch with client and verify ridge height is sufficient for interior use.</span>
+      </li>
+      <li>
+        <span class="nk">Electrical</span>
+        <span>Not in TJ's scope. Client will coordinate rough-in (lighting, outlets, door opener) with separate contractor after structure is set.</span>
+      </li>
+      <li>
+        <span class="nk">Foundation</span>
+        <span>Slab on grade. Client to coordinate concrete work locally. TJ's to confirm sill log requirements and anchor bolt pattern.</span>
+      </li>
+    </ul>
+  </section>
+
+  <footer class="footer">
+    <span>Stan Bullis · RV Barn Spec</span>
+    <span>For TJ's Log &amp; Timber</span>
+    <span>May 2026 · Rev 2</span>
+  </footer>
+
+</div>
+</body>
+</html>
