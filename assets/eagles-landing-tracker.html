@@ -349,6 +349,97 @@
       font-style: italic;
     }
 
+    /* ── PIN MODAL ── */
+    .pin-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.6);
+      z-index: 10000;
+      align-items: center;
+      justify-content: center;
+    }
+    .pin-overlay.show { display: flex; }
+    .pin-modal {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 2rem 2rem 1.5rem;
+      width: min(320px, 90vw);
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,.4);
+    }
+    .pin-modal .pin-eyebrow {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--lt);
+      margin-bottom: .5rem;
+    }
+    .pin-modal h3 {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 18px;
+      color: var(--navy);
+      margin-bottom: 1.25rem;
+    }
+    .pin-input {
+      width: 100%;
+      font-size: 28px;
+      letter-spacing: 8px;
+      text-align: center;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: .6rem 1rem;
+      font-family: 'Josefin Sans', sans-serif;
+      color: var(--navy);
+      margin-bottom: .75rem;
+      transition: border-color .2s;
+    }
+    .pin-input:focus { outline: none; border-color: var(--blue); }
+    .pin-input.shake {
+      animation: shake .3s ease;
+      border-color: var(--red);
+    }
+    @keyframes shake {
+      0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)}
+    }
+    .pin-error {
+      font-size: 13px;
+      color: var(--red);
+      min-height: 18px;
+      margin-bottom: .75rem;
+    }
+    .pin-actions {
+      display: flex;
+      gap: .75rem;
+      justify-content: center;
+    }
+    .pin-confirm {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: .6rem 1.5rem;
+      border-radius: 100px;
+      border: none;
+      background: var(--approved);
+      color: var(--white);
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .pin-cancel {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: .6rem 1.5rem;
+      border-radius: 100px;
+      border: 1.5px solid var(--border);
+      background: var(--white);
+      color: var(--gray);
+      cursor: pointer;
+    }
+
     /* ── SAVE STATUS TOAST ── */
     .toast {
       position: fixed;
@@ -463,6 +554,20 @@
   <div class="log-header">Update Log</div>
   <div class="log-card" id="logCard">
     <div class="log-empty" id="logEmpty">No updates recorded yet. Changes will appear here when you save progress.</div>
+  </div>
+</div>
+
+<!-- PIN MODAL -->
+<div class="pin-overlay" id="pinOverlay">
+  <div class="pin-modal">
+    <div class="pin-eyebrow">Owner Approval Required</div>
+    <h3>Enter PIN to Approve</h3>
+    <input class="pin-input" id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="····" autocomplete="off">
+    <div class="pin-error" id="pinError"></div>
+    <div class="pin-actions">
+      <button class="pin-cancel" onclick="cancelPin()">Cancel</button>
+      <button class="pin-confirm" onclick="confirmPin()">Approve</button>
+    </div>
   </div>
 </div>
 
@@ -899,23 +1004,83 @@ function escHtml(str) {
 }
 
 // ════════════════════════════════════════════
-//  STATUS CHANGE
+//  PIN PROTECTION FOR APPROVED STATUS
 // ════════════════════════════════════════════
+const APPROVED_PIN = '8108'; // Stan's PIN — change via MC if needed
+let pendingApproval = null;  // { taskId } waiting for PIN confirmation
+
 function onStatusChange(taskId, newStatus) {
+  if (newStatus === 'approved') {
+    // Intercept — require PIN before applying
+    pendingApproval = { taskId };
+    // Reset the radio back to previous visually (PIN not entered yet)
+    const row = document.getElementById('row-' + taskId);
+    const prevStatus = row ? row.dataset.status : 'not-started';
+    // Re-check the previous radio so UI stays consistent until confirmed
+    const prevRadio = document.querySelector(`input[name="status-${taskId}"][value="${prevStatus}"]`);
+    if (prevRadio) prevRadio.checked = true;
+    showPinModal();
+    return;
+  }
+  applyStatusChange(taskId, newStatus);
+}
+
+function applyStatusChange(taskId, newStatus) {
   const row = document.getElementById('row-' + taskId);
   if (row) row.dataset.status = newStatus;
 
-  // Update label styles
   ['approved','completed','in-progress','not-started'].forEach(s => {
     const lbl = document.getElementById(`lbl-${taskId}-${s}`);
     if (lbl) {
       lbl.className = 'status-label' + (s === newStatus ? ` status-${s}` : '');
     }
   });
+  // Sync the radio
+  const radio = document.querySelector(`input[name="status-${taskId}"][value="${newStatus}"]`);
+  if (radio) radio.checked = true;
 
   updateCounts();
   markDirty();
 }
+
+function showPinModal() {
+  const overlay = document.getElementById('pinOverlay');
+  const input   = document.getElementById('pinInput');
+  const error   = document.getElementById('pinError');
+  error.textContent = '';
+  input.value = '';
+  overlay.classList.add('show');
+  setTimeout(() => input.focus(), 100);
+}
+
+function confirmPin() {
+  const input = document.getElementById('pinInput');
+  const error = document.getElementById('pinError');
+  if (input.value === APPROVED_PIN) {
+    document.getElementById('pinOverlay').classList.remove('show');
+    if (pendingApproval) {
+      applyStatusChange(pendingApproval.taskId, 'approved');
+      pendingApproval = null;
+    }
+  } else {
+    error.textContent = 'Incorrect PIN. Try again.';
+    input.classList.add('shake');
+    input.value = '';
+    setTimeout(() => input.classList.remove('shake'), 400);
+    input.focus();
+  }
+}
+
+function cancelPin() {
+  document.getElementById('pinOverlay').classList.remove('show');
+  pendingApproval = null;
+}
+
+// Allow Enter key to confirm PIN
+document.getElementById('pinInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') confirmPin();
+  if (e.key === 'Escape') cancelPin();
+});
 
 // ════════════════════════════════════════════
 //  COUNTS
