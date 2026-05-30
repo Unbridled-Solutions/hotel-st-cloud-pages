@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Construction punch list and task tracker for Eagles Landing Cabin, Grand Lake CO">
+  <title>Eagles Landing Cabin · Construction Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy:   #1a2a3a;
+      --dark:   #0f1a24;
+      --blue:   #4a8fa8;
+      --gold:   #ba8032;
+      --cream:  #f5f4f0;
+      --white:  #ffffff;
+      --gray:   #4b4f54;
+      --lt:     #8a9aaa;
+      --green:  #2e7d55;
+      --amber:  #c47b1a;
+      --red:    #c0392b;
+      --green-bg:  #e8f5ee;
+      --amber-bg:  #fdf3e3;
+      --red-bg:    #fdecea;
+      --border: #dde3e8;
+      --surface:#f8f9fa;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--cream);
+      color: var(--navy);
+      font-size: 16px;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    .site-header {
+      background: var(--dark);
+      padding: clamp(1.5rem,4vw,2.5rem) clamp(1rem,5vw,3rem);
+      text-align: center;
+      border-bottom: 3px solid var(--gold);
+    }
+    .site-header .eyebrow {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: clamp(10px,1.5vw,12px);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: .5rem;
+    }
+    .site-header h1 {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: clamp(1.6rem,4vw,2.6rem);
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: -0.5px;
+      margin-bottom: .4rem;
+    }
+    .site-header .address {
+      font-size: clamp(13px,1.8vw,15px);
+      color: var(--lt);
+      letter-spacing: 0.5px;
+    }
+    .site-header .subtitle {
+      margin-top:.6rem;
+      font-size: clamp(13px,1.8vw,15px);
+      color: var(--lt);
+    }
+
+    /* ── SUMMARY STRIP ── */
+    .summary-strip {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+      background: var(--navy);
+      padding: 1rem clamp(1rem,5vw,3rem);
+    }
+    .stat-pill {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 13px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--white);
+    }
+    .stat-pill .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-green  { background: #4caf7d; }
+    .dot-amber  { background: #f0a500; }
+    .dot-gray   { background: #8a9aaa; }
+    .stat-pill span.num {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--gold);
+    }
+
+    /* ── CONTROLS BAR ── */
+    .controls-bar {
+      max-width: 1100px;
+      margin: 1.5rem auto 0;
+      padding: 0 clamp(1rem,4vw,2rem);
+      display: flex;
+      flex-wrap: wrap;
+      gap: .75rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .filter-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+    }
+    .filter-btn {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: .4rem 1rem;
+      border-radius: 100px;
+      border: 1.5px solid var(--border);
+      background: var(--white);
+      color: var(--gray);
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .filter-btn:hover, .filter-btn.active {
+      background: var(--navy);
+      border-color: var(--navy);
+      color: var(--white);
+    }
+    .save-btn {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: .5rem 1.5rem;
+      border-radius: 100px;
+      border: none;
+      background: var(--gold);
+      color: var(--white);
+      cursor: pointer;
+      font-weight: 600;
+      transition: opacity .2s;
+    }
+    .save-btn:hover { opacity: .85; }
+
+    /* ── MAIN CONTENT ── */
+    .main-wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1.5rem clamp(1rem,4vw,2rem) 4rem;
+    }
+
+    /* ── ROOM SECTION ── */
+    .room-section {
+      margin-bottom: 2rem;
+      background: var(--white);
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.06);
+      overflow: hidden;
+    }
+    .room-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--navy);
+      padding: .9rem 1.25rem;
+      cursor: pointer;
+      user-select: none;
+    }
+    .room-header h2 {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: clamp(14px,2vw,17px);
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .room-header .room-meta {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+    }
+    .room-badge {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      padding: .2rem .75rem;
+      border-radius: 100px;
+      background: rgba(255,255,255,.12);
+      color: rgba(255,255,255,.7);
+    }
+    .room-toggle {
+      color: var(--gold);
+      font-size: 18px;
+      transition: transform .25s;
+    }
+    .room-section.collapsed .room-toggle { transform: rotate(-90deg); }
+    .room-body { padding: 0; }
+    .room-section.collapsed .room-body { display: none; }
+
+    /* ── TASK TABLE ── */
+    .task-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .task-table thead th {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 10px;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--lt);
+      padding: .6rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .task-table tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background .15s;
+    }
+    .task-table tbody tr:last-child { border-bottom: none; }
+    .task-table tbody tr:hover { background: #f0f4f7; }
+    .task-table td {
+      padding: .85rem 1rem;
+      vertical-align: middle;
+      font-size: 14px;
+    }
+    .task-table td.task-desc {
+      font-size: 14px;
+      color: var(--navy);
+      font-weight: 500;
+      min-width: 200px;
+    }
+    .task-table td.task-location {
+      font-size: 12px;
+      color: var(--lt);
+      font-family: 'Josefin Sans', sans-serif;
+      letter-spacing: 1px;
+      white-space: nowrap;
+    }
+    .task-table td.task-owner input {
+      width: 100%;
+      min-width: 120px;
+      max-width: 160px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: .35rem .6rem;
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+      color: var(--navy);
+      background: var(--surface);
+      transition: border-color .2s;
+    }
+    .task-table td.task-owner input:focus {
+      outline: none;
+      border-color: var(--blue);
+      background: var(--white);
+    }
+    /* ── RADIO STATUS ── */
+    .status-group {
+      display: flex;
+      gap: .35rem;
+      flex-wrap: wrap;
+    }
+    .status-label {
+      display: flex;
+      align-items: center;
+      gap: .3rem;
+      cursor: pointer;
+      font-size: 12px;
+      font-family: 'Josefin Sans', sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      padding: .3rem .65rem;
+      border-radius: 100px;
+      border: 1.5px solid var(--border);
+      background: var(--white);
+      color: var(--gray);
+      transition: all .2s;
+      user-select: none;
+    }
+    .status-label input[type=radio] {
+      position: absolute;
+      opacity: 0;
+      width: 0; height: 0;
+    }
+    /* Active states */
+    .status-label.status-completed  { border-color: var(--green); background: var(--green-bg); color: var(--green); font-weight: 600; }
+    .status-label.status-in-progress{ border-color: var(--amber); background: var(--amber-bg); color: var(--amber); font-weight: 600; }
+    .status-label.status-not-started{ border-color: #c0392b; background: var(--red-bg); color: var(--red); font-weight: 600; }
+
+    /* ── LOG SECTION ── */
+    .log-section {
+      max-width: 1100px;
+      margin: 0 auto 2rem;
+      padding: 0 clamp(1rem,4vw,2rem);
+    }
+    .log-header {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--lt);
+      margin-bottom: .75rem;
+    }
+    .log-card {
+      background: var(--white);
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.06);
+      overflow: hidden;
+    }
+    .log-entry {
+      display: flex;
+      gap: 1rem;
+      padding: .85rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      align-items: flex-start;
+    }
+    .log-entry:last-child { border-bottom: none; }
+    .log-time {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 11px;
+      color: var(--lt);
+      white-space: nowrap;
+      margin-top: 2px;
+      min-width: 130px;
+    }
+    .log-text { color: var(--navy); line-height: 1.5; }
+    .log-text strong { color: var(--blue); }
+    .log-empty {
+      padding: 1.5rem 1.25rem;
+      font-size: 14px;
+      color: var(--lt);
+      font-style: italic;
+    }
+
+    /* ── SAVE STATUS TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: var(--navy);
+      color: var(--white);
+      padding: .75rem 1.25rem;
+      border-radius: 8px;
+      font-size: 13px;
+      font-family: 'Josefin Sans', sans-serif;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.25);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: all .3s;
+      pointer-events: none;
+      z-index: 999;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── BACK BUTTON ── */
+    .back-btn {
+      position: fixed;
+      bottom: 1.25rem;
+      left: 1.25rem;
+      z-index: 9999;
+      background: var(--navy);
+      color: var(--gold);
+      border: 1px solid var(--gold);
+      border-radius: 50%;
+      width: 44px; height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      font-size: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.3);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 700px) {
+      .task-table thead { display: none; }
+      .task-table tbody tr {
+        display: flex;
+        flex-direction: column;
+        padding: .75rem;
+        gap: .4rem;
+      }
+      .task-table td {
+        padding: .2rem 0;
+        display: block;
+      }
+      .task-table td.task-owner input {
+        max-width: 100%;
+      }
+      .status-group {
+        flex-wrap: wrap;
+      }
+    }
+
+    @media print {
+      .save-btn, .filter-btn, .toast, .back-btn, .controls-bar { display: none; }
+      body { background: white; }
+      .room-section.collapsed .room-body { display: block !important; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="eyebrow">Construction Tracker</div>
+  <h1>Eagles Landing Cabin</h1>
+  <div class="address">225 Lake View Drive · Grand Lake, Colorado 80447</div>
+  <div class="subtitle">10,900 SF · Task Status · Room by Room</div>
+</header>
+
+<!-- SUMMARY STRIP -->
+<div class="summary-strip" id="summaryStrip">
+  <div class="stat-pill"><div class="dot dot-green"></div> Completed <span class="num" id="countDone">0</span></div>
+  <div class="stat-pill"><div class="dot dot-amber"></div> In Progress <span class="num" id="countProg">0</span></div>
+  <div class="stat-pill"><div class="dot dot-gray"></div> Not Started <span class="num" id="countNone">0</span></div>
+  <div class="stat-pill" style="color:var(--lt);">Total Tasks <span class="num" id="countTotal">0</span></div>
+</div>
+
+<!-- CONTROLS -->
+<div class="controls-bar">
+  <div class="filter-group">
+    <button class="filter-btn active" onclick="filterTasks('all',this)">All Rooms</button>
+    <button class="filter-btn" onclick="filterTasks('completed',this)">✓ Completed</button>
+    <button class="filter-btn" onclick="filterTasks('in-progress',this)">⏳ In Progress</button>
+    <button class="filter-btn" onclick="filterTasks('not-started',this)">○ Not Started</button>
+  </div>
+  <button class="save-btn" onclick="saveAll()">💾 Save Progress</button>
+</div>
+
+<!-- MAIN TASK LIST -->
+<div class="main-wrap" id="mainWrap">
+
+  <!-- Rooms will be injected here by JS -->
+
+</div>
+
+<!-- UPDATE LOG -->
+<div class="log-section">
+  <div class="log-header">Update Log</div>
+  <div class="log-card" id="logCard">
+    <div class="log-empty" id="logEmpty">No updates recorded yet. Changes will appear here when you save progress.</div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">Progress saved ✓</div>
+
+<!-- BACK BUTTON -->
+<a href="javascript:history.back()" class="back-btn" title="Back">←</a>
+
+<script>
+// ════════════════════════════════════════════
+//  ROOM & TASK DATA
+//  Stan will dictate room by room — add tasks here
+// ════════════════════════════════════════════
+const ROOMS = [
+  {
+    id: 'placeholder',
+    name: 'Ready for Your Tasks',
+    tasks: [
+      { id: 'p1', desc: 'Stan — dictate your first room and tasks to MC to begin populating this list.', location: 'Eagles Landing Cabin', owner: '', status: 'not-started' }
+    ]
+  }
+];
+
+// ════════════════════════════════════════════
+//  RENDER
+// ════════════════════════════════════════════
+function buildTracker() {
+  const wrap = document.getElementById('mainWrap');
+  wrap.innerHTML = '';
+
+  ROOMS.forEach(room => {
+    const section = document.createElement('div');
+    section.className = 'room-section';
+    section.id = 'room-' + room.id;
+
+    const taskCount = room.tasks.length;
+    section.innerHTML = `
+      <div class="room-header" onclick="toggleRoom('${room.id}')">
+        <h2>${room.name}</h2>
+        <div class="room-meta">
+          <span class="room-badge">${taskCount} task${taskCount !== 1 ? 's' : ''}</span>
+          <span class="room-toggle">▾</span>
+        </div>
+      </div>
+      <div class="room-body">
+        <table class="task-table">
+          <thead>
+            <tr>
+              <th>Task</th>
+              <th>Location / Detail</th>
+              <th>Owner / Completed By</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-${room.id}">
+          </tbody>
+        </table>
+      </div>
+    `;
+    wrap.appendChild(section);
+
+    const tbody = document.getElementById('tbody-' + room.id);
+    room.tasks.forEach(task => {
+      const saved = loadTask(task.id);
+      const status = saved ? saved.status : (task.status || 'not-started');
+      const owner  = saved ? saved.owner  : (task.owner  || '');
+      tbody.appendChild(buildRow(task, status, owner));
+    });
+  });
+
+  updateCounts();
+}
+
+function buildRow(task, status, owner) {
+  const tr = document.createElement('tr');
+  tr.id = 'row-' + task.id;
+  tr.dataset.status = status;
+
+  const statusOptions = [
+    { val: 'completed',   label: '✓ Done' },
+    { val: 'in-progress', label: '⏳ In Progress' },
+    { val: 'not-started', label: '○ Not Started' }
+  ];
+
+  const radios = statusOptions.map(opt => {
+    const checked = status === opt.val ? 'checked' : '';
+    const activeClass = status === opt.val ? `status-${opt.val}` : '';
+    return `
+      <label class="status-label ${activeClass}" id="lbl-${task.id}-${opt.val}">
+        <input type="radio" name="status-${task.id}" value="${opt.val}" ${checked}
+          onchange="onStatusChange('${task.id}', '${opt.val}')">
+        ${opt.label}
+      </label>
+    `;
+  }).join('');
+
+  tr.innerHTML = `
+    <td class="task-desc">${task.desc}</td>
+    <td class="task-location">${task.location || ''}</td>
+    <td class="task-owner">
+      <input type="text" placeholder="Assign owner…" value="${escHtml(owner)}"
+        id="owner-${task.id}"
+        onchange="markDirty()">
+    </td>
+    <td>
+      <div class="status-group">${radios}</div>
+    </td>
+  `;
+  return tr;
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ════════════════════════════════════════════
+//  STATUS CHANGE
+// ════════════════════════════════════════════
+function onStatusChange(taskId, newStatus) {
+  const row = document.getElementById('row-' + taskId);
+  if (row) row.dataset.status = newStatus;
+
+  // Update label styles
+  ['completed','in-progress','not-started'].forEach(s => {
+    const lbl = document.getElementById(`lbl-${taskId}-${s}`);
+    if (lbl) {
+      lbl.className = 'status-label' + (s === newStatus ? ` status-${s}` : '');
+    }
+  });
+
+  updateCounts();
+  markDirty();
+}
+
+// ════════════════════════════════════════════
+//  COUNTS
+// ════════════════════════════════════════════
+function updateCounts() {
+  const rows = document.querySelectorAll('.task-table tbody tr');
+  let done = 0, prog = 0, none = 0;
+  rows.forEach(r => {
+    const s = r.dataset.status;
+    if (s === 'completed') done++;
+    else if (s === 'in-progress') prog++;
+    else none++;
+  });
+  document.getElementById('countDone').textContent  = done;
+  document.getElementById('countProg').textContent  = prog;
+  document.getElementById('countNone').textContent  = none;
+  document.getElementById('countTotal').textContent = rows.length;
+}
+
+// ════════════════════════════════════════════
+//  FILTER
+// ════════════════════════════════════════════
+function filterTasks(filter, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  document.querySelectorAll('.task-table tbody tr').forEach(tr => {
+    if (filter === 'all') {
+      tr.style.display = '';
+    } else {
+      tr.style.display = tr.dataset.status === filter ? '' : 'none';
+    }
+  });
+}
+
+// ════════════════════════════════════════════
+//  COLLAPSE / EXPAND
+// ════════════════════════════════════════════
+function toggleRoom(roomId) {
+  const sec = document.getElementById('room-' + roomId);
+  sec.classList.toggle('collapsed');
+}
+
+// ════════════════════════════════════════════
+//  SAVE / LOAD  (localStorage)
+// ════════════════════════════════════════════
+let dirty = false;
+
+function markDirty() { dirty = true; }
+
+function saveAll() {
+  const changes = [];
+  ROOMS.forEach(room => {
+    room.tasks.forEach(task => {
+      const row = document.getElementById('row-' + task.id);
+      if (!row) return;
+      const status = row.dataset.status;
+      const ownerEl = document.getElementById('owner-' + task.id);
+      const owner = ownerEl ? ownerEl.value.trim() : '';
+      const prev = loadTask(task.id);
+      const prevStatus = prev ? prev.status : (task.status || 'not-started');
+      const prevOwner  = prev ? prev.owner  : (task.owner  || '');
+
+      if (status !== prevStatus || owner !== prevOwner) {
+        changes.push({ task, status, owner, prevStatus });
+      }
+      localStorage.setItem('el-task-' + task.id, JSON.stringify({ status, owner }));
+    });
+  });
+
+  if (changes.length > 0) {
+    addLogEntries(changes);
+  }
+  showToast('Progress saved ✓');
+  dirty = false;
+}
+
+function loadTask(taskId) {
+  const raw = localStorage.getItem('el-task-' + taskId);
+  return raw ? JSON.parse(raw) : null;
+}
+
+function addLogEntries(changes) {
+  const logCard = document.getElementById('logCard');
+  const empty   = document.getElementById('logEmpty');
+  if (empty) empty.remove();
+
+  const now = new Date();
+  const time = now.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
+             + ' ' + now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+
+  changes.forEach(c => {
+    const entry = document.createElement('div');
+    entry.className = 'log-entry';
+    const ownerNote = c.owner ? ` · Owner: <strong>${escHtml(c.owner)}</strong>` : '';
+    entry.innerHTML = `
+      <div class="log-time">${time}</div>
+      <div class="log-text">
+        <strong>${escHtml(c.task.desc)}</strong>
+        changed from <em>${formatStatus(c.prevStatus)}</em> → <strong>${formatStatus(c.status)}</strong>${ownerNote}
+      </div>
+    `;
+    logCard.insertBefore(entry, logCard.firstChild);
+  });
+
+  // Persist log
+  const stored = JSON.parse(localStorage.getItem('el-log') || '[]');
+  changes.forEach(c => {
+    stored.unshift({
+      time,
+      task: c.task.desc,
+      from: c.prevStatus,
+      to:   c.status,
+      owner: c.owner
+    });
+  });
+  // Keep last 200 entries
+  localStorage.setItem('el-log', JSON.stringify(stored.slice(0, 200)));
+}
+
+function formatStatus(s) {
+  if (s === 'completed')   return '✓ Completed';
+  if (s === 'in-progress') return '⏳ In Progress';
+  return '○ Not Started';
+}
+
+function loadLog() {
+  const stored = JSON.parse(localStorage.getItem('el-log') || '[]');
+  if (stored.length === 0) return;
+  const logCard = document.getElementById('logCard');
+  const empty   = document.getElementById('logEmpty');
+  if (empty) empty.remove();
+  stored.forEach(entry => {
+    const div = document.createElement('div');
+    div.className = 'log-entry';
+    const ownerNote = entry.owner ? ` · Owner: <strong>${escHtml(entry.owner)}</strong>` : '';
+    div.innerHTML = `
+      <div class="log-time">${entry.time}</div>
+      <div class="log-text">
+        <strong>${escHtml(entry.task)}</strong>
+        changed from <em>${formatStatus(entry.from)}</em> → <strong>${formatStatus(entry.to)}</strong>${ownerNote}
+      </div>
+    `;
+    logCard.appendChild(div);
+  });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════
+buildTracker();
+loadLog();
+
+// Warn on unsaved changes
+window.addEventListener('beforeunload', e => {
+  if (dirty) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
+// Auto-save every 5 minutes
+setInterval(() => { if (dirty) saveAll(); }, 5 * 60 * 1000);
+</script>
+</body>
+</html>
