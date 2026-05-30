@@ -21,9 +21,11 @@
       --green:  #2e7d55;
       --amber:  #c47b1a;
       --red:    #c0392b;
+      --approved: #1a5c3a;
       --green-bg:  #e8f5ee;
       --amber-bg:  #fdf3e3;
       --red-bg:    #fdecea;
+      --approved-bg: #d4eddf;
       --border: #dde3e8;
       --surface:#f8f9fa;
     }
@@ -299,6 +301,7 @@
     .status-label.status-completed  { border-color: var(--green); background: var(--green-bg); color: var(--green); font-weight: 600; }
     .status-label.status-in-progress{ border-color: var(--amber); background: var(--amber-bg); color: var(--amber); font-weight: 600; }
     .status-label.status-not-started{ border-color: #c0392b; background: var(--red-bg); color: var(--red); font-weight: 600; }
+    .status-label.status-approved   { border-color: var(--approved); background: var(--approved-bg); color: var(--approved); font-weight: 700; letter-spacing: 1.5px; }
 
     /* ── LOG SECTION ── */
     .log-section {
@@ -430,6 +433,7 @@
 <!-- SUMMARY STRIP -->
 <div class="summary-strip" id="summaryStrip">
   <div class="stat-pill"><div class="dot dot-green"></div> Completed <span class="num" id="countDone">0</span></div>
+  <div class="stat-pill"><div class="dot" style="background:#1a5c3a"></div> Approved <span class="num" id="countApproved">0</span></div>
   <div class="stat-pill"><div class="dot dot-amber"></div> In Progress <span class="num" id="countProg">0</span></div>
   <div class="stat-pill"><div class="dot dot-gray"></div> Not Started <span class="num" id="countNone">0</span></div>
   <div class="stat-pill" style="color:var(--lt);">Total Tasks <span class="num" id="countTotal">0</span></div>
@@ -439,6 +443,7 @@
 <div class="controls-bar">
   <div class="filter-group">
     <button class="filter-btn active" onclick="filterTasks('all',this)">All Rooms</button>
+    <button class="filter-btn" onclick="filterTasks('approved',this)">✓✓ Approved</button>
     <button class="filter-btn" onclick="filterTasks('completed',this)">✓ Completed</button>
     <button class="filter-btn" onclick="filterTasks('in-progress',this)">⏳ In Progress</button>
     <button class="filter-btn" onclick="filterTasks('not-started',this)">○ Not Started</button>
@@ -855,6 +860,7 @@ function buildRow(task, status, owner) {
   tr.dataset.status = status;
 
   const statusOptions = [
+    { val: 'approved',    label: '✓✓ Approved' },
     { val: 'completed',   label: '✓ Done' },
     { val: 'in-progress', label: '⏳ In Progress' },
     { val: 'not-started', label: '○ Not Started' }
@@ -900,7 +906,7 @@ function onStatusChange(taskId, newStatus) {
   if (row) row.dataset.status = newStatus;
 
   // Update label styles
-  ['completed','in-progress','not-started'].forEach(s => {
+  ['approved','completed','in-progress','not-started'].forEach(s => {
     const lbl = document.getElementById(`lbl-${taskId}-${s}`);
     if (lbl) {
       lbl.className = 'status-label' + (s === newStatus ? ` status-${s}` : '');
@@ -916,17 +922,19 @@ function onStatusChange(taskId, newStatus) {
 // ════════════════════════════════════════════
 function updateCounts() {
   const rows = document.querySelectorAll('.task-table tbody tr');
-  let done = 0, prog = 0, none = 0;
+  let done = 0, approved = 0, prog = 0, none = 0;
   rows.forEach(r => {
     const s = r.dataset.status;
-    if (s === 'completed') done++;
+    if (s === 'approved') approved++;
+    else if (s === 'completed') done++;
     else if (s === 'in-progress') prog++;
     else none++;
   });
-  document.getElementById('countDone').textContent  = done;
-  document.getElementById('countProg').textContent  = prog;
-  document.getElementById('countNone').textContent  = none;
-  document.getElementById('countTotal').textContent = rows.length;
+  document.getElementById('countDone').textContent     = done;
+  document.getElementById('countApproved').textContent = approved;
+  document.getElementById('countProg').textContent     = prog;
+  document.getElementById('countNone').textContent     = none;
+  document.getElementById('countTotal').textContent    = rows.length;
 }
 
 // ════════════════════════════════════════════
@@ -1031,6 +1039,7 @@ function addLogEntries(changes) {
 }
 
 function formatStatus(s) {
+  if (s === 'approved')    return '✓✓ Approved';
   if (s === 'completed')   return '✓ Completed';
   if (s === 'in-progress') return '⏳ In Progress';
   return '○ Not Started';
