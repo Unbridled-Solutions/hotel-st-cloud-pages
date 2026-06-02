@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Hotel St. Cloud F&B Labor Scheduler — Revenue-tiered staffing model">
+  <title>F&B Labor Scheduler | Hotel St. Cloud</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --navy: #1f2b3f;
+      --navy-light: #253348;
+      --blue: #5a8ba7;
+      --blue-light: #7aaec7;
+      --cream: #f7f5f0;
+      --gold: #ba8032;
+      --gold-light: #d4a050;
+      --green: #2e7d55;
+      --green-bg: #e8f5ee;
+      --amber: #c47b1a;
+      --amber-bg: #fef3e2;
+      --red: #c0392b;
+      --red-bg: #fdecea;
+      --gray: #4b4f54;
+      --light-gray: #7a8490;
+      --border: #ddd8cf;
+      --white: #ffffff;
+      --text: #2e3338;
+      --card-bg: #ffffff;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--cream); color: var(--text); font-family: 'Inter', sans-serif; font-size: 16px; line-height: 1.6; }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      background: var(--navy);
+      padding: .75rem clamp(1.5rem, 5vw, 3rem);
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 200;
+      border-bottom: 2px solid var(--gold);
+    }
+    .topbar-brand { font-family: 'Josefin Sans', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--white); text-decoration: none; }
+    .topbar-brand span { color: var(--blue-light); }
+    .topbar-right { font-family: 'Josefin Sans', sans-serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #4a6a85; }
+    .live-dot { display: inline-block; width: 7px; height: 7px; background: var(--green); border-radius: 50%; margin-right: 6px; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.4; } }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(135deg, var(--navy) 0%, #162230 100%);
+      padding: clamp(3rem, 8vw, 5rem) clamp(1.5rem, 6vw, 4rem);
+      text-align: center; position: relative; overflow: hidden;
+    }
+    .hero::before { content:''; position:absolute; inset:0; background: radial-gradient(ellipse at 50% 30%, rgba(90,139,167,.12) 0%, transparent 70%); }
+    .hero-eyebrow { font-family: 'Josefin Sans', sans-serif; font-size: 10px; letter-spacing: 5px; text-transform: uppercase; color: var(--gold); margin-bottom: 1rem; }
+    .hero h1 { font-family: 'Josefin Sans', sans-serif; font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 600; color: var(--white); margin-bottom: .75rem; }
+    .hero h1 em { color: var(--blue-light); font-style: normal; }
+    .hero-sub { font-size: clamp(.9rem, 2vw, 1.1rem); color: #8aabbd; max-width: 600px; margin: 0 auto 2rem; }
+    .hero-stats { display: flex; justify-content: center; gap: clamp(1.5rem, 5vw, 3rem); flex-wrap: wrap; position: relative; }
+    .hero-stat { text-align: center; }
+    .hero-stat .val { font-family: 'Josefin Sans', sans-serif; font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 700; color: var(--gold); }
+    .hero-stat .lbl { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #4a6a85; margin-top: 2px; }
+
+    /* ── LAYOUT ── */
+    .container { max-width: 1200px; margin: 0 auto; padding: clamp(2rem, 5vw, 3rem) clamp(1rem, 4vw, 2rem); }
+    .section-label { font-family: 'Josefin Sans', sans-serif; font-size: 9px; letter-spacing: 4px; text-transform: uppercase; color: var(--gold); margin-bottom: .5rem; }
+    .section-title { font-family: 'Josefin Sans', sans-serif; font-size: clamp(1.4rem, 3vw, 1.9rem); font-weight: 600; color: var(--navy); margin-bottom: 1.5rem; }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+
+    /* ── TIER CARDS ── */
+    .tier-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2.5rem; }
+    @media (max-width: 768px) { .tier-grid { grid-template-columns: 1fr; } }
+    .tier-card {
+      background: var(--card-bg); border-radius: 12px; padding: clamp(1.25rem, 3vw, 1.75rem);
+      border: 1px solid var(--border); box-shadow: 0 2px 12px rgba(0,0,0,.06);
+      position: relative; overflow: hidden;
+    }
+    .tier-card::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; }
+    .tier-1::before { background: var(--amber); }
+    .tier-2::before { background: var(--blue); }
+    .tier-3::before { background: var(--gold); }
+    .tier-badge { display: inline-block; font-family: 'Josefin Sans', sans-serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; padding: 3px 10px; border-radius: 100px; margin-bottom: .75rem; }
+    .tier-1 .tier-badge { background: var(--amber-bg); color: var(--amber); }
+    .tier-2 .tier-badge { background: #e8f2f9; color: var(--blue); }
+    .tier-3 .tier-badge { background: #fef6e8; color: var(--gold); }
+    .tier-card h3 { font-family: 'Josefin Sans', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--navy); margin-bottom: .25rem; }
+    .tier-days { font-size: .8rem; color: var(--light-gray); margin-bottom: 1rem; }
+    .tier-metric { display: flex; justify-content: space-between; align-items: center; padding: .5rem 0; border-bottom: 1px solid var(--border); }
+    .tier-metric:last-child { border-bottom: none; }
+    .tier-metric .met-label { font-size: .8rem; color: var(--gray); }
+    .tier-metric .met-val { font-weight: 600; color: var(--navy); font-size: .9rem; }
+    .tier-metric .met-val.good { color: var(--green); }
+    .tier-metric .met-val.warn { color: var(--amber); }
+    .tier-metric .met-val.bad  { color: var(--red); }
+
+    /* ── SCHEDULE BUILDER ── */
+    .builder-card {
+      background: var(--card-bg); border-radius: 12px; padding: clamp(1.5rem, 4vw, 2.5rem);
+      border: 1px solid var(--border); box-shadow: 0 2px 16px rgba(0,0,0,.07); margin-bottom: 2rem;
+    }
+    .builder-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
+    .day-selector { display: flex; gap: .5rem; flex-wrap: wrap; }
+    .day-btn {
+      font-family: 'Josefin Sans', sans-serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+      padding: 6px 14px; border-radius: 100px; border: 1px solid var(--border);
+      background: var(--cream); color: var(--gray); cursor: pointer; transition: all .2s;
+    }
+    .day-btn:hover { border-color: var(--blue); color: var(--blue); }
+    .day-btn.active { background: var(--navy); border-color: var(--navy); color: var(--white); }
+    .day-btn.tier-1-day.active { background: var(--amber); border-color: var(--amber); }
+    .day-btn.tier-2-day.active { background: var(--blue); border-color: var(--blue); }
+    .day-btn.tier-3-day.active { background: var(--gold); border-color: var(--gold); }
+
+    /* Revenue input */
+    .rev-input-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .rev-input-group { display: flex; align-items: center; gap: .5rem; }
+    .rev-input-group label { font-size: .8rem; color: var(--gray); font-weight: 500; white-space: nowrap; }
+    .rev-input {
+      font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 600; color: var(--navy);
+      border: 2px solid var(--border); border-radius: 8px; padding: 8px 14px;
+      background: var(--cream); width: 140px; transition: border-color .2s;
+    }
+    .rev-input:focus { outline: none; border-color: var(--blue); }
+    .tier-indicator { font-family: 'Josefin Sans', sans-serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; padding: 5px 14px; border-radius: 100px; font-weight: 600; }
+
+    /* Schedule table */
+    .schedule-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    .schedule-table th {
+      font-family: 'Josefin Sans', sans-serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+      color: var(--light-gray); padding: .6rem 1rem; text-align: left; border-bottom: 2px solid var(--border);
+    }
+    .schedule-table td { padding: .65rem 1rem; border-bottom: 1px solid var(--border); font-size: .9rem; vertical-align: middle; }
+    .schedule-table tr:last-child td { border-bottom: none; }
+    .schedule-table tr:hover td { background: rgba(90,139,167,.04); }
+    .role-badge { display: inline-block; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+    .boh { background: #e8f2f9; color: #2d6a8a; }
+    .foh { background: #e8f5ee; color: #1d6640; }
+    .mgr { background: #fef6e8; color: #8a5a10; }
+    .hrs-input {
+      width: 60px; border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px;
+      font-family: 'Inter', sans-serif; font-size: .85rem; color: var(--navy); background: var(--cream);
+      text-align: center; transition: border-color .2s;
+    }
+    .hrs-input:focus { outline: none; border-color: var(--blue); }
+    .shift-select {
+      border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px;
+      font-family: 'Inter', sans-serif; font-size: .8rem; color: var(--navy); background: var(--cream);
+      cursor: pointer; transition: border-color .2s;
+    }
+    .shift-select:focus { outline: none; border-color: var(--blue); }
+    .cost-cell { font-weight: 600; color: var(--navy); }
+    .section-group { background: var(--navy); color: var(--white); }
+    .section-group td { padding: .5rem 1rem; font-family: 'Josefin Sans', sans-serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #7aaec7; }
+
+    /* Labor summary bar */
+    .labor-summary {
+      background: var(--navy); border-radius: 10px; padding: 1.25rem 1.5rem;
+      display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; margin-top: 1.5rem;
+    }
+    .labor-pct-label { font-family: 'Josefin Sans', sans-serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #4a6a85; white-space: nowrap; }
+    .labor-pct-val { font-family: 'Josefin Sans', sans-serif; font-size: 2rem; font-weight: 700; margin-right: .25rem; }
+    .labor-pct-val.green { color: #4caf7d; }
+    .labor-pct-val.amber { color: #f0a830; }
+    .labor-pct-val.red   { color: #e05a5a; }
+    .labor-bar-wrap { flex: 1; min-width: 200px; }
+    .labor-bar-track { height: 8px; background: rgba(255,255,255,.1); border-radius: 100px; overflow: hidden; }
+    .labor-bar-fill { height: 8px; border-radius: 100px; transition: width .4s, background .4s; }
+    .labor-detail { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+    .labor-detail-item { text-align: center; }
+    .labor-detail-item .dv { font-family: 'Josefin Sans', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--white); }
+    .labor-detail-item .dl { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: #4a6a85; margin-top: 1px; }
+    .verdict-badge {
+      font-family: 'Josefin Sans', sans-serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+      padding: 6px 14px; border-radius: 100px; font-weight: 700; white-space: nowrap;
+    }
+    .verdict-ok   { background: rgba(76,175,125,.15); color: #4caf7d; }
+    .verdict-warn { background: rgba(240,168,48,.15); color: #f0a830; }
+    .verdict-bad  { background: rgba(224,90,90,.15); color: #e05a5a; }
+
+    /* ── WEEKLY OVERVIEW ── */
+    .weekly-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: .75rem; margin-bottom: 2rem; }
+    @media (max-width: 900px) { .weekly-grid { grid-template-columns: repeat(4, 1fr); } }
+    @media (max-width: 520px) { .weekly-grid { grid-template-columns: repeat(2, 1fr); } }
+    .day-card {
+      background: var(--card-bg); border-radius: 10px; padding: 1rem;
+      border: 1px solid var(--border); text-align: center; cursor: pointer; transition: all .2s;
+    }
+    .day-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.1); transform: translateY(-1px); }
+    .day-card.selected { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(90,139,167,.3); }
+    .day-card .day-name { font-family: 'Josefin Sans', sans-serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--light-gray); margin-bottom: .25rem; }
+    .day-card .day-rev { font-weight: 700; color: var(--navy); font-size: 1rem; }
+    .day-card .day-budget { font-size: .75rem; color: var(--light-gray); margin-top: 2px; }
+    .day-card .day-tier { font-family: 'Josefin Sans', sans-serif; font-size: 8px; letter-spacing: 2px; text-transform: uppercase; margin-top: .4rem; padding: 2px 8px; border-radius: 100px; }
+    .t1-pill { background: var(--amber-bg); color: var(--amber); }
+    .t2-pill { background: #e8f2f9; color: var(--blue); }
+    .t3-pill { background: #fef6e8; color: var(--gold); }
+
+    /* ── PRINT SCHEDULE ── */
+    .print-btn {
+      font-family: 'Josefin Sans', sans-serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+      padding: 10px 20px; background: var(--navy); color: var(--white); border: none;
+      border-radius: 100px; cursor: pointer; transition: background .2s;
+    }
+    .print-btn:hover { background: var(--blue); }
+
+    /* ── CHARTS ── */
+    .charts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-bottom: 2.5rem; }
+    @media (max-width: 768px) { .charts-grid { grid-template-columns: 1fr; } }
+    .chart-card {
+      background: var(--card-bg); border-radius: 12px; padding: 1.5rem;
+      border: 1px solid var(--border); box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    }
+    .chart-title { font-family: 'Josefin Sans', sans-serif; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--gray); margin-bottom: 1rem; }
+
+    /* ── RESEARCH CALLOUTS ── */
+    .research-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-bottom: 2rem; }
+    @media (max-width: 768px) { .research-grid { grid-template-columns: 1fr; } }
+    .research-card {
+      background: var(--navy); border-radius: 10px; padding: 1.25rem 1.5rem; color: var(--white);
+    }
+    .research-number { font-family: 'Josefin Sans', sans-serif; font-size: 2rem; font-weight: 700; color: var(--gold); }
+    .research-label { font-size: .8rem; color: #8aabbd; margin-top: 3px; }
+    .research-source { font-size: .7rem; color: #4a6a85; margin-top: .5rem; }
+
+    .insight-card {
+      background: var(--card-bg); border-radius: 10px; padding: 1.25rem 1.5rem;
+      border-left: 4px solid var(--blue); box-shadow: 0 2px 10px rgba(0,0,0,.06); margin-bottom: 1rem;
+    }
+    .insight-card h4 { font-family: 'Josefin Sans', sans-serif; font-size: .85rem; font-weight: 700; color: var(--navy); margin-bottom: .4rem; }
+    .insight-card p { font-size: .85rem; color: var(--gray); line-height: 1.6; }
+    .insight-card.warning { border-left-color: var(--red); }
+    .insight-card.tip { border-left-color: var(--green); }
+    .insight-card.gold { border-left-color: var(--gold); }
+
+    /* ── STAFF ROSTER ── */
+    .roster-card {
+      background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border);
+      box-shadow: 0 2px 12px rgba(0,0,0,.06); overflow: hidden; margin-bottom: 2rem;
+    }
+    .roster-header { background: var(--navy); padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+    .roster-header h3 { font-family: 'Josefin Sans', sans-serif; font-size: .95rem; font-weight: 700; color: var(--white); letter-spacing: 1px; }
+    .roster-header .count { font-family: 'Josefin Sans', sans-serif; font-size: 1.4rem; font-weight: 700; color: var(--gold); }
+    .roster-table { width: 100%; border-collapse: collapse; }
+    .roster-table th { font-family: 'Josefin Sans', sans-serif; font-size: 8px; letter-spacing: 3px; text-transform: uppercase; color: var(--light-gray); padding: .6rem 1.25rem; text-align: left; border-bottom: 1px solid var(--border); }
+    .roster-table td { padding: .6rem 1.25rem; border-bottom: 1px solid rgba(221,216,207,.5); font-size: .85rem; }
+    .roster-table tr:last-child td { border-bottom: none; }
+    .rate-val { font-weight: 600; color: var(--navy); }
+
+    /* Footer */
+    .footer { background: var(--navy); padding: 2rem clamp(1.5rem,5vw,3rem); text-align: center; }
+    .footer p { font-family: 'Josefin Sans', sans-serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #2a3d52; }
+
+    @media print {
+      .topbar, .hero, .day-selector, .rev-input-row, .print-btn, .charts-grid, .research-grid, .footer { display: none !important; }
+      body { background: white; }
+      .schedule-table th, .schedule-table td { font-size: 10px; padding: .4rem .6rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<nav class="topbar">
+  <a href="https://www.hotelstcloud.com" class="topbar-brand">Hotel <span>St. Cloud</span></a>
+  <div class="topbar-right"><span class="live-dot"></span>F&B Labor Scheduler</div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">Hotel St. Cloud · 1887 Eatery · Fremont Public House · The War Room</div>
+  <h1>F&B <em>Labor Scheduler</em></h1>
+  <p class="hero-sub">Revenue-tiered staffing model built from 12 months of actual sales data. Know your budget before you build the schedule.</p>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="val">$1.48M</div><div class="lbl">Annual Revenue</div></div>
+    <div class="hero-stat"><div class="val">$123K</div><div class="lbl">Monthly Avg</div></div>
+    <div class="hero-stat"><div class="val">74%</div><div class="lbl">Revenue After 4PM</div></div>
+    <div class="hero-stat"><div class="val">28-33%</div><div class="lbl">Labor Target</div></div>
+  </div>
+</div>
+
+<!-- MAIN CONTAINER -->
+<div class="container">
+
+  <!-- SECTION: Revenue Tiers -->
+  <div class="section-label">The Model</div>
+  <h2 class="section-title">Three-Tier Staffing System</h2>
+  <div class="tier-grid">
+    <!-- Tier 1 -->
+    <div class="tier-card tier-1">
+      <div class="tier-badge">Tier 1 · Slow</div>
+      <h3>Mon / Tue / Wed</h3>
+      <p class="tier-days">Lowest revenue days — lean deployment</p>
+      <div class="tier-metric"><span class="met-label">Avg Daily Revenue</span><span class="met-val">$2,200 – $2,900</span></div>
+      <div class="tier-metric"><span class="met-label">Max Labor Budget</span><span class="met-val good">$700 – $800</span></div>
+      <div class="tier-metric"><span class="met-label">Labor % Target</span><span class="met-val good">28-33%</span></div>
+      <div class="tier-metric"><span class="met-label">BOH Minimum</span><span class="met-val">2 cooks</span></div>
+      <div class="tier-metric"><span class="met-label">FOH Minimum</span><span class="met-val">3 staff</span></div>
+      <div class="tier-metric"><span class="met-label">Dinner Crew Arrives</span><span class="met-val">3:30 PM</span></div>
+    </div>
+    <!-- Tier 2 -->
+    <div class="tier-card tier-2">
+      <div class="tier-badge">Tier 2 · Mid</div>
+      <h3>Thu / Sun</h3>
+      <p class="tier-days">Building toward weekend — moderate</p>
+      <div class="tier-metric"><span class="met-label">Avg Daily Revenue</span><span class="met-val">$3,400 – $4,100</span></div>
+      <div class="tier-metric"><span class="met-label">Max Labor Budget</span><span class="met-val good">$1,000 – $1,300</span></div>
+      <div class="tier-metric"><span class="met-label">Labor % Target</span><span class="met-val good">29-32%</span></div>
+      <div class="tier-metric"><span class="met-label">BOH Minimum</span><span class="met-val">3 cooks</span></div>
+      <div class="tier-metric"><span class="met-label">FOH Minimum</span><span class="met-val">4 staff</span></div>
+      <div class="tier-metric"><span class="met-label">Dinner Crew Arrives</span><span class="met-val">3:30 PM</span></div>
+    </div>
+    <!-- Tier 3 -->
+    <div class="tier-card tier-3">
+      <div class="tier-badge">Tier 3 · Peak</div>
+      <h3>Fri / Sat</h3>
+      <p class="tier-days">Full deployment — all venues active</p>
+      <div class="tier-metric"><span class="met-label">Avg Daily Revenue</span><span class="met-val">$6,000 – $6,600</span></div>
+      <div class="tier-metric"><span class="met-label">Max Labor Budget</span><span class="met-val good">$1,800 – $2,000</span></div>
+      <div class="tier-metric"><span class="met-label">Labor % Target</span><span class="met-val good">30-33%</span></div>
+      <div class="tier-metric"><span class="met-label">BOH Minimum</span><span class="met-val">5 cooks</span></div>
+      <div class="tier-metric"><span class="met-label">FOH Minimum</span><span class="met-val">6 staff</span></div>
+      <div class="tier-metric"><span class="met-label">Dinner Crew Arrives</span><span class="met-val">3:30 PM</span></div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION: Weekly Overview -->
+  <div class="section-label">Weekly View</div>
+  <h2 class="section-title">Daily Revenue & Labor Budgets</h2>
+  <div class="weekly-grid" id="weeklyGrid"></div>
+
+  <hr class="divider">
+
+  <!-- SECTION: Schedule Builder -->
+  <div class="section-label">Interactive Builder</div>
+  <h2 class="section-title">Build Your Schedule</h2>
+
+  <div class="builder-card">
+    <div class="builder-header">
+      <div>
+        <div style="font-weight:600;color:var(--navy);margin-bottom:.5rem;">Select a Day to Schedule</div>
+        <div class="day-selector" id="daySelector"></div>
+      </div>
+      <button class="print-btn" onclick="printSchedule()">⎙ Print Schedule</button>
+    </div>
+
+    <div class="rev-input-row">
+      <div class="rev-input-group">
+        <label>Projected Revenue:</label>
+        <span style="font-size:1.1rem;color:var(--gray);font-weight:500;">$</span>
+        <input type="number" class="rev-input" id="revInput" value="2600" min="0" step="100" oninput="updateSchedule()">
+      </div>
+      <span class="tier-indicator" id="tierIndicator"></span>
+      <div style="font-size:.8rem;color:var(--light-gray);">Max labor budget: <strong id="maxBudget" style="color:var(--navy)">$780</strong></div>
+    </div>
+
+    <table class="schedule-table" id="scheduleTable">
+      <thead>
+        <tr>
+          <th>Staff</th>
+          <th>Role</th>
+          <th>Rate</th>
+          <th>Shift</th>
+          <th>Hours</th>
+          <th>Day Cost</th>
+          <th>On?</th>
+        </tr>
+      </thead>
+      <tbody id="scheduleBody"></tbody>
+    </table>
+
+    <div class="labor-summary" id="laborSummary">
+      <div>
+        <div class="labor-pct-label">Labor %</div>
+        <span class="labor-pct-val" id="laborPct">—</span>
+      </div>
+      <div class="labor-bar-wrap">
+        <div style="display:flex;justify-content:space-between;font-size:.7rem;color:#4a6a85;margin-bottom:4px;">
+          <span>0%</span><span>30%</span><span>33%</span><span>50%</span>
+        </div>
+        <div class="labor-bar-track"><div class="labor-bar-fill" id="laborBarFill" style="width:0%"></div></div>
+        <div style="font-size:.7rem;color:#4a6a85;margin-top:4px;">Industry target: 28–33%</div>
+      </div>
+      <div class="labor-detail">
+        <div class="labor-detail-item"><div class="dv" id="summTotalLabor">$0</div><div class="dl">Total Labor</div></div>
+        <div class="labor-detail-item"><div class="dv" id="summRevenue">$0</div><div class="dl">Revenue</div></div>
+        <div class="labor-detail-item"><div class="dv" id="summVariance">$0</div><div class="dl">Vs. Budget</div></div>
+        <div class="labor-detail-item"><div class="dv" id="summHeadcount">0</div><div class="dl">Headcount</div></div>
+      </div>
+      <span class="verdict-badge" id="verdictBadge">—</span>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION: Charts -->
+  <div class="section-label">Sales Data</div>
+  <h2 class="section-title">12-Month Revenue Analysis</h2>
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">Net Sales by Day of Week (Annual)</div>
+      <canvas id="dowChart" height="200"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Revenue by Time of Day</div>
+      <canvas id="todChart" height="200"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Monthly Revenue — Jun 2025 to May 2026</div>
+      <canvas id="monthChart" height="200"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Weekly Labor Budget by Tier</div>
+      <canvas id="laborBudgetChart" height="200"></canvas>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION: Key Insights -->
+  <div class="section-label">Research & Insights</div>
+  <h2 class="section-title">What the Data Tells Us</h2>
+
+  <div class="research-grid">
+    <div class="research-card"><div class="research-number">155%</div><div class="research-label">Current labor cost on slowest days</div><div class="research-source">$1,324 labor / $850 revenue — source: your schedule data</div></div>
+    <div class="research-card"><div class="research-number">74%</div><div class="research-label">Revenue generated after 4PM daily</div><div class="research-source">Based on POS time-of-day sales analysis, 12 months</div></div>
+    <div class="research-card"><div class="research-number">12%</div><div class="research-label">Revenue from breakfast window (7–11 AM)</div><div class="research-source">Most overstaffed shift relative to revenue contribution</div></div>
+    <div class="research-card"><div class="research-number">$10K+</div><div class="research-label">Weekly labor savings available</div><div class="research-source">Moving to tiered model at 31% blended labor cost</div></div>
+    <div class="research-card"><div class="research-number">28–33%</div><div class="research-label">F&B industry labor benchmark</div><div class="research-source">NRA 2024 Operations Report — full-service restaurants</div></div>
+    <div class="research-card"><div class="research-number">3.3×</div><div class="research-label">Weekend revenue vs. weekday ratio</div><div class="research-source">Fri/Sat avg $6,340 vs. Mon–Wed avg $1,950 (actual data)</div></div>
+  </div>
+
+  <div class="insight-card warning">
+    <h4>⚠ The Breakfast Problem</h4>
+    <p>Breakfast (7–11 AM) generates only 12% of daily revenue. On a Monday generating $2,200, that's roughly $264 in the morning window. You cannot staff a full BOH crew to generate $264. One cook + Louise for bake-off covers breakfast and transitions straight through to lunch without a shift change.</p>
+  </div>
+  <div class="insight-card warning">
+    <h4>⚠ The Lunch Gap (Mon–Wed)</h4>
+    <p>Lunch (12–3 PM) on slow days adds ~$300 in revenue. You're paying for a full changeover to generate less than a typical dinner ticket. Recommendation: condensed bar-bites menu at Fremont Public House only, close 1887 for lunch Mon–Wed, and let the breakfast cook hold through to dinner prep.</p>
+  </div>
+  <div class="insight-card tip">
+    <h4>✓ The 3:30 PM Rule</h4>
+    <p>Dinner crew should arrive at 3:30 PM, not 11 AM or 2 PM. Your data shows 74% of revenue begins at 4 PM. Every BOH dollar spent before 3:30 PM on a slow day is paid against a fraction of the revenue. Set the standard: dinner crew = 3:30 PM start, regardless of day.</p>
+  </div>
+  <div class="insight-card gold">
+    <h4>📈 Sunday Is Moving Up</h4>
+    <p>Sunday is now tracking above Thursday revenue consistently at $4,100+ average. If this trend holds through summer, you have a 4-day weekend (Thu–Sun), not a 2-day one. Watch the next 8 Sundays. If Sunday consistently clears $4,500, promote it to Tier 3 staffing.</p>
+  </div>
+  <div class="insight-card tip">
+    <h4>✓ Cross-Train FOH Across All Three Venues</h4>
+    <p>1887, Fremont Public House, and The War Room should be staffed by a flexible FOH team, not three dedicated crews. One server who opens 1887 transitions to the Fremont bar at 11 AM and then supports War Room at 5 PM. With 36 keys driving F&B, you can't afford three siloed teams on weekdays.</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION: Staff Roster -->
+  <div class="section-label">Current Roster</div>
+  <h2 class="section-title">Your Team</h2>
+
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;margin-bottom:2rem;">
+    <!-- BOH Roster -->
+    <div class="roster-card">
+      <div class="roster-header">
+        <h3>Back of House</h3>
+        <div class="count">14</div>
+      </div>
+      <table class="roster-table">
+        <thead><tr><th>Name</th><th>Rate</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Josh Elder</td><td class="rate-val">Salaried</td><td>Executive Chef</td></tr>
+          <tr><td>Jon Lee</td><td class="rate-val">$20.00</td><td>Senior line</td></tr>
+          <tr><td>Luis Reyes</td><td class="rate-val">$20.00</td><td>Senior line</td></tr>
+          <tr><td>Atlas Taylor</td><td class="rate-val">$19.00</td><td></td></tr>
+          <tr><td>Joey Sankot</td><td class="rate-val">$18.00</td><td></td></tr>
+          <tr><td>Maliki Walters</td><td class="rate-val">$18.00</td><td></td></tr>
+          <tr><td>Tristian Radhe</td><td class="rate-val">$18.00</td><td></td></tr>
+          <tr><td>Steven White</td><td class="rate-val">$17.50</td><td></td></tr>
+          <tr><td>Mandy Torres</td><td class="rate-val">$17.00</td><td></td></tr>
+          <tr><td>Christopher</td><td class="rate-val">$17.00</td><td></td></tr>
+          <tr><td>Jen Sassaman</td><td class="rate-val">$16.00</td><td></td></tr>
+          <tr><td>Jesse Robbins</td><td class="rate-val">$15.16</td><td></td></tr>
+          <tr><td>Olivia Means</td><td class="rate-val">$15.16</td><td></td></tr>
+          <tr><td>Zach Vaghn</td><td class="rate-val">—</td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- FOH Roster -->
+    <div class="roster-card">
+      <div class="roster-header">
+        <h3>Front of House</h3>
+        <div class="count">13</div>
+      </div>
+      <table class="roster-table">
+        <thead><tr><th>Name</th><th>Rate</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Alyssa Dickson</td><td class="rate-val">$19.00</td><td>Asst Manager</td></tr>
+          <tr><td>Izzy Gordon</td><td class="rate-val">$15.16</td><td></td></tr>
+          <tr><td>Ashley Gant</td><td class="rate-val">$14.00</td><td></td></tr>
+          <tr><td>Chelsea Jennings</td><td class="rate-val">$14.00</td><td></td></tr>
+          <tr><td>Teddy Brown</td><td class="rate-val">$14.00</td><td></td></tr>
+          <tr><td>Kragh Rasmussen</td><td class="rate-val">$12.14</td><td></td></tr>
+          <tr><td>Abigal Korman</td><td class="rate-val">$12.14</td><td></td></tr>
+          <tr><td>Zoey Kelley</td><td class="rate-val">$12.14</td><td></td></tr>
+          <tr><td>Jen Pierce</td><td class="rate-val">$12.14</td><td></td></tr>
+          <tr><td>Tagen Riede</td><td class="rate-val">$12.14</td><td></td></tr>
+          <tr><td>Joslyn Gordon</td><td class="rate-val">$12.14</td><td></td></tr>
+          <tr><td>Brenna Rutherford</td><td class="rate-val">$12.14</td><td></td></tr>
+          <tr><td>Chloe Coulter</td><td class="rate-val">$12.14</td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<div class="footer">
+  <p>© 2026 Hotel St. Cloud · F&B Labor Scheduler · Built by MC</p>
+</div>
+
+<script>
+// ── DATA ──
+const DAYS = [
+  { name:'Monday',    abbr:'Mon', tier:1, avgRev:2200, revLo:1500, revHi:3200 },
+  { name:'Tuesday',  abbr:'Tue', tier:1, avgRev:2200, revLo:1500, revHi:3200 },
+  { name:'Wednesday',abbr:'Wed', tier:1, avgRev:2700, revLo:1800, revHi:3600 },
+  { name:'Thursday', abbr:'Thu', tier:2, avgRev:3400, revLo:2500, revHi:5000 },
+  { name:'Friday',   abbr:'Fri', tier:3, avgRev:6200, revLo:4500, revHi:8500 },
+  { name:'Saturday', abbr:'Sat', tier:3, avgRev:6500, revLo:5000, revHi:9000 },
+  { name:'Sunday',   abbr:'Sun', tier:2, avgRev:4100, revLo:2800, revHi:6000 },
+];
+
+const TIERS = {
+  1: { label:'Tier 1 · Slow',   color:'#c47b1a', bg:'#fef3e2', pct:0.31, maxBoh:2, maxFoh:3 },
+  2: { label:'Tier 2 · Mid',    color:'#5a8ba7', bg:'#e8f2f9', pct:0.31, maxBoh:3, maxFoh:4 },
+  3: { label:'Tier 3 · Peak',   color:'#ba8032', bg:'#fef6e8', pct:0.32, maxBoh:5, maxFoh:6 },
+};
+
+// Staff data with tier-based default shifts
+const STAFF = [
+  // BOH
+  { id:'boh-elder',   name:'Josh Elder',       role:'BOH', rate:0,     salaried:true,  shifts:['Open Cover','Open Cover','Open Cover'], tierDefault:[false,false,false] },
+  { id:'boh-jon',     name:'Jon Lee',          role:'BOH', rate:20.00, salaried:false, defaultHrs:[8,8,8], tierActive:[false,false,true] },
+  { id:'boh-luis',    name:'Luis Reyes',       role:'BOH', rate:20.00, salaried:false, defaultHrs:[8,8,8], tierActive:[false,true,true] },
+  { id:'boh-atlas',   name:'Atlas Taylor',     role:'BOH', rate:19.00, salaried:false, defaultHrs:[7,8,8], tierActive:[false,true,true] },
+  { id:'boh-joey',    name:'Joey Sankot',      role:'BOH', rate:18.00, salaried:false, defaultHrs:[7,8,8], tierActive:[false,false,true] },
+  { id:'boh-maliki',  name:'Maliki Walters',   role:'BOH', rate:18.00, salaried:false, defaultHrs:[6,7,8], tierActive:[true,true,true] },
+  { id:'boh-tristian',name:'Tristian Radhe',   role:'BOH', rate:18.00, salaried:false, defaultHrs:[6,7,8], tierActive:[false,true,true] },
+  { id:'boh-steven',  name:'Steven White',     role:'BOH', rate:17.50, salaried:false, defaultHrs:[6,7,8], tierActive:[true,true,true] },
+  { id:'boh-mandy',   name:'Mandy Torres',     role:'BOH', rate:17.00, salaried:false, defaultHrs:[5,6,8], tierActive:[false,false,true] },
+  { id:'boh-chris',   name:'Christopher',      role:'BOH', rate:17.00, salaried:false, defaultHrs:[5,6,8], tierActive:[false,true,true] },
+  { id:'boh-jen-s',   name:'Jen Sassaman',     role:'BOH', rate:16.00, salaried:false, defaultHrs:[5,6,7], tierActive:[false,false,true] },
+  { id:'boh-jesse',   name:'Jesse Robbins',    role:'BOH', rate:15.16, salaried:false, defaultHrs:[5,6,7], tierActive:[true,true,true] },
+  { id:'boh-olivia',  name:'Olivia Means',     role:'BOH', rate:15.16, salaried:false, defaultHrs:[5,6,7], tierActive:[false,true,true] },
+  // FOH
+  { id:'foh-alyssa',  name:'Alyssa Dickson',   role:'FOH', rate:19.00, salaried:false, defaultHrs:[8,8,8], tierActive:[true,true,true], note:'Asst Mgr' },
+  { id:'foh-izzy',    name:'Izzy Gordon',      role:'FOH', rate:15.16, salaried:false, defaultHrs:[6,7,8], tierActive:[false,true,true] },
+  { id:'foh-ashley',  name:'Ashley Gant',      role:'FOH', rate:14.00, salaried:false, defaultHrs:[5,6,8], tierActive:[false,true,true] },
+  { id:'foh-chelsea', name:'Chelsea Jennings', role:'FOH', rate:14.00, salaried:false, defaultHrs:[5,6,8], tierActive:[false,false,true] },
+  { id:'foh-teddy',   name:'Teddy Brown',      role:'FOH', rate:14.00, salaried:false, defaultHrs:[5,6,8], tierActive:[false,true,true] },
+  { id:'foh-kragh',   name:'Kragh Rasmussen',  role:'FOH', rate:12.14, salaried:false, defaultHrs:[5,6,7], tierActive:[true,true,true] },
+  { id:'foh-abigal',  name:'Abigal Korman',    role:'FOH', rate:12.14, salaried:false, defaultHrs:[5,6,7], tierActive:[false,true,true] },
+  { id:'foh-zoey',    name:'Zoey Kelley',      role:'FOH', rate:12.14, salaried:false, defaultHrs:[5,5,7], tierActive:[false,false,true] },
+  { id:'foh-jen-p',   name:'Jen Pierce',       role:'FOH', rate:12.14, salaried:false, defaultHrs:[5,6,7], tierActive:[false,false,true] },
+  { id:'foh-tagen',   name:'Tagen Riede',      role:'FOH', rate:12.14, salaried:false, defaultHrs:[5,6,7], tierActive:[false,true,true] },
+  { id:'foh-joslyn',  name:'Joslyn Gordon',    role:'FOH', rate:12.14, salaried:false, defaultHrs:[5,5,7], tierActive:[false,false,true] },
+  { id:'foh-brenna',  name:'Brenna Rutherford',role:'FOH', rate:12.14, salaried:false, defaultHrs:[5,6,7], tierActive:[false,false,true] },
+  { id:'foh-chloe',   name:'Chloe Coulter',    role:'FOH', rate:12.14, salaried:false, defaultHrs:[5,5,7], tierActive:[false,false,true] },
+];
+
+const SHIFTS = ['Off','5-10am','6-11am','7am-3pm','8am-3pm','10am-4pm','3:30-10pm','4-11pm','5-11pm','Open Cover'];
+
+let selectedDay = 0;
+let scheduleState = {};
+
+function getTier(rev) {
+  if (rev < 3200) return 1;
+  if (rev < 5000) return 2;
+  return 3;
+}
+
+function fmt$(n) { return '$' + Math.round(n).toLocaleString(); }
+function fmtPct(n) { return (n*100).toFixed(1) + '%'; }
+
+// ── WEEKLY GRID ──
+function buildWeeklyGrid() {
+  const grid = document.getElementById('weeklyGrid');
+  grid.innerHTML = '';
+  DAYS.forEach((d, i) => {
+    const budget = Math.round(d.avgRev * TIERS[d.tier].pct);
+    const pillClass = ['','t1-pill','t2-pill','t3-pill'][d.tier];
+    const div = document.createElement('div');
+    div.className = 'day-card' + (i===0?' selected':'');
+    div.innerHTML = `
+      <div class="day-name">${d.abbr}</div>
+      <div class="day-rev">${fmt$(d.avgRev)}</div>
+      <div class="day-budget">max labor ${fmt$(budget)}</div>
+      <div class="day-tier ${pillClass}">${TIERS[d.tier].label}</div>`;
+    div.onclick = () => selectDay(i, div);
+    grid.appendChild(div);
+  });
+}
+
+function selectDay(i, el) {
+  document.querySelectorAll('.day-card').forEach(d => d.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedDay = i;
+  document.querySelectorAll('.day-btn').forEach((b,j) => {
+    b.classList.toggle('active', j===i);
+  });
+  const d = DAYS[i];
+  document.getElementById('revInput').value = d.avgRev;
+  updateSchedule();
+}
+
+// ── DAY SELECTOR ──
+function buildDaySelector() {
+  const sel = document.getElementById('daySelector');
+  sel.innerHTML = '';
+  DAYS.forEach((d, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'day-btn tier-' + d.tier + '-day' + (i===0?' active':'');
+    btn.textContent = d.abbr;
+    btn.onclick = () => {
+      selectedDay = i;
+      document.querySelectorAll('.day-btn').forEach((b,j) => b.classList.toggle('active', j===i));
+      document.querySelectorAll('.day-card').forEach((c,j) => c.classList.toggle('selected', j===i));
+      document.getElementById('revInput').value = DAYS[i].avgRev;
+      updateSchedule();
+    };
+    sel.appendChild(btn);
+  });
+}
+
+// ── SCHEDULE TABLE ──
+function updateSchedule() {
+  const rev = parseFloat(document.getElementById('revInput').value) || 0;
+  const tier = getTier(rev);
+  const tierInfo = TIERS[tier];
+  const budget = Math.round(rev * tierInfo.pct);
+
+  // Update tier indicator
+  const ti = document.getElementById('tierIndicator');
+  ti.textContent = tierInfo.label;
+  ti.style.background = tierInfo.bg;
+  ti.style.color = tierInfo.color;
+  document.getElementById('maxBudget').textContent = fmt$(budget);
+
+  // Build table
+  const tbody = document.getElementById('scheduleBody');
+  tbody.innerHTML = '';
+
+  let totalCost = 0;
+  let headcount = 0;
+  let bSection = false, fSection = false;
+
+  STAFF.forEach(s => {
+    // Section headers
+    if (s.role==='BOH' && !bSection) {
+      bSection = true;
+      const tr = document.createElement('tr');
+      tr.className = 'section-group';
+      tr.innerHTML = '<td colspan="7">Back of House</td>';
+      tbody.appendChild(tr);
+    }
+    if (s.role==='FOH' && !fSection) {
+      fSection = true;
+      const tr = document.createElement('tr');
+      tr.className = 'section-group';
+      tr.innerHTML = '<td colspan="7">Front of House</td>';
+      tbody.appendChild(tr);
+    }
+
+    const tierIdx = tier - 1;
+    const isActive = s.salaried ? true : (s.tierActive ? s.tierActive[tierIdx] : false);
+    const defHrs = s.defaultHrs ? (s.defaultHrs[tierIdx] || 0) : 0;
+    const stateKey = `${selectedDay}-${s.id}`;
+
+    // Initialize state
+    if (!scheduleState[stateKey]) {
+      scheduleState[stateKey] = {
+        active: isActive,
+        hrs: defHrs,
+        shift: isActive ? (tier===1 ? (s.role==='BOH'?'7am-3pm':'3:30-10pm') : (s.role==='BOH'?'7am-3pm':'3:30-10pm')) : 'Off'
+      };
+    }
+    const st = scheduleState[stateKey];
+    const cost = s.salaried ? 0 : (st.active ? st.hrs * s.rate : 0);
+    if (st.active && !s.salaried) { totalCost += cost; headcount++; }
+    if (st.active && s.salaried) headcount++;
+
+    const tr = document.createElement('tr');
+    tr.style.opacity = st.active ? '1' : '.4';
+
+    const shiftOpts = SHIFTS.map(sh => `<option value="${sh}" ${sh===st.shift?'selected':''}>${sh}</option>`).join('');
+    const roleCls = s.salaried ? 'mgr' : (s.role==='BOH'?'boh':'foh');
+    const roleLabel = s.salaried ? 'Chef' : s.role;
+    const rateDisplay = s.salaried ? '<em style="font-size:.8rem;color:var(--light-gray)">salary</em>' : ('$' + s.rate.toFixed(2));
+    const costDisplay = s.salaried ? '<em style="font-size:.8rem;color:var(--light-gray)">incl.</em>' : (st.active ? fmt$(cost) : '—');
+
+    tr.innerHTML = `
+      <td><strong style="font-size:.9rem;">${s.name}</strong>${s.note?`<br><span style="font-size:.7rem;color:var(--light-gray)">${s.note}</span>`:''}</td>
+      <td><span class="role-badge ${roleCls}">${roleLabel}</span></td>
+      <td>${rateDisplay}</td>
+      <td>${s.salaried ? '<span style="font-size:.8rem;color:var(--light-gray)">Flex</span>' :
+        `<select class="shift-select" onchange="setShift('${stateKey}','${s.id}',this.value)">${shiftOpts}</select>`}</td>
+      <td>${s.salaried ? '—' : `<input type="number" class="hrs-input" value="${st.hrs}" min="0" max="12" step=".5" onchange="setHrs('${stateKey}',this.value,'${s.id}')">`}</td>
+      <td class="cost-cell">${costDisplay}</td>
+      <td><input type="checkbox" ${st.active?'checked':''} onchange="toggleStaff('${stateKey}',this.checked,'${s.id}')" style="width:18px;height:18px;cursor:pointer;accent-color:var(--blue)"></td>`;
+    tbody.appendChild(tr);
+  });
+
+  updateLaborBar(totalCost, rev, budget, headcount);
+}
+
+function setShift(stateKey, id, val) {
+  if (!scheduleState[stateKey]) scheduleState[stateKey] = {};
+  scheduleState[stateKey].shift = val;
+  updateSchedule();
+}
+
+function setHrs(stateKey, val, id) {
+  if (!scheduleState[stateKey]) scheduleState[stateKey] = {};
+  scheduleState[stateKey].hrs = parseFloat(val) || 0;
+  updateSchedule();
+}
+
+function toggleStaff(stateKey, checked, id) {
+  if (!scheduleState[stateKey]) scheduleState[stateKey] = {};
+  scheduleState[stateKey].active = checked;
+  updateSchedule();
+}
+
+function updateLaborBar(labor, rev, budget, hc) {
+  const pct = rev > 0 ? labor/rev : 0;
+  const pctStr = fmtPct(pct);
+  const variance = budget - labor;
+
+  const pctEl = document.getElementById('laborPct');
+  pctEl.textContent = pctStr;
+  pctEl.className = 'labor-pct-val ' + (pct < .33 ? 'green' : pct < .45 ? 'amber' : 'red');
+
+  const barW = Math.min(100, pct * 200); // 100% at 50% labor
+  const barEl = document.getElementById('laborBarFill');
+  barEl.style.width = barW + '%';
+  barEl.style.background = pct < .33 ? '#4caf7d' : pct < .45 ? '#f0a830' : '#e05a5a';
+
+  document.getElementById('summTotalLabor').textContent = fmt$(labor);
+  document.getElementById('summRevenue').textContent = fmt$(rev);
+  document.getElementById('summVariance').textContent = (variance>=0?'+ ':'') + fmt$(variance);
+  document.getElementById('summVariance').style.color = variance >= 0 ? '#4caf7d' : '#e05a5a';
+  document.getElementById('summHeadcount').textContent = hc;
+
+  const vb = document.getElementById('verdictBadge');
+  if (pct < .33) { vb.textContent = '✓ On Target'; vb.className = 'verdict-badge verdict-ok'; }
+  else if (pct < .45) { vb.textContent = '⚠ Over Budget'; vb.className = 'verdict-badge verdict-warn'; }
+  else { vb.textContent = '✗ Critical Overrun'; vb.className = 'verdict-badge verdict-bad'; }
+}
+
+// ── PRINT ──
+function printSchedule() {
+  const win = window.open('', '_blank');
+  const day = DAYS[selectedDay];
+  const rev = parseFloat(document.getElementById('revInput').value) || 0;
+  const date = new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const tableHtml = document.getElementById('scheduleTable').outerHTML;
+  const summHtml = document.getElementById('laborSummary').outerHTML;
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Schedule · ${day.name}</title>
+    <style>
+      body { font-family: Arial, sans-serif; font-size: 12px; margin: 2cm; color: #222; }
+      h1 { font-size: 18px; margin-bottom: 4px; }
+      .meta { font-size: 11px; color: #666; margin-bottom: 20px; }
+      table { width: 100%; border-collapse: collapse; }
+      th { background: #1f2b3f; color: white; padding: 8px; text-align: left; font-size: 10px; }
+      td { padding: 7px 8px; border-bottom: 1px solid #ddd; font-size: 11px; }
+      .section-group td { background: #f5f5f5; font-weight: bold; font-size: 10px; letter-spacing: 2px; color: #666; }
+      .role-badge { font-size: 9px; padding: 2px 6px; border-radius: 3px; }
+      .boh { background: #e8f2f9; color: #2d6a8a; }
+      .foh { background: #e8f5ee; color: #1d6640; }
+      .mgr { background: #fef6e8; color: #8a5a10; }
+      .labor-summary { margin-top: 20px; background: #1f2b3f; color: white; padding: 16px; border-radius: 8px; }
+      input, select { border: none; background: transparent; font-size: 11px; }
+      @page { margin: 1.5cm; }
+    </style></head><body>
+    <h1>Hotel St. Cloud — F&B Schedule</h1>
+    <div class="meta">${day.name} · Projected Revenue: $${rev.toLocaleString()} · Printed: ${date}</div>
+    ${tableHtml}
+    <br><div style="font-size:11px;padding:12px;background:#1f2b3f;color:white;border-radius:6px;">
+      Total Labor: ${document.getElementById('summTotalLabor').textContent} &nbsp;|&nbsp;
+      Labor %: ${document.getElementById('laborPct').textContent} &nbsp;|&nbsp;
+      Budget Variance: ${document.getElementById('summVariance').textContent} &nbsp;|&nbsp;
+      Headcount: ${document.getElementById('summHeadcount').textContent}
+    </div>
+    <script>window.onload=function(){window.print();}<\/script>
+    </body></html>`);
+  win.document.close();
+}
+
+// ── CHARTS ──
+function buildCharts() {
+  const chartDefaults = {
+    plugins: { legend: { display: false }, tooltip: { backgroundColor:'#1f2b3f', padding:10, titleColor:'#7aaec7', bodyColor:'#e8e0d4' } },
+    scales: {
+      x: { ticks:{ color:'#7a8490', font:{size:11} }, grid:{ color:'rgba(0,0,0,.05)' } },
+      y: { ticks:{ color:'#7a8490', font:{size:11}, callback: v => '$'+v.toLocaleString() }, grid:{ color:'rgba(0,0,0,.05)' } }
+    }
+  };
+
+  // Day of week
+  new Chart(document.getElementById('dowChart'), {
+    type:'bar',
+    data: {
+      labels: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
+      datasets:[{ data:[220000,145000,145000,155000,180000,325000,355000],
+        backgroundColor:['#e8f2f9','#fef3e2','#fef3e2','#fef3e2','#e8f2f9','#fef6e8','#fef6e8'],
+        borderColor:['#5a8ba7','#c47b1a','#c47b1a','#c47b1a','#5a8ba7','#ba8032','#ba8032'],
+        borderWidth:2, borderRadius:6 }]
+    },
+    options:{ ...chartDefaults, plugins:{...chartDefaults.plugins, tooltip:{...chartDefaults.plugins.tooltip, callbacks:{label:c=>'$'+c.raw.toLocaleString()}}} }
+  });
+
+  // Time of day
+  new Chart(document.getElementById('todChart'), {
+    type:'bar',
+    data: {
+      labels:['7am','8am','9am','10am','11am','12pm','1pm','2pm','3pm','4pm','5pm','6pm','7pm','8pm','9pm','10pm'],
+      datasets:[{ data:[10000,30000,43000,43000,47000,73000,50000,35000,50000,100000,265000,325000,210000,100000,50000,15000],
+        backgroundColor: Array(16).fill(0).map((_,i) => i >= 10 ? 'rgba(186,128,50,.7)' : 'rgba(90,139,167,.5)'),
+        borderRadius:4 }]
+    },
+    options:{ ...chartDefaults, plugins:{...chartDefaults.plugins, tooltip:{...chartDefaults.plugins.tooltip, callbacks:{label:c=>'$'+c.raw.toLocaleString()}}} }
+  });
+
+  // Monthly
+  new Chart(document.getElementById('monthChart'), {
+    type:'line',
+    data: {
+      labels:['Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May'],
+      datasets:[{
+        data:[119657,127227,146330,130230,152285,105015,125820,85090,114245,111838,118514,141116],
+        borderColor:'#5a8ba7', backgroundColor:'rgba(90,139,167,.1)', fill:true,
+        tension:.4, pointBackgroundColor:'#5a8ba7', pointRadius:5
+      }]
+    },
+    options:{ ...chartDefaults, plugins:{...chartDefaults.plugins, tooltip:{...chartDefaults.plugins.tooltip, callbacks:{label:c=>'$'+c.raw.toLocaleString()}}} }
+  });
+
+  // Labor budget by tier/day
+  new Chart(document.getElementById('laborBudgetChart'), {
+    type:'bar',
+    data: {
+      labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+      datasets:[
+        { label:'Revenue (avg)', data:[2200,2200,2700,3400,6200,6500,4100], backgroundColor:'rgba(90,139,167,.3)', borderColor:'#5a8ba7', borderWidth:2, borderRadius:4 },
+        { label:'Labor Budget (30%)', data:[660,660,810,1020,1860,1950,1230], backgroundColor:'rgba(186,128,50,.7)', borderColor:'#ba8032', borderWidth:1, borderRadius:4 },
+      ]
+    },
+    options:{
+      ...chartDefaults,
+      plugins:{ legend:{ display:true, labels:{ color:'#4b4f54', font:{size:11} } }, tooltip:{ backgroundColor:'#1f2b3f', callbacks:{ label:c=>'$'+c.raw.toLocaleString() } } },
+      scales:{ ...chartDefaults.scales }
+    }
+  });
+}
+
+// ── INIT ──
+buildWeeklyGrid();
+buildDaySelector();
+updateSchedule();
+buildCharts();
+</script>
+</body>
+</html>
