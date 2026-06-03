@@ -4,7 +4,6 @@
   <meta name="robots" content="noindex, nofollow">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="refresh" content="300">
   <title>Fremont Makers · Harrison Building | Unbridled</title>
   <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -18,6 +17,7 @@
   --green: #4caf7d;
   --red: #e05a5a;
   --amber: #e0a040;
+  --purple: #9b7fd4;
   --text: #e8e0d4;
   --muted: #6a8a9a;
   --white: #f5f5f5;
@@ -41,35 +41,48 @@ body { background: var(--bg); color: var(--text); font-family: 'Josefin Sans', s
 
 .summary-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 1.75rem 0; }
 .sum-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: .9rem 1rem; text-align: center; }
-.sum-val { font-size: 24px; font-weight: 700; color: var(--gold); line-height: 1; margin-bottom: .2rem; }
+.sum-val { font-size: 24px; font-weight: 700; line-height: 1; margin-bottom: .2rem; }
+.sum-val.c-inprogress { color: var(--gold); }
+.sum-val.c-pending   { color: var(--muted); }
+.sum-val.c-completed { color: var(--green); }
+.sum-val.c-approved  { color: var(--purple); }
 .sum-lbl { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
 
 .section-label { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin: 1.75rem 0 .75rem; padding-bottom: .5rem; border-bottom: 1px solid var(--border); }
 
-.todo-item { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: .65rem; display: flex; align-items: flex-start; gap: 1rem; }
+.todo-item { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: .65rem; display: flex; align-items: flex-start; gap: 1rem; transition: opacity .2s; }
 .todo-item.status-in_progress { border-left: 3px solid var(--gold); }
-.todo-item.status-pending { border-left: 3px solid var(--border); }
-.todo-item.status-completed { border-left: 3px solid var(--green); opacity: .55; }
-.todo-item.status-blocked { border-left: 3px solid var(--red); }
+.todo-item.status-not_started { border-left: 3px solid var(--border); }
+.todo-item.status-completed   { border-left: 3px solid var(--green); opacity: .55; }
+.todo-item.status-approved    { border-left: 3px solid var(--purple); opacity: .7; }
 
-.status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.status-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; cursor: pointer; transition: transform .15s; }
+.status-dot:hover { transform: scale(1.35); }
+.dot-not_started { background: var(--muted); opacity: .45; }
 .dot-in_progress { background: var(--gold); box-shadow: 0 0 6px rgba(201,170,124,.5); }
-.dot-pending { background: var(--muted); opacity: .5; }
-.dot-completed { background: var(--green); }
-.dot-blocked { background: var(--red); }
+.dot-completed   { background: var(--green); }
+.dot-approved    { background: var(--purple); box-shadow: 0 0 6px rgba(155,127,212,.45); }
 
 .todo-body { flex: 1; }
 .todo-text { font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.5; margin-bottom: .3rem; letter-spacing: .2px; }
-.todo-meta { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; }
+.todo-meta { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; margin-top: .25rem; }
 .todo-tag { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; padding: .2rem .55rem; border-radius: 4px; border: 1px solid; }
-.tag-building { color: #a0c0d8; border-color: rgba(90,139,167,.4); background: rgba(90,139,167,.1); }
-.tag-makers { color: #c9aa7c; border-color: rgba(201,170,124,.4); background: rgba(201,170,124,.1); }
-.tag-legal { color: #d4a0c0; border-color: rgba(155,89,182,.4); background: rgba(155,89,182,.1); }
-.tag-construction { color: #f0c080; border-color: rgba(224,160,64,.4); background: rgba(224,160,64,.1); }
-.tag-vendors { color: #a0d4b8; border-color: rgba(76,175,125,.4); background: rgba(76,175,125,.1); }
-.tag-marketing { color: #f0a080; border-color: rgba(229,115,80,.4); background: rgba(229,115,80,.1); }
-.tag-hr { color: #c0d4a0; border-color: rgba(160,200,100,.4); background: rgba(160,200,100,.1); }
+.tag-building    { color: #a0c0d8; border-color: rgba(90,139,167,.4); background: rgba(90,139,167,.1); }
+.tag-makers      { color: #c9aa7c; border-color: rgba(201,170,124,.4); background: rgba(201,170,124,.1); }
+.tag-legal       { color: #d4a0c0; border-color: rgba(155,89,182,.4); background: rgba(155,89,182,.1); }
+.tag-construction{ color: #f0c080; border-color: rgba(224,160,64,.4); background: rgba(224,160,64,.1); }
+.tag-vendors     { color: #a0d4b8; border-color: rgba(76,175,125,.4); background: rgba(76,175,125,.1); }
+.tag-marketing   { color: #f0a080; border-color: rgba(229,115,80,.4); background: rgba(229,115,80,.1); }
+.tag-hr          { color: #c0d4a0; border-color: rgba(160,200,100,.4); background: rgba(160,200,100,.1); }
+.tag-finance     { color: #a8d8f0; border-color: rgba(100,180,220,.4); background: rgba(100,180,220,.1); }
+.tag-ops         { color: #e0c8f0; border-color: rgba(180,130,220,.4); background: rgba(180,130,220,.1); }
 .todo-note { font-size: 11px; color: var(--muted); margin-top: .35rem; line-height: 1.55; font-style: italic; }
+
+.status-pill { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; padding: .2rem .55rem; border-radius: 4px; border: 1px solid; font-weight: 700; }
+.pill-not_started { color: var(--muted); border-color: rgba(106,138,154,.3); background: rgba(106,138,154,.08); }
+.pill-in_progress { color: var(--gold); border-color: rgba(201,170,124,.4); background: rgba(201,170,124,.1); }
+.pill-completed   { color: var(--green); border-color: rgba(76,175,125,.4); background: rgba(76,175,125,.1); }
+.pill-approved    { color: var(--purple); border-color: rgba(155,127,212,.4); background: rgba(155,127,212,.1); }
 
 .add-btn { width: 100%; background: transparent; border: 1px dashed var(--border); border-radius: 10px; padding: .9rem; color: var(--muted); font-family: 'Josefin Sans', sans-serif; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: all .2s; margin-top: .5rem; }
 .add-btn:hover { border-color: var(--gold); color: var(--gold); }
@@ -80,8 +93,22 @@ body { background: var(--bg); color: var(--text); font-family: 'Josefin Sans', s
 .save-btn { background: var(--gold); color: #0a1219; border: none; border-radius: 8px; padding: .75rem 1.25rem; font-family: 'Josefin Sans', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; white-space: nowrap; }
 .save-btn:hover { opacity: .88; }
 
-.status-btn { background: transparent; border: 1px solid var(--border); border-radius: 6px; padding: .25rem .6rem; color: var(--muted); font-family: 'Josefin Sans', sans-serif; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all .15s; }
-.status-btn:hover { border-color: var(--gold); color: var(--gold); }
+/* PIN modal */
+.pin-overlay { display: none; position: fixed; inset: 0; background: rgba(10,18,25,.85); z-index: 999; align-items: center; justify-content: center; }
+.pin-overlay.open { display: flex; }
+.pin-box { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 2rem; width: min(340px, 90vw); text-align: center; }
+.pin-box h3 { font-size: 13px; letter-spacing: 3px; text-transform: uppercase; color: var(--purple); margin-bottom: .5rem; }
+.pin-box p { font-size: 11px; color: var(--muted); margin-bottom: 1.25rem; letter-spacing: .5px; line-height: 1.5; }
+.pin-dots { display: flex; justify-content: center; gap: .75rem; margin-bottom: 1.25rem; }
+.pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border); transition: background .15s; }
+.pin-dot.filled { background: var(--purple); border-color: var(--purple); }
+.pin-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; max-width: 220px; margin: 0 auto 1rem; }
+.pin-key { background: var(--navy); border: 1px solid var(--border); border-radius: 8px; padding: .9rem; font-family: 'Josefin Sans', sans-serif; font-size: 16px; font-weight: 700; color: var(--text); cursor: pointer; transition: all .15s; }
+.pin-key:hover { border-color: var(--purple); color: var(--purple); }
+.pin-key.wide { grid-column: span 2; }
+.pin-err { font-size: 11px; color: var(--red); letter-spacing: 1px; min-height: 16px; margin-bottom: .5rem; }
+.pin-cancel { background: transparent; border: none; color: var(--muted); font-family: 'Josefin Sans', sans-serif; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; }
+.pin-cancel:hover { color: var(--text); }
 
 .updated-note { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-align: center; margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
 .updated-note span { color: var(--blue); }
@@ -92,7 +119,7 @@ body { background: var(--bg); color: var(--text); font-family: 'Josefin Sans', s
 <body>
 
 <div class="topbar">
-  <div class="topbar-brand">Unbridled <span>·</span> Stan Bullis</div>
+  <div class="topbar-brand">Unbridled <span>·</span> Fremont Makers</div>
   <div class="topbar-meta" id="lastUpdated">Loading...</div>
 </div>
 
@@ -105,16 +132,15 @@ body { background: var(--bg); color: var(--text); font-family: 'Josefin Sans', s
 <div class="wrap">
 
   <div class="summary-strip">
-    <div class="sum-card"><div class="sum-val" id="countActive">—</div><div class="sum-lbl">In Progress</div></div>
-    <div class="sum-card"><div class="sum-val" id="countPending">—</div><div class="sum-lbl">Pending</div></div>
-    <div class="sum-card"><div class="sum-val" id="countBlocked">—</div><div class="sum-lbl">Blocked</div></div>
-    <div class="sum-card"><div class="sum-val" id="countDone">—</div><div class="sum-lbl">Done</div></div>
+    <div class="sum-card"><div class="sum-val c-inprogress" id="countActive">—</div><div class="sum-lbl">In Progress</div></div>
+    <div class="sum-card"><div class="sum-val c-pending"   id="countPending">—</div><div class="sum-lbl">Not Started</div></div>
+    <div class="sum-card"><div class="sum-val c-completed" id="countDone">—</div><div class="sum-lbl">Completed</div></div>
+    <div class="sum-card"><div class="sum-val c-approved"  id="countApproved">—</div><div class="sum-lbl">Approved</div></div>
   </div>
 
   <div id="todoList"></div>
 
-  <!-- Add item -->
-  <div class="add-btn" onclick="showInput()" id="addBtn">+ Add Task</div>
+  <button class="add-btn" onclick="showInput()" id="addBtn">+ Add Task</button>
   <div id="inputArea" style="display:none">
     <div class="input-row">
       <input class="todo-input" id="newTask" placeholder="What needs to happen?" onkeydown="if(event.key==='Enter')addItem()">
@@ -122,40 +148,101 @@ body { background: var(--bg); color: var(--text); font-family: 'Josefin Sans', s
     </div>
   </div>
 
-  <div class="updated-note">Fremont Makers · Harrison Building (611 Main St) · <span>Built by MC</span> · Tap status dots to cycle · Tell MC what to add</div>
+  <div class="updated-note">Fremont Makers · Harrison Building (611 Main St) · <span>Built by MC</span> · Tap status dots to cycle · ✦ Approved requires PIN</div>
+</div>
+
+<!-- PIN MODAL -->
+<div class="pin-overlay" id="pinOverlay">
+  <div class="pin-box">
+    <h3>✦ Approved</h3>
+    <p>This item requires authorization to mark as Approved.</p>
+    <div class="pin-dots">
+      <div class="pin-dot" id="pd0"></div>
+      <div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div>
+      <div class="pin-dot" id="pd3"></div>
+    </div>
+    <div class="pin-err" id="pinErr"></div>
+    <div class="pin-keypad">
+      <button class="pin-key" onclick="pinPress('1')">1</button>
+      <button class="pin-key" onclick="pinPress('2')">2</button>
+      <button class="pin-key" onclick="pinPress('3')">3</button>
+      <button class="pin-key" onclick="pinPress('4')">4</button>
+      <button class="pin-key" onclick="pinPress('5')">5</button>
+      <button class="pin-key" onclick="pinPress('6')">6</button>
+      <button class="pin-key" onclick="pinPress('7')">7</button>
+      <button class="pin-key" onclick="pinPress('8')">8</button>
+      <button class="pin-key" onclick="pinPress('9')">9</button>
+      <button class="pin-key" onclick="pinPress('0')">0</button>
+      <button class="pin-key" onclick="pinBackspace()">⌫</button>
+    </div>
+    <button class="pin-cancel" onclick="pinCancel()">Cancel</button>
+  </div>
 </div>
 
 <script>
-// ── TODO DATA ──
+// ════════════════════════════════════════════
+//  CONFIG
+// ════════════════════════════════════════════
+const APPROVED_PIN = '8108';
+const STATUS_CYCLE = ['not_started', 'in_progress', 'completed', 'approved'];
+
+let pendingApproval = null;
+let pinEntry = '';
+
+// ════════════════════════════════════════════
+//  TODO DATA
+// ════════════════════════════════════════════
 const TODOS = [
   // ── HARRISON BUILDING — CONSTRUCTION & DEMO ──
-  { id: 'h1',  status: 'in_progress', text: 'Talk to Kathy — back door egress solution',          tags: ['building','construction'], note: 'Egress requirement blocking demo start' },
-  { id: 'h2',  status: 'pending',     text: 'Get right-of-way permit for dumpster placement',     tags: ['building','legal'],        note: '611 Main St — city permit required before demo' },
-  { id: 'h3',  status: 'pending',     text: 'Call New Image — get drop ceiling removal quote',    tags: ['building','vendors'],      note: 'Demo phase — ceiling comes out first' },
-  { id: 'h4',  status: 'pending',     text: 'Wait on Wyndell revised bid — then proceed with demo', tags: ['building','construction'], note: 'Hold demo until Wyndell\'s updated numbers are in' },
-  { id: 'h5',  status: 'pending',     text: 'Lester — redraw bathroom configuration',             tags: ['building','construction'], note: 'New layout needed before rough-in can start' },
-  { id: 'h6',  status: 'pending',     text: 'Pick electrical company — get bids',                 tags: ['building','vendors'],      note: 'Need electrical contractor selected before TI work begins' },
+  { id: 'h1',  status: 'in_progress', text: 'Talk to Kathy — back door egress solution',               tags: ['building','construction'], note: 'Egress requirement blocking demo start' },
+  { id: 'h2',  status: 'not_started', text: 'Get right-of-way permit for dumpster placement',           tags: ['building','legal'],        note: '611 Main St — city permit required before demo' },
+  { id: 'h3',  status: 'not_started', text: 'Call New Image — get drop ceiling removal quote',          tags: ['building','vendors'],      note: 'Demo phase — ceiling comes out first' },
+  { id: 'h4',  status: 'not_started', text: 'Wait on Wyndell revised bid — then proceed with demo',     tags: ['building','construction'], note: 'Hold demo until Wyndell\'s updated numbers are in' },
+  { id: 'h5',  status: 'not_started', text: 'Lester — redraw bathroom configuration',                   tags: ['building','construction'], note: 'New layout needed before rough-in can start' },
+  { id: 'h6',  status: 'not_started', text: 'Pick electrical company — get bids',                       tags: ['building','vendors'],      note: 'Need electrical contractor selected before TI work begins' },
+  { id: 'h7',  status: 'not_started', text: 'Review Matthew Brothers revised electrical bid',            tags: ['building','vendors'],      note: 'Just came in — saved $4–5K from reliant by meeting again this morning' },
+  { id: 'h8',  status: 'not_started', text: 'Kathy drywall review by Friday/Monday — New Image framing next week', tags: ['building','construction'], note: 'Ceilings + framing walls. Plumbing and electrical stacked up after.' },
+  { id: 'h9',  status: 'not_started', text: 'Confirm 30\" sink placement + step-down counter config with Lester', tags: ['building','construction'], note: 'Space is tight — had to redraw layout this morning' },
+  { id: 'h10', status: 'not_started', text: 'Finishes locked: Shantilly Lace walls, scrape+seal brick, aged brass crown, white drop tiles', tags: ['building','construction'], note: 'One shot to nail that crown — aged brass, make it draw the eye up' },
+
+  // ── 719 MAIN (DEALERSHIP) ──
+  { id: 'd1',  status: 'in_progress', text: 'Get tenant lined up for Harrison Building (719 Main)',     tags: ['building','legal'],        note: 'Possession ~July 15 — Nick has keys' },
+  { id: 'd2',  status: 'not_started', text: 'Follow up Mike Butts — resend closing instructions (no attachment came through)', tags: ['building','legal'], note: 'Get settlement numbers so we can close on 719' },
+  { id: 'd3',  status: 'not_started', text: '719 demo plan: demo apartment + interior out the back within 1–2 weeks of possession', tags: ['building','construction'], note: 'City unaware of back apartment — pull it all out quietly' },
+  { id: 'd4',  status: 'not_started', text: 'Asbestos assessment for 719 before any permitted demo',    tags: ['building','legal'],        note: 'Non-suspect materials (drywall/studs) can go out the back DIY' },
+  { id: 'd5',  status: 'not_started', text: '719 layout plan: ~2,500 sqft woodshop + ~4,500 sqft event/banquet space', tags: ['building','construction'], note: 'Under 2,500 sqft woodworking = no fire alarm/sprinkler required. Josh Elder very excited about banquet.' },
 
   // ── FREMONT MAKERS — BUSINESS ACTIVATION ──
-  { id: 'm1',  status: 'pending',     text: 'Activate Fremont Makers as a legal company',         tags: ['makers','legal'],          note: 'LLC formation + EIN' },
-  { id: 'm2',  status: 'pending',     text: 'Point fremontmakers.com DNS to Cloudflare',          tags: ['makers','marketing'],      note: 'Domain is registered — just needs DNS pointed' },
-  { id: 'm3',  status: 'pending',     text: 'Call wholesale cabinet rep — get cabinet line images', tags: ['makers','vendors'],      note: 'Need product imagery before website can launch' },
-  { id: 'm4',  status: 'pending',     text: 'Order remaining cabinet samples for showroom',       tags: ['makers','vendors'],        note: 'Physical samples needed for the space' },
-  { id: 'm5',  status: 'pending',     text: 'Interview Taylor',                                   tags: ['makers','hr'],             note: 'Potential hire — schedule when building progress allows' },
+  { id: 'm1',  status: 'not_started', text: 'Reactivate Fremont Makers — effective August 1st',         tags: ['makers','legal'],          note: 'Stan handles operating agreement. $100K can go in early.' },
+  { id: 'm2',  status: 'not_started', text: 'Activate Fremont Makers LLC + EIN',                         tags: ['makers','legal'],          note: '' },
+  { id: 'm3',  status: 'not_started', text: 'Stan intros MC to Carrie — check FM bank account at High Country Bank', tags: ['makers','finance'], note: '~$200–300 in there from dormant period. Confirm available funds.' },
+  { id: 'm4',  status: 'not_started', text: 'Get with Jessica re: QuickBooks oversight for FM',          tags: ['makers','finance'],        note: 'Carrie may already have a license. Transfer dormant FM books to new direction.' },
+  { id: 'm5',  status: 'not_started', text: 'Transfer FCA woodshop equipment payment to FM ($27/mo)',    tags: ['makers','finance'],        note: '5-yr term, no early payoff — tax benefit. FM already owns all woodshop equipment.' },
+  { id: 'm6',  status: 'not_started', text: 'Draft Fremont Makers operating agreement',                  tags: ['makers','legal'],          note: 'Stan 81% / partner 19% until $100K @ 6% repaid → then 51/49. Rent = mortgage (~$354/mo).' },
+  { id: 'm7',  status: 'not_started', text: 'Buy commercial Whirlpool washer+dryer from dog groomer — $100', tags: ['makers','ops'],       note: 'He leaves them in place. Heavy duty, basically new. Great for shop + future event laundry.' },
+  { id: 'm8',  status: 'not_started', text: 'Line up Kristen for contract labor — ~10 hrs/week when needed', tags: ['makers','hr'],        note: 'Cabinet assembly/prep. Bring her in as needed.' },
+  { id: 'm9',  status: 'not_started', text: 'Point fremontmakers.com DNS to Cloudflare',                 tags: ['makers','marketing'],      note: 'Domain registered — just needs DNS pointed' },
 
-  // ── FREMONT MAKERS — WEBSITE ──
-  { id: 'w1',  status: 'pending',     text: 'MC builds Fremont Makers website once images received', tags: ['makers','marketing'],   note: 'Request a quote + Doing Good by Doing Well culture · Unbridled style · Keep Fremont Makers logo' },
-  { id: 'w2',  status: 'pending',     text: 'Add Fremont Makers to master deliverables sheet',   tags: ['makers','marketing'],      note: '' },
+  // ── CABINET BUSINESS ──
+  { id: 'c1',  status: 'not_started', text: 'Talk to Jeremy Crochet Wednesday — get development plans, price kitchens for 268-home project', tags: ['makers','vendors'], note: '150 + 118 phases. $804K total revenue potential at $3K/unit profit. Need phase timeline.' },
+  { id: 'c2',  status: 'not_started', text: 'Find out phase timeline for builder contract — 2 yrs? 4 yrs? 5 yrs?', tags: ['makers','finance'], note: 'Drives all revenue projections and cash planning.' },
+  { id: 'c3',  status: 'not_started', text: 'Jerry (wholesale cabinets rep) — waiting on spec sheets + mass discount confirmation', tags: ['makers','vendors'], note: 'He went to management. Aiming for deepest possible pricing on full development.' },
+  { id: 'c4',  status: 'not_started', text: 'Send FM branding iron logo to MC for website + spec sheets', tags: ['makers','marketing'],   note: 'FM acronym, branding iron style, est. 2019. Not the one from the logos folder.' },
 
-  // ── TENANT & OCCUPANCY ──
-  { id: 't1',  status: 'in_progress', text: 'Get tenant lined up for Harrison Building',          tags: ['building','legal'],        note: 'Identify anchor tenant before TI investment finalizes' },
+  // ── WEBSITE & MARKETING ──
+  { id: 'w1',  status: 'in_progress', text: 'Build Fremont Makers website — no pricing, for Barry/Bernie visits', tags: ['makers','marketing'], note: 'Credentials + culture piece. Unbridled style. "Fremont Makers" spelled out, FM logo.' },
+  { id: 'w2',  status: 'not_started', text: 'Add Fremont Makers to master deliverables sheet',           tags: ['makers','marketing'],      note: '' },
 
-  // ── MARKETING ──
-  { id: 'mk1', status: 'pending',     text: 'Build Google Ads campaign for Fremont Makers (post-TI)', tags: ['makers','marketing'],  note: 'Launch marketing campaign after tenant improvements complete' },
+  // ── OTHER ──
+  { id: 'o1',  status: 'not_started', text: 'Nick — photos of 505 Meacon (post office) for listing at $1.6M', tags: ['building','marketing'], note: 'Nick was taking pics this morning at 10am' },
+  { id: 'o2',  status: 'not_started', text: 'Cabin — TVs arriving this week. Schedule Barry visit + 15 min bar design session', tags: ['ops'], note: 'Barry wants to come up. Need to direct bar design — not something the contractor figures out.' },
+  { id: 'o3',  status: 'not_started', text: 'Weekly Wednesday 1-hr FM team meetings — on the calendar',  tags: ['ops'],                     note: 'Good cadence for the build.' },
 ];
 
-const STATUS_CYCLE = ['pending','in_progress','blocked','completed'];
-
+// ════════════════════════════════════════════
+//  RENDER
+// ════════════════════════════════════════════
 function render() {
   const list = document.getElementById('todoList');
   document.getElementById('lastUpdated').textContent =
@@ -163,24 +250,23 @@ function render() {
     new Date().toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit', timeZoneName:'short'});
 
   const active    = TODOS.filter(t => t.status === 'in_progress');
-  const pending   = TODOS.filter(t => t.status === 'pending');
-  const blocked   = TODOS.filter(t => t.status === 'blocked');
+  const pending   = TODOS.filter(t => t.status === 'not_started');
   const completed = TODOS.filter(t => t.status === 'completed');
+  const approved  = TODOS.filter(t => t.status === 'approved');
 
   document.getElementById('countActive').textContent  = active.length;
   document.getElementById('countPending').textContent = pending.length;
-  document.getElementById('countBlocked').textContent = blocked.length;
   document.getElementById('countDone').textContent    = completed.length;
-
-  let html = '';
+  document.getElementById('countApproved').textContent = approved.length;
 
   const sections = [
-    { label: '🔨 In Progress', items: active },
-    { label: '📋 Pending',     items: pending },
-    { label: '🚫 Blocked',     items: blocked },
-    { label: '✅ Done',         items: completed },
+    { label: '🔨 In Progress',  items: active },
+    { label: '📋 Not Started',  items: pending },
+    { label: '✅ Completed',     items: completed },
+    { label: '✦ Approved',      items: approved },
   ];
 
+  let html = '';
   sections.forEach(sec => {
     if (!sec.items.length) return;
     html += `<div class="section-label">${sec.label}</div>`;
@@ -189,12 +275,16 @@ function render() {
         `<span class="todo-tag tag-${tag}">${tag}</span>`
       ).join('');
       const noteHtml = t.note ? `<div class="todo-note">${t.note}</div>` : '';
+      const pillLabel = { not_started:'Not Started', in_progress:'In Progress', completed:'Completed', approved:'Approved' }[t.status];
       html += `
         <div class="todo-item status-${t.status}" id="item-${t.id}">
-          <div class="status-dot dot-${t.status}" onclick="cycleStatus('${t.id}')" title="Click to update status" style="cursor:pointer"></div>
+          <div class="status-dot dot-${t.status}" onclick="cycleStatus('${t.id}')" title="Tap to change status"></div>
           <div class="todo-body">
             <div class="todo-text">${t.text}</div>
-            <div class="todo-meta">${tagHtml}</div>
+            <div class="todo-meta">
+              <span class="status-pill pill-${t.status}">${pillLabel}</span>
+              ${tagHtml}
+            </div>
             ${noteHtml}
           </div>
         </div>`;
@@ -204,14 +294,79 @@ function render() {
   list.innerHTML = html;
 }
 
+// ════════════════════════════════════════════
+//  STATUS CYCLING
+// ════════════════════════════════════════════
 function cycleStatus(id) {
   const item = TODOS.find(t => t.id === id);
   if (!item) return;
   const idx = STATUS_CYCLE.indexOf(item.status);
-  item.status = STATUS_CYCLE[(idx + 1) % STATUS_CYCLE.length];
-  render();
+  const next = STATUS_CYCLE[(idx + 1) % STATUS_CYCLE.length];
+  if (next === 'approved') {
+    pendingApproval = id;
+    openPin();
+  } else {
+    item.status = next;
+    render();
+  }
 }
 
+// ════════════════════════════════════════════
+//  PIN LOGIC
+// ════════════════════════════════════════════
+function openPin() {
+  pinEntry = '';
+  document.getElementById('pinErr').textContent = '';
+  updatePinDots();
+  document.getElementById('pinOverlay').classList.add('open');
+}
+
+function pinPress(digit) {
+  if (pinEntry.length >= 4) return;
+  pinEntry += digit;
+  updatePinDots();
+  if (pinEntry.length === 4) {
+    setTimeout(checkPin, 150);
+  }
+}
+
+function pinBackspace() {
+  pinEntry = pinEntry.slice(0, -1);
+  updatePinDots();
+  document.getElementById('pinErr').textContent = '';
+}
+
+function updatePinDots() {
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById('pd' + i);
+    if (i < pinEntry.length) dot.classList.add('filled');
+    else dot.classList.remove('filled');
+  }
+}
+
+function checkPin() {
+  if (pinEntry === APPROVED_PIN) {
+    const item = TODOS.find(t => t.id === pendingApproval);
+    if (item) item.status = 'approved';
+    pendingApproval = null;
+    document.getElementById('pinOverlay').classList.remove('open');
+    render();
+  } else {
+    document.getElementById('pinErr').textContent = 'Incorrect PIN — try again';
+    pinEntry = '';
+    updatePinDots();
+  }
+}
+
+function pinCancel() {
+  pendingApproval = null;
+  pinEntry = '';
+  document.getElementById('pinOverlay').classList.remove('open');
+}
+
+// ════════════════════════════════════════════
+//  ADD ITEM
+// ════════════════════════════════════════════
 function showInput() {
   document.getElementById('addBtn').style.display = 'none';
   document.getElementById('inputArea').style.display = 'block';
@@ -221,7 +376,7 @@ function showInput() {
 function addItem() {
   const val = document.getElementById('newTask').value.trim();
   if (!val) return;
-  TODOS.unshift({ id: 'u' + Date.now(), status: 'pending', text: val, tags: [], note: '' });
+  TODOS.unshift({ id: 'u' + Date.now(), status: 'not_started', text: val, tags: [], note: '' });
   document.getElementById('newTask').value = '';
   document.getElementById('inputArea').style.display = 'none';
   document.getElementById('addBtn').style.display = 'block';
