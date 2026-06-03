@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="refresh" content="300">
+  <title>Fremont Makers · Harrison Building | Unbridled</title>
+  <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1923;
+  --navy: #1a2e3b;
+  --card: #162433;
+  --border: #1e3347;
+  --gold: #c9aa7c;
+  --blue: #5a8ba7;
+  --green: #4caf7d;
+  --red: #e05a5a;
+  --amber: #e0a040;
+  --text: #e8e0d4;
+  --muted: #6a8a9a;
+  --white: #f5f5f5;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Josefin Sans', sans-serif; font-weight: 300; min-height: 100vh; padding-bottom: 4rem; }
+
+.topbar { background: #0a1219; border-bottom: 1px solid var(--border); padding: .75rem clamp(1rem,4vw,2rem); display: flex; align-items: center; justify-content: space-between; }
+.topbar-brand { font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--white); }
+.topbar-brand span { color: var(--blue); }
+.topbar-meta { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+
+.hero { background: linear-gradient(180deg, #0a1219 0%, var(--bg) 100%); border-bottom: 1px solid var(--border); padding: 2rem clamp(1rem,4vw,2rem) 1.5rem; position: relative; }
+.hero::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+.hero-eyebrow { font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: var(--blue); margin-bottom: .5rem; }
+.hero-title { font-size: clamp(24px,4vw,38px); font-weight: 700; color: var(--white); letter-spacing: -.5px; margin-bottom: .35rem; }
+.hero-title em { color: var(--gold); font-style: normal; }
+.hero-sub { font-size: 11px; color: var(--muted); letter-spacing: 1px; }
+
+.wrap { max-width: 700px; margin: 0 auto; padding: 0 clamp(1rem,4vw,1.5rem); }
+
+.summary-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 1.75rem 0; }
+.sum-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: .9rem 1rem; text-align: center; }
+.sum-val { font-size: 24px; font-weight: 700; color: var(--gold); line-height: 1; margin-bottom: .2rem; }
+.sum-lbl { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+
+.section-label { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin: 1.75rem 0 .75rem; padding-bottom: .5rem; border-bottom: 1px solid var(--border); }
+
+.todo-item { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: .65rem; display: flex; align-items: flex-start; gap: 1rem; }
+.todo-item.status-in_progress { border-left: 3px solid var(--gold); }
+.todo-item.status-pending { border-left: 3px solid var(--border); }
+.todo-item.status-completed { border-left: 3px solid var(--green); opacity: .55; }
+.todo-item.status-blocked { border-left: 3px solid var(--red); }
+
+.status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.dot-in_progress { background: var(--gold); box-shadow: 0 0 6px rgba(201,170,124,.5); }
+.dot-pending { background: var(--muted); opacity: .5; }
+.dot-completed { background: var(--green); }
+.dot-blocked { background: var(--red); }
+
+.todo-body { flex: 1; }
+.todo-text { font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.5; margin-bottom: .3rem; letter-spacing: .2px; }
+.todo-meta { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; }
+.todo-tag { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; padding: .2rem .55rem; border-radius: 4px; border: 1px solid; }
+.tag-building { color: #a0c0d8; border-color: rgba(90,139,167,.4); background: rgba(90,139,167,.1); }
+.tag-makers { color: #c9aa7c; border-color: rgba(201,170,124,.4); background: rgba(201,170,124,.1); }
+.tag-legal { color: #d4a0c0; border-color: rgba(155,89,182,.4); background: rgba(155,89,182,.1); }
+.tag-construction { color: #f0c080; border-color: rgba(224,160,64,.4); background: rgba(224,160,64,.1); }
+.tag-vendors { color: #a0d4b8; border-color: rgba(76,175,125,.4); background: rgba(76,175,125,.1); }
+.tag-marketing { color: #f0a080; border-color: rgba(229,115,80,.4); background: rgba(229,115,80,.1); }
+.tag-hr { color: #c0d4a0; border-color: rgba(160,200,100,.4); background: rgba(160,200,100,.1); }
+.todo-note { font-size: 11px; color: var(--muted); margin-top: .35rem; line-height: 1.55; font-style: italic; }
+
+.add-btn { width: 100%; background: transparent; border: 1px dashed var(--border); border-radius: 10px; padding: .9rem; color: var(--muted); font-family: 'Josefin Sans', sans-serif; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: all .2s; margin-top: .5rem; }
+.add-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+.input-row { display: grid; grid-template-columns: 1fr auto; gap: .5rem; margin-top: .75rem; }
+.todo-input { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: .75rem 1rem; color: var(--text); font-family: 'Josefin Sans', sans-serif; font-size: 13px; letter-spacing: .3px; outline: none; width: 100%; }
+.todo-input:focus { border-color: var(--gold); }
+.save-btn { background: var(--gold); color: #0a1219; border: none; border-radius: 8px; padding: .75rem 1.25rem; font-family: 'Josefin Sans', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; white-space: nowrap; }
+.save-btn:hover { opacity: .88; }
+
+.status-btn { background: transparent; border: 1px solid var(--border); border-radius: 6px; padding: .25rem .6rem; color: var(--muted); font-family: 'Josefin Sans', sans-serif; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all .15s; }
+.status-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+.updated-note { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-align: center; margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+.updated-note span { color: var(--blue); }
+
+@media(max-width:480px) { .summary-strip { grid-template-columns: repeat(2,1fr); } }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">Unbridled <span>·</span> Stan Bullis</div>
+  <div class="topbar-meta" id="lastUpdated">Loading...</div>
+</div>
+
+<div class="hero">
+  <div class="hero-eyebrow">Project Tracker · Cañon City</div>
+  <h1 class="hero-title">Fremont <em>Makers</em> · Harrison Building</h1>
+  <div class="hero-sub">611 Main St · Demo → TI → Launch · Updated live</div>
+</div>
+
+<div class="wrap">
+
+  <div class="summary-strip">
+    <div class="sum-card"><div class="sum-val" id="countActive">—</div><div class="sum-lbl">In Progress</div></div>
+    <div class="sum-card"><div class="sum-val" id="countPending">—</div><div class="sum-lbl">Pending</div></div>
+    <div class="sum-card"><div class="sum-val" id="countBlocked">—</div><div class="sum-lbl">Blocked</div></div>
+    <div class="sum-card"><div class="sum-val" id="countDone">—</div><div class="sum-lbl">Done</div></div>
+  </div>
+
+  <div id="todoList"></div>
+
+  <!-- Add item -->
+  <div class="add-btn" onclick="showInput()" id="addBtn">+ Add Task</div>
+  <div id="inputArea" style="display:none">
+    <div class="input-row">
+      <input class="todo-input" id="newTask" placeholder="What needs to happen?" onkeydown="if(event.key==='Enter')addItem()">
+      <button class="save-btn" onclick="addItem()">Add</button>
+    </div>
+  </div>
+
+  <div class="updated-note">Fremont Makers · Harrison Building (611 Main St) · <span>Built by MC</span> · Tap status dots to cycle · Tell MC what to add</div>
+</div>
+
+<script>
+// ── TODO DATA ──
+const TODOS = [
+  // ── HARRISON BUILDING — CONSTRUCTION & DEMO ──
+  { id: 'h1',  status: 'in_progress', text: 'Talk to Kathy — back door egress solution',          tags: ['building','construction'], note: 'Egress requirement blocking demo start' },
+  { id: 'h2',  status: 'pending',     text: 'Get right-of-way permit for dumpster placement',     tags: ['building','legal'],        note: '611 Main St — city permit required before demo' },
+  { id: 'h3',  status: 'pending',     text: 'Call New Image — get drop ceiling removal quote',    tags: ['building','vendors'],      note: 'Demo phase — ceiling comes out first' },
+  { id: 'h4',  status: 'pending',     text: 'Wait on Wyndell revised bid — then proceed with demo', tags: ['building','construction'], note: 'Hold demo until Wyndell\'s updated numbers are in' },
+  { id: 'h5',  status: 'pending',     text: 'Lester — redraw bathroom configuration',             tags: ['building','construction'], note: 'New layout needed before rough-in can start' },
+  { id: 'h6',  status: 'pending',     text: 'Pick electrical company — get bids',                 tags: ['building','vendors'],      note: 'Need electrical contractor selected before TI work begins' },
+
+  // ── FREMONT MAKERS — BUSINESS ACTIVATION ──
+  { id: 'm1',  status: 'pending',     text: 'Activate Fremont Makers as a legal company',         tags: ['makers','legal'],          note: 'LLC formation + EIN' },
+  { id: 'm2',  status: 'pending',     text: 'Point fremontmakers.com DNS to Cloudflare',          tags: ['makers','marketing'],      note: 'Domain is registered — just needs DNS pointed' },
+  { id: 'm3',  status: 'pending',     text: 'Call wholesale cabinet rep — get cabinet line images', tags: ['makers','vendors'],      note: 'Need product imagery before website can launch' },
+  { id: 'm4',  status: 'pending',     text: 'Order remaining cabinet samples for showroom',       tags: ['makers','vendors'],        note: 'Physical samples needed for the space' },
+  { id: 'm5',  status: 'pending',     text: 'Interview Taylor',                                   tags: ['makers','hr'],             note: 'Potential hire — schedule when building progress allows' },
+
+  // ── FREMONT MAKERS — WEBSITE ──
+  { id: 'w1',  status: 'pending',     text: 'MC builds Fremont Makers website once images received', tags: ['makers','marketing'],   note: 'Request a quote + Doing Good by Doing Well culture · Unbridled style · Keep Fremont Makers logo' },
+  { id: 'w2',  status: 'pending',     text: 'Add Fremont Makers to master deliverables sheet',   tags: ['makers','marketing'],      note: '' },
+
+  // ── TENANT & OCCUPANCY ──
+  { id: 't1',  status: 'in_progress', text: 'Get tenant lined up for Harrison Building',          tags: ['building','legal'],        note: 'Identify anchor tenant before TI investment finalizes' },
+
+  // ── MARKETING ──
+  { id: 'mk1', status: 'pending',     text: 'Build Google Ads campaign for Fremont Makers (post-TI)', tags: ['makers','marketing'],  note: 'Launch marketing campaign after tenant improvements complete' },
+];
+
+const STATUS_CYCLE = ['pending','in_progress','blocked','completed'];
+
+function render() {
+  const list = document.getElementById('todoList');
+  document.getElementById('lastUpdated').textContent =
+    new Date().toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'}) + ' · ' +
+    new Date().toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit', timeZoneName:'short'});
+
+  const active    = TODOS.filter(t => t.status === 'in_progress');
+  const pending   = TODOS.filter(t => t.status === 'pending');
+  const blocked   = TODOS.filter(t => t.status === 'blocked');
+  const completed = TODOS.filter(t => t.status === 'completed');
+
+  document.getElementById('countActive').textContent  = active.length;
+  document.getElementById('countPending').textContent = pending.length;
+  document.getElementById('countBlocked').textContent = blocked.length;
+  document.getElementById('countDone').textContent    = completed.length;
+
+  let html = '';
+
+  const sections = [
+    { label: '🔨 In Progress', items: active },
+    { label: '📋 Pending',     items: pending },
+    { label: '🚫 Blocked',     items: blocked },
+    { label: '✅ Done',         items: completed },
+  ];
+
+  sections.forEach(sec => {
+    if (!sec.items.length) return;
+    html += `<div class="section-label">${sec.label}</div>`;
+    sec.items.forEach(t => {
+      const tagHtml = (t.tags||[]).map(tag =>
+        `<span class="todo-tag tag-${tag}">${tag}</span>`
+      ).join('');
+      const noteHtml = t.note ? `<div class="todo-note">${t.note}</div>` : '';
+      html += `
+        <div class="todo-item status-${t.status}" id="item-${t.id}">
+          <div class="status-dot dot-${t.status}" onclick="cycleStatus('${t.id}')" title="Click to update status" style="cursor:pointer"></div>
+          <div class="todo-body">
+            <div class="todo-text">${t.text}</div>
+            <div class="todo-meta">${tagHtml}</div>
+            ${noteHtml}
+          </div>
+        </div>`;
+    });
+  });
+
+  list.innerHTML = html;
+}
+
+function cycleStatus(id) {
+  const item = TODOS.find(t => t.id === id);
+  if (!item) return;
+  const idx = STATUS_CYCLE.indexOf(item.status);
+  item.status = STATUS_CYCLE[(idx + 1) % STATUS_CYCLE.length];
+  render();
+}
+
+function showInput() {
+  document.getElementById('addBtn').style.display = 'none';
+  document.getElementById('inputArea').style.display = 'block';
+  document.getElementById('newTask').focus();
+}
+
+function addItem() {
+  const val = document.getElementById('newTask').value.trim();
+  if (!val) return;
+  TODOS.unshift({ id: 'u' + Date.now(), status: 'pending', text: val, tags: [], note: '' });
+  document.getElementById('newTask').value = '';
+  document.getElementById('inputArea').style.display = 'none';
+  document.getElementById('addBtn').style.display = 'block';
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
