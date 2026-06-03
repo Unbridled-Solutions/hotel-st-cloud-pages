@@ -615,10 +615,10 @@ function updateSchedule(){
     const shiftOpts=s.shiftList.map(sh=>`<option value="${sh}"${sh===st.shift?' selected':''}>${sh}</option>`).join('');
 
     tr.innerHTML=`
-      <td><strong style="font-size:.85rem">${s.name}</strong>${s.note?`<br><span style="font-size:.7rem;color:var(--light-gray)">${s.note}</span>`:''}</td>
+      <td><span class="editable-name" style="font-size:.85rem;font-weight:700;cursor:text;border-bottom:1px dashed rgba(255,255,255,.2);padding-bottom:1px" title="Click to edit name" onclick="editName(this,'${s.id}')">${s.name}</span>${s.note?`<br><span style="font-size:.7rem;color:var(--light-gray)">${s.note}</span>`:''}</td>
       <td><span class="role-badge ${roleCls}">${s.role}</span></td>
       <td>${typeTag}</td>
-      <td style="font-size:.85rem">${rateDisp}</td>
+      <td style="font-size:.85rem">${s.sal?'<em style="font-size:.8rem;color:var(--light-gray)">salary</em>':`<span class="editable-rate" style="cursor:text;border-bottom:1px dashed rgba(255,255,255,.2);padding-bottom:1px" title="Click to edit rate" onclick="editRate(this,'${s.id}')">$${s.rate.toFixed(2)}</span>`}</td>
       <td>${s.sal?'<span style="font-size:.8rem;color:var(--light-gray)">Flex</span>':`<select class="shift-select" onchange="setShift('${key}',this.value)">${shiftOpts}</select>`}</td>
       <td>${s.sal?'—':`<input type="number" class="hrs-input" value="${st.hrs}" min="0" max="14" step=".5" onchange="setHrs('${key}',this.value)">`}</td>
       <td class="cost-cell">${costDisp}</td>
@@ -656,6 +656,54 @@ function toggleStaff(key,checked){
   if(!state[key])state[key]={};
   state[key].active=checked;
   updateSchedule();
+}
+
+function editName(el,id){
+  const s=STAFF.find(x=>x.id===id);
+  if(!s)return;
+  const cur=s.name;
+  const input=document.createElement('input');
+  input.type='text';
+  input.value=cur;
+  input.style.cssText='background:rgba(255,255,255,.08);border:1px solid var(--blue);border-radius:4px;color:var(--white);font-size:.85rem;font-weight:700;padding:1px 5px;width:120px;outline:none';
+  el.replaceWith(input);
+  input.focus();
+  input.select();
+  const commit=()=>{
+    const val=input.value.trim()||cur;
+    s.name=val;
+    // also update the roster table row if present
+    document.querySelectorAll('.roster-table td').forEach(td=>{if(td.textContent===cur)td.textContent=val;});
+    updateSchedule();
+  };
+  input.addEventListener('blur',commit);
+  input.addEventListener('keydown',e=>{if(e.key==='Enter'){input.blur();}if(e.key==='Escape'){s.name=cur;input.blur();}});
+}
+
+function editRate(el,id){
+  const s=STAFF.find(x=>x.id===id);
+  if(!s||s.sal)return;
+  const cur=s.rate;
+  const input=document.createElement('input');
+  input.type='number';
+  input.value=cur.toFixed(2);
+  input.step='0.01';
+  input.min='0';
+  input.style.cssText='background:rgba(255,255,255,.08);border:1px solid var(--blue);border-radius:4px;color:var(--white);font-size:.85rem;padding:1px 5px;width:72px;outline:none';
+  el.replaceWith(input);
+  input.focus();
+  input.select();
+  const commit=()=>{
+    const val=parseFloat(input.value);
+    s.rate=(!isNaN(val)&&val>=0)?val:cur;
+    // update roster table rate cell
+    document.querySelectorAll('.roster-table .rate-val').forEach(td=>{
+      if(td.textContent==='$'+cur.toFixed(2))td.textContent='$'+s.rate.toFixed(2);
+    });
+    updateSchedule();
+  };
+  input.addEventListener('blur',commit);
+  input.addEventListener('keydown',e=>{if(e.key==='Enter'){input.blur();}if(e.key==='Escape'){s.rate=cur;input.blur();}});
 }
 
 function updateLaborBar(labor,rev,budget,hc){
