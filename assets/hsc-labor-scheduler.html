@@ -397,54 +397,11 @@
 
   <hr class="divider">
 
-  <!-- ROSTER -->
+  <!-- ROSTER — rendered from STAFF data, stays in sync with schedule -->
   <div class="section-label">Current Team</div>
   <h2 class="section-title">Your Roster</h2>
-  <div class="roster-grid">
-    <div class="roster-card">
-      <div class="roster-header"><h3>Back of House</h3><div class="count">14</div></div>
-      <table class="roster-table">
-        <thead><tr><th>Name</th><th>Rate</th><th>Notes</th></tr></thead>
-        <tbody>
-          <tr><td>Josh Elder</td><td class="rate-val">Salaried</td><td>Executive Chef</td></tr>
-          <tr><td>Jon Lee</td><td class="rate-val">$20.00</td><td>Senior line / service</td></tr>
-          <tr><td>Luis Reyes</td><td class="rate-val">$20.00</td><td>Senior line / service</td></tr>
-          <tr><td>Atlas Taylor</td><td class="rate-val">$19.00</td><td></td></tr>
-          <tr><td>Joey Sankot</td><td class="rate-val">$18.00</td><td></td></tr>
-          <tr><td>Maliki Walters</td><td class="rate-val">$18.00</td><td>Prep capable</td></tr>
-          <tr><td>Tristian Radhe</td><td class="rate-val">$18.00</td><td></td></tr>
-          <tr><td>Steven White</td><td class="rate-val">$17.50</td><td>Prep capable</td></tr>
-          <tr><td>Mandy Torres</td><td class="rate-val">$17.00</td><td></td></tr>
-          <tr><td>Christopher</td><td class="rate-val">$17.00</td><td></td></tr>
-          <tr><td>Jen Sassaman</td><td class="rate-val">$16.00</td><td></td></tr>
-          <tr><td>Jesse Robbins</td><td class="rate-val">$15.16</td><td>Prep / AM</td></tr>
-          <tr><td>Olivia Means</td><td class="rate-val">$15.16</td><td>Prep / AM</td></tr>
-          <tr><td>Zach Vaghn</td><td class="rate-val">—</td><td></td></tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="roster-card">
-      <div class="roster-header"><h3>Front of House</h3><div class="count">14</div></div>
-      <table class="roster-table">
-        <thead><tr><th>Name</th><th>Rate</th><th>Notes</th></tr></thead>
-        <tbody>
-          <tr><td>Alyssa Dickson</td><td class="rate-val">$19.00</td><td>Asst Manager · opens</td></tr>
-          <tr><td>Front Bar Bartender</td><td class="rate-val">$14.00</td><td>Front Bar · 10am–9pm daily</td></tr>
-          <tr><td>Izzy Gordon</td><td class="rate-val">$15.16</td><td></td></tr>
-          <tr><td>Ashley Gant</td><td class="rate-val">$14.00</td><td></td></tr>
-          <tr><td>Chelsea Jennings</td><td class="rate-val">$14.00</td><td></td></tr>
-          <tr><td>Teddy Brown</td><td class="rate-val">$14.00</td><td></td></tr>
-          <tr><td>Kragh Rasmussen</td><td class="rate-val">$12.14</td><td></td></tr>
-          <tr><td>Abigal Korman</td><td class="rate-val">$12.14</td><td></td></tr>
-          <tr><td>Zoey Kelley</td><td class="rate-val">$12.14</td><td></td></tr>
-          <tr><td>Jen Pierce</td><td class="rate-val">$12.14</td><td></td></tr>
-          <tr><td>Tagen Riede</td><td class="rate-val">$12.14</td><td></td></tr>
-          <tr><td>Joslyn Gordon</td><td class="rate-val">$12.14</td><td></td></tr>
-          <tr><td>Brenna Rutherford</td><td class="rate-val">$12.14</td><td></td></tr>
-          <tr><td>Chloe Coulter</td><td class="rate-val">$12.14</td><td></td></tr>
-        </tbody>
-      </table>
-    </div>
+  <div class="roster-grid" id="rosterGrid">
+    <!-- populated by renderRoster() -->
   </div>
 
 </div>
@@ -804,6 +761,138 @@ buildWeeklyGrid();
 buildDaySelector();
 updateSchedule();
 buildCharts();
+renderRoster();
+
+// ── ROSTER RENDERER ──
+function renderRoster(){
+  const grid=document.getElementById('rosterGrid');
+  if(!grid)return;
+  const boh=STAFF.filter(s=>s.role==='BOH');
+  const foh=STAFF.filter(s=>s.role==='FOH');
+  grid.innerHTML=buildRosterCard('Back of House','BOH',boh)+buildRosterCard('Front of House','FOH',foh);
+}
+
+function buildRosterCard(label,role,members){
+  const rows=members.map(s=>`
+    <tr data-id="${s.id}">
+      <td class="r-name" onclick="rEditName(this,'${s.id}')" title="Click to edit" style="cursor:text">${s.name}</td>
+      <td class="rate-val r-rate" onclick="rEditRate(this,'${s.id}')" title="Click to edit" style="cursor:text">${s.sal?'Salaried':'$'+s.rate.toFixed(2)}</td>
+      <td class="r-note" onclick="rEditNote(this,'${s.id}')" title="Click to edit" style="cursor:text;color:var(--light-gray);font-size:.8rem">${s.note||'—'}</td>
+      <td style="text-align:right;padding-right:.5rem"><button onclick="removeStaff('${s.id}')" title="Remove" style="background:none;border:none;color:var(--light-gray);font-size:1rem;cursor:pointer;line-height:1;padding:0 4px" onmouseover="this.style.color='#e05a5a'" onmouseout="this.style.color='var(--light-gray)'">×</button></td>
+    </tr>`).join('');
+  return `
+    <div class="roster-card">
+      <div class="roster-header"><h3>${label}</h3><div class="count">${members.length}</div></div>
+      <table class="roster-table">
+        <thead><tr><th>Name</th><th>Rate</th><th>Notes</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div style="padding:.75rem 1.25rem;border-top:1px solid var(--border)">
+        <button onclick="showAddForm('${role}')" id="add-btn-${role}" style="background:none;border:1px dashed rgba(255,255,255,.2);color:var(--light-gray);font-size:.78rem;letter-spacing:1px;padding:.35rem .85rem;border-radius:6px;cursor:pointer;width:100%;text-align:center" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='rgba(255,255,255,.2)';this.style.color='var(--light-gray)'">+ Add Team Member</button>
+        <div id="add-form-${role}" style="display:none;margin-top:.6rem;display:none">
+          <div style="display:grid;grid-template-columns:1fr auto auto;gap:.4rem;align-items:center">
+            <input id="add-name-${role}" placeholder="Name" style="background:rgba(255,255,255,.07);border:1px solid var(--border);border-radius:5px;color:var(--white);font-size:.82rem;padding:.3rem .6rem;outline:none" onkeydown="if(event.key==='Enter')confirmAdd('${role}')">
+            <input id="add-rate-${role}" placeholder="Rate" type="number" min="0" step="0.01" style="background:rgba(255,255,255,.07);border:1px solid var(--border);border-radius:5px;color:var(--white);font-size:.82rem;padding:.3rem .6rem;width:72px;outline:none" onkeydown="if(event.key==='Enter')confirmAdd('${role}')">
+            <div style="display:flex;gap:.3rem">
+              <button onclick="confirmAdd('${role}')" style="background:var(--gold);color:#0f1923;border:none;border-radius:5px;font-size:.78rem;font-weight:700;padding:.3rem .7rem;cursor:pointer">Add</button>
+              <button onclick="cancelAdd('${role}')" style="background:rgba(255,255,255,.07);color:var(--light-gray);border:none;border-radius:5px;font-size:.78rem;padding:.3rem .6rem;cursor:pointer">✕</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:.5rem;margin-top:.4rem;flex-wrap:wrap">
+            <label style="font-size:.75rem;color:var(--light-gray);display:flex;align-items:center;gap:.3rem"><input type="checkbox" id="add-prep-${role}" style="accent-color:var(--gold)"> Prep role</label>
+            <label style="font-size:.75rem;color:var(--light-gray);display:flex;align-items:center;gap:.3rem"><input type="checkbox" id="add-sal-${role}"> Salaried</label>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function showAddForm(role){
+  const form=document.getElementById('add-form-'+role);
+  const btn=document.getElementById('add-btn-'+role);
+  form.style.display='block';
+  btn.style.display='none';
+  document.getElementById('add-name-'+role).focus();
+}
+function cancelAdd(role){
+  document.getElementById('add-form-'+role).style.display='none';
+  document.getElementById('add-btn-'+role).style.display='block';
+  document.getElementById('add-name-'+role).value='';
+  document.getElementById('add-rate-'+role).value='';
+}
+function confirmAdd(role){
+  const nameEl=document.getElementById('add-name-'+role);
+  const rateEl=document.getElementById('add-rate-'+role);
+  const prepEl=document.getElementById('add-prep-'+role);
+  const salEl=document.getElementById('add-sal-'+role);
+  const name=nameEl.value.trim();
+  if(!name)return nameEl.focus();
+  const sal=salEl.checked;
+  const rate=sal?0:(parseFloat(rateEl.value)||0);
+  const isPrep=prepEl.checked;
+  const id=role.toLowerCase()+'-custom-'+Date.now();
+  const shiftList=role==='BOH'?(isPrep?PREP_SHIFTS:SVC_SHIFTS):(isPrep?FOH_PREP_SHIFTS:FOH_SVC_SHIFTS);
+  const defShift=shiftList[0];
+  STAFF.push({
+    id,name,role,isPrep,rate,sal,
+    tierActive:[true,true,true],
+    defaultHrs:[8,8,8],
+    defaultShift:[defShift,defShift,defShift],
+    shiftList,
+    note:''
+  });
+  cancelAdd(role);
+  renderRoster();
+  updateSchedule();
+}
+function removeStaff(id){
+  if(!confirm('Remove this team member from the roster and schedule?'))return;
+  const idx=STAFF.findIndex(s=>s.id===id);
+  if(idx===-1)return;
+  STAFF.splice(idx,1);
+  // clean up any saved state keys for this staff member
+  Object.keys(state).forEach(k=>{if(k.includes(id))delete state[k];});
+  renderRoster();
+  updateSchedule();
+}
+
+// Roster inline edit helpers (separate from schedule table edits — both update STAFF array)
+function rEditName(el,id){
+  const s=STAFF.find(x=>x.id===id);
+  if(!s)return;
+  const cur=s.name;
+  const inp=document.createElement('input');
+  inp.value=cur;
+  inp.style.cssText='background:rgba(255,255,255,.08);border:1px solid var(--blue);border-radius:4px;color:var(--white);font-size:.85rem;padding:1px 5px;width:110px;outline:none';
+  el.replaceWith(inp);inp.focus();inp.select();
+  const done=()=>{s.name=inp.value.trim()||cur;renderRoster();updateSchedule();};
+  inp.addEventListener('blur',done);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')inp.blur();if(e.key==='Escape'){s.name=cur;inp.blur();}});
+}
+function rEditRate(el,id){
+  const s=STAFF.find(x=>x.id===id);
+  if(!s||s.sal)return;
+  const cur=s.rate;
+  const inp=document.createElement('input');
+  inp.type='number';inp.value=cur.toFixed(2);inp.step='0.01';inp.min='0';
+  inp.style.cssText='background:rgba(255,255,255,.08);border:1px solid var(--blue);border-radius:4px;color:var(--white);font-size:.85rem;padding:1px 5px;width:70px;outline:none';
+  el.replaceWith(inp);inp.focus();inp.select();
+  const done=()=>{const v=parseFloat(inp.value);s.rate=(!isNaN(v)&&v>=0)?v:cur;renderRoster();updateSchedule();};
+  inp.addEventListener('blur',done);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')inp.blur();if(e.key==='Escape'){s.rate=cur;inp.blur();}});
+}
+function rEditNote(el,id){
+  const s=STAFF.find(x=>x.id===id);
+  if(!s)return;
+  const cur=s.note||'';
+  const inp=document.createElement('input');
+  inp.value=cur==='—'?'':cur;inp.placeholder='Add note…';
+  inp.style.cssText='background:rgba(255,255,255,.08);border:1px solid var(--blue);border-radius:4px;color:var(--white);font-size:.8rem;padding:1px 5px;width:130px;outline:none';
+  el.replaceWith(inp);inp.focus();
+  const done=()=>{s.note=inp.value.trim();renderRoster();updateSchedule();};
+  inp.addEventListener('blur',done);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')inp.blur();if(e.key==='Escape'){s.note=cur;inp.blur();}});
+}
 </script>
 </body>
 </html>
