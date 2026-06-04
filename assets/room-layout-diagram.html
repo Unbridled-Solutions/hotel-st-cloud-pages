@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Room Layout Diagram | Unbridled</title>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1923;
+  --navy: #1a2e3b;
+  --card: #162433;
+  --border: #1e3347;
+  --gold: #c9aa7c;
+  --blue: #5a8ba7;
+  --green: #4caf7d;
+  --text: #e8e0d4;
+  --muted: #6a8a9a;
+  --white: #f5f5f5;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Josefin Sans', sans-serif; font-weight: 300; min-height: 100vh; padding-bottom: 3rem; }
+
+.topbar { background: #0a1219; border-bottom: 1px solid var(--border); padding: .75rem clamp(1rem,4vw,2.5rem); display: flex; align-items: center; justify-content: space-between; }
+.topbar-brand { font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--white); }
+.topbar-brand span { color: var(--blue); }
+.topbar-meta { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+
+.hero { background: linear-gradient(180deg, #0a1219 0%, var(--bg) 100%); border-bottom: 1px solid var(--border); padding: 2.5rem clamp(1rem,4vw,2.5rem) 2rem; text-align: center; position: relative; }
+.hero::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+.hero-eyebrow { font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: var(--blue); margin-bottom: .6rem; }
+.hero-title { font-size: clamp(22px,4vw,38px); font-weight: 700; color: var(--white); letter-spacing: -.5px; margin-bottom: .5rem; }
+.hero-title em { color: var(--gold); font-style: normal; }
+.hero-sub { font-size: 13px; color: var(--muted); max-width: 600px; margin: 0 auto; line-height: 1.6; }
+
+.wrap { max-width: 1000px; margin: 0 auto; padding: 0 clamp(1rem,4vw,1.5rem); }
+
+/* STATS STRIP */
+.stats-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 2rem 0 1.5rem; }
+.stat-box { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; }
+.stat-label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: .35rem; }
+.stat-val { font-size: 26px; font-weight: 700; line-height: 1; }
+.stat-sub { font-size: 10px; color: var(--muted); margin-top: .2rem; }
+.sv-gold { color: var(--gold); }
+.sv-blue { color: var(--blue); }
+.sv-green { color: var(--green); }
+.sv-rust { color: #e07a5f; }
+
+/* DIAGRAM CARD */
+.diagram-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; margin-bottom: 2rem; }
+.diagram-label { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 1rem; }
+
+#diagram-container { width: 100%; overflow-x: auto; }
+svg { display: block; max-width: 100%; }
+
+/* LEGEND */
+.legend { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+.legend-item { display: flex; align-items: center; gap: .5rem; font-size: 11px; color: var(--muted); letter-spacing: .5px; }
+.legend-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+.legend-sq { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
+
+/* KEY CARD */
+.key-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; }
+.key-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: .75rem; margin-top: 1rem; }
+.key-row { display: flex; align-items: flex-start; gap: .75rem; font-size: 12px; color: var(--text); line-height: 1.4; padding: .6rem; background: rgba(255,255,255,.03); border-radius: 6px; border: 1px solid var(--border); }
+.key-row .kicon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.key-row .klabel { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: .2rem; }
+.key-row .kval { font-weight: 600; color: var(--white); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">UNBRIDLED <span>·</span> ROOM CAPACITY</div>
+  <div class="topbar-meta">Floor Plan View</div>
+</div>
+
+<div class="hero">
+  <div class="hero-eyebrow">Room Layout Diagram</div>
+  <div class="hero-title">100 × 200 ft · <em>Rounds of 10</em></div>
+  <div class="hero-sub">20,000 sq ft ballroom · Stage 36 × 24 ft · 137 tables · 1,376 guests</div>
+</div>
+
+<div class="wrap">
+
+  <!-- STATS STRIP -->
+  <div class="stats-strip">
+    <div class="stat-box">
+      <div class="stat-label">Room Size</div>
+      <div class="stat-val sv-gold">20,000</div>
+      <div class="stat-sub">sq ft · 100 × 200 ft</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Usable Floor</div>
+      <div class="stat-val sv-blue">15,136</div>
+      <div class="stat-sub">sq ft after 80% + stage</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Tables</div>
+      <div class="stat-val sv-green">137</div>
+      <div class="stat-sub">rounds of 10 · 72" tables</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Guest Capacity</div>
+      <div class="stat-val sv-rust">1,376</div>
+      <div class="stat-sub">seated · 10 per table</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Stage</div>
+      <div class="stat-val sv-gold">864</div>
+      <div class="stat-sub">sq ft · 36 × 24 ft</div>
+    </div>
+  </div>
+
+  <!-- DIAGRAM -->
+  <div class="diagram-card">
+    <div class="diagram-label">Floor Plan — Not to Scale</div>
+    <div id="diagram-container">
+      <!-- SVG rendered by JS below -->
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#4caf7d;border:2px solid #3a9460"></div> Round table (seats 10)</div>
+      <div class="legend-item"><div class="legend-sq" style="background:#1a2e3b;border:2px solid #e07a5f"></div> Stage (36 × 24 ft)</div>
+      <div class="legend-item"><div class="legend-sq" style="background:rgba(90,139,167,.15);border:2px dashed #5a8ba7"></div> Room boundary</div>
+      <div class="legend-item"><div class="legend-sq" style="background:rgba(201,170,124,.12);border:2px solid rgba(201,170,124,.3)"></div> Main aisle</div>
+    </div>
+  </div>
+
+  <!-- KEY NOTES -->
+  <div class="key-card">
+    <div class="diagram-label">Layout Notes</div>
+    <div class="key-grid">
+      <div class="key-row"><span class="kicon">📐</span><div><span class="klabel">Table Spacing</span><span class="kval">8 ft center-to-center (6 ft table + 2 ft clearance)</span></div></div>
+      <div class="key-row"><span class="kicon">🚶</span><div><span class="klabel">Main Aisle</span><span class="kval">6 ft wide down the center — ADA + service access</span></div></div>
+      <div class="key-row"><span class="kicon">🛤️</span><div><span class="klabel">Perimeter Buffer</span><span class="kval">8 ft from walls — egress, service, ADA clearance</span></div></div>
+      <div class="key-row"><span class="kicon">🎭</span><div><span class="klabel">Stage Position</span><span class="kval">Centered on the far wall · 36 ft wide × 24 ft deep</span></div></div>
+      <div class="key-row"><span class="kicon">📊</span><div><span class="klabel">Capacity Formula</span><span class="kval">(20,000 × 80%) − 864 sq ft stage = 15,136 ÷ 11 = 1,376</span></div></div>
+      <div class="key-row"><span class="kicon">⚠️</span><div><span class="klabel">Verify Against</span><span class="kval">Fire code occupancy limits · ADA requirements · CAD layout</span></div></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── ROOM PARAMETERS (feet) ───────────────────────────────────────────────
+const ROOM_W = 100;
+const ROOM_D = 200;
+const STAGE_W = 36;
+const STAGE_D = 24;
+const TABLE_D = 6;       // 72" table diameter
+const SPACING = 8;       // center-to-center spacing
+const WALL_BUF = 8;      // perimeter buffer from walls
+const AISLE_W = 6;       // center aisle width
+
+// ─── SCALE ────────────────────────────────────────────────────────────────
+// Container max width ~920px. Room is 100ft wide, 200ft deep.
+// We'll orient it with width across and depth going down.
+// Scale so room fits with good margin.
+const CONTAINER_W = 880;
+const MARGIN = 30;
+const drawW = CONTAINER_W - MARGIN * 2;
+const scale = drawW / ROOM_W;   // px per foot
+const drawH = ROOM_D * scale;
+const svgW = CONTAINER_W;
+const svgH = drawH + MARGIN * 2 + 60; // extra for labels
+
+const O = { x: MARGIN, y: MARGIN + 40 }; // origin (top-left of room)
+
+function px(ft) { return ft * scale; }
+
+// ─── SVG BUILDER ─────────────────────────────────────────────────────────
+let svg = '';
+const ns = 'http://www.w3.org/2000/svg';
+
+function rect(x, y, w, h, attrs = '') {
+  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" ${attrs}/>`;
+}
+function circle(cx, cy, r, attrs = '') {
+  return `<circle cx="${cx}" cy="${cy}" r="${r}" ${attrs}/>`;
+}
+function text(x, y, content, attrs = '') {
+  return `<text x="${x}" y="${y}" ${attrs}>${content}</text>`;
+}
+function line(x1, y1, x2, y2, attrs = '') {
+  return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" ${attrs}/>`;
+}
+
+// ─── BUILD SVG ────────────────────────────────────────────────────────────
+let s = `<svg viewBox="0 0 ${svgW} ${svgH}" xmlns="${ns}" style="width:100%;height:auto">`;
+s += `<defs>
+  <pattern id="grid" width="${px(10)}" height="${px(10)}" patternUnits="userSpaceOnUse">
+    <path d="M ${px(10)} 0 L 0 0 0 ${px(10)}" fill="none" stroke="rgba(255,255,255,.04)" stroke-width="0.5"/>
+  </pattern>
+</defs>`;
+
+// ROOM OUTLINE + fill
+s += rect(O.x, O.y, px(ROOM_W), px(ROOM_D), `fill="rgba(90,139,167,.07)" stroke="#5a8ba7" stroke-width="2" rx="4"`);
+
+// Grid overlay
+s += rect(O.x, O.y, px(ROOM_W), px(ROOM_D), `fill="url(#grid)"`);
+
+// DIMENSION LABELS (outside room)
+const dimStyle = `font-family='Josefin Sans,sans-serif' font-size='11' fill='#6a8a9a' letter-spacing='1' text-anchor='middle'`;
+// Top label (width)
+s += text(O.x + px(ROOM_W)/2, O.y - 10, `100 ft`, dimStyle);
+s += line(O.x + 5, O.y - 6, O.x + px(ROOM_W)/2 - 40, O.y - 6, `stroke="#6a8a9a" stroke-width="1"`);
+s += line(O.x + px(ROOM_W) - 5, O.y - 6, O.x + px(ROOM_W)/2 + 40, O.y - 6, `stroke="#6a8a9a" stroke-width="1"`);
+// Left label (depth) — rotated
+s += `<text x="${O.x - 8}" y="${O.y + px(ROOM_D)/2}" font-family="Josefin Sans,sans-serif" font-size="11" fill="#6a8a9a" letter-spacing="1" text-anchor="middle" transform="rotate(-90, ${O.x - 8}, ${O.y + px(ROOM_D)/2})">200 ft</text>`;
+
+// STAGE — centered on the far wall (top of diagram = front of room)
+const stageX = O.x + px((ROOM_W - STAGE_W) / 2);
+const stageY = O.y;
+const stageW = px(STAGE_W);
+const stageH = px(STAGE_D);
+
+s += rect(stageX, stageY, stageW, stageH, `fill="#1a2e3b" stroke="#e07a5f" stroke-width="2"`);
+// Stage label
+s += text(stageX + stageW/2, stageY + stageH/2 - 6, `STAGE`, `font-family='Josefin Sans,sans-serif' font-size='11' font-weight='700' fill='#e07a5f' letter-spacing='2' text-anchor='middle'`);
+s += text(stageX + stageW/2, stageY + stageH/2 + 9, `36 × 24 ft`, `font-family='Josefin Sans,sans-serif' font-size='9' fill='#c47a5f' letter-spacing='1' text-anchor='middle'`);
+
+// STAGE DIMENSION ARROWS
+const sArrY = stageY + stageH + 6;
+s += line(stageX, sArrY, stageX + stageW, sArrY, `stroke="#e07a5f" stroke-width="1" stroke-dasharray="3,3"`);
+
+// WALL BUFFER GUIDES (dashed)
+const bufPx = px(WALL_BUF);
+s += rect(O.x + bufPx, O.y + stageH + bufPx/2, px(ROOM_W) - bufPx*2, px(ROOM_D) - stageH - bufPx*1.5, `fill="none" stroke="rgba(201,170,124,.2)" stroke-width="1" stroke-dasharray="4,4" rx="2"`);
+
+// CENTER AISLE — vertical divider
+const aisleX = O.x + px(ROOM_W/2);
+const aisleTop = O.y + stageH + px(WALL_BUF/2);
+const aisleBot = O.y + px(ROOM_D) - px(WALL_BUF/2);
+s += rect(aisleX - px(AISLE_W)/2, aisleTop, px(AISLE_W), aisleBot - aisleTop, `fill="rgba(201,170,124,.07)" stroke="rgba(201,170,124,.25)" stroke-width="1" stroke-dasharray="4,3"`);
+s += text(aisleX, aisleTop + 14, `← CENTER AISLE →`, `font-family='Josefin Sans,sans-serif' font-size='7.5' fill='rgba(201,170,124,.5)' letter-spacing='2' text-anchor='middle'`);
+
+// ─── TABLE PLACEMENT ──────────────────────────────────────────────────────
+// Available floor below stage, inside wall buffer
+const floorTop = stageH + WALL_BUF;        // in feet from room top
+const floorBot = ROOM_D - WALL_BUF;
+const floorLeft = WALL_BUF;
+const floorRight = ROOM_W - WALL_BUF;
+
+// Half-aisle on each side of center
+const aisleHalf = AISLE_W / 2;
+const leftZoneRight = ROOM_W/2 - aisleHalf;
+const rightZoneLeft = ROOM_W/2 + aisleHalf;
+
+// Generate grid positions — left zone
+let tableCenters = [];
+let col = floorLeft + SPACING/2;
+while (col <= leftZoneRight - TABLE_D/2) {
+  let row = floorTop + SPACING/2;
+  while (row <= floorBot - TABLE_D/2) {
+    tableCenters.push({ x: col, y: row });
+    row += SPACING;
+  }
+  col += SPACING;
+}
+// Right zone (mirror)
+col = rightZoneLeft + SPACING/2;
+while (col <= floorRight - TABLE_D/2) {
+  let row = floorTop + SPACING/2;
+  while (row <= floorBot - TABLE_D/2) {
+    tableCenters.push({ x: col, y: row });
+    row += SPACING;
+  }
+  col += SPACING;
+}
+
+// Sort front-to-back for numbering
+tableCenters.sort((a, b) => a.y - b.y || a.x - b.x);
+
+// Only draw up to 137 tables
+const TABLE_COUNT = 137;
+const drawn = tableCenters.slice(0, TABLE_COUNT);
+
+// Draw tables
+const tR = px(TABLE_D / 2);
+drawn.forEach((t, i) => {
+  const cx = O.x + px(t.x);
+  const cy = O.y + px(t.y);
+  s += circle(cx, cy, tR, `fill="rgba(76,175,125,.18)" stroke="#4caf7d" stroke-width="1.2"`);
+  // Chair dots (10 evenly around)
+  for (let c = 0; c < 10; c++) {
+    const angle = (c / 10) * Math.PI * 2 - Math.PI/2;
+    const cr = tR + px(0.4);
+    const chairR = px(0.45);
+    s += circle(cx + Math.cos(angle) * cr, cy + Math.sin(angle) * cr, chairR, `fill="#4caf7d" opacity="0.7"`);
+  }
+  // Table number (every 10th table labeled)
+  if ((i + 1) % 10 === 0 || i === 0 || i === TABLE_COUNT - 1) {
+    s += text(cx, cy + 3.5, String(i + 1), `font-family='Josefin Sans,sans-serif' font-size='${Math.max(6, px(0.65))}' fill='rgba(76,175,125,.9)' text-anchor='middle' font-weight='700'`);
+  }
+});
+
+// ─── HEADER LABELS ────────────────────────────────────────────────────────
+// "FRONT OF ROOM" at top
+s += text(O.x + px(ROOM_W)/2, O.y - 22, `▲  FRONT OF ROOM  ▲`, `font-family='Josefin Sans,sans-serif' font-size='10' fill='#5a8ba7' letter-spacing='3' text-anchor='middle' font-weight='600'`);
+
+// "BACK OF ROOM" at bottom
+s += text(O.x + px(ROOM_W)/2, O.y + px(ROOM_D) + 20, `▼  BACK OF ROOM  ▼`, `font-family='Josefin Sans,sans-serif' font-size='10' fill='#5a8ba7' letter-spacing='3' text-anchor='middle' font-weight='600'`);
+
+// Table count overlay badge
+const badgeX = O.x + px(ROOM_W) - 8;
+const badgeY = O.y + px(ROOM_D) - 8;
+s += rect(badgeX - 90, badgeY - 22, 92, 24, `fill="rgba(76,175,125,.15)" stroke="#4caf7d" stroke-width="1" rx="4"`);
+s += text(badgeX - 44, badgeY - 6, `137 tables · 1,376 guests`, `font-family='Josefin Sans,sans-serif' font-size='8.5' fill='#4caf7d' letter-spacing='1' text-anchor='middle' font-weight='700'`);
+
+s += `</svg>`;
+
+document.getElementById('diagram-container').innerHTML = s;
+</script>
+</body>
+</html>
