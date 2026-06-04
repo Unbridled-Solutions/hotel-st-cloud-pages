@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>BeUnbridled — Strategy Notes</title>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1923;
+  --navy: #1a2e3b;
+  --card: #162433;
+  --border: #1e3347;
+  --gold: #c9aa7c;
+  --blue: #5a8ba7;
+  --green: #4caf7d;
+  --text: #e8e0d4;
+  --muted: #6a8a9a;
+  --white: #f5f5f5;
+  --red: #e07a5f;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 300;
+  min-height: 100vh;
+  line-height: 1.7;
+}
+
+/* ── GATE ── */
+#gate {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: radial-gradient(ellipse at 50% 40%, #1a2e3b 0%, #0f1923 70%);
+}
+.gate-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 3rem 2.5rem;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.gate-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.gate-elk {
+  font-size: 42px;
+  margin-bottom: 1rem;
+  display: block;
+}
+.gate-brand {
+  font-size: 10px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin-bottom: .5rem;
+}
+.gate-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: .4rem;
+}
+.gate-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 2rem;
+  line-height: 1.5;
+}
+.gate-input {
+  width: 100%;
+  background: #0d1a26;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: .9rem 1.1rem;
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--white);
+  text-align: center;
+  letter-spacing: 2px;
+  outline: none;
+  transition: border-color .2s;
+  margin-bottom: 1rem;
+}
+.gate-input:focus { border-color: var(--blue); }
+.gate-btn {
+  width: 100%;
+  background: var(--blue);
+  border: none;
+  border-radius: 8px;
+  padding: .9rem;
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--white);
+  cursor: pointer;
+  transition: background .2s, transform .1s;
+}
+.gate-btn:hover { background: #4a7a96; }
+.gate-btn:active { transform: scale(.98); }
+.gate-error {
+  margin-top: .75rem;
+  font-size: 11px;
+  color: var(--red);
+  letter-spacing: 1px;
+  min-height: 16px;
+}
+
+/* ── CONTENT ── */
+#content { display: none; }
+
+.topbar {
+  background: #0a1219;
+  border-bottom: 1px solid var(--border);
+  padding: .75rem clamp(1rem,4vw,2.5rem);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.topbar-brand {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--white);
+}
+.topbar-brand span { color: var(--blue); }
+.topbar-meta {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.hero {
+  background: linear-gradient(180deg, #0a1219 0%, var(--bg) 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 3rem clamp(1rem,4vw,2.5rem) 2.5rem;
+  text-align: center;
+  position: relative;
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.hero-eyebrow {
+  font-size: 10px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin-bottom: .6rem;
+}
+.hero-title {
+  font-size: clamp(26px,5vw,46px);
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: .5rem;
+  letter-spacing: -.5px;
+}
+.hero-title em { color: var(--gold); font-style: normal; }
+.hero-sub {
+  font-size: 13px;
+  color: var(--muted);
+  max-width: 560px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.wrap {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 3rem clamp(1rem,4vw,1.5rem) 5rem;
+}
+
+/* ── SECTIONS ── */
+.section {
+  margin-bottom: 3rem;
+}
+.section-label {
+  font-size: 9px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 1.25rem;
+  padding-bottom: .6rem;
+  border-bottom: 1px solid var(--border);
+}
+
+h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--white);
+  margin: 2rem 0 .75rem;
+  line-height: 1.3;
+}
+h2:first-child { margin-top: 0; }
+
+h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin: 1.5rem 0 .5rem;
+}
+
+p {
+  font-size: 14px;
+  color: var(--text);
+  margin-bottom: .9rem;
+  line-height: 1.75;
+}
+
+blockquote {
+  border-left: 3px solid var(--gold);
+  margin: 1.25rem 0;
+  padding: .75rem 1.25rem;
+  background: rgba(201,170,124,.06);
+  border-radius: 0 6px 6px 0;
+  font-size: 14px;
+  color: var(--white);
+  font-style: italic;
+  line-height: 1.6;
+}
+
+ul, ol {
+  margin: .5rem 0 1rem 1.25rem;
+}
+li {
+  font-size: 14px;
+  color: var(--text);
+  margin-bottom: .4rem;
+  line-height: 1.65;
+}
+li strong { color: var(--white); font-weight: 700; }
+
+/* ── TABLE ── */
+.tbl-wrap {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 1rem 0 1.25rem;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th {
+  padding: .6rem 1rem;
+  text-align: left;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  font-weight: 400;
+  background: rgba(0,0,0,.2);
+}
+td {
+  padding: .7rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  color: var(--text);
+  vertical-align: top;
+}
+tr:last-child td { border-bottom: none; }
+td:first-child { font-weight: 600; color: var(--white); }
+
+/* ── CALLOUT CARDS ── */
+.callout {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem;
+  margin: 1rem 0 1.25rem;
+  position: relative;
+  overflow: hidden;
+}
+.callout::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+}
+.callout-gold::before { background: var(--gold); }
+.callout-blue::before { background: var(--blue); }
+.callout-green::before { background: var(--green); }
+.callout-red::before { background: var(--red); }
+
+.callout-title {
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: .5rem;
+}
+.callout p { margin-bottom: 0; font-size: 13px; }
+.callout ul { margin-bottom: 0; }
+.callout li { font-size: 13px; }
+
+/* ── CHECKLIST ── */
+.checklist { list-style: none; margin: .5rem 0 1rem 0; }
+.checklist li {
+  padding-left: 1.75rem;
+  position: relative;
+  margin-bottom: .5rem;
+}
+.checklist li::before {
+  content: '☐';
+  position: absolute;
+  left: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* ── DIVIDER ── */
+.divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2.5rem 0;
+}
+
+.footnote {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  letter-spacing: .5px;
+}
+</style>
+</head>
+<body>
+
+<!-- ── GATE ── -->
+<div id="gate">
+  <div class="gate-card">
+    <span class="gate-elk">🦌</span>
+    <div class="gate-brand">BeUnbridled · Confidential</div>
+    <div class="gate-title">Strategy Notes</div>
+    <div class="gate-sub">This document is for invited participants only.<br>Enter the access code to continue.</div>
+    <input class="gate-input" id="pw" type="password" placeholder="Access code" autocomplete="off" />
+    <button class="gate-btn" onclick="unlock()">Enter →</button>
+    <div class="gate-error" id="err"></div>
+  </div>
+</div>
+
+<!-- ── CONTENT ── -->
+<div id="content">
+
+  <div class="topbar">
+    <div class="topbar-brand">BEUNBRIDLED <span>·</span> CONFIDENTIAL</div>
+    <div class="topbar-meta">Strategy Notes · June 2025</div>
+  </div>
+
+  <div class="hero">
+    <div class="hero-eyebrow">Internal Strategy Session</div>
+    <div class="hero-title"><em>BeUnbridled</em> — Launch Strategy</div>
+    <div class="hero-sub">Captured from live session · June 2025 · For cap table participants and invited advisors only</div>
+  </div>
+
+  <div class="wrap">
+
+    <!-- SECTION 1 -->
+    <div class="section">
+      <div class="section-label">The Core Insight</div>
+
+      <p>Two very different products are being built right now:</p>
+      <ul>
+        <li><strong>Enterprise AI</strong> — unlocking firewalls, navigating IT, complex org networks. Infinitely harder.</li>
+        <li><strong>Small Business Digital Chief of Staff</strong> — off-grid, fast to deploy, immediate ROI. <strong>More marketable.</strong></li>
+      </ul>
+      <p>The latter wins. Build that first.</p>
+
+      <div class="callout callout-gold">
+        <div class="callout-title">The Window</div>
+        <p>This has a potential to expire. First-mover advantage in the small business AI chief of staff space is real — but not permanent. The intake process, skill-building, and automatic deployment pipeline have to be a <em>now</em> thing.</p>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- SECTION 2 -->
+    <div class="section">
+      <div class="section-label">Three Product Lines</div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Product</th><th>Who</th><th>What</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>BeUnbridled (solo)</td>
+              <td>Solopreneurs, churches, restaurants, Blue Collar</td>
+              <td>Digital chief of staff — off-grid, fast setup, recurring revenue</td>
+            </tr>
+            <tr>
+              <td>Unbridled Internal</td>
+              <td>Unbridled team members</td>
+              <td>Personal AI assistants, hub building, SaaS replacement, data plumbing</td>
+            </tr>
+            <tr>
+              <td>Sol4 / Enterprise</td>
+              <td>Solutions MSP clients</td>
+              <td>AI as part of the managed services offering — setup, security, tenant navigation</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>The Missing Layer: Personal AI for Team Members</h3>
+      <p>This is distinct from micro-apps and enterprise infrastructure — and arguably the most important unlock. The vision: your team members' AI checks their email every day, drafts responses, creates documents, replies on their behalf. They type less, talk more, do what they're good at.</p>
+      <p>That's not a web app you visit. That's an always-on digital chief of staff for each person. It requires change management, beta testing, and security sign-off — and it's going to take longer than it should. That's the honest reality.</p>
+    </div>
+
+    <hr class="divider">
+
+    <!-- SECTION 3 -->
+    <div class="section">
+      <div class="section-label">Pricing Model</div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Component</th><th>Amount</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Setup fee</td><td>$2,500</td></tr>
+            <tr><td>Monthly retainer (server included)</td><td>$3,500/mo</td></tr>
+            <tr><td>Token usage markup</td><td>20%</td></tr>
+            <tr><td>Additional build time</td><td>$150/hr</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Goal: recurring revenue. Get 15 clients on retainer and we're covering the baseline. Stack and scale from there.</p>
+    </div>
+
+    <hr class="divider">
+
+    <!-- SECTION 4 -->
+    <div class="section">
+      <div class="section-label">Strategic Themes</div>
+
+      <h2>1. Specialize — Don't Boil the Ocean</h2>
+      <p>Pick 2–3 core audience types and own them. Say no to everything that starts looking enterprise once you see security/2FA/compliance requirements creep in.</p>
+
+      <blockquote>"When you double down on who you are and what you do for people, it perpetuates and accelerates."</blockquote>
+
+      <p><strong>The landscaping lesson:</strong> <em>Areas Escaping</em> — niche name, instant SEO credibility, won on search, near $1.5M in revenue with almost no time invested. The name told the full story. BeUnbridled should do the same for its audience.</p>
+
+      <h3>Target Verticals</h3>
+      <ul>
+        <li><strong>Solopreneurs / small businesses</strong> — primary ICP</li>
+        <li><strong>Restaurants / F&amp;B</strong> — already proven (HSC labor scheduler found 155% labor cost on slowest days instantly)</li>
+        <li><strong>Churches</strong> — outside enterprise networks, massive admin burden, terrible legacy software, overcharged for it. A natural fit.</li>
+        <li><strong>Blue Collar businesses</strong> — potential partnership with Jason / Blue Collar Bowen for referral network</li>
+        <li><strong>TJ's network</strong> — existing relationships, referral base</li>
+      </ul>
+
+      <h2>2. The Demo IS the Sales Pitch</h2>
+      <p>No deck needed. Pull it up on your phone. Let the numbers do the work.</p>
+      <blockquote>"You're sick, it's green, trust me. You have data and you have an idea. You can make something happen."</blockquote>
+
+      <h2>3. Build Off-Grid — Protect the Advantage</h2>
+      <p>The only reason we've been able to build at this speed is we're building off-grid — outside enterprise networks, no IT bottleneck, no permissioning gauntlet. Protect that. The moment we start seeing security/2FA/compliance friction, we're in a different product category.</p>
+    </div>
+
+    <hr class="divider">
+
+    <!-- SECTION 5 -->
+    <div class="section">
+      <div class="section-label">Cap Table Structure</div>
+
+      <div class="callout callout-blue">
+        <div class="callout-title">Structure</div>
+        <ul>
+          <li>Justin — <strong>19%</strong> (anchor, he built it)</li>
+          <li>Everyone else — <strong>$25K ante = equal slice of remaining 81%</strong></li>
+          <li>No one over 19% — limits liability, keeps everyone "silent partners with a leader"</li>
+          <li>Profits distributed annually to cap table</li>
+          <li><strong>Vehicle: Unbridled Ventures</strong> (not Solutions)</li>
+        </ul>
+      </div>
+
+      <h3>Proposed Participants</h3>
+      <ul>
+        <li>Stan — operator, capital, pitch, ideation</li>
+        <li>Justin — builder, protected for 2 years (~$120K target)</li>
+        <li>Brandon — enterprise engineering</li>
+        <li>Martin Hampton — F&amp;B vertical, 30 years experience</li>
+        <li>Jason — Blue Collar network, referral base</li>
+        <li>Johnny — finance/security credibility</li>
+        <li>Mark — TBD</li>
+        <li>Unbridled Ventures — equity partner</li>
+      </ul>
+
+      <p>Brandon conversation happening at Paxate (Salt Lake City, Mon–Tue).</p>
+    </div>
+
+    <hr class="divider">
+
+    <!-- SECTION 6 -->
+    <div class="section">
+      <div class="section-label">The Three Hats</div>
+
+      <p>Stan sees AI through three different lenses — each with a different role, opinion, and stake.</p>
+
+      <h3>Hat 1 — Entrepreneurial (BeUnbridled)</h3>
+      <p>Build something specialized, defensible, recurring. Specialize in 2–3 verticals. Say no to enterprise complexity. Protect the off-grid advantage. Get to 15 clients at $3,500/mo, then scale.</p>
+
+      <h3>Hat 2 — Unbridled (Internal)</h3>
+      <p>AI adoption can't live in IT alone — it has to live in the operators and solution architects. The bottleneck model fails. AI needs a maker inside, not just an IT gatekeeper. Stan's role: unlock and unkink, not own. Everyone needs to understand the value and be pulling for it.</p>
+
+      <h3>Hat 3 — Sol4 (Advisory)</h3>
+      <p>Push Sol4 to be solutions-oriented, agile, entrepreneurial about AI — not just managing infrastructure. AI as a service to enterprise clients. The hackathon showed the problem clearly: firewall after firewall, access denied, brutal to navigate. Organizations are slow to adopt AI precisely because of permissioning complexity — that's the problem Sol4 needs to be solving, not just documenting.</p>
+
+      <div class="callout callout-green">
+        <div class="callout-title">Where the time goes</div>
+        <p>Of the three hats, the middle one (Unbridled internal AI) is where Stan believes his time goes right now — but BeUnbridled is where the entrepreneurial energy and cap table opportunity live. The goal is to free up enough time to run both.</p>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- SECTION 7 -->
+    <div class="section">
+      <div class="section-label">The Builder Question</div>
+
+      <p>The core tension: does Unbridled need a dedicated maker inside the org, or does BeUnbridled function as a shared service bureau that bills back?</p>
+
+      <p><strong>The case for inside:</strong> Too important to be fractional. If whoever's building AI is also fielding restaurant client requests, they're distracted by definition. You need someone whose sole focus is making and moving for the sake of Unbridled.</p>
+
+      <p><strong>The case for outside (BeUnbridled as shared service):</strong> Every time Unbridled has tried to build capability internally — apps, gamification, web dev — it got slow and eventually died. Outside the org: agility, IP compounds, no consensus drag, no competing priorities.</p>
+
+      <blockquote>"We kill everything." — the honest track record</blockquote>
+
+      <p><strong>Where it landed:</strong> BeUnbridled stays outside as the incubator. Bills back to Unbridled on retainer. Justin gets a clean mandate. Solutions gets a dedicated resource eventually — it just comes from BeUnbridled headcount as we scale, not a Solutions hire. Pivot to an inside hire if and when the product naturally evolves that direction.</p>
+    </div>
+
+    <hr class="divider">
+
+    <!-- SECTION 8 -->
+    <div class="section">
+      <div class="section-label">Talent Pipeline</div>
+
+      <ul>
+        <li><strong>Justin Farr</strong> — builder, anchor. Currently stretched thin. Needs a clean mandate and protected comp. Taking PTO just to get build time — that's the signal.</li>
+        <li><strong>Daniel Melliswamy</strong> — former pastor (Bridgeway), ran his own IT company for a decade. Looking for next chapter. Strong context in engineering + church/admin networks. Introduction with Justin pending.</li>
+        <li><strong>Ripper</strong> — Stan's son. Built a tower defense app last night, just landed a $5K contract (website → AI bot for a custom home builder). Getting him involved as soon as practical.</li>
+        <li><strong>Cañon City remote tech workforce</strong> — underutilized talent pool worth tapping. Ideal if builders can eventually be in one of the offices.</li>
+      </ul>
+
+      <div class="callout callout-gold">
+        <div class="callout-title">The "Two Justins" reality</div>
+        <p>Every demo creates demand. As soon as this thing is in team members' hands, everyone's going to want something built. Two builders would barely keep up. That demand is coming — plan for it now.</p>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- SECTION 9 -->
+    <div class="section">
+      <div class="section-label">Cañon City Hub</div>
+
+      <p>An emerging picture of a Cañon City center of gravity:</p>
+      <ul>
+        <li>BeUnbridled AI incubator (Justin's base)</li>
+        <li>Potential family office / shared services for the broader company portfolio</li>
+        <li>Fractional marketing, controller function, back-office</li>
+        <li>AI cross-collaboration tech hub — builders in one place</li>
+        <li>Practical reason for Stan + team to be in Cañon City regularly (2x/month?)</li>
+      </ul>
+
+      <p>Kerry's suggestion: centralize books for all non-live-events brands under a Canyon entity with a dedicated controller. Stan's instinct: before you hire, map what can be automated. Maybe 10 of 20 controller tasks get replaced by AI — then hire what's left. Might still be a controller. Might be something different. Start with the robots, then figure out the role.</p>
+    </div>
+
+    <hr class="divider">
+
+    <!-- SECTION 10 -->
+    <div class="section">
+      <div class="section-label">Open Items</div>
+
+      <ul class="checklist">
+        <li>Cap table term sheet — Stan to discuss with Brandon at Paxate</li>
+        <li>Justin extraction plan — comp structure, timeline, clean mandate</li>
+        <li>Paxate debrief — MSP/AI market intel back to the group</li>
+        <li>Controller vs. AI-first back office — map what can be automated before hiring</li>
+        <li>Hotel St. Cloud GM hire</li>
+        <li>Personal AI rollout for Unbridled team — identify first candidate</li>
+        <li>Daniel Melliswamy intro with Justin → evaluate fit</li>
+        <li>Cañon City hub — formalize or let it develop organically</li>
+        <li>Identify 2–3 launch clients (restaurant? church? TJ's network?)</li>
+        <li>BeUnbridled name — revisit vs. vertical-specific branding</li>
+      </ul>
+    </div>
+
+    <div class="footnote">
+      BeUnbridled · Confidential · For invited participants only · June 2025<br>
+      Captured and structured by MC · <em>Doing Good by Doing Well</em>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const HASH = '6a6c1d8f2e4b5c9d3a7f0e1b2c4d5e6f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3';
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function unlock() {
+  const val = document.getElementById('pw').value.trim();
+  const h = await sha256(val.toLowerCase());
+  // hash of "elkmeadow"
+  if (h === '99e41628dd4000102f13b2c56b0d622fe113fc020270a803b187b90b09b3e151') {
+    show();
+  } else {
+    document.getElementById('err').textContent = 'Incorrect access code. Try again.';
+    document.getElementById('pw').value = '';
+    document.getElementById('pw').focus();
+  }
+}
+
+function show() {
+  document.getElementById('gate').style.display = 'none';
+  document.getElementById('content').style.display = 'block';
+  window.scrollTo(0,0);
+}
+
+document.getElementById('pw').addEventListener('keydown', e => {
+  if (e.key === 'Enter') unlock();
+  document.getElementById('err').textContent = '';
+});
+</script>
+</body>
+</html>
