@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>BeUnbridled Launch Notes — June 4, 2026</title>
+  <style>
+    :root {
+      --navy: #07080f;
+      --surface: #111827;
+      --card: #1a2637;
+      --teal: #3de8c8;
+      --teal-dim: rgba(61,232,200,0.15);
+      --teal-border: rgba(61,232,200,0.3);
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --gold: #f59e0b;
+      --gold-dim: rgba(245,158,11,0.12);
+      --green: #22c55e;
+      --green-dim: rgba(34,197,94,0.12);
+      --red: #ef4444;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--navy);
+      color: var(--text);
+      font-size: 18px;
+      line-height: 1.65;
+    }
+
+    /* PASSWORD GATE */
+    #gate {
+      position: fixed;
+      inset: 0;
+      background: var(--navy);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 2rem;
+    }
+    .gate-box {
+      background: var(--surface);
+      border: 1px solid var(--teal-border);
+      border-radius: 16px;
+      padding: clamp(2rem, 6vw, 3rem);
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+    }
+    .gate-logo {
+      width: clamp(50px, 12vw, 70px);
+      height: auto;
+      margin-bottom: 1.5rem;
+    }
+    .gate-box h2 {
+      font-size: clamp(1.2rem, 3vw, 1.5rem);
+      color: var(--teal);
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+    .gate-box p {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 1.5rem;
+    }
+    .gate-input {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--teal-border);
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      font-size: 1rem;
+      color: var(--text);
+      margin-bottom: 1rem;
+      letter-spacing: 0.08em;
+      text-align: center;
+    }
+    .gate-input:focus { outline: none; border-color: var(--teal); }
+    .gate-btn {
+      width: 100%;
+      background: var(--teal);
+      color: var(--navy);
+      border: none;
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .gate-btn:hover { opacity: 0.88; }
+    .gate-error {
+      color: var(--red);
+      font-size: 0.85rem;
+      margin-top: 0.75rem;
+      display: none;
+    }
+
+    /* MAIN CONTENT */
+    #content { display: none; }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--teal-border);
+      padding: clamp(1.5rem, 4vw, 2.5rem) clamp(1rem, 5vw, 3rem);
+    }
+    .header-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+    }
+    .header-logo {
+      width: clamp(36px, 8vw, 48px);
+      height: auto;
+      flex-shrink: 0;
+    }
+    .header-text h1 {
+      font-size: clamp(1.3rem, 3.5vw, 1.8rem);
+      font-weight: 700;
+      color: var(--teal);
+      line-height: 1.2;
+    }
+    .header-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.4rem;
+    }
+    .badge {
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.25rem 0.65rem;
+      border-radius: 100px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .badge-teal { background: var(--teal-dim); color: var(--teal); border: 1px solid var(--teal-border); }
+    .badge-gold { background: var(--gold-dim); color: var(--gold); border: 1px solid rgba(245,158,11,0.3); }
+    .badge-green { background: var(--green-dim); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: clamp(1.5rem, 5vw, 3rem) clamp(1rem, 5vw, 2rem);
+    }
+
+    .intro-card {
+      background: var(--card);
+      border: 1px solid var(--teal-border);
+      border-left: 4px solid var(--teal);
+      border-radius: 12px;
+      padding: clamp(1.25rem, 4vw, 1.75rem);
+      margin-bottom: 2.5rem;
+    }
+    .intro-card p { color: var(--muted); font-size: 0.95rem; }
+    .intro-card strong { color: var(--text); }
+
+    section { margin-bottom: 2.5rem; }
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 0.5rem;
+    }
+    section h2 {
+      font-size: clamp(1.1rem, 2.8vw, 1.35rem);
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: clamp(1rem, 3vw, 1.5rem);
+      margin-bottom: 1rem;
+    }
+    .card h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--teal);
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .card h3 .icon { opacity: 0.8; }
+    .card ul {
+      list-style: none;
+      padding: 0;
+    }
+    .card ul li {
+      padding: 0.35rem 0;
+      padding-left: 1.25rem;
+      position: relative;
+      color: var(--text);
+      font-size: 0.95rem;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .card ul li:last-child { border-bottom: none; }
+    .card ul li::before {
+      content: '›';
+      position: absolute;
+      left: 0;
+      color: var(--teal);
+      font-weight: 700;
+    }
+    .card ul li.decision::before { content: '✓'; color: var(--green); }
+    .card ul li.action::before { content: '□'; color: var(--gold); }
+    .card ul li.tension::before { content: '⟷'; color: var(--gold); }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+    @media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } }
+
+    .quote-block {
+      background: rgba(61,232,200,0.05);
+      border-left: 3px solid var(--teal);
+      border-radius: 0 8px 8px 0;
+      padding: 1rem 1.25rem;
+      margin: 0.75rem 0;
+      font-style: italic;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    .quote-block strong { color: var(--text); font-style: normal; }
+
+    .action-grid {
+      display: grid;
+      gap: 0.65rem;
+    }
+    .action-item {
+      background: var(--card);
+      border: 1px solid rgba(245,158,11,0.2);
+      border-left: 3px solid var(--gold);
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      font-size: 0.95rem;
+    }
+    .action-check {
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--gold);
+      border-radius: 4px;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+    .action-item .owner {
+      font-size: 0.78rem;
+      color: var(--gold);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: block;
+      margin-top: 0.2rem;
+    }
+
+    .three-hats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+    @media (max-width: 640px) { .three-hats { grid-template-columns: 1fr; } }
+
+    .hat-card {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 10px;
+      padding: 1.25rem;
+    }
+    .hat-card .hat-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+    }
+    .hat-card h4 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--teal);
+      margin-bottom: 0.75rem;
+    }
+    .hat-card p { font-size: 0.88rem; color: var(--muted); }
+
+    .cap-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+    .cap-table th {
+      background: rgba(255,255,255,0.05);
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.6rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .cap-table td {
+      padding: 0.6rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      color: var(--text);
+    }
+    .cap-table tr:last-child td { border-bottom: none; }
+    .cap-table td.pct { color: var(--teal); font-weight: 700; }
+
+    .agreement-item {
+      background: var(--green-dim);
+      border: 1px solid rgba(34,197,94,0.2);
+      border-left: 3px solid var(--green);
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      margin-bottom: 0.65rem;
+      font-size: 0.95rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+    }
+    .agreement-item .check { color: var(--green); flex-shrink: 0; font-size: 1.1rem; }
+
+    footer {
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding: clamp(1.5rem, 4vw, 2rem) clamp(1rem, 5vw, 2rem);
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+    footer strong { color: var(--teal); }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- PASSWORD GATE -->
+<div id="gate">
+  <div class="gate-box">
+    <img src="logos/unbridled-elk-icon-white.png" class="gate-logo" alt="Unbridled">
+    <h2>BeUnbridled Launch Notes</h2>
+    <p>Enter the password to access this document.</p>
+    <input type="password" id="pwInput" class="gate-input" placeholder="Password" autocomplete="off">
+    <button class="gate-btn" onclick="checkPW()">Access Notes →</button>
+    <div class="gate-error" id="pwError">Incorrect password. Try again.</div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div id="content">
+
+<header>
+  <div class="header-inner">
+    <img src="logos/unbridled-elk-icon-white.png" class="header-logo" alt="Unbridled">
+    <div class="header-text">
+      <h1>BeUnbridled Launch — Meeting Notes</h1>
+      <div class="header-meta">
+        <span class="badge badge-teal">June 4, 2026</span>
+        <span class="badge badge-gold">Stan Bullis · Tim Woodring</span>
+        <span class="badge badge-green">Confidential</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <div class="intro-card">
+    <p><strong>About this document:</strong> Summary of the Stan Bullis and Tim Woodring strategy session on launching BeUnbridled AI. Covers the product vision, three-hat framework, org structure debate, cap table structure, talent pipeline, and open action items. Compiled by MC from the live recording.</p>
+  </div>
+
+  <!-- SECTION 1: PRODUCT VISION -->
+  <section>
+    <div class="section-label">Product Vision</div>
+    <h2>Three Distinct Products — Not One</h2>
+    <div class="three-hats">
+      <div class="hat-card">
+        <div class="hat-label">Product 1</div>
+        <h4>BeUnbridled</h4>
+        <p>Digital Chief of Staff for solopreneurs, small businesses, restaurants, churches, and blue collar businesses. Off-grid, fast to deploy, recurring revenue. Most marketable.</p>
+      </div>
+      <div class="hat-card">
+        <div class="hat-label">Product 2</div>
+        <h4>Unbridled Internal</h4>
+        <p>Personal AI for each team member (Sabrina's email, document drafts, responses). Hub-building, SaaS replacement, data plumbing. Hardest — requires change management, Microsoft tenant navigation, slow by nature.</p>
+      </div>
+      <div class="hat-card">
+        <div class="hat-label">Product 3</div>
+        <h4>Sol4 / Enterprise</h4>
+        <p>AI setup + infrastructure as part of Sol4's MSP offering to enterprise customers. Needs proactive solutioning, not just setup and management. Stan's role: advisory + direction.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 2: THREE HATS -->
+  <section>
+    <div class="section-label">Stan's Framework</div>
+    <h2>The Three Hats Stan Sees AI Through</h2>
+    <div class="card">
+      <ul>
+        <li><strong>Entrepreneurial Hat (BeUnbridled):</strong> Cap table partner, build something specialized, defensible, recurring revenue. The fun work. Stan sees this as the most important thing to focus on right now.</li>
+        <li><strong>Unbridled Hat:</strong> AI adoption can't live in IT alone — it must live in operators, architects, solution-builders. Stan's role: advocate and unlocker, not gatekeeper or bottleneck. Chris Howell alignment: decentralize AI to the people doing the work.</li>
+        <li><strong>Sol4 Hat:</strong> Executive sponsor alongside Kerry (Stan = software direction, Kerry = fiscal). Pushing Sol4 to be solutions-oriented and entrepreneurial about AI — not just managing infrastructure. Going to Paxate conference (Salt Lake City, Mon–Tue) to learn the MSP/AI market.</li>
+      </ul>
+    </div>
+    <div class="quote-block">
+      "I think my time's going to free up. And I can run — we don't need a lot to support the baseline of this. We need 15 people at $1,000 a month to cover a gesture."
+      <strong>— Stan</strong>
+    </div>
+  </section>
+
+  <!-- SECTION 3: BUSINESS MODEL -->
+  <section>
+    <div class="section-label">Pricing Model</div>
+    <h2>BeUnbridled Revenue Model</h2>
+    <div class="two-col">
+      <div class="card">
+        <h3><span class="icon">💰</span> Pricing Structure</h3>
+        <ul>
+          <li>Setup fee: <strong>$2,500</strong></li>
+          <li>Monthly retainer (incl. server): <strong>$3,500/mo</strong></li>
+          <li>Token usage markup: <strong>20%</strong></li>
+          <li>Additional build time: <strong>$150/hr</strong></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><span class="icon">🎯</span> Target Verticals</h3>
+        <ul>
+          <li>Solopreneurs + small businesses (primary ICP)</li>
+          <li>Restaurants / F&B — already proven</li>
+          <li>Churches — massive admin burden, overcharged on bad software</li>
+          <li>Blue collar businesses (Jason / Blue Collar Bowen network)</li>
+          <li>TJ's / contractor networks</li>
+        </ul>
+      </div>
+    </div>
+    <div class="quote-block">
+      "When you double down on who you are and what you do for people, that perpetuates and accelerates. Say no to things that look more enterprise once you start seeing security and compliance creep in."
+      <strong>— Stan</strong>
+    </div>
+  </section>
+
+  <!-- SECTION 4: ORG STRUCTURE DEBATE -->
+  <section>
+    <div class="section-label">Key Tension</div>
+    <h2>Inside vs. Outside — The Debate</h2>
+    <div class="card">
+      <h3><span class="icon">⟷</span> The Core Tension</h3>
+      <ul>
+        <li class="tension"><strong>Tim's view:</strong> Unbridled needs a dedicated <em>maker</em> inside the org — someone fully focused on building the hub, not fractionalized. Justin is the model. If he were 100% on this, inside Solutions, that's what it looks like.</li>
+        <li class="tension"><strong>Stan's view:</strong> Keep BeUnbridled as the incubator. Bill back to Unbridled on retainer. IP and learning compounds in an incubator that benefits the whole ecosystem. Solutions has tried to build internally (apps, gamification, web dev) and nothing stuck. "We kill everything."</li>
+        <li><strong>Where it landed:</strong> Agree to disagree, but Stan's direction is to pull Justin and possibly Brandon into BeUnbridled as a shared service model. Solutions gets a dedicated resource eventually — it comes from BeUnbridled headcount, not a Solutions hire.</li>
+      </ul>
+    </div>
+    <div class="quote-block">
+      "Justin called me yesterday. He's like, 'I'm getting pulled in a hundred different directions every single day.' He's talking about taking PTO just so he can focus on building."
+      <strong>— Stan</strong>
+    </div>
+    <div class="card" style="margin-top:1rem;">
+      <h3><span class="icon">💡</span> Tim's Concession</h3>
+      <ul>
+        <li>Tim accepts the BeUnbridled incubator model — with conditions: clear access points to Unbridled, dedicated focus, and willingness to pivot if needed</li>
+        <li>"If BeUnbridled runs in the direction of solopreneurs and Unbridled is a different thing altogether — let's hire a dedicated person inside and treat bigger pushes as special projects."</li>
+        <li>The flexibility to pivot and change direction is important — we don't know everything on the front end</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SECTION 5: CAP TABLE -->
+  <section>
+    <div class="section-label">Ownership Structure</div>
+    <h2>Proposed Cap Table</h2>
+    <div class="card">
+      <table class="cap-table">
+        <thead>
+          <tr>
+            <th>Partner</th>
+            <th>Role / Value Brought</th>
+            <th>Stake</th>
+            <th>Ante</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Justin Farr</strong></td>
+            <td>Builder — has built most of it</td>
+            <td class="pct">19%</td>
+            <td>Protected</td>
+          </tr>
+          <tr>
+            <td><strong>Everyone else</strong></td>
+            <td>Equal distribution of remaining 81%</td>
+            <td class="pct">Equal shares</td>
+            <td>$25K each</td>
+          </tr>
+          <tr>
+            <td>Stan Bullis</td>
+            <td>Operator, capital, pitch, ideation</td>
+            <td>—</td>
+            <td>$25K</td>
+          </tr>
+          <tr>
+            <td>Brandon</td>
+            <td>Enterprise engineering (TBD — Justin's call)</td>
+            <td>—</td>
+            <td>$25K</td>
+          </tr>
+          <tr>
+            <td>Martin Hampton</td>
+            <td>F&B vertical — 30 years experience</td>
+            <td>—</td>
+            <td>$25K</td>
+          </tr>
+          <tr>
+            <td>Jason</td>
+            <td>Blue Collar Bowen — referral network</td>
+            <td>—</td>
+            <td>$25K</td>
+          </tr>
+          <tr>
+            <td>Mark</td>
+            <td>TBD</td>
+            <td>—</td>
+            <td>$25K</td>
+          </tr>
+          <tr>
+            <td>Johnny</td>
+            <td>Finance / security credibility</td>
+            <td>—</td>
+            <td>$25K</td>
+          </tr>
+          <tr>
+            <td><strong>Unbridled Ventures</strong></td>
+            <td>Vehicle — NOT Solutions</td>
+            <td>—</td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card" style="margin-top:1rem;">
+      <h3><span class="icon">📋</span> Cap Table Rules</h3>
+      <ul>
+        <li>Nobody over 19% intentionally — limits liability, keeps everyone silent partners with a leader</li>
+        <li>Annual profit distribution to cap table</li>
+        <li>Everyone stays involved and pushes it</li>
+        <li>Entity: <strong>Unbridled Ventures</strong> — not Solutions. That distinction matters.</li>
+        <li>Stan to discuss cap table with Brandon at Paxate (Salt Lake City, Mon–Tue)</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SECTION 6: JUSTIN'S SITUATION -->
+  <section>
+    <div class="section-label">People</div>
+    <h2>Justin's Situation + Talent Pipeline</h2>
+    <div class="two-col">
+      <div class="card">
+        <h3><span class="icon">👤</span> Justin Farr</h3>
+        <ul>
+          <li>Grossly underpaid for what he does</li>
+          <li>Stays at Unbridled for health benefits (Jenny)</li>
+          <li>Goal: pull him outside to BeUnbridled, get him to ~$120K</li>
+          <li>Currently pulled 100 directions: Liz, web admin, Brandon direction, random requests</li>
+          <li>This has to happen BEFORE enterprise demand consumes him entirely</li>
+          <li>Protect him for 2 years — that's the ask</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><span class="icon">🔍</span> Brandon Assessment</h3>
+        <ul>
+          <li>Justin's call — Stan not close enough to assess day-to-day</li>
+          <li>At hackathon: had trepidation on basic questions, didn't own the moment initially</li>
+          <li>Did eventually get there and accomplish things</li>
+          <li>Stan's read: doesn't build full confidence, but insufficient data to decide</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card" style="margin-top:1rem;">
+      <h3><span class="icon">🌱</span> Talent Pipeline</h3>
+      <ul>
+        <li><strong>Daniel Melliswamy</strong> — former Bridgeway pastor, ran his own IT company for a decade. Wife just took a job in Florida. Looking for next thing. Context in engineering, pastoral admin, church networks. Stan has lined him up with Justin.</li>
+        <li><strong>Ripper (Stan's son)</strong> — Built a tower defense game to bypass school network. Stan handed him a $5K contract (website + social → bot for a custom home builder). Military disability = healthcare covered. Getting him involved as able.</li>
+        <li><strong>"Two Justins" model</strong> — the ask is coming. Every demo creates demand. Two builders would barely keep up.</li>
+        <li><strong>Cañon City remote tech workforce</strong> — there's a pool worth tapping. Stan wants builders wherever they are, ideally in one of the offices.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SECTION 7: THE DEMO IS THE PITCH -->
+  <section>
+    <div class="section-label">Sales Strategy</div>
+    <h2>The Live Demo IS the Sales Pitch</h2>
+    <div class="card">
+      <ul>
+        <li>No deck needed — pull it up on your phone and show real results in real time</li>
+        <li>Stan showed Andrew the room capacity calculator + floor plan during a call today. It landed.</li>
+        <li>HSC labor example: dumped in a year of data, got a 3-tier staffing model instantly. Labor cost on slowest days was 155% — it found that immediately.</li>
+        <li>"You're sick, it's green, trust me. You have data and you have an idea. Make something happen."</li>
+      </ul>
+    </div>
+    <div class="quote-block">
+      "I just can't have my mind blown all the time. I'm just obsessed. I'm just building every second. I just can't wait to go build and make."
+      <strong>— Stan</strong>
+    </div>
+  </section>
+
+  <!-- SECTION 8: CANYON CITY VISION -->
+  <section>
+    <div class="section-label">Infrastructure</div>
+    <h2>Cañon City Hub Vision</h2>
+    <div class="card">
+      <ul>
+        <li>Harrison Building as anchor: BeUnbridled (AI incubator) + potential family office / shared services for Stan's 32 companies</li>
+        <li>Fractional marketing, controller function, back-office all in one place</li>
+        <li>AI cross-collaboration tech hub — Justin + builders collaborating in same space</li>
+        <li>Practical reason for Stan + team to be in Cañon City regularly (2x/month?)</li>
+        <li><strong>Kerry's suggestion:</strong> Hire a controller to centralize books for all non-live-events brands under a Cañon City entity</li>
+        <li><strong>Stan's counter:</strong> Before hiring a controller, figure out how much of what they do can be automated. Map the 20 tasks → maybe 10 can be automated. Hire the thought leader for the remaining 10 — might not be a traditional controller at all.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SECTION 9: AGREEMENTS -->
+  <section>
+    <div class="section-label">Outcomes</div>
+    <h2>What Was Agreed</h2>
+
+    <div class="agreement-item">
+      <span class="check">✓</span>
+      <div>BeUnbridled lives outside Unbridled as an independent incubator, with Unbridled as a retainer client. Not a Solutions hire.</div>
+    </div>
+    <div class="agreement-item">
+      <span class="check">✓</span>
+      <div>Justin gets 19% of the cap table. Everyone else puts in $25K for equal shares of the remaining 81%.</div>
+    </div>
+    <div class="agreement-item">
+      <span class="check">✓</span>
+      <div>Entity is <strong>Unbridled Ventures</strong> — not Unbridled Solutions. The distinction is intentional.</div>
+    </div>
+    <div class="agreement-item">
+      <span class="check">✓</span>
+      <div>Specialize — pick 2–3 core audience types and own them. Say no to enterprise creep.</div>
+    </div>
+    <div class="agreement-item">
+      <span class="check">✓</span>
+      <div>The window is now — first-mover advantage in small business AI Chief of Staff is real but not permanent.</div>
+    </div>
+    <div class="agreement-item">
+      <span class="check">✓</span>
+      <div>Tim is on board with the direction, supportive of being involved, wants clear access points and willingness to pivot built in.</div>
+    </div>
+    <div class="agreement-item">
+      <span class="check">✓</span>
+      <div>Stan's next two fights: (1) Legitimate family office setup, (2) Double down on AI.</div>
+    </div>
+  </section>
+
+  <!-- SECTION 10: OPEN ACTION ITEMS -->
+  <section>
+    <div class="section-label">Next Steps</div>
+    <h2>Open Action Items</h2>
+    <div class="action-grid">
+      <div class="action-item">
+        <div class="action-check"></div>
+        <div>
+          Cap table term sheet — formalize structure
+          <span class="owner">Stan — discuss with Brandon at Paxate (Mon–Tue)</span>
+        </div>
+      </div>
+      <div class="action-item">
+        <div class="action-check"></div>
+        <div>
+          Justin extraction plan — comp, structure, timeline, health benefits solution
+          <span class="owner">Stan + Justin</span>
+        </div>
+      </div>
+      <div class="action-item">
+        <div class="action-check"></div>
+        <div>
+          Brandon assessment — is he in or out of the cap table?
+          <span class="owner">Justin's call</span>
+        </div>
+      </div>
+      <div class="action-item">
+        <div class="action-check"></div>
+        <div>
+          Daniel Melliswamy intro with Justin — evaluate fit for engineer/builder role
+          <span class="owner">Stan has connected; Justin to follow up</span>
+        </div>
+      </div>
+      <div class="action-item">
+        <div class="action-check"></div>
+        <div>
+          Identify 2–3 launch clients — TJ's? Restaurant? Church?
+          <span class="owner">Stan + Justin</span>
+        </div>
+      </div>
+      <div class="action-item">
+        <div class="action-check"></div>
+        <div>
+          Paxate conference intel — bring back MSP/AI market direction for Sol4
+          <span class="owner">Stan — Salt Lake City, Monday–Tuesday</span>
+        </div>
+      </div>
+      <div class="action-item">
+        <div class="action-check"></div>
+        <div>
+          Controller vs. AI-first back office — map what can be automated before hiring
+          <span class="owner">Stan</span>
+        </div>
+      </div>
+      <div class="action-item">
+        <div class="action-check"></div>
+        <div>
+          Hotel St. Cloud GM hire
+          <span class="owner">Stan</span>
+        </div>
+      </div>
+      <div class="action-item">
+        <div class="action-check"></div>
+        <div>
+          Name decision — revisit BeUnbridled vs. partnership brand (Blue Collar Bowen angle)
+          <span class="owner">Stan — open item</span>
+        </div>
+      </div>
+      <div class="action-item">
+        <div class="action-check"></div>
+        <div>
+          Get Ripper (Stan's son) involved — first $5K contract underway, evaluate ongoing role
+          <span class="owner">Stan</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <strong>BeUnbridled</strong> · Meeting Notes — June 4, 2026 · Stan Bullis &amp; Tim Woodring<br>
+  Compiled by MC · Confidential — not for distribution
+</footer>
+
+</div><!-- end #content -->
+
+<script>
+  document.getElementById('pwInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') checkPW();
+  });
+
+  function checkPW() {
+    const val = document.getElementById('pwInput').value.trim().toUpperCase();
+    if (val === 'BEUNBRIDLED' || val === 'DGBDW') {
+      document.getElementById('gate').style.display = 'none';
+      document.getElementById('content').style.display = 'block';
+    } else {
+      document.getElementById('pwError').style.display = 'block';
+      document.getElementById('pwInput').value = '';
+      document.getElementById('pwInput').focus();
+    }
+  }
+</script>
+
+</body>
+</html>
