@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="18-month build timeline for a 1,000 sq ft log cabin in Grand County, Colorado.">
+  <title>Grand County Log Cabin — 18-Month Build Timeline</title>
+  <style>
+    :root {
+      --navy:    #1a2637;
+      --blue:    #5a8ba7;
+      --light-blue: #78b0d1;
+      --cream:   #f5f4f0;
+      --gray:    #4b4f54;
+      --border:  #dde3e8;
+      --green:   #2e7d55;
+      --amber:   #c47b1a;
+      --red:     #c0392b;
+      --phase1:  #5a8ba7;
+      --phase2:  #7ba05b;
+      --phase3:  #a07b2a;
+      --phase4:  #7b5aa0;
+      --phase5:  #a05a7b;
+      --phase6:  #5a9ea0;
+      --phase7:  #a08b5a;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--cream);
+      color: var(--navy);
+      font-size: 16px;
+      line-height: 1.5;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* HEADER */
+    .hero {
+      background: var(--navy);
+      color: #fff;
+      padding: clamp(2rem, 6vw, 4rem) clamp(1rem, 5vw, 3rem);
+      text-align: center;
+    }
+    .hero-eyebrow {
+      font-size: clamp(0.7rem, 1.5vw, 0.85rem);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--light-blue);
+      margin-bottom: 0.75rem;
+    }
+    .hero h1 {
+      font-size: clamp(1.6rem, 4vw, 2.8rem);
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 0.5rem;
+    }
+    .hero-sub {
+      font-size: clamp(0.95rem, 2vw, 1.15rem);
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 1.5rem;
+    }
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem 2rem;
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.55);
+    }
+    .hero-meta span strong { color: var(--light-blue); }
+
+    /* STAT STRIP */
+    .stats {
+      background: var(--blue);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      text-align: center;
+    }
+    .stat {
+      padding: 1.25rem 1rem;
+      border-right: 1px solid rgba(255,255,255,0.15);
+    }
+    .stat:last-child { border-right: none; }
+    .stat-num {
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      font-weight: 700;
+      color: #fff;
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.75);
+      margin-top: 0.25rem;
+    }
+
+    /* CONTENT WRAPPER */
+    .content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: clamp(1.5rem, 4vw, 3rem) clamp(1rem, 4vw, 2rem);
+    }
+
+    /* SECTION LABEL */
+    .section-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--blue);
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    .section-title {
+      font-size: clamp(1.3rem, 3vw, 1.8rem);
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 2rem;
+    }
+
+    /* PHASE LEGEND */
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.25rem;
+      margin-bottom: 2rem;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.8rem;
+      color: var(--gray);
+    }
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    /* GANTT CHART */
+    .gantt-wrap {
+      overflow-x: auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      margin-bottom: 3rem;
+    }
+    .gantt {
+      min-width: 780px;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    /* Month header */
+    .gantt-header {
+      display: grid;
+      grid-template-columns: 200px repeat(18, 1fr);
+      background: var(--navy);
+      color: rgba(255,255,255,0.8);
+    }
+    .gh-label {
+      padding: 0.6rem 0.75rem;
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--light-blue);
+    }
+    .gh-month {
+      padding: 0.6rem 0.2rem;
+      font-size: 0.68rem;
+      text-align: center;
+      font-weight: 600;
+      color: rgba(255,255,255,0.7);
+      border-left: 1px solid rgba(255,255,255,0.08);
+    }
+    .gh-month.quarter-start {
+      color: #fff;
+      border-left: 1px solid rgba(255,255,255,0.25);
+    }
+
+    /* Phase rows */
+    .gantt-phase-header {
+      display: grid;
+      grid-template-columns: 200px repeat(18, 1fr);
+      background: var(--navy);
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .gph-title {
+      padding: 0.55rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .gph-title .phase-num {
+      background: rgba(255,255,255,0.15);
+      border-radius: 3px;
+      padding: 0.05rem 0.3rem;
+      font-size: 0.65rem;
+      font-weight: 600;
+    }
+    .gph-bar-cell {
+      border-left: 1px solid rgba(255,255,255,0.08);
+    }
+
+    /* Task rows */
+    .gantt-row {
+      display: grid;
+      grid-template-columns: 200px repeat(18, 1fr);
+      border-top: 1px solid var(--border);
+    }
+    .gantt-row:hover { background: #f8f9fb; }
+    .gr-task {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.78rem;
+      color: var(--gray);
+      line-height: 1.3;
+      display: flex;
+      align-items: center;
+    }
+    .gr-cell {
+      border-left: 1px solid var(--border);
+      padding: 0.3rem 0.1rem;
+      position: relative;
+    }
+
+    /* Bar segment */
+    .bar {
+      height: 22px;
+      border-radius: 3px;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      opacity: 0.88;
+    }
+    .bar-full { left: 0; right: 0; }
+    .bar-left { left: 0; right: 30%; }
+    .bar-right { left: 30%; right: 0; }
+
+    /* Warning strip */
+    .warnings {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      padding: clamp(1.25rem, 3vw, 2rem);
+      margin-bottom: 3rem;
+    }
+    .warnings h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .warning-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+      gap: 0.75rem;
+    }
+    .warning-item {
+      display: flex;
+      gap: 0.6rem;
+      align-items: flex-start;
+      font-size: 0.82rem;
+      color: var(--gray);
+      line-height: 1.4;
+    }
+    .warning-icon {
+      font-size: 1rem;
+      flex-shrink: 0;
+      margin-top: 0.05rem;
+    }
+    .warning-item strong { color: var(--navy); display: block; font-size: 0.78rem; }
+
+    /* PHASE CARDS */
+    .phases {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+      gap: 1.25rem;
+      margin-bottom: 3rem;
+    }
+    .phase-card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      overflow: hidden;
+    }
+    .phase-card-header {
+      padding: 0.85rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #fff;
+    }
+    .phase-card-header h3 {
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+    .phase-badge {
+      background: rgba(255,255,255,0.2);
+      border-radius: 20px;
+      padding: 0.15rem 0.6rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .phase-card-body {
+      padding: 1rem 1.25rem;
+    }
+    .phase-task {
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-start;
+      font-size: 0.8rem;
+      color: var(--gray);
+      line-height: 1.4;
+      padding: 0.3rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .phase-task:last-child { border-bottom: none; }
+    .phase-task::before {
+      content: '→';
+      color: var(--blue);
+      font-size: 0.7rem;
+      flex-shrink: 0;
+      margin-top: 0.12rem;
+    }
+
+    /* FOOTER */
+    footer {
+      background: var(--navy);
+      color: rgba(255,255,255,0.5);
+      text-align: center;
+      padding: 1.5rem;
+      font-size: 0.75rem;
+    }
+    footer strong { color: rgba(255,255,255,0.8); }
+
+    @media (max-width: 640px) {
+      .gantt-wrap { border-radius: 6px; }
+      .phases { grid-template-columns: 1fr; }
+    }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-eyebrow">Project Timeline</div>
+    <h1>Grand County Log Cabin</h1>
+    <div class="hero-sub">1,000 sq ft · Colorado High Country · 18-Month Build</div>
+    <div class="hero-meta">
+      <span><strong>Location:</strong> Grand County, CO</span>
+      <span><strong>Size:</strong> ~1,000 sq ft</span>
+      <span><strong>Build Cycle:</strong> 18 Months</span>
+      <span><strong>Elevation:</strong> 8,000–9,000 ft</span>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-num">7</div>
+      <div class="stat-label">Phases</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">18</div>
+      <div class="stat-label">Months</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">100+</div>
+      <div class="stat-label">PSF Snow Load</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">48"</div>
+      <div class="stat-label">Frost Depth</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">6</div>
+      <div class="stat-label">Key Milestones</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- GANTT -->
+    <div class="section-label">Project Schedule</div>
+    <h2 class="section-title">Gantt Chart — Month by Month</h2>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--phase1)"></div>Pre-Construction</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--phase2)"></div>Site &amp; Foundation</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--phase3)"></div>Shell &amp; Roof</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--phase4)"></div>Rough Mechanicals</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--phase5)"></div>Insulation / Drywall</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--phase6)"></div>Interior Finishes</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--phase7)"></div>Site Finish &amp; Punch</div>
+    </div>
+
+    <div class="gantt-wrap">
+      <div class="gantt">
+
+        <!-- MONTH HEADER -->
+        <div class="gantt-header">
+          <div class="gh-label">Phase / Task</div>
+          <div class="gh-month quarter-start">M1</div>
+          <div class="gh-month">M2</div>
+          <div class="gh-month">M3</div>
+          <div class="gh-month quarter-start">M4</div>
+          <div class="gh-month">M5</div>
+          <div class="gh-month">M6</div>
+          <div class="gh-month quarter-start">M7</div>
+          <div class="gh-month">M8</div>
+          <div class="gh-month">M9</div>
+          <div class="gh-month quarter-start">M10</div>
+          <div class="gh-month">M11</div>
+          <div class="gh-month">M12</div>
+          <div class="gh-month quarter-start">M13</div>
+          <div class="gh-month">M14</div>
+          <div class="gh-month">M15</div>
+          <div class="gh-month quarter-start">M16</div>
+          <div class="gh-month">M17</div>
+          <div class="gh-month">M18</div>
+        </div>
+
+        <!-- PHASE 1: PRE-CONSTRUCTION -->
+        <div class="gantt-phase-header" style="background:#1d3048;">
+          <div class="gph-title" style="color:var(--phase1)"><span class="phase-num">01</span> Pre-Construction</div>
+          <div class="gph-bar-cell" style="grid-column: 2 / 5; background: var(--phase1); opacity:0.18;"></div>
+          <div class="gph-bar-cell" style="grid-column: 5 / 20;"></div>
+        </div>
+        <!-- Tasks -->
+        <div class="gantt-row">
+          <div class="gr-task">Design &amp; Architect</div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase1);"></div></div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gr-task">Permits &amp; Engineering</div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase1);"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase1);"></div></div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gr-task">Subcontractor Bids</div>
+          <div class="gr-cell"></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase1);"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase1);"></div></div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gr-task">Log Package Order</div>
+          <div class="gr-cell"></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase1);"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase1);"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase1); opacity:0.4;"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase1); opacity:0.4;"></div></div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+        </div>
+
+        <!-- PHASE 2: SITE & FOUNDATION -->
+        <div class="gantt-phase-header" style="background:#1a2e1c;">
+          <div class="gph-title" style="color:#a8d08d"><span class="phase-num">02</span> Site &amp; Foundation</div>
+          <div class="gph-bar-cell" style="grid-column: 2 / 4;"></div>
+          <div class="gph-bar-cell" style="grid-column: 4 / 7; background: var(--phase2); opacity:0.18;"></div>
+          <div class="gph-bar-cell" style="grid-column: 7 / 20;"></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gr-task">Site Clearing &amp; Grading</div>
+          <div class="gr-cell"></div><div class="gr-cell"></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase2);"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-left" style="background:var(--phase2);"></div></div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gr-task">Excavation</div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase2);"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-left" style="background:var(--phase2);"></div></div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gr-task">Foundation Pour</div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase2);"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-left" style="background:var(--phase2);"></div></div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+        </div>
+
+        <!-- PHASE 3: SHELL & ROOF -->
+        <div class="gantt-phase-header" style="background:#2a1f0a;">
+          <div class="gph-title" style="color:#e0b96a"><span class="phase-num">03</span> Log Shell &amp; Roof</div>
+          <div class="gph-bar-cell" style="grid-column: 2 / 6;"></div>
+          <div class="gph-bar-cell" style="grid-column: 6 / 10; background: var(--phase3); opacity:0.18;"></div>
+          <div class="gph-bar-cell" style="grid-column: 10 / 20;"></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gr-task">Log Delivery &amp; Sill</div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase3);"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase3);"></div></div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gr-task">Log Wall Stacking</div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase3);"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase3);"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-left" style="background:var(--phase3);"></div></div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gr-task">Roof Structure &amp; Metal</div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase3);"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase3);"></div></div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+        </div>
+
+        <!-- PHASE 4: ROUGH MECHANICALS -->
+        <div class="gantt-phase-header" style="background:#1e1530;">
+          <div class="gph-title" style="color:#b39ddb"><span class="phase-num">04</span> Rough Mechanicals</div>
+          <div class="gph-bar-cell" style="grid-column: 2 / 9;"></div>
+          <div class="gph-bar-cell" style="grid-column: 9 / 12; background: var(--phase4); opacity:0.18;"></div>
+          <div class="gph-bar-cell" style="grid-column: 12 / 20;"></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gr-task">Rough Electrical</div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase4);"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase4);"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-left" style="background:var(--phase4);"></div></div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gr-task">Rough Plumbing</div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase4);"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase4);"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-left" style="background:var(--phase4);"></div></div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gr-task">HVAC / Radiant Rough</div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase4);"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase4);"></div></div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gr-task">Windows / Doors Set + Chinking</div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase4);"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase4);"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-left" style="background:var(--phase4);"></div></div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+        </div>
+
+        <!-- PHASE 5: INSULATION / DRYWALL -->
+        <div class="gantt-phase-header" style="background:#2e1020;">
+          <div class="gph-title" style="color:#f48fb1"><span class="phase-num">05</span> Insulation / Drywall</div>
+          <div class="gph-bar-cell" style="grid-column: 2 / 11;"></div>
+          <div class="gph-bar-cell" style="grid-column: 11 / 13; background: var(--phase5); opacity:0.18;"></div>
+          <div class="gph-bar-cell" style="grid-column: 13 / 20;"></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gr-task">Insulation + Vapor Barrier</div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase5);"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-left" style="background:var(--phase5);"></div></div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gr-task">Drywall / T&amp;G Close-in</div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase5);"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-left" style="background:var(--phase5);"></div></div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+        </div>
+
+        <!-- PHASE 6: INTERIOR FINISHES -->
+        <div class="gantt-phase-header" style="background:#0d2528;">
+          <div class="gph-title" style="color:#80cbc4"><span class="phase-num">06</span> Interior Finishes</div>
+          <div class="gph-bar-cell" style="grid-column: 2 / 12;"></div>
+          <div class="gph-bar-cell" style="grid-column: 12 / 17; background: var(--phase6); opacity:0.18;"></div>
+          <div class="gph-bar-cell" style="grid-column: 17 / 20;"></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gr-task">Flooring Rough + Tile</div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase6);"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase6);"></div></div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gr-task">Cabinetry + Trim</div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase6);"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase6);"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-left" style="background:var(--phase6);"></div></div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gr-task">Fireplace / Stove + Chimney</div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase6);"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase6);"></div></div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gr-task">Countertops + Fixtures Trim-out</div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase6);"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase6);"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase6);"></div></div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gr-task">Paint, Finish Floors, Hardware</div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase6);"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase6);"></div></div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+        </div>
+
+        <!-- PHASE 7: SITE FINISH & PUNCH -->
+        <div class="gantt-phase-header" style="background:#261e0a;">
+          <div class="gph-title" style="color:#ffcc80"><span class="phase-num">07</span> Site Finish &amp; Punch</div>
+          <div class="gph-bar-cell" style="grid-column: 2 / 16;"></div>
+          <div class="gph-bar-cell" style="grid-column: 16 / 20; background: var(--phase7); opacity:0.18;"></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gr-task">Deck / Porch + Stairs</div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase7);"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase7);"></div></div>
+          <div class="gr-cell"></div><div class="gr-cell"></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gr-task">Exterior Log Stain (2nd Coat)</div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase7);"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase7);"></div></div>
+          <div class="gr-cell"></div><div class="gr-cell"></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gr-task">Final Grading + Driveway</div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase7);"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase7);"></div></div>
+          <div class="gr-cell"></div>
+        </div>
+        <div class="gantt-row">
+          <div class="gr-task">Final Inspections + CO</div>
+          <div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div><div class="gr-cell"></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase7);"></div></div>
+          <div class="gr-cell" style="position:relative;"><div class="bar bar-full" style="background:var(--phase7);"></div></div>
+        </div>
+
+      </div><!-- /gantt -->
+    </div><!-- /gantt-wrap -->
+
+    <!-- GRAND COUNTY WATCHOUTS -->
+    <div class="warnings">
+      <h3>⚠️ Grand County — High-Country Watch Items</h3>
+      <div class="warning-grid">
+        <div class="warning-item">
+          <div class="warning-icon">❄️</div>
+          <div><strong>Snow Load Engineering</strong>100+ PSF roof design load at elevation. Structural stamp is not optional — Grand County will require it.</div>
+        </div>
+        <div class="warning-item">
+          <div class="warning-icon">🏔️</div>
+          <div><strong>Frost Depth</strong>36–48 inches minimum depending on zone. Foundation depth is everything up here — don't cut corners.</div>
+        </div>
+        <div class="warning-item">
+          <div class="warning-icon">🔥</div>
+          <div><strong>Fire Mitigation</strong>Grand County has defensible space rules. Log exteriors need fire-rated stain. Budget and timeline for it.</div>
+        </div>
+        <div class="warning-item">
+          <div class="warning-icon">📐</div>
+          <div><strong>Log Settling</strong>Green logs settle 3–6 inches over 2 years. Every window, door, stair, and mech penetration must have a settling space built in.</div>
+        </div>
+        <div class="warning-item">
+          <div class="warning-icon">📋</div>
+          <div><strong>Permit Timeline</strong>Grand County is not fast. Submit Day 1 of Month 1, not Month 2. Build 6–8 weeks of permit wait into your schedule.</div>
+        </div>
+        <div class="warning-item">
+          <div class="warning-icon">🌡️</div>
+          <div><strong>Weather Windows</strong>Concrete: May–Sep. Roofing: Jun–Oct. Start concrete in spring or you'll be fighting freezes and cost overruns.</div>
+        </div>
+        <div class="warning-item">
+          <div class="warning-icon">🪵</div>
+          <div><strong>Log Lead Times</strong>Log package manufacturers run 8–16 weeks. Order in Month 2 or your shell crew will be sitting idle in Month 5.</div>
+        </div>
+        <div class="warning-item">
+          <div class="warning-icon">💧</div>
+          <div><strong>Well &amp; Septic</strong>Both require separate state permits in Grand County. Budget 6–10 weeks just for those approvals. Do not treat as an afterthought.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE CARDS -->
+    <div class="section-label">Phase Details</div>
+    <h2 class="section-title">What Happens When</h2>
+
+    <div class="phases">
+
+      <div class="phase-card">
+        <div class="phase-card-header" style="background:var(--phase1);">
+          <h3>Phase 1 — Pre-Construction</h3>
+          <div class="phase-badge">Months 1–3</div>
+        </div>
+        <div class="phase-card-body">
+          <div class="phase-task">Engage architect, lock GC and key subs</div>
+          <div class="phase-task">Site survey, soil test, geotechnical report</div>
+          <div class="phase-task">Submit for Grand County building permit</div>
+          <div class="phase-task">Structural engineer stamp (snow load critical)</div>
+          <div class="phase-task">Well + septic design and CDPHE permit</div>
+          <div class="phase-task">Place log package order (8–16 wk lead time)</div>
+          <div class="phase-task">Finalize bid packages with all subs</div>
+        </div>
+      </div>
+
+      <div class="phase-card">
+        <div class="phase-card-header" style="background:var(--phase2);">
+          <h3>Phase 2 — Site &amp; Foundation</h3>
+          <div class="phase-badge">Months 3–5</div>
+        </div>
+        <div class="phase-card-body">
+          <div class="phase-task">Clear and grade building pad</div>
+          <div class="phase-task">Excavate to 48" frost depth</div>
+          <div class="phase-task">Install drainage and gravel bed</div>
+          <div class="phase-task">Form and pour concrete — target May pour</div>
+          <div class="phase-task">Waterproofing and exterior insulation board</div>
+          <div class="phase-task">Backfill, compact, and set anchor bolts for sill log</div>
+        </div>
+      </div>
+
+      <div class="phase-card">
+        <div class="phase-card-header" style="background:var(--phase3);">
+          <h3>Phase 3 — Log Shell &amp; Roof</h3>
+          <div class="phase-badge">Months 5–8</div>
+        </div>
+        <div class="phase-card-body">
+          <div class="phase-task">Log package delivered — crane / boom truck access</div>
+          <div class="phase-task">Sill logs set, sealed, and anchored</div>
+          <div class="phase-task">Wall logs stacked course by course</div>
+          <div class="phase-task">Window and door bucks with settling spaces</div>
+          <div class="phase-task">Ridge beam, rafters, and gable ends</div>
+          <div class="phase-task">Roof deck, ice + water shield (required)</div>
+          <div class="phase-task">Dark charcoal standing seam metal roofing</div>
+        </div>
+      </div>
+
+      <div class="phase-card">
+        <div class="phase-card-header" style="background:var(--phase4);">
+          <h3>Phase 4 — Rough Mechanicals</h3>
+          <div class="phase-badge">Months 8–10</div>
+        </div>
+        <div class="phase-card-body">
+          <div class="phase-task">Pass rough framing inspection before closing walls</div>
+          <div class="phase-task">Rough electrical throughout</div>
+          <div class="phase-task">Rough plumbing — supply, DWV</div>
+          <div class="phase-task">Radiant heat rough-in (recommended for log cabin)</div>
+          <div class="phase-task">Propane line rough-in</div>
+          <div class="phase-task">Exterior windows and doors hung</div>
+          <div class="phase-task">Chinking and exterior log stain (coat 1)</div>
+        </div>
+      </div>
+
+      <div class="phase-card">
+        <div class="phase-card-header" style="background:var(--phase5);">
+          <h3>Phase 5 — Insulation / Drywall</h3>
+          <div class="phase-badge">Months 10–11</div>
+        </div>
+        <div class="phase-card-body">
+          <div class="phase-task">Spray foam at rim joists and penetrations</div>
+          <div class="phase-task">Batts at any non-log partition walls</div>
+          <div class="phase-task">Vapor barrier details</div>
+          <div class="phase-task">Drywall or T&amp;G pine throughout</div>
+          <div class="phase-task">Pass insulation and framing final inspections</div>
+        </div>
+      </div>
+
+      <div class="phase-card">
+        <div class="phase-card-header" style="background:var(--phase6);">
+          <h3>Phase 6 — Interior Finishes</h3>
+          <div class="phase-badge">Months 11–15</div>
+        </div>
+        <div class="phase-card-body">
+          <div class="phase-task">T&amp;G pine or hardwood flooring rough install</div>
+          <div class="phase-task">Cabinet delivery and installation</div>
+          <div class="phase-task">Stone countertop template + 3–4 wk fabrication</div>
+          <div class="phase-task">Fireplace / wood stove + chimney</div>
+          <div class="phase-task">Plumbing trim-out — fixtures and sinks</div>
+          <div class="phase-task">Electrical trim-out — panel final + fixtures</div>
+          <div class="phase-task">HVAC commissioning</div>
+          <div class="phase-task">Paint, finish floors, hardware, and accessories</div>
+        </div>
+      </div>
+
+      <div class="phase-card">
+        <div class="phase-card-header" style="background:var(--phase7);">
+          <h3>Phase 7 — Site Finish &amp; Punch</h3>
+          <div class="phase-badge">Months 15–18</div>
+        </div>
+        <div class="phase-card-body">
+          <div class="phase-task">Deck, porch framing, decking, and stairs</div>
+          <div class="phase-task">Exterior railings and guardrails</div>
+          <div class="phase-task">Exterior log stain — second coat</div>
+          <div class="phase-task">Septic final inspection</div>
+          <div class="phase-task">Driveway gravel and final grading</div>
+          <div class="phase-task">Native landscaping — minimal at altitude</div>
+          <div class="phase-task">Final building inspection — Certificate of Occupancy</div>
+          <div class="phase-task">Punch list walk + deep clean — move-in ready 🏔️</div>
+        </div>
+      </div>
+
+    </div><!-- /phases -->
+
+  </div><!-- /content -->
+
+  <footer>
+    <strong>Grand County Log Cabin — 1,000 sq ft | 18-Month Build</strong><br>
+    Grand County, Colorado · Prepared by MC · Unbridled
+  </footer>
+
+</body>
+</html>
