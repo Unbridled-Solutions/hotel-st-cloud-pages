@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deliverables Archive | Unbridled · Stan Bullis</title>
+  <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0f1923;--navy:#1a2e3b;--card:#162433;--border:#1e3347;
+  --gold:#c9aa7c;--gold-light:#e0c99a;--blue:#5a8ba7;--green:#4caf7d;
+  --red:#e05a5a;--amber:#e0a040;--text:#e8e0d4;--muted:#6a8a9a;--white:#f5f5f5;
+  --purple:#9b7fd4;--archive:#8a7a6a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-serif;font-weight:300;min-height:100vh;padding-bottom:5rem}
+
+/* ── TOP BAR ── */
+.topbar{background:#0a1219;border-bottom:1px solid var(--border);padding:.75rem clamp(1rem,4vw,2rem);display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.topbar-brand{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--white)}
+.topbar-brand span{color:var(--gold)}
+.topbar-nav{display:flex;align-items:center;gap:1rem}
+.topbar-link{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s}
+.topbar-link:hover{color:var(--gold)}
+.topbar-link.active{color:var(--gold)}
+.topbar-date{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+
+/* ── HERO ── */
+.hero{background:linear-gradient(180deg,#0a1219 0%,var(--bg) 100%);border-bottom:1px solid var(--border);padding:2.5rem clamp(1rem,4vw,2rem) 2rem;position:relative}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--archive),transparent)}
+.hero-eyebrow{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--archive);margin-bottom:.5rem}
+.hero-title{font-size:clamp(24px,4vw,40px);font-weight:700;color:var(--white);letter-spacing:-.5px;line-height:1.1;margin-bottom:.5rem}
+.hero-title em{color:var(--archive);font-style:normal}
+.hero-sub{font-size:13px;color:var(--muted);line-height:1.6;max-width:580px}
+
+/* ── WRAP ── */
+.wrap{max-width:900px;margin:0 auto;padding:0 clamp(1rem,4vw,1.5rem)}
+
+/* ── STATS STRIP ── */
+.stats-strip{display:flex;gap:1rem;flex-wrap:wrap;margin:1.75rem 0 1.25rem}
+.stat-pill{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:.4rem 1rem;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.stat-pill strong{color:var(--archive);font-size:13px;margin-right:.3rem}
+
+/* ── FILTER BAR ── */
+.filter-bar{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.75rem;padding:.85rem 1rem;background:var(--card);border:1px solid var(--border);border-radius:10px}
+.filter-btn{background:transparent;border:1px solid var(--border);border-radius:20px;padding:.3rem .85rem;font-family:'Josefin Sans',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap}
+.filter-btn:hover{border-color:var(--archive);color:var(--archive)}
+.filter-btn.active{border-color:var(--archive);color:var(--archive);background:rgba(138,122,106,.12)}
+
+/* ── TIMELINE SECTION ── */
+.timeline-group{margin:2rem 0}
+.tg-header{display:flex;align-items:center;gap:.75rem;margin-bottom:.85rem;padding-bottom:.5rem;border-bottom:1px solid var(--border)}
+.tg-dot{width:8px;height:8px;border-radius:50%;background:var(--archive);flex-shrink:0}
+.tg-label{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--archive);font-weight:700}
+.tg-count{font-size:10px;color:var(--muted);margin-left:auto;letter-spacing:1px}
+
+/* ── ARCHIVE CARD ── */
+.item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem;margin-bottom:.6rem;display:flex;align-items:flex-start;gap:1rem;opacity:.85;transition:opacity .2s,border-color .2s}
+.item:hover{opacity:1;border-color:var(--archive)}
+.item-dot{width:8px;height:8px;border-radius:50%;background:var(--archive);flex-shrink:0;margin-top:4px}
+.item-body{flex:1;min-width:0}
+.item-title{font-size:14px;font-weight:600;color:var(--white);margin-bottom:.2rem;line-height:1.3}
+.item-desc{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:.5rem}
+.item-meta{display:flex;align-items:center;flex-wrap:wrap;gap:.5rem}
+.item-link{font-size:11px;color:var(--blue);text-decoration:none;letter-spacing:.5px;transition:color .2s}
+.item-link:hover{color:var(--gold)}
+.item-week{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.item-cat{font-size:9px;letter-spacing:1.2px;text-transform:uppercase;padding:.15rem .55rem;border-radius:8px;border:1px solid var(--border);color:var(--muted);flex-shrink:0}
+.item-actions{display:flex;flex-direction:column;align-items:flex-end;gap:.4rem;flex-shrink:0}
+
+/* ── BADGES ── */
+.badge{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:.2rem .65rem;border-radius:10px;font-weight:700;white-space:nowrap}
+.badge-archived{background:rgba(138,122,106,.1);color:var(--archive);border:1px solid rgba(138,122,106,.25)}
+.badge-book{background:rgba(155,127,212,.08);color:var(--purple);border:1px solid rgba(155,127,212,.2)}
+.badge-reference{background:rgba(90,139,167,.1);color:var(--blue);border:1px solid rgba(90,139,167,.2)}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:4rem 1rem;color:var(--muted)}
+.empty-icon{font-size:36px;margin-bottom:.75rem}
+.empty-text{font-size:12px;letter-spacing:1px}
+
+/* ── NOTE BAR ── */
+.note-bar{background:rgba(138,122,106,.06);border:1px solid rgba(138,122,106,.18);border-radius:10px;padding:.85rem 1.1rem;margin:1.25rem 0;font-size:11px;color:var(--muted);line-height:1.6}
+.note-bar strong{color:var(--archive)}
+
+/* ── FOOTER ── */
+.footer-note{font-size:10px;color:var(--muted);letter-spacing:1px;text-align:center;margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid var(--border)}
+.footer-note a{color:var(--blue);text-decoration:none}
+.footer-note a:hover{color:var(--gold)}
+
+@media(max-width:560px){
+  .filter-btn{font-size:8px;padding:.25rem .65rem}
+  .item-title{font-size:13px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">Unbridled <span>·</span> Stan Bullis</div>
+  <div class="topbar-nav">
+    <a class="topbar-link" href="https://offers.hotelstcloud.com/assets/master-deliverables.html">← Active</a>
+    <a class="topbar-link active" href="#">Archive</a>
+  </div>
+  <div class="topbar-date" id="topDate">—</div>
+</div>
+
+<div class="hero">
+  <div class="hero-eyebrow">Deliverables Archive · Unbridled</div>
+  <h1 class="hero-title">Everything We've <em>Built</em></h1>
+  <div class="hero-sub">A chronological record of completed work — moved here from the active deliverables sheet when it's done-done. Nothing gets deleted. Everything is indexed, linked, and searchable.</div>
+</div>
+
+<div class="wrap">
+
+  <div class="stats-strip">
+    <div class="stat-pill"><strong id="totalCount">0</strong> archived items</div>
+    <div class="stat-pill"><strong id="bookCount">0</strong> book</div>
+    <div class="stat-pill"><strong id="leCount">0</strong> live events</div>
+    <div class="stat-pill"><strong id="hospCount">0</strong> hospitality</div>
+    <div class="stat-pill"><strong id="otherCount">0</strong> other</div>
+  </div>
+
+  <div class="note-bar">
+    <strong>How this works:</strong> When something on the Active Deliverables sheet is done-done — no longer needs to be front-and-center — MC moves it here. It stays live, linked, and fully accessible. This is the long-term record, not the trash.
+  </div>
+
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
+    <button class="filter-btn" onclick="setFilter('book', this)">📖 Book</button>
+    <button class="filter-btn" onclick="setFilter('live-events', this)">🎤 Live Events</button>
+    <button class="filter-btn" onclick="setFilter('hospitality', this)">🏨 Hospitality</button>
+    <button class="filter-btn" onclick="setFilter('beunbridled', this)">🤖 BeUnbridled</button>
+    <button class="filter-btn" onclick="setFilter('research', this)">📊 Research</button>
+    <button class="filter-btn" onclick="setFilter('reference', this)">📎 Reference</button>
+  </div>
+
+  <div id="archiveList"></div>
+
+  <div class="footer-note">
+    Deliverables Archive · <a href="https://offers.hotelstcloud.com/assets/master-deliverables.html">← Back to Active</a> · Built by MC · Nothing here is deleted — it's all still live
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  ARCHIVE DATA
+//  To add an item: push a new object to ARCHIVE_ITEMS
+//  Fields: id, title, desc, url, cat, archived, built, badge
+// ═══════════════════════════════════════════════════
+const ARCHIVE_ITEMS = [
+
+  // ── BOOK — INDIVIDUAL CHAPTERS (superseded by Full Manuscript) ──
+  {
+    id: 'arc-book-intro',
+    title: 'Introduction · The Journey Is the Point',
+    desc: 'Opening chapter establishing the thesis: what Unbridled is and why the journey itself is the destination. Voice memo → prose. Stan\'s origin — the motorcycle ride, the elk, the covenant.',
+    url: 'https://offers.hotelstcloud.com/assets/unbridled-way-intro.html',
+    cat: 'book',
+    archived: 'June 2026',
+    built: 'May 2026',
+    badge: 'Book Chapter'
+  },
+  {
+    id: 'arc-book-ch1',
+    title: 'Chapter 1 · Doing Good by Doing Well',
+    desc: 'The 20/20/60 model. Philanthropy, reinvestment, and people — the structural DNA of Unbridled. Why profit and purpose aren\'t in tension.',
+    url: 'https://offers.hotelstcloud.com/assets/unbridled-way-ch1.html',
+    cat: 'book',
+    archived: 'June 2026',
+    built: 'May 2026',
+    badge: 'Book Chapter'
+  },
+  {
+    id: 'arc-book-destiny',
+    title: 'Part I Opener · Destiny',
+    desc: 'The section opener for Part I — framing the idea of destiny as something you walk into, not something that happens to you.',
+    url: 'https://offers.hotelstcloud.com/assets/unbridled-way-destiny.html',
+    cat: 'book',
+    archived: 'June 2026',
+    built: 'May 2026',
+    badge: 'Book Chapter'
+  },
+  {
+    id: 'arc-book-ch2',
+    title: 'Chapter 2 · Adjacent Opportunities',
+    desc: 'How Unbridled grew by following what was already working — the logic of adjacent moves over moonshots.',
+    url: 'https://offers.hotelstcloud.com/assets/unbridled-way-ch2.html',
+    cat: 'book',
+    archived: 'June 2026',
+    built: 'May 2026',
+    badge: 'Book Chapter'
+  },
+  {
+    id: 'arc-book-ch3',
+    title: 'Chapter 3 · Ecosystems Over Egosystems',
+    desc: 'The shift from ego-driven leadership to ecosystem thinking. Why community and collaboration beat competition.',
+    url: 'https://offers.hotelstcloud.com/assets/unbridled-way-ch3.html',
+    cat: 'book',
+    archived: 'June 2026',
+    built: 'May 2026',
+    badge: 'Book Chapter'
+  },
+  {
+    id: 'arc-book-ch4',
+    title: 'Chapter 4 · A Culture of Authenticity',
+    desc: 'What it actually means to build a culture where people show up whole. Stan\'s framework for authentic leadership.',
+    url: 'https://offers.hotelstcloud.com/assets/unbridled-way-ch4.html',
+    cat: 'book',
+    archived: 'June 2026',
+    built: 'May 2026',
+    badge: 'Book Chapter'
+  },
+  {
+    id: 'arc-book-ch5',
+    title: 'Chapter 5 · Our Mission: Unbridling Human Purpose and Potential',
+    desc: 'The mission statement unpacked. What it means to unbridle something — and why potential without purpose is just noise.',
+    url: 'https://offers.hotelstcloud.com/assets/unbridled-way-ch5.html',
+    cat: 'book',
+    archived: 'June 2026',
+    built: 'May 2026',
+    badge: 'Book Chapter'
+  },
+  {
+    id: 'arc-book-ch6',
+    title: 'Chapter 6 · Values in Action',
+    desc: 'The four cornerstones — not as poster words but as operating principles. How they show up in daily decisions.',
+    url: 'https://offers.hotelstcloud.com/assets/unbridled-way-ch6.html',
+    cat: 'book',
+    archived: 'June 2026',
+    built: 'May 2026',
+    badge: 'Book Chapter'
+  },
+  {
+    id: 'arc-book-ch7',
+    title: 'Chapter 7 · The Unbridled Journey',
+    desc: 'The 9-stage employee journey and the Epic Tale framework. Unbridled is something you become, not somewhere you work.',
+    url: 'https://offers.hotelstcloud.com/assets/unbridled-way-ch7.html',
+    cat: 'book',
+    archived: 'June 2026',
+    built: 'May 2026',
+    badge: 'Book Chapter'
+  },
+  {
+    id: 'arc-book-ch8',
+    title: 'Chapter 8 · Deliver Exceptional. Build World Class.',
+    desc: 'Six pillars of exceptional client experience and the DAG arc. "Life is just better when Unbridled is around."',
+    url: 'https://offers.hotelstcloud.com/assets/unbridled-way-ch8.html',
+    cat: 'book',
+    archived: 'June 2026',
+    built: 'May 2026',
+    badge: 'Book Chapter'
+  },
+  {
+    id: 'arc-book-part3',
+    title: 'Part III Opener · The Proof Is in the People',
+    desc: 'Section opener for Part III — framing the people stories that follow as the ultimate evidence of the Unbridled way.',
+    url: 'https://offers.hotelstcloud.com/assets/unbridled-way-part3.html',
+    cat: 'book',
+    archived: 'June 2026',
+    built: 'May 2026',
+    badge: 'Book Chapter'
+  },
+  {
+    id: 'arc-book-acts',
+    title: 'UnbridledACTS · A Business of Generosity',
+    desc: 'The 501(c)(3) chapter. How the 20% philanthropy model became its own identity — and why giving is baked into the business model, not bolted on.',
+    url: 'https://offers.hotelstcloud.com/assets/unbridled-way-acts.html',
+    cat: 'book',
+    archived: 'June 2026',
+    built: 'May 2026',
+    badge: 'Book Chapter'
+  },
+  {
+    id: 'arc-book-generosity',
+    title: 'Generosity of Spirit',
+    desc: 'The companion piece to ACTS — generosity as a posture, not just a program. What it looks like inside a company that operates this way.',
+    url: 'https://offers.hotelstcloud.com/assets/unbridled-way-generosity.html',
+    cat: 'book',
+    archived: 'June 2026',
+    built: 'May 2026',
+    badge: 'Book Chapter'
+  },
+  {
+    id: 'arc-book-appendix',
+    title: 'Appendix · The Ancient Roots',
+    desc: 'The scriptural and philosophical roots of Unbridled\'s founding principles. The faith-informed foundation, handled with intentional restraint.',
+    url: 'https://offers.hotelstcloud.com/assets/unbridled-way-appendix.html',
+    cat: 'book',
+    archived: 'June 2026',
+    built: 'May 2026',
+    badge: 'Book Chapter'
+  },
+  {
+    id: 'arc-book-closing',
+    title: 'Closing · At Least We\'re in the Arena',
+    desc: 'The Cañon City origin story, the Bosworth Mansion, 8 years of no profit, the 9-building prototype vision, the Cindy tribute, and the covenant forward.',
+    url: 'https://offers.hotelstcloud.com/assets/unbridled-way-closing.html',
+    cat: 'book',
+    archived: 'June 2026',
+    built: 'May 2026',
+    badge: 'Book Chapter'
+  },
+  {
+    id: 'arc-book-compare',
+    title: 'Book Structure Comparison · Version A vs B',
+    desc: 'Side-by-side of the original outline vs the approved Version B. Reference document for understanding what changed and why during the restructure.',
+    url: 'https://offers.hotelstcloud.com/assets/book-structure-comparison.html',
+    cat: 'reference',
+    archived: 'June 2026',
+    built: 'May 2026',
+    badge: 'Reference'
+  },
+
+  // ── LIVE EVENTS ──
+  {
+    id: 'arc-le-cco',
+    title: 'CCO Letter + OS · Combined Document',
+    desc: 'Scott Greenberg\'s CCO welcome letter paired with the Live Events OS. The original combined-format version before the OS was separated into its own standalone document.',
+    url: 'https://offers.hotelstcloud.com/assets/live-events-os.html',
+    cat: 'live-events',
+    archived: 'June 2026',
+    built: 'May 2026',
+    badge: 'Archived'
+  },
+  {
+    id: 'arc-le-caseys',
+    title: 'Casey\'s C3 2026 · Production Runsheet',
+    desc: 'Full production runsheet for the Casey\'s C3 2026 event. Timeline, AV cues, speaker order, green room logistics, and post-event wrap.',
+    url: 'https://offers.hotelstcloud.com/assets/caseys-c3-runsheet.html',
+    cat: 'live-events',
+    archived: 'June 2026',
+    built: 'May 2026',
+    badge: 'Archived'
+  },
+
+  // ── RESEARCH & REFERENCE ──
+  {
+    id: 'arc-rs-session-may11',
+    title: 'Session Summary · May 11',
+    desc: 'The first full working session recap. Decisions made, agreements locked, action items assigned. The record of what was agreed on Day 1.',
+    url: 'https://offers.hotelstcloud.com/assets/session-summary-may11.html',
+    cat: 'reference',
+    archived: 'June 2026',
+    built: 'May 2026',
+    badge: 'Reference'
+  },
+
+];
+
+// ═══════════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════════
+let activeFilter = 'all';
+
+const CAT_LABELS = {
+  'book': '📖 Book',
+  'live-events': '🎤 Live Events',
+  'hospitality': '🏨 Hospitality',
+  'beunbridled': '🤖 BeUnbridled',
+  'research': '📊 Research',
+  'reference': '📎 Reference',
+  'other': '📁 Other'
+};
+
+function setFilter(cat, btn) {
+  activeFilter = cat;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderList();
+}
+
+function renderList() {
+  const list = document.getElementById('archiveList');
+  const filtered = activeFilter === 'all'
+    ? ARCHIVE_ITEMS
+    : ARCHIVE_ITEMS.filter(i => i.cat === activeFilter);
+
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">Nothing archived in this category yet.</div></div>`;
+    return;
+  }
+
+  // Group by archived date
+  const groups = {};
+  filtered.forEach(item => {
+    const key = item.archived || 'Undated';
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(item);
+  });
+
+  let html = '';
+  Object.entries(groups).sort((a,b) => b[0].localeCompare(a[0])).forEach(([date, items]) => {
+    html += `
+    <div class="timeline-group" data-group="${date}">
+      <div class="tg-header">
+        <div class="tg-dot"></div>
+        <div class="tg-label">Archived · ${date}</div>
+        <div class="tg-count">${items.length} item${items.length !== 1 ? 's' : ''}</div>
+      </div>`;
+
+    items.forEach(item => {
+      const catLabel = CAT_LABELS[item.cat] || item.cat;
+      const linkHtml = item.url
+        ? `<a class="item-link" href="${item.url}" target="_blank">↗ Open</a>`
+        : '';
+      const builtHtml = item.built ? `<span class="item-week">Built ${item.built}</span>` : '';
+      const badgeClass = item.badge === 'Book Chapter' ? 'badge-book'
+                       : item.badge === 'Reference' ? 'badge-reference'
+                       : 'badge-archived';
+
+      html += `
+      <div class="item" id="${item.id}">
+        <div class="item-dot"></div>
+        <div class="item-body">
+          <div class="item-title">${item.title}</div>
+          <div class="item-desc">${item.desc}</div>
+          <div class="item-meta">
+            ${linkHtml}
+            <span class="item-cat">${catLabel}</span>
+            ${builtHtml}
+          </div>
+        </div>
+        <div class="item-actions">
+          <span class="badge ${badgeClass}">${item.badge}</span>
+        </div>
+      </div>`;
+    });
+
+    html += `</div>`;
+  });
+
+  list.innerHTML = html;
+  updateStats();
+}
+
+function updateStats() {
+  document.getElementById('totalCount').textContent = ARCHIVE_ITEMS.length;
+  document.getElementById('bookCount').textContent  = ARCHIVE_ITEMS.filter(i => i.cat === 'book').length;
+  document.getElementById('leCount').textContent    = ARCHIVE_ITEMS.filter(i => i.cat === 'live-events').length;
+  document.getElementById('hospCount').textContent  = ARCHIVE_ITEMS.filter(i => i.cat === 'hospitality').length;
+  document.getElementById('otherCount').textContent = ARCHIVE_ITEMS.filter(i => !['book','live-events','hospitality'].includes(i.cat)).length;
+}
+
+// ── INIT ──
+document.getElementById('topDate').textContent =
+  new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+
+renderList();
+</script>
+</body>
+</html>
