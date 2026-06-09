@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Barista Candidates — Standard Oil Coffee Co.</title>
+<style>
+  :root {
+    --bg: #0f1923; --navy: #1a2e3b; --gold: #c9aa7c; --blue: #5a8ba7;
+    --text: #e8e0d4; --muted: #8a9aaa; --card-bg: #162433; --border: #263d52;
+    --green: #4caf7d; --orange: #f97316; --red: #e05a5a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; min-height: 100vh; }
+
+  .header {
+    background: linear-gradient(135deg, var(--navy) 0%, #0f1923 100%);
+    border-bottom: 2px solid var(--gold);
+    padding: 24px 32px;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  }
+  .header-left .eyebrow { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }
+  .header-left h1 { font-size: 20px; font-weight: 700; color: var(--text); }
+  .header-right { display: flex; gap: 10px; align-items: center; }
+  .refresh-btn {
+    background: transparent; border: 1px solid var(--border); color: var(--muted);
+    border-radius: 6px; font-size: 12px; padding: 7px 14px; cursor: pointer;
+    transition: border-color 0.2s, color 0.2s; display: flex; align-items: center; gap: 6px;
+  }
+  .refresh-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .refresh-btn svg { width: 13px; height: 13px; }
+  .spinning { animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .stats-bar {
+    display: flex; gap: 14px; flex-wrap: wrap;
+    padding: 20px 32px 0;
+  }
+  .stat-chip {
+    background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px;
+    padding: 7px 16px; font-size: 12px; color: var(--muted);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .stat-chip strong { color: var(--text); font-size: 14px; }
+
+  .controls {
+    padding: 20px 32px 0;
+    display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+  }
+  .search-box {
+    flex: 1; min-width: 200px; max-width: 320px;
+    background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text); font-size: 13px; padding: 9px 14px; outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-box:focus { border-color: var(--gold); }
+  .search-box::placeholder { color: var(--border); }
+
+  .sort-btn {
+    background: var(--card-bg); border: 1px solid var(--border); color: var(--muted);
+    border-radius: 6px; font-size: 12px; padding: 8px 14px; cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .sort-btn:hover, .sort-btn.active { border-color: var(--gold); color: var(--gold); }
+
+  .candidate-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+    padding: 20px 32px 48px;
+  }
+
+  .candidate-card {
+    background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px;
+    overflow: hidden; transition: border-color 0.2s;
+  }
+  .candidate-card:hover { border-color: var(--gold); }
+
+  .card-top {
+    padding: 16px 18px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 14px;
+  }
+  .avatar {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--orange), var(--gold));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700; color: #fff; flex-shrink: 0;
+    text-transform: uppercase;
+  }
+  .card-name { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+  .card-date { font-size: 11px; color: var(--muted); }
+
+  .card-body { padding: 14px 18px; }
+
+  .contact-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .contact-chip {
+    font-size: 12px; color: var(--muted); background: rgba(38,61,82,0.5);
+    border-radius: 4px; padding: 3px 8px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .contact-chip a { color: var(--blue); text-decoration: none; }
+  .contact-chip a:hover { color: var(--gold); }
+
+  .field-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .field-text { font-size: 13px; color: var(--text); line-height: 1.6; margin-bottom: 12px; }
+  .field-text:last-child { margin-bottom: 0; }
+  .field-text.empty { color: var(--border); font-style: italic; }
+
+  .source-badge {
+    display: inline-block; font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+    background: rgba(247,115,22,0.12); color: var(--orange); border: 1px solid rgba(247,115,22,0.3);
+    border-radius: 4px; padding: 2px 8px; margin-top: 10px;
+  }
+
+  .empty-state {
+    grid-column: 1 / -1; text-align: center; padding: 80px 20px;
+    color: var(--muted);
+  }
+  .empty-state .big-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
+  .empty-state h3 { font-size: 18px; color: var(--text); margin-bottom: 8px; }
+  .empty-state p { font-size: 13px; line-height: 1.6; }
+
+  .loading-state {
+    grid-column: 1 / -1; text-align: center; padding: 80px 20px; color: var(--muted);
+  }
+  .loader {
+    width: 32px; height: 32px; border: 3px solid var(--border);
+    border-top-color: var(--orange); border-radius: 50%;
+    animation: spin 0.8s linear infinite; margin: 0 auto 16px;
+  }
+
+  footer { text-align: center; font-size: 11px; color: var(--muted); padding: 0 32px 32px; }
+  footer span { color: var(--gold); font-weight: 600; }
+
+  @media (max-width: 600px) {
+    .header { padding: 20px; }
+    .stats-bar, .controls, .candidate-grid { padding-left: 16px; padding-right: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="eyebrow">Standard Oil Coffee Co. — Hiring</div>
+    <h1>Barista Candidates</h1>
+  </div>
+  <div class="header-right">
+    <button class="refresh-btn" onclick="loadCandidates()">
+      <svg id="refreshIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="23 4 23 10 17 10"></polyline>
+        <polyline points="1 20 1 14 7 14"></polyline>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+      </svg>
+      Refresh
+    </button>
+  </div>
+</div>
+
+<div class="stats-bar" id="stats-bar">
+  <div class="stat-chip"><strong id="count-total">—</strong> Total Applicants</div>
+  <div class="stat-chip"><strong id="count-week">—</strong> This Week</div>
+  <div class="stat-chip" id="latest-chip" style="display:none">Latest: <strong id="count-latest">—</strong></div>
+</div>
+
+<div class="controls">
+  <input class="search-box" type="text" id="search" placeholder="Search by name, email, or experience..." oninput="renderCards()">
+  <button class="sort-btn active" id="sort-new" onclick="setSort('new')">Newest First</button>
+  <button class="sort-btn" id="sort-old" onclick="setSort('old')">Oldest First</button>
+</div>
+
+<div class="candidate-grid" id="grid">
+  <div class="loading-state">
+    <div class="loader"></div>
+    <p>Loading candidates...</p>
+  </div>
+</div>
+
+<footer><p>Powered by <span>MC — Unbridled Solutions</span> · Standard Oil Coffee Co. · Auto-populates from the application form</p></footer>
+
+<script>
+let allRecords = [];
+let sortOrder  = 'new';
+
+async function loadCandidates() {
+  const icon = document.getElementById('refreshIcon');
+  icon.classList.add('spinning');
+
+  try {
+    const res  = await fetch('/api/socc-candidates');
+    const data = await res.json();
+    allRecords = data.records || [];
+    updateStats();
+    renderCards();
+  } catch (err) {
+    document.getElementById('grid').innerHTML = `
+      <div class="empty-state">
+        <div class="big-icon">⚠️</div>
+        <h3>Couldn't load candidates</h3>
+        <p>${err.message}</p>
+      </div>`;
+  } finally {
+    icon.classList.remove('spinning');
+  }
+}
+
+function updateStats() {
+  document.getElementById('count-total').textContent = allRecords.length;
+
+  const now    = new Date();
+  const week   = allRecords.filter(r => {
+    const d = new Date(r.fields['Applied At'] || r.createdTime);
+    return (now - d) < 7 * 24 * 60 * 60 * 1000;
+  });
+  document.getElementById('count-week').textContent = week.length;
+
+  if (allRecords.length > 0) {
+    const latest = allRecords[0];
+    const name   = latest.fields['Name'] || 'Unknown';
+    document.getElementById('count-latest').textContent = name;
+    document.getElementById('latest-chip').style.display = 'flex';
+  }
+}
+
+function setSort(order) {
+  sortOrder = order;
+  document.getElementById('sort-new').classList.toggle('active', order === 'new');
+  document.getElementById('sort-old').classList.toggle('active', order === 'old');
+  renderCards();
+}
+
+function renderCards() {
+  const query = document.getElementById('search').value.toLowerCase();
+
+  let records = [...allRecords];
+
+  // Filter
+  if (query) {
+    records = records.filter(r => {
+      const f = r.fields;
+      return (
+        (f['Name']         || '').toLowerCase().includes(query) ||
+        (f['Email']        || '').toLowerCase().includes(query) ||
+        (f['Experience']   || '').toLowerCase().includes(query) ||
+        (f['Availability'] || '').toLowerCase().includes(query)
+      );
+    });
+  }
+
+  // Sort
+  records.sort((a, b) => {
+    const da = new Date(a.fields['Applied At'] || a.createdTime);
+    const db = new Date(b.fields['Applied At'] || b.createdTime);
+    return sortOrder === 'new' ? db - da : da - db;
+  });
+
+  const grid = document.getElementById('grid');
+
+  if (records.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <div class="big-icon">☕</div>
+        <h3>${query ? 'No matches found' : 'No applications yet'}</h3>
+        <p>${query ? 'Try a different search term.' : 'Applications submitted via the hiring page will appear here automatically.'}</p>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = records.map(r => {
+    const f       = r.fields;
+    const name    = f['Name']         || 'Unknown';
+    const email   = f['Email']        || '';
+    const phone   = f['Phone']        || '';
+    const exp     = f['Experience']   || '';
+    const avail   = f['Availability'] || '';
+    const applied = f['Applied At']   || r.createdTime;
+    const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2);
+
+    const dateStr = applied
+      ? new Date(applied).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
+      : '—';
+
+    return `
+      <div class="candidate-card">
+        <div class="card-top">
+          <div class="avatar">${initials}</div>
+          <div>
+            <div class="card-name">${esc(name)}</div>
+            <div class="card-date">Applied ${dateStr}</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="contact-row">
+            ${email ? `<div class="contact-chip">✉ <a href="mailto:${esc(email)}">${esc(email)}</a></div>` : ''}
+            ${phone ? `<div class="contact-chip">📞 <a href="tel:${esc(phone)}">${esc(phone)}</a></div>` : ''}
+          </div>
+          <div class="field-label">Experience</div>
+          <div class="field-text ${exp ? '' : 'empty'}">${exp ? esc(exp) : 'Not provided'}</div>
+          <div class="field-label">Availability</div>
+          <div class="field-text ${avail ? '' : 'empty'}">${avail ? esc(avail) : 'Not provided'}</div>
+          <div class="source-badge">Google Ads — Barista Hiring</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function esc(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+loadCandidates();
+</script>
+
+</body>
+</html>

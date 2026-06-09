@@ -15,6 +15,25 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
+    // ── GET /api/socc-candidates ─────────────────────────────────────────────
+    if (url.pathname === "/api/socc-candidates") {
+      try {
+        let records = [];
+        let offset  = "";
+        do {
+          const atUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE}/SOCC%20Barista%20Applications?pageSize=100&sort%5B0%5D%5Bfield%5D=Applied%20At&sort%5B0%5D%5Bdirection%5D=desc${offset ? `&offset=${offset}` : ""}`;
+          const atRes = await fetch(atUrl, { headers: { Authorization: `Bearer ${env.AIRTABLE_API_KEY}` } });
+          const data  = await atRes.json();
+          if (!atRes.ok) throw new Error(data.error?.message || "Airtable error");
+          records = records.concat(data.records || []);
+          offset  = data.offset || "";
+        } while (offset);
+        return new Response(JSON.stringify({ records }), { status: 200, headers: CORS });
+      } catch (err) {
+        return new Response(JSON.stringify({ records: [], error: err.message }), { status: 500, headers: CORS });
+      }
+    }
+
     // ── POST /api/socc-apply ─────────────────────────────────────────────────
     if (url.pathname === "/api/socc-apply") {
       if (request.method === "OPTIONS") {
