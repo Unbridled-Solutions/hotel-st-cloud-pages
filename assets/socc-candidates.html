@@ -80,7 +80,19 @@
     padding: 16px 18px 14px;
     border-bottom: 1px solid var(--border);
     display: flex; align-items: center; gap: 14px;
+    position: relative;
   }
+  .delete-btn {
+    position: absolute; top: 12px; right: 12px;
+    background: transparent; border: 1px solid transparent;
+    color: var(--border); border-radius: 6px;
+    width: 28px; height: 28px; cursor: pointer; font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+  }
+  .delete-btn:hover { color: var(--red); border-color: var(--red); background: rgba(224,90,90,0.08); }
+  .delete-btn.confirming { color: var(--red); border-color: var(--red); background: rgba(224,90,90,0.15); font-size: 11px; font-weight: 700; width: auto; padding: 0 8px; letter-spacing: 0.5px; }
+  .candidate-card.deleting { opacity: 0.4; pointer-events: none; transition: opacity 0.3s; }
   .avatar {
     width: 42px; height: 42px; border-radius: 50%;
     background: linear-gradient(135deg, var(--orange), var(--gold));
@@ -289,6 +301,7 @@ function renderCards() {
             <div class="card-name">${esc(name)}</div>
             <div class="card-date">Applied ${dateStr}</div>
           </div>
+          <button class="delete-btn" title="Remove candidate" onclick="confirmDelete(this, '${r.id}')">✕</button>
         </div>
         <div class="card-body">
           <div class="contact-row">
@@ -311,6 +324,54 @@ function esc(str) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+let deleteTimer = null;
+
+function confirmDelete(btn, recordId) {
+  // First click: ask to confirm
+  if (!btn.classList.contains('confirming')) {
+    btn.classList.add('confirming');
+    btn.textContent = 'Delete?';
+    // Auto-revert after 3 seconds if no second click
+    deleteTimer = setTimeout(() => {
+      btn.classList.remove('confirming');
+      btn.textContent = '✕';
+    }, 3000);
+    return;
+  }
+  // Second click: delete
+  clearTimeout(deleteTimer);
+  const card = btn.closest('.candidate-card');
+  card.classList.add('deleting');
+
+  fetch('/api/socc-candidates', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: recordId }),
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      allRecords = allRecords.filter(r => r.id !== recordId);
+      updateStats();
+      card.style.transform = 'scale(0.95)';
+      card.style.opacity   = '0';
+      card.style.transition = 'transform 0.25s, opacity 0.25s';
+      setTimeout(() => renderCards(), 280);
+    } else {
+      card.classList.remove('deleting');
+      btn.classList.remove('confirming');
+      btn.textContent = '✕';
+      alert('Delete failed: ' + (data.error || 'Unknown error'));
+    }
+  })
+  .catch(err => {
+    card.classList.remove('deleting');
+    btn.classList.remove('confirming');
+    btn.textContent = '✕';
+    alert('Delete failed: ' + err.message);
+  });
 }
 
 loadCandidates();

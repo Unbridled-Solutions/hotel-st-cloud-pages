@@ -15,6 +15,23 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
+    // ── DELETE /api/socc-candidates ──────────────────────────────────────────
+    if (url.pathname === "/api/socc-candidates" && request.method === "DELETE") {
+      try {
+        const { id } = await request.json();
+        if (!id) return new Response(JSON.stringify({ success: false, error: "No record ID provided." }), { status: 400, headers: CORS });
+        const atRes = await fetch(
+          `https://api.airtable.com/v0/${AIRTABLE_BASE}/SOCC%20Barista%20Applications/${id}`,
+          { method: "DELETE", headers: { Authorization: `Bearer ${env.AIRTABLE_API_KEY}` } }
+        );
+        const data = await atRes.json();
+        if (!atRes.ok) throw new Error(data.error?.message || "Delete failed.");
+        return new Response(JSON.stringify({ success: true }), { status: 200, headers: CORS });
+      } catch (err) {
+        return new Response(JSON.stringify({ success: false, error: err.message }), { status: 500, headers: CORS });
+      }
+    }
+
     // ── GET /api/socc-candidates ─────────────────────────────────────────────
     if (url.pathname === "/api/socc-candidates") {
       try {
