@@ -1,520 +1,458 @@
-     1|<!DOCTYPE html>
-     2|<html lang="en">
-     3|<head>
-     4|<meta charset="UTF-8">
-     5|<meta name="viewport" content="width=device-width, initial-scale=1.0">
-     6|<title>Standard Oil Coffee Co — Hiring Angle Ad Preview</title>
-     7|<style>
-     8|  :root {
-     9|    --bg: #0f1923;
-    10|    --navy: #1a2e3b;
-    11|    --gold: #c9aa7c;
-    12|    --blue: #5a8ba7;
-    13|    --text: #e8e0d4;
-    14|    --muted: #8a9aaa;
-    15|    --green: #4caf7d;
-    16|    --red: #e05a5a;
-    17|    --card-bg: #162433;
-    18|    --border: #263d52;
-    19|    --orange: #f97316;
-    20|  }
-    21|  * { box-sizing: border-box; margin: 0; padding: 0; }
-    22|  body {
-    23|    background: var(--bg);
-    24|    color: var(--text);
-    25|    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    26|    padding: 0 0 60px;
-    27|  }
-    28|
-    29|  /* HEADER */
-    30|  .header {
-    31|    background: linear-gradient(135deg, var(--navy) 0%, #0f1923 100%);
-    32|    border-bottom: 2px solid var(--gold);
-    33|    padding: 28px 32px 24px;
-    34|  }
-    35|  .header-eyebrow {
-    36|    font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
-    37|    color: var(--gold); margin-bottom: 8px;
-    38|  }
-    39|  .header h1 { font-size: 22px; font-weight: 700; color: var(--text); }
-    40|  .header-sub { font-size: 13px; color: var(--muted); margin-top: 6px; }
-    41|
-    42|  /* STRATEGY BOX */
-    43|  .strategy-box {
-    44|    background: var(--card-bg);
-    45|    border: 1px solid var(--border);
-    46|    border-left: 4px solid var(--gold);
-    47|    border-radius: 8px;
-    48|    margin: 28px 32px 0;
-    49|    padding: 20px 24px;
-    50|  }
-    51|  .strategy-box .strat-title {
-    52|    font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase;
-    53|    color: var(--gold); margin-bottom: 12px;
-    54|  }
-    55|  .strategy-box p {
-    56|    font-size: 14px; line-height: 1.7; color: var(--text); margin-bottom: 10px;
-    57|  }
-    58|  .strategy-box p:last-child { margin-bottom: 0; }
-    59|  .strat-note {
-    60|    background: rgba(201,170,124,0.08);
-    61|    border-radius: 6px;
-    62|    padding: 12px 16px;
-    63|    margin-top: 14px;
-    64|    font-size: 13px;
-    65|    color: var(--gold);
-    66|    line-height: 1.6;
-    67|  }
-    68|
-    69|  /* SECTION HEADERS */
-    70|  .section-wrap { margin: 32px 32px 0; }
-    71|  .section-label {
-    72|    font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase;
-    73|    color: var(--gold); padding-bottom: 10px;
-    74|    border-bottom: 1px solid var(--border);
-    75|    margin-bottom: 20px;
-    76|  }
-    77|  .section-desc {
-    78|    font-size: 13px; color: var(--muted); margin-bottom: 20px; margin-top: -10px; line-height: 1.6;
-    79|  }
-    80|
-    81|  /* AD CARD GRID */
-    82|  .ad-grid {
-    83|    display: grid;
-    84|    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    85|    gap: 20px;
-    86|  }
-    87|
-    88|  /* GOOGLE AD MOCKUP */
-    89|  .ad-card {
-    90|    background: #fff;
-    91|    border-radius: 10px;
-    92|    padding: 16px 18px 14px;
-    93|    box-shadow: 0 4px 24px rgba(0,0,0,0.35);
-    94|    position: relative;
-    95|  }
-    96|  .ad-card-label {
-    97|    position: absolute;
-    98|    top: -11px; left: 14px;
-    99|    background: var(--orange);
-   100|    color: #fff;
-   101|    font-size: 10px;
-   102|    font-weight: 700;
-   103|    letter-spacing: 1.5px;
-   104|    text-transform: uppercase;
-   105|    padding: 3px 10px;
-   106|    border-radius: 4px;
-   107|  }
-   108|  .ad-card-label.blue { background: var(--blue); }
-   109|  .ad-card-label.green { background: var(--green); }
-   110|  .ad-sponsored {
-   111|    font-size: 11px;
-   112|    color: #5f6368;
-   113|    display: flex; align-items: center; gap: 5px;
-   114|    margin-bottom: 4px;
-   115|  }
-   116|  .ad-sponsored span {
-   117|    border: 1px solid #5f6368;
-   118|    border-radius: 3px;
-   119|    padding: 0 4px;
-   120|    font-size: 10px;
-   121|    font-weight: 600;
-   122|  }
-   123|  .ad-url {
-   124|    font-size: 13px; color: #1a0dab; margin-bottom: 2px;
-   125|    font-weight: 500;
-   126|  }
-   127|  .ad-domain {
-   128|    font-size: 12px; color: #3c4043; margin-bottom: 5px;
-   129|  }
-   130|  .ad-headline {
-   131|    font-size: 18px;
-   132|    color: #1a0dab;
-   133|    font-weight: 500;
-   134|    line-height: 1.3;
-   135|    margin-bottom: 6px;
-   136|    text-decoration: underline;
-   137|    text-decoration-color: transparent;
-   138|    cursor: pointer;
-   139|  }
-   140|  .ad-headline:hover { text-decoration-color: #1a0dab; }
-   141|  .ad-description {
-   142|    font-size: 13px;
-   143|    color: #3c4043;
-   144|    line-height: 1.5;
-   145|    margin-bottom: 8px;
-   146|  }
-   147|  .ad-sitelink-row {
-   148|    display: flex; flex-wrap: wrap; gap: 6px;
-   149|    margin-top: 6px; border-top: 1px solid #e8eaed; padding-top: 8px;
-   150|  }
-   151|  .ad-sitelink {
-   152|    font-size: 12px; color: #1a0dab; text-decoration: underline; cursor: pointer;
-   153|  }
-   154|  .ad-callout-row {
-   155|    display: flex; flex-wrap: wrap; gap: 4px;
-   156|    margin-top: 6px;
-   157|  }
-   158|  .ad-callout {
-   159|    font-size: 11px; color: #3c4043;
-   160|    background: #f1f3f4;
-   161|    border-radius: 12px;
-   162|    padding: 3px 9px;
-   163|  }
-   .ad-callout.hiring {
-     background: #e8f5e9;
-     color: #2e7d32;
-     font-weight: 600;
-   }
-   .ad-hiring-bar {
-     background: #f97316;
-     color: #fff;
-     font-size: 12px;
-     font-weight: 700;
-     letter-spacing: 0.5px;
-     padding: 8px 14px;
-     border-radius: 0 0 6px 6px;
-     margin-top: 10px;
-     text-align: center;
-     display: flex;
-     align-items: center;
-     justify-content: center;
-     gap: 6px;
-   }
-   169|  .ad-note {
-   170|    font-size: 11px;
-   171|    color: var(--muted);
-   172|    background: var(--card-bg);
-   173|    border: 1px solid var(--border);
-   174|    border-left: 3px solid var(--orange);
-   175|    border-radius: 5px;
-   176|    padding: 8px 12px;
-   177|    margin-top: 12px;
-   178|    line-height: 1.5;
-   179|  }
-   180|  .ad-note.blue-note { border-left-color: var(--blue); }
-   181|  .ad-note.green-note { border-left-color: var(--green); }
-   182|
-   183|  /* COMPARISON TABLE */
-   184|  .compare-table {
-   185|    background: var(--card-bg);
-   186|    border: 1px solid var(--border);
-   187|    border-radius: 8px;
-   188|    overflow: hidden;
-   189|    margin-bottom: 20px;
-   190|  }
-   191|  .compare-table table { width: 100%; border-collapse: collapse; }
-   192|  .compare-table th {
-   193|    background: var(--navy);
-   194|    color: var(--gold);
-   195|    font-size: 11px;
-   196|    letter-spacing: 1.5px;
-   197|    text-transform: uppercase;
-   198|    padding: 10px 14px;
-   199|    text-align: left;
-   200|  }
-   201|  .compare-table td {
-   202|    font-size: 13px;
-   203|    color: var(--text);
-   204|    padding: 10px 14px;
-   205|    border-top: 1px solid var(--border);
-   206|    vertical-align: top;
-   207|    line-height: 1.5;
-   208|  }
-   209|  .compare-table tr:last-child td { border-bottom: none; }
-   210|  .td-yes { color: var(--green); font-weight: 700; }
-   211|  .td-no { color: var(--red); }
-   212|  .td-warn { color: var(--gold); }
-   213|
-   214|  /* COPY BLOCK */
-   215|  .copy-block {
-   216|    background: var(--card-bg);
-   217|    border: 1px solid var(--border);
-   218|    border-radius: 8px;
-   219|    padding: 20px 24px;
-   220|    margin-bottom: 20px;
-   221|  }
-   222|  .copy-block h3 {
-   223|    font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
-   224|    color: var(--orange); margin-bottom: 14px; padding-bottom: 8px;
-   225|    border-bottom: 1px solid var(--border);
-   226|  }
-   227|  .copy-block h3.blue-h { color: var(--blue); }
-   228|  .hl-list { list-style: none; margin-bottom: 12px; }
-   229|  .hl-list li {
-   230|    font-size: 13px; color: var(--text); padding: 4px 0;
-   231|    display: flex; justify-content: space-between; align-items: baseline;
-   232|    border-bottom: 1px solid rgba(38,61,82,0.5);
-   233|  }
-   234|  .hl-list li:last-child { border-bottom: none; }
-   235|  .hl-num { color: var(--muted); font-size: 12px; margin-right: 8px; min-width: 20px; }
-   236|  .hl-text { flex: 1; }
-   237|  .hl-chars { color: var(--muted); font-size: 11px; margin-left: 8px; }
-   238|  .hl-new { color: var(--green); font-size: 10px; font-weight: 700; 
-   239|            letter-spacing: 1px; text-transform: uppercase; margin-left: 6px; }
-   240|  .desc-list { list-style: none; }
-   241|  .desc-list li {
-   242|    font-size: 13px; color: var(--text); padding: 6px 0;
-   243|    border-bottom: 1px solid rgba(38,61,82,0.5); line-height: 1.5;
-   244|    display: flex; gap: 8px;
-   245|  }
-   246|  .desc-list li:last-child { border-bottom: none; }
-   247|
-   248|  /* MC CARD */
-   249|  .mc-card {
-   250|    background: linear-gradient(135deg, #162433, #1a2e3b);
-   251|    border: 1px solid var(--gold);
-   252|    border-radius: 10px;
-   253|    padding: 22px 26px;
-   254|    margin-top: 32px;
-   255|    margin-left: 32px; margin-right: 32px;
-   256|  }
-   257|  .mc-header {
-   258|    display: flex; align-items: center; gap: 14px; margin-bottom: 14px;
-   259|  }
-   260|  .mc-avatar {
-   261|    width: 40px; height: 40px; border-radius: 50%;
-   262|    background: var(--gold); color: var(--navy);
-   263|    display: flex; align-items: center; justify-content: center;
-   264|    font-weight: 800; font-size: 14px; flex-shrink: 0;
-   265|  }
-   266|  .mc-title { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); }
-   267|  .mc-sub { font-size: 12px; color: var(--muted); }
-   268|  .mc-body p { font-size: 14px; color: var(--text); line-height: 1.7; margin-bottom: 10px; }
-   269|  .mc-body p:last-child { margin-bottom: 0; }
-   270|  .mc-body strong { color: var(--gold); }
-   271|
-   272|  /* FOOTER */
-   273|  footer {
-   274|    text-align: center;
-   275|    font-size: 11px;
-   276|    color: var(--muted);
-   277|    margin-top: 40px;
-   278|    padding: 0 32px;
-   279|  }
-   280|  footer span { color: var(--gold); font-weight: 600; }
-   281|</style>
-   282|</head>
-   283|<body>
-   284|
-   285|<!-- HEADER -->
-   286|<div class="header">
-   287|  <div class="header-eyebrow">Standard Oil Coffee Co — Ad Preview</div>
-   288|  <h1>Now Hiring Baristas: The Dual-Purpose Ad Strategy</h1>
-   289|  <div class="header-sub">Two approaches: recruit great baristas while marketing the coffee shop · For Stan's review</div>
-   290|</div>
-   291|
-   292|<!-- STRATEGY CALLOUT -->
-   293|<div class="strategy-box">
-   294|  <div class="strat-title">MC's Take — The Strategy</div>
-   295|  <p>The hiring angle is a smart double play. When a specialty coffee shop signals it's looking for <em>qualified</em> baristas, it tells every coffee drinker who sees the ad: <strong>we take the craft seriously.</strong> It's not just a job posting — it's a credibility signal.</p>
-   296|  <p>There are two ways to run this. <strong>Option A</strong> keeps the existing customer-focused ads exactly as approved and adds a hiring callout extension — a small green badge line that says "Now Hiring Baristas" visible on mobile. Zero disruption to the current campaign. <strong>Option B</strong> builds a dedicated second ad group targeting people searching for barista jobs in Cañon City — it intercepts job seekers and turns them into aware-of-the-brand applicants.</p>
-   297|  <div class="strat-note">💡 Recommendation: Run both. Option A costs nothing extra — it layers onto the existing $35/day. Option B adds a small separate budget ($10–15/day) and targets a completely different keyword set. Together they cover customers AND recruits without cannibalizing each other.</div>
-   298|</div>
-   299|
-   300|<!-- SECTION 1: OPTION A -->
-   301|<div class="section-wrap" style="margin-top: 32px;">
-   302|  <div class="section-label">Option A — Callout Extension on Existing Ads (zero extra budget)</div>
-   303|  <div class="section-desc">The existing customer-facing ads stay exactly as approved. We add a "Callout Extension" — a small line of text that appears below the ad on mobile. It reads as a natural aside, not a job listing. Google shows it when there's ad space available.</div>
-   304|</div>
-   305|
-   306|<div class="section-wrap">
-   307|  <div class="ad-grid">
-   308|
-   309|    <!-- AD 1: Existing + Callout Extension -->
-   310|    <div>
-   311|      <div class="ad-card">
-   312|        <div class="ad-card-label">Option A — Existing Ad + Hiring Callout</div>
-   313|        <div class="ad-sponsored"><span>Sponsored</span></div>
-   314|        <div class="ad-url">hotelstcloud.com/standard-oil</div>
-   315|        <div class="ad-domain">Standard Oil Coffee Co · Cañon City, CO</div>
-   316|        <div class="ad-headline">Fuel Changed. Standard Hasn't. | Specialty Coffee. Main Street. | Top 5% of Beans. Real Coffee.</div>
-   317|        <div class="ad-description">Top 5% of beans. Traceable origin. Roasted fresh. On Main Street, Cañon City.</div>
-   318|        <div class="ad-callout-row">
-   319|          <span class="ad-callout">Rancilio Espresso</span>
-   320|          <span class="ad-callout">Outdoor Patio</span>
-   321|          <span class="ad-callout">Historic Building</span>
-   322|          <span class="ad-callout hiring">⚡ Now Hiring Qualified Baristas</span>
-   323|        </div>
-   324|        <div class="ad-sitelink-row">
-   325|          <span class="ad-sitelink">Apply Now</span>
-   326|          <span class="ad-sitelink">View Menu</span>
-   327|          <span class="ad-sitelink">Hours &amp; Location</span>
-   328|        </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Standard Oil Coffee Co — Hiring Angle Ad Preview</title>
+<style>
+  :root {
+    --bg: #0f1923;
+    --navy: #1a2e3b;
+    --gold: #c9aa7c;
+    --blue: #5a8ba7;
+    --text: #e8e0d4;
+    --muted: #8a9aaa;
+    --green: #4caf7d;
+    --red: #e05a5a;
+    --card-bg: #162433;
+    --border: #263d52;
+    --orange: #f97316;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    padding: 0 0 60px;
+  }
+
+  .header {
+    background: linear-gradient(135deg, var(--navy) 0%, #0f1923 100%);
+    border-bottom: 2px solid var(--gold);
+    padding: 28px 32px 24px;
+  }
+  .header-eyebrow {
+    font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 8px;
+  }
+  .header h1 { font-size: 22px; font-weight: 700; color: var(--text); }
+  .header-sub { font-size: 13px; color: var(--muted); margin-top: 6px; }
+
+  .strategy-box {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--gold);
+    border-radius: 8px;
+    margin: 28px 32px 0;
+    padding: 20px 24px;
+  }
+  .strategy-box .strat-title {
+    font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 12px;
+  }
+  .strategy-box p { font-size: 14px; line-height: 1.7; color: var(--text); margin-bottom: 10px; }
+  .strategy-box p:last-child { margin-bottom: 0; }
+  .strat-note {
+    background: rgba(201,170,124,0.08);
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--gold);
+    line-height: 1.6;
+  }
+
+  .section-wrap { margin: 32px 32px 0; }
+  .section-label {
+    font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--gold); padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+  .section-desc { font-size: 13px; color: var(--muted); margin-bottom: 20px; margin-top: -10px; line-height: 1.6; }
+
+  .ad-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 20px;
+  }
+
+  .ad-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 16px 18px 0;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+    position: relative;
+    overflow: hidden;
+  }
+  .ad-card-label {
+    position: absolute;
+    top: -11px; left: 14px;
+    background: var(--orange);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 4px;
+  }
+  .ad-card-label.blue { background: var(--blue); }
+  .ad-card-label.green { background: var(--green); }
+  .ad-sponsored { font-size: 11px; color: #5f6368; display: flex; align-items: center; gap: 5px; margin-bottom: 4px; }
+  .ad-sponsored span { border: 1px solid #5f6368; border-radius: 3px; padding: 0 4px; font-size: 10px; font-weight: 600; }
+  .ad-url { font-size: 13px; color: #1a0dab; margin-bottom: 2px; font-weight: 500; }
+  .ad-domain { font-size: 12px; color: #3c4043; margin-bottom: 5px; }
+  .ad-headline { font-size: 18px; color: #1a0dab; font-weight: 500; line-height: 1.3; margin-bottom: 6px; }
+  .ad-description { font-size: 13px; color: #3c4043; line-height: 1.5; margin-bottom: 8px; }
+  .ad-sitelink-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; border-top: 1px solid #e8eaed; padding-top: 8px; margin-bottom: 12px; }
+  .ad-sitelink { font-size: 12px; color: #1a0dab; text-decoration: underline; cursor: pointer; }
+  .ad-callout-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .ad-callout { font-size: 11px; color: #3c4043; background: #f1f3f4; border-radius: 12px; padding: 3px 9px; }
+
+  .ad-hiring-bar {
+    background: var(--orange);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 10px 18px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin: 0 -18px;
+  }
+
+  .ad-note {
+    font-size: 11px;
+    color: var(--muted);
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--orange);
+    border-radius: 5px;
+    padding: 8px 12px;
+    margin-top: 12px;
+    line-height: 1.5;
+  }
+  .ad-note.blue-note { border-left-color: var(--blue); }
+  .ad-note.green-note { border-left-color: var(--green); }
+
+  .compare-table { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
+  .compare-table table { width: 100%; border-collapse: collapse; }
+  .compare-table th { background: var(--navy); color: var(--gold); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; padding: 10px 14px; text-align: left; }
+  .compare-table td { font-size: 13px; color: var(--text); padding: 10px 14px; border-top: 1px solid var(--border); vertical-align: top; line-height: 1.5; }
+  .td-yes { color: var(--green); font-weight: 700; }
+  .td-warn { color: var(--gold); }
+
+  .copy-block { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 20px 24px; margin-bottom: 20px; }
+  .copy-block h3 { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--orange); margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .copy-block h3.blue-h { color: var(--blue); }
+  .hl-list { list-style: none; margin-bottom: 12px; }
+  .hl-list li { font-size: 13px; color: var(--text); padding: 5px 0; display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid rgba(38,61,82,0.5); }
+  .hl-list li:last-child { border-bottom: none; }
+  .hl-num { color: var(--muted); font-size: 12px; margin-right: 8px; min-width: 22px; }
+  .hl-text { flex: 1; }
+  .hl-chars { color: var(--muted); font-size: 11px; margin-left: 8px; }
+  .hl-new { color: var(--green); font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-left: 6px; }
+  .desc-list { list-style: none; }
+  .desc-list li { font-size: 13px; color: var(--text); padding: 6px 0; border-bottom: 1px solid rgba(38,61,82,0.5); line-height: 1.5; display: flex; gap: 8px; }
+  .desc-list li:last-child { border-bottom: none; }
+
+  .mc-card { background: linear-gradient(135deg, #162433, #1a2e3b); border: 1px solid var(--gold); border-radius: 10px; padding: 22px 26px; margin-top: 32px; margin-left: 32px; margin-right: 32px; }
+  .mc-header { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .mc-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--gold); color: var(--navy); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; }
+  .mc-title { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); }
+  .mc-sub { font-size: 12px; color: var(--muted); }
+  .mc-body p { font-size: 14px; color: var(--text); line-height: 1.7; margin-bottom: 10px; }
+  .mc-body p:last-child { margin-bottom: 0; }
+  .mc-body strong { color: var(--gold); }
+
+  footer { text-align: center; font-size: 11px; color: var(--muted); margin-top: 40px; padding: 0 32px; }
+  footer span { color: var(--gold); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-eyebrow">Standard Oil Coffee Co — Ad Preview</div>
+  <h1>Now Hiring Baristas: The Dual-Purpose Ad Strategy</h1>
+  <div class="header-sub">Two approaches: recruit great baristas while marketing the coffee shop · For Stan's review</div>
+</div>
+
+<div class="strategy-box">
+  <div class="strat-title">MC's Take — The Strategy</div>
+  <p>The hiring angle is a smart double play. When a specialty coffee shop signals it's looking for <em>qualified</em> baristas, it tells every coffee drinker who sees the ad: <strong>we take the craft seriously.</strong> It's not just a job posting — it's a credibility signal.</p>
+  <p>There are two ways to run this. <strong>Option A</strong> keeps the existing customer-focused ads exactly as approved and adds a hiring bar — visible, orange, impossible to miss. <strong>Option B</strong> builds a dedicated second ad group targeting people actively searching for barista jobs. Different keywords, different copy, same brand.</p>
+  <div class="strat-note">💡 Recommendation: Run both. Option A costs nothing extra — layers onto the existing $35/day. Option B adds $10–15/day and targets a completely different audience. Together they cover customers AND recruits without cannibalizing each other.</div>
+</div>
+
+<!-- OPTION A -->
+<div class="section-wrap" style="margin-top: 32px;">
+  <div class="section-label">Option A — Existing Ads + Hiring Bar (zero extra budget)</div>
+  <div class="section-desc">The approved coffee copy stays exactly as-is. The orange bar at the bottom of each ad makes the hiring message unmissable — customers see a brand that has standards, job seekers see an opportunity.</div>
+</div>
+
+<div class="section-wrap">
+  <div class="ad-grid">
+
+    <div>
+      <div class="ad-card">
+        <div class="ad-card-label">Option A — Existing Ad</div>
+        <div class="ad-sponsored"><span>Sponsored</span></div>
+        <div class="ad-url">hotelstcloud.com/standard-oil</div>
+        <div class="ad-domain">Standard Oil Coffee Co · Cañon City, CO</div>
+        <div class="ad-headline">Fuel Changed. Standard Hasn't. | Specialty Coffee. Main Street. | Top 5% of Beans. Real Coffee.</div>
+        <div class="ad-description">Top 5% of beans. Traceable origin. Roasted fresh. On Main Street, Cañon City.</div>
+        <div class="ad-callout-row">
+          <span class="ad-callout">Rancilio Espresso</span>
+          <span class="ad-callout">Outdoor Patio</span>
+          <span class="ad-callout">Historic Building</span>
+        </div>
+        <div class="ad-sitelink-row">
+          <span class="ad-sitelink">View Menu</span>
+          <span class="ad-sitelink">Hours &amp; Location</span>
+          <span class="ad-sitelink">Apply Now</span>
+        </div>
         <div class="ad-hiring-bar">⚡ Now Hiring Qualified Baristas</div>
-   329|      </div>
-   330|      <div class="ad-note">
-   331|        <strong>What this does:</strong> The green callout badge "Now Hiring Qualified Baristas" appears under the main ad copy. It's subtle — won't scare off coffee customers — but it catches the eye of anyone in the market for a barista job. Add a "Apply Now" sitelink pointing to a simple application page or even a contact form.
-   332|      </div>
-   333|    </div>
-   334|
-   335|    <!-- AD 2: Customer-first with hiring woven in -->
-   336|    <div>
-   337|      <div class="ad-card">
-   338|        <div class="ad-card-label blue">Option A — Alternate: Hiring Woven Into Headline</div>
-   339|        <div class="ad-sponsored"><span>Sponsored</span></div>
-   340|        <div class="ad-url">hotelstcloud.com/standard-oil</div>
-   341|        <div class="ad-domain">Standard Oil Coffee Co · Cañon City, CO</div>
-   342|        <div class="ad-headline">Specialty Coffee. Main Street. | We're Hiring Baristas. | Top 5% of Beans. Real Coffee.</div>
-   343|        <div class="ad-description">Specialty coffee scored 80+ by Q Graders. Not grocery store coffee. Taste the difference.</div>
-   344|        <div class="ad-description" style="margin-top:4px;">Passionate about craft coffee? We're growing — and we want you behind our bar.</div>
-   345|        <div class="ad-callout-row">
-   346|          <span class="ad-callout">Craft Espresso</span>
-   347|          <span class="ad-callout">Outdoor Seating</span>
-   348|          <span class="ad-callout hiring">⚡ Barista Positions Open</span>
-   349|        </div>
-   350|        <div class="ad-sitelink-row">
-   351|          <span class="ad-sitelink">Apply Today</span>
-   352|          <span class="ad-sitelink">Our Story</span>
-   <span class="ad-sitelink">Menu</span>
-   </div>
-   <div class="ad-hiring-bar">⚡ Now Hiring Qualified Baristas</div>
-   </div>
-   <div class="ad-note blue-note">
-   357|        <strong>What's different:</strong> "We're Hiring Baristas." becomes one of the 15 RSA headlines — Google will test-rotate it against the coffee-focused headlines. It'll appear in some ad combinations, not all. The second description line also subtly recruits. This version does double duty without feeling like a job board ad.
-   358|      </div>
-   359|    </div>
-   360|
-   361|  </div>
-   362|</div>
-   363|
-   364|<!-- SECTION 2: OPTION B -->
-   365|<div class="section-wrap" style="margin-top: 36px;">
-   366|  <div class="section-label">Option B — Dedicated "Hiring" Ad Group (separate keyword set, $10–15/day)</div>
-   367|  <div class="section-desc">A second ad group within the Standard Oil campaign — or a separate small campaign — targeting people actively searching for barista jobs. Different keywords, different copy, same brand. This is a true recruiting play, not a coffee-marketing play.</div>
-   368|</div>
-   369|
-   370|<div class="section-wrap">
-   371|  <div class="ad-grid">
-   372|
-   373|    <!-- AD 3: Job seeker -->
-   374|    <div>
-   375|      <div class="ad-card">
-   376|        <div class="ad-card-label green">Option B — Barista Hiring Ad</div>
-   377|        <div class="ad-sponsored"><span>Sponsored</span></div>
-   378|        <div class="ad-url">hotelstcloud.com/standard-oil/careers</div>
-   379|        <div class="ad-domain">Standard Oil Coffee Co · Cañon City, CO</div>
-   380|        <div class="ad-headline">Barista Jobs in Cañon City | Now Hiring Baristas | Craft Coffee Career</div>
-   381|        <div class="ad-description">Love specialty coffee? Standard Oil Coffee Co is hiring. Specialty beans, real craft, great team. Apply today.</div>
-   382|        <div class="ad-callout-row">
-   383|          <span class="ad-callout hiring">Now Hiring</span>
-   384|          <span class="ad-callout">Specialty Coffee</span>
-   385|          <span class="ad-callout">Historic Location</span>
-   386|          <span class="ad-callout">Great Team</span>
-   387|        </div>
-   388|        <div class="ad-sitelink-row">
-   389|          <span class="ad-sitelink">Apply Now</span>
-   390|          <span class="ad-sitelink">About Us</span>
-   391|          <span class="ad-sitelink">What We Brew</span>
+      </div>
+      <div class="ad-note">
+        <strong>What this does:</strong> Coffee customers see a shop that has standards. Job seekers see "Apply Now" in the sitelinks. Zero change to the approved copy — the hiring message lives in the bar and the sitelink only.
+      </div>
+    </div>
+
+    <div>
+      <div class="ad-card">
+        <div class="ad-card-label blue">Option A — With Hiring Headline in Rotation</div>
+        <div class="ad-sponsored"><span>Sponsored</span></div>
+        <div class="ad-url">hotelstcloud.com/standard-oil</div>
+        <div class="ad-domain">Standard Oil Coffee Co · Cañon City, CO</div>
+        <div class="ad-headline">Specialty Coffee. Main Street. | We're Hiring Baristas. | Top 5% of Beans. Real Coffee.</div>
+        <div class="ad-description">Specialty coffee scored 80+ by Q Graders. Not grocery store coffee. Taste the difference.</div>
+        <div class="ad-description" style="margin-top:4px;">Passionate about craft coffee? We're growing — and we want you behind our bar.</div>
+        <div class="ad-callout-row">
+          <span class="ad-callout">Craft Espresso</span>
+          <span class="ad-callout">Outdoor Seating</span>
+          <span class="ad-callout">Historic Station</span>
+        </div>
+        <div class="ad-sitelink-row">
+          <span class="ad-sitelink">Apply Today</span>
+          <span class="ad-sitelink">Our Story</span>
+          <span class="ad-sitelink">Menu</span>
+        </div>
         <div class="ad-hiring-bar">⚡ Now Hiring Qualified Baristas</div>
-   392|        </div>
-   393|      </div>
-   394|      <div class="ad-note green-note">
-   395|        <strong>Who sees this:</strong> People searching "barista jobs cañon city," "coffee shop jobs near me," "barista hiring colorado." These are active job seekers. The copy leads with the job, then earns their interest by making the shop sound like a place worth working. Landing page needs a simple "tell us about yourself" form or email link.
-   396|      </div>
-   397|    </div>
-   398|
-   399|    <!-- AD 4: Craft angle for job seekers -->
-   400|    <div>
-   401|      <div class="ad-card">
-   402|        <div class="ad-card-label green">Option B — Craft-Focused Barista Ad</div>
-   403|        <div class="ad-sponsored"><span>Sponsored</span></div>
-   404|        <div class="ad-url">hotelstcloud.com/standard-oil/careers</div>
-   405|        <div class="ad-domain">Standard Oil Coffee Co · Cañon City, CO</div>
-   406|        <div class="ad-headline">Work With Top 5% Beans | Specialty Barista Wanted | Cañon City Coffee Career</div>
-   407|        <div class="ad-description">We take coffee seriously. Top 5% of beans, Rancilio espresso, latte art. Qualified baristas — come work with us.</div>
-   408|        <div class="ad-callout-row">
-   409|          <span class="ad-callout hiring">Qualified Baristas Welcome</span>
-   410|          <span class="ad-callout">Rancilio Espresso</span>
-   411|          <span class="ad-callout">Main Street Location</span>
-   412|        </div>
-   413|        <div class="ad-sitelink-row">
-   414|          <span class="ad-sitelink">Apply Now</span>
-   415|          <span class="ad-sitelink">Our Coffee</span>
-   416|          <span class="ad-sitelink">Find Us</span>
+      </div>
+      <div class="ad-note blue-note">
+        <strong>What's different:</strong> "We're Hiring Baristas." becomes one of the 15 RSA headlines — Google rotates it alongside the coffee-focused lines. It shows in some combinations, not all. The second description also recruits. Double duty, no dedicated budget needed.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- OPTION B -->
+<div class="section-wrap" style="margin-top: 36px;">
+  <div class="section-label">Option B — Dedicated Barista Hiring Ad Group ($10–15/day)</div>
+  <div class="section-desc">A separate ad group targeting people actively searching for barista jobs. Different keywords, recruiter-first copy. The orange bar reinforces the message across both audiences.</div>
+</div>
+
+<div class="section-wrap">
+  <div class="ad-grid">
+
+    <div>
+      <div class="ad-card">
+        <div class="ad-card-label green">Option B — Job Seeker Ad</div>
+        <div class="ad-sponsored"><span>Sponsored</span></div>
+        <div class="ad-url">hotelstcloud.com/standard-oil/careers</div>
+        <div class="ad-domain">Standard Oil Coffee Co · Cañon City, CO</div>
+        <div class="ad-headline">Barista Jobs in Cañon City | Now Hiring Baristas | Craft Coffee Career</div>
+        <div class="ad-description">Love specialty coffee? Standard Oil is hiring. Top 5% beans, real craft, great team. Apply today.</div>
+        <div class="ad-callout-row">
+          <span class="ad-callout">Specialty Coffee</span>
+          <span class="ad-callout">Historic Location</span>
+          <span class="ad-callout">Great Team</span>
+        </div>
+        <div class="ad-sitelink-row">
+          <span class="ad-sitelink">Apply Now</span>
+          <span class="ad-sitelink">About Us</span>
+          <span class="ad-sitelink">What We Brew</span>
+        </div>
         <div class="ad-hiring-bar">⚡ Now Hiring Qualified Baristas</div>
-   417|        </div>
-   418|      </div>
-   419|      <div class="ad-note green-note">
-   420|        <strong>The angle:</strong> "Work With Top 5% Beans" speaks to the craft-passionate barista — someone who takes the job seriously and wants to work somewhere that does too. This filters for quality applicants, not just anyone who needs a job. That's what "qualified" means in practice.
-   421|      </div>
-   422|    </div>
-   423|
-   424|  </div>
-   425|</div>
-   426|
-   427|<!-- COPY DECK: OPTION A HEADLINES -->
-   428|<div class="section-wrap" style="margin-top: 36px;">
-   429|  <div class="section-label">New RSA Headlines — Option A (Existing 15 + Hiring Variants to Swap In)</div>
-   430|
-   431|  <div class="copy-block">
-   432|    <h3>Hiring Headlines to Add to Existing RSA (pick 1–2 to replace weakest performers)</h3>
-   433|    <ul class="hl-list">
-   434|      <li><span class="hl-num">H1</span><span class="hl-text">We're Hiring Baristas.<span class="hl-new">new</span></span><span class="hl-chars">21 ✓</span></li>
-   435|      <li><span class="hl-num">H2</span><span class="hl-text">Hiring Qualified Baristas Now<span class="hl-new">new</span></span><span class="hl-chars">29 ✓</span></li>
-   436|      <li><span class="hl-num">H3</span><span class="hl-text">Barista Positions Now Open.<span class="hl-new">new</span></span><span class="hl-chars">26 ✓</span></li>
-   437|      <li><span class="hl-num">H4</span><span class="hl-text">Love Coffee? Join Our Team.<span class="hl-new">new</span></span><span class="hl-chars">26 ✓</span></li>
-   438|    </ul>
-   439|    <p style="font-size: 12px; color: var(--muted); margin-top: 8px;">Google rotates RSA headlines in combinations of 3. Adding 1–2 hiring headlines means they appear in some ads, not every impression — so coffee customers mostly see coffee headlines. The hiring audience sees the right message when it rotates in.</p>
-   440|  </div>
-   441|
-   442|  <div class="copy-block">
-   443|    <h3 class="blue-h">Hiring Description to Add (replaces one existing description)</h3>
-   444|    <ul class="desc-list">
-   445|      <li><span class="hl-num">D5</span><span>Passionate about craft coffee? We're growing. Come work with us. — 54 ✓ <span class="hl-new">new</span></span></li>
-   446|      <li><span class="hl-num">D6</span><span>Now hiring qualified baristas. Specialty coffee, great team, Main Street. — 70 ✓ <span class="hl-new">new</span></span></li>
-   447|    </ul>
-   448|  </div>
-   449|</div>
-   450|
-   451|<!-- COPY DECK: OPTION B HEADLINES -->
-   452|<div class="section-wrap">
-   453|  <div class="section-label">New Ad Group: Barista Hiring — Full Headline &amp; Keyword Set</div>
-   454|
-   455|  <div class="copy-block">
-   456|    <h3>Option B — 15 Headlines (Barista Hiring Ad Group)</h3>
-   457|    <ul class="hl-list">
-   458|      <li><span class="hl-num">1</span><span class="hl-text">Barista Jobs in Cañon City</span><span class="hl-chars">26 ✓</span></li>
-   459|      <li><span class="hl-num">2</span><span class="hl-text">Now Hiring Qualified Baristas</span><span class="hl-chars">29 ✓</span></li>
-   460|      <li><span class="hl-num">3</span><span class="hl-text">Work With Top 5% Beans</span><span class="hl-chars">22 ✓</span></li>
-   461|      <li><span class="hl-num">4</span><span class="hl-text">Specialty Barista Wanted</span><span class="hl-chars">24 ✓</span></li>
-   462|      <li><span class="hl-num">5</span><span class="hl-text">Craft Coffee Career Awaits</span><span class="hl-chars">25 ✓</span></li>
-   463|      <li><span class="hl-num">6</span><span class="hl-text">Barista Hiring — Apply Today</span><span class="hl-chars">28 ✓</span></li>
-   464|      <li><span class="hl-num">7</span><span class="hl-text">Rancilio Espresso. Real Craft.</span><span class="hl-chars">30 ✓</span></li>
-   465|      <li><span class="hl-num">8</span><span class="hl-text">Join the Standard Oil Team</span><span class="hl-chars">26 ✓</span></li>
-   466|      <li><span class="hl-num">9</span><span class="hl-text">Coffee Jobs Near Cañon City</span><span class="hl-chars">27 ✓</span></li>
-   467|      <li><span class="hl-num">10</span><span class="hl-text">We Take Coffee Seriously</span><span class="hl-chars">24 ✓</span></li>
-   468|      <li><span class="hl-num">11</span><span class="hl-text">Hiring: Passionate About Coffee</span><span class="hl-chars">30 ✓</span></li>
-   469|      <li><span class="hl-num">12</span><span class="hl-text">Barista Openings in Cañon City</span><span class="hl-chars">30 ✓</span></li>
-   470|      <li><span class="hl-num">13</span><span class="hl-text">Historic Café. Growing Team.</span><span class="hl-chars">28 ✓</span></li>
-   471|      <li><span class="hl-num">14</span><span class="hl-text">Main Street Coffee Career</span><span class="hl-chars">25 ✓</span></li>
-   472|      <li><span class="hl-num">15</span><span class="hl-text">Latte Art? We Want You.</span><span class="hl-chars">23 ✓</span></li>
-   473|    </ul>
-   474|  </div>
-   475|
-   476|  <div class="copy-block">
-   477|    <h3>Option B — 4 Descriptions (Barista Hiring Ad Group)</h3>
-   478|    <ul class="desc-list">
-   479|      <li><span class="hl-num">1</span><span>Love specialty coffee? Standard Oil Coffee Co is hiring. Specialty beans, real craft, great team. — 93 ⚠ trim → <em>Love specialty coffee? Standard Oil is hiring. Top 5% beans, real craft, great team.</em> — 75 ✓</span></li>
-   480|      <li><span class="hl-num">2</span><span>We take coffee seriously. Rancilio espresso, latte art, traceable beans. Qualified baristas — apply. — 82 ✓</span></li>
-   481|      <li><span class="hl-num">3</span><span>Work with the best beans. Learn, grow, and craft exceptional coffee in Cañon City. Apply today. — 88 ✓</span></li>
-   482|      <li><span class="hl-num">4</span><span>Not your average coffee gig. Specialty beans, historic location, real craft. Come be the standard. — 90 ✓</span></li>
-   483|    </ul>
-   484|  </div>
-   485|
-   486|  <div class="copy-block">
-   487|    <h3>Option B — Keyword Set (Barista Hiring Ad Group)</h3>
-   488|    <ul class="hl-list">
-   489|      <li><span class="hl-num">—</span><span class="hl-text">barista jobs near me [BROAD]</span><span class="hl-chars">high vol</span></li>
-   490|      <li><span class="hl-num">—</span><span class="hl-text">coffee shop jobs near me [BROAD]</span><span class="hl-chars">high vol</span></li>
-   491|      <li><span class="hl-num">—</span><span class="hl-text">barista hiring colorado [PHRASE]</span><span class="hl-chars">med vol</span></li>
-   492|      <li><span class="hl-num">—</span><span class="hl-text">barista jobs canon city [PHRASE]</span><span class="hl-chars">low vol, high intent</span></li>
-   493|      <li><span class="hl-num">—</span><span class="hl-text">cafe jobs near me [BROAD]</span><span class="hl-chars">med vol</span></li>
-   494|      <li><span class="hl-num">—</span><span class="hl-text">coffee jobs colorado [PHRASE]</span><span class="hl-chars">med vol</span></li>
-   495|      <li><span class="hl-num">—</span><span class="hl-text">part time barista jobs [BROAD]</span><span class="hl-chars">high vol</span></li>
-   496|      <li><span class="hl-num">—</span><span class="hl-text">espresso bar jobs [BROAD]</span><span class="hl-chars">med vol</span></li>
-   497|    </ul>
-   498|    <p style="font-size: 12px; color: var(--muted); margin-top: 10px;">⚠️ Note: These are different from coffee-customer keywords. The geo radius handles location — keep keywords intent-focused (job seekers). Budget recommendation: $10–15/day, 7am–4pm (when job seekers browse).</p>
-   499|  </div>
-   500|</div>
-   501|
+      </div>
+      <div class="ad-note green-note">
+        <strong>Who sees this:</strong> People searching "barista jobs near me," "coffee shop jobs colorado," "barista hiring cañon city." Active job seekers — the copy leads with the opportunity, earns their interest by making the shop sound worth working at.
+      </div>
+    </div>
+
+    <div>
+      <div class="ad-card">
+        <div class="ad-card-label green">Option B — Craft-Focused Barista Ad</div>
+        <div class="ad-sponsored"><span>Sponsored</span></div>
+        <div class="ad-url">hotelstcloud.com/standard-oil/careers</div>
+        <div class="ad-domain">Standard Oil Coffee Co · Cañon City, CO</div>
+        <div class="ad-headline">Work With Top 5% Beans | Specialty Barista Wanted | Cañon City Coffee Career</div>
+        <div class="ad-description">We take coffee seriously. Rancilio espresso, latte art, traceable beans. Qualified baristas — apply.</div>
+        <div class="ad-callout-row">
+          <span class="ad-callout">Rancilio Espresso</span>
+          <span class="ad-callout">Main Street</span>
+          <span class="ad-callout">Historic Building</span>
+        </div>
+        <div class="ad-sitelink-row">
+          <span class="ad-sitelink">Apply Now</span>
+          <span class="ad-sitelink">Our Coffee</span>
+          <span class="ad-sitelink">Find Us</span>
+        </div>
+        <div class="ad-hiring-bar">⚡ Now Hiring Qualified Baristas</div>
+      </div>
+      <div class="ad-note green-note">
+        <strong>The angle:</strong> "Work With Top 5% Beans" speaks to the craft-passionate barista who wants to work somewhere serious. Filters for quality applicants. That's what "qualified" means in practice.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- COMPARISON TABLE -->
+<div class="section-wrap" style="margin-top: 36px;">
+  <div class="section-label">Side-by-Side Comparison</div>
+  <div class="compare-table">
+    <table>
+      <tr>
+        <th>Factor</th>
+        <th>Option A — Hiring Bar on Existing Ads</th>
+        <th>Option B — Dedicated Ad Group</th>
+      </tr>
+      <tr>
+        <td>Extra budget needed</td>
+        <td class="td-yes">None — layers on existing $35/day</td>
+        <td class="td-warn">+$10–15/day recommended</td>
+      </tr>
+      <tr>
+        <td>Recruiting reach</td>
+        <td class="td-warn">Passive — seen by coffee searchers only</td>
+        <td class="td-yes">Active — targets people searching for barista jobs</td>
+      </tr>
+      <tr>
+        <td>Customer ad disruption</td>
+        <td class="td-yes">None — coffee copy unchanged</td>
+        <td class="td-yes">None — completely separate ad group</td>
+      </tr>
+      <tr>
+        <td>Brand credibility signal</td>
+        <td class="td-yes">Strong — "we're picky about who we hire"</td>
+        <td class="td-yes">Strong — shows the shop is growing and serious</td>
+      </tr>
+      <tr>
+        <td>Needs a landing page</td>
+        <td class="td-warn">Just an Apply sitelink (contact form works)</td>
+        <td class="td-warn">Yes — simple one-page "tell us about yourself" form</td>
+      </tr>
+      <tr>
+        <td>Implementation effort</td>
+        <td class="td-yes">Low — add bar + sitelink to existing campaign</td>
+        <td class="td-warn">Medium — new ad group, keywords, landing page</td>
+      </tr>
+      <tr>
+        <td>MC recommendation</td>
+        <td class="td-yes">✅ Do this immediately</td>
+        <td class="td-yes">✅ Do this when ready to actively recruit</td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<!-- COPY DECK -->
+<div class="section-wrap" style="margin-top: 36px;">
+  <div class="section-label">New Headlines to Add to Existing RSA (Option A)</div>
+
+  <div class="copy-block">
+    <h3>Pick 1–2 to swap in — replace weakest performers</h3>
+    <ul class="hl-list">
+      <li><span class="hl-num">H1</span><span class="hl-text">We're Hiring Baristas.<span class="hl-new">new</span></span><span class="hl-chars">21 ✓</span></li>
+      <li><span class="hl-num">H2</span><span class="hl-text">Hiring Qualified Baristas Now<span class="hl-new">new</span></span><span class="hl-chars">29 ✓</span></li>
+      <li><span class="hl-num">H3</span><span class="hl-text">Barista Positions Now Open.<span class="hl-new">new</span></span><span class="hl-chars">26 ✓</span></li>
+      <li><span class="hl-num">H4</span><span class="hl-text">Love Coffee? Join Our Team.<span class="hl-new">new</span></span><span class="hl-chars">26 ✓</span></li>
+    </ul>
+  </div>
+
+  <div class="copy-block">
+    <h3 class="blue-h">Optional: Add a Hiring Description (replaces one existing)</h3>
+    <ul class="desc-list">
+      <li><span class="hl-num">D+</span><span>Passionate about craft coffee? We're growing. Come work with us. — 54 ✓ <span class="hl-new">new</span></span></li>
+      <li><span class="hl-num">D+</span><span>Now hiring qualified baristas. Specialty coffee, great team, Main Street. — 70 ✓ <span class="hl-new">new</span></span></li>
+    </ul>
+  </div>
+</div>
+
+<div class="section-wrap">
+  <div class="section-label">Option B — Full Copy Set (Barista Hiring Ad Group)</div>
+
+  <div class="copy-block">
+    <h3>15 Headlines</h3>
+    <ul class="hl-list">
+      <li><span class="hl-num">1</span><span class="hl-text">Barista Jobs in Cañon City</span><span class="hl-chars">26 ✓</span></li>
+      <li><span class="hl-num">2</span><span class="hl-text">Now Hiring Qualified Baristas</span><span class="hl-chars">29 ✓</span></li>
+      <li><span class="hl-num">3</span><span class="hl-text">Work With Top 5% Beans</span><span class="hl-chars">22 ✓</span></li>
+      <li><span class="hl-num">4</span><span class="hl-text">Specialty Barista Wanted</span><span class="hl-chars">24 ✓</span></li>
+      <li><span class="hl-num">5</span><span class="hl-text">Craft Coffee Career Awaits</span><span class="hl-chars">25 ✓</span></li>
+      <li><span class="hl-num">6</span><span class="hl-text">Barista Hiring — Apply Today</span><span class="hl-chars">28 ✓</span></li>
+      <li><span class="hl-num">7</span><span class="hl-text">Rancilio Espresso. Real Craft.</span><span class="hl-chars">30 ✓</span></li>
+      <li><span class="hl-num">8</span><span class="hl-text">Join the Standard Oil Team</span><span class="hl-chars">26 ✓</span></li>
+      <li><span class="hl-num">9</span><span class="hl-text">Coffee Jobs Near Cañon City</span><span class="hl-chars">27 ✓</span></li>
+      <li><span class="hl-num">10</span><span class="hl-text">We Take Coffee Seriously</span><span class="hl-chars">24 ✓</span></li>
+      <li><span class="hl-num">11</span><span class="hl-text">Hiring: Passionate About Coffee</span><span class="hl-chars">30 ✓</span></li>
+      <li><span class="hl-num">12</span><span class="hl-text">Barista Openings in Cañon City</span><span class="hl-chars">30 ✓</span></li>
+      <li><span class="hl-num">13</span><span class="hl-text">Historic Café. Growing Team.</span><span class="hl-chars">28 ✓</span></li>
+      <li><span class="hl-num">14</span><span class="hl-text">Main Street Coffee Career</span><span class="hl-chars">25 ✓</span></li>
+      <li><span class="hl-num">15</span><span class="hl-text">Latte Art? We Want You.</span><span class="hl-chars">23 ✓</span></li>
+    </ul>
+  </div>
+
+  <div class="copy-block">
+    <h3>4 Descriptions</h3>
+    <ul class="desc-list">
+      <li><span class="hl-num">1</span><span>Love specialty coffee? Standard Oil is hiring. Top 5% beans, real craft, great team. Apply. — 75 ✓</span></li>
+      <li><span class="hl-num">2</span><span>We take coffee seriously. Rancilio espresso, latte art, traceable beans. Qualified baristas — apply. — 82 ✓</span></li>
+      <li><span class="hl-num">3</span><span>Work with the best beans. Learn, grow, and craft exceptional coffee in Cañon City. Apply today. — 88 ✓</span></li>
+      <li><span class="hl-num">4</span><span>Not your average coffee gig. Specialty beans, historic location, real craft. Come be the standard. — 90 ✓</span></li>
+    </ul>
+  </div>
+
+  <div class="copy-block">
+    <h3>Keyword Set</h3>
+    <ul class="hl-list">
+      <li><span class="hl-num">—</span><span class="hl-text">barista jobs near me</span><span class="hl-chars">BROAD · high vol</span></li>
+      <li><span class="hl-num">—</span><span class="hl-text">coffee shop jobs near me</span><span class="hl-chars">BROAD · high vol</span></li>
+      <li><span class="hl-num">—</span><span class="hl-text">barista hiring colorado</span><span class="hl-chars">PHRASE · med vol</span></li>
+      <li><span class="hl-num">—</span><span class="hl-text">barista jobs canon city</span><span class="hl-chars">PHRASE · low vol, high intent</span></li>
+      <li><span class="hl-num">—</span><span class="hl-text">cafe jobs near me</span><span class="hl-chars">BROAD · med vol</span></li>
+      <li><span class="hl-num">—</span><span class="hl-text">coffee jobs colorado</span><span class="hl-chars">PHRASE · med vol</span></li>
+      <li><span class="hl-num">—</span><span class="hl-text">part time barista jobs</span><span class="hl-chars">BROAD · high vol</span></li>
+      <li><span class="hl-num">—</span><span class="hl-text">espresso bar jobs</span><span class="hl-chars">BROAD · med vol</span></li>
+    </ul>
+  </div>
+</div>
+
+<!-- MC CARD -->
+<div class="mc-card">
+  <div class="mc-header">
+    <div class="mc-avatar">MC</div>
+    <div>
+      <div class="mc-title">MC's Recommendation</div>
+      <div class="mc-sub">For Stan's review</div>
+    </div>
+  </div>
+  <div class="mc-body">
+    <p>Start with <strong>Option A</strong> — costs nothing and goes live the moment we push the existing Standard Oil campaign. The orange bar makes the hiring message impossible to miss, and an "Apply Now" sitelink gives job seekers somewhere to land. Low effort, double payoff.</p>
+    <p>When you're ready to actively recruit — meaning cast a wider net for baristas who are <em>looking right now</em> — add <strong>Option B</strong>. $10–15/day, pointed at job-seeker keywords. The only piece we'd need: a simple one-page application form. I can build that in an hour.</p>
+    <p>"Qualified baristas" is the right language either way. It filters the tire-kickers and attracts the craft-passionate. That's the Standard Oil brand in two words.</p>
+  </div>
+</div>
+
+<footer>
+  <p>Powered by <span>MC — Unbridled Solutions</span> · Standard Oil Coffee Co · For Stan's review before any changes go live</p>
+</footer>
+
+</body>
+</html>
