@@ -184,6 +184,10 @@
         <label for="availability">Availability</label>
         <input type="text" id="availability" placeholder="e.g. mornings only, full-time, weekends...">
       </div>
+      <div class="form-group">
+        <label for="resume">Resume <span style="color:var(--border);font-size:11px;text-transform:none;letter-spacing:0">(optional — PDF or Word)</span></label>
+        <input type="file" id="resume" accept=".pdf,.doc,.docx" style="padding:9px 14px;cursor:pointer;">
+      </div>
 
       <button class="submit-btn" id="submit-btn" type="button" onclick="submitApp()">
         <span class="spinner" id="spinner"></span>
@@ -233,6 +237,25 @@ async function submitApp() {
     experience:   document.getElementById('experience').value.trim(),
     availability: document.getElementById('availability').value.trim(),
   };
+
+  // Read resume file if provided
+  const fileInput = document.getElementById('resume');
+  if (fileInput.files && fileInput.files[0]) {
+    const file = fileInput.files[0];
+    payload.resume_filename = file.name;
+    label.textContent = 'Uploading resume...';
+    try {
+      payload.resume_base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload  = e => resolve(e.target.result.split(',')[1]); // strip data: prefix
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    } catch (e) {
+      // Resume read failed — continue without it
+    }
+    label.textContent = 'Sending...';
+  }
 
   try {
     const res = await fetch('/api/socc-apply', {
