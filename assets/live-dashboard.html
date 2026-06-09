@@ -4,110 +4,104 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
-  <title>Campaign Dashboard — Hotel St. Cloud</title>
+  <title>Campaign Dashboard · Hotel St. Cloud</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
       --bg: #0f1923;
       --card-bg: #162433;
-      --card-border: #1e3347;
+      --card-border: #1e3045;
       --gold: #c9aa7c;
       --blue: #5a8ba7;
       --green: #4caf7d;
       --orange: #f97316;
       --purple: #9b6ec8;
       --text: #e2e8f0;
-      --muted: #7a95a8;
-      --live: #4caf7d;
+      --text-muted: #7a94aa;
+      --text-dim: #4a6274;
     }
 
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       font-size: 14px;
       line-height: 1.5;
       min-height: 100vh;
     }
 
-    /* HEADER */
-    .header {
-      background: linear-gradient(135deg, #0a1520 0%, #12222f 50%, #0f1923 100%);
+    /* ── HEADER ── */
+    header {
+      background: linear-gradient(135deg, #0a1520 0%, #0f1923 50%, #121e2d 100%);
       border-bottom: 2px solid var(--gold);
-      padding: 28px 24px 22px;
+      padding: 28px 32px 24px;
       text-align: center;
     }
-    .header-eyebrow {
+    header .eyebrow {
       font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 3px;
+      letter-spacing: 2.5px;
       text-transform: uppercase;
       color: var(--gold);
-      opacity: 0.75;
       margin-bottom: 8px;
+      opacity: 0.85;
     }
-    .header h1 {
-      font-size: clamp(22px, 4vw, 32px);
+    header h1 {
+      font-size: clamp(22px, 4vw, 34px);
       font-weight: 700;
       color: #fff;
       letter-spacing: -0.5px;
-      margin-bottom: 6px;
     }
-    .header-sub {
-      font-size: 14px;
-      color: var(--muted);
-      margin-bottom: 10px;
+    header .subtitle {
+      margin-top: 6px;
+      color: var(--text-muted);
+      font-size: 13px;
     }
-    .header-timestamp {
-      display: inline-block;
+    header .timestamp {
+      margin-top: 10px;
       font-size: 11px;
+      color: var(--text-dim);
+    }
+    header .timestamp span {
       color: var(--gold);
-      opacity: 0.65;
-      background: rgba(201,170,124,0.08);
-      padding: 3px 10px;
-      border-radius: 20px;
-      border: 1px solid rgba(201,170,124,0.2);
+      opacity: 0.75;
     }
 
-    /* LAYOUT */
-    .container {
+    /* ── LAYOUT ── */
+    main {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 28px 16px 48px;
+      padding: 32px 20px 48px;
     }
 
-    /* SECTION TITLES */
+    section { margin-bottom: 44px; }
+
     .section-title {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 2.5px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 2px;
       text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 14px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
       padding-bottom: 8px;
       border-bottom: 1px solid var(--card-border);
     }
-    .section { margin-bottom: 40px; }
 
-    /* TOTALS CARDS */
+    /* ── TOTALS GRID ── */
     .totals-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 14px;
     }
-    @media (max-width: 768px) {
+    @media (max-width: 700px) {
       .totals-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-    @media (max-width: 400px) {
-      .totals-grid { grid-template-columns: 1fr; }
     }
 
     .total-card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       border-radius: 10px;
-      padding: 18px 16px;
+      padding: 20px 18px;
       position: relative;
       overflow: hidden;
     }
@@ -116,42 +110,43 @@
       position: absolute;
       top: 0; left: 0; right: 0;
       height: 3px;
+      border-radius: 10px 10px 0 0;
     }
     .total-card.gold::before  { background: var(--gold); }
     .total-card.blue::before  { background: var(--blue); }
     .total-card.green::before { background: var(--green); }
     .total-card.purple::before{ background: var(--purple); }
 
-    .total-label {
+    .total-card .label {
       font-size: 11px;
-      font-weight: 600;
       letter-spacing: 1.5px;
       text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 8px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
     }
-    .total-value {
-      font-size: clamp(22px, 3.5vw, 30px);
+    .total-card .value {
+      font-size: clamp(26px, 3.5vw, 36px);
       font-weight: 700;
-      color: #fff;
       line-height: 1;
     }
-    .total-card.gold  .total-value { color: var(--gold); }
-    .total-card.blue  .total-value { color: var(--blue); }
-    .total-card.green .total-value { color: var(--green); }
-    .total-card.purple .total-value { color: var(--purple); }
+    .total-card.gold  .value { color: var(--gold); }
+    .total-card.blue  .value { color: var(--blue); }
+    .total-card.green .value { color: var(--green); }
+    .total-card.purple .value { color: var(--purple); }
+    .total-card .sub {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
 
-    /* CAMPAIGN CARDS */
+    /* ── CAMPAIGN CARDS ── */
     .campaign-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
       gap: 16px;
     }
-    @media (max-width: 480px) {
-      .campaign-grid { grid-template-columns: 1fr; }
-    }
 
-    .campaign-card {
+    .cc {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       border-radius: 12px;
@@ -160,99 +155,92 @@
       overflow: hidden;
       transition: border-color 0.2s;
     }
-    .campaign-card:hover {
-      border-color: rgba(201,170,124,0.3);
-    }
-    .campaign-card-accent {
+    .cc:hover { border-color: #2a4a64; }
+    .cc::before {
+      content: '';
       position: absolute;
       top: 0; left: 0; right: 0;
       height: 3px;
+      border-radius: 12px 12px 0 0;
     }
 
-    .campaign-card-header {
+    .cc-lp::before  { background: #9b6ec8; }
+    .cc-bb::before  { background: #c9aa7c; }
+    .cc-fp::before  { background: #4caf7d; }
+    .cc-bc::before  { background: #5a8ba7; }
+    .cc-so::before  { background: #f97316; }
+
+    .cc-header {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
+      gap: 10px;
       margin-bottom: 16px;
-      gap: 8px;
     }
-    .campaign-name {
-      font-size: 13px;
-      font-weight: 700;
+    .cc-name {
+      font-size: 14px;
+      font-weight: 600;
       color: #fff;
       line-height: 1.3;
       flex: 1;
     }
-    .live-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
+    .badge {
       font-size: 10px;
       font-weight: 700;
       letter-spacing: 1px;
       text-transform: uppercase;
-      color: var(--live);
-      background: rgba(76,175,125,0.12);
-      border: 1px solid rgba(76,175,125,0.3);
       padding: 3px 8px;
       border-radius: 20px;
       white-space: nowrap;
-      flex-shrink: 0;
     }
-    .live-dot {
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-      background: var(--live);
-      animation: pulse 2s infinite;
+    .badge-live {
+      background: rgba(76,175,125,0.15);
+      color: var(--green);
+      border: 1px solid rgba(76,175,125,0.3);
     }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
+    .badge-paused {
+      background: rgba(122,148,170,0.12);
+      color: var(--text-muted);
+      border: 1px solid rgba(122,148,170,0.2);
     }
 
+    /* stat 2x2 grid */
     .stat-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
       margin-bottom: 18px;
     }
-    .stat-item {
-      background: rgba(0,0,0,0.2);
+    .stat-box {
+      background: rgba(10,20,30,0.4);
+      border: 1px solid var(--card-border);
       border-radius: 8px;
       padding: 10px 12px;
     }
-    .stat-label {
+    .stat-box .s-label {
       font-size: 10px;
-      font-weight: 600;
       letter-spacing: 1px;
       text-transform: uppercase;
-      color: var(--muted);
+      color: var(--text-dim);
       margin-bottom: 4px;
     }
-    .stat-value {
-      font-size: 16px;
+    .stat-box .s-val {
+      font-size: 20px;
       font-weight: 700;
       color: #fff;
+      line-height: 1;
     }
 
-    /* SPARKLINES */
-    .sparklines {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 14px;
-    }
-    .spark-block { }
+    /* Sparklines */
+    .sparkline-section { margin-bottom: 16px; }
     .spark-label {
       font-size: 10px;
-      font-weight: 600;
       letter-spacing: 1px;
       text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 6px;
+      color: var(--text-dim);
+      margin-bottom: 5px;
     }
-    .spark-bars {
+    .sparkline {
       display: flex;
       align-items: flex-end;
       gap: 3px;
@@ -261,480 +249,444 @@
     .spark-bar {
       flex: 1;
       border-radius: 2px 2px 0 0;
-      opacity: 0.55;
       min-height: 2px;
+      opacity: 0.55;
       transition: opacity 0.2s;
     }
-    .spark-bar.latest {
-      opacity: 1;
-    }
-    .spark-bar:hover {
-      opacity: 0.85;
-    }
+    .spark-bar:last-child { opacity: 1; }
+    .spark-bar:hover { opacity: 1; }
 
-    /* TAGS */
-    .campaign-tags {
+    /* tags */
+    .tag-row {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
+      margin-top: 14px;
     }
     .tag {
-      font-size: 10px;
-      font-weight: 500;
-      letter-spacing: 0.5px;
-      color: var(--muted);
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.08);
-      padding: 3px 8px;
+      font-size: 11px;
+      padding: 3px 9px;
       border-radius: 20px;
+      background: rgba(255,255,255,0.05);
+      color: var(--text-muted);
+      border: 1px solid var(--card-border);
     }
 
-    /* ZERO-DATA STATE */
-    .zero-state {
-      font-size: 12px;
-      color: var(--muted);
-      font-style: italic;
-      padding: 8px 0;
-    }
-
-    /* BUDGET TABLE */
+    /* ── BUDGET TABLE ── */
     .budget-table {
+      width: 100%;
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       border-radius: 12px;
       overflow: hidden;
     }
-    .budget-row {
-      display: grid;
-      grid-template-columns: 180px 1fr 90px;
-      align-items: center;
-      gap: 16px;
-      padding: 14px 20px;
+    .budget-table table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .budget-table thead tr {
       border-bottom: 1px solid var(--card-border);
     }
-    .budget-row:last-child { border-bottom: none; }
-    .budget-row.header-row {
-      background: rgba(0,0,0,0.2);
-      padding: 10px 20px;
-    }
-    @media (max-width: 600px) {
-      .budget-row { grid-template-columns: 1fr 80px; }
-      .budget-row .col-name { grid-column: 1 / -1; }
-    }
-    .budget-col-label {
-      font-size: 10px;
-      font-weight: 700;
+    .budget-table th {
+      padding: 12px 16px;
+      font-size: 11px;
       letter-spacing: 1.5px;
       text-transform: uppercase;
-      color: var(--muted);
-    }
-    .budget-name {
-      font-size: 12px;
+      color: var(--text-dim);
       font-weight: 600;
-      color: #fff;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      text-align: left;
     }
-    .budget-bar-wrap {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+    .budget-table th:last-child { text-align: right; }
+    .budget-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(30,48,69,0.5);
+      color: var(--text);
+      vertical-align: middle;
     }
-    .budget-bar-track {
-      flex: 1;
-      height: 8px;
-      background: rgba(255,255,255,0.06);
-      border-radius: 4px;
-      overflow: hidden;
-    }
-    .budget-bar-fill {
-      height: 100%;
-      border-radius: 4px;
-      transition: width 0.3s;
-    }
-    .budget-pct {
-      font-size: 11px;
+    .budget-table tr:last-child td { border-bottom: none; }
+    .budget-table td:last-child {
+      text-align: right;
       font-weight: 600;
-      color: var(--muted);
-      white-space: nowrap;
-      min-width: 38px;
-      text-align: right;
-    }
-    .budget-spend {
-      font-size: 13px;
-      font-weight: 700;
-      color: #fff;
-      text-align: right;
+      color: var(--green);
     }
 
-    /* MC'S TAKE */
-    .mc-card {
+    .spend-bar-wrap {
+      width: 100%;
+      background: rgba(10,20,30,0.6);
+      border-radius: 4px;
+      height: 8px;
+      overflow: hidden;
+    }
+    .spend-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+
+    .camp-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 8px;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+    .camp-name-cell {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    @media (max-width: 600px) {
+      .budget-table th:nth-child(3),
+      .budget-table td:nth-child(3) { display: none; }
+    }
+
+    /* ── MC'S TAKE ── */
+    .mc-take {
       background: var(--card-bg);
       border: 1px solid var(--gold);
       border-radius: 12px;
-      padding: 24px 22px;
+      padding: 24px 26px;
       position: relative;
     }
-    .mc-card::before {
-      content: '';
+    .mc-take::before {
+      content: 'MC\'s Take';
       position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, var(--gold), rgba(201,170,124,0.3));
-      border-radius: 12px 12px 0 0;
-    }
-    .mc-card-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-    .mc-icon {
-      width: 32px;
-      height: 32px;
-      background: rgba(201,170,124,0.12);
-      border: 1px solid rgba(201,170,124,0.3);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-    }
-    .mc-title {
-      font-size: 12px;
+      top: -1px; left: 22px;
+      transform: translateY(-50%);
+      background: var(--card-bg);
+      padding: 0 8px;
+      font-size: 11px;
       font-weight: 700;
-      letter-spacing: 1.5px;
+      letter-spacing: 2px;
       text-transform: uppercase;
       color: var(--gold);
     }
-    .mc-body {
+    .mc-take p {
+      color: var(--text);
       font-size: 14px;
-      line-height: 1.7;
-      color: #c8d8e4;
+      line-height: 1.8;
     }
-    .mc-body strong {
-      color: var(--gold);
-    }
+    .mc-take p + p { margin-top: 12px; }
+    .mc-take strong { color: var(--gold); font-weight: 600; }
 
-    /* FOOTER */
-    .footer {
+    /* ── FOOTER ── */
+    footer {
       border-top: 1px solid var(--card-border);
-      padding: 16px 24px;
+      padding: 18px 32px;
       text-align: center;
       font-size: 11px;
-      color: var(--muted);
-      opacity: 0.7;
+      color: var(--text-dim);
+      letter-spacing: 0.5px;
     }
-    .footer span { margin: 0 8px; }
+    footer span { color: var(--gold); opacity: 0.6; }
   </style>
 </head>
 <body>
 
-<header class="header">
-  <div class="header-eyebrow">Hotel St. Cloud · Google Ads</div>
+<header>
+  <div class="eyebrow">Hotel St. Cloud · Google Ads</div>
   <h1>Campaign Dashboard</h1>
-  <div class="header-sub">Rolling 7-Day Performance</div>
-  <div class="header-timestamp">Data pulled June 08, 2026 at 06:01 AM MT</div>
+  <div class="subtitle">Rolling 7-Day Performance &nbsp;·&nbsp; Jun 02 – Jun 08, 2026</div>
+  <div class="timestamp">Data pulled: <span>June 09, 2026 at 06:00 AM MT</span></div>
 </header>
 
-<div class="container">
+<main>
 
-  <!-- SECTION 1: PORTFOLIO SUMMARY -->
-  <section class="section">
+  <!-- ── SECTION 1: PORTFOLIO SUMMARY ── -->
+  <section>
     <div class="section-title">Portfolio Summary</div>
     <div class="totals-grid">
       <div class="total-card gold">
-        <div class="total-label">Impressions</div>
-        <div class="total-value">7,640</div>
+        <div class="label">Impressions</div>
+        <div class="value">7,880</div>
+        <div class="sub">All active campaigns</div>
       </div>
       <div class="total-card blue">
-        <div class="total-label">Clicks</div>
-        <div class="total-value">586</div>
+        <div class="label">Clicks</div>
+        <div class="value">614</div>
+        <div class="sub">Portfolio-wide</div>
       </div>
       <div class="total-card green">
-        <div class="total-label">Total Spend</div>
-        <div class="total-value">$1,135.94</div>
+        <div class="label">Total Spend</div>
+        <div class="value">$1,165.05</div>
+        <div class="sub">7-day total</div>
       </div>
       <div class="total-card purple">
-        <div class="total-label">Conversions</div>
-        <div class="total-value">7</div>
+        <div class="label">Conversions</div>
+        <div class="value">7</div>
+        <div class="sub">All campaigns</div>
       </div>
     </div>
   </section>
 
-  <!-- SECTION 2: CAMPAIGN PERFORMANCE -->
-  <section class="section">
+  <!-- ── SECTION 2: CAMPAIGN PERFORMANCE ── -->
+  <section>
     <div class="section-title">Campaign Performance</div>
     <div class="campaign-grid">
 
       <!-- Local Proximity & Through Traffic -->
-      <div class="campaign-card cc-lp">
-        <div class="campaign-card-accent" style="background:#9b6ec8;"></div>
-        <div class="campaign-card-header">
-          <div class="campaign-name">Local Proximity &amp; Through Traffic</div>
-          <div class="live-badge"><span class="live-dot"></span>Live</div>
+      <div class="cc cc-lp">
+        <div class="cc-header">
+          <div class="cc-name">Local Proximity &amp; Through Traffic</div>
+          <div class="badge badge-live">● Live</div>
         </div>
         <div class="stat-grid">
-          <div class="stat-item">
-            <div class="stat-label">Impressions</div>
-            <div class="stat-value" style="color:#9b6ec8;">1,109</div>
+          <div class="stat-box">
+            <div class="s-label">Impressions</div>
+            <div class="s-val">1,120</div>
           </div>
-          <div class="stat-item">
-            <div class="stat-label">Clicks</div>
-            <div class="stat-value">220</div>
+          <div class="stat-box">
+            <div class="s-label">Clicks</div>
+            <div class="s-val">234</div>
           </div>
-          <div class="stat-item">
-            <div class="stat-label">CTR</div>
-            <div class="stat-value">19.84%</div>
+          <div class="stat-box">
+            <div class="s-label">CTR</div>
+            <div class="s-val">20.89%</div>
           </div>
-          <div class="stat-item">
-            <div class="stat-label">Spend</div>
-            <div class="stat-value">$586.60</div>
-          </div>
-        </div>
-        <div class="sparklines">
-          <div class="spark-block">
-            <div class="spark-label">Clicks / Day</div>
-            <div class="spark-bars">
-              <!-- values: 34,26,31,34,31,23,41 — max=41 -->
-              <div class="spark-bar" style="background:#9b6ec8;height:calc(36px * 34/41);"></div>
-              <div class="spark-bar" style="background:#9b6ec8;height:calc(36px * 26/41);"></div>
-              <div class="spark-bar" style="background:#9b6ec8;height:calc(36px * 31/41);"></div>
-              <div class="spark-bar" style="background:#9b6ec8;height:calc(36px * 34/41);"></div>
-              <div class="spark-bar" style="background:#9b6ec8;height:calc(36px * 31/41);"></div>
-              <div class="spark-bar" style="background:#9b6ec8;height:calc(36px * 23/41);"></div>
-              <div class="spark-bar latest" style="background:#9b6ec8;height:36px;"></div>
-            </div>
-          </div>
-          <div class="spark-block">
-            <div class="spark-label">Spend / Day</div>
-            <div class="spark-bars">
-              <!-- micros: 74803257,65045499,98463235,98487963,85636540,59830649,104336562 — max=104336562 -->
-              <div class="spark-bar" style="background:#9b6ec8;height:calc(36px * 74803257/104336562);"></div>
-              <div class="spark-bar" style="background:#9b6ec8;height:calc(36px * 65045499/104336562);"></div>
-              <div class="spark-bar" style="background:#9b6ec8;height:calc(36px * 98463235/104336562);"></div>
-              <div class="spark-bar" style="background:#9b6ec8;height:calc(36px * 98487963/104336562);"></div>
-              <div class="spark-bar" style="background:#9b6ec8;height:calc(36px * 85636540/104336562);"></div>
-              <div class="spark-bar" style="background:#9b6ec8;height:calc(36px * 59830649/104336562);"></div>
-              <div class="spark-bar latest" style="background:#9b6ec8;height:36px;"></div>
-            </div>
+          <div class="stat-box">
+            <div class="s-label">Spend</div>
+            <div class="s-val">$605.38</div>
           </div>
         </div>
-        <div class="campaign-tags">
+
+        <div class="sparkline-section">
+          <div class="spark-label">Clicks · Last 7 Days</div>
+          <div class="sparkline">
+            <!-- max=48: 26,31,34,31,23,41,48 -->
+            <div class="spark-bar" style="height:54%;background:#9b6ec8;"></div>
+            <div class="spark-bar" style="height:65%;background:#9b6ec8;"></div>
+            <div class="spark-bar" style="height:71%;background:#9b6ec8;"></div>
+            <div class="spark-bar" style="height:65%;background:#9b6ec8;"></div>
+            <div class="spark-bar" style="height:48%;background:#9b6ec8;"></div>
+            <div class="spark-bar" style="height:85%;background:#9b6ec8;"></div>
+            <div class="spark-bar" style="height:100%;background:#9b6ec8;"></div>
+          </div>
+        </div>
+        <div class="sparkline-section">
+          <div class="spark-label">Spend · Last 7 Days</div>
+          <div class="sparkline">
+            <!-- max=104.34: 65.05,98.46,98.49,85.64,59.83,104.34,93.58 -->
+            <div class="spark-bar" style="height:62%;background:#9b6ec8;"></div>
+            <div class="spark-bar" style="height:94%;background:#9b6ec8;"></div>
+            <div class="spark-bar" style="height:94%;background:#9b6ec8;"></div>
+            <div class="spark-bar" style="height:82%;background:#9b6ec8;"></div>
+            <div class="spark-bar" style="height:57%;background:#9b6ec8;"></div>
+            <div class="spark-bar" style="height:100%;background:#9b6ec8;"></div>
+            <div class="spark-bar" style="height:90%;background:#9b6ec8;"></div>
+          </div>
+        </div>
+        <div class="tag-row">
           <span class="tag">Hotel Stays</span>
           <span class="tag">Highway 50</span>
           <span class="tag">Drive Market</span>
         </div>
       </div>
 
-      <!-- Hotel St. Cloud | Royal Gorge Basecamp -->
-      <div class="campaign-card cc-bc">
-        <div class="campaign-card-accent" style="background:#5a8ba7;"></div>
-        <div class="campaign-card-header">
-          <div class="campaign-name">Hotel St. Cloud | Royal Gorge Basecamp</div>
-          <div class="live-badge"><span class="live-dot"></span>Live</div>
-        </div>
-        <div class="stat-grid">
-          <div class="stat-item">
-            <div class="stat-label">Impressions</div>
-            <div class="stat-value" style="color:#5a8ba7;">1,581</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-label">Clicks</div>
-            <div class="stat-value">136</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-label">CTR</div>
-            <div class="stat-value">8.60%</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-label">Spend</div>
-            <div class="stat-value">$270.72</div>
-          </div>
-        </div>
-        <div class="sparklines">
-          <div class="spark-block">
-            <div class="spark-label">Clicks / Day</div>
-            <div class="spark-bars">
-              <!-- values: 20,16,16,23,19,18,24 — max=24 -->
-              <div class="spark-bar" style="background:#5a8ba7;height:calc(36px * 20/24);"></div>
-              <div class="spark-bar" style="background:#5a8ba7;height:calc(36px * 16/24);"></div>
-              <div class="spark-bar" style="background:#5a8ba7;height:calc(36px * 16/24);"></div>
-              <div class="spark-bar" style="background:#5a8ba7;height:calc(36px * 23/24);"></div>
-              <div class="spark-bar" style="background:#5a8ba7;height:calc(36px * 19/24);"></div>
-              <div class="spark-bar" style="background:#5a8ba7;height:calc(36px * 18/24);"></div>
-              <div class="spark-bar latest" style="background:#5a8ba7;height:36px;"></div>
-            </div>
-          </div>
-          <div class="spark-block">
-            <div class="spark-label">Spend / Day</div>
-            <div class="spark-bars">
-              <!-- micros: 36528380,28407919,29006989,56103989,35190491,31564357,53915082 — max=56103989 -->
-              <div class="spark-bar" style="background:#5a8ba7;height:calc(36px * 36528380/56103989);"></div>
-              <div class="spark-bar" style="background:#5a8ba7;height:calc(36px * 28407919/56103989);"></div>
-              <div class="spark-bar" style="background:#5a8ba7;height:calc(36px * 29006989/56103989);"></div>
-              <div class="spark-bar" style="background:#5a8ba7;height:calc(36px * 56103989/56103989);"></div>
-              <div class="spark-bar" style="background:#5a8ba7;height:calc(36px * 35190491/56103989);"></div>
-              <div class="spark-bar" style="background:#5a8ba7;height:calc(36px * 31564357/56103989);"></div>
-              <div class="spark-bar latest" style="background:#5a8ba7;height:calc(36px * 53915082/56103989);"></div>
-            </div>
-          </div>
-        </div>
-        <div class="campaign-tags">
-          <span class="tag">Hotel Stays</span>
-          <span class="tag">Royal Gorge</span>
-          <span class="tag">Adventure</span>
-        </div>
-      </div>
-
       <!-- FP Sports Bar | Fremont Provisions -->
-      <div class="campaign-card cc-fp">
-        <div class="campaign-card-accent" style="background:#4caf7d;"></div>
-        <div class="campaign-card-header">
-          <div class="campaign-name">FP Sports Bar | Fremont Provisions</div>
-          <div class="live-badge"><span class="live-dot"></span>Live</div>
+      <div class="cc cc-fp">
+        <div class="cc-header">
+          <div class="cc-name">FP Sports Bar | Fremont Provisions</div>
+          <div class="badge badge-live">● Live</div>
         </div>
         <div class="stat-grid">
-          <div class="stat-item">
-            <div class="stat-label">Impressions</div>
-            <div class="stat-value" style="color:#4caf7d;">4,501</div>
+          <div class="stat-box">
+            <div class="s-label">Impressions</div>
+            <div class="s-val">4,789</div>
           </div>
-          <div class="stat-item">
-            <div class="stat-label">Clicks</div>
-            <div class="stat-value">218</div>
+          <div class="stat-box">
+            <div class="s-label">Clicks</div>
+            <div class="s-val">233</div>
           </div>
-          <div class="stat-item">
-            <div class="stat-label">CTR</div>
-            <div class="stat-value">4.84%</div>
+          <div class="stat-box">
+            <div class="s-label">CTR</div>
+            <div class="s-val">4.87%</div>
           </div>
-          <div class="stat-item">
-            <div class="stat-label">Spend</div>
-            <div class="stat-value">$252.77</div>
-          </div>
-        </div>
-        <div class="sparklines">
-          <div class="spark-block">
-            <div class="spark-label">Clicks / Day</div>
-            <div class="spark-bars">
-              <!-- values: 29,32,30,28,28,37,34 — max=37 -->
-              <div class="spark-bar" style="background:#4caf7d;height:calc(36px * 29/37);"></div>
-              <div class="spark-bar" style="background:#4caf7d;height:calc(36px * 32/37);"></div>
-              <div class="spark-bar" style="background:#4caf7d;height:calc(36px * 30/37);"></div>
-              <div class="spark-bar" style="background:#4caf7d;height:calc(36px * 28/37);"></div>
-              <div class="spark-bar" style="background:#4caf7d;height:calc(36px * 28/37);"></div>
-              <div class="spark-bar" style="background:#4caf7d;height:36px;"></div>
-              <div class="spark-bar latest" style="background:#4caf7d;height:calc(36px * 34/37);"></div>
-            </div>
-          </div>
-          <div class="spark-block">
-            <div class="spark-label">Spend / Day</div>
-            <div class="spark-bars">
-              <!-- micros: 29017316,41700540,35081413,39777759,36411712,33731153,37051434 — max=41700540 -->
-              <div class="spark-bar" style="background:#4caf7d;height:calc(36px * 29017316/41700540);"></div>
-              <div class="spark-bar" style="background:#4caf7d;height:36px;"></div>
-              <div class="spark-bar" style="background:#4caf7d;height:calc(36px * 35081413/41700540);"></div>
-              <div class="spark-bar" style="background:#4caf7d;height:calc(36px * 39777759/41700540);"></div>
-              <div class="spark-bar" style="background:#4caf7d;height:calc(36px * 36411712/41700540);"></div>
-              <div class="spark-bar" style="background:#4caf7d;height:calc(36px * 33731153/41700540);"></div>
-              <div class="spark-bar latest" style="background:#4caf7d;height:calc(36px * 37051434/41700540);"></div>
-            </div>
+          <div class="stat-box">
+            <div class="s-label">Spend</div>
+            <div class="s-val">$272.89</div>
           </div>
         </div>
-        <div class="campaign-tags">
+
+        <div class="sparkline-section">
+          <div class="spark-label">Clicks · Last 7 Days</div>
+          <div class="sparkline">
+            <!-- max=44: 32,30,28,28,37,34,44 -->
+            <div class="spark-bar" style="height:73%;background:#4caf7d;"></div>
+            <div class="spark-bar" style="height:68%;background:#4caf7d;"></div>
+            <div class="spark-bar" style="height:64%;background:#4caf7d;"></div>
+            <div class="spark-bar" style="height:64%;background:#4caf7d;"></div>
+            <div class="spark-bar" style="height:84%;background:#4caf7d;"></div>
+            <div class="spark-bar" style="height:77%;background:#4caf7d;"></div>
+            <div class="spark-bar" style="height:100%;background:#4caf7d;"></div>
+          </div>
+        </div>
+        <div class="sparkline-section">
+          <div class="spark-label">Spend · Last 7 Days</div>
+          <div class="sparkline">
+            <!-- max=49.14: 41.70,35.08,39.78,36.41,33.73,37.05,49.14 -->
+            <div class="spark-bar" style="height:85%;background:#4caf7d;"></div>
+            <div class="spark-bar" style="height:71%;background:#4caf7d;"></div>
+            <div class="spark-bar" style="height:81%;background:#4caf7d;"></div>
+            <div class="spark-bar" style="height:74%;background:#4caf7d;"></div>
+            <div class="spark-bar" style="height:69%;background:#4caf7d;"></div>
+            <div class="spark-bar" style="height:75%;background:#4caf7d;"></div>
+            <div class="spark-bar" style="height:100%;background:#4caf7d;"></div>
+          </div>
+        </div>
+        <div class="tag-row">
           <span class="tag">Sports Bar</span>
           <span class="tag">Game Day</span>
           <span class="tag">Canon City</span>
         </div>
       </div>
 
-      <!-- Standard Oil Coffee Co -->
-      <div class="campaign-card cc-so">
-        <div class="campaign-card-accent" style="background:#f97316;"></div>
-        <div class="campaign-card-header">
-          <div class="campaign-name">Standard Oil Coffee Co</div>
-          <div class="live-badge"><span class="live-dot"></span>Live</div>
+      <!-- Hotel St. Cloud | Royal Gorge Basecamp -->
+      <div class="cc cc-bc">
+        <div class="cc-header">
+          <div class="cc-name">Hotel St. Cloud | Royal Gorge Basecamp</div>
+          <div class="badge badge-live">● Live</div>
         </div>
         <div class="stat-grid">
-          <div class="stat-item">
-            <div class="stat-label">Impressions</div>
-            <div class="stat-value" style="color:#f97316;">449</div>
+          <div class="stat-box">
+            <div class="s-label">Impressions</div>
+            <div class="s-val">1,541</div>
           </div>
-          <div class="stat-item">
-            <div class="stat-label">Clicks</div>
-            <div class="stat-value">12</div>
+          <div class="stat-box">
+            <div class="s-label">Clicks</div>
+            <div class="s-val">137</div>
           </div>
-          <div class="stat-item">
-            <div class="stat-label">CTR</div>
-            <div class="stat-value">2.67%</div>
+          <div class="stat-box">
+            <div class="s-label">CTR</div>
+            <div class="s-val">8.89%</div>
           </div>
-          <div class="stat-item">
-            <div class="stat-label">Spend</div>
-            <div class="stat-value">$25.84</div>
-          </div>
-        </div>
-        <div class="sparklines">
-          <div class="spark-block">
-            <div class="spark-label">Clicks / Day</div>
-            <div class="spark-bars">
-              <!-- values: 2,3,3,1,0,3,0 — max=3 -->
-              <div class="spark-bar" style="background:#f97316;height:calc(36px * 2/3);"></div>
-              <div class="spark-bar" style="background:#f97316;height:36px;"></div>
-              <div class="spark-bar" style="background:#f97316;height:36px;"></div>
-              <div class="spark-bar" style="background:#f97316;height:calc(36px * 1/3);"></div>
-              <div class="spark-bar" style="background:#f97316;height:2px;"></div>
-              <div class="spark-bar" style="background:#f97316;height:36px;"></div>
-              <div class="spark-bar latest" style="background:#f97316;height:2px;"></div>
-            </div>
-          </div>
-          <div class="spark-block">
-            <div class="spark-label">Spend / Day</div>
-            <div class="spark-bars">
-              <!-- micros: 4281121,6395977,6410000,2190000,0,6567618,0 — max=6567618 -->
-              <div class="spark-bar" style="background:#f97316;height:calc(36px * 4281121/6567618);"></div>
-              <div class="spark-bar" style="background:#f97316;height:calc(36px * 6395977/6567618);"></div>
-              <div class="spark-bar" style="background:#f97316;height:calc(36px * 6410000/6567618);"></div>
-              <div class="spark-bar" style="background:#f97316;height:calc(36px * 2190000/6567618);"></div>
-              <div class="spark-bar" style="background:#f97316;height:2px;"></div>
-              <div class="spark-bar" style="background:#f97316;height:36px;"></div>
-              <div class="spark-bar latest" style="background:#f97316;height:2px;"></div>
-            </div>
+          <div class="stat-box">
+            <div class="s-label">Spend</div>
+            <div class="s-val">$265.22</div>
           </div>
         </div>
-        <div class="campaign-tags">
+
+        <div class="sparkline-section">
+          <div class="spark-label">Clicks · Last 7 Days</div>
+          <div class="sparkline">
+            <!-- max=25: 16,16,23,19,18,25,20 -->
+            <div class="spark-bar" style="height:64%;background:#5a8ba7;"></div>
+            <div class="spark-bar" style="height:64%;background:#5a8ba7;"></div>
+            <div class="spark-bar" style="height:92%;background:#5a8ba7;"></div>
+            <div class="spark-bar" style="height:76%;background:#5a8ba7;"></div>
+            <div class="spark-bar" style="height:72%;background:#5a8ba7;"></div>
+            <div class="spark-bar" style="height:100%;background:#5a8ba7;"></div>
+            <div class="spark-bar" style="height:80%;background:#5a8ba7;"></div>
+          </div>
+        </div>
+        <div class="sparkline-section">
+          <div class="spark-label">Spend · Last 7 Days</div>
+          <div class="sparkline">
+            <!-- max=56.41: 28.41,29.01,56.10,35.19,31.56,56.41,28.54 -->
+            <div class="spark-bar" style="height:50%;background:#5a8ba7;"></div>
+            <div class="spark-bar" style="height:51%;background:#5a8ba7;"></div>
+            <div class="spark-bar" style="height:99%;background:#5a8ba7;"></div>
+            <div class="spark-bar" style="height:62%;background:#5a8ba7;"></div>
+            <div class="spark-bar" style="height:56%;background:#5a8ba7;"></div>
+            <div class="spark-bar" style="height:100%;background:#5a8ba7;"></div>
+            <div class="spark-bar" style="height:51%;background:#5a8ba7;"></div>
+          </div>
+        </div>
+        <div class="tag-row">
+          <span class="tag">Hotel Stays</span>
+          <span class="tag">Royal Gorge</span>
+          <span class="tag">Adventure</span>
+        </div>
+      </div>
+
+      <!-- Standard Oil Coffee Co -->
+      <div class="cc cc-so">
+        <div class="cc-header">
+          <div class="cc-name">Standard Oil Coffee Co</div>
+          <div class="badge badge-live">● Live</div>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-box">
+            <div class="s-label">Impressions</div>
+            <div class="s-val">430</div>
+          </div>
+          <div class="stat-box">
+            <div class="s-label">Clicks</div>
+            <div class="s-val">10</div>
+          </div>
+          <div class="stat-box">
+            <div class="s-label">CTR</div>
+            <div class="s-val">2.33%</div>
+          </div>
+          <div class="stat-box">
+            <div class="s-label">Spend</div>
+            <div class="s-val">$21.56</div>
+          </div>
+        </div>
+
+        <div class="sparkline-section">
+          <div class="spark-label">Clicks · Last 7 Days</div>
+          <div class="sparkline">
+            <!-- max=3: 3,3,1,0,3,0,0 -->
+            <div class="spark-bar" style="height:100%;background:#f97316;"></div>
+            <div class="spark-bar" style="height:100%;background:#f97316;"></div>
+            <div class="spark-bar" style="height:33%;background:#f97316;"></div>
+            <div class="spark-bar" style="height:5%;background:#f97316;"></div>
+            <div class="spark-bar" style="height:100%;background:#f97316;"></div>
+            <div class="spark-bar" style="height:5%;background:#f97316;"></div>
+            <div class="spark-bar" style="height:5%;background:#f97316;"></div>
+          </div>
+        </div>
+        <div class="sparkline-section">
+          <div class="spark-label">Spend · Last 7 Days</div>
+          <div class="sparkline">
+            <!-- max=6.57: 6.40,6.41,2.19,0,6.57,0,0 -->
+            <div class="spark-bar" style="height:97%;background:#f97316;"></div>
+            <div class="spark-bar" style="height:98%;background:#f97316;"></div>
+            <div class="spark-bar" style="height:33%;background:#f97316;"></div>
+            <div class="spark-bar" style="height:5%;background:#f97316;"></div>
+            <div class="spark-bar" style="height:100%;background:#f97316;"></div>
+            <div class="spark-bar" style="height:5%;background:#f97316;"></div>
+            <div class="spark-bar" style="height:5%;background:#f97316;"></div>
+          </div>
+        </div>
+        <div class="tag-row">
           <span class="tag">Specialty Coffee</span>
           <span class="tag">Main Street</span>
           <span class="tag">Cafe</span>
         </div>
       </div>
 
-      <!-- Bars and Bathrooms (zero data) -->
-      <div class="campaign-card cc-bb">
-        <div class="campaign-card-accent" style="background:#c9aa7c;"></div>
-        <div class="campaign-card-header">
-          <div class="campaign-name">Bars and Bathrooms</div>
-          <div class="live-badge"><span class="live-dot"></span>Live</div>
+      <!-- Bars and Bathrooms (PAUSED) -->
+      <div class="cc cc-bb">
+        <div class="cc-header">
+          <div class="cc-name">Bars and Bathrooms</div>
+          <div class="badge badge-paused">⏸ Paused</div>
         </div>
         <div class="stat-grid">
-          <div class="stat-item">
-            <div class="stat-label">Impressions</div>
-            <div class="stat-value" style="color:#c9aa7c;">0</div>
+          <div class="stat-box">
+            <div class="s-label">Impressions</div>
+            <div class="s-val" style="color:var(--text-dim)">—</div>
           </div>
-          <div class="stat-item">
-            <div class="stat-label">Clicks</div>
-            <div class="stat-value">0</div>
+          <div class="stat-box">
+            <div class="s-label">Clicks</div>
+            <div class="s-val" style="color:var(--text-dim)">—</div>
           </div>
-          <div class="stat-item">
-            <div class="stat-label">CTR</div>
-            <div class="stat-value">—</div>
+          <div class="stat-box">
+            <div class="s-label">CTR</div>
+            <div class="s-val" style="color:var(--text-dim)">—</div>
           </div>
-          <div class="stat-item">
-            <div class="stat-label">Spend</div>
-            <div class="stat-value">$0.00</div>
+          <div class="stat-box">
+            <div class="s-label">Spend</div>
+            <div class="s-val" style="color:var(--text-dim)">$0.00</div>
           </div>
         </div>
-        <div class="zero-state">No activity in the last 7 days — campaign may need budget or ad review.</div>
-        <div class="campaign-tags" style="margin-top:12px;">
+        <div style="padding:10px 0 6px; color:var(--text-dim); font-size:12px; font-style:italic;">
+          Campaign paused — no activity this period.
+        </div>
+        <div class="tag-row">
           <span class="tag">Speakeasy</span>
           <span class="tag">Cocktails</span>
           <span class="tag">Dining</span>
@@ -744,92 +696,119 @@
     </div>
   </section>
 
-  <!-- SECTION 3: BUDGET ALLOCATION -->
-  <section class="section">
+  <!-- ── SECTION 3: BUDGET ALLOCATION ── -->
+  <section>
     <div class="section-title">Budget Allocation</div>
     <div class="budget-table">
-      <div class="budget-row header-row">
-        <div class="budget-col-label col-name">Campaign</div>
-        <div class="budget-col-label">Spend Share</div>
-        <div class="budget-col-label" style="text-align:right;">7-Day Spend</div>
-      </div>
-      <!-- Total spend: 1135937955 micros = $1,135.94 -->
-      <!-- LP: 586603705 = 51.6% -->
-      <div class="budget-row">
-        <div class="budget-name" title="Local Proximity &amp; Through Traffic">Local Proximity &amp; Through Traffic</div>
-        <div class="budget-bar-wrap">
-          <div class="budget-bar-track">
-            <div class="budget-bar-fill" style="width:51.6%;background:#9b6ec8;"></div>
-          </div>
-          <div class="budget-pct">51.6%</div>
-        </div>
-        <div class="budget-spend">$586.60</div>
-      </div>
-      <!-- BC: 270717207 = 23.8% -->
-      <div class="budget-row">
-        <div class="budget-name" title="Hotel St. Cloud | Royal Gorge Basecamp">Royal Gorge Basecamp</div>
-        <div class="budget-bar-wrap">
-          <div class="budget-bar-track">
-            <div class="budget-bar-fill" style="width:23.8%;background:#5a8ba7;"></div>
-          </div>
-          <div class="budget-pct">23.8%</div>
-        </div>
-        <div class="budget-spend">$270.72</div>
-      </div>
-      <!-- FP: 252771327 = 22.3% -->
-      <div class="budget-row">
-        <div class="budget-name" title="FP Sports Bar | Fremont Provisions">FP Sports Bar</div>
-        <div class="budget-bar-wrap">
-          <div class="budget-bar-track">
-            <div class="budget-bar-fill" style="width:22.3%;background:#4caf7d;"></div>
-          </div>
-          <div class="budget-pct">22.3%</div>
-        </div>
-        <div class="budget-spend">$252.77</div>
-      </div>
-      <!-- SO: 25844716 = 2.3% -->
-      <div class="budget-row">
-        <div class="budget-name" title="Standard Oil Coffee Co">Standard Oil Coffee Co</div>
-        <div class="budget-bar-wrap">
-          <div class="budget-bar-track">
-            <div class="budget-bar-fill" style="width:2.3%;background:#f97316;"></div>
-          </div>
-          <div class="budget-pct">2.3%</div>
-        </div>
-        <div class="budget-spend">$25.84</div>
-      </div>
-      <!-- BB: 0 = 0% -->
-      <div class="budget-row">
-        <div class="budget-name" title="Bars and Bathrooms">Bars and Bathrooms</div>
-        <div class="budget-bar-wrap">
-          <div class="budget-bar-track">
-            <div class="budget-bar-fill" style="width:0%;background:#c9aa7c;"></div>
-          </div>
-          <div class="budget-pct" style="color:#555;">0%</div>
-        </div>
-        <div class="budget-spend" style="color:#555;">$0.00</div>
-      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Campaign</th>
+            <th>Allocation</th>
+            <th>Clicks</th>
+            <th>Spend</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div class="camp-name-cell">
+                <span class="camp-dot" style="background:#9b6ec8;"></span>
+                Local Proximity &amp; Through Traffic
+              </div>
+            </td>
+            <td style="width:200px;">
+              <div class="spend-bar-wrap">
+                <div class="spend-bar-fill" style="width:51.9%;background:#9b6ec8;"></div>
+              </div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">51.9%</div>
+            </td>
+            <td style="color:var(--text-muted);">234</td>
+            <td>$605.38</td>
+          </tr>
+          <tr>
+            <td>
+              <div class="camp-name-cell">
+                <span class="camp-dot" style="background:#4caf7d;"></span>
+                FP Sports Bar | Fremont Provisions
+              </div>
+            </td>
+            <td>
+              <div class="spend-bar-wrap">
+                <div class="spend-bar-fill" style="width:23.4%;background:#4caf7d;"></div>
+              </div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">23.4%</div>
+            </td>
+            <td style="color:var(--text-muted);">233</td>
+            <td>$272.89</td>
+          </tr>
+          <tr>
+            <td>
+              <div class="camp-name-cell">
+                <span class="camp-dot" style="background:#5a8ba7;"></span>
+                Hotel St. Cloud | Royal Gorge Basecamp
+              </div>
+            </td>
+            <td>
+              <div class="spend-bar-wrap">
+                <div class="spend-bar-fill" style="width:22.8%;background:#5a8ba7;"></div>
+              </div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">22.8%</div>
+            </td>
+            <td style="color:var(--text-muted);">137</td>
+            <td>$265.22</td>
+          </tr>
+          <tr>
+            <td>
+              <div class="camp-name-cell">
+                <span class="camp-dot" style="background:#f97316;"></span>
+                Standard Oil Coffee Co
+              </div>
+            </td>
+            <td>
+              <div class="spend-bar-wrap">
+                <div class="spend-bar-fill" style="width:1.9%;background:#f97316;"></div>
+              </div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">1.9%</div>
+            </td>
+            <td style="color:var(--text-muted);">10</td>
+            <td>$21.56</td>
+          </tr>
+          <tr>
+            <td>
+              <div class="camp-name-cell">
+                <span class="camp-dot" style="background:#c9aa7c;opacity:0.4;"></span>
+                <span style="color:var(--text-dim);">Bars and Bathrooms</span>
+              </div>
+            </td>
+            <td>
+              <div class="spend-bar-wrap">
+                <div class="spend-bar-fill" style="width:0%;background:#c9aa7c;"></div>
+              </div>
+              <div style="font-size:11px;color:var(--text-dim);margin-top:3px;">0.0% · Paused</div>
+            </td>
+            <td style="color:var(--text-dim);">0</td>
+            <td style="color:var(--text-dim);">$0.00</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </section>
 
-  <!-- SECTION 4: MC'S TAKE -->
-  <section class="section">
-    <div class="section-title">MC's Take</div>
-    <div class="mc-card">
-      <div class="mc-card-header">
-        <div class="mc-icon">🎯</div>
-        <div class="mc-title">Analysis — Week of June 1–7, 2026</div>
-      </div>
-      <div class="mc-body">
-        <strong>Local Proximity &amp; Through Traffic is the clear winner</strong> — a 19.84% CTR on Highway 50 traffic is exceptional, and it's the only campaign generating actual conversions (7 this week). It's eating 51.6% of the budget and earning every penny. <strong>Royal Gorge Basecamp and FP Sports Bar</strong> are holding steady with consistent daily spend and click volume, but zero conversions across both is worth a closer look — the traffic is showing up, the intent may not be converting post-click. <strong>Standard Oil Coffee Co</strong> is barely off the ground at $25.84 spend; activity dropped to zero on the 5th and 7th, which suggests either budget floor issues or ad serving throttle — needs a budget review. <strong>Bars and Bathrooms went completely dark</strong> this week with no impressions, no clicks, no spend — this campaign is not serving and needs immediate attention before it loses momentum entirely.
-      </div>
+  <!-- ── SECTION 4: MC'S TAKE ── -->
+  <section>
+    <div class="mc-take">
+      <p><strong>Local Proximity &amp; Through Traffic is the standout this week</strong> — a 20.89% CTR is exceptional for any search campaign, and 7 conversions out of 1,120 impressions tells you the targeting is dialed in tight. It's eating 52% of the budget and earning it. Keep it fed.</p>
+      <p><strong>Fremont Provisions is working the volume game well</strong> — highest impressions by far (4,789), solid click count matching Local Proximity, and a steadily climbing spend curve with the weekend surge on Jun 8 looking promising. The zero conversions aren't alarming for a food/bar campaign where attribution is hard, but worth watching if it continues past two weeks.</p>
+      <p><strong>Royal Gorge Basecamp is efficient but mid-paced</strong> — $1.94 avg CPC is healthy, CTR is respectable at 8.89%, but the spend volatility (two big spikes on Jun 4 and Jun 7) suggests bid competition for gorge-adjacent terms. Steady as she goes.</p>
+      <p><strong>Standard Oil Coffee needs attention</strong> — 10 clicks and $21.56 over 7 days is essentially rounding error. Three flat days with zero clicks late in the week is a signal worth investigating: ad scheduling, bid floors, or creative fatigue. Low urgency, but don't let it drift. <strong>Bars and Bathrooms is paused</strong> — whenever that relaunches, the audience and creative will be ready.</p>
     </div>
   </section>
 
-</div>
+</main>
 
-<footer class="footer">
-  Rolling 7-Day <span>·</span> Refreshes daily 6am MT <span>·</span> Hotel St. Cloud · Canon City, CO
+<footer>
+  Rolling 7-Day &nbsp;·&nbsp; <span>Refreshes daily 6am MT</span> &nbsp;·&nbsp; Hotel St. Cloud · Unbridled Solutions
 </footer>
 
 </body>
