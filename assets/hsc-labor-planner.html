@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weekly Labor Planner — Fremont Provisions</title>
+<style>
+:root {
+  --bg: #0f1923; --navy: #1a2e3b; --gold: #c9aa7c; --blue: #5a8ba7;
+  --text: #e8e0d4; --muted: #8a9aaa; --card-bg: #162433; --border: #263d52;
+  --green: #4caf7d; --red: #e05a5a; --orange: #f97316; --purple: #9b6ec8;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+
+.header {
+  background: linear-gradient(135deg, var(--navy) 0%, #0f1923 100%);
+  border-bottom: 2px solid var(--gold);
+  padding: 18px 24px 14px;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+}
+.header-left .eyebrow { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 3px; }
+.header-left h1 { font-size: 20px; font-weight: 700; }
+.header-right { display: flex; gap: 8px; flex-wrap: wrap; }
+.hdr-btn { background: var(--card-bg); border: 1px solid var(--border); color: var(--muted); border-radius: 6px; font-size: 11px; padding: 7px 14px; cursor: pointer; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; transition: all 0.2s; }
+.hdr-btn:hover { border-color: var(--gold); color: var(--gold); }
+.hdr-btn.primary { background: var(--gold); color: var(--navy); border-color: var(--gold); }
+.hdr-btn.primary:hover { opacity: 0.9; }
+
+.week-nav { background: var(--navy); border-bottom: 1px solid var(--border); padding: 9px 24px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.week-nav label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+.week-input { background: var(--card-bg); border: 1px solid var(--border); color: var(--text); border-radius: 5px; padding: 5px 10px; font-size: 13px; outline: none; cursor: pointer; }
+.week-nav-btn {
+  background: var(--card-bg); border: 1px solid var(--border); color: var(--gold);
+  border-radius: 5px; font-size: 18px; font-weight: 700; padding: 2px 10px;
+  cursor: pointer; line-height: 1.4; transition: all 0.15s;
+}
+.week-nav-btn:hover { background: var(--navy); border-color: var(--gold); }
+.week-display { font-size: 13px; color: var(--gold); font-weight: 600; }
+.period-chip { background: rgba(90,139,167,0.15); border: 1px solid rgba(90,139,167,0.4); color: var(--blue); border-radius: 5px; font-size: 11px; font-weight: 700; padding: 3px 10px; letter-spacing: 0.5px; white-space: nowrap; }
+.wk-chip { background: rgba(201,170,124,0.1); border: 1px solid rgba(201,170,124,0.3); color: var(--gold); border-radius: 5px; font-size: 11px; font-weight: 700; padding: 3px 10px; }
+.submit-badge { margin-left: auto; background: rgba(76,175,125,0.12); border: 1px solid rgba(76,175,125,0.4); color: var(--green); border-radius: 20px; font-size: 11px; font-weight: 700; padding: 4px 12px; }
+
+.status-banner { display: none; margin: 12px 24px 0; background: rgba(76,175,125,0.12); border: 1px solid rgba(76,175,125,0.4); color: var(--green); border-radius: 8px; padding: 11px 16px; font-size: 13px; font-weight: 600; }
+
+.grid-outer { overflow-x: auto; padding: 16px 24px 0; }
+.sched-table { width: 100%; min-width: 1040px; border-collapse: collapse; font-size: 13px; }
+.col-pos  { width: 168px; }
+.col-role { width: 54px; }
+.col-rate { width: 72px; }
+.col-day  { min-width: 88px; }
+.col-week { min-width: 94px; background: rgba(201,170,124,0.03); }
+
+.sched-table thead tr.day-header th { background: var(--navy); padding: 0; border: 1px solid var(--border); vertical-align: bottom; }
+.sched-table thead tr.day-header th.meta { background: #0d1620; }
+.sched-table thead tr.day-header th.week-col { background: #0d1822; border-left: 2px solid var(--gold); }
+.day-th { padding: 10px 8px 8px; text-align: center; }
+.day-name { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); display: block; margin-bottom: 2px; }
+.day-name.weekend { color: var(--orange); }
+.day-name.total-col { color: var(--gold); letter-spacing: 1.5px; }
+.day-date { font-size: 10px; color: var(--muted); display: block; margin-bottom: 4px; }
+
+.rev-row td, .rev-row th { border: 1px solid var(--border); padding: 5px 8px; background: rgba(201,170,124,0.07); }
+.rev-row th { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); text-align: left; }
+.rev-row td.week-col { border-left: 2px solid var(--gold); background: rgba(201,170,124,0.12); }
+.rev-input { width: 100%; background: transparent; border: none; border-bottom: 1px solid rgba(201,170,124,0.4); color: var(--gold); font-size: 14px; font-weight: 700; text-align: center; outline: none; padding: 2px 0; }
+.rev-input:focus { border-bottom-color: var(--gold); }
+.rev-input::placeholder { color: var(--border); font-weight: 400; font-size: 12px; }
+
+.target-row td, .target-row th { border: 1px solid var(--border); padding: 4px 6px; background: rgba(76,175,125,0.05); }
+.target-row th { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--green); text-align: left; padding: 5px 10px; }
+.target-row td.week-col { border-left: 2px solid var(--gold); background: rgba(76,175,125,0.08); }
+.target-cell { text-align: center; vertical-align: middle; }
+.pct-input { width: 36px; background: var(--navy); border: 1px solid rgba(76,175,125,0.5); color: var(--green); font-size: 13px; font-weight: 700; text-align: center; border-radius: 4px; padding: 2px; outline: none; display: inline-block; }
+.pct-input:focus { border-color: var(--green); }
+.pct-sign { color: var(--green); font-weight: 700; font-size: 13px; margin: 0 1px; }
+.target-range { font-size: 11px; font-weight: 700; color: var(--green); display: block; margin-top: 2px; }
+
+.section-row td { background: #0d1620; border: 1px solid var(--border); padding: 5px 10px; font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--blue); }
+
+.pos-row td { border: 1px solid var(--border); padding: 0; vertical-align: middle; }
+.pos-row:hover td { background: rgba(255,255,255,0.02); }
+.pos-row.inactive td { opacity: 0.38; }
+.pos-row td.week-col { border-left: 2px solid rgba(201,170,124,0.3); background: rgba(201,170,124,0.03); }
+
+.editable { cursor: pointer; border-bottom: 1px dashed transparent; transition: border-color 0.15s; padding: 1px 2px; border-radius: 2px; }
+.editable:hover { border-bottom-color: var(--gold); background: rgba(201,170,124,0.06); }
+.edit-field { background: var(--navy); border: 1px solid var(--gold); color: var(--gold); font-size: 13px; padding: 3px 6px; border-radius: 4px; outline: none; width: 100%; }
+
+.pos-name-cell { padding: 7px 10px; }
+.pos-name { font-size: 13px; color: var(--text); font-weight: 500; }
+.pos-sub  { font-size: 10px; color: var(--muted); margin-top: 1px; }
+.role-cell { padding: 5px 6px; text-align: center; }
+.role-badge { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 2px 6px; border-radius: 3px; white-space: nowrap; }
+.role-boh { background: rgba(90,139,167,0.2); color: var(--blue); }
+.role-foh { background: rgba(201,170,124,0.2); color: var(--gold); }
+.role-bar { background: rgba(155,110,200,0.2); color: var(--purple); }
+.role-mgr { background: rgba(76,175,125,0.2); color: var(--green); }
+.rate-cell { padding: 6px 8px; text-align: right; color: var(--muted); font-size: 12px; }
+
+.day-cell { padding: 5px 5px; text-align: center; background: var(--card-bg); }
+.day-cell.on { background: rgba(76,175,125,0.07); }
+.day-cell.week-col { background: rgba(201,170,124,0.04); border-left: 2px solid rgba(201,170,124,0.2); text-align: center; padding: 4px 6px; }
+.toggle-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.day-toggle { position: relative; width: 36px; height: 18px; cursor: pointer; }
+.day-toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-track { position: absolute; inset: 0; background: var(--border); border-radius: 9px; transition: background 0.2s; }
+.toggle-track::after { content:''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; background: var(--muted); border-radius: 50%; transition: transform 0.2s, background 0.2s; }
+.day-toggle input:checked + .toggle-track { background: rgba(76,175,125,0.3); }
+.day-toggle input:checked + .toggle-track::after { transform: translateX(18px); background: var(--green); }
+.hours-input { display: none; width: 44px; background: transparent; border: none; border-bottom: 1px solid rgba(76,175,125,0.5); color: var(--text); font-size: 13px; font-weight: 700; text-align: center; outline: none; padding: 1px 0; }
+.hours-input:focus { border-bottom-color: var(--green); }
+.day-cell.on .hours-input { display: block; }
+.hrs-label { display: none; font-size: 9px; color: var(--muted); letter-spacing: 0.5px; }
+.day-cell.on .hrs-label { display: block; }
+.day-cost { font-size: 11px; color: var(--green); margin-top: 1px; min-height: 13px; display: none; }
+.day-cell.on .day-cost { display: block; }
+
+.week-pos-total { font-size: 12px; font-weight: 700; color: var(--gold); }
+
+.total-row td { border: 1px solid var(--border); padding: 7px 10px; font-size: 12px; }
+.total-row.budget-row td  { background: rgba(76,175,125,0.06); }
+.total-row.actual-row td  { background: rgba(247,115,22,0.06); }
+.total-row.variance-row td{ background: rgba(224,90,90,0.04); }
+.total-row.pct-row td     { background: rgba(201,170,124,0.04); }
+.total-row td.week-col    { border-left: 2px solid var(--gold); }
+.total-row.pct-row td.week-col { border-left: 2px solid var(--gold); }
+.total-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
+.total-val { font-size: 14px; font-weight: 700; text-align: center; }
+.total-val.green  { color: var(--green); }
+.total-val.gold   { color: var(--gold); }
+.actual-input { width: 100%; background: transparent; border: none; border-bottom: 1px solid rgba(247,115,22,0.5); color: var(--orange); font-size: 13px; font-weight: 700; text-align: center; outline: none; padding: 2px 0; }
+.actual-input:focus { border-bottom-color: var(--orange); }
+.actual-input::placeholder { color: var(--border); font-weight: 400; font-size: 11px; }
+.pct-good { color: var(--green) !important; }
+.pct-warn { color: var(--gold) !important; }
+.pct-over { color: var(--red) !important; }
+
+.week-summary { margin: 16px 24px 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(148px,1fr)); gap: 10px; }
+.sum-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; position: relative; overflow: hidden; }
+.sum-card::before { content:''; position: absolute; top:0; left:0; right:0; height:3px; }
+.sum-card.gold::before   { background: var(--gold); }
+.sum-card.green::before  { background: var(--green); }
+.sum-card.orange::before { background: var(--orange); }
+.sum-card.red::before    { background: var(--red); }
+.sum-card.blue::before   { background: var(--blue); }
+.sum-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
+.sum-val   { font-size: 20px; font-weight: 700; }
+.sum-sub   { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+.submit-section { margin: 14px 24px 0; background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.submit-left h3 { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+.submit-left p  { font-size: 12px; color: var(--muted); }
+.submit-right { display: flex; gap: 8px; flex-wrap: wrap; }
+.sub-btn { padding: 9px 18px; border-radius: 7px; border: none; cursor: pointer; font-size: 13px; font-weight: 700; letter-spacing: 0.3px; transition: opacity 0.2s; }
+.sub-btn.save   { background: var(--navy); color: var(--muted); border: 1px solid var(--border); }
+.sub-btn.save:hover { color: var(--text); }
+.sub-btn.submit { background: var(--gold); color: var(--navy); }
+.sub-btn.submit:hover { opacity: 0.9; }
+
+/* 52-WEEK HISTORY */
+.history-section { margin: 20px 24px 0; }
+.history-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+.history-title { font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold); padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.history-clear { font-size: 11px; color: var(--muted); background: transparent; border: 1px solid var(--border); border-radius: 5px; padding: 4px 10px; cursor: pointer; }
+.history-clear:hover { color: var(--red); border-color: var(--red); }
+.hist-table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
+.hist-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 700px; }
+.hist-table thead th { background: var(--navy); color: var(--muted); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; padding: 8px 12px; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.hist-table thead th:first-child { text-align: left; }
+.hist-table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+.hist-table tbody tr:last-child { border-bottom: none; }
+.hist-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+.hist-table td { padding: 8px 12px; text-align: right; vertical-align: middle; }
+.hist-table td:first-child { text-align: left; }
+.hist-period { font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--blue); }
+.hist-week { font-size: 10px; color: var(--muted); }
+.hist-empty { text-align: center; padding: 32px; color: var(--muted); font-size: 13px; }
+
+footer { text-align: center; font-size: 11px; color: var(--muted); padding: 16px 24px 28px; border-top: 1px solid var(--border); margin-top: 20px; }
+footer span { color: var(--gold); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="eyebrow">Hotel St. Cloud — Weekly Labor Planner</div>
+    <h1>Hotel St. Cloud</h1>
+  </div>
+  <div class="header-right">
+    <button class="hdr-btn" onclick="clearActuals()">Clear Actuals</button>
+    <button class="hdr-btn" onclick="window.print()">⎙ Print</button>
+    <button class="hdr-btn primary" onclick="submitSchedule()">Submit for Approval →</button>
+  </div>
+</div>
+
+<div class="week-nav">
+  <label>Week of</label>
+  <button class="week-nav-btn" onclick="shiftWeek(-1)" title="Previous week">‹</button>
+  <input type="date" class="week-input" id="weekStart" onchange="onWeekChange()">
+  <button class="week-nav-btn" onclick="shiftWeek(1)" title="Next week">›</button>
+  <span class="week-display" id="weekDisplay">Select a week</span>
+  <span class="wk-chip" id="wkChip" style="display:none"></span>
+  <span class="period-chip" id="periodChip" style="display:none"></span>
+  <div class="submit-badge" id="submitBadge" style="display:none">✓ Submitted</div>
+</div>
+
+<div class="status-banner" id="statusBanner"></div>
+
+<div class="grid-outer">
+<table class="sched-table">
+<thead>
+  <tr class="day-header">
+    <th class="col-pos meta" style="border:1px solid var(--border);padding:8px 10px">
+      <span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)">Position</span>
+    </th>
+    <th class="col-role meta" style="border:1px solid var(--border)"></th>
+    <th class="col-rate meta" style="border:1px solid var(--border);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);text-align:right;padding:8px">Rate/hr</th>
+    <th class="col-day"><div class="day-th"><span class="day-name">Mon</span><span class="day-date" id="date-0">—</span></div></th>
+    <th class="col-day"><div class="day-th"><span class="day-name">Tue</span><span class="day-date" id="date-1">—</span></div></th>
+    <th class="col-day"><div class="day-th"><span class="day-name">Wed</span><span class="day-date" id="date-2">—</span></div></th>
+    <th class="col-day"><div class="day-th"><span class="day-name">Thu</span><span class="day-date" id="date-3">—</span></div></th>
+    <th class="col-day"><div class="day-th"><span class="day-name weekend">Fri</span><span class="day-date" id="date-4">—</span></div></th>
+    <th class="col-day"><div class="day-th"><span class="day-name weekend">Sat</span><span class="day-date" id="date-5">—</span></div></th>
+    <th class="col-day"><div class="day-th"><span class="day-name">Sun</span><span class="day-date" id="date-6">—</span></div></th>
+    <th class="col-week week-col"><div class="day-th"><span class="day-name total-col">Week</span><span class="day-date">Total</span></div></th>
+  </tr>
+  <tr class="rev-row">
+    <th colspan="3">📈 Forecast Revenue</th>
+    <td><input class="rev-input" type="number" id="rev-0" placeholder="$" oninput="recalc()"></td>
+    <td><input class="rev-input" type="number" id="rev-1" placeholder="$" oninput="recalc()"></td>
+    <td><input class="rev-input" type="number" id="rev-2" placeholder="$" oninput="recalc()"></td>
+    <td><input class="rev-input" type="number" id="rev-3" placeholder="$" oninput="recalc()"></td>
+    <td><input class="rev-input" type="number" id="rev-4" placeholder="$" oninput="recalc()"></td>
+    <td><input class="rev-input" type="number" id="rev-5" placeholder="$" oninput="recalc()"></td>
+    <td><input class="rev-input" type="number" id="rev-6" placeholder="$" oninput="recalc()"></td>
+    <td class="week-col" style="text-align:center;font-size:14px;font-weight:700;color:var(--gold)" id="rev-week">—</td>
+  </tr>
+  <tr class="target-row">
+    <th colspan="3" style="padding:5px 10px">
+      <span style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--green)">🎯 Target Labor %</span>
+      <span style="font-size:9px;color:var(--muted);margin-left:6px">25–36% per day</span>
+    </th>
+    <td class="target-cell"><input class="pct-input" type="number" id="pct-0" value="28" min="25" max="36" step="1" oninput="recalc()"><span class="pct-sign">%</span><span class="target-range" id="trg-0">—</span></td>
+    <td class="target-cell"><input class="pct-input" type="number" id="pct-1" value="28" min="25" max="36" step="1" oninput="recalc()"><span class="pct-sign">%</span><span class="target-range" id="trg-1">—</span></td>
+    <td class="target-cell"><input class="pct-input" type="number" id="pct-2" value="28" min="25" max="36" step="1" oninput="recalc()"><span class="pct-sign">%</span><span class="target-range" id="trg-2">—</span></td>
+    <td class="target-cell"><input class="pct-input" type="number" id="pct-3" value="30" min="25" max="36" step="1" oninput="recalc()"><span class="pct-sign">%</span><span class="target-range" id="trg-3">—</span></td>
+    <td class="target-cell"><input class="pct-input" type="number" id="pct-4" value="32" min="25" max="36" step="1" oninput="recalc()"><span class="pct-sign">%</span><span class="target-range" id="trg-4">—</span></td>
+    <td class="target-cell"><input class="pct-input" type="number" id="pct-5" value="35" min="25" max="36" step="1" oninput="recalc()"><span class="pct-sign">%</span><span class="target-range" id="trg-5">—</span></td>
+    <td class="target-cell"><input class="pct-input" type="number" id="pct-6" value="30" min="25" max="36" step="1" oninput="recalc()"><span class="pct-sign">%</span><span class="target-range" id="trg-6">—</span></td>
+    <td class="week-col target-cell">
+      <span style="font-size:9px;color:var(--muted);letter-spacing:0.5px;display:block">28–33%</span>
+      <span class="target-range" id="trg-week" style="font-size:13px">—</span>
+      <span style="font-size:9px;color:var(--muted);display:block" id="trg-week-pct">week target</span>
+    </td>
+  </tr>
+</thead>
+<tbody id="schedBody"></tbody>
+<tfoot id="schedFoot"></tfoot>
+</table>
+</div>
+
+<div class="week-summary" id="weekSummary"></div>
+
+<div class="submit-section">
+  <div class="submit-left">
+    <h3>Ready to submit?</h3>
+    <p>Submitting saves this week to the 52-week running history below.</p>
+  </div>
+  <div class="submit-right">
+    <button class="sub-btn save" onclick="saveLocal()">💾 Save Draft</button>
+    <button class="sub-btn submit" onclick="submitSchedule()">Submit for Approval →</button>
+  </div>
+</div>
+
+<!-- 52-WEEK HISTORY -->
+<div class="history-section">
+  <div class="history-header">
+    <div class="history-title">📅 52-Week Running History</div>
+    <button class="history-clear" onclick="clearHistory()">Clear History</button>
+  </div>
+  <div class="hist-table-wrap">
+    <table class="hist-table">
+      <thead>
+        <tr>
+          <th style="text-align:left">Period · Week</th>
+          <th>Date Range</th>
+          <th>Forecast Rev</th>
+          <th>Actual Rev</th>
+          <th>Budget Labor</th>
+          <th>Labor %</th>
+          <th>Actual Labor</th>
+          <th>Actual Labor %</th>
+          <th>Variance</th>
+        </tr>
+      </thead>
+      <tbody id="histBody"><tr><td colspan="9" class="hist-empty">No weeks submitted yet. Complete a schedule and click Submit for Approval to start tracking.</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<footer><p>Powered by <span>MC — Unbridled Solutions</span> · Hotel St. Cloud</p></footer>
+
+<script>
+// ── POSITIONS ─────────────────────────────────────────────────────────────────
+let POSITIONS = [
+  {section:'MANAGEMENT',        name:'Asst Manager / Events',   sub:'$62K · 250 days/yr',    role:'MGR', rate:null,  dailyRate:248.00, defH:8 },
+  {section:null,                name:'Asst Manager #2',         sub:'Hourly',                 role:'MGR', rate:25.00, dailyRate:null,   defH:8 },
+
+  {section:'FRONT DESK',        name:'Front Desk Lead',         sub:'Registration',           role:'FOH', rate:20.00, dailyRate:null,   defH:8 },
+  {section:null,                name:'Front Desk #1',           sub:'Registration',           role:'FOH', rate:17.00, dailyRate:null,   defH:8 },
+  {section:null,                name:'Front Desk #2',           sub:'Registration',           role:'FOH', rate:17.00, dailyRate:null,   defH:8 },
+  {section:null,                name:'Concierge / Guest Svc',   sub:'',                       role:'FOH', rate:16.00, dailyRate:null,   defH:8 },
+
+  {section:'HOUSEKEEPING',      name:'Housekeeping Manager',    sub:'',                       role:'BOH', rate:20.00, dailyRate:null,   defH:8 },
+  {section:null,                name:'Housekeeper #1',          sub:'Rooms',                  role:'BOH', rate:17.00, dailyRate:null,   defH:7 },
+  {section:null,                name:'Housekeeper #2',          sub:'Rooms',                  role:'BOH', rate:17.00, dailyRate:null,   defH:7 },
+  {section:null,                name:'Housekeeper #3',          sub:'Rooms',                  role:'BOH', rate:17.00, dailyRate:null,   defH:7 },
+  {section:null,                name:'Housekeeper #4',          sub:'Rooms',                  role:'BOH', rate:17.00, dailyRate:null,   defH:7 },
+
+  {section:'LAUNDRY',           name:'Laundry Attendant #1',    sub:'',                       role:'BOH', rate:17.00, dailyRate:null,   defH:7 },
+  {section:null,                name:'Laundry Attendant #2',    sub:'',                       role:'BOH', rate:17.00, dailyRate:null,   defH:7 },
+
+  {section:'NIGHT AUDIT / CLEANING', name:'Night Auditor',      sub:'',                       role:'MGR', rate:17.00, dailyRate:null,   defH:8 },
+  {section:null,                name:'Night Cleaner #1',        sub:'',                       role:'BOH', rate:17.00, dailyRate:null,   defH:8 },
+  {section:null,                name:'Night Cleaner #2',        sub:'',                       role:'BOH', rate:17.00, dailyRate:null,   defH:8 },
+];
+
+let state = {};
+function initState() {
+  POSITIONS.forEach((p, pi) => {
+    state[pi] = state[pi] || {};
+    for (let di = 0; di < 7; di++) {
+      state[pi][di] = state[pi][di] || { on: false, hours: p.defH };
+    }
+  });
+}
+initState();
+
+// ── BUILD TABLE ───────────────────────────────────────────────────────────────
+function buildTable() {
+  const tbody = document.getElementById('schedBody');
+  let html = '', sec = null;
+
+  POSITIONS.forEach((p, pi) => {
+    if (p.section && p.section !== sec) {
+      sec = p.section;
+      html += `<tr class="section-row"><td colspan="11">${p.section}</td></tr>`;
+    }
+
+    const rcls = {BOH:'role-boh',FOH:'role-foh',BAR:'role-bar',MGR:'role-mgr'}[p.role];
+    const rateStr = p.dailyRate
+      ? `<span style="font-size:11px;color:var(--gold)">$${p.dailyRate.toFixed(2)}<br><span style="font-size:9px;color:var(--muted);letter-spacing:0.5px">PER DAY</span></span>`
+      : p.rate
+        ? `<span class="editable" onclick="editRate(${pi},this)">$${p.rate.toFixed(2)}</span>`
+        : `<span class="editable" style="color:var(--orange);font-size:11px;border-bottom:1px dashed var(--orange)" onclick="editRate(${pi},this)">set salary</span>`;
+
+    let days = '';
+    for (let di = 0; di < 7; di++) {
+      if (p.dailyRate) {
+        days += `<td class="day-cell" id="dc-${pi}-${di}">
+          <div class="toggle-wrap">
+            <label class="day-toggle"><input type="checkbox" id="tog-${pi}-${di}" onchange="toggleDay(${pi},${di})"><span class="toggle-track"></span></label>
+            <div class="day-cost" id="cost-${pi}-${di}" style="font-size:12px;color:var(--gold)"></div>
+            <span class="hrs-label" style="color:var(--muted)">flat</span>
+          </div>
+        </td>`;
+      } else {
+        days += `<td class="day-cell" id="dc-${pi}-${di}">
+          <div class="toggle-wrap">
+            <label class="day-toggle"><input type="checkbox" id="tog-${pi}-${di}" onchange="toggleDay(${pi},${di})"><span class="toggle-track"></span></label>
+            <input class="hours-input" type="number" id="hrs-${pi}-${di}" value="${p.defH}" min="0.5" max="16" step="0.5" oninput="recalc()" placeholder="hrs">
+            <span class="hrs-label">hrs</span>
+            <div class="day-cost" id="cost-${pi}-${di}"></div>
+          </div>
+        </td>`;
+      }
+    }
+
+    html += `<tr class="pos-row inactive" id="row-${pi}">
+      <td class="pos-name-cell">
+        <span class="editable pos-name" onclick="editName(${pi},this)">${p.name}</span>
+        ${p.sub ? `<div class="pos-sub">${p.sub}</div>` : ''}
+      </td>
+      <td class="role-cell"><span class="role-badge ${rcls}">${p.role}</span></td>
+      <td class="rate-cell" id="ratecell-${pi}">${rateStr}</td>
+      ${days}
+      <td class="day-cell week-col"><div class="week-pos-total" id="wk-pos-${pi}">—</div></td>
+    </tr>`;
+  });
+
+  tbody.innerHTML = html;
+
+  POSITIONS.forEach((p, pi) => {
+    for (let di = 0; di < 7; di++) {
+      const cb   = document.getElementById(`tog-${pi}-${di}`);
+      const hrs  = document.getElementById(`hrs-${pi}-${di}`);
+      const cell = document.getElementById(`dc-${pi}-${di}`);
+      if (!cb) return;
+      cb.checked = state[pi][di].on;
+      cell.className = `day-cell ${state[pi][di].on ? 'on' : 'off'}`;
+      if (hrs && state[pi][di].hours) hrs.value = state[pi][di].hours;
+    }
+    const anyOn = Object.values(state[pi]).some(d => d.on);
+    const row = document.getElementById(`row-${pi}`);
+    if (row) row.className = `pos-row ${anyOn ? '' : 'inactive'}`;
+  });
+
+  buildFooter();
+}
+
+function buildFooter() {
+  let budCells = '', pctCells = '', actRevCells = '', actCells = '', actLaborPctCells = '', varCells = '';
+  for (let di = 0; di < 7; di++) {
+    budCells        += `<td class="total-val green"  id="tot-bud-${di}">—</td>`;
+    pctCells        += `<td class="total-val"        id="tot-pct-${di}">—</td>`;
+    actRevCells     += `<td><input class="actual-input" type="number" id="tot-actrev-${di}" placeholder="actual $" oninput="recalc()" style="border-bottom-color:rgba(90,139,167,0.6);color:#5a8ba7"></td>`;
+    actCells        += `<td><input class="actual-input" type="number" id="tot-act-${di}"    placeholder="actual $" oninput="recalc()"></td>`;
+    actLaborPctCells+= `<td class="total-val"        id="tot-actlpct-${di}">—</td>`;
+    varCells        += `<td class="total-val"         id="tot-var-${di}">—</td>`;
+  }
+  document.getElementById('schedFoot').innerHTML = `
+    <tr class="total-row budget-row" style="border-top:2px solid var(--border)">
+      <td colspan="2" class="pos-name-cell">
+        <span class="total-label" style="color:var(--green)">Budget Labor</span>
+        <span style="font-size:10px;color:var(--muted);margin-left:6px">incl. 11% payroll tax</span>
+      </td>
+      <td class="rate-cell" style="font-size:10px;color:var(--muted)">scheduled</td>
+      ${budCells}
+      <td class="total-val green week-col" id="tot-bud-week">—</td>
+    </tr>
+    <tr class="total-row pct-row">
+      <td colspan="2" class="pos-name-cell"><span class="total-label" style="color:var(--gold)">Labor % of Revenue</span></td>
+      <td class="rate-cell" style="font-size:10px;color:var(--muted)">budget ÷ forecast</td>
+      ${pctCells}
+      <td class="total-val week-col" id="tot-pct-week">—</td>
+    </tr>
+    <tr class="total-row" style="background:rgba(90,139,167,0.05);border-top:1px solid var(--border)">
+      <td colspan="2" class="pos-name-cell">
+        <span class="total-label" style="color:#5a8ba7">Actual Revenue $</span>
+      </td>
+      <td class="rate-cell" style="font-size:10px;color:var(--muted)">entered</td>
+      ${actRevCells}
+      <td class="total-val week-col" id="tot-actrev-week" style="color:#5a8ba7">—</td>
+    </tr>
+    <tr class="total-row actual-row">
+      <td colspan="2" class="pos-name-cell"><span class="total-label" style="color:var(--orange)">Actual Labor $</span></td>
+      <td class="rate-cell" style="font-size:10px;color:var(--muted)">entered</td>
+      ${actCells}
+      <td class="total-val orange week-col" id="tot-act-week">—</td>
+    </tr>
+    <tr class="total-row">
+      <td colspan="2" class="pos-name-cell"><span class="total-label" style="color:var(--gold)">Actual Labor % of Revenue</span></td>
+      <td class="rate-cell" style="font-size:10px;color:var(--muted)">actual ÷ actual rev</td>
+      ${actLaborPctCells}
+      <td class="total-val week-col" id="tot-actlpct-week">—</td>
+    </tr>
+    <tr class="total-row variance-row">
+      <td colspan="2" class="pos-name-cell"><span class="total-label" style="color:var(--red)">Variance (Actual – Budget)</span></td>
+      <td class="rate-cell" style="font-size:10px;color:var(--muted)">labor $</td>
+      ${varCells}
+      <td class="total-val week-col" id="tot-var-week">—</td>
+    </tr>`;
+}
+
+// ── INLINE EDIT ───────────────────────────────────────────────────────────────
+function editName(pi, el) {
+  const cur = POSITIONS[pi].name;
+  const input = document.createElement('input');
+  input.className = 'edit-field'; input.value = cur; input.style.width = '140px';
+  el.replaceWith(input); input.focus(); input.select();
+  const save = () => {
+    POSITIONS[pi].name = input.value || cur;
+    const span = document.createElement('span');
+    span.className = 'editable pos-name'; span.textContent = POSITIONS[pi].name;
+    span.onclick = () => editName(pi, span); input.replaceWith(span);
+  };
+  input.onblur = save;
+  input.onkeydown = e => { if (e.key==='Enter') input.blur(); if (e.key==='Escape') { input.value=cur; input.blur(); } };
+}
+
+function editRate(pi, el) {
+  const p = POSITIONS[pi];
+  const input = document.createElement('input');
+  input.className = 'edit-field'; input.type = 'number';
+  input.value = p.dailyRate || p.rate || ''; input.style.width = '64px';
+  input.min = '0'; input.step = '0.25'; input.placeholder = p.dailyRate !== undefined ? 'daily $' : 'hr $';
+  el.replaceWith(input); input.focus(); input.select();
+  const save = () => {
+    const v = parseFloat(input.value);
+    if (!isNaN(v)) { if (p.dailyRate !== undefined) p.dailyRate = v; else p.rate = v; }
+    const cell = document.getElementById(`ratecell-${pi}`);
+    cell.innerHTML = p.dailyRate
+      ? `<span style="font-size:11px;color:var(--gold)">$${p.dailyRate.toFixed(2)}<br><span style="font-size:9px;color:var(--muted);letter-spacing:0.5px">PER DAY</span></span>`
+      : p.rate
+        ? `<span class="editable" onclick="editRate(${pi},this)">$${p.rate.toFixed(2)}</span>`
+        : `<span class="editable" style="color:var(--orange);font-size:11px;border-bottom:1px dashed var(--orange)" onclick="editRate(${pi},this)">set salary</span>`;
+    recalc();
+  };
+  input.onblur = save; input.onkeydown = e => { if (e.key==='Enter') input.blur(); };
+}
+
+// ── TOGGLE ────────────────────────────────────────────────────────────────────
+function toggleDay(pi, di) {
+  const cb = document.getElementById(`tog-${pi}-${di}`);
+  const cell = document.getElementById(`dc-${pi}-${di}`);
+  state[pi][di].on = cb.checked;
+  cell.className = `day-cell ${cb.checked ? 'on' : 'off'}`;
+  const anyOn = Object.values(state[pi]).some(d => d.on);
+  document.getElementById(`row-${pi}`).className = `pos-row ${anyOn ? '' : 'inactive'}`;
+  recalc();
+}
+
+// ── RECALC ────────────────────────────────────────────────────────────────────
+function recalc() {
+  const TAX = 1.11;
+  const dayTotals = Array(7).fill(0);
+
+  // Per-position per-day costs + position weekly totals
+  POSITIONS.forEach((p, pi) => {
+    let posWeekCost = 0;
+    for (let di = 0; di < 7; di++) {
+      const costEl = document.getElementById(`cost-${pi}-${di}`);
+      if (!costEl) continue;
+      if (!state[pi][di].on) { costEl.textContent = ''; continue; }
+      let cost = 0;
+      if (p.dailyRate) {
+        cost = p.dailyRate;
+        costEl.textContent = `$${cost.toFixed(0)}`;
+      } else {
+        const rate = p.rate || 0;
+        const hrs  = parseFloat(document.getElementById(`hrs-${pi}-${di}`)?.value) || 0;
+        cost = rate * hrs;
+        costEl.textContent = rate ? `$${cost.toFixed(0)}` : 'salary';
+      }
+      dayTotals[di] += cost;
+      posWeekCost   += cost;
+    }
+    const wkEl = document.getElementById(`wk-pos-${pi}`);
+    if (wkEl) {
+      const grossed = posWeekCost * TAX;
+      wkEl.textContent = grossed ? `$${Math.round(grossed).toLocaleString()}` : '—';
+    }
+  });
+
+  let weekBudget = 0, weekRev = 0, weekActual = 0, weekActRev = 0;
+
+  for (let di = 0; di < 7; di++) {
+    const rev    = parseFloat(document.getElementById(`rev-${di}`)?.value) || 0;
+    const bud    = dayTotals[di] * TAX;
+    const act    = parseFloat(document.getElementById(`tot-act-${di}`)?.value) || 0;
+    const actRev = parseFloat(document.getElementById(`tot-actrev-${di}`)?.value) || 0;
+    weekBudget += bud; weekRev += rev; weekActual += act; weekActRev += actRev;
+
+    // Clamp pct to 25–36
+    const pctEl = document.getElementById(`pct-${di}`);
+    if (pctEl) {
+      let v = parseFloat(pctEl.value);
+      if (!isNaN(v)) { v = Math.min(36, Math.max(25, v)); if (pctEl.value != v) pctEl.value = v; }
+    }
+
+    // Target dollar
+    const trgEl = document.getElementById(`trg-${di}`);
+    if (trgEl) {
+      const pct = parseFloat(document.getElementById(`pct-${di}`)?.value) || 28;
+      if (rev) {
+        const target = Math.round(rev * pct / 100);
+        trgEl.textContent = `$${target.toLocaleString()}`;
+        trgEl.style.color = !bud ? 'var(--muted)' : bud <= target ? 'var(--green)' : 'var(--red)';
+      } else { trgEl.textContent = '—'; trgEl.style.color = 'var(--muted)'; }
+    }
+
+    // Budget row
+    const budEl = document.getElementById(`tot-bud-${di}`);
+    if (budEl) budEl.textContent = bud ? `$${Math.round(bud).toLocaleString()}` : '—';
+
+    // Labor % row
+    const dayPctEl = document.getElementById(`tot-pct-${di}`);
+    if (dayPctEl) {
+      if (rev && bud) {
+        const p = (bud / rev * 100).toFixed(1);
+        dayPctEl.textContent = `${p}%`;
+        dayPctEl.className = `total-val ${p <= 28 ? 'pct-good' : p <= 33 ? 'pct-warn' : 'pct-over'}`;
+      } else { dayPctEl.textContent = '—'; dayPctEl.className = 'total-val'; }
+    }
+
+    // Variance (actual labor – budget labor)
+    const varEl = document.getElementById(`tot-var-${di}`);
+    if (varEl) {
+      if (act && bud) {
+        const v = act - bud;
+        varEl.textContent = (v >= 0 ? '+' : '') + `$${Math.round(v).toLocaleString()}`;
+        varEl.className = `total-val ${v <= 0 ? 'pct-good' : v < 100 ? 'pct-warn' : 'pct-over'}`;
+      } else { varEl.textContent = '—'; varEl.className = 'total-val'; }
+    }
+
+    // Actual Labor % of Revenue (actual labor ÷ actual revenue)
+    const actLPctEl = document.getElementById(`tot-actlpct-${di}`);
+    if (actLPctEl) {
+      if (act && actRev) {
+        const p = (act / actRev * 100).toFixed(1);
+        actLPctEl.textContent = `${p}%`;
+        actLPctEl.className = `total-val ${p <= 28 ? 'pct-good' : p <= 33 ? 'pct-warn' : 'pct-over'}`;
+      } else { actLPctEl.textContent = '—'; actLPctEl.className = 'total-val'; }
+    }
+  }
+
+  // WEEK TOTALS column
+  const weekPct = weekRev ? (weekBudget / weekRev * 100) : null;
+  const weekPctColor = !weekPct ? '' : weekPct < 28 ? 'pct-warn' : weekPct <= 33 ? 'pct-good' : 'pct-over';
+
+  const revWkEl = document.getElementById('rev-week');
+  if (revWkEl) revWkEl.textContent = weekRev ? `$${weekRev.toLocaleString()}` : '—';
+
+  const budWkEl = document.getElementById('tot-bud-week');
+  if (budWkEl) budWkEl.textContent = weekBudget ? `$${Math.round(weekBudget).toLocaleString()}` : '—';
+
+  const pctWkEl = document.getElementById('tot-pct-week');
+  if (pctWkEl) {
+    pctWkEl.textContent = weekPct ? `${weekPct.toFixed(1)}%` : '—';
+    pctWkEl.className = `total-val week-col ${weekPctColor}`;
+  }
+
+  const actWkEl = document.getElementById('tot-act-week');
+  const actWk = weekActual;
+  if (actWkEl) actWkEl.textContent = actWk ? `$${Math.round(actWk).toLocaleString()}` : '—';
+
+  const varWkEl = document.getElementById('tot-var-week');
+  if (varWkEl) {
+    if (actWk && weekBudget) {
+      const v = actWk - weekBudget;
+      varWkEl.textContent = (v >= 0 ? '+' : '') + `$${Math.round(v).toLocaleString()}`;
+      varWkEl.className = `total-val week-col ${v <= 0 ? 'pct-good' : v < 200 ? 'pct-warn' : 'pct-over'}`;
+    } else { varWkEl.textContent = '—'; varWkEl.className = 'total-val week-col'; }
+  }
+
+  // Actual Revenue week total
+  const actRevWkEl = document.getElementById('tot-actrev-week');
+  if (actRevWkEl) actRevWkEl.textContent = weekActRev ? `$${Math.round(weekActRev).toLocaleString()}` : '—';
+
+  // Actual Labor % of Revenue — week total (actual labor ÷ actual revenue)
+  const actLPctWkEl = document.getElementById('tot-actlpct-week');
+  if (actLPctWkEl) {
+    if (weekActual && weekActRev) {
+      const p = (weekActual / weekActRev * 100).toFixed(1);
+      actLPctWkEl.textContent = `${p}%`;
+      actLPctWkEl.className = `total-val week-col ${p <= 28 ? 'pct-good' : p <= 33 ? 'pct-warn' : 'pct-over'}`;
+    } else { actLPctWkEl.textContent = '—'; actLPctWkEl.className = 'total-val week-col'; }
+  }
+
+  // Weekly target display
+  const trgWkEl = document.getElementById('trg-week');
+  const trgWkPctEl = document.getElementById('trg-week-pct');
+  if (trgWkEl && weekRev) {
+    const lo = Math.round(weekRev * 0.28), hi = Math.round(weekRev * 0.33);
+    trgWkEl.textContent = `$${lo.toLocaleString()} – $${hi.toLocaleString()}`;
+    trgWkEl.style.color = !weekBudget ? 'var(--muted)' : (weekBudget >= lo && weekBudget <= hi) ? 'var(--green)' : weekBudget < lo ? 'var(--gold)' : 'var(--red)';
+    if (trgWkPctEl) trgWkPctEl.textContent = weekPct ? `actual: ${weekPct.toFixed(1)}%` : '28–33% target';
+  } else if (trgWkEl) { trgWkEl.textContent = '—'; }
+
+  updateSummary(weekBudget, weekRev, weekActual, weekPct);
+}
+
+function updateSummary(weekBudget, weekRev, weekActual, weekPct) {
+  const pctColor = !weekPct ? 'gold' : weekPct < 28 ? 'gold' : weekPct <= 33 ? 'green' : 'red';
+  const staffedDays = Array.from({length:7}, (_,di) => POSITIONS.some((_,pi) => state[pi]?.[di]?.on)).filter(Boolean).length;
+  const actPct = weekRev && weekActual ? (weekActual / weekRev * 100).toFixed(1) : null;
+  const pctLabel = !weekPct ? '—' : `${weekPct.toFixed(1)}%`;
+  const pctNote = !weekPct ? 'enter revenue + labor' : weekPct < 28 ? 'under target (28%)' : weekPct <= 33 ? '✓ on target' : `over target (33% max)`;
+
+  document.getElementById('weekSummary').innerHTML = `
+    <div class="sum-card gold"><div class="sum-label">Week Revenue</div><div class="sum-val">${weekRev ? '$'+weekRev.toLocaleString() : '—'}</div><div class="sum-sub">Forecast total</div></div>
+    <div class="sum-card green"><div class="sum-label">Budget Labor</div><div class="sum-val">${weekBudget ? '$'+Math.round(weekBudget).toLocaleString() : '—'}</div><div class="sum-sub">Incl. 11% tax</div></div>
+    <div class="sum-card ${pctColor}"><div class="sum-label">Weekly Labor %</div><div class="sum-val" style="color:var(--${pctColor})">${pctLabel}</div><div class="sum-sub">${pctNote}</div></div>
+    <div class="sum-card orange"><div class="sum-label">Actual Labor</div><div class="sum-val">${weekActual ? '$'+Math.round(weekActual).toLocaleString() : '—'}</div><div class="sum-sub">${actPct ? actPct+'% of rev' : 'not submitted'}</div></div>
+    <div class="sum-card blue"><div class="sum-label">Days Staffed</div><div class="sum-val">${staffedDays} / 7</div><div class="sum-sub">This week</div></div>`;
+}
+
+// ── ISO WEEK / PERIOD ─────────────────────────────────────────────────────────
+function getISOWeek(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const day = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+
+// ── WEEK KEY ──────────────────────────────────────────────────────────────────
+function weekKey(dateStr) {
+  // Normalize to Monday of that week
+  const d = new Date(dateStr + 'T00:00:00');
+  const dow = d.getDay();
+  d.setDate(d.getDate() + (dow === 0 ? -6 : 1 - dow));
+  return `hsc-wk-${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function currentWeekKey() {
+  return weekKey(document.getElementById('weekStart').value);
+}
+
+// ── SHIFT WEEK BUTTONS ────────────────────────────────────────────────────────
+function shiftWeek(delta) {
+  // Save current week before navigating
+  saveLocal(false);
+  const inp = document.getElementById('weekStart');
+  const d = new Date(inp.value + 'T00:00:00');
+  d.setDate(d.getDate() + delta * 7);
+  inp.value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  onWeekChange();
+}
+
+function onWeekChange() {
+  updateWeekDates();
+  loadWeek(currentWeekKey());
+  recalc();
+}
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function updateWeekDates() {
+  const val = document.getElementById('weekStart').value;
+  if (!val) return;
+  const start = new Date(val + 'T00:00:00');
+  const dow = start.getDay();
+  start.setDate(start.getDate() + (dow === 0 ? -6 : 1 - dow));
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(start); d.setDate(start.getDate() + i);
+    document.getElementById(`date-${i}`).textContent = `${MONTHS[d.getMonth()]} ${d.getDate()}`;
+  }
+  const end = new Date(start); end.setDate(start.getDate() + 6);
+  document.getElementById('weekDisplay').textContent =
+    `${MONTHS[start.getMonth()]} ${start.getDate()} – ${MONTHS[end.getMonth()]} ${end.getDate()}, ${end.getFullYear()}`;
+
+  // ISO week + period
+  const isoWk = getISOWeek(start);
+  const period = Math.ceil(isoWk / 4);
+  const wkInPeriod = ((isoWk - 1) % 4) + 1;
+
+  const wkChip = document.getElementById('wkChip');
+  const perChip = document.getElementById('periodChip');
+  wkChip.textContent = `Wk ${isoWk}`;
+  perChip.textContent = `Period ${period} · Week ${wkInPeriod}`;
+  wkChip.style.display = 'inline-block';
+  perChip.style.display = 'inline-block';
+}
+
+function setCurrentWeek() {
+  const t = new Date();
+  const dow = t.getDay();
+  t.setDate(t.getDate() + (dow === 0 ? -6 : 1 - dow));
+  document.getElementById('weekStart').value = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+  updateWeekDates();
+}
+
+// ── SAVE / SUBMIT / HISTORY ───────────────────────────────────────────────────
+function saveLocal(notify = true) {
+  POSITIONS.forEach((p, pi) => {
+    for (let di = 0; di < 7; di++) {
+      const hrsEl = document.getElementById(`hrs-${pi}-${di}`);
+      if (hrsEl) state[pi][di].hours = parseFloat(hrsEl.value) || p.defH;
+    }
+  });
+  const key = currentWeekKey();
+  const data = {
+    week:      document.getElementById('weekStart').value,
+    pcts:      Array.from({length:7}, (_,di) => document.getElementById(`pct-${di}`)?.value || '28'),
+    revs:      Array.from({length:7}, (_,di) => document.getElementById(`rev-${di}`)?.value || ''),
+    acts:      Array.from({length:7}, (_,di) => document.getElementById(`tot-act-${di}`)?.value || ''),
+    actrevs:   Array.from({length:7}, (_,di) => document.getElementById(`tot-actrev-${di}`)?.value || ''),
+    state:     JSON.parse(JSON.stringify(state)),
+    positions: POSITIONS.map(p => ({name:p.name, rate:p.rate, dailyRate:p.dailyRate})),
+  };
+  localStorage.setItem(key, JSON.stringify(data));
+  // Also track which weeks have been saved
+  const wkIndex = JSON.parse(localStorage.getItem('hsc-week-index') || '[]');
+  if (!wkIndex.includes(key)) { wkIndex.unshift(key); localStorage.setItem('hsc-week-index', JSON.stringify(wkIndex.slice(0,52))); }
+  if (notify) showBanner('💾 Draft saved for this week.');
+}
+
+function loadWeek(key) {
+  const raw = localStorage.getItem(key);
+
+  // Reset state and UI to blank for this week
+  initState();
+  // Reset toggles
+  POSITIONS.forEach((p, pi) => {
+    for (let di = 0; di < 7; di++) {
+      state[pi][di] = { on: false, hours: p.defH };
+    }
+  });
+  // Clear revenue/actual inputs
+  for (let di = 0; di < 7; di++) {
+    const rv = document.getElementById(`rev-${di}`); if (rv) rv.value = '';
+    const ac = document.getElementById(`tot-act-${di}`); if (ac) ac.value = '';
+    const ar = document.getElementById(`tot-actrev-${di}`); if (ar) ar.value = '';
+    const pc = document.getElementById(`pct-${di}`);
+    if (pc) pc.value = [28,28,28,30,32,35,30][di];
+  }
+  document.getElementById('submitBadge').style.display = 'none';
+
+  if (raw) {
+    try {
+      const data = JSON.parse(raw);
+      data.pcts?.forEach((v, di) => { const el = document.getElementById(`pct-${di}`); if (el && v) el.value = v; });
+      data.revs?.forEach((v, di) => { if (v) document.getElementById(`rev-${di}`).value = v; });
+      data.acts?.forEach((v, di) => { const el = document.getElementById(`tot-act-${di}`); if (el && v) el.value = v; });
+      data.actrevs?.forEach((v, di) => { const el = document.getElementById(`tot-actrev-${di}`); if (el && v) el.value = v; });
+      if (data.positions) data.positions.forEach((p, pi) => { if (POSITIONS[pi]) { POSITIONS[pi].name = p.name; POSITIONS[pi].rate = p.rate; if (p.dailyRate !== undefined) POSITIONS[pi].dailyRate = p.dailyRate; } });
+      if (data.state) Object.keys(data.state).forEach(pi => { state[pi] = state[pi] || {}; Object.keys(data.state[pi]).forEach(di => { state[pi][di] = data.state[pi][di]; }); });
+      // Check if this week was submitted
+      const hist = JSON.parse(localStorage.getItem('hsc-history') || '[]');
+      if (hist.some(h => h.weekStart === data.week)) document.getElementById('submitBadge').style.display = 'inline-block';
+    } catch(e) {}
+  }
+
+  // Rebuild table to apply fresh state
+  buildTable();
+}
+
+function submitSchedule() {
+  saveLocal();
+
+  // Collect metrics
+  const weekDisplay = document.getElementById('weekDisplay').textContent;
+  const isoWkEl = document.getElementById('wkChip');
+  const periodEl = document.getElementById('periodChip');
+  const isoWk  = isoWkEl?.textContent || '';
+  const period  = periodEl?.textContent || '';
+  const weekRev    = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`rev-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
+  const weekBudTxt = document.getElementById('tot-bud-week')?.textContent || '—';
+  const weekActual = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`tot-act-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
+  const weekActRev = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`tot-actrev-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
+  const weekBudNum = parseFloat(weekBudTxt.replace(/[^0-9.]/g,'')) || 0;
+  const weekPct    = weekRev ? (weekBudNum / weekRev * 100) : null;
+  const actPct     = weekRev && weekActual ? (weekActual / weekRev * 100) : null;
+  const variance   = weekActual && weekBudNum ? weekActual - weekBudNum : null;
+  const revVariance = weekActRev && weekRev ? weekActRev - weekRev : null;
+  const weekStart  = document.getElementById('weekStart').value;
+
+  // Save to history
+  const hist = JSON.parse(localStorage.getItem('hsc-history') || '[]');
+  // Remove existing entry for same week
+  const filtered = hist.filter(h => h.weekStart !== weekStart);
+  filtered.unshift({
+    weekStart, weekDisplay, isoWk, period,
+    rev: weekRev, budget: weekBudNum,
+    pct: weekPct ? +weekPct.toFixed(1) : null,
+    actual: weekActual || null,
+    actPct: actPct ? +actPct.toFixed(1) : null,
+    variance: variance ? +variance.toFixed(0) : null,
+    actRev: weekActRev || null,
+    revVariance: revVariance ? +revVariance.toFixed(0) : null,
+  });
+  // Keep last 52 weeks
+  localStorage.setItem('hsc-history', JSON.stringify(filtered.slice(0, 52)));
+
+  document.getElementById('submitBadge').style.display = 'inline-block';
+  showBanner(`✅ Schedule for ${weekDisplay} submitted and saved to 52-week history.`);
+  renderHistory();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderHistory() {
+  const hist = JSON.parse(localStorage.getItem('hsc-history') || '[]');
+  const tbody = document.getElementById('histBody');
+  if (!hist.length) {
+    tbody.innerHTML = `<tr><td colspan="9" class="hist-empty">No weeks submitted yet.</td></tr>`;
+    return;
+  }
+  const fmt = v => v != null ? `$${Math.round(v).toLocaleString()}` : '—';
+  const fmtPct = v => v != null ? `${v}%` : '—';
+  const fmtVar = v => v != null ? `${v >= 0 ? '+' : ''}$${Math.round(Math.abs(v)).toLocaleString()}` : '—';
+  const pctClass = v => !v ? '' : v < 28 ? 'style="color:var(--gold)"' : v <= 33 ? 'style="color:var(--green)"' : 'style="color:var(--red)"';
+  const varClass = v => !v ? '' : v <= 0 ? 'style="color:var(--green)"' : v < 200 ? 'style="color:var(--gold)"' : 'style="color:var(--red)"';
+
+  tbody.innerHTML = hist.map(h => {
+    // Compute actual labor % from saved actRev if available
+    const actLaborPct = (h.actual && h.actRev) ? +(h.actual / h.actRev * 100).toFixed(1) : h.actPct;
+    return `
+    <tr>
+      <td><span class="hist-period">${h.period || '—'}</span><br><span class="hist-week">${h.isoWk || ''}</span></td>
+      <td style="text-align:left;color:var(--text)">${h.weekDisplay || h.weekStart}</td>
+      <td style="color:var(--gold)">${fmt(h.rev)}</td>
+      <td style="color:#5a8ba7">${fmt(h.actRev)}</td>
+      <td style="color:var(--green)">${fmt(h.budget)}</td>
+      <td ${pctClass(h.pct)}>${fmtPct(h.pct)}</td>
+      <td style="color:var(--orange)">${fmt(h.actual)}</td>
+      <td ${pctClass(actLaborPct)}>${fmtPct(actLaborPct)}</td>
+      <td ${varClass(h.variance)}>${fmtVar(h.variance)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function clearHistory() {
+  if (!confirm('Clear all 52-week history? This cannot be undone.')) return;
+  localStorage.removeItem('hsc-history');
+  renderHistory();
+}
+
+function clearActuals() {
+  for (let di = 0; di < 7; di++) {
+    const el = document.getElementById(`tot-act-${di}`); if (el) el.value = '';
+    const ar = document.getElementById(`tot-actrev-${di}`); if (ar) ar.value = '';
+  }
+  recalc();
+}
+
+function showBanner(msg) {
+  const el = document.getElementById('statusBanner');
+  el.textContent = msg; el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 5000);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+buildTable();
+setCurrentWeek();
+loadWeek(currentWeekKey());
+recalc();
+renderHistory();
+</script>
+</body>
+</html>
