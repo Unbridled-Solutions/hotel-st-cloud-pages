@@ -74,10 +74,17 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
 .rev-input::placeholder { color: var(--border); font-weight: 400; font-size: 12px; }
 
 /* Target range row */
-.target-row td, .target-row th { border: 1px solid var(--border); padding: 4px 8px; background: rgba(76,175,125,0.05); }
-.target-row th { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--green); text-align: left; }
-.target-cell { text-align: center; }
-.target-range { font-size: 11px; font-weight: 700; color: var(--green); display: block; }
+.target-row td, .target-row th { border: 1px solid var(--border); padding: 4px 6px; background: rgba(76,175,125,0.05); }
+.target-row th { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--green); text-align: left; padding: 5px 10px; }
+.target-cell { text-align: center; vertical-align: middle; }
+.pct-input {
+  width: 38px; background: var(--navy); border: 1px solid rgba(76,175,125,0.5);
+  color: var(--green); font-size: 13px; font-weight: 700; text-align: center;
+  border-radius: 4px; padding: 2px 2px; outline: none; display: inline-block;
+}
+.pct-input:focus { border-color: var(--green); }
+.pct-sign { color: var(--green); font-weight: 700; font-size: 13px; margin: 0 2px 0 1px; }
+.target-range { font-size: 11px; font-weight: 700; color: var(--green); display: block; margin-top: 2px; }
 .target-hint  { font-size: 9px; color: var(--muted); letter-spacing: 0.5px; margin-top: 1px; display: block; }
 
 /* Section header */
@@ -234,24 +241,15 @@ footer span { color: var(--gold); font-weight: 600; }
   <!-- TARGET LABOR ROW -->
   <tr class="target-row">
     <th colspan="3" style="padding:5px 10px">
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--green)">🎯 Target Labor</span>
-        <div style="display:flex;align-items:center;gap:3px">
-          <input type="number" id="targetPct" value="28" min="1" max="99" step="1"
-            oninput="recalc()"
-            style="width:46px;background:var(--navy);border:1px solid var(--green);color:var(--green);
-                   font-size:14px;font-weight:700;text-align:center;border-radius:5px;padding:2px 4px;outline:none;">
-          <span style="color:var(--green);font-weight:700;font-size:14px">%</span>
-        </div>
-      </div>
+      <span style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--green)">🎯 Target Labor %</span>
     </th>
-    <td class="target-cell"><span class="target-range" id="trg-0">—</span></td>
-    <td class="target-cell"><span class="target-range" id="trg-1">—</span></td>
-    <td class="target-cell"><span class="target-range" id="trg-2">—</span></td>
-    <td class="target-cell"><span class="target-range" id="trg-3">—</span></td>
-    <td class="target-cell"><span class="target-range" id="trg-4">—</span></td>
-    <td class="target-cell"><span class="target-range" id="trg-5">—</span></td>
-    <td class="target-cell"><span class="target-range" id="trg-6">—</span></td>
+    <td class="target-cell"><input class="pct-input" type="number" id="pct-0" value="28" min="1" max="99" step="1" oninput="recalc()"><span class="pct-sign">%</span><span class="target-range" id="trg-0">—</span></td>
+    <td class="target-cell"><input class="pct-input" type="number" id="pct-1" value="28" min="1" max="99" step="1" oninput="recalc()"><span class="pct-sign">%</span><span class="target-range" id="trg-1">—</span></td>
+    <td class="target-cell"><input class="pct-input" type="number" id="pct-2" value="28" min="1" max="99" step="1" oninput="recalc()"><span class="pct-sign">%</span><span class="target-range" id="trg-2">—</span></td>
+    <td class="target-cell"><input class="pct-input" type="number" id="pct-3" value="30" min="1" max="99" step="1" oninput="recalc()"><span class="pct-sign">%</span><span class="target-range" id="trg-3">—</span></td>
+    <td class="target-cell"><input class="pct-input" type="number" id="pct-4" value="32" min="1" max="99" step="1" oninput="recalc()"><span class="pct-sign">%</span><span class="target-range" id="trg-4">—</span></td>
+    <td class="target-cell"><input class="pct-input" type="number" id="pct-5" value="35" min="1" max="99" step="1" oninput="recalc()"><span class="pct-sign">%</span><span class="target-range" id="trg-5">—</span></td>
+    <td class="target-cell"><input class="pct-input" type="number" id="pct-6" value="30" min="1" max="99" step="1" oninput="recalc()"><span class="pct-sign">%</span><span class="target-range" id="trg-6">—</span></td>
   </tr>
 </thead>
 <tbody id="schedBody"></tbody>
@@ -538,10 +536,10 @@ function recalc() {
     const act    = parseFloat(document.getElementById(`tot-act-${di}`)?.value) || 0;
     weekBudget += bud; weekRev += rev; weekActual += act;
 
-    // Target labor
+    // Target labor — per day %
     const trgEl = document.getElementById(`trg-${di}`);
     if (trgEl) {
-      const pct = parseFloat(document.getElementById('targetPct')?.value) || 28;
+      const pct = parseFloat(document.getElementById(`pct-${di}`)?.value) || 28;
       if (rev) {
         const target = Math.round(rev * pct / 100);
         trgEl.textContent = `$${target.toLocaleString()}`;
@@ -621,11 +619,11 @@ function saveLocal() {
   });
   const data = {
     week:      document.getElementById('weekStart').value,
-    targetPct: document.getElementById('targetPct')?.value || '28',
+    pcts:      Array.from({length:7}, (_,di) => document.getElementById(`pct-${di}`)?.value || '28'),
     revs:      Array.from({length:7}, (_,di) => document.getElementById(`rev-${di}`)?.value || ''),
     acts:      Array.from({length:7}, (_,di) => document.getElementById(`tot-act-${di}`)?.value || ''),
     state:     JSON.parse(JSON.stringify(state)),
-    positions: POSITIONS.map(p => ({name:p.name, rate:p.rate})),
+    positions: POSITIONS.map(p => ({name:p.name, rate:p.rate, dailyRate:p.dailyRate})),
   };
   localStorage.setItem('fp-labor-draft', JSON.stringify(data));
   showBanner('💾 Draft saved.');
@@ -637,7 +635,7 @@ function loadLocal() {
   try {
     const data = JSON.parse(raw);
     if (data.week) { document.getElementById('weekStart').value = data.week; updateWeekDates(); }
-    if (data.targetPct) { const el = document.getElementById('targetPct'); if (el) el.value = data.targetPct; }
+    data.pcts?.forEach((v, di) => { const el = document.getElementById(`pct-${di}`); if (el && v) el.value = v; });
     data.revs?.forEach((v, di) => { if (v) document.getElementById(`rev-${di}`).value = v; });
     if (data.positions) {
       data.positions.forEach((p, pi) => {
