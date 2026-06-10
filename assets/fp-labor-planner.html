@@ -299,9 +299,9 @@ const SH_MGR = [
 
 // ── POSITIONS ─────────────────────────────────────────────────────────────────
 let POSITIONS = [
-  {section:'MANAGEMENT',  name:'General Manager',    sub:'',              role:'MGR', rate:null,  shifts:SH_MGR, defH:8 },
-  {section:null,          name:'Executive Chef',      sub:'Kitchen Lead',  role:'MGR', rate:22.00, shifts:SH_MGR, defH:8 },
-  {section:null,          name:'Shift Lead / Asst',   sub:'',              role:'MGR', rate:18.00, shifts:SH_MGR, defH:8 },
+  {section:'MANAGEMENT',  name:'General Manager',    sub:'$70K salary',   role:'MGR', rate:null,  dailyRate:269.23, shifts:SH_MGR, defH:8 },
+  {section:null,          name:'Executive Chef',      sub:'salary',        role:'MGR', rate:null,  dailyRate:null,   shifts:SH_MGR, defH:8 },
+  {section:null,          name:'Shift Lead / Asst',   sub:'',              role:'MGR', rate:18.00, dailyRate:null,   shifts:SH_MGR, defH:8 },
   {section:'BACK OF HOUSE',name:'Head Cook',          sub:'Line Lead',     role:'BOH', rate:19.00, shifts:SH_BOH, defH:8 },
   {section:null,          name:'Line Cook #1',        sub:'Service',       role:'BOH', rate:17.00, shifts:SH_BOH, defH:6 },
   {section:null,          name:'Line Cook #2',        sub:'Service',       role:'BOH', rate:16.00, shifts:SH_BOH, defH:6 },
@@ -342,20 +342,33 @@ function buildTable() {
     }
 
     const rcls = {BOH:'role-boh',FOH:'role-foh',BAR:'role-bar',MGR:'role-mgr'}[p.role];
-    const rateStr = p.rate
-      ? `<span class="editable" onclick="editRate(${pi},this)">$${p.rate.toFixed(2)}</span>`
-      : `<em style="color:var(--muted);font-size:11px">salary</em>`;
+    const rateStr = p.dailyRate
+      ? `<span style="font-size:11px;color:var(--gold)">$${p.dailyRate.toFixed(2)}<br><span style="font-size:9px;color:var(--muted);letter-spacing:0.5px">PER DAY</span></span>`
+      : p.rate
+        ? `<span class="editable" onclick="editRate(${pi},this)">$${p.rate.toFixed(2)}</span>`
+        : `<em style="color:var(--muted);font-size:11px">salary</em>`;
 
     let days = '';
     for (let di = 0; di < 7; di++) {
-      days += `<td class="day-cell" id="dc-${pi}-${di}">
-        <div class="toggle-wrap">
-          <label class="day-toggle"><input type="checkbox" id="tog-${pi}-${di}" onchange="toggleDay(${pi},${di})"><span class="toggle-track"></span></label>
-          <input class="hours-input" type="number" id="hrs-${pi}-${di}" value="${p.defH}" min="0.5" max="16" step="0.5" oninput="recalc()" placeholder="hrs">
-          <span class="hrs-label">hrs</span>
-          <div class="day-cost" id="cost-${pi}-${di}"></div>
-        </div>
-      </td>`;
+      if (p.dailyRate) {
+        // Salaried — show fixed daily cost, no hours input
+        days += `<td class="day-cell" id="dc-${pi}-${di}">
+          <div class="toggle-wrap">
+            <label class="day-toggle"><input type="checkbox" id="tog-${pi}-${di}" onchange="toggleDay(${pi},${di})"><span class="toggle-track"></span></label>
+            <div class="day-cost" id="cost-${pi}-${di}" style="font-size:12px;color:var(--gold)"></div>
+            <span class="hrs-label" style="color:var(--muted)">daily flat</span>
+          </div>
+        </td>`;
+      } else {
+        days += `<td class="day-cell" id="dc-${pi}-${di}">
+          <div class="toggle-wrap">
+            <label class="day-toggle"><input type="checkbox" id="tog-${pi}-${di}" onchange="toggleDay(${pi},${di})"><span class="toggle-track"></span></label>
+            <input class="hours-input" type="number" id="hrs-${pi}-${di}" value="${p.defH}" min="0.5" max="16" step="0.5" oninput="recalc()" placeholder="hrs">
+            <span class="hrs-label">hrs</span>
+            <div class="day-cost" id="cost-${pi}-${di}"></div>
+          </div>
+        </td>`;
+      }
     }
 
     html += `<tr class="pos-row inactive" id="row-${pi}">
@@ -480,10 +493,16 @@ function recalc() {
       const costEl = document.getElementById(`cost-${pi}-${di}`);
       if (!costEl) continue;
       if (!state[pi][di].on) { costEl.textContent = ''; continue; }
-      const rate = p.rate || 0;
-      const hrs  = parseFloat(document.getElementById(`hrs-${pi}-${di}`)?.value) || 0;
-      const cost = rate * hrs;
-      costEl.textContent = rate ? `$${cost.toFixed(0)}` : 'salary';
+      let cost = 0;
+      if (p.dailyRate) {
+        cost = p.dailyRate;
+        costEl.textContent = `$${cost.toFixed(2)}`;
+      } else {
+        const rate = p.rate || 0;
+        const hrs  = parseFloat(document.getElementById(`hrs-${pi}-${di}`)?.value) || 0;
+        cost = rate * hrs;
+        costEl.textContent = rate ? `$${cost.toFixed(0)}` : 'salary';
+      }
       dayTotals[di] += cost;
     }
   });
