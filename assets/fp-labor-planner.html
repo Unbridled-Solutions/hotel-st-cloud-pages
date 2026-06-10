@@ -424,7 +424,10 @@ function buildFooter() {
   }
   document.getElementById('schedFoot').innerHTML = `
     <tr class="total-row budget-row" style="border-top:2px solid var(--border)">
-      <td colspan="2" class="pos-name-cell"><span class="total-label" style="color:var(--green)">Budget Labor $</span></td>
+      <td colspan="2" class="pos-name-cell">
+        <span class="total-label" style="color:var(--green)">Budget Labor</span>
+        <span style="font-size:10px;color:var(--muted);margin-left:6px">incl. 11% payroll tax</span>
+      </td>
       <td class="rate-cell" style="font-size:10px;color:var(--muted)">scheduled</td>
       ${budCells}
     </tr>
@@ -527,10 +530,12 @@ function recalc() {
   });
 
   let weekBudget = 0, weekRev = 0, weekActual = 0;
+  const TAX = 1.11; // 11% payroll tax gross-up
   for (let di = 0; di < 7; di++) {
-    const rev = parseFloat(document.getElementById(`rev-${di}`)?.value) || 0;
-    const bud = dayTotals[di];
-    const act = parseFloat(document.getElementById(`tot-act-${di}`)?.value) || 0;
+    const rev    = parseFloat(document.getElementById(`rev-${di}`)?.value) || 0;
+    const bud    = dayTotals[di] * TAX;   // grossed up
+    const budRaw = dayTotals[di];         // before tax — for target comparison
+    const act    = parseFloat(document.getElementById(`tot-act-${di}`)?.value) || 0;
     weekBudget += bud; weekRev += rev; weekActual += act;
 
     // Target labor
@@ -541,14 +546,14 @@ function recalc() {
         const target = Math.round(rev * pct / 100);
         trgEl.textContent = `$${target.toLocaleString()}`;
         trgEl.style.color = !bud ? 'var(--muted)' : bud <= target ? 'var(--green)' : 'var(--red)';
-        trgEl.title = `${pct}% of $${rev.toLocaleString()}`;
+        trgEl.title = `${pct}% of $${rev.toLocaleString()} · incl. 11% tax`;
       } else {
         trgEl.textContent = '—';
         trgEl.style.color = 'var(--muted)';
       }
     }
 
-    // Budget total
+    // Budget total (grossed up)
     const budEl = document.getElementById(`tot-bud-${di}`);
     if (budEl) { budEl.textContent = bud ? `$${bud.toFixed(0)}` : '—'; }
 
