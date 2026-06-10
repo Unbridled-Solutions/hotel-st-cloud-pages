@@ -30,6 +30,12 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
 .week-nav { background: var(--navy); border-bottom: 1px solid var(--border); padding: 9px 24px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .week-nav label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
 .week-input { background: var(--card-bg); border: 1px solid var(--border); color: var(--text); border-radius: 5px; padding: 5px 10px; font-size: 13px; outline: none; cursor: pointer; }
+.week-nav-btn {
+  background: var(--card-bg); border: 1px solid var(--border); color: var(--gold);
+  border-radius: 5px; font-size: 18px; font-weight: 700; padding: 2px 10px;
+  cursor: pointer; line-height: 1.4; transition: all 0.15s;
+}
+.week-nav-btn:hover { background: var(--navy); border-color: var(--gold); }
 .week-display { font-size: 13px; color: var(--gold); font-weight: 600; }
 .period-chip { background: rgba(90,139,167,0.15); border: 1px solid rgba(90,139,167,0.4); color: var(--blue); border-radius: 5px; font-size: 11px; font-weight: 700; padding: 3px 10px; letter-spacing: 0.5px; white-space: nowrap; }
 .wk-chip { background: rgba(201,170,124,0.1); border: 1px solid rgba(201,170,124,0.3); color: var(--gold); border-radius: 5px; font-size: 11px; font-weight: 700; padding: 3px 10px; }
@@ -191,7 +197,9 @@ footer span { color: var(--gold); font-weight: 600; }
 
 <div class="week-nav">
   <label>Week of</label>
-  <input type="date" class="week-input" id="weekStart" onchange="updateWeekDates()">
+  <button class="week-nav-btn" onclick="shiftWeek(-1)" title="Previous week">‹</button>
+  <input type="date" class="week-input" id="weekStart" onchange="onWeekChange()">
+  <button class="week-nav-btn" onclick="shiftWeek(1)" title="Next week">›</button>
   <span class="week-display" id="weekDisplay">Select a week</span>
   <span class="wk-chip" id="wkChip" style="display:none"></span>
   <span class="period-chip" id="periodChip" style="display:none"></span>
@@ -641,7 +649,35 @@ function getISOWeek(date) {
   return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
 }
 
-// ── WEEK DATES ────────────────────────────────────────────────────────────────
+// ── WEEK KEY ──────────────────────────────────────────────────────────────────
+function weekKey(dateStr) {
+  // Normalize to Monday of that week
+  const d = new Date(dateStr + 'T00:00:00');
+  const dow = d.getDay();
+  d.setDate(d.getDate() + (dow === 0 ? -6 : 1 - dow));
+  return `fp-labor-wk-${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function currentWeekKey() {
+  return weekKey(document.getElementById('weekStart').value);
+}
+
+// ── SHIFT WEEK BUTTONS ────────────────────────────────────────────────────────
+function shiftWeek(delta) {
+  // Save current week before navigating
+  saveLocal(false);
+  const inp = document.getElementById('weekStart');
+  const d = new Date(inp.value + 'T00:00:00');
+  d.setDate(d.getDate() + delta * 7);
+  inp.value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  onWeekChange();
+}
+
+function onWeekChange() {
+  updateWeekDates();
+  loadWeek(currentWeekKey());
+  recalc();
+}
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function updateWeekDates() {
   const val = document.getElementById('weekStart').value;
@@ -679,13 +715,14 @@ function setCurrentWeek() {
 }
 
 // ── SAVE / SUBMIT / HISTORY ───────────────────────────────────────────────────
-function saveLocal() {
+function saveLocal(notify = true) {
   POSITIONS.forEach((p, pi) => {
     for (let di = 0; di < 7; di++) {
       const hrsEl = document.getElementById(`hrs-${pi}-${di}`);
       if (hrsEl) state[pi][di].hours = parseFloat(hrsEl.value) || p.defH;
     }
   });
+  const key = currentWeekKey();
   const data = {
     week:      document.getElementById('weekStart').value,
     pcts:      Array.from({length:7}, (_,di) => document.getElementById(`pct-${di}`)?.value || '28'),
@@ -694,21 +731,48 @@ function saveLocal() {
     state:     JSON.parse(JSON.stringify(state)),
     positions: POSITIONS.map(p => ({name:p.name, rate:p.rate, dailyRate:p.dailyRate})),
   };
-  localStorage.setItem('fp-labor-draft', JSON.stringify(data));
-  showBanner('💾 Draft saved.');
+  localStorage.setItem(key, JSON.stringify(data));
+  // Also track which weeks have been saved
+  const wkIndex = JSON.parse(localStorage.getItem('fp-labor-week-index') || '[]');
+  if (!wkIndex.includes(key)) { wkIndex.unshift(key); localStorage.setItem('fp-labor-week-index', JSON.stringify(wkIndex.slice(0,52))); }
+  if (notify) showBanner('💾 Draft saved for this week.');
 }
 
-function loadLocal() {
-  const raw = localStorage.getItem('fp-labor-draft');
-  if (!raw) return;
-  try {
-    const data = JSON.parse(raw);
-    if (data.week) { document.getElementById('weekStart').value = data.week; updateWeekDates(); }
-    data.pcts?.forEach((v, di) => { const el = document.getElementById(`pct-${di}`); if (el && v) el.value = v; });
-    data.revs?.forEach((v, di) => { if (v) document.getElementById(`rev-${di}`).value = v; });
-    if (data.positions) data.positions.forEach((p, pi) => { if (POSITIONS[pi]) { POSITIONS[pi].name = p.name; POSITIONS[pi].rate = p.rate; if (p.dailyRate !== undefined) POSITIONS[pi].dailyRate = p.dailyRate; } });
-    if (data.state) Object.keys(data.state).forEach(pi => { state[pi] = state[pi] || {}; Object.keys(data.state[pi]).forEach(di => { state[pi][di] = data.state[pi][di]; }); });
-  } catch(e) {}
+function loadWeek(key) {
+  const raw = localStorage.getItem(key);
+
+  // Reset state and UI to blank for this week
+  initState();
+  // Reset toggles
+  POSITIONS.forEach((p, pi) => {
+    for (let di = 0; di < 7; di++) {
+      state[pi][di] = { on: false, hours: p.defH };
+    }
+  });
+  // Clear revenue/actual inputs
+  for (let di = 0; di < 7; di++) {
+    const rv = document.getElementById(`rev-${di}`); if (rv) rv.value = '';
+    const ac = document.getElementById(`tot-act-${di}`); if (ac) ac.value = '';
+    const pc = document.getElementById(`pct-${di}`);
+    if (pc) pc.value = [28,28,28,30,32,35,30][di];
+  }
+  document.getElementById('submitBadge').style.display = 'none';
+
+  if (raw) {
+    try {
+      const data = JSON.parse(raw);
+      data.pcts?.forEach((v, di) => { const el = document.getElementById(`pct-${di}`); if (el && v) el.value = v; });
+      data.revs?.forEach((v, di) => { if (v) document.getElementById(`rev-${di}`).value = v; });
+      if (data.positions) data.positions.forEach((p, pi) => { if (POSITIONS[pi]) { POSITIONS[pi].name = p.name; POSITIONS[pi].rate = p.rate; if (p.dailyRate !== undefined) POSITIONS[pi].dailyRate = p.dailyRate; } });
+      if (data.state) Object.keys(data.state).forEach(pi => { state[pi] = state[pi] || {}; Object.keys(data.state[pi]).forEach(di => { state[pi][di] = data.state[pi][di]; }); });
+      // Check if this week was submitted
+      const hist = JSON.parse(localStorage.getItem('fp-labor-history') || '[]');
+      if (hist.some(h => h.weekStart === data.week)) document.getElementById('submitBadge').style.display = 'inline-block';
+    } catch(e) {}
+  }
+
+  // Rebuild table to apply fresh state
+  buildTable();
 }
 
 function submitSchedule() {
@@ -794,9 +858,9 @@ function showBanner(msg) {
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-loadLocal();
 buildTable();
 setCurrentWeek();
+loadWeek(currentWeekKey());
 recalc();
 renderHistory();
 </script>
