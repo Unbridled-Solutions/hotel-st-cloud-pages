@@ -88,7 +88,7 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
 .edit-field { background: var(--navy); border: 1px solid var(--gold); color: var(--gold); font-size: 13px; padding: 3px 6px; border-radius: 4px; outline: none; width: 100%; }
 
 .pos-name-cell { padding: 7px 10px; }
-.pos-name { font-size: 13px; color: var(--text); font-weight: 500; }
+.pos-name { font-size: 13px; color: #ffffff; font-weight: 500; }
 .pos-sub  { font-size: 10px; color: var(--muted); margin-top: 1px; }
 .role-cell { padding: 5px 6px; text-align: center; }
 .role-badge { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 2px 6px; border-radius: 3px; white-space: nowrap; }
@@ -155,6 +155,9 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
 .sub-btn { padding: 9px 18px; border-radius: 7px; border: none; cursor: pointer; font-size: 13px; font-weight: 700; letter-spacing: 0.3px; transition: opacity 0.2s; }
 .sub-btn.save   { background: var(--navy); color: var(--muted); border: 1px solid var(--border); }
 .sub-btn.save:hover { color: var(--text); }
+.sub-btn.approve { background: var(--navy); color: var(--muted); border: 1px dashed var(--border); display: none; }
+.sub-btn.approve:hover { border-color: var(--green); color: var(--green); }
+.sub-btn.approve.approved { background: #1a4a2e; color: #4cca80; border: 1px solid #4cca80; display: inline-block; cursor: default; }
 .sub-btn.submit { background: var(--gold); color: var(--navy); }
 .sub-btn.submit:hover { opacity: 0.9; }
 
@@ -191,7 +194,10 @@ footer span { color: var(--gold); font-weight: 600; }
   <div class="header-right">
     <button class="hdr-btn" onclick="clearActuals()">Clear Actuals</button>
     <button class="hdr-btn" onclick="window.print()">⎙ Print</button>
+    <button class="hdr-btn" id="saveBtnHdr" onclick="saveLocal()" style="border-color:var(--gold);color:var(--gold)">💾 Save</button>
     <button class="hdr-btn primary" onclick="submitSchedule()">Submit for Approval →</button>
+    <button class="hdr-btn" id="approveBtnHdr" style="display:none;border-color:var(--green);color:var(--green)" onclick="approveSchedule()">Approve ✓</button>
+    <button class="hdr-btn" id="unlockBtnHdr" style="display:none;border-color:var(--gold);color:var(--gold)" onclick="unlockWeek()">🔓 Unlock</button>
   </div>
 </div>
 
@@ -221,10 +227,21 @@ footer span { color: var(--gold); font-weight: 600; }
     <th class="col-day"><div class="day-th"><span class="day-name">Tue</span><span class="day-date" id="date-1">—</span></div></th>
     <th class="col-day"><div class="day-th"><span class="day-name">Wed</span><span class="day-date" id="date-2">—</span></div></th>
     <th class="col-day"><div class="day-th"><span class="day-name">Thu</span><span class="day-date" id="date-3">—</span></div></th>
-    <th class="col-day"><div class="day-th"><span class="day-name weekend">Fri</span><span class="day-date" id="date-4">—</span></div></th>
+    <th class="col-day"><div class="day-th"><span class="day-name">Fri</span><span class="day-date" id="date-4">—</span></div></th>
     <th class="col-day"><div class="day-th"><span class="day-name weekend">Sat</span><span class="day-date" id="date-5">—</span></div></th>
-    <th class="col-day"><div class="day-th"><span class="day-name">Sun</span><span class="day-date" id="date-6">—</span></div></th>
+    <th class="col-day"><div class="day-th"><span class="day-name weekend">Sun</span><span class="day-date" id="date-6">—</span></div></th>
     <th class="col-week week-col"><div class="day-th"><span class="day-name total-col">Week</span><span class="day-date">Total</span></div></th>
+  </tr>
+  <tr class="rev-row" style="background:rgba(90,139,167,0.08)">
+    <th colspan="3" style="color:#5a8ba7;letter-spacing:1.5px">📊 4-Wk Avg Actual Revenue</th>
+    <td id="mavg-hdr-0" style="text-align:center;font-size:13px;font-weight:700;color:#5a8ba7">—</td>
+    <td id="mavg-hdr-1" style="text-align:center;font-size:13px;font-weight:700;color:#5a8ba7">—</td>
+    <td id="mavg-hdr-2" style="text-align:center;font-size:13px;font-weight:700;color:#5a8ba7">—</td>
+    <td id="mavg-hdr-3" style="text-align:center;font-size:13px;font-weight:700;color:#5a8ba7">—</td>
+    <td id="mavg-hdr-4" style="text-align:center;font-size:13px;font-weight:700;color:#5a8ba7">—</td>
+    <td id="mavg-hdr-5" style="text-align:center;font-size:13px;font-weight:700;color:#5a8ba7">—</td>
+    <td id="mavg-hdr-6" style="text-align:center;font-size:13px;font-weight:700;color:#5a8ba7">—</td>
+    <td class="week-col" style="text-align:center;font-size:13px;font-weight:700;color:#5a8ba7" id="mavg-hdr-week">—</td>
   </tr>
   <tr class="rev-row">
     <th colspan="3">📈 Forecast Revenue</th>
@@ -250,9 +267,11 @@ footer span { color: var(--gold); font-weight: 600; }
     <td class="target-cell"><input class="pct-input" type="number" id="pct-5" value="35" min="25" max="36" step="1" oninput="recalc()"><span class="pct-sign">%</span><span class="target-range" id="trg-5">—</span></td>
     <td class="target-cell"><input class="pct-input" type="number" id="pct-6" value="30" min="25" max="36" step="1" oninput="recalc()"><span class="pct-sign">%</span><span class="target-range" id="trg-6">—</span></td>
     <td class="week-col target-cell">
-      <span style="font-size:9px;color:var(--muted);letter-spacing:0.5px;display:block">28–33%</span>
-      <span class="target-range" id="trg-week" style="font-size:13px">—</span>
-      <span style="font-size:9px;color:var(--muted);display:block" id="trg-week-pct">week target</span>
+      <span style="font-size:9px;color:var(--muted);letter-spacing:0.5px;display:block">SCHEDULED</span>
+      <span id="trg-week-scheduled" style="font-size:14px;font-weight:700;color:var(--green);display:block">—</span>
+      <span style="font-size:9px;color:var(--muted);letter-spacing:0.5px;display:block;margin-top:4px">TARGET RANGE</span>
+      <span class="target-range" id="trg-week" style="font-size:12px">—</span>
+      <span style="font-size:9px;color:var(--muted);display:block" id="trg-week-pct">enter revenue</span>
     </td>
   </tr>
 </thead>
@@ -270,7 +289,9 @@ footer span { color: var(--gold); font-weight: 600; }
   </div>
   <div class="submit-right">
     <button class="sub-btn save" onclick="saveLocal()">💾 Save Draft</button>
+    <button class="sub-btn" style="background:var(--navy);color:var(--muted);border:1px dashed var(--border)" onclick="clearThisWeek()">🗑 Clear This Week</button>
     <button class="sub-btn submit" onclick="submitSchedule()">Submit for Approval →</button>
+    <button class="sub-btn approve" id="approveBtn" onclick="approveSchedule()">Approve ✓</button>
   </div>
 </div>
 
@@ -293,9 +314,10 @@ footer span { color: var(--gold); font-weight: 600; }
           <th>Actual Labor</th>
           <th>Actual Labor %</th>
           <th>Variance</th>
+          <th>Status</th>
         </tr>
       </thead>
-      <tbody id="histBody"><tr><td colspan="9" class="hist-empty">No weeks submitted yet. Complete a schedule and click Submit for Approval to start tracking.</td></tr></tbody>
+      <tbody id="histBody"><tr><td colspan="10" class="hist-empty">No weeks submitted yet. Complete a schedule and click Submit for Approval to start tracking.</td></tr></tbody>
     </table>
   </div>
 </div>
@@ -305,19 +327,19 @@ footer span { color: var(--gold); font-weight: 600; }
 <script>
 // ── POSITIONS ─────────────────────────────────────────────────────────────────
 let POSITIONS = [
-  {section:'MANAGEMENT',           name:'Executive Chef',           sub:'$85K · 250 days/yr',    role:'MGR', rate:null,  dailyRate:340.00, defH:8 },
-  {section:null,                   name:'Restaurant Manager',       sub:'$62K · 250 days/yr',    role:'MGR', rate:null,  dailyRate:248.00, defH:8 },
-  {section:null,                   name:'Asst Manager / Events',    sub:'$62K · 250 days/yr',    role:'MGR', rate:null,  dailyRate:248.00, defH:8 },
+  {section:'MANAGEMENT',           name:'Executive Chef',           sub:'Daily Rate',    role:'MGR', rate:null,  dailyRate:340.00, defH:8 },
+  {section:null,                   name:'Restaurant Manager',       sub:'Daily Rate',            role:'MGR', rate:null,  dailyRate:248.00, defH:8 },
   {section:null,                   name:'Shift Lead / Asst #1',     sub:'MGT',                   role:'MGR', rate:18.00, dailyRate:null,   defH:8 },
   {section:null,                   name:'Shift Lead / Asst #2',     sub:'MGT',                   role:'MGR', rate:18.00, dailyRate:null,   defH:8 },
 
-  {section:'BACK OF HOUSE',        name:'Head Cook',             sub:'Line Lead',              role:'BOH', rate:19.00, dailyRate:null,   defH:8 },
-  {section:null,                   name:'BOH Shift Lead',        sub:'',                       role:'BOH', rate:17.00, dailyRate:null,   defH:8 },
+  {section:'BACK OF HOUSE',        name:'BOH Shift Lead',        sub:'Line Lead',              role:'BOH', rate:19.00, dailyRate:null,   defH:8 },
   {section:null,                   name:'Line Cook #1',          sub:'Service',                role:'BOH', rate:17.00, dailyRate:null,   defH:6 },
   {section:null,                   name:'Line Cook #2',          sub:'Service',                role:'BOH', rate:16.00, dailyRate:null,   defH:6 },
   {section:null,                   name:'Prep Cook',             sub:'AM Prep',                role:'BOH', rate:15.50, dailyRate:null,   defH:7 },
   {section:null,                   name:'Dishwasher #1',         sub:'',                       role:'BOH', rate:14.00, dailyRate:null,   defH:6 },
   {section:null,                   name:'Dishwasher #2',         sub:'',                       role:'BOH', rate:14.00, dailyRate:null,   defH:6 },
+  {section:null,                   name:'Baker #1',              sub:'AM Bake',                role:'BOH', rate:15.50, dailyRate:null,   defH:6 },
+  {section:null,                   name:'Baker #2',              sub:'AM Bake',                role:'BOH', rate:15.50, dailyRate:null,   defH:6 },
 
   {section:'FRONT OF HOUSE',       name:'FOH Shift Lead',        sub:'',                       role:'FOH', rate:16.00, dailyRate:null,   defH:8 },
   {section:null,                   name:'Server #1',             sub:'Dining Room',            role:'FOH', rate:11.40, dailyRate:null,   defH:5 },
@@ -348,6 +370,19 @@ function initState() {
   });
 }
 initState();
+
+// ── AUTO-SAVE (debounced, 2s after last input) ────────────────────────────
+let _autoSaveTimer = null;
+function scheduleAutoSave() {
+  clearTimeout(_autoSaveTimer);
+  _autoSaveTimer = setTimeout(() => {
+    // Don't auto-save if week is locked (approved)
+    if (document.body.classList.contains('week-locked')) return;
+    saveLocal(false);
+    const btn = document.getElementById('saveBtnHdr');
+    if (btn) { btn.textContent = '✓ Saved'; setTimeout(() => { btn.textContent = '💾 Save'; }, 1500); }
+  }, 2000);
+}
 
 // ── BUILD TABLE ───────────────────────────────────────────────────────────────
 function buildTable() {
@@ -422,14 +457,17 @@ function buildTable() {
 }
 
 function buildFooter() {
-  let budCells = '', pctCells = '', actRevCells = '', actCells = '', actLaborPctCells = '', varCells = '';
+  let budCells = '', pctCells = '', restRevCells = '', evtRevCells = '', actRevTotalCells = '', actCells = '', actLaborPctCells = '', varCells = '', revVarCells = '';
   for (let di = 0; di < 7; di++) {
     budCells        += `<td class="total-val green"  id="tot-bud-${di}">—</td>`;
     pctCells        += `<td class="total-val"        id="tot-pct-${di}">—</td>`;
-    actRevCells     += `<td><input class="actual-input" type="number" id="tot-actrev-${di}" placeholder="actual $" oninput="recalc()" style="border-bottom-color:rgba(90,139,167,0.6);color:#5a8ba7"></td>`;
+    restRevCells    += `<td><input class="actual-input" type="number" id="tot-actrev-${di}" placeholder="$" oninput="recalc()" style="border-bottom-color:rgba(90,139,167,0.6);color:#5a8ba7"></td>`;
+    evtRevCells     += `<td><input class="actual-input" type="number" id="tot-evtrev-${di}" placeholder="$" oninput="recalc()" style="border-bottom-color:rgba(155,110,200,0.6);color:#9b6ec8"></td>`;
+    actRevTotalCells+= `<td class="total-val" id="tot-actrev-total-${di}" style="color:#5a8ba7;font-weight:700">—</td>`;
     actCells        += `<td><input class="actual-input" type="number" id="tot-act-${di}"    placeholder="actual $" oninput="recalc()"></td>`;
     actLaborPctCells+= `<td class="total-val"        id="tot-actlpct-${di}">—</td>`;
     varCells        += `<td class="total-val"         id="tot-var-${di}">—</td>`;
+    revVarCells     += `<td class="total-val"         id="tot-revvar-${di}">—</td>`;
   }
   document.getElementById('schedFoot').innerHTML = `
     <tr class="total-row budget-row" style="border-top:2px solid var(--border)">
@@ -449,11 +487,28 @@ function buildFooter() {
     </tr>
     <tr class="total-row" style="background:rgba(90,139,167,0.05);border-top:1px solid var(--border)">
       <td colspan="2" class="pos-name-cell">
-        <span class="total-label" style="color:#5a8ba7">Actual Revenue $</span>
+        <span class="total-label" style="color:#5a8ba7">Restaurant Revenue $</span>
       </td>
-      <td class="rate-cell" style="font-size:10px;color:var(--muted)">entered</td>
-      ${actRevCells}
+      <td class="rate-cell" style="font-size:10px;color:var(--muted)">actual</td>
+      ${restRevCells}
       <td class="total-val week-col" id="tot-actrev-week" style="color:#5a8ba7">—</td>
+    </tr>
+    <tr class="total-row" style="background:rgba(155,110,200,0.05)">
+      <td colspan="2" class="pos-name-cell">
+        <span class="total-label" style="color:#9b6ec8">Event Revenue $</span>
+      </td>
+      <td class="rate-cell" style="font-size:10px;color:var(--muted)">actual</td>
+      ${evtRevCells}
+      <td class="total-val week-col" id="tot-evtrev-week" style="color:#9b6ec8">—</td>
+    </tr>
+    <tr class="total-row" style="background:rgba(90,139,167,0.10);border-top:1px solid rgba(90,139,167,0.3)">
+      <td colspan="2" class="pos-name-cell">
+        <span class="total-label" style="color:#5a8ba7">Total Actual Revenue</span>
+        <span style="font-size:10px;color:var(--muted);margin-left:6px">restaurant + event</span>
+      </td>
+      <td class="rate-cell" style="font-size:10px;color:var(--muted)">combined</td>
+      ${actRevTotalCells}
+      <td class="total-val week-col" id="tot-actrev-total-week" style="color:#5a8ba7;font-weight:700">—</td>
     </tr>
     <tr class="total-row actual-row">
       <td colspan="2" class="pos-name-cell"><span class="total-label" style="color:var(--orange)">Actual Labor $</span></td>
@@ -472,6 +527,15 @@ function buildFooter() {
       <td class="rate-cell" style="font-size:10px;color:var(--muted)">labor $</td>
       ${varCells}
       <td class="total-val week-col" id="tot-var-week">—</td>
+    </tr>
+    <tr class="total-row" style="border-top:1px solid var(--border)">
+      <td colspan="2" class="pos-name-cell">
+        <span class="total-label" style="color:var(--gold)">Revenue Variance</span>
+        <span style="font-size:10px;color:var(--muted);margin-left:6px">actual − forecast</span>
+      </td>
+      <td class="rate-cell" style="font-size:10px;color:var(--muted)">rev $</td>
+      ${revVarCells}
+      <td class="total-val week-col" id="tot-revvar-week">—</td>
     </tr>`;
 }
 
@@ -495,12 +559,12 @@ function editRate(pi, el) {
   const p = POSITIONS[pi];
   const input = document.createElement('input');
   input.className = 'edit-field'; input.type = 'number';
-  input.value = p.dailyRate || p.rate || ''; input.style.width = '64px';
-  input.min = '0'; input.step = '0.25'; input.placeholder = p.dailyRate !== undefined ? 'daily $' : 'hr $';
+  input.value = p.dailyRate != null ? p.dailyRate : (p.rate || ''); input.style.width = '64px';
+  input.min = '0'; input.step = '0.25'; input.placeholder = p.dailyRate != null ? 'daily $' : 'hr $';
   el.replaceWith(input); input.focus(); input.select();
   const save = () => {
     const v = parseFloat(input.value);
-    if (!isNaN(v)) { if (p.dailyRate !== undefined) p.dailyRate = v; else p.rate = v; }
+    if (!isNaN(v)) { if (p.dailyRate != null) p.dailyRate = v; else p.rate = v; }
     const cell = document.getElementById(`ratecell-${pi}`);
     cell.innerHTML = p.dailyRate
       ? `<span style="font-size:11px;color:var(--gold)">$${p.dailyRate.toFixed(2)}<br><span style="font-size:9px;color:var(--muted);letter-spacing:0.5px">PER DAY</span></span>`
@@ -555,14 +619,16 @@ function recalc() {
     }
   });
 
-  let weekBudget = 0, weekRev = 0, weekActual = 0, weekActRev = 0;
+  let weekBudget = 0, weekRev = 0, weekActual = 0, weekActRev = 0, weekEvtRev = 0;
 
   for (let di = 0; di < 7; di++) {
     const rev    = parseFloat(document.getElementById(`rev-${di}`)?.value) || 0;
     const bud    = dayTotals[di] * TAX;
     const act    = parseFloat(document.getElementById(`tot-act-${di}`)?.value) || 0;
     const actRev = parseFloat(document.getElementById(`tot-actrev-${di}`)?.value) || 0;
-    weekBudget += bud; weekRev += rev; weekActual += act; weekActRev += actRev;
+    const evtRev = parseFloat(document.getElementById(`tot-evtrev-${di}`)?.value) || 0;
+    const actRevTotal = actRev + evtRev;
+    weekBudget += bud; weekRev += rev; weekActual += act; weekActRev += actRev; weekEvtRev += evtRev;
 
     // Clamp pct to 25–36
     const pctEl = document.getElementById(`pct-${di}`);
@@ -606,15 +672,29 @@ function recalc() {
       } else { varEl.textContent = '—'; varEl.className = 'total-val'; }
     }
 
-    // Actual Labor % of Revenue (actual labor ÷ actual revenue)
+    // Revenue Variance (actual revenue – forecast revenue) — uses total actual rev
+    const revVarEl = document.getElementById(`tot-revvar-${di}`);
+    if (revVarEl) {
+      if (actRevTotal && rev) {
+        const rv = actRevTotal - rev;
+        revVarEl.textContent = (rv >= 0 ? '+' : '') + `$${Math.round(rv).toLocaleString()}`;
+        revVarEl.className = `total-val ${rv >= 0 ? 'pct-good' : 'pct-over'}`;
+      } else { revVarEl.textContent = '—'; revVarEl.className = 'total-val'; }
+    }
+
+    // Actual Labor % of Revenue (actual labor ÷ total actual revenue)
     const actLPctEl = document.getElementById(`tot-actlpct-${di}`);
     if (actLPctEl) {
-      if (act && actRev) {
-        const p = (act / actRev * 100).toFixed(1);
+      if (act && actRevTotal) {
+        const p = (act / actRevTotal * 100).toFixed(1);
         actLPctEl.textContent = `${p}%`;
         actLPctEl.className = `total-val ${p <= 28 ? 'pct-good' : p <= 33 ? 'pct-warn' : 'pct-over'}`;
       } else { actLPctEl.textContent = '—'; actLPctEl.className = 'total-val'; }
     }
+
+    // Per-day Total Actual Revenue display cell
+    const actRevTotalEl = document.getElementById(`tot-actrev-total-${di}`);
+    if (actRevTotalEl) actRevTotalEl.textContent = actRevTotal ? `$${Math.round(actRevTotal).toLocaleString()}` : '—';
   }
 
   // WEEK TOTALS column
@@ -646,15 +726,34 @@ function recalc() {
     } else { varWkEl.textContent = '—'; varWkEl.className = 'total-val week-col'; }
   }
 
-  // Actual Revenue week total
+  // Actual Revenue (restaurant) week total
   const actRevWkEl = document.getElementById('tot-actrev-week');
   if (actRevWkEl) actRevWkEl.textContent = weekActRev ? `$${Math.round(weekActRev).toLocaleString()}` : '—';
 
-  // Actual Labor % of Revenue — week total (actual labor ÷ actual revenue)
+  // Event Revenue week total
+  const evtRevWkEl = document.getElementById('tot-evtrev-week');
+  if (evtRevWkEl) evtRevWkEl.textContent = weekEvtRev ? `$${Math.round(weekEvtRev).toLocaleString()}` : '—';
+
+  // Total Actual Revenue week total
+  const weekActRevTotal = weekActRev + weekEvtRev;
+  const actRevTotalWkEl = document.getElementById('tot-actrev-total-week');
+  if (actRevTotalWkEl) actRevTotalWkEl.textContent = weekActRevTotal ? `$${Math.round(weekActRevTotal).toLocaleString()}` : '—';
+
+  // Revenue Variance week total (total actual revenue – forecast revenue)
+  const revVarWkEl = document.getElementById('tot-revvar-week');
+  if (revVarWkEl) {
+    if (weekActRevTotal && weekRev) {
+      const rv = weekActRevTotal - weekRev;
+      revVarWkEl.textContent = (rv >= 0 ? '+' : '') + `$${Math.round(rv).toLocaleString()}`;
+      revVarWkEl.className = `total-val week-col ${rv >= 0 ? 'pct-good' : 'pct-over'}`;
+    } else { revVarWkEl.textContent = '—'; revVarWkEl.className = 'total-val week-col'; }
+  }
+
+  // Actual Labor % of Revenue — week total (actual labor ÷ total actual revenue)
   const actLPctWkEl = document.getElementById('tot-actlpct-week');
   if (actLPctWkEl) {
-    if (weekActual && weekActRev) {
-      const p = (weekActual / weekActRev * 100).toFixed(1);
+    if (weekActual && weekActRevTotal) {
+      const p = (weekActual / weekActRevTotal * 100).toFixed(1);
       actLPctWkEl.textContent = `${p}%`;
       actLPctWkEl.className = `total-val week-col ${p <= 28 ? 'pct-good' : p <= 33 ? 'pct-warn' : 'pct-over'}`;
     } else { actLPctWkEl.textContent = '—'; actLPctWkEl.className = 'total-val week-col'; }
@@ -663,29 +762,98 @@ function recalc() {
   // Weekly target display
   const trgWkEl = document.getElementById('trg-week');
   const trgWkPctEl = document.getElementById('trg-week-pct');
+  const trgWkSchedEl = document.getElementById('trg-week-scheduled');
+
+  // Always show scheduled labor total
+  if (trgWkSchedEl) {
+    if (weekBudget) {
+      trgWkSchedEl.textContent = `$${Math.round(weekBudget).toLocaleString()}`;
+      trgWkSchedEl.style.color = weekPct ? (weekPct <= 33 ? 'var(--green)' : 'var(--red)') : 'var(--green)';
+    } else {
+      trgWkSchedEl.textContent = '—';
+      trgWkSchedEl.style.color = 'var(--muted)';
+    }
+  }
+
   if (trgWkEl && weekRev) {
     const lo = Math.round(weekRev * 0.28), hi = Math.round(weekRev * 0.33);
     trgWkEl.textContent = `$${lo.toLocaleString()} – $${hi.toLocaleString()}`;
     trgWkEl.style.color = !weekBudget ? 'var(--muted)' : (weekBudget >= lo && weekBudget <= hi) ? 'var(--green)' : weekBudget < lo ? 'var(--gold)' : 'var(--red)';
-    if (trgWkPctEl) trgWkPctEl.textContent = weekPct ? `actual: ${weekPct.toFixed(1)}%` : '28–33% target';
-  } else if (trgWkEl) { trgWkEl.textContent = '—'; }
+    if (trgWkPctEl) trgWkPctEl.textContent = weekPct ? `${weekPct.toFixed(1)}% of revenue` : '28–33% target';
+  } else if (trgWkEl) {
+    trgWkEl.textContent = '—';
+    if (trgWkPctEl) trgWkPctEl.textContent = 'enter revenue';
+  }
 
-  updateSummary(weekBudget, weekRev, weekActual, weekPct);
+
+  // ── 4-WEEK MOVING AVERAGE of actual revenue by day of week ─────────────
+  (function() {
+    const HIST_KEY = 'fp-ph-history';
+    const hist = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
+    const curWeekStart = document.getElementById('weekStart').value;
+    // Build a synthetic entry from live actrev inputs for the current week
+    const liveActRevByDay = Array.from({length:7}, (_,di) => {
+      const r = parseFloat(document.getElementById(`tot-actrev-${di}`)?.value) || 0;
+      const e = parseFloat(document.getElementById(`tot-evtrev-${di}`)?.value) || 0;
+      const total = r + e;
+      return total > 0 ? total : null;
+    });
+    const liveActRev = liveActRevByDay.reduce((a,v) => a + (v||0), 0);
+    // Prior submitted weeks (exclude current week to avoid double-counting)
+    const prior = hist.filter(h => h.actRevByDay && Array.isArray(h.actRevByDay) && h.weekStart !== curWeekStart);
+    // Prepend current week's live data if any actrev entered
+    const all = liveActRevByDay.some(v => v > 0)
+      ? [{ actRevByDay: liveActRevByDay, actRev: liveActRev || null }, ...prior]
+      : prior;
+    for (let di = 0; di < 7; di++) {
+      const el = document.getElementById(`mavg-hdr-${di}`);
+      if (!el) continue;
+      const vals = all.map(h => h.actRevByDay[di]).filter(v => v !== null && v !== undefined && v > 0);
+      const top4 = vals.slice(0, 4);
+      if (top4.length < 4) {
+        el.textContent = top4.length === 0 ? '—' : `(${top4.length}/4)`;
+        el.title = top4.length === 0 ? 'No actual data yet — enter actual revenue to populate' : `${top4.length} of 4 weeks: ${top4.map(v=>'$'+Math.round(v).toLocaleString()).join(', ')}`;
+      } else {
+        const avg = Math.round(top4.reduce((a,b)=>a+b,0) / 4);
+        el.textContent = `$${avg.toLocaleString()}`;
+        el.title = `4-week avg: ${top4.map(v=>'$'+Math.round(v).toLocaleString()).join(', ')}`;
+      }
+    }
+    const wkEl = document.getElementById('mavg-hdr-week');
+    if (wkEl) {
+      const wkVals = all.map(h => h.actRev).filter(v => v > 0);
+      const top4wk = wkVals.slice(0, 4);
+      if (top4wk.length < 4) {
+        wkEl.textContent = top4wk.length === 0 ? '—' : `(${top4wk.length}/4)`;
+        wkEl.title = top4wk.length === 0 ? 'No actual data yet' : `${top4wk.length} of 4 weeks`;
+      } else {
+        const avg = Math.round(top4wk.reduce((a,b)=>a+b,0) / 4);
+        wkEl.textContent = `$${avg.toLocaleString()}`;
+        wkEl.title = `4-week avg actual weekly revenue`;
+      }
+    }
+  })();
+
+  updateSummary(weekBudget, weekRev, weekActual, weekActRevTotal, weekPct);
+  scheduleAutoSave();
 }
 
-function updateSummary(weekBudget, weekRev, weekActual, weekPct) {
+function updateSummary(weekBudget, weekRev, weekActual, weekActRev, weekPct) {
   const pctColor = !weekPct ? 'gold' : weekPct < 28 ? 'gold' : weekPct <= 33 ? 'green' : 'red';
   const staffedDays = Array.from({length:7}, (_,di) => POSITIONS.some((_,pi) => state[pi]?.[di]?.on)).filter(Boolean).length;
-  const actPct = weekRev && weekActual ? (weekActual / weekRev * 100).toFixed(1) : null;
+  const actLaborPct = weekActRev && weekActual ? (weekActual / weekActRev * 100).toFixed(1) : null;
+  const actLaborPctColor = !actLaborPct ? 'orange' : actLaborPct <= 28 ? 'green' : actLaborPct <= 33 ? 'green' : 'red';
   const pctLabel = !weekPct ? '—' : `${weekPct.toFixed(1)}%`;
   const pctNote = !weekPct ? 'enter revenue + labor' : weekPct < 28 ? 'under target (28%)' : weekPct <= 33 ? '✓ on target' : `over target (33% max)`;
 
   document.getElementById('weekSummary').innerHTML = `
-    <div class="sum-card gold"><div class="sum-label">Week Revenue</div><div class="sum-val">${weekRev ? '$'+weekRev.toLocaleString() : '—'}</div><div class="sum-sub">Forecast total</div></div>
+    <div class="sum-card gold"><div class="sum-label">Forecast Revenue</div><div class="sum-val">${weekRev ? '$'+weekRev.toLocaleString() : '—'}</div><div class="sum-sub">Budgeted week total</div></div>
     <div class="sum-card green"><div class="sum-label">Budget Labor</div><div class="sum-val">${weekBudget ? '$'+Math.round(weekBudget).toLocaleString() : '—'}</div><div class="sum-sub">Incl. 11% tax</div></div>
-    <div class="sum-card ${pctColor}"><div class="sum-label">Weekly Labor %</div><div class="sum-val" style="color:var(--${pctColor})">${pctLabel}</div><div class="sum-sub">${pctNote}</div></div>
-    <div class="sum-card orange"><div class="sum-label">Actual Labor</div><div class="sum-val">${weekActual ? '$'+Math.round(weekActual).toLocaleString() : '—'}</div><div class="sum-sub">${actPct ? actPct+'% of rev' : 'not submitted'}</div></div>
-    <div class="sum-card blue"><div class="sum-label">Days Staffed</div><div class="sum-val">${staffedDays} / 7</div><div class="sum-sub">This week</div></div>`;
+    <div class="sum-card ${pctColor}"><div class="sum-label">Budget Labor %</div><div class="sum-val" style="color:var(--${pctColor})">${pctLabel}</div><div class="sum-sub">${pctNote}</div></div>
+    <div class="sum-card blue"><div class="sum-label">Total Actual Revenue</div><div class="sum-val" style="color:var(--blue)">${weekActRev ? '$'+Math.round(weekActRev).toLocaleString() : '—'}</div><div class="sum-sub">${weekActRev && weekRev ? (weekActRev >= weekRev ? '▲ above forecast' : '▼ below forecast') : 'restaurant + events'}</div></div>
+    <div class="sum-card orange"><div class="sum-label">Actual Labor</div><div class="sum-val">${weekActual ? '$'+Math.round(weekActual).toLocaleString() : '—'}</div><div class="sum-sub">${actLaborPct ? actLaborPct+'% of actual rev' : 'enter actual labor'}</div></div>
+    <div class="sum-card ${actLaborPctColor}"><div class="sum-label">Actual Labor %</div><div class="sum-val" style="color:var(--${actLaborPctColor})">${actLaborPct ? actLaborPct+'%' : '—'}</div><div class="sum-sub">${actLaborPct ? (actLaborPct <= 33 ? '✓ on target' : 'over target (33% max)') : 'actual ÷ actual rev'}</div></div>
+    <div class="sum-card blue" style="--card-accent:var(--muted)"><div class="sum-label">Days Staffed</div><div class="sum-val">${staffedDays} / 7</div><div class="sum-sub">This week</div></div>`;
 }
 
 // ── ISO WEEK / PERIOD ─────────────────────────────────────────────────────────
@@ -699,10 +867,11 @@ function getISOWeek(date) {
 
 // ── WEEK KEY ──────────────────────────────────────────────────────────────────
 function weekKey(dateStr) {
-  // Normalize to Monday of that week
+  // Normalize to Monday of that week (Mon–Sun to align with 13-period calendar)
   const d = new Date(dateStr + 'T00:00:00');
-  const dow = d.getDay();
-  d.setDate(d.getDate() + (dow === 0 ? -6 : 1 - dow));
+  const dow = d.getDay(); // 0=Sun,1=Mon,...,6=Sat
+  const diff = (dow === 0) ? -6 : 1 - dow; // shift Sun back 6, others back to Mon
+  d.setDate(d.getDate() + diff);
   return `fp-ph-wk-${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
@@ -731,8 +900,9 @@ function updateWeekDates() {
   const val = document.getElementById('weekStart').value;
   if (!val) return;
   const start = new Date(val + 'T00:00:00');
-  const dow = start.getDay();
-  start.setDate(start.getDate() + (dow === 0 ? -6 : 1 - dow));
+  const dow = start.getDay(); // 0=Sun,1=Mon,...,6=Sat
+  const diff = (dow === 0) ? -6 : 1 - dow; // snap to Monday
+  start.setDate(start.getDate() + diff);
   for (let i = 0; i < 7; i++) {
     const d = new Date(start); d.setDate(start.getDate() + i);
     document.getElementById(`date-${i}`).textContent = `${MONTHS[d.getMonth()]} ${d.getDate()}`;
@@ -756,8 +926,9 @@ function updateWeekDates() {
 
 function setCurrentWeek() {
   const t = new Date();
-  const dow = t.getDay();
-  t.setDate(t.getDate() + (dow === 0 ? -6 : 1 - dow));
+  const dow = t.getDay(); // 0=Sun,1=Mon,...,6=Sat
+  const diff = (dow === 0) ? -6 : 1 - dow; // snap to Monday
+  t.setDate(t.getDate() + diff);
   document.getElementById('weekStart').value = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
   updateWeekDates();
 }
@@ -777,6 +948,7 @@ function saveLocal(notify = true) {
     revs:      Array.from({length:7}, (_,di) => document.getElementById(`rev-${di}`)?.value || ''),
     acts:      Array.from({length:7}, (_,di) => document.getElementById(`tot-act-${di}`)?.value || ''),
     actrevs:   Array.from({length:7}, (_,di) => document.getElementById(`tot-actrev-${di}`)?.value || ''),
+    evtrevs:   Array.from({length:7}, (_,di) => document.getElementById(`tot-evtrev-${di}`)?.value || ''),
     state:     JSON.parse(JSON.stringify(state)),
     positions: POSITIONS.map(p => ({name:p.name, rate:p.rate, dailyRate:p.dailyRate})),
   };
@@ -815,7 +987,8 @@ function loadWeek(key) {
       data.revs?.forEach((v, di) => { if (v) document.getElementById(`rev-${di}`).value = v; });
       data.acts?.forEach((v, di) => { const el = document.getElementById(`tot-act-${di}`); if (el && v) el.value = v; });
       data.actrevs?.forEach((v, di) => { const el = document.getElementById(`tot-actrev-${di}`); if (el && v) el.value = v; });
-      if (data.positions) data.positions.forEach((p, pi) => { if (POSITIONS[pi]) { POSITIONS[pi].name = p.name; POSITIONS[pi].rate = p.rate; if (p.dailyRate !== undefined) POSITIONS[pi].dailyRate = p.dailyRate; } });
+      data.evtrevs?.forEach((v, di) => { const el = document.getElementById(`tot-evtrev-${di}`); if (el && v) el.value = v; });
+      if (data.positions) data.positions.forEach((p, pi) => { if (POSITIONS[pi]) { POSITIONS[pi].name = p.name; POSITIONS[pi].rate = p.rate; if (p.dailyRate != null) POSITIONS[pi].dailyRate = p.dailyRate; } });
       if (data.state) Object.keys(data.state).forEach(pi => { state[pi] = state[pi] || {}; Object.keys(data.state[pi]).forEach(di => { state[pi][di] = data.state[pi][di]; }); });
       // Check if this week was submitted
       const hist = JSON.parse(localStorage.getItem('fp-ph-history') || '[]');
@@ -825,6 +998,13 @@ function loadWeek(key) {
 
   // Rebuild table to apply fresh state
   buildTable();
+  // Lock if this week is approved
+  (function() {
+    const wkStart = document.getElementById('weekStart').value;
+    const h = JSON.parse(localStorage.getItem('fp-ph-history') || '[]');
+    const entry = h.find(e => e.weekStart === wkStart);
+    lockWeek(!!(entry && entry.approved));
+  })();
 }
 
 function submitSchedule() {
@@ -840,17 +1020,26 @@ function submitSchedule() {
   const weekBudTxt = document.getElementById('tot-bud-week')?.textContent || '—';
   const weekActual = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`tot-act-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
   const weekActRev = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`tot-actrev-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
+  const weekEvtRev = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`tot-evtrev-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
+  const weekActRevTotal = weekActRev + weekEvtRev;
   const weekBudNum = parseFloat(weekBudTxt.replace(/[^0-9.]/g,'')) || 0;
   const weekPct    = weekRev ? (weekBudNum / weekRev * 100) : null;
   const actPct     = weekRev && weekActual ? (weekActual / weekRev * 100) : null;
   const variance   = weekActual && weekBudNum ? weekActual - weekBudNum : null;
-  const revVariance = weekActRev && weekRev ? weekActRev - weekRev : null;
+  const revVariance = weekActRevTotal && weekRev ? weekActRevTotal - weekRev : null;
   const weekStart  = document.getElementById('weekStart').value;
 
   // Save to history
   const hist = JSON.parse(localStorage.getItem('fp-ph-history') || '[]');
   // Remove existing entry for same week
   const filtered = hist.filter(h => h.weekStart !== weekStart);
+  const revByDay = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`rev-${di}`)?.value)||null);
+  const actRevByDay = Array.from({length:7}, (_,di) => {
+    const r = parseFloat(document.getElementById(`tot-actrev-${di}`)?.value)||0;
+    const e = parseFloat(document.getElementById(`tot-evtrev-${di}`)?.value)||0;
+    const total = r + e;
+    return total > 0 ? total : null;
+  });
   filtered.unshift({
     weekStart, weekDisplay, isoWk, period,
     rev: weekRev, budget: weekBudNum,
@@ -858,16 +1047,96 @@ function submitSchedule() {
     actual: weekActual || null,
     actPct: actPct ? +actPct.toFixed(1) : null,
     variance: variance ? +variance.toFixed(0) : null,
-    actRev: weekActRev || null,
+    actRev: weekActRevTotal || null,
+    evtRev: weekEvtRev || null,
     revVariance: revVariance ? +revVariance.toFixed(0) : null,
+    revByDay,
+    actRevByDay,
   });
   // Keep last 52 weeks
   localStorage.setItem('fp-ph-history', JSON.stringify(filtered.slice(0, 52)));
 
   document.getElementById('submitBadge').style.display = 'inline-block';
+  // Show Approve button
+  const btn  = document.getElementById('approveBtn');
+  const btnH = document.getElementById('approveBtnHdr');
+  const HIST_KEY = 'fp-ph-history';
+  const curHist = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
+  const curEntry = curHist.find(h => h.weekStart === weekStart);
+  if (curEntry?.approved) {
+    if (btn)  { btn.textContent = '✅ Approved'; btn.classList.add('approved'); btn.onclick = null; }
+    if (btnH) { btnH.textContent = '✅ Approved'; btnH.style.display='inline-block'; btnH.style.background='#1a4a2e'; btnH.style.color='#4cca80'; btnH.onclick = null; }
+  } else {
+    if (btn)  { btn.style.display = 'inline-block'; btn.textContent = 'Approve ✓'; btn.classList.remove('approved'); btn.onclick = approveSchedule; }
+    if (btnH) { btnH.style.display = 'inline-block'; btnH.textContent = 'Approve ✓'; btnH.style.background=''; btnH.style.color='var(--green)'; btnH.onclick = approveSchedule; }
+  }
   showBanner(`✅ Schedule for ${weekDisplay} submitted and saved to 52-week history.`);
   renderHistory();
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+
+// ── WEEK LOCK (approved weeks are read-only) ─────────────────────────────
+function lockWeek(lock) {
+  document.body.classList.toggle('week-locked', lock);
+  // Disable/enable all inputs in the schedule table
+  document.querySelectorAll(
+    '.sched-table input, .sched-table select, .rev-input, .pct-input, .actual-input, .hours-input, .day-toggle input'
+  ).forEach(el => { el.disabled = lock; });
+  // Show/hide lock banner in week-nav
+  let banner = document.getElementById('lockBanner');
+  if (lock) {
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'lockBanner';
+      banner.style.cssText = 'background:#1a4a2e;color:#4cca80;border:1px solid #4cca80;border-radius:6px;padding:4px 14px;font-size:12px;font-weight:700;letter-spacing:1px;margin-left:10px';
+      banner.textContent = '🔒 APPROVED — READ ONLY';
+      document.getElementById('weekDisplay').after(banner);
+    }
+    banner.style.display = 'inline-block';
+    // Dim save + submit buttons
+    const saveBtn = document.getElementById('saveBtnHdr');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.style.opacity = '0.4'; }
+    const unlockBtn = document.getElementById('unlockBtnHdr');
+    if (unlockBtn) unlockBtn.style.display = 'inline-block';
+    const subBtn = document.querySelector('.sub-btn.submit');
+    if (subBtn) { subBtn.disabled = true; subBtn.style.opacity = '0.4'; }
+    const subBtnH = document.querySelector('.hdr-btn.primary');
+    if (subBtnH) { subBtnH.disabled = true; subBtnH.style.opacity = '0.4'; }
+  } else {
+    if (banner) banner.style.display = 'none';
+    const saveBtn = document.getElementById('saveBtnHdr');
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.style.opacity = ''; }
+    const unlockBtn = document.getElementById('unlockBtnHdr');
+    if (unlockBtn) unlockBtn.style.display = 'none';
+    const subBtn = document.querySelector('.sub-btn.submit');
+    if (subBtn) { subBtn.disabled = false; subBtn.style.opacity = ''; }
+    const subBtnH = document.querySelector('.hdr-btn.primary');
+    if (subBtnH) { subBtnH.disabled = false; subBtnH.style.opacity = ''; }
+  }
+}
+
+function unlockWeek() {
+  const pin = prompt('Enter PIN to unlock this week:');
+  if (pin !== '5476') { alert('Incorrect PIN.'); return; }
+  lockWeek(false);
+  showBanner('🔓 Week unlocked — changes are now allowed.');
+}
+
+function approveSchedule() {
+  const pin = prompt('Enter approval PIN:');
+  if (pin !== '5476') { alert('Incorrect PIN.'); return; }
+  const weekStart = document.getElementById('weekStart').value;
+  const hist = JSON.parse(localStorage.getItem('fp-ph-history') || '[]');
+  const entry = hist.find(h => h.weekStart === weekStart);
+  if (entry) { entry.approved = true; localStorage.setItem('fp-ph-history', JSON.stringify(hist)); }
+  const btn  = document.getElementById('approveBtn');
+  const btnH = document.getElementById('approveBtnHdr');
+  if (btn)  { btn.textContent = '✅ Approved'; btn.classList.add('approved'); btn.onclick = null; }
+  if (btnH) { btnH.textContent = '✅ Approved'; btnH.style.background='#1a4a2e'; btnH.style.color='#4cca80'; btnH.onclick = null; }
+  lockWeek(true);
+  showBanner('✅ Schedule approved and locked.');
+  renderHistory();
 }
 
 function renderHistory() {
@@ -887,7 +1156,7 @@ function renderHistory() {
     // Compute actual labor % from saved actRev if available
     const actLaborPct = (h.actual && h.actRev) ? +(h.actual / h.actRev * 100).toFixed(1) : h.actPct;
     return `
-    <tr>
+    <tr style="${h.approved ? 'background:rgba(76,202,128,0.06);' : ''}">
       <td><span class="hist-period">${h.period || '—'}</span><br><span class="hist-week">${h.isoWk || ''}</span></td>
       <td style="text-align:left;color:var(--text)">${h.weekDisplay || h.weekStart}</td>
       <td style="color:var(--gold)">${fmt(h.rev)}</td>
@@ -897,6 +1166,7 @@ function renderHistory() {
       <td style="color:var(--orange)">${fmt(h.actual)}</td>
       <td ${pctClass(actLaborPct)}>${fmtPct(actLaborPct)}</td>
       <td ${varClass(h.variance)}>${fmtVar(h.variance)}</td>
+      <td>${h.approved ? '<span style="font-size:10px;font-weight:700;letter-spacing:1px;color:#4cca80;background:rgba(76,202,128,0.15);padding:2px 7px;border-radius:3px;border:1px solid rgba(76,202,128,0.4)">✓ APPROVED</span>' : '<span style="font-size:10px;color:var(--muted)">Pending</span>'}</td>
     </tr>`;
   }).join('');
 }
@@ -911,8 +1181,21 @@ function clearActuals() {
   for (let di = 0; di < 7; di++) {
     const el = document.getElementById(`tot-act-${di}`); if (el) el.value = '';
     const ar = document.getElementById(`tot-actrev-${di}`); if (ar) ar.value = '';
+    const er = document.getElementById(`tot-evtrev-${di}`); if (er) er.value = '';
   }
   recalc();
+}
+
+function clearThisWeek() {
+  if (!confirm('Clear saved draft for this week? The schedule will reset to blank (history is kept).')) return;
+  const key = currentWeekKey();
+  localStorage.removeItem(key);
+  // Also remove from week index
+  const idx = JSON.parse(localStorage.getItem('fp-ph-week-index') || '[]');
+  const newIdx = idx.filter(k => k !== key);
+  localStorage.setItem('fp-ph-week-index', JSON.stringify(newIdx));
+  loadWeek(key);
+  showBanner('Week cleared — schedule reset to blank.');
 }
 
 function showBanner(msg) {
