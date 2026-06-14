@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>July 4th Prep List</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f4f0;
+      color: #1a1a1a;
+      min-height: 100vh;
+      padding: 24px 16px 60px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #1a1a1a;
+    }
+
+    header p {
+      margin-top: 6px;
+      font-size: 0.85rem;
+      color: #888;
+    }
+
+    .room {
+      background: #fff;
+      border-radius: 14px;
+      padding: 18px 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    }
+
+    .room h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #f0f0f0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .room h2 .emoji {
+      font-size: 1.1rem;
+    }
+
+    .item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 9px 0;
+      border-bottom: 1px solid #f7f7f7;
+      cursor: pointer;
+    }
+
+    .item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .item input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 22px;
+      height: 22px;
+      min-width: 22px;
+      border: 2px solid #d0d0d0;
+      border-radius: 6px;
+      margin-top: 1px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      background: #fff;
+    }
+
+    .item input[type="checkbox"]:checked {
+      background: #5a8ba7;
+      border-color: #5a8ba7;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Cpath d='M2 7l3.5 3.5L12 3' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+
+    .item label {
+      font-size: 0.95rem;
+      line-height: 1.4;
+      color: #2a2a2a;
+      cursor: pointer;
+      flex: 1;
+      transition: color 0.15s ease;
+    }
+
+    .item input[type="checkbox"]:checked + label {
+      color: #aaa;
+      text-decoration: line-through;
+    }
+
+    .progress-bar {
+      margin-top: 8px;
+      height: 4px;
+      background: #eee;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #5a8ba7;
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+
+    .progress-label {
+      font-size: 0.75rem;
+      color: #aaa;
+      margin-top: 4px;
+      text-align: right;
+    }
+
+    .total-bar {
+      background: #fff;
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    }
+
+    .total-bar h3 {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+
+    .total-count {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #1a1a1a;
+    }
+
+    .total-count span {
+      font-size: 0.9rem;
+      font-weight: 400;
+      color: #aaa;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 0.75rem;
+      color: #bbb;
+      margin-top: 32px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🏠 July 4th Prep</h1>
+    <p>Hotel St. Cloud — Punch List</p>
+  </header>
+
+  <div class="total-bar">
+    <h3>Overall Progress</h3>
+    <div class="total-count" id="totalCount">0 <span>of 0 done</span></div>
+    <div class="progress-bar" style="margin-top:10px;">
+      <div class="progress-fill" id="totalFill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- ROOM: Upstairs NW Bathroom (master) -->
+  <div class="room" id="room-nwbath">
+    <h2><span class="emoji">🚿</span> Upstairs NW Bathroom (master)</h2>
+    <div class="item"><input type="checkbox" id="t1"><label for="t1">Touch up ceiling paint</label></div>
+    <div class="item"><input type="checkbox" id="t2"><label for="t2">Trim out door</label></div>
+    <div class="item"><input type="checkbox" id="t3"><label for="t3">Install window box</label></div>
+    <div class="item"><input type="checkbox" id="t4"><label for="t4">Closet door trim — missing header inside and out</label></div>
+    <div class="item"><input type="checkbox" id="t5"><label for="t5">Touch up stain on doors</label></div>
+    <div class="progress-bar"><div class="progress-fill" data-room="room-nwbath" style="width:0%"></div></div>
+    <div class="progress-label" data-label="room-nwbath">0 of 5</div>
+  </div>
+
+  <!-- ROOM: Upstairs South Bedroom Bathroom -->
+  <div class="room" id="room-sbath">
+    <h2><span class="emoji">🚿</span> Upstairs South Bedroom Bathroom</h2>
+    <div class="item"><input type="checkbox" id="t6"><label for="t6">Finish trim around door + header</label></div>
+    <div class="item"><input type="checkbox" id="t7"><label for="t7">Install window box + trim</label></div>
+    <div class="item"><input type="checkbox" id="t8"><label for="t8">Fix latch on door</label></div>
+    <div class="item"><input type="checkbox" id="t9"><label for="t9">Touch up stain on all doors</label></div>
+    <div class="progress-bar"><div class="progress-fill" data-room="room-sbath" style="width:0%"></div></div>
+    <div class="progress-label" data-label="room-sbath">0 of 4</div>
+  </div>
+
+  <!-- ROOM: Upstairs South Bedroom -->
+  <div class="room" id="room-sbedroom">
+    <h2><span class="emoji">🛏</span> Upstairs South Bedroom</h2>
+    <div class="item"><input type="checkbox" id="t10"><label for="t10">Finish installing trim around closet</label></div>
+    <div class="item"><input type="checkbox" id="t11"><label for="t11">Remove shim from base</label></div>
+    <div class="progress-bar"><div class="progress-fill" data-room="room-sbedroom" style="width:0%"></div></div>
+    <div class="progress-label" data-label="room-sbedroom">0 of 2</div>
+  </div>
+
+  <!-- ROOM: General / Cleaning Crew -->
+  <div class="room" id="room-general">
+    <h2><span class="emoji">🧹</span> Cleaning Crew</h2>
+    <div class="item"><input type="checkbox" id="t12"><label for="t12">Pull out remaining plastic</label></div>
+    <div class="progress-bar"><div class="progress-fill" data-room="room-general" style="width:0%"></div></div>
+    <div class="progress-label" data-label="room-general">0 of 1</div>
+  </div>
+
+  <footer>Last updated June 14, 2026</footer>
+
+  <script>
+    const STORAGE_KEY = 'july4prep_v1';
+
+    function save() {
+      const state = {};
+      document.querySelectorAll('input[type=checkbox]').forEach(cb => {
+        state[cb.id] = cb.checked;
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function load() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const state = JSON.parse(raw);
+      Object.entries(state).forEach(([id, checked]) => {
+        const el = document.getElementById(id);
+        if (el) el.checked = checked;
+      });
+    }
+
+    function updateProgress() {
+      // Per-room
+      document.querySelectorAll('.room').forEach(room => {
+        const boxes = room.querySelectorAll('input[type=checkbox]');
+        const total = boxes.length;
+        const done = Array.from(boxes).filter(b => b.checked).length;
+        const pct = total ? Math.round((done / total) * 100) : 0;
+        const fill = room.querySelector('.progress-fill');
+        const label = room.querySelector('.progress-label');
+        if (fill) fill.style.width = pct + '%';
+        if (label) label.textContent = done + ' of ' + total;
+      });
+
+      // Overall
+      const all = document.querySelectorAll('input[type=checkbox]');
+      const totalAll = all.length;
+      const doneAll = Array.from(all).filter(b => b.checked).length;
+      const pctAll = totalAll ? Math.round((doneAll / totalAll) * 100) : 0;
+      document.getElementById('totalCount').innerHTML =
+        doneAll + ' <span>of ' + totalAll + ' done</span>';
+      document.getElementById('totalFill').style.width = pctAll + '%';
+    }
+
+    document.querySelectorAll('input[type=checkbox]').forEach(cb => {
+      cb.addEventListener('change', () => {
+        save();
+        updateProgress();
+      });
+    });
+
+    load();
+    updateProgress();
+  </script>
+
+</body>
+</html>
