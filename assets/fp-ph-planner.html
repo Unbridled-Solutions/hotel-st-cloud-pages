@@ -199,7 +199,7 @@ footer span { color: var(--gold); font-weight: 600; }
 <div class="header">
   <div class="header-left">
     <div class="eyebrow">Fremont Provisions — Weekly Labor Planner</div>
-    <h1>Fremont Public House, 1887 &amp; War Room</h1>
+    <h1>Hotel St. Cloud — 1887 &amp; War Room</h1>
   </div>
   <div class="header-right">
     <button class="hdr-btn" onclick="clearActuals()">Clear Actuals</button>
@@ -813,9 +813,7 @@ function recalc() {
         if (!d.week) return;
         const byDay = Array.from({length:7}, (_,di) => {
           const r = parseFloat(d.actrevs?.[di]) || 0;
-          const e = parseFloat(d.evtrevs?.[di]) || 0;
-          const t = r + e;
-          return t > 0 ? t : null;
+          return r > 0 ? r : null;
         });
         const total = byDay.reduce((a,v) => a + (v||0), 0);
         if (total > 0) weekMap.set(d.week, { byDay, total });
@@ -828,7 +826,7 @@ function recalc() {
       if (!h.weekStart || !h.actRevByDay) return;
       if (weekMap.has(h.weekStart)) return; // per-week data takes priority
       const byDay = Array.from({length:7}, (_,di) => {
-        const v = h.actRevByDay[di];
+        const v = h.restRevByDay?.[di] ?? h.actRevByDay[di];
         return (v != null && v > 0) ? v : null;
       });
       const total = byDay.reduce((a,v) => a + (v||0), 0);
@@ -838,9 +836,7 @@ function recalc() {
     // Current week live inputs override everything
     const liveByDay = Array.from({length:7}, (_,di) => {
       const r = parseFloat(document.getElementById(`tot-actrev-${di}`)?.value) || 0;
-      const e = parseFloat(document.getElementById(`tot-evtrev-${di}`)?.value) || 0;
-      const t = r + e;
-      return t > 0 ? t : null;
+      return r > 0 ? r : null;
     });
     const liveTotal = liveByDay.reduce((a,v) => a + (v||0), 0);
     if (liveTotal > 0) weekMap.set(curWeekStart, { byDay: liveByDay, total: liveTotal });
@@ -1133,6 +1129,10 @@ function submitSchedule() {
     const total = r + e;
     return total > 0 ? total : null;
   });
+  const restRevByDay = Array.from({length:7}, (_,di) => {
+    const r = parseFloat(document.getElementById(`tot-actrev-${di}`)?.value)||0;
+    return r > 0 ? r : null;
+  });
   filtered.unshift({
     weekStart, weekDisplay, isoWk, period,
     rev: weekRev, budget: weekBudNum,
@@ -1145,6 +1145,7 @@ function submitSchedule() {
     revVariance: revVariance ? +revVariance.toFixed(0) : null,
     revByDay,
     actRevByDay,
+    restRevByDay,
   });
   // Keep last 52 weeks
   localStorage.setItem('fp-ph-history', JSON.stringify(filtered.slice(0, 52)));
