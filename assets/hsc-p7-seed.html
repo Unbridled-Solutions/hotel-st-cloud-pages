@@ -110,13 +110,22 @@
 </div>
 
 <script>
-// Period 7 forecast revenue — Hotel St. Cloud Rooms
-// Exact cents preserved from budget sheet
+// Period 7 — Hotel St. Cloud Rooms
+// revs      = Forecast Revenue (budget sheet)
+// bookedrevs = Projected Booked Revenue by day (replaces 4-wk mavg)
 const WEEKS = [
-  { key: 'hsc-wk-2026-06-15', week: '2026-06-15', revs: [4212.00, 5065.20, 5065.20, 4158.00, 5972.40, 6048.00, 4050.00] },
-  { key: 'hsc-wk-2026-06-22', week: '2026-06-22', revs: [3780.00, 4914.00, 4914.00, 5292.00, 5972.40, 5972.40, 4050.00] },
-  { key: 'hsc-wk-2026-06-29', week: '2026-06-29', revs: [3780.00, 4914.00, 4914.00, 5292.00, 5972.40, 5972.40, 4050.00] },
-  { key: 'hsc-wk-2026-07-06', week: '2026-07-06', revs: [3780.00, 4914.00, 4914.00, 5292.00, 5972.40, 5972.40, 8100.00] },
+  { key: 'hsc-wk-2026-06-15', week: '2026-06-15',
+    revs:       [4212.00, 5065.20, 5065.20, 4158.00, 5972.40, 6048.00, 4050.00],
+    bookedrevs: [7358.00, 3351.59, 3747.59, 3164.16, 7848.16, 8519.87, 1665.55] },
+  { key: 'hsc-wk-2026-06-22', week: '2026-06-22',
+    revs:       [3780.00, 4914.00, 4914.00, 5292.00, 5972.40, 5972.40, 4050.00],
+    bookedrevs: [1203.04, 3419.17, 3086.62, 3944.00, 4793.88, 4593.99, 1404.00] },
+  { key: 'hsc-wk-2026-06-29', week: '2026-06-29',
+    revs:       [3780.00, 4914.00, 4914.00, 5292.00, 5972.40, 5972.40, 4050.00],
+    bookedrevs: [1215.00, 1423.00, 1677.00,  787.00, 2029.00, 1281.00, 1329.00] },
+  { key: 'hsc-wk-2026-07-06', week: '2026-07-06',
+    revs:       [3780.00, 4914.00, 4914.00, 5292.00, 5972.40, 5972.40, 8100.00],
+    bookedrevs: [1272.00, 1265.00, 1074.00, 3685.00, 3580.00, 2472.00, 2199.00] },
 ];
 
 function seed() {
@@ -126,8 +135,9 @@ function seed() {
     const existing = localStorage.getItem(w.key);
     let data = existing ? JSON.parse(existing) : {};
 
-    data.week = w.week;
-    data.revs = w.revs.map(String);
+    data.week       = w.week;
+    data.revs       = w.revs.map(String);
+    data.bookedrevs = w.bookedrevs.map(String);
     if (!data.pcts) data.pcts = ['28','28','28','30','32','35','30'];
 
     localStorage.setItem(w.key, JSON.stringify(data));
