@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HSC P6 History Seed</title>
+<style>
+  body { font-family: monospace; background: #111; color: #ccc; padding: 24px; }
+  h2 { color: #5a8ba7; }
+  .ok { color: #4cca80; }
+  .err { color: #e05c5c; }
+  table { border-collapse: collapse; margin: 12px 0; }
+  td, th { border: 1px solid #333; padding: 4px 10px; font-size: 12px; }
+  th { color: #5a8ba7; }
+  .go-btn { display:inline-block; margin-top:20px; padding:10px 24px; background:#5a8ba7;
+    color:#fff; border-radius:6px; text-decoration:none; font-family:monospace; font-size:14px; }
+</style>
+</head>
+<body>
+<h2>HSC P6 History Seed</h2>
+<p>Loading Period 6 actuals into HSC planner localStorage…</p>
+<div id="log"></div>
+
+<script>
+const log = document.getElementById('log');
+function out(msg, ok) {
+  const d = document.createElement('div');
+  d.className = ok === false ? 'err' : (ok ? 'ok' : '');
+  d.textContent = msg;
+  log.appendChild(d);
+}
+
+// ── P6 actuals ──────────────────────────────────────────────────────────────
+
+const weeks = [
+  {
+    key:     'hsc-wk-2026-05-18',
+    weekStart: '2026-05-18',
+    weekDisplay: 'May 18 – May 24, 2026',
+    period: 'P6',
+    // actrevs: actual hotel revenue Mon–Sun
+    actrevs: [3692.00, 4856.00, 4975.00, 4713.00, 2852.20, 4793.53, 3347.34],
+    // acts: actual labor (with 11% payroll tax) Mon–Sun
+    acts:    [1467.09, 1101.10, 1346.79, 1683.34, 1809.83, 1343.32, 1340.48],
+  },
+  {
+    key:     'hsc-wk-2026-05-25',
+    weekStart: '2026-05-25',
+    weekDisplay: 'May 25 – May 31, 2026',
+    period: 'P6',
+    actrevs: [2420.16, 2378.64, 2019.11, 1269.00, 3627.00, 6977.20, 1905.94],
+    acts:    [1355.24, 1524.40, 1496.64, 1570.12, 1625.10, 1517.94, 1473.24],
+  },
+  {
+    key:     'hsc-wk-2026-06-01',
+    weekStart: '2026-06-01',
+    weekDisplay: 'June 1 – June 7, 2026',
+    period: 'P6',
+    actrevs: [2064.07, 1212.94, 1604.47, 2410.35, 5526.73, 5864.96, 3275.40],
+    acts:    [1840.62, 1331.78, 1536.58, 1506.75, 1442.91, 1547.26, 1727.54],
+  },
+  {
+    key:     'hsc-wk-2026-06-08',
+    weekStart: '2026-06-08',
+    weekDisplay: 'June 8 – June 14, 2026',
+    period: 'P6',
+    actrevs: [2268.13, 4057.00, 4372.31, 4509.88, 7872.00, 8430.00, 7418.25],
+    acts:    [1796.60, 1694.48, 1811.25, 1672.65, 1908.52, 1653.38, 2282.33],
+  },
+];
+
+// ── Write per-week keys ─────────────────────────────────────────────────────
+
+out('Writing per-week localStorage keys…');
+
+weeks.forEach(wk => {
+  // Read existing data (preserve forecast revs, pcts, positions, state)
+  let existing = {};
+  try { existing = JSON.parse(localStorage.getItem(wk.key) || '{}'); } catch(e) {}
+
+  const data = Object.assign({}, existing, {
+    week:      wk.weekStart,
+    actrevs:   wk.actrevs.map(String),
+    acts:      wk.acts.map(String),
+  });
+
+  // Don't wipe bookedrevs if already set
+  if (!data.bookedrevs) data.bookedrevs = Array(7).fill('');
+
+  localStorage.setItem(wk.key, JSON.stringify(data));
+
+  const actRev = wk.actrevs.reduce((a,b)=>a+b,0);
+  const actLab = wk.acts.reduce((a,b)=>a+b,0);
+  out(`  ✓ ${wk.key}  actRev=$${actRev.toFixed(2)}  actLab=$${actLab.toFixed(2)}  laborPct=${(actLab/actRev*100).toFixed(1)}%`, true);
+});
+
+// ── Write hsc-history entries ───────────────────────────────────────────────
+
+out('\nUpdating hsc-history entries…');
+
+let hist = [];
+try { hist = JSON.parse(localStorage.getItem('hsc-history') || '[]'); } catch(e) {}
+
+weeks.forEach(wk => {
+  const actRev  = wk.actrevs.reduce((a,b)=>a+b,0);
+  const actLab  = wk.acts.reduce((a,b)=>a+b,0);
+  const actPct  = actRev ? +(actLab/actRev*100).toFixed(1) : null;
+
+  hist = hist.filter(h => h.weekStart !== wk.weekStart);
+  hist.push({
+    weekStart:   wk.weekStart,
+    weekDisplay: wk.weekDisplay,
+    isoWk:       '',
+    period:      wk.period,
+    rev:         actRev,    // using actuals as stand-in for forecast rev
+    budget:      null,
+    pct:         null,
+    actual:      +actLab.toFixed(2),
+    actPct:      actPct,
+    variance:    null,
+    actRev:      +actRev.toFixed(2),
+    revVariance: 0,
+    revByDay:    wk.actrevs,
+    actRevByDay: wk.actrevs,
+    actLaborByDay: wk.acts,
+  });
+  out(`  ✓ history entry: ${wk.weekDisplay}  actRev=$${actRev.toFixed(2)}  laborPct=${actPct}%`, true);
+});
+
+// Sort by weekStart descending
+hist.sort((a,b) => b.weekStart.localeCompare(a.weekStart));
+localStorage.setItem('hsc-history', JSON.stringify(hist.slice(0,52)));
+
+// ── Summary ─────────────────────────────────────────────────────────────────
+
+out('\n── P6 Summary ─────────────────────');
+const totalRev = weeks.reduce((s,wk)=>s+wk.actrevs.reduce((a,b)=>a+b,0),0);
+const totalLab = weeks.reduce((s,wk)=>s+wk.acts.reduce((a,b)=>a+b,0),0);
+out(`  Total Revenue: $${totalRev.toFixed(2)}  (sheet: $110,712.61)`, Math.abs(totalRev-110712.61)<0.05);
+out(`  Total Labor:   $${totalLab.toFixed(2)}  (incl. 3 boundary Sundays not in sheet)`, true);
+out(`  Labor %:       ${(totalLab/totalRev*100).toFixed(1)}%`);
+out('\n✅ All done. Click below to open P7 Week 1.', true);
+
+const a = document.createElement('a');
+a.className = 'go-btn';
+a.href = 'hsc-labor-planner.html?week=2026-06-15';
+a.textContent = '→ Open HSC Planner (P7 Wk1)';
+log.appendChild(a);
+</script>
+</body>
+</html>
