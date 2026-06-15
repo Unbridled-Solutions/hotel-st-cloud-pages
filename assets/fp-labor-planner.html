@@ -44,6 +44,9 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
 .status-banner { display: none; margin: 12px 24px 0; background: rgba(76,175,125,0.12); border: 1px solid rgba(76,175,125,0.4); color: var(--green); border-radius: 8px; padding: 11px 16px; font-size: 13px; font-weight: 600; }
 
 .grid-outer { overflow-x: auto; padding: 16px 24px 0; }
+.grid-scroll { max-height: 62vh; overflow-y: auto; overflow-x: auto; }
+.sched-table thead th, .sched-table thead td { position: sticky; top: 0; z-index: 10; }
+.sched-table tfoot td, .sched-table tfoot th { position: sticky; bottom: 0; z-index: 10; background: var(--bg); }
 .sched-table { width: 100%; min-width: 1040px; border-collapse: collapse; font-size: 13px; }
 .col-pos  { width: 168px; }
 .col-role { width: 54px; }
@@ -215,6 +218,7 @@ footer span { color: var(--gold); font-weight: 600; }
 <div class="status-banner" id="statusBanner"></div>
 
 <div class="grid-outer">
+<div class="grid-scroll">
 <table class="sched-table">
 <thead>
   <tr class="day-header">
@@ -278,6 +282,7 @@ footer span { color: var(--gold); font-weight: 600; }
 <tbody id="schedBody"></tbody>
 <tfoot id="schedFoot"></tfoot>
 </table>
+</div>
 </div>
 
 <div class="week-summary" id="weekSummary"></div>
@@ -450,14 +455,20 @@ function buildTable() {
 }
 
 function buildFooter() {
-  let budCells = '', pctCells = '', restRevCells = '', evtRevCells = '', actRevTotalCells = '', actCells = '', actLaborPctCells = '', varCells = '', revVarCells = '';
+  let budCells = '', pctCells = '', restRevCells = '', evtRevCells = '', actRevTotalCells = '';
+  let actMgrCells = '', actBohCells = '', actFohCells = '', actBarCells = '';
+  let actTotalCells = '', actLaborPctCells = '', varCells = '', revVarCells = '';
   for (let di = 0; di < 7; di++) {
     budCells        += `<td class="total-val green"  id="tot-bud-${di}">—</td>`;
     pctCells        += `<td class="total-val"        id="tot-pct-${di}">—</td>`;
     restRevCells    += `<td><input class="actual-input" type="number" id="tot-actrev-${di}" placeholder="$" oninput="recalc()" style="border-bottom-color:rgba(90,139,167,0.6);color:#5a8ba7"></td>`;
     evtRevCells     += `<td><input class="actual-input" type="number" id="tot-evtrev-${di}" placeholder="$" oninput="recalc()" style="border-bottom-color:rgba(155,110,200,0.6);color:#9b6ec8"></td>`;
     actRevTotalCells+= `<td class="total-val" id="tot-actrev-total-${di}" style="color:#5a8ba7;font-weight:700">—</td>`;
-    actCells        += `<td><input class="actual-input" type="number" id="tot-act-${di}"    placeholder="actual $" oninput="recalc()"></td>`;
+    actMgrCells     += `<td><input class="actual-input" type="number" id="tot-act-mgr-${di}" placeholder="$" oninput="recalcActTotals()" style="border-bottom-color:rgba(155,110,200,0.5);color:#9b6ec8"></td>`;
+    actBohCells     += `<td><input class="actual-input" type="number" id="tot-act-boh-${di}" placeholder="$" oninput="recalcActTotals()" style="border-bottom-color:rgba(249,115,22,0.5);color:#f97316"></td>`;
+    actFohCells     += `<td><input class="actual-input" type="number" id="tot-act-foh-${di}" placeholder="$" oninput="recalcActTotals()" style="border-bottom-color:rgba(76,175,125,0.5);color:#4caf7d"></td>`;
+    actBarCells     += `<td><input class="actual-input" type="number" id="tot-act-bar-${di}" placeholder="$" oninput="recalcActTotals()" style="border-bottom-color:rgba(201,170,124,0.5);color:#c9aa7c"></td>`;
+    actTotalCells   += `<td class="total-val orange" id="tot-act-${di}">—</td>`;
     actLaborPctCells+= `<td class="total-val"        id="tot-actlpct-${di}">—</td>`;
     varCells        += `<td class="total-val"         id="tot-var-${di}">—</td>`;
     revVarCells     += `<td class="total-val"         id="tot-revvar-${di}">—</td>`;
@@ -503,10 +514,37 @@ function buildFooter() {
       ${actRevTotalCells}
       <td class="total-val week-col" id="tot-actrev-total-week" style="color:#5a8ba7;font-weight:700">—</td>
     </tr>
-    <tr class="total-row actual-row">
-      <td colspan="2" class="pos-name-cell"><span class="total-label" style="color:var(--orange)">Actual Labor $</span></td>
-      <td class="rate-cell" style="font-size:10px;color:var(--muted)">entered</td>
-      ${actCells}
+    <tr class="total-row" style="background:rgba(155,110,200,0.05);border-top:2px solid var(--border)">
+      <td colspan="2" class="pos-name-cell"><span class="total-label" style="color:#9b6ec8">Actual Labor — Management</span></td>
+      <td class="rate-cell" style="font-size:10px;color:var(--muted)">MGR</td>
+      ${actMgrCells}
+      <td class="total-val week-col" id="tot-act-mgr-week" style="color:#9b6ec8">—</td>
+    </tr>
+    <tr class="total-row" style="background:rgba(249,115,22,0.04)">
+      <td colspan="2" class="pos-name-cell"><span class="total-label" style="color:#f97316">Actual Labor — Back of House</span></td>
+      <td class="rate-cell" style="font-size:10px;color:var(--muted)">BOH</td>
+      ${actBohCells}
+      <td class="total-val week-col" id="tot-act-boh-week" style="color:#f97316">—</td>
+    </tr>
+    <tr class="total-row" style="background:rgba(76,175,125,0.04)">
+      <td colspan="2" class="pos-name-cell"><span class="total-label" style="color:#4caf7d">Actual Labor — Front of House</span></td>
+      <td class="rate-cell" style="font-size:10px;color:var(--muted)">FOH</td>
+      ${actFohCells}
+      <td class="total-val week-col" id="tot-act-foh-week" style="color:#4caf7d">—</td>
+    </tr>
+    <tr class="total-row" style="background:rgba(201,170,124,0.04)">
+      <td colspan="2" class="pos-name-cell"><span class="total-label" style="color:#c9aa7c">Actual Labor — Bar</span></td>
+      <td class="rate-cell" style="font-size:10px;color:var(--muted)">BAR</td>
+      ${actBarCells}
+      <td class="total-val week-col" id="tot-act-bar-week" style="color:#c9aa7c">—</td>
+    </tr>
+    <tr class="total-row actual-row" style="border-top:1px solid rgba(249,115,22,0.4)">
+      <td colspan="2" class="pos-name-cell">
+        <span class="total-label" style="color:var(--orange)">Actual Labor Total</span>
+        <span style="font-size:10px;color:var(--muted);margin-left:6px">MGR + BOH + FOH + BAR</span>
+      </td>
+      <td class="rate-cell" style="font-size:10px;color:var(--muted)">computed</td>
+      ${actTotalCells}
       <td class="total-val orange week-col" id="tot-act-week">—</td>
     </tr>
     <tr class="total-row">
@@ -617,7 +655,7 @@ function recalc() {
   for (let di = 0; di < 7; di++) {
     const rev    = parseFloat(document.getElementById(`rev-${di}`)?.value) || 0;
     const bud    = dayTotals[di] * TAX;
-    const act    = parseFloat(document.getElementById(`tot-act-${di}`)?.value) || 0;
+    const act    = parseFloat(document.getElementById(`tot-act-${di}`)?.textContent?.replace(/[$,]/g,'')) || 0;
     const actRev = parseFloat(document.getElementById(`tot-actrev-${di}`)?.value) || 0;
     const evtRev = parseFloat(document.getElementById(`tot-evtrev-${di}`)?.value) || 0;
     const actRevTotal = actRev + evtRev;
@@ -881,7 +919,28 @@ function updateSummary(weekBudget, weekRev, weekActual, weekActRev, weekPct) {
     <div class="sum-card blue" style="--card-accent:var(--muted)"><div class="sum-label">Days Staffed</div><div class="sum-val">${staffedDays} / 7</div><div class="sum-sub">This week</div></div>`;
 }
 
-// ── ISO WEEK / PERIOD ─────────────────────────────────────────────────────────
+// ── CATEGORY ACTUAL LABOR → sum to tot-act-* then recalc ────────────────────
+function recalcActTotals() {
+  for (let di = 0; di < 7; di++) {
+    const mgr = parseFloat(document.getElementById(`tot-act-mgr-${di}`)?.value) || 0;
+    const boh = parseFloat(document.getElementById(`tot-act-boh-${di}`)?.value) || 0;
+    const foh = parseFloat(document.getElementById(`tot-act-foh-${di}`)?.value) || 0;
+    const bar = parseFloat(document.getElementById(`tot-act-bar-${di}`)?.value) || 0;
+    const total = mgr + boh + foh + bar;
+    const el = document.getElementById(`tot-act-${di}`);
+    if (el) el.textContent = total > 0 ? `$${Math.round(total).toLocaleString()}` : '—';
+    // Also update week totals per category
+    ['mgr','boh','foh','bar'].forEach(cat => {
+      const wkEl = document.getElementById(`tot-act-${cat}-week`);
+      if (!wkEl) return;
+      const sum = Array.from({length:7}, (_,d) => parseFloat(document.getElementById(`tot-act-${cat}-${d}`)?.value)||0).reduce((a,b)=>a+b,0);
+      wkEl.textContent = sum > 0 ? `$${Math.round(sum).toLocaleString()}` : '—';
+    });
+  }
+  recalc();
+}
+
+
 function getISOWeek(date) {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   const day = d.getUTCDay() || 7;
@@ -971,8 +1030,12 @@ function saveLocal(notify = true) {
     week:      document.getElementById('weekStart').value,
     pcts:      Array.from({length:7}, (_,di) => document.getElementById(`pct-${di}`)?.value || '28'),
     revs:      Array.from({length:7}, (_,di) => document.getElementById(`rev-${di}`)?.value || ''),
-    acts:      Array.from({length:7}, (_,di) => document.getElementById(`tot-act-${di}`)?.value || ''),
+    acts:      Array.from({length:7}, (_,di) => document.getElementById(`tot-act-${di}`)?.textContent?.replace(/[$,—]/g,'').trim() || ''),
     actrevs:   Array.from({length:7}, (_,di) => document.getElementById(`tot-actrev-${di}`)?.value || ''),
+    acts_mgr:  Array.from({length:7}, (_,di) => document.getElementById(`tot-act-mgr-${di}`)?.value || ''),
+    acts_boh:  Array.from({length:7}, (_,di) => document.getElementById(`tot-act-boh-${di}`)?.value || ''),
+    acts_foh:  Array.from({length:7}, (_,di) => document.getElementById(`tot-act-foh-${di}`)?.value || ''),
+    acts_bar:  Array.from({length:7}, (_,di) => document.getElementById(`tot-act-bar-${di}`)?.value || ''),
     evtrevs:   Array.from({length:7}, (_,di) => document.getElementById(`tot-evtrev-${di}`)?.value || ''),
     state:     JSON.parse(JSON.stringify(state)),
     positions: POSITIONS.map(p => ({name:p.name, rate:p.rate, dailyRate:p.dailyRate})),
@@ -998,8 +1061,9 @@ function loadWeek(key) {
   // Clear revenue/actual inputs
   for (let di = 0; di < 7; di++) {
     const rv = document.getElementById(`rev-${di}`); if (rv) rv.value = '';
-    const ac = document.getElementById(`tot-act-${di}`); if (ac) ac.value = '';
+    const ac = document.getElementById(`tot-act-${di}`); if (ac) ac.textContent = '—';
     const ar = document.getElementById(`tot-actrev-${di}`); if (ar) ar.value = '';
+    ['mgr','boh','foh','bar'].forEach(cat => { const el = document.getElementById(`tot-act-${cat}-${di}`); if (el) el.value = ''; });
     const er = document.getElementById(`tot-evtrev-${di}`); if (er) er.value = '';
     const pc = document.getElementById(`pct-${di}`);
     if (pc) pc.value = [28,28,28,30,32,35,30][di];
@@ -1008,6 +1072,7 @@ function loadWeek(key) {
 
   // Parse saved data — hold actrevs/acts/evtrevs for after buildTable()
   let savedActrevs = null, savedActs = null, savedEvtrevs = null;
+  let savedActsMgr = null, savedActsBoh = null, savedActsFoh = null, savedActsBar = null;
 
   if (raw) {
     try {
@@ -1019,6 +1084,10 @@ function loadWeek(key) {
       savedActrevs = data.actrevs || null;
       savedActs    = data.acts    || null;
       savedEvtrevs = data.evtrevs || null;
+      savedActsMgr = data.acts_mgr || null;
+      savedActsBoh = data.acts_boh || null;
+      savedActsFoh = data.acts_foh || null;
+      savedActsBar = data.acts_bar || null;
       // Check if this week was submitted
       const hist = JSON.parse(localStorage.getItem('fp-labor-history') || '[]');
       if (hist.some(h => h.weekStart === data.week)) document.getElementById('submitBadge').style.display = 'inline-block';
@@ -1030,8 +1099,16 @@ function loadWeek(key) {
 
   // NOW restore actuals into the freshly-built DOM elements
   if (savedActrevs) savedActrevs.forEach((v, di) => { const el = document.getElementById(`tot-actrev-${di}`); if (el && v) el.value = v; });
-  if (savedActs)    savedActs.forEach((v, di)    => { const el = document.getElementById(`tot-act-${di}`);    if (el && v) el.value = v; });
   if (savedEvtrevs) savedEvtrevs.forEach((v, di) => { const el = document.getElementById(`tot-evtrev-${di}`); if (el && v) el.value = v; });
+  // Restore per-category actual labor, then recompute totals
+  if (savedActsMgr) savedActsMgr.forEach((v, di) => { const el = document.getElementById(`tot-act-mgr-${di}`); if (el && v) el.value = v; });
+  if (savedActsBoh) savedActsBoh.forEach((v, di) => { const el = document.getElementById(`tot-act-boh-${di}`); if (el && v) el.value = v; });
+  if (savedActsFoh) savedActsFoh.forEach((v, di) => { const el = document.getElementById(`tot-act-foh-${di}`); if (el && v) el.value = v; });
+  if (savedActsBar) savedActsBar.forEach((v, di) => { const el = document.getElementById(`tot-act-bar-${di}`); if (el && v) el.value = v; });
+  // If no categories saved yet but legacy acts exist, populate the total display cells
+  if (!savedActsMgr && savedActs) savedActs.forEach((v, di) => { const el = document.getElementById(`tot-act-${di}`); if (el && v) el.textContent = `$${parseFloat(v).toLocaleString()}`; });
+  // Recompute category totals so tot-act-* and week totals are correct
+  recalcActTotals();
 
   // Lock if this week is approved
   (function() {
@@ -1053,7 +1130,7 @@ function submitSchedule() {
   const period  = periodEl?.textContent || '';
   const weekRev    = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`rev-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
   const weekBudTxt = document.getElementById('tot-bud-week')?.textContent || '—';
-  const weekActual = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`tot-act-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
+  const weekActual = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`tot-act-${di}`)?.textContent?.replace(/[$,—]/g,''))||0).reduce((a,b)=>a+b,0);
   const weekActRev = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`tot-actrev-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
   const weekEvtRev = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`tot-evtrev-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
   const weekActRevTotal = weekActRev + weekEvtRev;
@@ -1214,7 +1291,8 @@ function clearHistory() {
 
 function clearActuals() {
   for (let di = 0; di < 7; di++) {
-    const el = document.getElementById(`tot-act-${di}`); if (el) el.value = '';
+    const el = document.getElementById(`tot-act-${di}`); if (el) el.textContent = '—';
+    ['mgr','boh','foh','bar'].forEach(cat => { const c = document.getElementById(`tot-act-${cat}-${di}`); if (c) c.value = ''; });
     const ar = document.getElementById(`tot-actrev-${di}`); if (ar) ar.value = '';
     const er = document.getElementById(`tot-evtrev-${di}`); if (er) er.value = '';
   }
