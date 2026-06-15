@@ -117,6 +117,21 @@ function seed() {
   const updated = [...P6_HISTORY].reverse().concat(filtered).slice(0, 52);
   localStorage.setItem('fp-labor-history', JSON.stringify(updated));
 
+  // Also populate per-week keys so actual revenue shows when navigating to those weeks
+  P6_HISTORY.forEach(h => {
+    const d   = new Date(h.weekStart + 'T00:00:00');
+    const key = `fp-labor-wk-${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const raw = localStorage.getItem(key);
+    const data = raw ? JSON.parse(raw) : {};
+    data.week    = h.weekStart;
+    data.actrevs = h.actRevByDay.map(v => v != null ? String(v) : '');
+    data.revs    = h.revByDay.map(v => v != null ? String(v) : '');
+    if (!data.pcts) data.pcts = ['28','28','28','30','32','35','30'];
+    localStorage.setItem(key, JSON.stringify(data));
+    const idx = JSON.parse(localStorage.getItem('fp-labor-week-index') || '[]');
+    if (!idx.includes(key)) { idx.unshift(key); localStorage.setItem('fp-labor-week-index', JSON.stringify(idx.slice(0,52))); }
+  });
+
   document.getElementById('status').textContent = '';
   document.getElementById('banner').style.display = 'block';
 
