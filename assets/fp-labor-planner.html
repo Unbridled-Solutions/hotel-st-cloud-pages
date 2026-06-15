@@ -1006,24 +1006,33 @@ function loadWeek(key) {
   }
   document.getElementById('submitBadge').style.display = 'none';
 
+  // Parse saved data — hold actrevs/acts/evtrevs for after buildTable()
+  let savedActrevs = null, savedActs = null, savedEvtrevs = null;
+
   if (raw) {
     try {
       const data = JSON.parse(raw);
       data.pcts?.forEach((v, di) => { const el = document.getElementById(`pct-${di}`); if (el && v) el.value = v; });
       data.revs?.forEach((v, di) => { if (v) document.getElementById(`rev-${di}`).value = v; });
-      data.acts?.forEach((v, di) => { const el = document.getElementById(`tot-act-${di}`); if (el && v) el.value = v; });
       if (data.positions) data.positions.forEach((p, pi) => { if (POSITIONS[pi]) { POSITIONS[pi].name = p.name; POSITIONS[pi].rate = p.rate; if (p.dailyRate != null) POSITIONS[pi].dailyRate = p.dailyRate; } });
-      data.actrevs?.forEach((v, di) => { const el = document.getElementById(`tot-actrev-${di}`); if (el && v) el.value = v; });
-      data.evtrevs?.forEach((v, di) => { const el = document.getElementById(`tot-evtrev-${di}`); if (el && v) el.value = v; });
       if (data.state) Object.keys(data.state).forEach(pi => { state[pi] = state[pi] || {}; Object.keys(data.state[pi]).forEach(di => { state[pi][di] = data.state[pi][di]; }); });
+      savedActrevs = data.actrevs || null;
+      savedActs    = data.acts    || null;
+      savedEvtrevs = data.evtrevs || null;
       // Check if this week was submitted
       const hist = JSON.parse(localStorage.getItem('fp-labor-history') || '[]');
       if (hist.some(h => h.weekStart === data.week)) document.getElementById('submitBadge').style.display = 'inline-block';
     } catch(e) {}
   }
 
-  // Rebuild table to apply fresh state
+  // Rebuild table — this recreates tot-actrev-*, tot-act-*, tot-evtrev-* elements
   buildTable();
+
+  // NOW restore actuals into the freshly-built DOM elements
+  if (savedActrevs) savedActrevs.forEach((v, di) => { const el = document.getElementById(`tot-actrev-${di}`); if (el && v) el.value = v; });
+  if (savedActs)    savedActs.forEach((v, di)    => { const el = document.getElementById(`tot-act-${di}`);    if (el && v) el.value = v; });
+  if (savedEvtrevs) savedEvtrevs.forEach((v, di) => { const el = document.getElementById(`tot-evtrev-${di}`); if (el && v) el.value = v; });
+
   // Lock if this week is approved
   (function() {
     const wkStart = document.getElementById('weekStart').value;
