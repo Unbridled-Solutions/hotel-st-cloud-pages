@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loading P6 History…</title>
+<style>
+  body { background: #0f1923; color: #e8e0d4; font-family: -apple-system, sans-serif;
+         display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+  .card { background: #162433; border: 1px solid #263d52; border-radius: 12px;
+          padding: 36px 44px; max-width: 520px; text-align: center; }
+  .eyebrow { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #c9aa7c; margin-bottom: 8px; }
+  h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+  .sub { color: #8a9aaa; font-size: 14px; margin-bottom: 24px; }
+  .weeks { text-align: left; margin-bottom: 28px; }
+  .wk { display: flex; justify-content: space-between; padding: 10px 14px; border-radius: 6px;
+        border: 1px solid #263d52; margin-bottom: 8px; font-size: 13px; }
+  .wk-label { color: #c9aa7c; font-weight: 600; }
+  .wk-total { color: #4caf7d; font-weight: 700; }
+  .note { font-size: 11px; color: #8a9aaa; margin-top: 4px; }
+  .btn { background: #c9aa7c; color: #1a2e3b; border: none; border-radius: 8px;
+         font-size: 15px; font-weight: 700; padding: 14px 32px; cursor: pointer; width: 100%; transition: opacity 0.2s; }
+  .btn:hover { opacity: 0.9; }
+  .status { margin-top: 14px; font-size: 12px; color: #8a9aaa; min-height: 18px; }
+  .banner { display: none; background: rgba(76,175,125,0.12); border: 1px solid rgba(76,175,125,0.4);
+            color: #4caf7d; border-radius: 8px; padding: 12px 16px; font-size: 13px;
+            font-weight: 600; margin-top: 16px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="eyebrow">FP Sports Bar &amp; Kitchen</div>
+  <h1>Period 6 Actual Revenue</h1>
+  <p class="sub">4 weeks of history → feeds P7 rolling average</p>
+
+  <div class="weeks">
+    <div class="wk">
+      <span class="wk-label">P6 Wk 1 — May 18–24</span>
+      <span class="wk-total">$18,924.00</span>
+    </div>
+    <div class="wk">
+      <span class="wk-label">P6 Wk 2 — May 25–31</span>
+      <span class="wk-total">$16,227.50</span>
+    </div>
+    <div class="wk">
+      <span class="wk-label">P6 Wk 3 — Jun 1–7</span>
+      <span class="wk-total">$19,004.21</span>
+    </div>
+    <div class="wk">
+      <span class="wk-label">P6 Wk 4 — Jun 8–14</span>
+      <span class="wk-total">$20,297.98</span>
+    </div>
+  </div>
+  <p class="note" style="margin-bottom:20px">Total: $74,453.69 · Revenue-only (no labor yet)</p>
+
+  <button class="btn" onclick="seed()">Load P6 History &amp; Open Planner →</button>
+  <div class="status" id="status">Injects 4 weeks into fp-labor-history for the 4-wk mavg.</div>
+  <div class="banner" id="banner">✓ P6 history loaded. Opening planner on current week…</div>
+</div>
+
+<script>
+// Period 6 actuals — FP Sports Bar & Kitchen
+// Remapped from sheet's Sun-Sat weeks to planner's Mon-Sun weeks
+// actRevByDay[0]=Mon … [6]=Sun
+const P6_HISTORY = [
+  {
+    weekStart: '2026-05-18',
+    weekDisplay: 'May 18 – May 24, 2026',
+    isoWk: 'Wk 21', period: 'Period 6 · Week 1',
+    rev: null, budget: null, pct: null,
+    actual: null, actPct: null, variance: null,
+    actRev: 18924.00, evtRev: 0, revVariance: null,
+    revByDay: [null,null,null,null,null,null,null],
+    actRevByDay: [2460.24, 2961.25, 2220.00, 2367.50, 2972.00, 2665.28, 3277.73],
+  },
+  {
+    weekStart: '2026-05-25',
+    weekDisplay: 'May 25 – May 31, 2026',
+    isoWk: 'Wk 22', period: 'Period 6 · Week 2',
+    rev: null, budget: null, pct: null,
+    actual: null, actPct: null, variance: null,
+    actRev: 16227.50, evtRev: 0, revVariance: null,
+    revByDay: [null,null,null,null,null,null,null],
+    actRevByDay: [1925.00, 2147.91, 1563.99, 2043.75, 1982.75, 3569.85, 2994.25],
+  },
+  {
+    weekStart: '2026-06-01',
+    weekDisplay: 'Jun 1 – Jun 7, 2026',
+    isoWk: 'Wk 23', period: 'Period 6 · Week 3',
+    rev: null, budget: null, pct: null,
+    actual: null, actPct: null, variance: null,
+    actRev: 19004.21, evtRev: 0, revVariance: null,
+    revByDay: [null,null,null,null,null,null,null],
+    actRevByDay: [2435.13, 2305.10, 2205.75, 1691.00, 2974.99, 4404.99, 2987.25],
+  },
+  {
+    weekStart: '2026-06-08',
+    weekDisplay: 'Jun 8 – Jun 14, 2026',
+    isoWk: 'Wk 24', period: 'Period 6 · Week 4',
+    rev: null, budget: null, pct: null,
+    actual: null, actPct: null, variance: null,
+    actRev: 20297.98, evtRev: 0, revVariance: null,
+    revByDay: [null,null,null,null,null,null,null],
+    actRevByDay: [2015.00, 3520.00, 2691.95, 1682.51, 3818.25, 4142.84, 2427.43],
+  },
+];
+
+function seed() {
+  document.getElementById('status').textContent = 'Writing history entries…';
+
+  // Load existing history, remove any of these weeks if they already exist, then prepend
+  const existing = JSON.parse(localStorage.getItem('fp-labor-history') || '[]');
+  const weekStarts = P6_HISTORY.map(e => e.weekStart);
+  const filtered = existing.filter(e => !weekStarts.includes(e.weekStart));
+
+  // Prepend P6 weeks in reverse order so newest (Wk4) is first in the array
+  const updated = [...P6_HISTORY].reverse().concat(filtered).slice(0, 52);
+  localStorage.setItem('fp-labor-history', JSON.stringify(updated));
+
+  document.getElementById('status').textContent = '';
+  document.getElementById('banner').style.display = 'block';
+
+  // Open planner on current week (P7 Wk1)
+  setTimeout(() => {
+    window.location.href = 'fp-labor-planner.html?week=2026-06-15';
+  }, 1200);
+}
+</script>
+</body>
+</html>
