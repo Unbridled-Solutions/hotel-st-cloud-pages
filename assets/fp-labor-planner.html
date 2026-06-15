@@ -1045,9 +1045,40 @@ function loadWeek(key) {
   // NOW restore into the freshly-built DOM
   if (_pcts)    _pcts.forEach((v, di)    => { const el = document.getElementById(`pct-${di}`);          if (el && v) el.value = v; });
   if (_revs)    _revs.forEach((v, di)    => { const el = document.getElementById(`rev-${di}`);          if (el && v) el.value = v; });
-  if (_acts)    _acts.forEach((v, di)    => { const el = document.getElementById(`tot-act-${di}`);      if (el && v) el.value = v; });
-  if (_actrevs) _actrevs.forEach((v, di) => { const el = document.getElementById(`tot-actrev-${di}`);  if (el && v) el.value = v; });
   if (_evtrevs) _evtrevs.forEach((v, di) => { const el = document.getElementById(`tot-evtrev-${di}`);  if (el && v) el.value = v; });
+
+  // R7 (actrevs) and R10 (acts): use per-week data if present, otherwise fall back
+  // to fp-labor-history so historic weeks auto-populate without needing the seed page
+  const weekStartVal = document.getElementById('weekStart').value;
+  const histFallback = JSON.parse(localStorage.getItem('fp-labor-history') || '[]')
+    .find(h => h.weekStart === weekStartVal);
+
+  if (_actrevs && _actrevs.some(v => v)) {
+    _actrevs.forEach((v, di) => { const el = document.getElementById(`tot-actrev-${di}`); if (el && v) el.value = v; });
+  } else if (histFallback?.actRevByDay) {
+    // Fall back to history: use actRevByDay (already restaurant + event combined for old entries)
+    // For P6 entries seeded with restaurant-only actRevByDay, this correctly fills R7
+    histFallback.actRevByDay.forEach((v, di) => {
+      const el = document.getElementById(`tot-actrev-${di}`);
+      if (el && v != null && v > 0) el.value = v;
+    });
+  }
+
+  if (_acts && _acts.some(v => v)) {
+    _acts.forEach((v, di) => { const el = document.getElementById(`tot-act-${di}`); if (el && v) el.value = v; });
+  } else if (histFallback?.actual && histFallback?.actRevByDay) {
+    // Distribute total actual labor proportionally across days by revenue weight
+    const totalRevByDay = histFallback.actRevByDay.reduce((a, v) => a + (v || 0), 0);
+    if (totalRevByDay > 0) {
+      histFallback.actRevByDay.forEach((v, di) => {
+        const el = document.getElementById(`tot-act-${di}`);
+        if (el && v > 0) {
+          const dailyLabor = (histFallback.actual * (v / totalRevByDay));
+          el.value = dailyLabor.toFixed(2);
+        }
+      });
+    }
+  }
 
   // Lock if approved
   (function() {
