@@ -794,19 +794,15 @@ function recalc() {
 
 
   // ── 4-WEEK MOVING AVERAGE ─────────────────────────────────────────────────
-  // Reads directly from saved per-week keys (actrevs + evtrevs) so it updates
-  // on Save, not just Submit. Current week's live inputs are included too.
+  // Sources: (1) per-week localStorage keys (actrevs+evtrevs), (2) fp-labor-history
+  // Both are merged, deduped by weekStart, sorted newest-first, top-4 used.
   (function() {
     const curWeekStart = document.getElementById('weekStart').value;
+    const weekMap = new Map(); // weekStart → { byDay, total }
 
-    // Build a map of weekStart → actRevByDay from all saved weeks
+    // Source 1 — per-week keys (live saves, including current week)
     const wkIndex = JSON.parse(localStorage.getItem('fp-labor-week-index') || '[]');
-    const savedWeeks = [];
     wkIndex.forEach(key => {
-      // Derive the expected key for curWeekStart and skip it (use live inputs instead)
-      const cd = new Date(curWeekStart + 'T00:00:00');
-      const curKey = `fp-labor-wk-${cd.getFullYear()}-${String(cd.getMonth()+1).padStart(2,'0')}-${String(cd.getDate()).padStart(2,'0')}`;
-      if (key === curKey) return;
       const raw = localStorage.getItem(key);
       if (!raw) return;
       try {
@@ -819,11 +815,24 @@ function recalc() {
           return t > 0 ? t : null;
         });
         const total = byDay.reduce((a,v) => a + (v||0), 0);
-        savedWeeks.push({ weekStart: d.week, byDay, total });
+        if (total > 0) weekMap.set(d.week, { byDay, total });
       } catch(e) {}
     });
 
-    // Current week live inputs (restaurant + event)
+    // Source 2 — fp-labor-history (submit history, includes P6 seeded data)
+    const hist = JSON.parse(localStorage.getItem('fp-labor-history') || '[]');
+    hist.forEach(h => {
+      if (!h.weekStart || !h.actRevByDay) return;
+      if (weekMap.has(h.weekStart)) return; // per-week data takes priority
+      const byDay = Array.from({length:7}, (_,di) => {
+        const v = h.actRevByDay[di];
+        return (v != null && v > 0) ? v : null;
+      });
+      const total = byDay.reduce((a,v) => a + (v||0), 0);
+      if (total > 0) weekMap.set(h.weekStart, { byDay, total });
+    });
+
+    // Current week live inputs override saved (most up-to-date)
     const liveByDay = Array.from({length:7}, (_,di) => {
       const r = parseFloat(document.getElementById(`tot-actrev-${di}`)?.value) || 0;
       const e = parseFloat(document.getElementById(`tot-evtrev-${di}`)?.value) || 0;
@@ -831,35 +840,37 @@ function recalc() {
       return t > 0 ? t : null;
     });
     const liveTotal = liveByDay.reduce((a,v) => a + (v||0), 0);
+    if (liveTotal > 0) weekMap.set(curWeekStart, { byDay: liveByDay, total: liveTotal });
 
-    // Combine: current week live first, then saved weeks (most recent first), drop current if already saved
-    const all = [];
-    if (liveTotal > 0) all.push({ weekStart: curWeekStart, byDay: liveByDay, total: liveTotal });
-    savedWeeks.filter(w => w.weekStart !== curWeekStart).forEach(w => all.push(w));
+    // Sort all weeks newest-first, take top 4 (excluding current week from history avg)
+    const allWeeks = Array.from(weekMap.entries())
+      .map(([weekStart, data]) => ({ weekStart, ...data }))
+      .sort((a,b) => b.weekStart.localeCompare(a.weekStart));
 
-    // Sort descending by weekStart so most recent 4 are used
-    all.sort((a,b) => b.weekStart.localeCompare(a.weekStart));
+    // For the rolling avg we use the 4 most recent COMPLETED weeks
+    // (exclude current week unless it has live data — it's already accounted for above)
+    const completed = allWeeks.filter(w => w.weekStart !== curWeekStart || liveTotal > 0);
+    const top4weeks = completed.slice(0, 4);
 
     for (let di = 0; di < 7; di++) {
       const el = document.getElementById(`mavg-hdr-${di}`);
       if (!el) continue;
-      const vals = all.map(w => w.byDay[di]).filter(v => v !== null && v > 0);
-      const top4 = vals.slice(0, 4);
-      if (top4.length === 0) {
+      const vals = top4weeks.map(w => w.byDay[di]).filter(v => v !== null && v > 0);
+      if (vals.length === 0) {
         el.textContent = '—';
         el.title = 'No actual revenue saved yet for this day';
-      } else if (top4.length < 4) {
-        el.textContent = `(${top4.length}/4)`;
-        el.title = `${top4.length} of 4 weeks: ${top4.map(v=>'$'+Math.round(v).toLocaleString()).join(', ')}`;
+      } else if (vals.length < 4) {
+        el.textContent = `(${vals.length}/4)`;
+        el.title = `${vals.length} of 4 weeks: ${vals.map(v=>'$'+Math.round(v).toLocaleString()).join(', ')}`;
       } else {
-        const avg = Math.round(top4.reduce((a,b)=>a+b,0) / 4);
+        const avg = Math.round(vals.reduce((a,b)=>a+b,0) / 4);
         el.textContent = `$${avg.toLocaleString()}`;
-        el.title = `4-wk avg (restaurant + event): ${top4.map(v=>'$'+Math.round(v).toLocaleString()).join(', ')}`;
+        el.title = `4-wk avg: ${vals.map(v=>'$'+Math.round(v).toLocaleString()).join(', ')}`;
       }
     }
     const wkEl = document.getElementById('mavg-hdr-week');
     if (wkEl) {
-      const wkVals = all.map(w => w.total).filter(v => v > 0);
+      const wkVals = top4weeks.map(w => w.total).filter(v => v > 0);
       const top4wk = wkVals.slice(0, 4);
       if (top4wk.length === 0) {
         wkEl.textContent = '—'; wkEl.title = 'No actual revenue saved yet';
