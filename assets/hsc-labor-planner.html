@@ -233,15 +233,15 @@ footer span { color: var(--gold); font-weight: 600; }
     <th class="col-week week-col"><div class="day-th"><span class="day-name total-col">Week</span><span class="day-date">Total</span></div></th>
   </tr>
   <tr class="rev-row" style="background:rgba(90,139,167,0.08)">
-    <th colspan="3" style="color:#5a8ba7;letter-spacing:1.5px">📊 4-Wk Avg Actual Revenue</th>
-    <td id="mavg-hdr-0" style="text-align:center;font-size:13px;font-weight:700;color:#5a8ba7">—</td>
-    <td id="mavg-hdr-1" style="text-align:center;font-size:13px;font-weight:700;color:#5a8ba7">—</td>
-    <td id="mavg-hdr-2" style="text-align:center;font-size:13px;font-weight:700;color:#5a8ba7">—</td>
-    <td id="mavg-hdr-3" style="text-align:center;font-size:13px;font-weight:700;color:#5a8ba7">—</td>
-    <td id="mavg-hdr-4" style="text-align:center;font-size:13px;font-weight:700;color:#5a8ba7">—</td>
-    <td id="mavg-hdr-5" style="text-align:center;font-size:13px;font-weight:700;color:#5a8ba7">—</td>
-    <td id="mavg-hdr-6" style="text-align:center;font-size:13px;font-weight:700;color:#5a8ba7">—</td>
-    <td class="week-col" style="text-align:center;font-size:13px;font-weight:700;color:#5a8ba7" id="mavg-hdr-week">—</td>
+    <th colspan="3" style="color:#5a8ba7;letter-spacing:1.5px">🛏️ Rooms Booked Revenue</th>
+    <td><input class="rev-input" type="number" id="bookedrev-0" placeholder="$" oninput="recalc()" style="color:#5a8ba7;border-bottom-color:rgba(90,139,167,0.5)"></td>
+    <td><input class="rev-input" type="number" id="bookedrev-1" placeholder="$" oninput="recalc()" style="color:#5a8ba7;border-bottom-color:rgba(90,139,167,0.5)"></td>
+    <td><input class="rev-input" type="number" id="bookedrev-2" placeholder="$" oninput="recalc()" style="color:#5a8ba7;border-bottom-color:rgba(90,139,167,0.5)"></td>
+    <td><input class="rev-input" type="number" id="bookedrev-3" placeholder="$" oninput="recalc()" style="color:#5a8ba7;border-bottom-color:rgba(90,139,167,0.5)"></td>
+    <td><input class="rev-input" type="number" id="bookedrev-4" placeholder="$" oninput="recalc()" style="color:#5a8ba7;border-bottom-color:rgba(90,139,167,0.5)"></td>
+    <td><input class="rev-input" type="number" id="bookedrev-5" placeholder="$" oninput="recalc()" style="color:#5a8ba7;border-bottom-color:rgba(90,139,167,0.5)"></td>
+    <td><input class="rev-input" type="number" id="bookedrev-6" placeholder="$" oninput="recalc()" style="color:#5a8ba7;border-bottom-color:rgba(90,139,167,0.5)"></td>
+    <td class="week-col" style="text-align:center;font-size:13px;font-weight:700;color:#5a8ba7" id="bookedrev-week">—</td>
   </tr>
   <tr class="rev-row">
     <th colspan="3">📈 Forecast Revenue</th>
@@ -741,50 +741,15 @@ function recalc() {
   }
 
 
-  // ── 4-WEEK MOVING AVERAGE of actual revenue by day of week ─────────────
+  // ── ROOMS BOOKED REVENUE — sum inputs and update week total ────────────────
   (function() {
-    const HIST_KEY = 'hsc-history';
-    const hist = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
-    const curWeekStart = document.getElementById('weekStart').value;
-    // Build a synthetic entry from live actrev inputs for the current week
-    const liveActRevByDay = Array.from({length:7}, (_,di) => {
-      const v = parseFloat(document.getElementById(`tot-actrev-${di}`)?.value);
-      return isNaN(v) ? null : v;
-    });
-    const liveActRev = liveActRevByDay.reduce((a,v) => a + (v||0), 0);
-    // Prior submitted weeks (exclude current week to avoid double-counting)
-    const prior = hist.filter(h => h.actRevByDay && Array.isArray(h.actRevByDay) && h.weekStart !== curWeekStart);
-    // Prepend current week's live data if any actrev entered
-    const all = liveActRevByDay.some(v => v > 0)
-      ? [{ actRevByDay: liveActRevByDay, actRev: liveActRev || null }, ...prior]
-      : prior;
+    let bookedTotal = 0;
     for (let di = 0; di < 7; di++) {
-      const el = document.getElementById(`mavg-hdr-${di}`);
-      if (!el) continue;
-      const vals = all.map(h => h.actRevByDay[di]).filter(v => v !== null && v !== undefined && v > 0);
-      const top4 = vals.slice(0, 4);
-      if (top4.length < 4) {
-        el.textContent = top4.length === 0 ? '—' : `(${top4.length}/4)`;
-        el.title = top4.length === 0 ? 'No actual data yet — enter actual revenue to populate' : `${top4.length} of 4 weeks: ${top4.map(v=>'$'+Math.round(v).toLocaleString()).join(', ')}`;
-      } else {
-        const avg = Math.round(top4.reduce((a,b)=>a+b,0) / 4);
-        el.textContent = `$${avg.toLocaleString()}`;
-        el.title = `4-week avg: ${top4.map(v=>'$'+Math.round(v).toLocaleString()).join(', ')}`;
-      }
+      const v = parseFloat(document.getElementById(`bookedrev-${di}`)?.value) || 0;
+      bookedTotal += v;
     }
-    const wkEl = document.getElementById('mavg-hdr-week');
-    if (wkEl) {
-      const wkVals = all.map(h => h.actRev).filter(v => v > 0);
-      const top4wk = wkVals.slice(0, 4);
-      if (top4wk.length < 4) {
-        wkEl.textContent = top4wk.length === 0 ? '—' : `(${top4wk.length}/4)`;
-        wkEl.title = top4wk.length === 0 ? 'No actual data yet' : `${top4wk.length} of 4 weeks`;
-      } else {
-        const avg = Math.round(top4wk.reduce((a,b)=>a+b,0) / 4);
-        wkEl.textContent = `$${avg.toLocaleString()}`;
-        wkEl.title = `4-week avg actual weekly revenue`;
-      }
-    }
+    const wkEl = document.getElementById('bookedrev-week');
+    if (wkEl) wkEl.textContent = bookedTotal > 0 ? `$${Math.round(bookedTotal).toLocaleString()}` : '—';
   })();
 
   updateSummary(weekBudget, weekRev, weekActual, weekActRev, weekPct);
@@ -901,6 +866,7 @@ function saveLocal(notify = true) {
     revs:      Array.from({length:7}, (_,di) => document.getElementById(`rev-${di}`)?.value || ''),
     acts:      Array.from({length:7}, (_,di) => document.getElementById(`tot-act-${di}`)?.value || ''),
     actrevs:   Array.from({length:7}, (_,di) => document.getElementById(`tot-actrev-${di}`)?.value || ''),
+    bookedrevs: Array.from({length:7}, (_,di) => document.getElementById(`bookedrev-${di}`)?.value || ''),
     state:     JSON.parse(JSON.stringify(state)),
     positions: POSITIONS.map(p => ({name:p.name, rate:p.rate, dailyRate:p.dailyRate})),
   };
@@ -927,6 +893,7 @@ function loadWeek(key) {
     const rv = document.getElementById(`rev-${di}`); if (rv) rv.value = '';
     const ac = document.getElementById(`tot-act-${di}`); if (ac) ac.value = '';
     const ar = document.getElementById(`tot-actrev-${di}`); if (ar) ar.value = '';
+    const br = document.getElementById(`bookedrev-${di}`); if (br) br.value = '';
     const pc = document.getElementById(`pct-${di}`);
     if (pc) pc.value = [28,28,28,30,32,35,30][di];
   }
@@ -939,6 +906,7 @@ function loadWeek(key) {
       data.revs?.forEach((v, di) => { if (v) document.getElementById(`rev-${di}`).value = v; });
       data.acts?.forEach((v, di) => { const el = document.getElementById(`tot-act-${di}`); if (el && v) el.value = v; });
       data.actrevs?.forEach((v, di) => { const el = document.getElementById(`tot-actrev-${di}`); if (el && v) el.value = v; });
+      data.bookedrevs?.forEach((v, di) => { const el = document.getElementById(`bookedrev-${di}`); if (el && v) el.value = v; });
       if (data.positions) data.positions.forEach((p, pi) => { if (POSITIONS[pi]) { POSITIONS[pi].name = p.name; POSITIONS[pi].rate = p.rate; if (p.dailyRate != null) POSITIONS[pi].dailyRate = p.dailyRate; } });
       if (data.state) Object.keys(data.state).forEach(pi => { state[pi] = state[pi] || {}; Object.keys(data.state[pi]).forEach(di => { state[pi][di] = data.state[pi][di]; }); });
       // Check if this week was submitted
