@@ -779,50 +779,82 @@ function recalc() {
   }
 
 
-  // ── 4-WEEK MOVING AVERAGE of actual revenue by day of week ─────────────
+  // ── 4-WEEK MOVING AVERAGE ─────────────────────────────────────────────────
+  // Reads directly from saved per-week keys (actrevs + evtrevs) so it updates
+  // on Save, not just Submit. Current week's live inputs are included too.
   (function() {
-    const HIST_KEY = 'fp-labor-history';
-    const hist = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
     const curWeekStart = document.getElementById('weekStart').value;
-    // Build a synthetic entry from live actrev inputs for the current week
-    const liveActRevByDay = Array.from({length:7}, (_,di) => {
+
+    // Build a map of weekStart → actRevByDay from all saved weeks
+    const wkIndex = JSON.parse(localStorage.getItem('fp-labor-week-index') || '[]');
+    const savedWeeks = [];
+    wkIndex.forEach(key => {
+      // Derive the expected key for curWeekStart and skip it (use live inputs instead)
+      const cd = new Date(curWeekStart + 'T00:00:00');
+      const curKey = `fp-labor-wk-${cd.getFullYear()}-${String(cd.getMonth()+1).padStart(2,'0')}-${String(cd.getDate()).padStart(2,'0')}`;
+      if (key === curKey) return;
+      const raw = localStorage.getItem(key);
+      if (!raw) return;
+      try {
+        const d = JSON.parse(raw);
+        if (!d.week) return;
+        const byDay = Array.from({length:7}, (_,di) => {
+          const r = parseFloat(d.actrevs?.[di]) || 0;
+          const e = parseFloat(d.evtrevs?.[di]) || 0;
+          const t = r + e;
+          return t > 0 ? t : null;
+        });
+        const total = byDay.reduce((a,v) => a + (v||0), 0);
+        savedWeeks.push({ weekStart: d.week, byDay, total });
+      } catch(e) {}
+    });
+
+    // Current week live inputs (restaurant + event)
+    const liveByDay = Array.from({length:7}, (_,di) => {
       const r = parseFloat(document.getElementById(`tot-actrev-${di}`)?.value) || 0;
       const e = parseFloat(document.getElementById(`tot-evtrev-${di}`)?.value) || 0;
-      const total = r + e;
-      return total > 0 ? total : null;
+      const t = r + e;
+      return t > 0 ? t : null;
     });
-    const liveActRev = liveActRevByDay.reduce((a,v) => a + (v||0), 0);
-    // Prior submitted weeks (exclude current week to avoid double-counting)
-    const prior = hist.filter(h => h.actRevByDay && Array.isArray(h.actRevByDay) && h.weekStart !== curWeekStart);
-    // Prepend current week's live data if any actrev entered
-    const all = liveActRevByDay.some(v => v > 0)
-      ? [{ actRevByDay: liveActRevByDay, actRev: liveActRev || null }, ...prior]
-      : prior;
+    const liveTotal = liveByDay.reduce((a,v) => a + (v||0), 0);
+
+    // Combine: current week live first, then saved weeks (most recent first), drop current if already saved
+    const all = [];
+    if (liveTotal > 0) all.push({ weekStart: curWeekStart, byDay: liveByDay, total: liveTotal });
+    savedWeeks.filter(w => w.weekStart !== curWeekStart).forEach(w => all.push(w));
+
+    // Sort descending by weekStart so most recent 4 are used
+    all.sort((a,b) => b.weekStart.localeCompare(a.weekStart));
+
     for (let di = 0; di < 7; di++) {
       const el = document.getElementById(`mavg-hdr-${di}`);
       if (!el) continue;
-      const vals = all.map(h => h.actRevByDay[di]).filter(v => v !== null && v !== undefined && v > 0);
+      const vals = all.map(w => w.byDay[di]).filter(v => v !== null && v > 0);
       const top4 = vals.slice(0, 4);
-      if (top4.length < 4) {
-        el.textContent = top4.length === 0 ? '—' : `(${top4.length}/4)`;
-        el.title = top4.length === 0 ? 'No actual data yet — enter actual revenue to populate' : `${top4.length} of 4 weeks: ${top4.map(v=>'$'+Math.round(v).toLocaleString()).join(', ')}`;
+      if (top4.length === 0) {
+        el.textContent = '—';
+        el.title = 'No actual revenue saved yet for this day';
+      } else if (top4.length < 4) {
+        el.textContent = `(${top4.length}/4)`;
+        el.title = `${top4.length} of 4 weeks: ${top4.map(v=>'$'+Math.round(v).toLocaleString()).join(', ')}`;
       } else {
         const avg = Math.round(top4.reduce((a,b)=>a+b,0) / 4);
         el.textContent = `$${avg.toLocaleString()}`;
-        el.title = `4-week avg: ${top4.map(v=>'$'+Math.round(v).toLocaleString()).join(', ')}`;
+        el.title = `4-wk avg (restaurant + event): ${top4.map(v=>'$'+Math.round(v).toLocaleString()).join(', ')}`;
       }
     }
     const wkEl = document.getElementById('mavg-hdr-week');
     if (wkEl) {
-      const wkVals = all.map(h => h.actRev).filter(v => v > 0);
+      const wkVals = all.map(w => w.total).filter(v => v > 0);
       const top4wk = wkVals.slice(0, 4);
-      if (top4wk.length < 4) {
-        wkEl.textContent = top4wk.length === 0 ? '—' : `(${top4wk.length}/4)`;
-        wkEl.title = top4wk.length === 0 ? 'No actual data yet' : `${top4wk.length} of 4 weeks`;
+      if (top4wk.length === 0) {
+        wkEl.textContent = '—'; wkEl.title = 'No actual revenue saved yet';
+      } else if (top4wk.length < 4) {
+        wkEl.textContent = `(${top4wk.length}/4)`; wkEl.title = `${top4wk.length} of 4 weeks`;
       } else {
         const avg = Math.round(top4wk.reduce((a,b)=>a+b,0) / 4);
         wkEl.textContent = `$${avg.toLocaleString()}`;
-        wkEl.title = `4-week avg actual weekly revenue`;
+        wkEl.title = `4-wk avg weekly actual revenue`;
       }
     }
   })();
