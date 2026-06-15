@@ -1206,7 +1206,17 @@ function showBanner(msg) {
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 buildTable();
-setCurrentWeek();
+// Honor ?week=YYYY-MM-DD param (e.g. from seed page redirect)
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const wParam = params.get('week');
+  if (wParam && /^\d{4}-\d{2}-\d{2}$/.test(wParam)) {
+    document.getElementById('weekStart').value = wParam;
+    updateWeekDates();
+  } else {
+    setCurrentWeek();
+  }
+})();
 loadWeek(currentWeekKey());
 recalc();
 renderHistory();
