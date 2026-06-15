@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loading FPH P6 History…</title>
+<style>
+  body { background: #0f1923; color: #e8e0d4; font-family: -apple-system, sans-serif;
+         display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+  .card { background: #162433; border: 1px solid #263d52; border-radius: 12px;
+          padding: 36px 44px; max-width: 480px; text-align: center; }
+  .eyebrow { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #c9aa7c; margin-bottom: 8px; }
+  h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+  .sub { color: #8a9aaa; font-size: 14px; margin-bottom: 24px; }
+  .weeks { text-align: left; margin-bottom: 28px; }
+  .wk { display: flex; justify-content: space-between; padding: 10px 14px; border-radius: 6px;
+        border: 1px solid #263d52; margin-bottom: 8px; font-size: 13px; }
+  .wk-label { color: #c9aa7c; font-weight: 600; }
+  .wk-total { color: #4caf7d; font-weight: 700; }
+  .note { font-size: 11px; color: #8a9aaa; margin-bottom: 20px; }
+  .btn { background: #c9aa7c; color: #1a2e3b; border: none; border-radius: 8px;
+         font-size: 15px; font-weight: 700; padding: 14px 32px; cursor: pointer; width: 100%; transition: opacity 0.2s; }
+  .btn:hover { opacity: 0.9; }
+  .status { margin-top: 14px; font-size: 12px; color: #8a9aaa; min-height: 18px; }
+  .banner { display: none; background: rgba(76,175,125,0.12); border: 1px solid rgba(76,175,125,0.4);
+            color: #4caf7d; border-radius: 8px; padding: 12px 16px; font-size: 13px;
+            font-weight: 600; margin-top: 16px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="eyebrow">FPH · 1887 · War Room</div>
+  <h1>Period 6 Actual F&amp;B Revenue</h1>
+  <p class="sub">4 weeks of history → feeds P7 rolling average</p>
+
+  <div class="weeks">
+    <div class="wk"><span class="wk-label">P6 Wk 1 — May 18–24</span><span class="wk-total">$26,770.81</span></div>
+    <div class="wk"><span class="wk-label">P6 Wk 2 — May 25–31</span><span class="wk-total">$29,885.04</span></div>
+    <div class="wk"><span class="wk-label">P6 Wk 3 — Jun 1–7</span><span class="wk-total">$31,106.31</span></div>
+    <div class="wk"><span class="wk-label">P6 Wk 4 — Jun 8–14</span><span class="wk-total">$38,371.60</span></div>
+  </div>
+  <p class="note">Total: $126,133.76 · Revenue only (labor TBD)</p>
+
+  <button class="btn" onclick="seed()">Load P6 History &amp; Open Planner →</button>
+  <div class="status" id="status">Injects 4 weeks into fp-ph-history for the 4-wk mavg.</div>
+  <div class="banner" id="banner">✓ P6 history loaded. Opening FPH planner now…</div>
+</div>
+
+<script>
+// Period 6 actuals — FPH · 1887 · War Room
+// Remapped from sheet's Sun-Sat weeks → planner's Mon-Sun weeks
+// actRevByDay[0]=Mon … [6]=Sun
+const P6_HISTORY = [
+  {
+    weekStart: '2026-05-18', weekDisplay: 'May 18 – May 24, 2026',
+    isoWk: 'Wk 21', period: 'Period 6 · Week 1',
+    rev: 26770.81, budget: null, pct: null, actual: null, actPct: null, variance: null,
+    actRev: 26770.81, evtRev: 0, revVariance: 0,
+    revByDay:    [629.15, 1450.05, 3298.15, 4018.10, 5516.21, 8265.75, 3593.40],
+    actRevByDay: [629.15, 1450.05, 3298.15, 4018.10, 5516.21, 8265.75, 3593.40],
+  },
+  {
+    weekStart: '2026-05-25', weekDisplay: 'May 25 – May 31, 2026',
+    isoWk: 'Wk 22', period: 'Period 6 · Week 2',
+    rev: 29885.04, budget: null, pct: null, actual: null, actPct: null, variance: null,
+    actRev: 29885.04, evtRev: 0, revVariance: 0,
+    revByDay:    [3629.50, 2700.95, 3281.00, 3640.95, 5992.47, 5605.50, 5034.67],
+    actRevByDay: [3629.50, 2700.95, 3281.00, 3640.95, 5992.47, 5605.50, 5034.67],
+  },
+  {
+    weekStart: '2026-06-01', weekDisplay: 'Jun 1 – Jun 7, 2026',
+    isoWk: 'Wk 23', period: 'Period 6 · Week 3',
+    rev: 31106.31, budget: null, pct: null, actual: null, actPct: null, variance: null,
+    actRev: 31106.31, evtRev: 0, revVariance: 0,
+    revByDay:    [3495.45, 2305.10, 3637.75, 2774.10, 8518.58, 7388.08, 2987.25],
+    actRevByDay: [3495.45, 2305.10, 3637.75, 2774.10, 8518.58, 7388.08, 2987.25],
+  },
+  {
+    weekStart: '2026-06-08', weekDisplay: 'Jun 8 – Jun 14, 2026',
+    isoWk: 'Wk 24', period: 'Period 6 · Week 4',
+    rev: 38371.60, budget: null, pct: null, actual: null, actPct: null, variance: null,
+    actRev: 38371.60, evtRev: 0, revVariance: 0,
+    revByDay:    [4007.81, 5485.95, 4194.85, 4925.20, 5371.00, 9126.74, 5260.05],
+    actRevByDay: [4007.81, 5485.95, 4194.85, 4925.20, 5371.00, 9126.74, 5260.05],
+  },
+];
+
+function seed() {
+  document.getElementById('status').textContent = 'Writing history entries…';
+
+  // ── fp-ph-history (for 4-wk mavg + 52-week table) ──
+  const existing = JSON.parse(localStorage.getItem('fp-ph-history') || '[]');
+  const weekStarts = P6_HISTORY.map(e => e.weekStart);
+  const filtered = existing.filter(e => !weekStarts.includes(e.weekStart));
+  const updated = [...P6_HISTORY].reverse().concat(filtered).slice(0, 52);
+  localStorage.setItem('fp-ph-history', JSON.stringify(updated));
+
+  // ── per-week keys (for loadWeek to populate R7 + R10) ──
+  P6_HISTORY.forEach(h => {
+    const d   = new Date(h.weekStart + 'T00:00:00');
+    const key = `fp-ph-wk-${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const raw = localStorage.getItem(key);
+    const data = raw ? JSON.parse(raw) : {};
+    data.week    = h.weekStart;
+    data.actrevs = h.actRevByDay.map(v => String(v));
+    data.revs    = h.revByDay.map(v => String(v));
+    if (!data.pcts) data.pcts = ['28','28','28','30','32','35','30'];
+    localStorage.setItem(key, JSON.stringify(data));
+    const idx = JSON.parse(localStorage.getItem('fp-ph-week-index') || '[]');
+    if (!idx.includes(key)) { idx.unshift(key); localStorage.setItem('fp-ph-week-index', JSON.stringify(idx.slice(0,52))); }
+  });
+
+  document.getElementById('status').textContent = '';
+  document.getElementById('banner').style.display = 'block';
+
+  setTimeout(() => {
+    window.location.href = 'fp-ph-planner.html?week=2026-06-15';
+  }, 1200);
+}
+</script>
+</body>
+</html>
