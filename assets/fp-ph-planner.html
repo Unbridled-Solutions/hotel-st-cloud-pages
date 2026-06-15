@@ -1072,13 +1072,22 @@ function loadWeek(key) {
 
   if (_acts && _acts.some(v => v)) {
     _acts.forEach((v, di) => { const el = document.getElementById(`tot-act-${di}`); if (el && v) el.value = v; });
-  } else if (histFallback?.actual && histFallback?.actRevByDay) {
-    const totalRevByDay = histFallback.actRevByDay.reduce((a, v) => a + (v || 0), 0);
-    if (totalRevByDay > 0) {
-      histFallback.actRevByDay.forEach((v, di) => {
+  } else if (histFallback) {
+    // Use actLaborByDay if available (seeded daily labor)
+    if (histFallback.actLaborByDay) {
+      histFallback.actLaborByDay.forEach((v, di) => {
         const el = document.getElementById(`tot-act-${di}`);
-        if (el && v > 0) el.value = (histFallback.actual * (v / totalRevByDay)).toFixed(2);
+        if (el && v > 0) el.value = v.toFixed(2);
       });
+    } else if (histFallback.actual && histFallback.actRevByDay) {
+      // Fallback: distribute weekly total proportionally by revenue weight
+      const totalRevByDay = histFallback.actRevByDay.reduce((a, v) => a + (v || 0), 0);
+      if (totalRevByDay > 0) {
+        histFallback.actRevByDay.forEach((v, di) => {
+          const el = document.getElementById(`tot-act-${di}`);
+          if (el && v > 0) el.value = (histFallback.actual * (v / totalRevByDay)).toFixed(2);
+        });
+      }
     }
   }
 
