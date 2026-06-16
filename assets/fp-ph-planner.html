@@ -1431,7 +1431,12 @@ buildTable();
     setCurrentWeek();
   }
 })();
-cloudPull().then(() => { loadWeek(currentWeekKey()); recalc(); renderHistory(); renderMavg(); });
+cloudPull().then(() => {
+  try { loadWeek(currentWeekKey()); } catch(e) { console.error('loadWeek:', e); }
+  try { recalc(); } catch(e) { console.error('recalc:', e); }
+  try { renderHistory(); } catch(e) { console.error('renderHistory:', e); }
+  try { renderMavg(); } catch(e) { console.error('renderMavg:', e); }
+});
 </script>
 </body>
 </html>

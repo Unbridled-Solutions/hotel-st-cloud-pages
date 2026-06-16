@@ -807,6 +807,7 @@ function recalc() {
   }
 
   const actWk = weekActual;
+  const actWkEl = document.getElementById('tot-act-week');
   if (actWkEl) actWkEl.textContent = actWk ? `$${Math.round(actWk).toLocaleString()}` : '—';
 
   const weekHrly = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`tot-hrly-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
@@ -1405,7 +1406,12 @@ buildTable();
     setCurrentWeek();
   }
 })();
-cloudPull().then(() => { loadWeek(currentWeekKey()); recalc(); renderHistory(); renderMavg(); });
+cloudPull().then(() => {
+  try { loadWeek(currentWeekKey()); } catch(e) { console.error('loadWeek:', e); }
+  try { recalc(); } catch(e) { console.error('recalc:', e); }
+  try { renderHistory(); } catch(e) { console.error('renderHistory:', e); }
+  try { renderMavg(); } catch(e) { console.error('renderMavg:', e); }
+});
 
 </script>
 </body>
