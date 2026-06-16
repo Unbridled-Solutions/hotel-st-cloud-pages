@@ -880,7 +880,7 @@ function recalc() {
     const curWeekStart = document.getElementById('weekStart').value;
     const weekMap = new Map(); // weekStart → { byDay, total }
 
-    // Source 1 — per-week keys (live saves)
+    // Source 1 — per-week keys (live saves, actrevs = restaurant revenue)
     const wkIndex = JSON.parse(localStorage.getItem('fp-ph-week-index') || '[]');
     wkIndex.forEach(key => {
       const raw = localStorage.getItem(key);
@@ -893,15 +893,17 @@ function recalc() {
           return r > 0 ? r : null;
         });
         const total = byDay.reduce((a,v) => a + (v||0), 0);
+        // Only register if we actually have actrev data — otherwise let history take it
         if (total > 0) weekMap.set(d.week, { byDay, total });
       } catch(e) {}
     });
 
-    // Source 2 — fp-ph-history (submitted/approved weeks + seeded P6 data)
+    // Source 2 — fp-ph-history (submitted weeks + seeded P6 data)
+    // Fills gaps where per-week key exists but has no actrevs
     const hist = JSON.parse(localStorage.getItem('fp-ph-history') || '[]');
     hist.forEach(h => {
       if (!h.weekStart || !h.actRevByDay) return;
-      if (weekMap.has(h.weekStart)) return; // per-week data takes priority
+      if (weekMap.has(h.weekStart)) return; // per-week actrevs take priority
       const byDay = Array.from({length:7}, (_,di) => {
         const v = h.restRevByDay?.[di] ?? h.actRevByDay[di];
         return (v != null && v > 0) ? v : null;
