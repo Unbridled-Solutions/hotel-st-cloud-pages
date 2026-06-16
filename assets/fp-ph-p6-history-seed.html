@@ -108,7 +108,7 @@ const P6_HISTORY = [
   },
 ];
 
-function seed() {
+async function seed() {
   document.getElementById('status').textContent = 'Writing history entries…';
 
   const existing = JSON.parse(localStorage.getItem('fp-ph-history') || '[]');
@@ -133,6 +133,9 @@ function seed() {
     if (!idx.includes(key)) { idx.unshift(key); localStorage.setItem('fp-ph-week-index', JSON.stringify(idx.slice(0,52))); }
   });
 
+  // Push AFTER writing so cloud has fresh data before planner loads
+  await cloudPush();
+
   document.getElementById('status').textContent = '';
   document.getElementById('banner').style.display = 'block';
 
@@ -141,7 +144,7 @@ function seed() {
   }, 1200);
 }
 
-(async function cloudPush() {
+async function cloudPush() {
   try {
     const bundle = {};
     for (let i = 0; i < localStorage.length; i++) {
@@ -155,7 +158,7 @@ function seed() {
       method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(bundle),
     });
   } catch(e) {}
-})();
+}
 </script>
 </body>
 </html>

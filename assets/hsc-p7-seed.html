@@ -148,7 +148,7 @@ const WEEKS = [
   },
 ];
 
-function seed() {
+async function seed() {
   document.getElementById('status').textContent = 'Writing forecast + labor data…';
 
   WEEKS.forEach(w => {
@@ -168,6 +168,9 @@ function seed() {
     if (!idx.includes(w.key)) { idx.unshift(w.key); localStorage.setItem('hsc-week-index', JSON.stringify(idx.slice(0, 52))); }
   });
 
+  // Push AFTER writing so cloud has fresh data before planner loads
+  await cloudPush();
+
   document.getElementById('status').textContent = '';
   document.getElementById('banner').style.display = 'block';
 
@@ -176,7 +179,7 @@ function seed() {
   }, 1200);
 }
 
-(async function cloudPush() {
+async function cloudPush() {
   try {
     const bundle = {};
     for (let i = 0; i < localStorage.length; i++) {
@@ -190,7 +193,7 @@ function seed() {
       method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(bundle),
     });
   } catch(e) {}
-})();
+}
 </script>
 </body>
 </html>

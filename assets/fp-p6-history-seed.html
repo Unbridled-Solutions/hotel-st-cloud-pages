@@ -125,7 +125,7 @@ const P6_HISTORY = [
   },
 ];
 
-function seed() {
+async function seed() {
   document.getElementById('status').textContent = 'Writing history entries…';
 
   // Load existing history, remove any of these weeks, then prepend
@@ -152,6 +152,9 @@ function seed() {
     if (!idx.includes(key)) { idx.unshift(key); localStorage.setItem('fp-labor-week-index', JSON.stringify(idx.slice(0,52))); }
   });
 
+  // Push AFTER writing so cloud has fresh data before planner loads
+  await cloudPush();
+
   document.getElementById('status').textContent = '';
   document.getElementById('banner').style.display = 'block';
 
@@ -160,7 +163,7 @@ function seed() {
   }, 1200);
 }
 
-(async function cloudPush() {
+async function cloudPush() {
   try {
     const bundle = {};
     for (let i = 0; i < localStorage.length; i++) {
@@ -174,7 +177,7 @@ function seed() {
       method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(bundle),
     });
   } catch(e) {}
-})();
+}
 </script>
 </body>
 </html>
