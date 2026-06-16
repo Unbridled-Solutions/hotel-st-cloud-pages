@@ -977,15 +977,18 @@ function loadWeek(key) {
   }
   document.getElementById('submitBadge').style.display = 'none';
 
+  // Stash tfoot values — buildTable() recreates the DOM and wipes them
+  let _pcts=null, _revs=null, _hrlyacts=null, _mgmtacts=null, _actrevs=null, _bookedrevs=null;
+
   if (raw) {
     try {
       const data = JSON.parse(raw);
-      data.pcts?.forEach((v, di) => { const el = document.getElementById(`pct-${di}`); if (el && v) el.value = v; });
-      data.revs?.forEach((v, di) => { if (v) document.getElementById(`rev-${di}`).value = v; });
-      data.hrlyacts?.forEach((v, di) => { const el = document.getElementById(`tot-hrly-${di}`); if (el && v) el.value = v; });
-      data.mgmtacts?.forEach((v, di) => { const el = document.getElementById(`tot-mgmt-${di}`); if (el && v) el.value = v; });
-      data.actrevs?.forEach((v, di) => { const el = document.getElementById(`tot-actrev-${di}`); if (el && v) el.value = v; });
-      data.bookedrevs?.forEach((v, di) => { const el = document.getElementById(`bookedrev-${di}`); if (el && v) el.value = v; });
+      _pcts      = data.pcts      || null;
+      _revs      = data.revs      || null;
+      _hrlyacts  = data.hrlyacts  || null;
+      _mgmtacts  = data.mgmtacts  || null;
+      _actrevs   = data.actrevs   || null;
+      _bookedrevs= data.bookedrevs|| null;
       if (data.positions) data.positions.forEach((p, pi) => { if (POSITIONS[pi]) { POSITIONS[pi].name = p.name; POSITIONS[pi].rate = p.rate; if (p.dailyRate != null) POSITIONS[pi].dailyRate = p.dailyRate; } });
       if (data.state) Object.keys(data.state).forEach(pi => { state[pi] = state[pi] || {}; Object.keys(data.state[pi]).forEach(di => { state[pi][di] = data.state[pi][di]; }); });
       // Check if this week was submitted
@@ -996,6 +999,14 @@ function loadWeek(key) {
 
   // Rebuild table to apply fresh state
   buildTable();
+
+  // NOW restore into the freshly-built DOM
+  if (_pcts)       _pcts.forEach((v, di)       => { const el = document.getElementById(`pct-${di}`);          if (el && v) el.value = v; });
+  if (_revs)       _revs.forEach((v, di)       => { const el = document.getElementById(`rev-${di}`);          if (el && v) el.value = v; });
+  if (_hrlyacts)   _hrlyacts.forEach((v, di)   => { const el = document.getElementById(`tot-hrly-${di}`);     if (el && v) el.value = v; });
+  if (_mgmtacts)   _mgmtacts.forEach((v, di)   => { const el = document.getElementById(`tot-mgmt-${di}`);     if (el && v) el.value = v; });
+  if (_actrevs)    _actrevs.forEach((v, di)    => { const el = document.getElementById(`tot-actrev-${di}`);   if (el && v) el.value = v; });
+  if (_bookedrevs) _bookedrevs.forEach((v, di) => { const el = document.getElementById(`bookedrev-${di}`);    if (el && v) el.value = v; });
   // Lock if this week is approved
   (function() {
     const wkStart = document.getElementById('weekStart').value;
