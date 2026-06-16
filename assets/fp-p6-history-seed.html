@@ -145,6 +145,29 @@ function seed() {
     window.location.href = 'fp-labor-planner.html?week=2026-06-15';
   }, 1200);
 }
+
+async function cloudPush(ns, prefixes) {
+  try {
+    const bundle = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (prefixes.some(p => k.startsWith(p))) {
+        const raw = localStorage.getItem(k);
+        try { bundle[k] = JSON.parse(raw); } catch(e) { bundle[k] = raw; }
+      }
+    }
+    await fetch('/api/planner/bundle?ns=' + ns, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(bundle),
+    });
+    out('☁️ Pushed to cloud (ns=' + ns + ', ' + Object.keys(bundle).length + ' keys)', true);
+  } catch(e) {
+    out('⚠️ Cloud push failed (data safe in localStorage): ' + e.message);
+  }
+}
+
+cloudPush('fp', ["fp-labor-wk-", "fp-labor-week-index", "fp-labor-history"]);
 </script>
 </body>
 </html>
