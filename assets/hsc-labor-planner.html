@@ -352,7 +352,22 @@ async function cloudPull() {
     const { data } = await res.json();
     if (!data || typeof data !== 'object') return;
     Object.entries(data).forEach(([k, v]) => {
-      try { localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v)); } catch(e) {}
+      try {
+        const incoming = typeof v === 'string' ? v : JSON.stringify(v);
+        // For week keys: local wins if it has a newer saved_at timestamp
+        // This prevents a stale cloud snapshot from clobbering hand-entered data
+        const existing = localStorage.getItem(k);
+        if (existing) {
+          try {
+            const localObj   = JSON.parse(existing);
+            const cloudObj   = typeof v === 'object' ? v : JSON.parse(v);
+            const localTs    = localObj?.saved_at  || 0;
+            const cloudTs    = cloudObj?.saved_at  || 0;
+            if (localTs >= cloudTs) return; // local is same age or newer — keep it
+          } catch(e) { /* can't parse — fall through and overwrite */ }
+        }
+        localStorage.setItem(k, incoming);
+      } catch(e) {}
     });
   } catch(e) { /* offline — localStorage fallback */ }
 }
@@ -985,6 +1000,7 @@ function saveLocal(notify = true) {
     bookedrevs: Array.from({length:7}, (_,di) => document.getElementById(`bookedrev-${di}`)?.value || ''),
     state:     JSON.parse(JSON.stringify(state)),
     positions: POSITIONS.map(p => ({name:p.name, rate:p.rate, dailyRate:p.dailyRate})),
+    saved_at:  Date.now(),
   };
   localStorage.setItem(key, JSON.stringify(data));
   // Also track which weeks have been saved
