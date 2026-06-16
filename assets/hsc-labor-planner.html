@@ -67,6 +67,11 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
 .rev-input:focus { border-bottom-color: var(--gold); }
 .rev-input::placeholder { color: var(--border); font-weight: 400; font-size: 12px; }
 
+.occ-input { width: 52px; background: transparent; border: none; border-bottom: 1px solid rgba(90,139,167,0.4); color: #5a8ba7; font-size: 13px; font-weight: 700; text-align: center; outline: none; padding: 2px 0; }
+.occ-input:focus { border-bottom-color: #5a8ba7; }
+.occ-input::placeholder { color: var(--border); font-weight: 400; font-size: 11px; }
+.occ-pct { display: block; font-size: 10px; color: #5a8ba7; margin-top: 2px; font-weight: 700; letter-spacing: 0.5px; min-height: 13px; }
+
 .target-row td, .target-row th { border: 1px solid var(--border); padding: 4px 6px; background: rgba(76,175,125,0.05); }
 .target-row th { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--green); text-align: left; padding: 5px 10px; }
 .target-row td.week-col { border-left: 2px solid var(--gold); background: rgba(76,175,125,0.08); }
@@ -231,6 +236,17 @@ footer span { color: var(--gold); font-weight: 600; }
     <th class="col-day"><div class="day-th"><span class="day-name weekend">Sat</span><span class="day-date" id="date-5">—</span></div></th>
     <th class="col-day"><div class="day-th"><span class="day-name weekend">Sun</span><span class="day-date" id="date-6">—</span></div></th>
     <th class="col-week week-col"><div class="day-th"><span class="day-name total-col">Week</span><span class="day-date">Total</span></div></th>
+  </tr>
+  <tr class="rev-row" style="background:rgba(90,139,167,0.04)">
+    <th colspan="3" style="color:#5a8ba7;letter-spacing:1.5px">📊 Occupancy %<span style="font-size:10px;color:var(--muted);font-weight:400;margin-left:8px;letter-spacing:0">rooms booked ÷ 36</span></th>
+    <td style="text-align:center"><input class="occ-input" type="number" id="occrooms-0" placeholder="rms" min="0" max="36" oninput="recalcOcc()"><span class="occ-pct" id="occpct-0"></span></td>
+    <td style="text-align:center"><input class="occ-input" type="number" id="occrooms-1" placeholder="rms" min="0" max="36" oninput="recalcOcc()"><span class="occ-pct" id="occpct-1"></span></td>
+    <td style="text-align:center"><input class="occ-input" type="number" id="occrooms-2" placeholder="rms" min="0" max="36" oninput="recalcOcc()"><span class="occ-pct" id="occpct-2"></span></td>
+    <td style="text-align:center"><input class="occ-input" type="number" id="occrooms-3" placeholder="rms" min="0" max="36" oninput="recalcOcc()"><span class="occ-pct" id="occpct-3"></span></td>
+    <td style="text-align:center"><input class="occ-input" type="number" id="occrooms-4" placeholder="rms" min="0" max="36" oninput="recalcOcc()"><span class="occ-pct" id="occpct-4"></span></td>
+    <td style="text-align:center"><input class="occ-input" type="number" id="occrooms-5" placeholder="rms" min="0" max="36" oninput="recalcOcc()"><span class="occ-pct" id="occpct-5"></span></td>
+    <td style="text-align:center"><input class="occ-input" type="number" id="occrooms-6" placeholder="rms" min="0" max="36" oninput="recalcOcc()"><span class="occ-pct" id="occpct-6"></span></td>
+    <td class="week-col" style="text-align:center;font-size:13px;font-weight:700;color:#5a8ba7" id="occtotal-week">—</td>
   </tr>
   <tr class="rev-row" style="background:rgba(90,139,167,0.08)">
     <th colspan="3" style="color:#5a8ba7;letter-spacing:1.5px">🛏️ Rooms Booked Revenue</th>
@@ -613,6 +629,27 @@ function toggleDay(pi, di) {
 }
 
 // ── RECALC ────────────────────────────────────────────────────────────────────
+const TOTAL_ROOMS = 36;
+
+function recalcOcc() {
+  let weekRooms = 0;
+  for (let di = 0; di < 7; di++) {
+    const el = document.getElementById(`occrooms-${di}`);
+    const rooms = Math.min(TOTAL_ROOMS, Math.max(0, parseInt(el?.value) || 0));
+    if (el && el.value !== '' && parseInt(el.value) !== rooms) el.value = rooms;
+    const pct = rooms ? Math.round(rooms / TOTAL_ROOMS * 100) : null;
+    const span = document.getElementById(`occpct-${di}`);
+    if (span) span.textContent = pct ? `${pct}%` : '';
+    weekRooms += rooms;
+  }
+  const weekEl = document.getElementById('occtotal-week');
+  if (weekEl) {
+    const avgOcc = weekRooms ? Math.round(weekRooms / 7 / TOTAL_ROOMS * 100) : null;
+    weekEl.textContent = avgOcc ? `avg ${avgOcc}%` : '—';
+  }
+  scheduleAutoSave();
+}
+
 function recalc() {
   const TAX = 1.11;
   const dayTotals = Array(7).fill(0);
@@ -941,6 +978,7 @@ function saveLocal(notify = true) {
 
     hrlyacts:  Array.from({length:7}, (_,di) => document.getElementById(`tot-hrly-${di}`)?.value || ''),
     mgmtacts:  Array.from({length:7}, (_,di) => document.getElementById(`tot-mgmt-${di}`)?.value || ''),
+    occrooms:  Array.from({length:7}, (_,di) => document.getElementById(`occrooms-${di}`)?.value || ''),
     actrevs:   Array.from({length:7}, (_,di) => document.getElementById(`tot-actrev-${di}`)?.value || ''),
     bookedrevs: Array.from({length:7}, (_,di) => document.getElementById(`bookedrev-${di}`)?.value || ''),
     state:     JSON.parse(JSON.stringify(state)),
@@ -970,6 +1008,8 @@ function loadWeek(key) {
     const rv = document.getElementById(`rev-${di}`); if (rv) rv.value = '';
     const hr = document.getElementById(`tot-hrly-${di}`); if (hr) hr.value = '';
     const mg = document.getElementById(`tot-mgmt-${di}`); if (mg) mg.value = '';
+    const oc = document.getElementById(`occrooms-${di}`); if (oc) oc.value = '';
+    const sp = document.getElementById(`occpct-${di}`); if (sp) sp.textContent = '';
     const ar = document.getElementById(`tot-actrev-${di}`); if (ar) ar.value = '';
     const br = document.getElementById(`bookedrev-${di}`); if (br) br.value = '';
     const pc = document.getElementById(`pct-${di}`);
@@ -978,7 +1018,7 @@ function loadWeek(key) {
   document.getElementById('submitBadge').style.display = 'none';
 
   // Stash tfoot values — buildTable() recreates the DOM and wipes them
-  let _pcts=null, _revs=null, _hrlyacts=null, _mgmtacts=null, _actrevs=null, _bookedrevs=null;
+  let _pcts=null, _revs=null, _hrlyacts=null, _mgmtacts=null, _occrooms=null, _actrevs=null, _bookedrevs=null;
 
   if (raw) {
     try {
@@ -987,6 +1027,7 @@ function loadWeek(key) {
       _revs      = data.revs      || null;
       _hrlyacts  = data.hrlyacts  || null;
       _mgmtacts  = data.mgmtacts  || null;
+      _occrooms  = data.occrooms  || null;
       _actrevs   = data.actrevs   || null;
       _bookedrevs= data.bookedrevs|| null;
       if (data.positions) data.positions.forEach((p, pi) => { if (POSITIONS[pi]) { POSITIONS[pi].name = p.name; POSITIONS[pi].rate = p.rate; if (p.dailyRate != null) POSITIONS[pi].dailyRate = p.dailyRate; } });
@@ -1005,6 +1046,7 @@ function loadWeek(key) {
   if (_revs)       _revs.forEach((v, di)       => { const el = document.getElementById(`rev-${di}`);          if (el && v) el.value = v; });
   if (_hrlyacts)   _hrlyacts.forEach((v, di)   => { const el = document.getElementById(`tot-hrly-${di}`);     if (el && v) el.value = v; });
   if (_mgmtacts)   _mgmtacts.forEach((v, di)   => { const el = document.getElementById(`tot-mgmt-${di}`);     if (el && v) el.value = v; });
+  if (_occrooms)   { _occrooms.forEach((v, di)  => { const el = document.getElementById(`occrooms-${di}`);     if (el && v) el.value = v; }); recalcOcc(); }
   if (_actrevs)    _actrevs.forEach((v, di)    => { const el = document.getElementById(`tot-actrev-${di}`);   if (el && v) el.value = v; });
   if (_bookedrevs) _bookedrevs.forEach((v, di) => { const el = document.getElementById(`bookedrev-${di}`);    if (el && v) el.value = v; });
   // Lock if this week is approved
@@ -1209,7 +1251,7 @@ buildTable();
     setCurrentWeek();
   }
 })();
-cloudPull().then(() => { loadWeek(currentWeekKey()); recalc(); renderHistory(); });
+cloudPull().then(() => { loadWeek(currentWeekKey()); recalc(); recalcOcc(); renderHistory(); });
 </script>
 </body>
 </html>
