@@ -71,6 +71,7 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
 .occ-input:focus { border-bottom-color: #5a8ba7; }
 .occ-input::placeholder { color: var(--border); font-weight: 400; font-size: 11px; }
 .occ-pct { display: block; font-size: 10px; color: #5a8ba7; margin-top: 2px; font-weight: 700; letter-spacing: 0.5px; min-height: 13px; }
+.occ-sign { font-size: 11px; color: #5a8ba7; font-weight: 700; margin-left: 1px; }
 
 .target-row td, .target-row th { border: 1px solid var(--border); padding: 4px 6px; background: rgba(76,175,125,0.05); }
 .target-row th { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--green); text-align: left; padding: 5px 10px; }
@@ -239,13 +240,13 @@ footer span { color: var(--gold); font-weight: 600; }
   </tr>
   <tr class="rev-row" style="background:rgba(90,139,167,0.04)">
     <th colspan="3" style="color:#5a8ba7;letter-spacing:1.5px">📊 Occupancy %<span style="font-size:10px;color:var(--muted);font-weight:400;margin-left:8px;letter-spacing:0">enter % → shows rooms sold</span></th>
-    <td style="text-align:center"><input class="occ-input" type="number" id="occpct-0" placeholder="%" min="0" max="100" oninput="recalcOcc()"><span class="occ-pct" id="occrooms-0"></span></td>
-    <td style="text-align:center"><input class="occ-input" type="number" id="occpct-1" placeholder="%" min="0" max="100" oninput="recalcOcc()"><span class="occ-pct" id="occrooms-1"></span></td>
-    <td style="text-align:center"><input class="occ-input" type="number" id="occpct-2" placeholder="%" min="0" max="100" oninput="recalcOcc()"><span class="occ-pct" id="occrooms-2"></span></td>
-    <td style="text-align:center"><input class="occ-input" type="number" id="occpct-3" placeholder="%" min="0" max="100" oninput="recalcOcc()"><span class="occ-pct" id="occrooms-3"></span></td>
-    <td style="text-align:center"><input class="occ-input" type="number" id="occpct-4" placeholder="%" min="0" max="100" oninput="recalcOcc()"><span class="occ-pct" id="occrooms-4"></span></td>
-    <td style="text-align:center"><input class="occ-input" type="number" id="occpct-5" placeholder="%" min="0" max="100" oninput="recalcOcc()"><span class="occ-pct" id="occrooms-5"></span></td>
-    <td style="text-align:center"><input class="occ-input" type="number" id="occpct-6" placeholder="%" min="0" max="100" oninput="recalcOcc()"><span class="occ-pct" id="occrooms-6"></span></td>
+    <td style="text-align:center"><input class="occ-input" type="number" id="occpct-0" placeholder="%" min="0" max="100" oninput="recalcOcc()"><span class="occ-sign">%</span><span class="occ-pct" id="occrooms-0"></span></td>
+    <td style="text-align:center"><input class="occ-input" type="number" id="occpct-1" placeholder="%" min="0" max="100" oninput="recalcOcc()"><span class="occ-sign">%</span><span class="occ-pct" id="occrooms-1"></span></td>
+    <td style="text-align:center"><input class="occ-input" type="number" id="occpct-2" placeholder="%" min="0" max="100" oninput="recalcOcc()"><span class="occ-sign">%</span><span class="occ-pct" id="occrooms-2"></span></td>
+    <td style="text-align:center"><input class="occ-input" type="number" id="occpct-3" placeholder="%" min="0" max="100" oninput="recalcOcc()"><span class="occ-sign">%</span><span class="occ-pct" id="occrooms-3"></span></td>
+    <td style="text-align:center"><input class="occ-input" type="number" id="occpct-4" placeholder="%" min="0" max="100" oninput="recalcOcc()"><span class="occ-sign">%</span><span class="occ-pct" id="occrooms-4"></span></td>
+    <td style="text-align:center"><input class="occ-input" type="number" id="occpct-5" placeholder="%" min="0" max="100" oninput="recalcOcc()"><span class="occ-sign">%</span><span class="occ-pct" id="occrooms-5"></span></td>
+    <td style="text-align:center"><input class="occ-input" type="number" id="occpct-6" placeholder="%" min="0" max="100" oninput="recalcOcc()"><span class="occ-sign">%</span><span class="occ-pct" id="occrooms-6"></span></td>
     <td class="week-col" style="text-align:center;font-size:13px;font-weight:700;color:#5a8ba7" id="occtotal-week">—</td>
   </tr>
   <tr class="rev-row" style="background:rgba(90,139,167,0.08)">
@@ -640,6 +641,7 @@ function recalcOcc() {
     const rooms = pct ? Math.round(pct / 100 * TOTAL_ROOMS) : null;
     const span = document.getElementById(`occrooms-${di}`);
     if (span) span.textContent = rooms ? `${rooms} rms` : '';
+    if (pct && el) el.setAttribute('data-pct', pct);
     if (pct) { totalPct += pct; enteredDays++; }
   }
   const weekEl = document.getElementById('occtotal-week');
