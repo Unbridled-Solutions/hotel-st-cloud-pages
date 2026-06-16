@@ -892,111 +892,102 @@ function recalc() {
   }
 
 
-  // ── 4-WEEK MOVING AVERAGE ──────────────────────────────────────────────────
-  // Reads directly from _cloudData (populated by cloudPull) with localStorage fallback.
-  // Iterates all fp-ph-wk-* keys + fp-ph-history — no dependency on week-index.
-  (function() {
-    const weekMap = new Map();
 
-    // Source A — fp-ph-history (seeded P6 + submitted weeks) from cloud or localStorage
-    try {
-      const histArr = (_cloudData && Array.isArray(_cloudData['fp-ph-history']))
-        ? _cloudData['fp-ph-history']
-        : JSON.parse(localStorage.getItem('fp-ph-history') || '[]');
-      histArr.forEach(h => {
-        if (!h.weekStart) return;
-        const byDay = Array.from({length:7}, (_,di) => {
-          const v = h.restRevByDay?.[di] ?? h.actRevByDay?.[di];
-          return (v != null && v > 0) ? v : null;
-        });
-        const total = byDay.reduce((a,v) => a + (v||0), 0);
-        if (total > 0) weekMap.set(h.weekStart, { byDay, total });
-      });
-    } catch(e) {}
-
-    // Source B — per-week keys from cloud
-    if (_cloudData) {
-      Object.keys(_cloudData).filter(k => k.startsWith('fp-ph-wk-')).forEach(k => {
-        try {
-          const d = _cloudData[k];
-          if (!d || !d.week) return;
-          const byDay = Array.from({length:7}, (_,di) => {
-            const r = parseFloat(d.actrevs?.[di]) || 0;
-            return r > 0 ? r : null;
-          });
-          const total = byDay.reduce((a,v) => a + (v||0), 0);
-          if (total > 0) weekMap.set(d.week, { byDay, total });
-        } catch(e) {}
-      });
-    }
-    // Then localStorage for anything not in cloud
-    try {
-      const wkIndex = JSON.parse(localStorage.getItem('fp-ph-week-index') || '[]');
-      wkIndex.forEach(key => {
-        try {
-          const raw = localStorage.getItem(key);
-          if (!raw) return;
-          const d = JSON.parse(raw);
-          if (!d.week || weekMap.has(d.week)) return;
-          const byDay = Array.from({length:7}, (_,di) => {
-            const r = parseFloat(d.actrevs?.[di]) || 0;
-            return r > 0 ? r : null;
-          });
-          const total = byDay.reduce((a,v) => a + (v||0), 0);
-          if (total > 0) weekMap.set(d.week, { byDay, total });
-        } catch(e) {}
-      });
-    } catch(e) {}
-
-    // Sort newest-first, take up to 4 per day-of-week
-    const allWeeks = Array.from(weekMap.entries())
-      .map(([weekStart, data]) => ({ weekStart, ...data }))
-      .sort((a,b) => b.weekStart.localeCompare(a.weekStart));
-
-    for (let di = 0; di < 7; di++) {
-      const el = document.getElementById(`mavg-hdr-${di}`);
-      if (!el) continue;
-      const vals = [];
-      for (const w of allWeeks) {
-        if (vals.length >= 4) break;
-        const v = w.byDay[di];
-        if (v !== null && v > 0) vals.push(v);
-      }
-      if (vals.length === 0) {
-        el.textContent = '—';
-        el.title = 'No actual revenue for this day yet';
-      } else {
-        const avg = Math.round(vals.reduce((a,b)=>a+b,0) / vals.length);
-        el.textContent = `$${avg.toLocaleString()}`;
-        el.title = `${vals.length}-wk avg: ${vals.map(v=>'$'+Math.round(v).toLocaleString()).join(', ')}`;
-      }
-    }
-    const wkEl = document.getElementById('mavg-hdr-week');
-    if (wkEl) {
-      let wkAvgTotal = 0, daysWithData = 0;
-      for (let di = 0; di < 7; di++) {
-        const vals = [];
-        for (const w of allWeeks) {
-          if (vals.length >= 4) break;
-          const v = w.byDay[di];
-          if (v !== null && v > 0) vals.push(v);
-        }
-        if (vals.length > 0) {
-          wkAvgTotal += Math.round(vals.reduce((a,b)=>a+b,0) / vals.length);
-          daysWithData++;
-        }
-      }
-      if (daysWithData === 0) {
-        wkEl.textContent = '—'; wkEl.title = 'No actual revenue saved yet';
-      } else {
-        wkEl.textContent = `$${wkAvgTotal.toLocaleString()}`;
-        wkEl.title = `Avg week total (${daysWithData} days with data)`;
-      }
-    }
-  })();
 
   updateSummary(weekBudget, weekRev, weekActual, weekActRevTotal, weekPct);
   scheduleAutoSave();
+}
+
+// ── 4-WEEK MOVING AVERAGE (standalone — called after cloudPull, not inside recalc) ────
+function renderMavg() {
+  const weekMap = new Map();
+
+  // Source A — fp-ph-history direct from cloud (always prefer this)
+  try {
+    const histArr = (_cloudData && Array.isArray(_cloudData['fp-ph-history']))
+      ? _cloudData['fp-ph-history']
+      : JSON.parse(localStorage.getItem('fp-ph-history') || '[]');
+    histArr.forEach(h => {
+      if (!h.weekStart) return;
+      const byDay = Array.from({length:7}, (_,di) => {
+        const v = h.restRevByDay?.[di] ?? h.actRevByDay?.[di];
+        return (v != null && parseFloat(v) > 0) ? parseFloat(v) : null;
+      });
+      const total = byDay.reduce((a,v) => a + (v||0), 0);
+      if (total > 0) weekMap.set(h.weekStart, { byDay, total });
+    });
+  } catch(e) {}
+
+  // Source B — per-week wk-* keys from cloud
+  if (_cloudData) {
+    Object.keys(_cloudData).filter(k => k.startsWith('fp-ph-wk-')).forEach(k => {
+      try {
+        const d = _cloudData[k];
+        if (!d || !d.week) return;
+        const byDay = Array.from({length:7}, (_,di) => {
+          const r = parseFloat(d.actrevs?.[di]) || 0;
+          return r > 0 ? r : null;
+        });
+        const total = byDay.reduce((a,v) => a + (v||0), 0);
+        if (total > 0) weekMap.set(d.week, { byDay, total });
+      } catch(e) {}
+    });
+  }
+  // localStorage fallback
+  try {
+    const wkIndex = JSON.parse(localStorage.getItem('fp-ph-week-index') || '[]');
+    wkIndex.forEach(key => {
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return;
+        const d = JSON.parse(raw);
+        if (!d.week || weekMap.has(d.week)) return;
+        const byDay = Array.from({length:7}, (_,di) => {
+          const r = parseFloat(d.actrevs?.[di]) || 0;
+          return r > 0 ? r : null;
+        });
+        const total = byDay.reduce((a,v) => a + (v||0), 0);
+        if (total > 0) weekMap.set(d.week, { byDay, total });
+      } catch(e) {}
+    });
+  } catch(e) {}
+
+  if (weekMap.size === 0) return;
+
+  const allWeeks = Array.from(weekMap.entries())
+    .map(([weekStart, data]) => ({ weekStart, ...data }))
+    .sort((a,b) => b.weekStart.localeCompare(a.weekStart));
+
+  let wkAvgTotal = 0;
+  for (let di = 0; di < 7; di++) {
+    const el = document.getElementById(`mavg-hdr-${di}`);
+    if (!el) continue;
+    const vals = [];
+    for (const w of allWeeks) {
+      if (vals.length >= 4) break;
+      const v = w.byDay[di];
+      if (v !== null && v > 0) vals.push(v);
+    }
+    if (vals.length === 0) {
+      el.textContent = '—';
+      el.title = 'No actuals for this day yet';
+    } else {
+      const avg = Math.round(vals.reduce((a,b)=>a+b,0) / vals.length);
+      wkAvgTotal += avg;
+      el.textContent = `$${avg.toLocaleString()}`;
+      el.title = `${vals.length}-wk avg: ${vals.map(v=>'$'+Math.round(v).toLocaleString()).join(', ')}`;
+    }
+  }
+  const wkEl = document.getElementById('mavg-hdr-week');
+  if (wkEl) {
+    if (wkAvgTotal > 0) {
+      wkEl.textContent = `$${wkAvgTotal.toLocaleString()}`;
+      wkEl.title = 'Sum of daily averages';
+    } else {
+      wkEl.textContent = '—';
+      wkEl.title = 'No actual revenue saved yet';
+    }
+  }
 }
 
 function updateSummary(weekBudget, weekRev, weekActual, weekActRev, weekPct) {
@@ -1440,7 +1431,7 @@ buildTable();
     setCurrentWeek();
   }
 })();
-cloudPull().then(() => { loadWeek(currentWeekKey()); recalc(); renderHistory(); setTimeout(recalc, 300); });
+cloudPull().then(() => { loadWeek(currentWeekKey()); recalc(); renderHistory(); renderMavg(); });
 </script>
 </body>
 </html>
