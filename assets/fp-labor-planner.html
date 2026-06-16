@@ -287,7 +287,15 @@ footer span { color: var(--gold); font-weight: 600; }
     </td>
   </tr>
 </thead>
-<tbody id="schedBody"></tbody>
+<tbody id="schedToggleBody">
+  <tr id="schedToggleRow" onclick="toggleSchedule()" style="cursor:pointer;user-select:none;">
+    <td colspan="11" style="padding:8px 12px;background:#0a1520;border:1px solid var(--border);border-top:2px solid rgba(90,139,167,0.4);text-align:left;">
+      <span id="schedToggleLabel" style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--blue)">▶ STAFF SCHEDULE</span>
+      <span id="schedToggleSub" style="font-size:11px;color:var(--muted);margin-left:10px">— click to expand &amp; schedule staff</span>
+    </td>
+  </tr>
+</tbody>
+<tbody id="schedBody" style="display:none"></tbody>
 <tfoot id="schedFoot"></tfoot>
 </table>
 </div>
@@ -667,7 +675,28 @@ function toggleDay(pi, di) {
   cell.className = `day-cell ${cb.checked ? 'on' : 'off'}`;
   const anyOn = Object.values(state[pi]).some(d => d.on);
   document.getElementById(`row-${pi}`).className = `pos-row ${anyOn ? '' : 'inactive'}`;
+  updateSchedToggle();
   recalc();
+}
+
+// ── SCHEDULE ACCORDION ────────────────────────────────────────────────────────
+let _schedOpen = false;
+function toggleSchedule() {
+  _schedOpen = !_schedOpen;
+  document.getElementById('schedBody').style.display = _schedOpen ? '' : 'none';
+  updateSchedToggle();
+}
+function updateSchedToggle() {
+  const lbl = document.getElementById('schedToggleLabel');
+  const sub = document.getElementById('schedToggleSub');
+  if (!lbl) return;
+  // Count how many positions have at least one day toggled on this week
+  const scheduled = POSITIONS.filter((_,pi) => Object.values(state[pi]||{}).some(d=>d.on)).length;
+  const total = POSITIONS.length;
+  lbl.textContent = (_schedOpen ? '▼' : '▶') + ' STAFF SCHEDULE';
+  sub.textContent = scheduled > 0
+    ? `— ${scheduled} of ${total} positions scheduled this week`
+    : (_schedOpen ? '— click to collapse' : '— click to expand & schedule staff');
 }
 
 // ── RECALC ────────────────────────────────────────────────────────────────────
@@ -1201,6 +1230,7 @@ function loadWeek(key) {
     const entry = h.find(e => e.weekStart === wkStart);
     lockWeek(!!(entry && entry.approved));
   })();
+  updateSchedToggle();
 }
 
 function submitSchedule() {
