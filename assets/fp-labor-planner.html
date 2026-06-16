@@ -953,9 +953,13 @@ function renderMavg() {
 
   if (weekMap.size === 0) return; // nothing to show
 
-  // Sort newest-first, up to 4 per day-of-week
+  // Only use weeks BEFORE the currently viewed week — true rolling lookback
+  const curWeekStart = document.getElementById('weekStart')?.value || '';
+
+  // Sort newest-first, exclude current and future weeks, take up to 4 per day-of-week
   const allWeeks = Array.from(weekMap.entries())
     .map(([weekStart, data]) => ({ weekStart, ...data }))
+    .filter(w => w.weekStart < curWeekStart)
     .sort((a,b) => b.weekStart.localeCompare(a.weekStart));
 
   let wkAvgTotal = 0;

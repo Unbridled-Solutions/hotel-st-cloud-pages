@@ -954,8 +954,12 @@ function renderMavg() {
 
   if (weekMap.size === 0) return;
 
+  // Only use weeks BEFORE the currently viewed week — true rolling lookback
+  const curWeekStart = document.getElementById('weekStart')?.value || '';
+
   const allWeeks = Array.from(weekMap.entries())
     .map(([weekStart, data]) => ({ weekStart, ...data }))
+    .filter(w => w.weekStart < curWeekStart)
     .sort((a,b) => b.weekStart.localeCompare(a.weekStart));
 
   let wkAvgTotal = 0;
