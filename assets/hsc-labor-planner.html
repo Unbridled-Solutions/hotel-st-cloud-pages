@@ -480,12 +480,15 @@ function buildTable() {
 }
 
 function buildFooter() {
-  let budCells = '', pctCells = '', actRevCells = '', actCells = '', actLaborPctCells = '', varCells = '', revVarCells = '';
+  let budCells = '', pctCells = '', actRevCells = '', hrlyCell = '', mgmtCells = '', taxCells = '', actCells = '', actLaborPctCells = '', varCells = '', revVarCells = '';
   for (let di = 0; di < 7; di++) {
     budCells        += `<td class="total-val green"  id="tot-bud-${di}">—</td>`;
     pctCells        += `<td class="total-val"        id="tot-pct-${di}">—</td>`;
     actRevCells     += `<td><input class="actual-input" type="number" id="tot-actrev-${di}" placeholder="actual $" oninput="recalc()" style="border-bottom-color:rgba(90,139,167,0.6);color:#5a8ba7"></td>`;
-    actCells        += `<td><input class="actual-input" type="number" id="tot-act-${di}"    placeholder="actual $" oninput="recalc()"></td>`;
+    hrlyCell        += `<td><input class="actual-input" type="number" id="tot-hrly-${di}" placeholder="$" oninput="recalc()"></td>`;
+    mgmtCells       += `<td><input class="actual-input" type="number" id="tot-mgmt-${di}" placeholder="$" oninput="recalc()"></td>`;
+    taxCells        += `<td class="total-val" id="tot-tax-${di}" style="color:var(--muted)">—</td>`;
+    actCells        += `<td class="total-val orange" id="tot-act-${di}">—</td>`;
     actLaborPctCells+= `<td class="total-val"        id="tot-actlpct-${di}">—</td>`;
     varCells        += `<td class="total-val"         id="tot-var-${di}">—</td>`;
     revVarCells     += `<td class="total-val"         id="tot-revvar-${di}">—</td>`;
@@ -513,6 +516,24 @@ function buildFooter() {
       <td class="rate-cell" style="font-size:10px;color:var(--muted)">entered</td>
       ${actRevCells}
       <td class="total-val week-col" id="tot-actrev-week" style="color:#5a8ba7">—</td>
+    </tr>
+    <tr class="total-row">
+      <td colspan="2" class="pos-name-cell"><span class="total-label" style="color:var(--orange)">Hourly Labor $</span></td>
+      <td class="rate-cell" style="font-size:10px;color:var(--muted)">entered</td>
+      ${hrlyCell}
+      <td class="total-val orange week-col" id="tot-hrly-week">—</td>
+    </tr>
+    <tr class="total-row">
+      <td colspan="2" class="pos-name-cell"><span class="total-label" style="color:var(--orange)">Management Labor $</span></td>
+      <td class="rate-cell" style="font-size:10px;color:var(--muted)">entered</td>
+      ${mgmtCells}
+      <td class="total-val orange week-col" id="tot-mgmt-week">—</td>
+    </tr>
+    <tr class="total-row">
+      <td colspan="2" class="pos-name-cell"><span class="total-label" style="color:var(--muted)">Tax on Labor</span><span style="font-size:10px;color:var(--muted);margin-left:6px">11% on total wages</span></td>
+      <td class="rate-cell" style="font-size:10px;color:var(--muted)">computed</td>
+      ${taxCells}
+      <td class="total-val week-col" id="tot-tax-week" style="color:var(--muted)">—</td>
     </tr>
     <tr class="total-row actual-row">
       <td colspan="2" class="pos-name-cell"><span class="total-label" style="color:var(--orange)">Actual Labor $</span></td>
@@ -628,7 +649,14 @@ function recalc() {
   for (let di = 0; di < 7; di++) {
     const rev    = parseFloat(document.getElementById(`rev-${di}`)?.value) || 0;
     const bud    = dayTotals[di] * TAX;
-    const act    = parseFloat(document.getElementById(`tot-act-${di}`)?.value) || 0;
+    const hrly   = parseFloat(document.getElementById(`tot-hrly-${di}`)?.value) || 0;
+    const mgmt   = parseFloat(document.getElementById(`tot-mgmt-${di}`)?.value) || 0;
+    const tax    = (hrly + mgmt) * 0.11;
+    const act    = hrly + mgmt + tax;
+    const taxEl  = document.getElementById(`tot-tax-${di}`);
+    const actEl  = document.getElementById(`tot-act-${di}`);
+    if (taxEl)  taxEl.textContent  = tax  ? `$${Math.round(tax).toLocaleString()}`  : '—';
+    if (actEl)  actEl.textContent  = act  ? `$${Math.round(act).toLocaleString()}`  : '—';
     const actRev = parseFloat(document.getElementById(`tot-actrev-${di}`)?.value) || 0;
     weekBudget += bud; weekRev += rev; weekActual += act; weekActRev += actRev;
 
@@ -715,6 +743,16 @@ function recalc() {
   const actWkEl = document.getElementById('tot-act-week');
   const actWk = weekActual;
   if (actWkEl) actWkEl.textContent = actWk ? `$${Math.round(actWk).toLocaleString()}` : '—';
+
+  const weekHrly = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`tot-hrly-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
+  const weekMgmt = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`tot-mgmt-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
+  const weekTax  = (weekHrly + weekMgmt) * 0.11;
+  const hrlyWkEl = document.getElementById('tot-hrly-week');
+  if (hrlyWkEl) hrlyWkEl.textContent = weekHrly ? `$${Math.round(weekHrly).toLocaleString()}` : '—';
+  const mgmtWkEl = document.getElementById('tot-mgmt-week');
+  if (mgmtWkEl) mgmtWkEl.textContent = weekMgmt ? `$${Math.round(weekMgmt).toLocaleString()}` : '—';
+  const taxWkEl  = document.getElementById('tot-tax-week');
+  if (taxWkEl)  taxWkEl.textContent  = weekTax  ? `$${Math.round(weekTax).toLocaleString()}`  : '—';
 
   const varWkEl = document.getElementById('tot-var-week');
   if (varWkEl) {
@@ -900,7 +938,9 @@ function saveLocal(notify = true) {
     week:      document.getElementById('weekStart').value,
     pcts:      Array.from({length:7}, (_,di) => document.getElementById(`pct-${di}`)?.value || '28'),
     revs:      Array.from({length:7}, (_,di) => document.getElementById(`rev-${di}`)?.value || ''),
-    acts:      Array.from({length:7}, (_,di) => document.getElementById(`tot-act-${di}`)?.value || ''),
+
+    hrlyacts:  Array.from({length:7}, (_,di) => document.getElementById(`tot-hrly-${di}`)?.value || ''),
+    mgmtacts:  Array.from({length:7}, (_,di) => document.getElementById(`tot-mgmt-${di}`)?.value || ''),
     actrevs:   Array.from({length:7}, (_,di) => document.getElementById(`tot-actrev-${di}`)?.value || ''),
     bookedrevs: Array.from({length:7}, (_,di) => document.getElementById(`bookedrev-${di}`)?.value || ''),
     state:     JSON.parse(JSON.stringify(state)),
@@ -928,7 +968,8 @@ function loadWeek(key) {
   // Clear revenue/actual inputs
   for (let di = 0; di < 7; di++) {
     const rv = document.getElementById(`rev-${di}`); if (rv) rv.value = '';
-    const ac = document.getElementById(`tot-act-${di}`); if (ac) ac.value = '';
+    const hr = document.getElementById(`tot-hrly-${di}`); if (hr) hr.value = '';
+    const mg = document.getElementById(`tot-mgmt-${di}`); if (mg) mg.value = '';
     const ar = document.getElementById(`tot-actrev-${di}`); if (ar) ar.value = '';
     const br = document.getElementById(`bookedrev-${di}`); if (br) br.value = '';
     const pc = document.getElementById(`pct-${di}`);
@@ -941,7 +982,8 @@ function loadWeek(key) {
       const data = JSON.parse(raw);
       data.pcts?.forEach((v, di) => { const el = document.getElementById(`pct-${di}`); if (el && v) el.value = v; });
       data.revs?.forEach((v, di) => { if (v) document.getElementById(`rev-${di}`).value = v; });
-      data.acts?.forEach((v, di) => { const el = document.getElementById(`tot-act-${di}`); if (el && v) el.value = v; });
+      data.hrlyacts?.forEach((v, di) => { const el = document.getElementById(`tot-hrly-${di}`); if (el && v) el.value = v; });
+      data.mgmtacts?.forEach((v, di) => { const el = document.getElementById(`tot-mgmt-${di}`); if (el && v) el.value = v; });
       data.actrevs?.forEach((v, di) => { const el = document.getElementById(`tot-actrev-${di}`); if (el && v) el.value = v; });
       data.bookedrevs?.forEach((v, di) => { const el = document.getElementById(`bookedrev-${di}`); if (el && v) el.value = v; });
       if (data.positions) data.positions.forEach((p, pi) => { if (POSITIONS[pi]) { POSITIONS[pi].name = p.name; POSITIONS[pi].rate = p.rate; if (p.dailyRate != null) POSITIONS[pi].dailyRate = p.dailyRate; } });
@@ -974,7 +1016,11 @@ function submitSchedule() {
   const period  = periodEl?.textContent || '';
   const weekRev    = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`rev-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
   const weekBudTxt = document.getElementById('tot-bud-week')?.textContent || '—';
-  const weekActual = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`tot-act-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
+  const weekActual = Array.from({length:7}, (_,di) => {
+    const h = parseFloat(document.getElementById(`tot-hrly-${di}`)?.value)||0;
+    const m = parseFloat(document.getElementById(`tot-mgmt-${di}`)?.value)||0;
+    return (h + m) * 1.11;
+  }).reduce((a,b)=>a+b,0);
   const weekActRev = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`tot-actrev-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
   const weekBudNum = parseFloat(weekBudTxt.replace(/[^0-9.]/g,'')) || 0;
   const weekPct    = weekRev ? (weekBudNum / weekRev * 100) : null;

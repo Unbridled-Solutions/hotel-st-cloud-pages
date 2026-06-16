@@ -510,7 +510,10 @@ function buildFooter() {
     restRevCells    += `<td><input class="actual-input" type="number" id="tot-actrev-${di}" placeholder="$" oninput="recalc()" style="border-bottom-color:rgba(90,139,167,0.6);color:#5a8ba7"></td>`;
     evtRevCells     += `<td><input class="actual-input" type="number" id="tot-evtrev-${di}" placeholder="$" oninput="recalc()" style="border-bottom-color:rgba(155,110,200,0.6);color:#9b6ec8"></td>`;
     actRevTotalCells+= `<td class="total-val" id="tot-actrev-total-${di}" style="color:#5a8ba7;font-weight:700">—</td>`;
-    actCells        += `<td><input class="actual-input" type="number" id="tot-act-${di}"    placeholder="actual $" oninput="recalc()"></td>`;
+    hrlyCell        += `<td><input class="actual-input" type="number" id="tot-hrly-${di}" placeholder="$" oninput="recalc()"></td>`;
+    mgmtCells       += `<td><input class="actual-input" type="number" id="tot-mgmt-${di}" placeholder="$" oninput="recalc()"></td>`;
+    taxCells        += `<td class="total-val" id="tot-tax-${di}" style="color:var(--muted)">—</td>`;
+    actCells        += `<td class="total-val orange" id="tot-act-${di}">—</td>`;
     actLaborPctCells+= `<td class="total-val"        id="tot-actlpct-${di}">—</td>`;
     varCells        += `<td class="total-val"         id="tot-var-${di}">—</td>`;
     revVarCells     += `<td class="total-val"         id="tot-revvar-${di}">—</td>`;
@@ -555,6 +558,24 @@ function buildFooter() {
       <td class="rate-cell" style="font-size:9px;color:var(--muted);text-align:center">R9</td>
       ${actRevTotalCells}
       <td class="total-val week-col" id="tot-actrev-total-week" style="color:#5a8ba7;font-weight:700">—</td>
+    </tr>
+    <tr class="total-row">
+      <td colspan="2" class="pos-name-cell"><span class="total-label" style="color:var(--orange)">Hourly Labor $</span></td>
+      <td class="rate-cell" style="font-size:9px;color:var(--muted);text-align:center">R${++rn}</td>
+      ${hrlyCell}
+      <td class="total-val orange week-col" id="tot-hrly-week">—</td>
+    </tr>
+    <tr class="total-row">
+      <td colspan="2" class="pos-name-cell"><span class="total-label" style="color:var(--orange)">Management Labor $</span></td>
+      <td class="rate-cell" style="font-size:9px;color:var(--muted);text-align:center">R${++rn}</td>
+      ${mgmtCells}
+      <td class="total-val orange week-col" id="tot-mgmt-week">—</td>
+    </tr>
+    <tr class="total-row">
+      <td colspan="2" class="pos-name-cell"><span class="total-label" style="color:var(--muted)">Tax on Labor</span><span style="font-size:10px;color:var(--muted);margin-left:6px">11% on total wages</span></td>
+      <td class="rate-cell" style="font-size:9px;color:var(--muted);text-align:center">R${++rn}</td>
+      ${taxCells}
+      <td class="total-val week-col" id="tot-tax-week" style="color:var(--muted)">—</td>
     </tr>
     <tr class="total-row actual-row">
       <td colspan="2" class="pos-name-cell"><span class="total-label" style="color:var(--orange)">Actual Labor $</span></td>
@@ -670,10 +691,17 @@ function recalc() {
   for (let di = 0; di < 7; di++) {
     const rev    = parseFloat(document.getElementById(`rev-${di}`)?.value) || 0;
     const bud    = dayTotals[di] * TAX;
-    const act    = parseFloat(document.getElementById(`tot-act-${di}`)?.value) || 0;
+    const hrly   = parseFloat(document.getElementById(`tot-hrly-${di}`)?.value) || 0;
+    const mgmt   = parseFloat(document.getElementById(`tot-mgmt-${di}`)?.value) || 0;
+    const tax    = (hrly + mgmt) * 0.11;
+    const act    = hrly + mgmt + tax;
     const actRev = parseFloat(document.getElementById(`tot-actrev-${di}`)?.value) || 0;
     const evtRev = parseFloat(document.getElementById(`tot-evtrev-${di}`)?.value) || 0;
     const actRevTotal = actRev + evtRev;
+    const taxEl  = document.getElementById(`tot-tax-${di}`);
+    const actEl  = document.getElementById(`tot-act-${di}`);
+    if (taxEl)  taxEl.textContent  = tax  ? `$${Math.round(tax).toLocaleString()}`  : '—';
+    if (actEl)  actEl.textContent  = act  ? `$${Math.round(act).toLocaleString()}`  : '—';
     weekBudget += bud; weekRev += rev; weekActual += act; weekActRev += actRev; weekEvtRev += evtRev;
 
     // Clamp pct to 25–36
@@ -760,8 +788,18 @@ function recalc() {
   }
 
   const actWkEl = document.getElementById('tot-act-week');
-  const actWk = weekActual;
-  if (actWkEl) actWkEl.textContent = actWk ? `$${Math.round(actWk).toLocaleString()}` : '—';
+  // const actWk = weekActual; // This will become calculated, not a direct sum of inputs
+  if (actWkEl) actWkEl.textContent = weekActual ? `$${Math.round(weekActual).toLocaleString()}` : '—';
+
+  const weekHrly = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`tot-hrly-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
+  const weekMgmt = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`tot-mgmt-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
+  const weekTax  = (weekHrly + weekMgmt) * 0.11;
+  const hrlyWkEl = document.getElementById('tot-hrly-week');
+  if (hrlyWkEl) hrlyWkEl.textContent = weekHrly ? `$${Math.round(weekHrly).toLocaleString()}` : '—';
+  const mgmtWkEl = document.getElementById('tot-mgmt-week');
+  if (mgmtWkEl) mgmtWkEl.textContent = weekMgmt ? `$${Math.round(weekMgmt).toLocaleString()}` : '—';
+  const taxWkEl  = document.getElementById('tot-tax-week');
+  if (taxWkEl)  taxWkEl.textContent  = weekTax  ? `$${Math.round(weekTax).toLocaleString()}`  : '—';
 
   const varWkEl = document.getElementById('tot-var-week');
   if (varWkEl) {
@@ -1026,7 +1064,8 @@ function saveLocal(notify = true) {
     week:      document.getElementById('weekStart').value,
     pcts:      Array.from({length:7}, (_,di) => document.getElementById(`pct-${di}`)?.value || '28'),
     revs:      Array.from({length:7}, (_,di) => document.getElementById(`rev-${di}`)?.value || ''),
-    acts:      Array.from({length:7}, (_,di) => document.getElementById(`tot-act-${di}`)?.value || ''),
+    hrlyacts:  Array.from({length:7}, (_,di) => document.getElementById(`tot-hrly-${di}`)?.value || ''),
+    mgmtacts:  Array.from({length:7}, (_,di) => document.getElementById(`tot-mgmt-${di}`)?.value || ''),
     actrevs:   Array.from({length:7}, (_,di) => document.getElementById(`tot-actrev-${di}`)?.value || ''),
     evtrevs:   Array.from({length:7}, (_,di) => document.getElementById(`tot-evtrev-${di}`)?.value || ''),
     state:     JSON.parse(JSON.stringify(state)),
@@ -1050,7 +1089,8 @@ function loadWeek(key) {
   });
   for (let di = 0; di < 7; di++) {
     const rv = document.getElementById(`rev-${di}`); if (rv) rv.value = '';
-    const ac = document.getElementById(`tot-act-${di}`); if (ac) ac.value = '';
+    const h_ac = document.getElementById(`tot-hrly-${di}`); if (h_ac) h_ac.value = '';
+    const m_ac = document.getElementById(`tot-mgmt-${di}`); if (m_ac) m_ac.value = '';
     const ar = document.getElementById(`tot-actrev-${di}`); if (ar) ar.value = '';
     const er = document.getElementById(`tot-evtrev-${di}`); if (er) er.value = '';
     const pc = document.getElementById(`pct-${di}`);
@@ -1059,7 +1099,7 @@ function loadWeek(key) {
   document.getElementById('submitBadge').style.display = 'none';
 
   // Stash values that need to be restored AFTER buildTable() recreates the tfoot DOM
-  let _pcts=null, _revs=null, _acts=null, _actrevs=null, _evtrevs=null;
+  let _pcts=null, _revs=null, _acts=null, _actrevs=null, _evtrevs=null, _hrlyacts=null, _mgmtacts=null;
 
   if (raw) {
     try {
@@ -1069,6 +1109,8 @@ function loadWeek(key) {
       _acts    = data.acts    || null;
       _actrevs = data.actrevs || null;
       _evtrevs = data.evtrevs || null;
+      _hrlyacts = data.hrlyacts || null;
+      _mgmtacts = data.mgmtacts || null;
       if (data.positions) data.positions.forEach((p, pi) => {
         if (POSITIONS[pi]) { POSITIONS[pi].name = p.name; POSITIONS[pi].rate = p.rate; if (p.dailyRate != null) POSITIONS[pi].dailyRate = p.dailyRate; }
       });
@@ -1087,6 +1129,8 @@ function loadWeek(key) {
   // NOW restore into the freshly-built DOM
   if (_pcts)    _pcts.forEach((v, di)    => { const el = document.getElementById(`pct-${di}`);         if (el && v) el.value = v; });
   if (_revs)    _revs.forEach((v, di)    => { const el = document.getElementById(`rev-${di}`);         if (el && v) el.value = v; });
+  if (_hrlyacts) _hrlyacts.forEach((v, di) => { const el = document.getElementById(`tot-hrly-${di}`); if (el && v) el.value = v; });
+  if (_mgmtacts) _mgmtacts.forEach((v, di) => { const el = document.getElementById(`tot-mgmt-${di}`); if (el && v) el.value = v; });
   if (_evtrevs) _evtrevs.forEach((v, di) => { const el = document.getElementById(`tot-evtrev-${di}`); if (el && v) el.value = v; });
 
   // R7 + R10: use per-week data if present, otherwise fall back to fp-ph-history
@@ -1103,26 +1147,26 @@ function loadWeek(key) {
     });
   }
 
-  if (_acts && _acts.some(v => v)) {
-    _acts.forEach((v, di) => { const el = document.getElementById(`tot-act-${di}`); if (el && v) el.value = v; });
-  } else if (histFallback) {
-    // Use actLaborByDay if available (seeded daily labor)
-    if (histFallback.actLaborByDay) {
-      histFallback.actLaborByDay.forEach((v, di) => {
-        const el = document.getElementById(`tot-act-${di}`);
-        if (el && v > 0) el.value = v.toFixed(2);
-      });
-    } else if (histFallback.actual && histFallback.actRevByDay) {
-      // Fallback: distribute weekly total proportionally by revenue weight
-      const totalRevByDay = histFallback.actRevByDay.reduce((a, v) => a + (v || 0), 0);
-      if (totalRevByDay > 0) {
-        histFallback.actRevByDay.forEach((v, di) => {
-          const el = document.getElementById(`tot-act-${di}`);
-          if (el && v > 0) el.value = (histFallback.actual * (v / totalRevByDay)).toFixed(2);
-        });
-      }
-    }
-  }
+  // if (_acts && _acts.some(v => v)) {
+  //   _acts.forEach((v, di) => { const el = document.getElementById(`tot-act-${di}`); if (el && v) el.value = v; });
+  // } else if (histFallback) {
+  //   // Use actLaborByDay if available (seeded daily labor)
+  //   if (histFallback.actLaborByDay) {
+  //     histFallback.actLaborByDay.forEach((v, di) => {
+  //       const el = document.getElementById(`tot-act-${di}`);
+  //       if (el && v > 0) el.value = v.toFixed(2);
+  //     });
+  //   } else if (histFallback.actual && histFallback.actRevByDay) {
+  //     // Fallback: distribute weekly total proportionally by revenue weight
+  //     const totalRevByDay = histFallback.actRevByDay.reduce((a, v) => a + (v || 0), 0);
+  //     if (totalRevByDay > 0) {
+  //       histFallback.actRevByDay.forEach((v, di) => {
+  //         const el = document.getElementById(`tot-act-${di}`);
+  //         if (el && v > 0) el.value = (histFallback.actual * (v / totalRevByDay)).toFixed(2);
+  //       });
+  //     }
+  //   }
+  // }
 
   // Lock if approved
   (function() {
@@ -1144,7 +1188,11 @@ function submitSchedule() {
   const period  = periodEl?.textContent || '';
   const weekRev    = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`rev-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
   const weekBudTxt = document.getElementById('tot-bud-week')?.textContent || '—';
-  const weekActual = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`tot-act-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
+  const weekActual = Array.from({length:7}, (_,di) => {
+    const h = parseFloat(document.getElementById(`tot-hrly-${di}`)?.value)||0;
+    const m = parseFloat(document.getElementById(`tot-mgmt-${di}`)?.value)||0;
+    return (h + m) * 1.11;
+  }).reduce((a,b)=>a+b,0);
   const weekActRev = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`tot-actrev-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
   const weekEvtRev = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`tot-evtrev-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
   const weekActRevTotal = weekActRev + weekEvtRev;

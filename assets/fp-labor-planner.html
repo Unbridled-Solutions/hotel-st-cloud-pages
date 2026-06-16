@@ -498,14 +498,17 @@ function buildTable() {
 }
 
 function buildFooter() {
-  let budCells = '', pctCells = '', restRevCells = '', evtRevCells = '', actRevTotalCells = '', actCells = '', actLaborPctCells = '', varCells = '', revVarCells = '';
+  let budCells = '', pctCells = '', restRevCells = '', evtRevCells = '', actRevTotalCells = '', hrlyCell = '', mgmtCells = '', taxCells = '', actCells = '', actLaborPctCells = '', varCells = '', revVarCells = '';
   for (let di = 0; di < 7; di++) {
     budCells        += `<td class="total-val green"  id="tot-bud-${di}">—</td>`;
     pctCells        += `<td class="total-val"        id="tot-pct-${di}">—</td>`;
     restRevCells    += `<td><input class="actual-input" type="number" id="tot-actrev-${di}" placeholder="$" oninput="recalc()" style="border-bottom-color:rgba(90,139,167,0.6);color:#5a8ba7"></td>`;
     evtRevCells     += `<td><input class="actual-input" type="number" id="tot-evtrev-${di}" placeholder="$" oninput="recalc()" style="border-bottom-color:rgba(155,110,200,0.6);color:#9b6ec8"></td>`;
     actRevTotalCells+= `<td class="total-val" id="tot-actrev-total-${di}" style="color:#5a8ba7;font-weight:700">—</td>`;
-    actCells        += `<td><input class="actual-input" type="number" id="tot-act-${di}"    placeholder="actual $" oninput="recalc()"></td>`;
+    hrlyCell        += `<td><input class="actual-input" type="number" id="tot-hrly-${di}" placeholder="$" oninput="recalc()"></td>`;
+    mgmtCells       += `<td><input class="actual-input" type="number" id="tot-mgmt-${di}" placeholder="$" oninput="recalc()"></td>`;
+    taxCells        += `<td class="total-val" id="tot-tax-${di}" style="color:var(--muted)">—</td>`;
+    actCells        += `<td class="total-val orange" id="tot-act-${di}">—</td>`;
     actLaborPctCells+= `<td class="total-val"        id="tot-actlpct-${di}">—</td>`;
     varCells        += `<td class="total-val"         id="tot-var-${di}">—</td>`;
     revVarCells     += `<td class="total-val"         id="tot-revvar-${di}">—</td>`;
@@ -513,7 +516,7 @@ function buildFooter() {
   // Row counter — thead has 4 rows (R1–R4), tbody rows follow
   let rn = 4; // will be incremented as rows are added
   document.getElementById('schedFoot').innerHTML = `
-    <tr class="total-row budget-row" style="border-top:2px solid var(--border)">
+    <tr class="total-row" style="border-top:2px solid var(--border)">
       <td colspan="2" class="pos-name-cell">
         <span class="total-label" style="color:var(--green)">Budget Labor</span>
         <span style="font-size:10px;color:var(--muted);margin-left:6px">incl. 11% payroll tax</span>
@@ -552,6 +555,24 @@ function buildFooter() {
       <td class="rate-cell" style="font-size:9px;color:var(--muted);text-align:center">R${++rn}</td>
       ${actRevTotalCells}
       <td class="total-val week-col" id="tot-actrev-total-week" style="color:#5a8ba7;font-weight:700">—</td>
+    </tr>
+    <tr class="total-row">
+      <td colspan="2" class="pos-name-cell"><span class="total-label" style="color:var(--orange)">Hourly Labor $</span></td>
+      <td class="rate-cell" style="font-size:9px;color:var(--muted);text-align:center">R${++rn}</td>
+      ${hrlyCell}
+      <td class="total-val orange week-col" id="tot-hrly-week">—</td>
+    </tr>
+    <tr class="total-row">
+      <td colspan="2" class="pos-name-cell"><span class="total-label" style="color:var(--orange)">Management Labor $</span></td>
+      <td class="rate-cell" style="font-size:9px;color:var(--muted);text-align:center">R${++rn}</td>
+      ${mgmtCells}
+      <td class="total-val orange week-col" id="tot-mgmt-week">—</td>
+    </tr>
+    <tr class="total-row">
+      <td colspan="2" class="pos-name-cell"><span class="total-label" style="color:var(--muted)">Tax on Labor</span><span style="font-size:10px;color:var(--muted);margin-left:6px">11% on total wages</span></td>
+      <td class="rate-cell" style="font-size:9px;color:var(--muted);text-align:center">R${++rn}</td>
+      ${taxCells}
+      <td class="total-val week-col" id="tot-tax-week" style="color:var(--muted)">—</td>
     </tr>
     <tr class="total-row actual-row">
       <td colspan="2" class="pos-name-cell"><span class="total-label" style="color:var(--orange)">Actual Labor $</span></td>
@@ -667,7 +688,10 @@ function recalc() {
   for (let di = 0; di < 7; di++) {
     const rev    = parseFloat(document.getElementById(`rev-${di}`)?.value) || 0;
     const bud    = dayTotals[di] * TAX;
-    const act    = parseFloat(document.getElementById(`tot-act-${di}`)?.value) || 0;
+    const hrly   = parseFloat(document.getElementById(`tot-hrly-${di}`)?.value) || 0;
+    const mgmt   = parseFloat(document.getElementById(`tot-mgmt-${di}`)?.value) || 0;
+    const tax    = (hrly + mgmt) * 0.11;
+    const act    = hrly + mgmt + tax;
     const actRev = parseFloat(document.getElementById(`tot-actrev-${di}`)?.value) || 0;
     const evtRev = parseFloat(document.getElementById(`tot-evtrev-${di}`)?.value) || 0;
     const actRevTotal = actRev + evtRev;
@@ -738,6 +762,13 @@ function recalc() {
     // Per-day Total Actual Revenue display cell
     const actRevTotalEl = document.getElementById(`tot-actrev-total-${di}`);
     if (actRevTotalEl) actRevTotalEl.textContent = actRevTotal ? `$${Math.round(actRevTotal).toLocaleString()}` : '—';
+
+    const hrlyEl = document.getElementById(`tot-hrly-${di}`);
+    const mgmtEl = document.getElementById(`tot-mgmt-${di}`);
+    const taxEl  = document.getElementById(`tot-tax-${di}`);
+    const actEl  = document.getElementById(`tot-act-${di}`);
+    if (taxEl)  taxEl.textContent  = tax  ? `$${Math.round(tax).toLocaleString()}`  : '—';
+    if (actEl)  actEl.textContent  = act  ? `$${Math.round(act).toLocaleString()}`  : '—';
   }
 
   // WEEK TOTALS column
@@ -756,9 +787,20 @@ function recalc() {
     pctWkEl.className = `total-val week-col ${weekPctColor}`;
   }
 
-  const actWkEl = document.getElementById('tot-act-week');
   const actWk = weekActual;
   if (actWkEl) actWkEl.textContent = actWk ? `$${Math.round(actWk).toLocaleString()}` : '—';
+
+  const weekHrly = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`tot-hrly-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
+  const weekMgmt = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`tot-mgmt-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
+  const weekTax  = (weekHrly + weekMgmt) * 0.11;
+  // weekActual is already computed as sum of act per day
+
+  const hrlyWkEl = document.getElementById('tot-hrly-week');
+  if (hrlyWkEl) hrlyWkEl.textContent = weekHrly ? `$${Math.round(weekHrly).toLocaleString()}` : '—';
+  const mgmtWkEl = document.getElementById('tot-mgmt-week');
+  if (mgmtWkEl) mgmtWkEl.textContent = weekMgmt ? `$${Math.round(weekMgmt).toLocaleString()}` : '—';
+  const taxWkEl  = document.getElementById('tot-tax-week');
+  if (taxWkEl)  taxWkEl.textContent  = weekTax  ? `$${Math.round(weekTax).toLocaleString()}`  : '—';
 
   const varWkEl = document.getElementById('tot-var-week');
   if (varWkEl) {
@@ -1028,6 +1070,8 @@ function saveLocal(notify = true) {
     week:      document.getElementById('weekStart').value,
     pcts:      Array.from({length:7}, (_,di) => document.getElementById(`pct-${di}`)?.value || '28'),
     revs:      Array.from({length:7}, (_,di) => document.getElementById(`rev-${di}`)?.value || ''),
+    hrlyacts:  Array.from({length:7}, (_,di) => document.getElementById(`tot-hrly-${di}`)?.value || ''),
+    mgmtacts:  Array.from({length:7}, (_,di) => document.getElementById(`tot-mgmt-${di}`)?.value || ''),
     acts:      Array.from({length:7}, (_,di) => document.getElementById(`tot-act-${di}`)?.value || ''),
     actrevs:   Array.from({length:7}, (_,di) => document.getElementById(`tot-actrev-${di}`)?.value || ''),
     evtrevs:   Array.from({length:7}, (_,di) => document.getElementById(`tot-evtrev-${di}`)?.value || ''),
@@ -1052,7 +1096,8 @@ function loadWeek(key) {
   });
   for (let di = 0; di < 7; di++) {
     const rv = document.getElementById(`rev-${di}`); if (rv) rv.value = '';
-    const ac = document.getElementById(`tot-act-${di}`); if (ac) ac.value = '';
+    const hr = document.getElementById(`tot-hrly-${di}`); if (hr) hr.value = '';
+    const mg = document.getElementById(`tot-mgmt-${di}`); if (mg) mg.value = '';
     const ar = document.getElementById(`tot-actrev-${di}`); if (ar) ar.value = '';
     const er = document.getElementById(`tot-evtrev-${di}`); if (er) er.value = '';
     const pc = document.getElementById(`pct-${di}`);
@@ -1061,14 +1106,15 @@ function loadWeek(key) {
   document.getElementById('submitBadge').style.display = 'none';
 
   // Stash values that need to be restored AFTER buildTable() recreates the tfoot DOM
-  let _pcts=null, _revs=null, _acts=null, _actrevs=null, _evtrevs=null;
+  let _pcts=null, _revs=null, _hrlyacts=null, _mgmtacts=null, _actrevs=null, _evtrevs=null;
 
   if (raw) {
     try {
       const data = JSON.parse(raw);
       _pcts    = data.pcts    || null;
       _revs    = data.revs    || null;
-      _acts    = data.acts    || null;
+      _hrlyacts = data.hrlyacts || null;
+      _mgmtacts = data.mgmtacts || null;
       _actrevs = data.actrevs || null;
       _evtrevs = data.evtrevs || null;
       if (data.positions) data.positions.forEach((p, pi) => {
@@ -1089,6 +1135,12 @@ function loadWeek(key) {
   // NOW restore into the freshly-built DOM
   if (_pcts)    _pcts.forEach((v, di)    => { const el = document.getElementById(`pct-${di}`);          if (el && v) el.value = v; });
   if (_revs)    _revs.forEach((v, di)    => { const el = document.getElementById(`rev-${di}`);          if (el && v) el.value = v; });
+  if (_hrlyacts && _hrlyacts.some(v => v)) {
+    _hrlyacts.forEach((v, di) => { const el = document.getElementById(`tot-hrly-${di}`); if (el && v) el.value = v; });
+  }
+  if (_mgmtacts && _mgmtacts.some(v => v)) {
+    _mgmtacts.forEach((v, di) => { const el = document.getElementById(`tot-mgmt-${di}`); if (el && v) el.value = v; });
+  }
   if (_evtrevs) _evtrevs.forEach((v, di) => { const el = document.getElementById(`tot-evtrev-${di}`);  if (el && v) el.value = v; });
 
   // R7 (actrevs) and R10 (acts): use per-week data if present, otherwise fall back
@@ -1108,21 +1160,6 @@ function loadWeek(key) {
     });
   }
 
-  if (_acts && _acts.some(v => v)) {
-    _acts.forEach((v, di) => { const el = document.getElementById(`tot-act-${di}`); if (el && v) el.value = v; });
-  } else if (histFallback?.actual && histFallback?.actRevByDay) {
-    // Distribute total actual labor proportionally across days by revenue weight
-    const totalRevByDay = histFallback.actRevByDay.reduce((a, v) => a + (v || 0), 0);
-    if (totalRevByDay > 0) {
-      histFallback.actRevByDay.forEach((v, di) => {
-        const el = document.getElementById(`tot-act-${di}`);
-        if (el && v > 0) {
-          const dailyLabor = (histFallback.actual * (v / totalRevByDay));
-          el.value = dailyLabor.toFixed(2);
-        }
-      });
-    }
-  }
 
   // Lock if approved
   (function() {
@@ -1144,7 +1181,11 @@ function submitSchedule() {
   const period  = periodEl?.textContent || '';
   const weekRev    = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`rev-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
   const weekBudTxt = document.getElementById('tot-bud-week')?.textContent || '—';
-  const weekActual = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`tot-act-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
+  const weekActual = Array.from({length:7}, (_,di) => {
+    const h = parseFloat(document.getElementById(`tot-hrly-${di}`)?.value)||0;
+    const m = parseFloat(document.getElementById(`tot-mgmt-${di}`)?.value)||0;
+    return (h + m) * 1.11;
+  }).reduce((a,b)=>a+b,0);
   const weekActRev = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`tot-actrev-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
   const weekEvtRev = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`tot-evtrev-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
   const weekActRevTotal = weekActRev + weekEvtRev;
