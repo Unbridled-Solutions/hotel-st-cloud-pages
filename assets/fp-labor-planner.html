@@ -918,15 +918,12 @@ function recalc() {
     const liveTotal = liveByDay.reduce((a,v) => a + (v||0), 0);
     if (liveTotal > 0) weekMap.set(curWeekStart, { byDay: liveByDay, total: liveTotal });
 
-    // Sort all weeks newest-first, take top 4 (excluding current week from history avg)
-    const allWeeks = Array.from(weekMap.entries())
+    // Sort all weeks newest-first, exclude current week, take top 4 completed weeks
+    const top4weeks = Array.from(weekMap.entries())
       .map(([weekStart, data]) => ({ weekStart, ...data }))
-      .sort((a,b) => b.weekStart.localeCompare(a.weekStart));
-
-    // For the rolling avg we use the 4 most recent COMPLETED weeks
-    // (exclude current week unless it has live data — it's already accounted for above)
-    const completed = allWeeks.filter(w => w.weekStart !== curWeekStart || liveTotal > 0);
-    const top4weeks = completed.slice(0, 4);
+      .filter(w => w.weekStart !== curWeekStart)
+      .sort((a,b) => b.weekStart.localeCompare(a.weekStart))
+      .slice(0, 4);
 
     for (let di = 0; di < 7; di++) {
       const el = document.getElementById(`mavg-hdr-${di}`);

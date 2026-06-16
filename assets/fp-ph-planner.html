@@ -920,9 +920,10 @@ function recalc() {
     const liveTotal = liveByDay.reduce((a,v) => a + (v||0), 0);
     if (liveTotal > 0) weekMap.set(curWeekStart, { byDay: liveByDay, total: liveTotal });
 
-    // Sort newest-first, take top 4
+    // Sort newest-first, exclude current week, take top 4 completed weeks
     const top4weeks = Array.from(weekMap.entries())
       .map(([weekStart, data]) => ({ weekStart, ...data }))
+      .filter(w => w.weekStart !== curWeekStart)
       .sort((a,b) => b.weekStart.localeCompare(a.weekStart))
       .slice(0, 4);
 
