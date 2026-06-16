@@ -133,7 +133,7 @@ const WEEKS = [
 ];
 
 async function seed() {
-  document.getElementById('status').textContent = 'Writing forecast + labor data…';
+  document.getElementById('status').textContent = 'Writing forecast data + clearing any stale labor…';
 
   WEEKS.forEach(w => {
     const existing = localStorage.getItem(w.key);
@@ -143,6 +143,12 @@ async function seed() {
     data.revs       = w.revs.map(String);
     data.bookedrevs = w.bookedrevs.map(String);
     if (!data.pcts) data.pcts = ['28','28','28','30','32','35','30'];
+
+    // Explicitly wipe any previously seeded labor — managers enter weekly at close
+    delete data.hrlyacts;
+    delete data.mgmtacts;
+    delete data.acts;
+    delete data.actrevs;
 
     localStorage.setItem(w.key, JSON.stringify(data));
 
