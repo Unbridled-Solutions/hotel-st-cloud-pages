@@ -340,12 +340,16 @@ const CLOUD_NS = 'fp-ph';
 const CLOUD_URL = '/api/planner/bundle?ns=' + CLOUD_NS;
 const CLOUD_PREFIXES = ['fp-ph-wk-', 'fp-ph-week-index', 'fp-ph-history'];
 
+// Cloud data cache — populated by cloudPull, read by mavg directly
+let _cloudData = null;
+
 async function cloudPull() {
   try {
     const res = await fetch(CLOUD_URL);
     if (!res.ok) return;
     const { data } = await res.json();
     if (!data || typeof data !== 'object') return;
+    _cloudData = data; // cache for mavg
     Object.entries(data).forEach(([k, v]) => {
       try { localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v)); } catch(e) {}
     });
@@ -874,36 +878,43 @@ function recalc() {
 
 
   // ── 4-WEEK MOVING AVERAGE ──────────────────────────────────────────────────
-  // Sources: (1) per-week keys (fp-ph-wk-*), (2) fp-ph-history
-  // Deduped by weekStart, newest-first, top-4 used.
+  // Reads from _cloudData (in-memory after cloudPull) with localStorage fallback.
   (function() {
     const curWeekStart = document.getElementById('weekStart').value;
-    const weekMap = new Map(); // weekStart → { byDay, total }
+    const weekMap = new Map();
 
-    // Source 1 — per-week keys (live saves, actrevs = restaurant revenue)
-    const wkIndex = JSON.parse(localStorage.getItem('fp-ph-week-index') || '[]');
+    // Helper: read a key preferring cloud cache over localStorage
+    function getStored(key) {
+      if (_cloudData && _cloudData[key] !== undefined) {
+        const v = _cloudData[key];
+        return typeof v === 'string' ? v : JSON.stringify(v);
+      }
+      return localStorage.getItem(key);
+    }
+
+    // Source 1 — per-week keys
+    const wkIndex = JSON.parse(getStored('fp-ph-week-index') || '[]');
     wkIndex.forEach(key => {
-      const raw = localStorage.getItem(key);
-      if (!raw) return;
       try {
-        const d = JSON.parse(raw);
+        const raw = getStored(key);
+        if (!raw) return;
+        const d = typeof raw === 'object' ? raw : JSON.parse(raw);
         if (!d.week) return;
         const byDay = Array.from({length:7}, (_,di) => {
           const r = parseFloat(d.actrevs?.[di]) || 0;
           return r > 0 ? r : null;
         });
         const total = byDay.reduce((a,v) => a + (v||0), 0);
-        // Only register if we actually have actrev data — otherwise let history take it
         if (total > 0) weekMap.set(d.week, { byDay, total });
       } catch(e) {}
     });
 
-    // Source 2 — fp-ph-history (submitted weeks + seeded P6 data)
-    // Fills gaps where per-week key exists but has no actrevs
-    const hist = JSON.parse(localStorage.getItem('fp-ph-history') || '[]');
+    // Source 2 — fp-ph-history (P6 seeded data + submitted weeks)
+    const histRaw = getStored('fp-ph-history');
+    const hist = histRaw ? (typeof histRaw === 'string' ? JSON.parse(histRaw) : histRaw) : [];
     hist.forEach(h => {
       if (!h.weekStart || !h.actRevByDay) return;
-      if (weekMap.has(h.weekStart)) return; // per-week actrevs take priority
+      if (weekMap.has(h.weekStart)) return;
       const byDay = Array.from({length:7}, (_,di) => {
         const v = h.restRevByDay?.[di] ?? h.actRevByDay[di];
         return (v != null && v > 0) ? v : null;
@@ -911,14 +922,6 @@ function recalc() {
       const total = byDay.reduce((a,v) => a + (v||0), 0);
       if (total > 0) weekMap.set(h.weekStart, { byDay, total });
     });
-
-    // Current week live inputs override everything
-    const liveByDay = Array.from({length:7}, (_,di) => {
-      const r = parseFloat(document.getElementById(`tot-actrev-${di}`)?.value) || 0;
-      return r > 0 ? r : null;
-    });
-    const liveTotal = liveByDay.reduce((a,v) => a + (v||0), 0);
-    if (liveTotal > 0) weekMap.set(curWeekStart, { byDay: liveByDay, total: liveTotal });
 
     // Sort newest-first, exclude current week, take top 4 completed weeks
     const top4weeks = Array.from(weekMap.entries())
