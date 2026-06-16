@@ -142,7 +142,51 @@ export default {
       }
     }
 
+    // ── GET /api/planner/bundle?ns=X ─────────────────────────────────────────
+    // Returns the full KV bundle for a planner namespace (fp, fp-ph, hsc)
+    if (url.pathname === '/api/planner/bundle' && request.method === 'GET') {
+      const ns = url.searchParams.get('ns');
+      if (!ns) return new Response(JSON.stringify({ error: 'Missing ns param' }), { status: 400, headers: CORS });
+      try {
+        const raw = await env.PLANNER_DATA.get(`bundle:${ns}`);
+        const data = raw ? JSON.parse(raw) : {};
+        return new Response(JSON.stringify({ success: true, data }), { status: 200, headers: CORS });
+      } catch (err) {
+        return new Response(JSON.stringify({ success: false, error: err.message }), { status: 500, headers: CORS });
+      }
+    }
+
+    // ── POST /api/planner/bundle?ns=X ─────────────────────────────────────────
+    // Saves the full KV bundle for a planner namespace
+    if (url.pathname === '/api/planner/bundle' && request.method === 'POST') {
+      const ns = url.searchParams.get('ns');
+      if (!ns) return new Response(JSON.stringify({ error: 'Missing ns param' }), { status: 400, headers: CORS });
+      try {
+        const body = await request.json();
+        await env.PLANNER_DATA.put(`bundle:${ns}`, JSON.stringify(body));
+        return new Response(JSON.stringify({ success: true }), { status: 200, headers: CORS });
+      } catch (err) {
+        return new Response(JSON.stringify({ success: false, error: err.message }), { status: 500, headers: CORS });
+      }
+    }
+
     // ── All other requests → static assets ──────────────────────────────────
-    return env.ASSETS.fetch(request);
+    const response = await env.ASSETS.fetch(request);
+
+    // Force browsers to always revalidate HTML — no stale cache ever
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('text/html')) {
+      const newHeaders = new Headers(response.headers);
+      newHeaders.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      newHeaders.set('Pragma', 'no-cache');
+      newHeaders.set('Expires', '0');
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: newHeaders,
+      });
+    }
+
+    return response;
   },
 };

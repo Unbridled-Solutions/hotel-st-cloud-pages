@@ -335,6 +335,42 @@ footer span { color: var(--gold); font-weight: 600; }
 <footer><p>Powered by <span>MC — Unbridled Solutions</span> · Fremont Provisions · Fremont Public House, 1887 &amp; War Room</p></footer>
 
 <script>
+// ── CLOUD SYNC ──────────────────────────────────────────────────────────────
+const CLOUD_NS = 'fp-ph';
+const CLOUD_URL = '/api/planner/bundle?ns=' + CLOUD_NS;
+const CLOUD_PREFIXES = ['fp-ph-wk-', 'fp-ph-week-index', 'fp-ph-history'];
+
+async function cloudPull() {
+  try {
+    const res = await fetch(CLOUD_URL);
+    if (!res.ok) return;
+    const { data } = await res.json();
+    if (!data || typeof data !== 'object') return;
+    Object.entries(data).forEach(([k, v]) => {
+      try { localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v)); } catch(e) {}
+    });
+  } catch(e) { /* offline — localStorage fallback */ }
+}
+
+async function cloudPush() {
+  try {
+    const bundle = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (CLOUD_PREFIXES.some(p => k.startsWith(p))) {
+        const raw = localStorage.getItem(k);
+        try { bundle[k] = JSON.parse(raw); } catch(e) { bundle[k] = raw; }
+      }
+    }
+    await fetch(CLOUD_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(bundle),
+    });
+  } catch(e) { /* offline — data safe in localStorage */ }
+}
+// ── END CLOUD SYNC ──────────────────────────────────────────────────────────
+
 // ── POSITIONS ─────────────────────────────────────────────────────────────────
 let POSITIONS = [
   {section:'MANAGEMENT',           name:'Executive Chef',           sub:'Daily Rate',    role:'MGR', rate:null,  dailyRate:340.00, defH:8 },
@@ -1000,6 +1036,7 @@ function saveLocal(notify = true) {
   // Also track which weeks have been saved
   const wkIndex = JSON.parse(localStorage.getItem('fp-ph-week-index') || '[]');
   if (!wkIndex.includes(key)) { wkIndex.unshift(key); localStorage.setItem('fp-ph-week-index', JSON.stringify(wkIndex.slice(0,52))); }
+  cloudPush();
   if (notify) showBanner('💾 Draft saved for this week.');
 }
 
@@ -1311,9 +1348,7 @@ buildTable();
     setCurrentWeek();
   }
 })();
-loadWeek(currentWeekKey());
-recalc();
-renderHistory();
+cloudPull().then(() => { loadWeek(currentWeekKey()); recalc(); renderHistory(); });
 </script>
 </body>
 </html>
