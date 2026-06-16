@@ -923,40 +923,52 @@ function recalc() {
       if (total > 0) weekMap.set(h.weekStart, { byDay, total });
     });
 
-    // Sort newest-first, exclude current week, take top 4 completed weeks
-    const top4weeks = Array.from(weekMap.entries())
+    // Sort newest-first — include current week (days already in are past days),
+    // take up to 4 most recent actrev entries per day
+    const allWeeks = Array.from(weekMap.entries())
       .map(([weekStart, data]) => ({ weekStart, ...data }))
-      .filter(w => w.weekStart !== curWeekStart)
-      .sort((a,b) => b.weekStart.localeCompare(a.weekStart))
-      .slice(0, 4);
+      .sort((a,b) => b.weekStart.localeCompare(a.weekStart));
 
     for (let di = 0; di < 7; di++) {
       const el = document.getElementById(`mavg-hdr-${di}`);
       if (!el) continue;
-      const vals = top4weeks.map(w => w.byDay[di]).filter(v => v !== null && v > 0);
+      // Collect up to 4 most recent actual values for this specific day
+      const vals = [];
+      for (const w of allWeeks) {
+        if (vals.length >= 4) break;
+        const v = w.byDay[di];
+        if (v !== null && v > 0) vals.push(v);
+      }
       if (vals.length === 0) {
         el.textContent = '—';
-        el.title = 'No actual revenue saved yet for this day';
-      } else if (vals.length < 4) {
-        el.textContent = `(${vals.length}/4)`;
-        el.title = `${vals.length} of 4 weeks: ${vals.map(v=>'$'+Math.round(v).toLocaleString()).join(', ')}`;
+        el.title = 'No actual revenue for this day yet';
       } else {
-        const avg = Math.round(vals.reduce((a,b)=>a+b,0) / 4);
+        const avg = Math.round(vals.reduce((a,b)=>a+b,0) / vals.length);
         el.textContent = `$${avg.toLocaleString()}`;
-        el.title = `4-wk avg: ${vals.map(v=>'$'+Math.round(v).toLocaleString()).join(', ')}`;
+        el.title = `${vals.length}-wk avg: ${vals.map(v=>'$'+Math.round(v).toLocaleString()).join(', ')}`;
       }
     }
     const wkEl = document.getElementById('mavg-hdr-week');
     if (wkEl) {
-      const wkVals = top4weeks.map(w => w.total).filter(v => v > 0);
-      if (wkVals.length === 0) {
+      // Week total: sum of per-day averages for days that have data
+      let wkAvgTotal = 0, daysWithData = 0;
+      for (let di = 0; di < 7; di++) {
+        const vals = [];
+        for (const w of allWeeks) {
+          if (vals.length >= 4) break;
+          const v = w.byDay[di];
+          if (v !== null && v > 0) vals.push(v);
+        }
+        if (vals.length > 0) {
+          wkAvgTotal += Math.round(vals.reduce((a,b)=>a+b,0) / vals.length);
+          daysWithData++;
+        }
+      }
+      if (daysWithData === 0) {
         wkEl.textContent = '—'; wkEl.title = 'No actual revenue saved yet';
-      } else if (wkVals.length < 4) {
-        wkEl.textContent = `(${wkVals.length}/4)`; wkEl.title = `${wkVals.length} of 4 weeks`;
       } else {
-        const avg = Math.round(wkVals.reduce((a,b)=>a+b,0) / 4);
-        wkEl.textContent = `$${avg.toLocaleString()}`;
-        wkEl.title = `4-wk avg weekly actual revenue`;
+        wkEl.textContent = `$${wkAvgTotal.toLocaleString()}`;
+        wkEl.title = `Avg week total (${daysWithData} days with data)`;
       }
     }
   })();
