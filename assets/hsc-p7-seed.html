@@ -17,6 +17,7 @@
   .wk-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
   .wk-label { color: #c9aa7c; font-weight: 600; }
   .wk-total { color: #4caf7d; font-weight: 700; }
+  .wk-sub   { font-size: 11px; color: #8a9aaa; margin-bottom: 6px; }
   .wk-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
   .day-cell { background: #1a2e3b; border-radius: 4px; padding: 4px 2px; text-align: center; }
   .day-name { font-size: 9px; color: #8a9aaa; text-transform: uppercase; letter-spacing: 1px; display: block; }
@@ -33,16 +34,17 @@
 <body>
 <div class="card">
   <div class="eyebrow">Hotel St. Cloud — Rooms</div>
-  <h1>Period 7 Forecast Revenue</h1>
-  <p class="sub">4 weeks · $143,305.20 total budget</p>
+  <h1>Period 7 Forecast + Actual Labor</h1>
+  <p class="sub">4 weeks · $143,305.20 revenue budget</p>
 
   <div class="weeks">
 
     <div class="wk">
       <div class="wk-header">
         <span class="wk-label">Wk 1 — Jun 15–21</span>
-        <span class="wk-total">$34,570.80</span>
+        <span class="wk-total">$34,570.80 forecast</span>
       </div>
+      <div class="wk-sub">Actual labor: $12,683.42 (hrly + $408.22/day mgmt + 11% tax)</div>
       <div class="wk-days">
         <div class="day-cell"><span class="day-name">Mon</span><span class="day-amt">$4,212</span></div>
         <div class="day-cell"><span class="day-name">Tue</span><span class="day-amt">$5,065</span></div>
@@ -57,8 +59,9 @@
     <div class="wk">
       <div class="wk-header">
         <span class="wk-label">Wk 2 — Jun 22–28</span>
-        <span class="wk-total">$34,894.80</span>
+        <span class="wk-total">$34,894.80 forecast</span>
       </div>
+      <div class="wk-sub">Actual labor: $10,896.83 (hrly + $408.22/day mgmt + 11% tax)</div>
       <div class="wk-days">
         <div class="day-cell"><span class="day-name">Mon</span><span class="day-amt">$3,780</span></div>
         <div class="day-cell"><span class="day-name">Tue</span><span class="day-amt">$4,914</span></div>
@@ -73,8 +76,9 @@
     <div class="wk">
       <div class="wk-header">
         <span class="wk-label">Wk 3 — Jun 29–Jul 5</span>
-        <span class="wk-total">$34,894.80</span>
+        <span class="wk-total">$34,894.80 forecast</span>
       </div>
+      <div class="wk-sub">Actual labor: $12,175.59 (hrly + $567.00/day mgmt + 11% tax)</div>
       <div class="wk-days">
         <div class="day-cell"><span class="day-name">Mon</span><span class="day-amt">$3,780</span></div>
         <div class="day-cell"><span class="day-name">Tue</span><span class="day-amt">$4,914</span></div>
@@ -89,8 +93,9 @@
     <div class="wk">
       <div class="wk-header">
         <span class="wk-label">Wk 4 — Jul 6–12</span>
-        <span class="wk-total">$38,944.80</span>
+        <span class="wk-total">$38,944.80 forecast</span>
       </div>
+      <div class="wk-sub">Actual labor: $11,047.83 (hrly + $567.00/day mgmt + 11% tax)</div>
       <div class="wk-days">
         <div class="day-cell"><span class="day-name">Mon</span><span class="day-amt">$3,780</span></div>
         <div class="day-cell"><span class="day-name">Tue</span><span class="day-amt">$4,914</span></div>
@@ -111,25 +116,40 @@
 
 <script>
 // Period 7 — Hotel St. Cloud Rooms
-// revs      = Forecast Revenue (budget sheet)
-// bookedrevs = Projected Booked Revenue by day (replaces 4-wk mavg)
+// revs       = Forecast Revenue
+// bookedrevs = Projected Booked Revenue by day
+// hrlyByDay  = Actual hourly hotel labor from payroll sheet
+// mgmtByDay  = Management labor (flat daily rate — changes Jun 29+)
+//              Jun 15–28: $408.22/day, Jun 29+: $567.00/day
 const WEEKS = [
   { key: 'hsc-wk-2026-06-15', week: '2026-06-15',
     revs:       [4212.00, 5065.20, 5065.20, 4158.00, 5972.40, 6048.00, 4050.00],
-    bookedrevs: [7358.00, 3351.59, 3747.59, 3164.16, 7848.16, 8519.87, 1665.55] },
+    bookedrevs: [7358.00, 3351.59, 3747.59, 3164.16, 7848.16, 8519.87, 1665.55],
+    hrlyByDay:  [ 911.11,  837.90,  936.90,  791.04, 1962.04, 2129.97, 1000.00],
+    mgmtByDay:  [ 408.22,  408.22,  408.22,  408.22,  408.22,  408.22,  408.22],
+  },
   { key: 'hsc-wk-2026-06-22', week: '2026-06-22',
     revs:       [3780.00, 4914.00, 4914.00, 5292.00, 5972.40, 5972.40, 4050.00],
-    bookedrevs: [1203.04, 3419.17, 3086.62, 3944.00, 4793.88, 4593.99, 1404.00] },
+    bookedrevs: [1203.04, 3419.17, 3086.62, 3944.00, 4793.88, 4593.99, 1404.00],
+    hrlyByDay:  [1000.00,  854.79,  771.66,  986.00, 1198.47, 1148.50, 1000.00],
+    mgmtByDay:  [ 408.22,  408.22,  408.22,  408.22,  408.22,  408.22,  408.22],
+  },
   { key: 'hsc-wk-2026-06-29', week: '2026-06-29',
     revs:       [3780.00, 4914.00, 4914.00, 5292.00, 5972.40, 5972.40, 4050.00],
-    bookedrevs: [1215.00, 1423.00, 1677.00,  787.00, 2029.00, 1281.00, 1329.00] },
+    bookedrevs: [1215.00, 1423.00, 1677.00,  787.00, 2029.00, 1281.00, 1329.00],
+    hrlyByDay:  [1000.00, 1000.00, 1000.00, 1000.00, 1000.00, 1000.00, 1000.00],
+    mgmtByDay:  [ 567.00,  567.00,  567.00,  567.00,  567.00,  567.00,  567.00],
+  },
   { key: 'hsc-wk-2026-07-06', week: '2026-07-06',
     revs:       [3780.00, 4914.00, 4914.00, 5292.00, 5972.40, 5972.40, 8100.00],
-    bookedrevs: [1272.00, 1265.00, 1074.00, 3685.00, 3580.00, 2472.00, 2199.00] },
+    bookedrevs: [1272.00, 1265.00, 1074.00, 3685.00, 3580.00, 2472.00, 2199.00],
+    hrlyByDay:  [1000.00, 1000.00, 1000.00,  921.25,  895.00,  618.00,  549.75],
+    mgmtByDay:  [ 567.00,  567.00,  567.00,  567.00,  567.00,  567.00,  567.00],
+  },
 ];
 
 function seed() {
-  document.getElementById('status').textContent = 'Writing forecast data…';
+  document.getElementById('status').textContent = 'Writing forecast + labor data…';
 
   WEEKS.forEach(w => {
     const existing = localStorage.getItem(w.key);
@@ -138,6 +158,8 @@ function seed() {
     data.week       = w.week;
     data.revs       = w.revs.map(String);
     data.bookedrevs = w.bookedrevs.map(String);
+    data.hrlyacts   = w.hrlyByDay.map(String);
+    data.mgmtacts   = w.mgmtByDay.map(String);
     if (!data.pcts) data.pcts = ['28','28','28','30','32','35','30'];
 
     localStorage.setItem(w.key, JSON.stringify(data));
@@ -154,28 +176,21 @@ function seed() {
   }, 1200);
 }
 
-async function cloudPush(ns, prefixes) {
+(async function cloudPush() {
   try {
     const bundle = {};
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
-      if (prefixes.some(p => k.startsWith(p))) {
+      if (['hsc-wk-','hsc-week-index','hsc-history'].some(p => k.startsWith(p))) {
         const raw = localStorage.getItem(k);
         try { bundle[k] = JSON.parse(raw); } catch(e) { bundle[k] = raw; }
       }
     }
-    await fetch('/api/planner/bundle?ns=' + ns, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(bundle),
+    await fetch('/api/planner/bundle?ns=hsc', {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(bundle),
     });
-    out('☁️ Pushed to cloud (ns=' + ns + ', ' + Object.keys(bundle).length + ' keys)', true);
-  } catch(e) {
-    out('⚠️ Cloud push failed (data safe in localStorage): ' + e.message);
-  }
-}
-
-cloudPush('hsc', ["hsc-wk-", "hsc-week-index", "hsc-history"]);
+  } catch(e) {}
+})();
 </script>
 </body>
 </html>

@@ -30,28 +30,28 @@
 <body>
 <div class="card">
   <div class="eyebrow">FP Sports Bar &amp; Kitchen</div>
-  <h1>Period 6 Actual Revenue</h1>
+  <h1>Period 6 Actual Revenue + Labor</h1>
   <p class="sub">4 weeks of history → feeds P7 rolling average</p>
 
   <div class="weeks">
     <div class="wk">
       <span class="wk-label">P6 Wk 1 — May 18–24</span>
-      <span class="wk-total">$18,924.00</span>
+      <span class="wk-total">$8,773.64 labor</span>
     </div>
     <div class="wk">
       <span class="wk-label">P6 Wk 2 — May 25–31</span>
-      <span class="wk-total">$16,227.50</span>
+      <span class="wk-total">$8,210.97 labor</span>
     </div>
     <div class="wk">
       <span class="wk-label">P6 Wk 3 — Jun 1–7</span>
-      <span class="wk-total">$19,004.21</span>
+      <span class="wk-total">$8,816.64 labor</span>
     </div>
     <div class="wk">
       <span class="wk-label">P6 Wk 4 — Jun 8–14</span>
-      <span class="wk-total">$20,297.98</span>
+      <span class="wk-total">$8,571.10 labor</span>
     </div>
   </div>
-  <p class="note" style="margin-bottom:20px">Total: $74,453.69 · Revenue-only (no labor yet)</p>
+  <p class="note" style="margin-bottom:20px">Hourly + $376.71/day mgmt + 11% tax · Total: $34,372.35</p>
 
   <button class="btn" onclick="seed()">Load P6 History &amp; Open Planner →</button>
   <div class="status" id="status">Injects 4 weeks into fp-labor-history for the 4-wk mavg.</div>
@@ -60,8 +60,12 @@
 
 <script>
 // Period 6 actuals — FP Sports Bar & Kitchen
-// Remapped from sheet's Sun-Sat weeks to planner's Mon-Sun weeks
-// actRevByDay[0]=Mon … [6]=Sun
+// Planner weeks: Mon–Sun. actRevByDay/revByDay[0]=Mon…[6]=Sun
+// hrlyByDay = actual hourly labor per day from payroll sheet
+// mgmt = $376.71/day flat for all 28 days
+// actual = (sum hrly + sum mgmt) * 1.11 (11% payroll tax)
+const MGMT = 376.71;
+
 const P6_HISTORY = [
   {
     weekStart: '2026-05-18',
@@ -72,65 +76,76 @@ const P6_HISTORY = [
     actRev: 18924.00, evtRev: 0, revVariance: 0,
     revByDay:       [2460.24, 2961.25, 2220.00, 2367.50, 2972.00, 2665.28, 3277.73],
     actRevByDay:    [2460.24, 2961.25, 2220.00, 2367.50, 2972.00, 2665.28, 3277.73],
-    actLaborByDay:  [1184.70, 1425.71, 1121.51, 1053.76, 1261.09, 1360.62, 1366.25],
+    restRevByDay:   [2460.24, 2961.25, 2220.00, 2367.50, 2972.00, 2665.28, 3277.73],
+    hrlyByDay:      [ 690.59,  907.71,  633.66,  572.62,  759.41,  849.07,  854.15],
+    mgmtByDay:      [ 376.71,  376.71,  376.71,  376.71,  376.71,  376.71,  376.71],
+    actLaborByDay:  [ 690.59,  907.71,  633.66,  572.62,  759.41,  849.07,  854.15],
   },
   {
     weekStart: '2026-05-25',
     weekDisplay: 'May 25 – May 31, 2026',
     isoWk: 'Wk 22', period: 'Period 6 · Week 2',
     rev: 16227.50, budget: null, pct: null,
-    actual: 8200.98, actPct: 50.5, variance: null,
+    actual: 8210.97, actPct: 50.6, variance: null,
     actRev: 16227.50, evtRev: 0, revVariance: 0,
     revByDay:       [1925.00, 2147.91, 1563.99, 2043.75, 1982.75, 3569.85, 2994.25],
     actRevByDay:    [1925.00, 2147.91, 1563.99, 2043.75, 1982.75, 3569.85, 2994.25],
-    actLaborByDay:  [1262.88, 1085.72,  988.75, 1008.59, 1190.73, 1389.11, 1275.20],
+    restRevByDay:   [1925.00, 2147.91, 1563.99, 2043.75, 1982.75, 3569.85, 2994.25],
+    hrlyByDay:      [ 761.02,  601.41,  514.06,  531.93,  696.02,  883.74,  772.12],
+    mgmtByDay:      [ 376.71,  376.71,  376.71,  376.71,  376.71,  376.71,  376.71],
+    actLaborByDay:  [ 761.02,  601.41,  514.06,  531.93,  696.02,  883.74,  772.12],
   },
   {
     weekStart: '2026-06-01',
     weekDisplay: 'Jun 1 – Jun 7, 2026',
     isoWk: 'Wk 23', period: 'Period 6 · Week 3',
     rev: 19004.21, budget: null, pct: null,
-    actual: 8806.66, actPct: 46.3, variance: null,
+    actual: 8816.64, actPct: 46.4, variance: null,
     actRev: 19004.21, evtRev: 0, revVariance: 0,
     revByDay:       [2435.13, 2305.10, 2205.75, 1691.00, 2974.99, 4404.99, 2987.25],
     actRevByDay:    [2435.13, 2305.10, 2205.75, 1691.00, 2974.99, 4404.99, 2987.25],
-    actLaborByDay:  [1222.90, 1147.47, 1051.84, 1000.61, 1290.09, 1892.12, 1201.63],
+    restRevByDay:   [2435.13, 2305.10, 2205.75, 1691.00, 2974.99, 4404.99, 2987.25],
+    hrlyByDay:      [ 725.00,  657.05,  570.89,  524.74,  785.53, 1336.90,  705.84],
+    mgmtByDay:      [ 376.71,  376.71,  376.71,  376.71,  376.71,  376.71,  376.71],
+    actLaborByDay:  [ 725.00,  657.05,  570.89,  524.74,  785.53, 1336.90,  705.84],
   },
   {
     weekStart: '2026-06-08',
     weekDisplay: 'Jun 8 – Jun 14, 2026',
     isoWk: 'Wk 24', period: 'Period 6 · Week 4',
     rev: 20297.98, budget: null, pct: null,
-    actual: 8561.12, actPct: 42.2, variance: null,
+    actual: 8571.10, actPct: 42.2, variance: null,
     actRev: 20297.98, evtRev: 0, revVariance: 0,
     revByDay:       [2015.00, 3520.00, 2691.95, 1682.51, 3818.25, 4142.84, 2427.43],
     actRevByDay:    [2015.00, 3520.00, 2691.95, 1682.51, 3818.25, 4142.84, 2427.43],
-    actLaborByDay:  [1100.58, 1399.00, 1166.59, 1026.66, 1317.28, 1363.54, 1187.47],
+    restRevByDay:   [2015.00, 3520.00, 2691.95, 1682.51, 3818.25, 4142.84, 2427.43],
+    hrlyByDay:      [ 614.80,  883.65,  674.27,  548.21,  810.03,  860.70,  693.08],
+    mgmtByDay:      [ 376.71,  376.71,  376.71,  376.71,  376.71,  376.71,  376.71],
+    actLaborByDay:  [ 614.80,  883.65,  674.27,  548.21,  810.03,  860.70,  693.08],
   },
 ];
 
 function seed() {
   document.getElementById('status').textContent = 'Writing history entries…';
 
-  // Load existing history, remove any of these weeks if they already exist, then prepend
+  // Load existing history, remove any of these weeks, then prepend
   const existing = JSON.parse(localStorage.getItem('fp-labor-history') || '[]');
   const weekStarts = P6_HISTORY.map(e => e.weekStart);
   const filtered = existing.filter(e => !weekStarts.includes(e.weekStart));
-
-  // Prepend P6 weeks in reverse order so newest (Wk4) is first in the array
   const updated = [...P6_HISTORY].reverse().concat(filtered).slice(0, 52);
   localStorage.setItem('fp-labor-history', JSON.stringify(updated));
 
-  // Also populate per-week keys so actual revenue shows when navigating to those weeks
+  // Per-week keys: populate hrlyacts + mgmtacts + actrevs + revs
   P6_HISTORY.forEach(h => {
     const d   = new Date(h.weekStart + 'T00:00:00');
     const key = `fp-labor-wk-${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     const raw = localStorage.getItem(key);
     const data = raw ? JSON.parse(raw) : {};
-    data.week    = h.weekStart;
-    data.actrevs = h.actRevByDay.map(v => v != null ? String(v) : '');
-    data.acts    = h.actLaborByDay.map(v => v != null ? String(v) : '');
-    data.revs    = h.revByDay.map(v => v != null ? String(v) : '');
+    data.week      = h.weekStart;
+    data.actrevs   = h.actRevByDay.map(v => v != null ? String(v) : '');
+    data.hrlyacts  = h.hrlyByDay.map(v => v != null ? String(v) : '');
+    data.mgmtacts  = h.mgmtByDay.map(v => v != null ? String(v) : '');
+    data.revs      = h.revByDay.map(v => v != null ? String(v) : '');
     if (!data.pcts) data.pcts = ['28','28','28','30','32','35','30'];
     localStorage.setItem(key, JSON.stringify(data));
     const idx = JSON.parse(localStorage.getItem('fp-labor-week-index') || '[]');
@@ -140,34 +155,26 @@ function seed() {
   document.getElementById('status').textContent = '';
   document.getElementById('banner').style.display = 'block';
 
-  // Open planner on current week (P7 Wk1)
   setTimeout(() => {
     window.location.href = 'fp-labor-planner.html?week=2026-06-15';
   }, 1200);
 }
 
-async function cloudPush(ns, prefixes) {
+(async function cloudPush() {
   try {
     const bundle = {};
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
-      if (prefixes.some(p => k.startsWith(p))) {
+      if (['fp-labor-wk-','fp-labor-week-index','fp-labor-history'].some(p => k.startsWith(p))) {
         const raw = localStorage.getItem(k);
         try { bundle[k] = JSON.parse(raw); } catch(e) { bundle[k] = raw; }
       }
     }
-    await fetch('/api/planner/bundle?ns=' + ns, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(bundle),
+    await fetch('/api/planner/bundle?ns=fp', {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(bundle),
     });
-    out('☁️ Pushed to cloud (ns=' + ns + ', ' + Object.keys(bundle).length + ' keys)', true);
-  } catch(e) {
-    out('⚠️ Cloud push failed (data safe in localStorage): ' + e.message);
-  }
-}
-
-cloudPush('fp', ["fp-labor-wk-", "fp-labor-week-index", "fp-labor-history"]);
+  } catch(e) {}
+})();
 </script>
 </body>
 </html>
