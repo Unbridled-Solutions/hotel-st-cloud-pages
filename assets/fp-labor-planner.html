@@ -1069,8 +1069,14 @@ function currentWeekKey() {
 
 // ── SHIFT WEEK BUTTONS ────────────────────────────────────────────────────────
 function shiftWeek(delta) {
-  // Save current week before navigating
-  saveLocal(false);
+  // Only save before navigating if the user has actually entered actuals in the DOM.
+  // Saving a blank DOM (e.g. right after a page reload) would overwrite cloud data.
+  const hasActuals = Array.from({length:7}, (_,di) =>
+    document.getElementById(`tot-actrev-${di}`)?.value ||
+    document.getElementById(`tot-hrly-${di}`)?.value ||
+    document.getElementById(`tot-mgmt-${di}`)?.value
+  ).some(v => v && v.trim() !== '');
+  if (hasActuals) saveLocal(false);
   const inp = document.getElementById('weekStart');
   const d = new Date(inp.value + 'T00:00:00');
   d.setDate(d.getDate() + delta * 7);

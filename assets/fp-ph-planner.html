@@ -327,15 +327,17 @@ footer span { color: var(--gold); font-weight: 600; }
           <th>Date Range</th>
           <th>Forecast Rev</th>
           <th>Actual Rev</th>
+          <th style="color:#9b6ec8">Event Rev</th>
           <th>Budget Labor</th>
           <th>Labor %</th>
           <th>Actual Labor</th>
           <th>Actual Labor %</th>
           <th>Variance</th>
           <th>Status</th>
+          <th></th>
         </tr>
       </thead>
-      <tbody id="histBody"><tr><td colspan="10" class="hist-empty">No weeks submitted yet. Complete a schedule and click Submit for Approval to start tracking.</td></tr></tbody>
+      <tbody id="histBody"><tr><td colspan="12" class="hist-empty">No weeks submitted yet. Complete a schedule and click Submit for Approval to start tracking.</td></tr></tbody>
     </table>
   </div>
 </div>
@@ -923,9 +925,8 @@ function recalc() {
 
   updateSummary(weekBudget, weekRev, weekActual, weekActRevTotal, weekPct);
   scheduleAutoSave();
+  try { renderMavg(); } catch(e) {}
 }
-
-// ── 4-WEEK MOVING AVERAGE (standalone — called after cloudPull, not inside recalc) ────
 function renderMavg() {
   const weekMap = new Map();
 
@@ -1064,8 +1065,14 @@ function currentWeekKey() {
 
 // ── SHIFT WEEK BUTTONS ────────────────────────────────────────────────────────
 function shiftWeek(delta) {
-  // Save current week before navigating
-  saveLocal(false);
+  // Only save before navigating if the user has actually entered actuals in the DOM.
+  // Saving a blank DOM (e.g. right after a page reload) would overwrite cloud data.
+  const hasActuals = Array.from({length:7}, (_,di) =>
+    document.getElementById(`tot-actrev-${di}`)?.value ||
+    document.getElementById(`tot-hrly-${di}`)?.value ||
+    document.getElementById(`tot-mgmt-${di}`)?.value
+  ).some(v => v && v.trim() !== '');
+  if (hasActuals) saveLocal(false);
   const inp = document.getElementById('weekStart');
   const d = new Date(inp.value + 'T00:00:00');
   d.setDate(d.getDate() + delta * 7);
@@ -1146,7 +1153,24 @@ function saveLocal(notify = true) {
 }
 
 function loadWeek(key) {
+  // Always prefer cloud data over local — cloud is the source of truth.
+  // Local only wins if it has a saved_at strictly newer than cloud (i.e. user
+  // made changes THIS session that haven't pushed yet).
   const raw = localStorage.getItem(key);
+  const cloudObj = (_cloudData && _cloudData[key] && typeof _cloudData[key] === 'object')
+    ? _cloudData[key] : null;
+  let data = null;
+  if (raw) {
+    try {
+      const localObj = JSON.parse(raw);
+      const localTs = localObj?.saved_at || 0;
+      const cloudTs = cloudObj?.saved_at || 0;
+      // Cloud wins unless local is STRICTLY newer
+      data = (localTs > cloudTs) ? localObj : (cloudObj || localObj);
+    } catch(e) { data = cloudObj; }
+  } else {
+    data = cloudObj;
+  }
 
   // Reset state and UI to blank for this week
   initState();
@@ -1167,9 +1191,8 @@ function loadWeek(key) {
   // Stash values that need to be restored AFTER buildTable() recreates the tfoot DOM
   let _pcts=null, _revs=null, _acts=null, _actrevs=null, _evtrevs=null, _hrlyacts=null, _mgmtacts=null;
 
-  if (raw) {
+  if (data) {
     try {
-      const data = JSON.parse(raw);
       _pcts    = data.pcts    || null;
       _revs    = data.revs    || null;
       _acts    = data.acts    || null;
@@ -1386,35 +1409,91 @@ function approveSchedule() {
 }
 
 function renderHistory() {
-  const hist = JSON.parse(localStorage.getItem('fp-ph-history') || '[]');
+  const hist = (_cloudData && Array.isArray(_cloudData['fp-ph-history']))
+    ? _cloudData['fp-ph-history']
+    : JSON.parse(localStorage.getItem('fp-ph-history') || '[]');
   const tbody = document.getElementById('histBody');
   if (!hist.length) {
-    tbody.innerHTML = `<tr><td colspan="9" class="hist-empty">No weeks submitted yet.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="12" class="hist-empty">No weeks submitted yet.</td></tr>`;
     return;
   }
   const fmt = v => v != null ? `$${Math.round(v).toLocaleString()}` : '—';
   const fmtPct = v => v != null ? `${v}%` : '—';
   const fmtVar = v => v != null ? `${v >= 0 ? '+' : ''}$${Math.round(Math.abs(v)).toLocaleString()}` : '—';
   const pctClass = v => !v ? '' : v < 28 ? 'style="color:var(--gold)"' : v <= 33 ? 'style="color:var(--green)"' : 'style="color:var(--red)"';
-  const varClass = v => !v ? '' : v <= 0 ? 'style="color:var(--green)"' : v < 200 ? 'style="color:var(--gold)"' : 'style="color:var(--red)"';
+  const varClass = v => !v ? '' : v > 0 ? 'style="color:var(--green)"' : 'style="color:var(--red)"';
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
-  tbody.innerHTML = hist.map(h => {
-    // Compute actual labor % from saved actRev if available
+  const rows = [];
+  hist.forEach((h, idx) => {
     const actLaborPct = (h.actual && h.actRev) ? +(h.actual / h.actRev * 100).toFixed(1) : h.actPct;
-    return `
+    const evtTotal = h.evtRev != null ? h.evtRev : (h.evtRevByDay ? h.evtRevByDay.reduce((a,b)=>a+(b||0),0) : null);
+    rows.push(`
     <tr style="${h.approved ? 'background:rgba(76,202,128,0.06);' : ''}">
       <td><span class="hist-period">${h.period || '—'}</span><br><span class="hist-week">${h.isoWk || ''}</span></td>
       <td style="text-align:left;color:var(--text)">${h.weekDisplay || h.weekStart}</td>
       <td style="color:var(--gold)">${fmt(h.rev)}</td>
       <td style="color:#5a8ba7">${fmt(h.actRev)}</td>
+      <td style="color:#9b6ec8">${evtTotal ? fmt(evtTotal) : '—'}</td>
       <td style="color:var(--green)">${fmt(h.budget)}</td>
       <td ${pctClass(h.pct)}>${fmtPct(h.pct)}</td>
       <td style="color:var(--orange)">${fmt(h.actual)}</td>
       <td ${pctClass(actLaborPct)}>${fmtPct(actLaborPct)}</td>
       <td ${varClass(h.variance)}>${fmtVar(h.variance)}</td>
       <td>${h.approved ? '<span style="font-size:10px;font-weight:700;letter-spacing:1px;color:#4cca80;background:rgba(76,202,128,0.15);padding:2px 7px;border-radius:3px;border:1px solid rgba(76,202,128,0.4)">✓ APPROVED</span>' : '<span style="font-size:10px;color:var(--muted)">Pending</span>'}</td>
-    </tr>`;
-  }).join('');
+      <td><button onclick="toggleEvtEdit('fph-evt-edit-${idx}')" style="font-size:10px;padding:2px 8px;background:rgba(155,110,200,0.15);color:#9b6ec8;border:1px solid rgba(155,110,200,0.4);border-radius:3px;cursor:pointer;">✏️ Evt Rev</button></td>
+    </tr>
+    <tr id="fph-evt-edit-${idx}" style="display:none;background:rgba(155,110,200,0.06);">
+      <td colspan="12" style="padding:10px 14px;">
+        <div style="font-size:11px;color:#9b6ec8;margin-bottom:6px;font-weight:600;">✏️ Edit Event Revenue — ${h.weekDisplay || h.weekStart}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
+          ${days.map((d,di) => `<label style="font-size:10px;color:var(--muted);display:flex;flex-direction:column;gap:2px;">${d}<input id="fph-evt-${idx}-${di}" type="number" placeholder="0" value="${(h.evtRevByDay && h.evtRevByDay[di]) || ''}" style="width:70px;background:#0d1620;border:1px solid rgba(155,110,200,0.4);color:#9b6ec8;padding:3px 5px;border-radius:3px;font-size:12px;"></label>`).join('')}
+          <button onclick="saveHistEvtRev('${h.weekStart}', ${idx})" style="padding:4px 12px;background:rgba(155,110,200,0.2);color:#9b6ec8;border:1px solid rgba(155,110,200,0.5);border-radius:3px;cursor:pointer;font-size:11px;font-weight:600;">Save</button>
+          <button onclick="toggleEvtEdit('fph-evt-edit-${idx}')" style="padding:4px 8px;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:3px;cursor:pointer;font-size:11px;">Cancel</button>
+        </div>
+      </td>
+    </tr>`);
+  });
+  tbody.innerHTML = rows.join('');
+}
+
+function toggleEvtEdit(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = el.style.display === 'none' ? 'table-row' : 'none';
+}
+
+async function saveHistEvtRev(weekStart, idx) {
+  const days = [0,1,2,3,4,5,6];
+  const evtRevByDay = days.map(di => parseFloat(document.getElementById(`fph-evt-${idx}-${di}`)?.value) || 0);
+  const evtTotal = evtRevByDay.reduce((a,b)=>a+b,0);
+
+  const cloudHist = (_cloudData && Array.isArray(_cloudData['fp-ph-history']))
+    ? _cloudData['fp-ph-history']
+    : JSON.parse(localStorage.getItem('fp-ph-history') || '[]');
+  const entry = cloudHist.find(h => h.weekStart === weekStart);
+  if (!entry) { showBanner('❌ Week not found in history.'); return; }
+
+  entry.evtRevByDay = evtRevByDay;
+  entry.evtRev = evtTotal || null;
+  const restRev = entry.restRevByDay
+    ? entry.restRevByDay.reduce((a,b)=>a+(b||0),0)
+    : (entry.actRev || 0) - (entry.evtRev || 0);
+  entry.actRev = restRev + evtTotal;
+
+  localStorage.setItem('fp-ph-history', JSON.stringify(cloudHist));
+  if (_cloudData) _cloudData['fp-ph-history'] = cloudHist;
+
+  const wkKey = `fp-ph-wk-${weekStart}`;
+  const wkRaw = localStorage.getItem(wkKey);
+  const wkData = wkRaw ? JSON.parse(wkRaw) : {};
+  wkData.evtrevs = evtRevByDay.map(v => v > 0 ? String(v) : '');
+  wkData.saved_at = Date.now();
+  localStorage.setItem(wkKey, JSON.stringify(wkData));
+
+  await cloudPush();
+  showBanner(`✅ Event revenue updated for ${weekStart} and saved to cloud.`);
+  toggleEvtEdit(`fph-evt-edit-${idx}`);
+  renderHistory();
 }
 
 function clearHistory() {
@@ -1464,6 +1543,7 @@ buildTable();
   }
 })();
 cloudPull().then(() => {
+  setCurrentWeek();
   try { loadWeek(currentWeekKey()); } catch(e) { console.error('loadWeek:', e); }
   try { recalc(); } catch(e) { console.error('recalc:', e); }
   try { renderHistory(); } catch(e) { console.error('renderHistory:', e); }
