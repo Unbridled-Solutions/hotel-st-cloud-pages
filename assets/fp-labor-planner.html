@@ -445,7 +445,9 @@ initState();
 
 // ── AUTO-SAVE (debounced, 2s after last input) ────────────────────────────
 let _autoSaveTimer = null;
+let _pageLoading = true; // suppress auto-save during initial page load
 function scheduleAutoSave() {
+  if (_pageLoading) return; // don't auto-save until cloud pull + loadWeek complete
   clearTimeout(_autoSaveTimer);
   _autoSaveTimer = setTimeout(() => {
     // Don't auto-save if week is locked (approved)
@@ -1154,8 +1156,12 @@ function saveLocal(notify = true) {
   const wkIndex = JSON.parse(localStorage.getItem('fp-labor-week-index') || '[]');
   if (!wkIndex.includes(key)) { wkIndex.unshift(key); localStorage.setItem('fp-labor-week-index', JSON.stringify(wkIndex.slice(0,52))); }
   // ── Save roster (names + rates) globally so they carry forward to every future week ──
-  const roster = POSITIONS.map(p => ({name:p.name, rate:p.rate, dailyRate:p.dailyRate}));
-  localStorage.setItem('fp-labor-roster', JSON.stringify({roster, saved_at: Date.now()}));
+  // Only on explicit Save (notify=true) — never on auto-save — so we only snapshot
+  // intentional name/rate edits, not a blank-DOM state captured during page load.
+  if (notify) {
+    const roster = POSITIONS.map(p => ({name:p.name, rate:p.rate, dailyRate:p.dailyRate}));
+    localStorage.setItem('fp-labor-roster', JSON.stringify({roster, saved_at: Date.now()}));
+  }
   cloudPush();
   if (notify) showBanner('💾 Draft saved for this week.');
 }
@@ -1556,6 +1562,7 @@ cloudPull().then(() => {
   try { recalc(); } catch(e) { console.error('recalc:', e); }
   try { renderHistory(); } catch(e) { console.error('renderHistory:', e); }
   try { renderMavg(); } catch(e) { console.error('renderMavg:', e); }
+  _pageLoading = false; // page fully loaded — auto-save is now safe
 });
 
 </script>
