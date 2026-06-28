@@ -348,7 +348,7 @@ footer span { color: var(--gold); font-weight: 600; }
 // ── CLOUD SYNC ──────────────────────────────────────────────────────────────
 const CLOUD_NS = 'fp-ph';
 const CLOUD_URL = '/api/planner/bundle?ns=' + CLOUD_NS;
-const CLOUD_PREFIXES = ['fp-ph-wk-', 'fp-ph-week-index', 'fp-ph-history'];
+const CLOUD_PREFIXES = ['fp-ph-wk-', 'fp-ph-week-index', 'fp-ph-history', 'fp-ph-roster'];
 
 // Cloud data cache — populated by cloudPull, read by mavg directly
 let _cloudData = null;
@@ -451,7 +451,9 @@ initState();
 
 // ── AUTO-SAVE (debounced, 2s after last input) ────────────────────────────
 let _autoSaveTimer = null;
+let _pageLoading = true; // suppress auto-save during initial page load
 function scheduleAutoSave() {
+  if (_pageLoading) return; // don't auto-save until cloud pull + loadWeek complete
   clearTimeout(_autoSaveTimer);
   _autoSaveTimer = setTimeout(() => {
     // Don't auto-save if week is locked (approved)
@@ -1148,6 +1150,11 @@ function saveLocal(notify = true) {
   // Also track which weeks have been saved
   const wkIndex = JSON.parse(localStorage.getItem('fp-ph-week-index') || '[]');
   if (!wkIndex.includes(key)) { wkIndex.unshift(key); localStorage.setItem('fp-ph-week-index', JSON.stringify(wkIndex.slice(0,52))); }
+  // ── Save roster (names + rates) globally — explicit Save only, never auto-save ──
+  if (notify) {
+    const roster = POSITIONS.map(p => ({name:p.name, rate:p.rate, dailyRate:p.dailyRate}));
+    localStorage.setItem('fp-ph-roster', JSON.stringify({roster, saved_at: Date.now()}));
+  }
   cloudPush();
   if (notify) showBanner('💾 Draft saved for this week.');
 }
@@ -1530,6 +1537,28 @@ function showBanner(msg) {
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
+
+// Apply saved roster (names + rates) to POSITIONS before building the table
+function applyRoster() {
+  try {
+    const cloudRoster = (_cloudData && _cloudData['fp-ph-roster'])
+      ? (typeof _cloudData['fp-ph-roster'] === 'object' ? _cloudData['fp-ph-roster'] : JSON.parse(_cloudData['fp-ph-roster']))
+      : null;
+    const localRaw = localStorage.getItem('fp-ph-roster');
+    const localRoster = localRaw ? JSON.parse(localRaw) : null;
+    const cloudTs = cloudRoster?.saved_at || 0;
+    const localTs = localRoster?.saved_at || 0;
+    const best = (localTs > cloudTs) ? localRoster : (cloudRoster || localRoster);
+    if (!best || !Array.isArray(best.roster)) return;
+    best.roster.forEach((r, pi) => {
+      if (!POSITIONS[pi]) return;
+      if (r.name) POSITIONS[pi].name = r.name;
+      if (r.rate != null) POSITIONS[pi].rate = r.rate;
+      if (r.dailyRate != null) POSITIONS[pi].dailyRate = r.dailyRate;
+    });
+  } catch(e) {}
+}
+
 buildTable();
 // Honor ?week=YYYY-MM-DD param (e.g. from seed page redirect)
 (function() {
@@ -1544,10 +1573,12 @@ buildTable();
 })();
 cloudPull().then(() => {
   setCurrentWeek();
+  applyRoster();
   try { loadWeek(currentWeekKey()); } catch(e) { console.error('loadWeek:', e); }
   try { recalc(); } catch(e) { console.error('recalc:', e); }
   try { renderHistory(); } catch(e) { console.error('renderHistory:', e); }
   try { renderMavg(); } catch(e) { console.error('renderMavg:', e); }
+  _pageLoading = false; // page fully loaded — auto-save is now safe
 });
 </script>
 </body>

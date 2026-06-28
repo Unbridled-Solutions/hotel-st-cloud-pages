@@ -351,7 +351,7 @@ footer span { color: var(--gold); font-weight: 600; }
 // ── CLOUD SYNC ──────────────────────────────────────────────────────────────
 const CLOUD_NS = 'hsc';
 const CLOUD_URL = '/api/planner/bundle?ns=' + CLOUD_NS;
-const CLOUD_PREFIXES = ['hsc-wk-', 'hsc-week-index', 'hsc-history'];
+const CLOUD_PREFIXES = ['hsc-wk-', 'hsc-week-index', 'hsc-history', 'hsc-roster'];
 
 async function cloudPull() {
   try {
@@ -401,8 +401,8 @@ async function cloudPush() {
 
 // ── POSITIONS ─────────────────────────────────────────────────────────────────
 let POSITIONS = [
-  {section:'MANAGEMENT',        name:'Asst Manager / Events',   sub:'Daily Rate',            role:'MGR', rate:null,  dailyRate:248.00, defH:8 },
-  {section:null,                name:'Asst Manager / Hotel',    sub:'Daily Rate',            role:'MGR', rate:null,  dailyRate:232.00, defH:8 },
+  {section:'MANAGEMENT',        name:'Asst Manager / Events',   sub:'Daily Rate',            role:'MGR', rate:null,  dailyRate:248.00, defH:8, sortOrder:1 },
+  {section:null,                name:'Asst Manager / Hotel',    sub:'Daily Rate',            role:'MGR', rate:null,  dailyRate:232.00, defH:8, sortOrder:2 },
 
   {section:'FRONT DESK',        name:'Front Desk Lead',         sub:'Registration',           role:'FOH', rate:20.00, dailyRate:null,   defH:8 },
   {section:null,                name:'Front Desk #1',           sub:'Registration',           role:'FOH', rate:17.00, dailyRate:null,   defH:8 },
@@ -421,6 +421,18 @@ let POSITIONS = [
   {section:'NIGHT AUDIT / CLEANING', name:'Night Auditor',      sub:'',                       role:'MGR', rate:17.00, dailyRate:null,   defH:8 },
   {section:null,                name:'Night Cleaner #1',        sub:'',                       role:'BOH', rate:17.00, dailyRate:null,   defH:8 },
   {section:null,                name:'Night Cleaner #2',        sub:'',                       role:'BOH', rate:17.00, dailyRate:null,   defH:8 },
+
+  // ── ADDITIONS (appended to preserve existing row indices) ──
+  {section:'MANAGEMENT',        name:'Lindsay',                 sub:'GM',                     role:'MGR', rate:null,  dailyRate:null,   defH:8, ext:true, sortOrder:0 },
+  {section:'FRONT DESK',        name:'Front Desk #1',           sub:'',                       role:'FOH', rate:17.00, dailyRate:null,   defH:8 },
+  {section:null,                name:'Front Desk #2',           sub:'',                       role:'FOH', rate:17.00, dailyRate:null,   defH:8 },
+  {section:'HOUSEKEEPING',      name:'Housekeeper #1',          sub:'Rooms',                  role:'BOH', rate:17.00, dailyRate:null,   defH:7 },
+  {section:null,                name:'Housekeeper #2',          sub:'Rooms',                  role:'BOH', rate:17.00, dailyRate:null,   defH:7 },
+  {section:'NIGHT AUDIT / CLEANING', name:'Night Auditor',      sub:'',                       role:'MGR', rate:17.00, dailyRate:null,   defH:8 },
+  {section:'HOUSEKEEPING',      name:'Housekeeper #3',          sub:'Rooms',                  role:'BOH', rate:17.00, dailyRate:null,   defH:7 },
+  {section:'NIGHT AUDIT / CLEANING', name:'Night Auditor',      sub:'',                       role:'MGR', rate:17.00, dailyRate:null,   defH:8 },
+  {section:'LAUNDRY',           name:'Laundry Attendant #3',    sub:'',                       role:'BOH', rate:17.00, dailyRate:null,   defH:7 },
+  {section:null,                name:'Laundry Attendant #4',    sub:'',                       role:'BOH', rate:17.00, dailyRate:null,   defH:7 },
 ];
 
 let state = {};
@@ -436,7 +448,9 @@ initState();
 
 // ── AUTO-SAVE (debounced, 2s after last input) ────────────────────────────
 let _autoSaveTimer = null;
+let _pageLoading = true; // suppress auto-save during initial page load
 function scheduleAutoSave() {
+  if (_pageLoading) return; // don't auto-save until cloud pull + loadWeek complete
   clearTimeout(_autoSaveTimer);
   _autoSaveTimer = setTimeout(() => {
     // Don't auto-save if week is locked (approved)
@@ -450,33 +464,58 @@ function scheduleAutoSave() {
 // ── BUILD TABLE ───────────────────────────────────────────────────────────────
 function buildTable() {
   const tbody = document.getElementById('schedBody');
-  let html = '', sec = null;
+  let html = '';
 
+  // Group positions by section, preserving original index (pi) for state keys
+  // Appended entries with section:'MANAGEMENT' etc. are injected into the right section
+  const sections = [];
+  const sectionMap = {};
+  let currentSec = null;
   POSITIONS.forEach((p, pi) => {
-    if (p.section && p.section !== sec) {
-      sec = p.section;
-      html += `<tr class="section-row"><td colspan="11">${p.section}</td></tr>`;
+    const sec = p.section;
+    if (sec) {
+      if (!sectionMap[sec]) {
+        sectionMap[sec] = { label: sec, rows: [] };
+        sections.push(sectionMap[sec]);
+      }
+      currentSec = sectionMap[sec];
+      currentSec.rows.push({ p, pi });
+    } else {
+      if (currentSec) currentSec.rows.push({ p, pi });
     }
+  });
 
-    const rcls = {BOH:'role-boh',FOH:'role-foh',BAR:'role-bar',MGR:'role-mgr'}[p.role];
-    const rateStr = p.dailyRate
-      ? `<span style="font-size:11px;color:var(--gold)">$${p.dailyRate.toFixed(2)}<br><span style="font-size:9px;color:var(--muted);letter-spacing:0.5px">PER DAY</span></span>`
-      : p.rate
-        ? `<span class="editable" onclick="editRate(${pi},this)">$${p.rate.toFixed(2)}</span>`
-        : `<span class="editable" style="color:var(--orange);font-size:11px;border-bottom:1px dashed var(--orange)" onclick="editRate(${pi},this)">set salary</span>`;
+  sections.forEach(sec => {
+    // Sort rows within section by sortOrder if present, otherwise keep original order
+    const sorted = sec.rows.slice().sort((a, b) => {
+      const sa = a.p.sortOrder !== undefined ? a.p.sortOrder : 999;
+      const sb = b.p.sortOrder !== undefined ? b.p.sortOrder : 999;
+      return sa - sb;
+    });
+    html += `<tr class="section-row"><td colspan="11">${sec.label}</td></tr>`;
+    sorted.forEach(({ p, pi }) => {
 
-    let days = '';
-    for (let di = 0; di < 7; di++) {
-      if (p.dailyRate) {
-        days += `<td class="day-cell" id="dc-${pi}-${di}">
+      const rcls = {BOH:'role-boh',FOH:'role-foh',BAR:'role-bar',MGR:'role-mgr'}[p.role];
+      const rateStr = p.ext
+        ? `<span style="font-size:11px;color:var(--muted);font-style:italic">ext.</span>`
+        : p.dailyRate
+          ? `<span style="font-size:11px;color:var(--gold)">$${p.dailyRate.toFixed(2)}<br><span style="font-size:9px;color:var(--muted);letter-spacing:0.5px">PER DAY</span></span>`
+          : p.rate
+            ? `<span class="editable" onclick="editRate(${pi},this)">$${p.rate.toFixed(2)}</span>`
+            : `<span class="editable" style="color:var(--orange);font-size:11px;border-bottom:1px dashed var(--orange)" onclick="editRate(${pi},this)">set salary</span>`;
+
+      let days = '';
+      for (let di = 0; di < 7; di++) {
+        if (p.dailyRate) {
+          days += `<td class="day-cell" id="dc-${pi}-${di}">
           <div class="toggle-wrap">
             <label class="day-toggle"><input type="checkbox" id="tog-${pi}-${di}" onchange="toggleDay(${pi},${di})"><span class="toggle-track"></span></label>
             <div class="day-cost" id="cost-${pi}-${di}" style="font-size:12px;color:var(--gold)"></div>
             <span class="hrs-label" style="color:var(--muted)">flat</span>
           </div>
         </td>`;
-      } else {
-        days += `<td class="day-cell" id="dc-${pi}-${di}">
+        } else {
+          days += `<td class="day-cell" id="dc-${pi}-${di}">
           <div class="toggle-wrap">
             <label class="day-toggle"><input type="checkbox" id="tog-${pi}-${di}" onchange="toggleDay(${pi},${di})"><span class="toggle-track"></span></label>
             <input class="hours-input" type="number" id="hrs-${pi}-${di}" value="${p.defH}" min="0.5" max="16" step="0.5" oninput="recalc()" placeholder="hrs">
@@ -484,10 +523,10 @@ function buildTable() {
             <div class="day-cost" id="cost-${pi}-${di}"></div>
           </div>
         </td>`;
+        }
       }
-    }
 
-    html += `<tr class="pos-row inactive" id="row-${pi}">
+      html += `<tr class="pos-row inactive" id="row-${pi}">
       <td class="pos-name-cell">
         <span class="editable pos-name" onclick="editName(${pi},this)">${p.name}</span>
         ${p.sub ? `<div class="pos-sub">${p.sub}</div>` : ''}
@@ -497,6 +536,7 @@ function buildTable() {
       ${days}
       <td class="day-cell week-col"><div class="week-pos-total" id="wk-pos-${pi}">—</div></td>
     </tr>`;
+    });
   });
 
   tbody.innerHTML = html;
@@ -706,7 +746,9 @@ function recalc() {
       if (!costEl) continue;
       if (!state[pi][di].on) { costEl.textContent = ''; continue; }
       let cost = 0;
-      if (p.dailyRate) {
+      if (p.ext) {
+        costEl.textContent = 'ext.';
+      } else if (p.dailyRate) {
         cost = p.dailyRate;
         costEl.textContent = `$${cost.toFixed(0)}`;
       } else {
@@ -869,11 +911,18 @@ function recalc() {
     } else { actLPctWkEl.textContent = '—'; actLPctWkEl.className = 'total-val week-col'; }
   }
 
+  // ── ROOMS BOOKED REVENUE — sum inputs and update week total ────────────────
+  let weekBookedRev = 0;
+  for (let di = 0; di < 7; di++) {
+    weekBookedRev += parseFloat(document.getElementById(`bookedrev-${di}`)?.value) || 0;
+  }
+  const wkBookedEl = document.getElementById('bookedrev-week');
+  if (wkBookedEl) wkBookedEl.textContent = weekBookedRev > 0 ? `$${Math.round(weekBookedRev).toLocaleString()}` : '—';
+
   // Weekly target display
   const trgWkEl = document.getElementById('trg-week');
   const trgWkPctEl = document.getElementById('trg-week-pct');
   const trgWkSchedEl = document.getElementById('trg-week-scheduled');
-
   // Always show scheduled labor total
   if (trgWkSchedEl) {
     if (weekBudget) {
@@ -885,27 +934,16 @@ function recalc() {
     }
   }
 
-  if (trgWkEl && weekRev) {
-    const lo = Math.round(weekRev * 0.28), hi = Math.round(weekRev * 0.33);
+  if (trgWkEl && weekBookedRev) {
+    const lo = Math.round(weekBookedRev * 0.28), hi = Math.round(weekBookedRev * 0.33);
     trgWkEl.textContent = `$${lo.toLocaleString()} – $${hi.toLocaleString()}`;
     trgWkEl.style.color = !weekBudget ? 'var(--muted)' : (weekBudget >= lo && weekBudget <= hi) ? 'var(--green)' : weekBudget < lo ? 'var(--gold)' : 'var(--red)';
-    if (trgWkPctEl) trgWkPctEl.textContent = weekPct ? `${weekPct.toFixed(1)}% of revenue` : '28–33% target';
+    if (trgWkPctEl) trgWkPctEl.textContent = weekPct ? `${weekPct.toFixed(1)}% of revenue` : '28–33% of booked rev';
   } else if (trgWkEl) {
     trgWkEl.textContent = '—';
-    if (trgWkPctEl) trgWkPctEl.textContent = 'enter revenue';
+    if (trgWkPctEl) trgWkPctEl.textContent = 'enter booked revenue';
   }
 
-
-  // ── ROOMS BOOKED REVENUE — sum inputs and update week total ────────────────
-  (function() {
-    let bookedTotal = 0;
-    for (let di = 0; di < 7; di++) {
-      const v = parseFloat(document.getElementById(`bookedrev-${di}`)?.value) || 0;
-      bookedTotal += v;
-    }
-    const wkEl = document.getElementById('bookedrev-week');
-    if (wkEl) wkEl.textContent = bookedTotal > 0 ? `$${Math.round(bookedTotal).toLocaleString()}` : '—';
-  })();
 
   updateSummary(weekBudget, weekRev, weekActual, weekActRev, weekPct);
   scheduleAutoSave();
@@ -1033,6 +1071,11 @@ function saveLocal(notify = true) {
   // Also track which weeks have been saved
   const wkIndex = JSON.parse(localStorage.getItem('hsc-week-index') || '[]');
   if (!wkIndex.includes(key)) { wkIndex.unshift(key); localStorage.setItem('hsc-week-index', JSON.stringify(wkIndex.slice(0,52))); }
+  // ── Save roster (names + rates) globally — explicit Save only, never auto-save ──
+  if (notify) {
+    const roster = POSITIONS.map(p => ({name:p.name, rate:p.rate, dailyRate:p.dailyRate}));
+    localStorage.setItem('hsc-roster', JSON.stringify({roster, saved_at: Date.now()}));
+  }
   cloudPush();
   if (notify) showBanner('💾 Draft saved for this week.');
 }
@@ -1075,7 +1118,7 @@ function loadWeek(key) {
       _occrooms  = data.occrooms  || null;
       _actrevs   = data.actrevs   || null;
       _bookedrevs= data.bookedrevs|| null;
-      if (data.positions) data.positions.forEach((p, pi) => { if (POSITIONS[pi]) { POSITIONS[pi].name = p.name; POSITIONS[pi].rate = p.rate; if (p.dailyRate != null) POSITIONS[pi].dailyRate = p.dailyRate; } });
+      if (data.positions) data.positions.forEach((p, pi) => { if (POSITIONS[pi] && data.positions.length === POSITIONS.length) { POSITIONS[pi].name = p.name; POSITIONS[pi].rate = p.rate; if (p.dailyRate != null) POSITIONS[pi].dailyRate = p.dailyRate; } });
       if (data.state) Object.keys(data.state).forEach(pi => { state[pi] = state[pi] || {}; Object.keys(data.state[pi]).forEach(di => { state[pi][di] = data.state[pi][di]; }); });
       // Check if this week was submitted
       const hist = JSON.parse(localStorage.getItem('hsc-history') || '[]');
@@ -1243,7 +1286,7 @@ function renderHistory() {
   const fmtPct = v => v != null ? `${v}%` : '—';
   const fmtVar = v => v != null ? `${v >= 0 ? '+' : ''}$${Math.round(Math.abs(v)).toLocaleString()}` : '—';
   const pctClass = v => !v ? '' : v < 28 ? 'style="color:var(--gold)"' : v <= 33 ? 'style="color:var(--green)"' : 'style="color:var(--red)"';
-  const varClass = v => !v ? '' : v <= 0 ? 'style="color:var(--green)"' : v < 200 ? 'style="color:var(--gold)"' : 'style="color:var(--red)"';
+  const varClass = v => !v ? '' : v > 0 ? 'style="color:var(--green)"' : 'style="color:var(--red)"';
 
   tbody.innerHTML = hist.map(h => {
     // Compute actual labor % from saved actRev if available
@@ -1285,6 +1328,28 @@ function showBanner(msg) {
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
+
+// Apply saved roster (names + rates) to POSITIONS before building the table
+function applyRoster() {
+  try {
+    const cloudRoster = (_cloudData && _cloudData['hsc-roster'])
+      ? (typeof _cloudData['hsc-roster'] === 'object' ? _cloudData['hsc-roster'] : JSON.parse(_cloudData['hsc-roster']))
+      : null;
+    const localRaw = localStorage.getItem('hsc-roster');
+    const localRoster = localRaw ? JSON.parse(localRaw) : null;
+    const cloudTs = cloudRoster?.saved_at || 0;
+    const localTs = localRoster?.saved_at || 0;
+    const best = (localTs > cloudTs) ? localRoster : (cloudRoster || localRoster);
+    if (!best || !Array.isArray(best.roster)) return;
+    best.roster.forEach((r, pi) => {
+      if (!POSITIONS[pi]) return;
+      if (r.name) POSITIONS[pi].name = r.name;
+      if (r.rate != null) POSITIONS[pi].rate = r.rate;
+      if (r.dailyRate != null) POSITIONS[pi].dailyRate = r.dailyRate;
+    });
+  } catch(e) {}
+}
+
 buildTable();
 // Honor ?week=YYYY-MM-DD param (e.g. from seed page redirect)
 (function() {
@@ -1297,7 +1362,7 @@ buildTable();
     setCurrentWeek();
   }
 })();
-cloudPull().then(() => { setCurrentWeek(); loadWeek(currentWeekKey()); recalc(); recalcOcc(); renderHistory(); });
+cloudPull().then(() => { setCurrentWeek(); applyRoster(); loadWeek(currentWeekKey()); recalc(); recalcOcc(); renderHistory(); _pageLoading = false; });
 </script>
 </body>
 </html>
