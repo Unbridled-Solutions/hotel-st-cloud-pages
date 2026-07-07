@@ -56,6 +56,7 @@
     .card-meta{font-size:.75rem;color:var(--lgray);margin-top:.35rem;display:flex;flex-wrap:wrap;gap:.5rem .9rem}
     .card-meta span b{color:var(--navy);font-weight:600}
     .card-right{display:flex;flex-direction:column;align-items:flex-end;gap:.4rem}
+    .premium-badge{font-size:.8rem;font-weight:700;color:var(--navy);background:var(--cream);border:1.5px solid var(--border);border-radius:8px;padding:.25rem .6rem;white-space:nowrap;text-align:right}
     .card-link{font-size:.75rem;color:var(--blue);text-decoration:none;display:inline-flex;align-items:center;gap:.25rem}
     .card-link:hover{text-decoration:underline}
     .card-notes{font-size:.75rem;color:var(--lgray);background:var(--cream);border-radius:6px;padding:.4rem .65rem;margin-top:.35rem;border-left:3px solid var(--border);line-height:1.5}
@@ -192,6 +193,7 @@ function togglePill(el,k){
 }
 
 function insCard(r){
+  const premDisplay=r.premium?'<div class="premium-badge">'+fmtMoney(r.premium)+'/yr</div>':'';
   return '<div class="card">'+
     '<div class="card-main">'+
       '<div class="card-title">'+(r.building||r.entity)+'</div>'+
@@ -200,11 +202,10 @@ function insCard(r){
         '<span><b>Address</b> '+(r.address||'--')+'</span>'+
         '<span><b>Effective</b> '+fmtDate(r.effective)+'</span>'+
         '<span><b>Expires</b> '+fmtDate(r.expiration)+'</span>'+
-        '<span><b>Premium</b> '+fmtMoney(r.premium)+'/yr</span>'+
       '</div>'+
       (r.note?'<div class="card-notes">'+r.note+'</div>':'')+
     '</div>'+
-    '<div class="card-right">'+statusBadge(r.status,r.expiration)+extLink(r.link,'Policy')+'</div>'+
+    '<div class="card-right">'+statusBadge(r.status,r.expiration)+premDisplay+extLink(r.link,'Policy')+'</div>'+
   '</div>';
 }
 function licCard(r){
