@@ -1,312 +1,367 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="robots" content="noindex, nofollow">
-  <title>Unbridled Properties — Insurance, Licenses and Leases</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --navy:#1f2b3f; --blue:#5a8ba7; --cream:#f7f6f2; --gray:#4b4f54;
-      --lgray:#8a9299; --border:#dde3e8; --white:#fff;
-      --green:#2a7d4f; --green-bg:#e6f4ec;
-      --amber:#b06a00; --amber-bg:#fff3e0;
-      --red:#b42b2b; --red-bg:#fdecea;
-      --purple:#6b47a8; --purple-bg:#f0ebfa;
-    }
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Inter',system-ui,sans-serif;font-size:15px;background:var(--cream);color:var(--navy);min-height:100vh}
-    .header{background:var(--navy);color:#fff;padding:clamp(1.2rem,3vw,2rem) clamp(1rem,4vw,2.5rem);display:flex;flex-wrap:wrap;align-items:center;gap:1rem;justify-content:space-between}
-    .header-left{display:flex;align-items:center;gap:1rem}
-    .header-logo{width:clamp(36px,6vw,46px);height:auto;opacity:.92}
-    .header-title h1{font-size:clamp(1.1rem,2.5vw,1.5rem);font-weight:700;letter-spacing:-.02em}
-    .header-title p{font-size:.8rem;opacity:.65;margin-top:2px}
-    .header-badge{background:var(--blue);color:#fff;font-size:.7rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:.3rem .75rem;border-radius:100px}
-    .stats-strip{display:flex;flex-wrap:wrap;gap:.75rem;padding:1rem clamp(1rem,4vw,2.5rem);background:var(--white);border-bottom:1px solid var(--border)}
-    .stat-card{flex:1;min-width:120px;background:var(--cream);border:1px solid var(--border);border-radius:10px;padding:.8rem 1rem}
-    .stat-label{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--lgray)}
-    .stat-value{font-size:1.4rem;font-weight:700;color:var(--navy);margin-top:.15rem}
-    .stat-sub{font-size:.7rem;color:var(--lgray)}
-    .stat-warn{color:var(--red)} .stat-amber{color:var(--amber)}
-    .search-wrap{background:var(--white);border-bottom:1px solid var(--border);padding:1rem clamp(1rem,4vw,2.5rem);position:sticky;top:0;z-index:100;display:flex;flex-wrap:wrap;gap:.75rem;align-items:center}
-    .search-input{flex:1;min-width:200px;padding:.65rem 1rem .65rem 2.4rem;border:1.5px solid var(--border);border-radius:100px;font-size:.95rem;outline:none;background:var(--cream) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%234b4f54' stroke-width='2' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center;background-size:16px;transition:border-color .2s}
-    .search-input:focus{border-color:var(--blue);background-color:#fff}
-    .search-btn{padding:.65rem 1.4rem;background:var(--navy);color:#fff;border:none;border-radius:100px;font-size:.9rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s}
-    .search-btn:hover{background:var(--blue)}
-    .filter-tabs{display:flex;gap:.4rem;flex-wrap:wrap}
-    .filter-tab{padding:.4rem .9rem;border-radius:100px;font-size:.8rem;font-weight:600;border:1.5px solid var(--border);background:var(--white);color:var(--gray);cursor:pointer;transition:all .15s}
-    .filter-tab:hover{border-color:var(--blue);color:var(--blue)}
-    .filter-tab.active{background:var(--navy);border-color:var(--navy);color:#fff}
-    .result-count{font-size:.8rem;color:var(--lgray);margin-left:auto;white-space:nowrap}
-    .main{padding:clamp(1rem,3vw,2rem) clamp(1rem,4vw,2.5rem)}
-    .building-pills{display:flex;flex-wrap:wrap;gap:.35rem;margin:.25rem 0 .75rem}
-    .building-pill{font-size:.72rem;font-weight:600;cursor:pointer;padding:.25rem .65rem;border-radius:100px;border:1.5px solid var(--border);color:var(--gray);transition:all .15s;background:var(--white)}
-    .building-pill:hover{border-color:var(--blue);color:var(--blue)}
-    .building-pill.active{background:var(--blue);border-color:var(--blue);color:#fff}
-    .section-header{display:flex;align-items:center;gap:.75rem;margin:1.75rem 0 .75rem}
-    .section-header h2{font-size:.85rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lgray)}
-    .section-line{flex:1;height:1px;background:var(--border)}
-    .section-count{font-size:.7rem;color:var(--lgray);background:var(--border);padding:.1rem .55rem;border-radius:100px}
-    .cards{display:flex;flex-direction:column;gap:.5rem}
-    .card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:.9rem 1rem;display:flex;flex-wrap:wrap;gap:.5rem;align-items:flex-start;transition:box-shadow .15s}
-    .card:hover{box-shadow:0 2px 12px rgba(31,43,63,.08)}
-    .card-main{flex:1;min-width:0}
-    .card-title{font-weight:600;font-size:.95rem}
-    .card-sub{font-size:.8rem;color:var(--lgray);margin-top:.15rem}
-    .card-meta{font-size:.75rem;color:var(--lgray);margin-top:.35rem;display:flex;flex-wrap:wrap;gap:.5rem .9rem}
-    .card-meta span b{color:var(--navy);font-weight:600}
-    .card-right{display:flex;flex-direction:column;align-items:flex-end;gap:.4rem}
-    .premium-badge{font-size:.8rem;font-weight:700;color:var(--navy);background:var(--cream);border:1.5px solid var(--border);border-radius:8px;padding:.25rem .6rem;white-space:nowrap;text-align:right}
-    .card-link{font-size:.75rem;color:var(--blue);text-decoration:none;display:inline-flex;align-items:center;gap:.25rem}
-    .card-link:hover{text-decoration:underline}
-    .card-notes{font-size:.75rem;color:var(--lgray);background:var(--cream);border-radius:6px;padding:.4rem .65rem;margin-top:.35rem;border-left:3px solid var(--border);line-height:1.5}
-    .badge{display:inline-flex;align-items:center;gap:.25rem;font-size:.7rem;font-weight:700;letter-spacing:.03em;padding:.2rem .6rem;border-radius:100px;white-space:nowrap}
-    .badge-current{background:var(--green-bg);color:var(--green)}
-    .badge-expiring{background:var(--amber-bg);color:var(--amber)}
-    .badge-expired{background:var(--red-bg);color:var(--red)}
-    .badge-unknown{background:var(--border);color:var(--lgray)}
-    .badge-missing{background:#fff0f3;color:#b42b5a}
-    .badge-inprocess{background:var(--purple-bg);color:var(--purple)}
-    .badge-dot{width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block}
-    .na-section{background:var(--white);border:1.5px solid #f0d0d0;border-radius:12px;margin-top:2rem;overflow:hidden}
-    .na-header{background:#fff5f5;padding:1rem 1.25rem;display:flex;align-items:center;gap:.75rem;border-bottom:1px solid #f0d0d0;cursor:pointer;user-select:none}
-    .na-header h3{font-size:.95rem;font-weight:700;color:var(--red);flex:1}
-    .na-count{background:var(--red-bg);color:var(--red);font-size:.7rem;font-weight:700;padding:.2rem .6rem;border-radius:100px}
-    .na-chevron{font-size:.8rem;color:var(--lgray);transition:transform .2s}
-    .na-chevron.open{transform:rotate(180deg)}
-    .na-body{padding:.75rem 1.25rem 1.25rem}
-    .na-desc{font-size:.8rem;color:var(--lgray);margin-bottom:.75rem;line-height:1.5}
-    .na-items{display:flex;flex-direction:column;gap:.5rem}
-    .na-item{background:var(--cream);border:1px solid var(--border);border-radius:8px;padding:.7rem .9rem;display:flex;flex-wrap:wrap;gap:.5rem;align-items:flex-start}
-    .na-item-main{flex:1;min-width:0}
-    .na-item-cat{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lgray);margin-bottom:.2rem}
-    .na-item-title{font-size:.85rem;font-weight:600;color:var(--navy)}
-    .na-item-building{font-size:.75rem;color:var(--blue)}
-    .na-item-note{font-size:.75rem;color:var(--lgray);margin-top:.25rem;line-height:1.4}
-    .no-results{text-align:center;padding:2.5rem 1rem;color:var(--lgray);font-size:.9rem}
-    .hidden{display:none!important}
-    footer{margin-top:3rem;padding:1.5rem clamp(1rem,4vw,2.5rem);border-top:1px solid var(--border);font-size:.75rem;color:var(--lgray);display:flex;flex-wrap:wrap;gap:.5rem;justify-content:space-between}
-    @media(max-width:600px){.card-right{align-items:flex-start}.stats-strip{gap:.5rem}.stat-card{min-width:90px}}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Unbridled Properties</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#1f2b3f;--blue:#5a8ba7;--cream:#f7f6f2;--gray:#4b4f54;--lgray:#8a9299;--border:#dde3e8;--white:#fff;--green:#2a7d4f;--green-bg:#e6f4ec;--amber:#b06a00;--amber-bg:#fff3e0;--red:#b42b2b;--red-bg:#fdecea;--purple:#6b47a8;--purple-bg:#f0ebfa}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;font-size:15px;background:var(--cream);color:var(--navy)}
+.hdr{background:var(--navy);color:#fff;padding:clamp(1.2rem,3vw,2rem) clamp(1rem,4vw,2.5rem);display:flex;flex-wrap:wrap;align-items:center;gap:1rem;justify-content:space-between}
+.hdr-l{display:flex;align-items:center;gap:1rem}
+.hdr-logo{width:clamp(36px,6vw,46px);height:auto;opacity:.92}
+.hdr h1{font-size:clamp(1.1rem,2.5vw,1.5rem);font-weight:700}
+.hdr p{font-size:.8rem;opacity:.65;margin-top:2px}
+.hdr-badge{background:var(--blue);color:#fff;font-size:.7rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:.3rem .75rem;border-radius:100px}
+.stats{display:flex;flex-wrap:wrap;gap:.75rem;padding:1rem clamp(1rem,4vw,2.5rem);background:var(--white);border-bottom:1px solid var(--border)}
+.stat{flex:1;min-width:110px;background:var(--cream);border:1px solid var(--border);border-radius:10px;padding:.8rem 1rem}
+.stat-lbl{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--lgray)}
+.stat-val{font-size:1.4rem;font-weight:700;margin-top:.15rem}
+.stat-sub{font-size:.7rem;color:var(--lgray)}
+.red{color:var(--red)} .amber{color:var(--amber)}
+.search-bar{background:var(--white);border-bottom:1px solid var(--border);padding:.85rem clamp(1rem,4vw,2.5rem);position:sticky;top:0;z-index:100;display:flex;flex-wrap:wrap;gap:.6rem;align-items:center}
+.search-row{display:flex;gap:.5rem;flex:1;min-width:0}
+.s-input{flex:1;min-width:0;padding:.6rem 1rem .6rem 2.2rem;border:1.5px solid var(--border);border-radius:8px;font-size:.95rem;font-family:inherit;outline:none;background:var(--cream) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%234b4f54' stroke-width='2' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 8px center;background-size:16px;transition:border-color .15s}
+.s-input:focus{border-color:var(--blue);background-color:#fff}
+.s-btn{padding:.6rem 1.3rem;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:.9rem;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap;transition:background .15s}
+.s-btn:hover{background:var(--blue)}
+.s-clear{padding:.6rem .9rem;background:var(--cream);color:var(--lgray);border:1.5px solid var(--border);border-radius:8px;font-size:.85rem;font-family:inherit;cursor:pointer;display:none}
+.filters{display:flex;gap:.35rem;flex-wrap:wrap;width:100%}
+.ftab{padding:.35rem .85rem;border-radius:100px;font-size:.78rem;font-weight:600;border:1.5px solid var(--border);background:var(--white);color:var(--gray);cursor:pointer;transition:all .15s;font-family:inherit}
+.ftab:hover{border-color:var(--blue);color:var(--blue)}
+.ftab.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.rcount{font-size:.78rem;color:var(--lgray);margin-left:auto}
+.main{padding:clamp(.75rem,2vw,1.5rem) clamp(1rem,4vw,2.5rem)}
+.pills{display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.75rem}
+.pill{font-size:.72rem;font-weight:600;cursor:pointer;padding:.25rem .65rem;border-radius:100px;border:1.5px solid var(--border);color:var(--gray);background:var(--white);transition:all .15s}
+.pill:hover{border-color:var(--blue);color:var(--blue)}
+.pill.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.sec-hdr{display:flex;align-items:center;gap:.6rem;margin:1.5rem 0 .6rem}
+.sec-hdr h2{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lgray);white-space:nowrap}
+.sec-hdr .cnt{font-size:.7rem;color:var(--lgray);background:var(--border);padding:.1rem .5rem;border-radius:100px}
+.sec-hdr .line{flex:1;height:1px;background:var(--border)}
+.cards{display:flex;flex-direction:column;gap:.45rem}
+.card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:.85rem 1rem;display:flex;flex-wrap:wrap;gap:.5rem;align-items:flex-start}
+.card:hover{box-shadow:0 2px 10px rgba(31,43,63,.07)}
+.cm{flex:1;min-width:0}
+.ct{font-weight:600;font-size:.95rem}
+.cs{font-size:.8rem;color:var(--lgray);margin-top:.1rem}
+.meta{font-size:.74rem;color:var(--lgray);margin-top:.3rem;display:flex;flex-wrap:wrap;gap:.4rem .8rem}
+.meta b{color:var(--navy);font-weight:600}
+.cnotes{font-size:.74rem;color:var(--lgray);background:var(--cream);border-radius:6px;padding:.35rem .6rem;margin-top:.3rem;border-left:3px solid var(--border);line-height:1.5}
+.cr{display:flex;flex-direction:column;align-items:flex-end;gap:.4rem;flex-shrink:0}
+.prem{font-size:.82rem;font-weight:700;color:var(--navy);background:var(--cream);border:1.5px solid var(--border);border-radius:8px;padding:.22rem .6rem;white-space:nowrap}
+.link{font-size:.74rem;color:var(--blue);text-decoration:none}
+.link:hover{text-decoration:underline}
+.badge{display:inline-flex;align-items:center;gap:.25rem;font-size:.7rem;font-weight:700;padding:.2rem .55rem;border-radius:100px;white-space:nowrap}
+.b-cur{background:var(--green-bg);color:var(--green)}
+.b-exp{background:var(--amber-bg);color:var(--amber)}
+.b-old{background:var(--red-bg);color:var(--red)}
+.b-none{background:var(--border);color:var(--lgray)}
+.b-miss{background:#fff0f3;color:#b42b5a}
+.b-proc{background:var(--purple-bg);color:var(--purple)}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block}
+.empty{text-align:center;padding:2.5rem 1rem;color:var(--lgray);font-size:.9rem}
+.na{background:var(--white);border:1.5px solid #f0d0d0;border-radius:12px;margin-top:2rem;overflow:hidden}
+.na-hdr{background:#fff5f5;padding:.9rem 1.25rem;display:flex;align-items:center;gap:.75rem;border-bottom:1px solid #f0d0d0;cursor:pointer;user-select:none}
+.na-hdr h3{font-size:.9rem;font-weight:700;color:var(--red);flex:1}
+.na-cnt{background:var(--red-bg);color:var(--red);font-size:.7rem;font-weight:700;padding:.15rem .55rem;border-radius:100px}
+.chev{font-size:.75rem;color:var(--lgray);transition:transform .2s;display:inline-block}
+.chev.up{transform:rotate(180deg)}
+.na-body{padding:.75rem 1.25rem 1.25rem}
+.na-desc{font-size:.8rem;color:var(--lgray);margin-bottom:.75rem;line-height:1.5}
+.na-list{display:flex;flex-direction:column;gap:.45rem}
+.na-item{background:var(--cream);border:1px solid var(--border);border-radius:8px;padding:.65rem .9rem;display:flex;flex-wrap:wrap;gap:.5rem;align-items:flex-start}
+.na-m{flex:1;min-width:0}
+.na-cat{font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lgray);margin-bottom:.15rem}
+.na-title{font-size:.84rem;font-weight:600}
+.na-bld{font-size:.74rem;color:var(--blue)}
+.na-note{font-size:.74rem;color:var(--lgray);margin-top:.2rem;line-height:1.4}
+footer{margin-top:3rem;padding:1.25rem clamp(1rem,4vw,2.5rem);border-top:1px solid var(--border);font-size:.74rem;color:var(--lgray);display:flex;flex-wrap:wrap;gap:.5rem;justify-content:space-between}
+@media(max-width:560px){.cr{align-items:flex-start}.search-row{flex-wrap:wrap}}
+</style>
 </head>
 <body>
-<div class="header">
-  <div class="header-left">
-    <img class="header-logo" src="logos/unbridled-elk-icon-white.png" alt="Unbridled">
-    <div class="header-title">
-      <h1>Unbridled Properties</h1>
-      <p>Insurance &middot; Licenses &middot; Leases</p>
-    </div>
+
+<div class="hdr">
+  <div class="hdr-l">
+    <img class="hdr-logo" src="logos/unbridled-elk-icon-white.png" alt="">
+    <div><h1>Unbridled Properties</h1><p>Insurance &middot; Licenses &middot; Leases</p></div>
   </div>
-  <span class="header-badge">Internal</span>
+  <span class="hdr-badge">Internal</span>
 </div>
-<div class="stats-strip" id="statsStrip"></div>
-<div class="search-wrap">
-  <input type="text" class="search-input" id="searchInput" placeholder="Search building, entity, tenant, address..." autocomplete="off">
-  <button class="search-btn" id="searchBtn" onclick="render()">Search</button>
-  <div class="filter-tabs" id="filterTabs">
-    <button class="filter-tab active" data-filter="all">All</button>
-    <button class="filter-tab" data-filter="insurance">Insurance</button>
-    <button class="filter-tab" data-filter="licenses">Licenses</button>
-    <button class="filter-tab" data-filter="leases">Leases</button>
-    <button class="filter-tab" data-filter="expired">Expired</button>
+
+<div class="stats" id="stats"></div>
+
+<div class="search-bar">
+  <div class="search-row">
+    <input class="s-input" id="sInput" type="text" placeholder="Search: Holdings III, Hotel St Cloud, liquor, 631 Main..." autocomplete="off">
+    <button class="s-btn" id="sBtn">Search</button>
+    <button class="s-clear" id="sClear">Clear</button>
   </div>
-  <span class="result-count" id="resultCount"></span>
+  <div class="filters" id="filters">
+    <button class="ftab on" data-f="all">All</button>
+    <button class="ftab" data-f="insurance">Insurance</button>
+    <button class="ftab" data-f="licenses">Licenses</button>
+    <button class="ftab" data-f="leases">Leases</button>
+    <button class="ftab" data-f="expired">Expired</button>
+    <span class="rcount" id="rcount"></span>
+  </div>
 </div>
+
 <div class="main">
-  <div class="building-pills" id="buildingPills"></div>
-  <div id="resultSections"></div>
-  <div class="na-section">
-    <div class="na-header" onclick="toggleNA()">
+  <div class="pills" id="pills"></div>
+  <div id="sections"></div>
+
+  <div class="na" id="naBox">
+    <div class="na-hdr" id="naHdr">
       <h3>Needs Attention</h3>
-      <span class="na-count" id="naCount"></span>
-      <span class="na-chevron open" id="naChevron">&#9660;</span>
+      <span class="na-cnt" id="naCnt"></span>
+      <span class="chev up" id="naChev">&#9660;</span>
     </div>
-    <div class="na-body" id="naBody">
-      <p class="na-desc">Records where we are missing current documentation or waiting on renewals. Drop docs in the chat and MC will enter them automatically.</p>
-      <div class="na-items" id="naItems"></div>
+    <div id="naBody">
+      <div class="na-body">
+        <p class="na-desc">Missing or in-process records. Drop docs in the chat and MC will update automatically.</p>
+        <div class="na-list" id="naList"></div>
+      </div>
     </div>
   </div>
 </div>
+
 <footer>
-  <span>Unbridled Properties Registry &middot; Internal use only</span>
-  <span id="footerDate"></span>
+  <span>Unbridled Properties &middot; Internal</span>
+  <span id="fdate"></span>
 </footer>
+
 <script>
-const DATA = {"leases": [{"id": "rec1pNuc1Pc1W9LoL", "building": "Hotel St. Cloud", "tenant": "Fremont Public House, LLC (Restaurant/FP)", "suite": "631", "type": "Triple Net Lease", "expiration": "2052-10-31", "rent": 0, "cam": 0, "contact": "Unbridled Holdings III, LLC (Lessor)", "notes": "TNL #149 Restaurant outlet. Dated Sep 30 2023. Lessor: Holdings III. Lessee: Fremont Public House LLC. Rent per Exhibit B. Lessee must carry insurance + name Lessor as additional insured.", "link": "", "status": "current"}, {"id": "rec5Kt03Bub4XfPJJ", "building": "Apex", "tenant": "UnbridledACTS", "suite": "14", "type": "1-year lease", "expiration": "2025-12-31", "rent": 800, "cam": 160, "contact": "Lindsay Wyss", "notes": "", "link": "", "status": "expired"}, {"id": "rec5rigbxh8lmoPa6", "building": "Apex", "tenant": "", "suite": "11", "type": "", "expiration": "", "rent": 0, "cam": 0, "contact": "", "notes": "", "link": "", "status": "unknown"}, {"id": "rec76vqrJjAAZM7bW", "building": "Apex", "tenant": "Unbridled Solutions", "suite": "12", "type": "1-year lease", "expiration": "2025-12-31", "rent": 1200, "cam": 240, "contact": "Lindsay Wyss", "notes": "", "link": "", "status": "expired"}, {"id": "rec7KTgautUVCCo9I", "building": "414 Main", "tenant": "Artists' Gallery, LLC", "suite": "416", "type": "3 year lease", "expiration": "2026-12-31", "rent": 950, "cam": 0, "contact": "Sammy Burman", "notes": "", "link": "https://www.dropbox.com/s/pxt04cu4hw1lcwv/The_Artists__Gallery__LLC_Lease_-_416_Main.pdf?dl=0", "status": "current"}, {"id": "rec8Fm7tbCi3x9hTs", "building": "Harrison", "tenant": "Harrison Suites", "suite": "613", "type": "2 year", "expiration": "2027-04-30", "rent": 0, "cam": 0, "contact": "", "notes": "", "link": "", "status": "current"}, {"id": "recAQPfCHvHjYdn3i", "building": "Apex", "tenant": "", "suite": "13", "type": "", "expiration": "", "rent": 0, "cam": 0, "contact": "", "notes": "", "link": "", "status": "unknown"}, {"id": "recDTMtfoa32ZWHq2", "building": "Apex", "tenant": "Lower Ark", "suite": "4", "type": "2-year ", "expiration": "2027-04-30", "rent": 450, "cam": 90, "contact": "Blake Osborn", "notes": "", "link": "", "status": "current"}, {"id": "recDm6qliibCkcp4n", "building": "Apex", "tenant": "p3 Communities\n", "suite": "2", "type": "", "expiration": "2027-04-30", "rent": 300, "cam": 25, "contact": "Lester Limon\n\n", "notes": "", "link": "", "status": "current"}, {"id": "recMXqwk0GrJyveGQ", "building": "Harrison", "tenant": "Feathered Unicorn", "suite": "611", "type": "3 year lease", "expiration": "2029-12-31", "rent": 2950, "cam": 0, "contact": "Elaine Lucero", "notes": "", "link": "", "status": "current"}, {"id": "recPinfv13fAtvLAT", "building": "Apex", "tenant": "White Sage Massage", "suite": "6", "type": "1-year lease", "expiration": "2027-02-28", "rent": 450, "cam": 90, "contact": "Nadina Menefee", "notes": "", "link": "", "status": "current"}, {"id": "recQXllbSuU3G2HA4", "building": "Hotel St. Cloud", "tenant": "Fremont Public House, LLC (Bar/1887)", "suite": "631", "type": "Triple Net Lease", "expiration": "2052-10-31", "rent": 0, "cam": 0, "contact": "Unbridled Holdings III, LLC (Lessor)", "notes": "TNL #150 Bar outlet. Dated Nov 10 2022. Lessor: Holdings III. Lessee: Fremont Public House LLC. Rent per Exhibit B. Lessee must carry insurance + name Lessor as additional insured.", "link": "", "status": "current"}, {"id": "recTUTMvfOUr4Qwr0", "building": "Apex", "tenant": "", "suite": "3", "type": "", "expiration": "", "rent": 0, "cam": 0, "contact": "", "notes": "", "link": "", "status": "unknown"}, {"id": "recXzu6rt44eZQm9Q", "building": "Harrison", "tenant": "Bella Capelli", "suite": "617", "type": "month to month", "expiration": "", "rent": 925, "cam": 0, "contact": "Elsa\n", "notes": "", "link": "", "status": "unknown"}, {"id": "recYFFujWpQLbUz7q", "building": "Apex", "tenant": "", "suite": "9", "type": "", "expiration": "", "rent": 0, "cam": 0, "contact": "", "notes": "", "link": "", "status": "unknown"}, {"id": "recaY4W7hGoTMeof1", "building": "Annex", "tenant": "Unbridled Hospitality Group", "suite": "507", "type": "1 year", "expiration": "2026-12-31", "rent": 7000, "cam": 0, "contact": "Lindsay Wyss", "notes": "", "link": "", "status": "current"}, {"id": "recbYSvEwd9LC9Cdh", "building": "Harrison", "tenant": "Trevarah Studio", "suite": "609", "type": "month to month", "expiration": "", "rent": 900, "cam": 0, "contact": "Ara\n", "notes": "", "link": "", "status": "unknown"}, {"id": "recbfV7zHmoajzFB1", "building": "Std Oil / UHG Office", "tenant": "Unbridled Hospitality Group, LLC", "suite": "701", "type": "2026-2035 (2nd Amendment)", "expiration": "2035-12-31", "rent": 3200, "cam": 522, "contact": "Josh Ary \u2014 JPA Properties LLC", "notes": "601 Main + 110 N 7th. Landlord: JPA Properties LLC (Josh Ary). $3,200/mo + ~$522 CAM. 3% annual escalator yr 3+. Landlord completing parking lot improvements repaid via rent.", "link": "", "status": "current"}, {"id": "recliip0KpcmAcpLR", "building": "Harrison", "tenant": "Proficient Property Management", "suite": "615", "type": "5 year lease", "expiration": "2029-06-30", "rent": 925, "cam": 0, "contact": "Bernard C Kreul (Lessor)", "notes": "Commercial lease 60 months. Jul 1 2024 \u2013 Jun 30 2029. $925/mo yrs 1-4, $985/mo yr 5. $500 deposit. Lessor: Bernard C Kreul.", "link": "", "status": "current"}, {"id": "recoUiJA5s5IXz5Fv", "building": "414 Main", "tenant": "Red Canyon Cycles (Mel's Mill)", "suite": "414", "type": "3 year lease", "expiration": "2029-03-31", "rent": 950, "cam": 0, "contact": "Scott Eckstrom", "notes": "updated lease from $700 to $950/month in April 2026", "link": "", "status": "current"}, {"id": "recp3zYUBl5FoJFmG", "building": "Apex", "tenant": "", "suite": "10", "type": "", "expiration": "", "rent": 0, "cam": 0, "contact": "", "notes": "", "link": "", "status": "unknown"}, {"id": "recq8rZN8llkmyMcE", "building": "Apex", "tenant": "p3 Communities", "suite": "1", "type": "2-year ", "expiration": "2027-04-30", "rent": 300, "cam": 25, "contact": "Lester Limon\n", "notes": "", "link": "", "status": "current"}, {"id": "recqbj4AZb8wORxWC", "building": "Apex", "tenant": "Savio House", "suite": "8", "type": "1-year lease", "expiration": "2027-04-30", "rent": 450, "cam": 90, "contact": "Mary Vertrees\n", "notes": "", "link": "", "status": "current"}, {"id": "recr1D8tPXr6Tr1uN", "building": "Harrison", "tenant": "James Shannon", "suite": "1", "type": "1 year", "expiration": "2027-05-31", "rent": 850, "cam": 0, "contact": "James Shannon", "notes": "", "link": "", "status": "current"}, {"id": "reczs1fXGtArZ7ZO0", "building": "Hotel St. Cloud", "tenant": "Hotel St. Cloud, LLC", "suite": "631", "type": "Triple Net Lease", "expiration": "2052-10-31", "rent": 0, "cam": 0, "contact": "Unbridled Holdings III, LLC (Lessor)", "notes": "TNL #148 Hotel outlet. Commenced Mar 31 2024. Lessor: Holdings III. Lessee must carry full insurance + name Lessor as additional insured. Rent per Exhibit B.", "link": "", "status": "current"}], "insurance": [{"id": "rec0GSx53WlaOi3VU", "entity": "Unbridled Hospitality Group", "building": "UHG Van Insurance", "address": "631 Main St", "type": "Commercial Auto", "effective": "2026-06-15", "expiration": "2027-06-14", "premium": 4691, "link": "", "note": "Login info:  Account login created for: account.apps.progressive.com Username: unbridledhospitality Password: Hospitality2026!", "status": "current"}, {"id": "rec9v0RpvbUKBPJQ0", "entity": "Unbridled Holdings III", "building": "Standard Oil & Construction Office", "address": "701 Main St. & 110 N 7th St", "type": "Business Owner's", "effective": "2022-10-14", "expiration": "2024-10-14", "premium": 284, "link": "https://www.dropbox.com/s/linqturzd5lwj40/701%20%26%20110%20N%207th%2010.14.23.pdf?dl=0", "note": "", "status": "expired"}, {"id": "recDPQgeUXp4R2wnp", "entity": "Unbridled Holdings V", "building": "Abstract", "address": "709 Main St. ", "type": "Property Insurance", "effective": "2023-10-14", "expiration": "2025-10-14", "premium": 2332, "link": "https://www.dropbox.com/s/y7343k8dufrk61a/H5%20Policy%2010.14.23.pdf?dl=0", "note": "", "status": "expired"}, {"id": "recI7ClqFQ1NEqMdO", "entity": "Unbridled Holdings IX", "building": "Scholastica & Chapel", "address": "701 N 7th St & 707 N 7th St, Canon City CO 81212", "type": "Commercial Package Policy", "effective": "2026-02-28", "expiration": "2027-02-28", "premium": 7025.19, "link": "https://www.dropbox.com/s/xodseguklwanauz/2023-2024%20PKG%20Policy%20%28UH%20IX%20-%20701%20and%20707%207th%20Street%29.pdf?dl=0", "note": "Evanston Insurance Company (Non-Admitted, AM Best A XV). Renewal of policy 2AA424819. Quote #8376042A. RPS Contact: Carl Thompson 210-838-7968 Carl_Thompson@rpsins.com. Producer: Esther Gunsolus, Unbridled Insurance Agency LLC. Bound confirmed Jul 2026.", "status": "current"}, {"id": "recJDPKrCYnkU3IOy", "entity": "Unbridled Holdings VII", "building": "Annex", "address": "507 Main St.", "type": "Property Insurance", "effective": "2022-10-01", "expiration": "2025-10-01", "premium": 8811, "link": "https://www.dropbox.com/s/kwph8sjlcddngp3/H7%20Policy%2010%2001%202023.pdf?dl=0", "note": "", "status": "expired"}, {"id": "recN7zUCGfedOm5wT", "entity": "Unbridled Hospitality Group", "building": "Hotel St. Cloud", "address": "631 Main St.", "type": "Business Owner's", "effective": "2024-02-06", "expiration": "2025-02-06", "premium": 4485, "link": "https://www.dropbox.com/scl/fi/bbok0cnzwqcorlp3sfsn1/FREMONT-PUBLIC-HOUSE-2023-2024-CHUBB-BOP-POLICY.pdf?rlkey=lry6200nq8nysnt8ncwxvclrw&dl=0", "note": "", "status": "expired"}, {"id": "recQENw3IwIebAPUh", "entity": "Unbridled Holdings IV", "building": "Apex Commons", "address": "425-431 Main St.", "type": "Property Insurance", "effective": "2024-01-14", "expiration": "2025-01-14", "premium": 6997, "link": "https://www.dropbox.com/scl/fi/mtpzs9xqq00by811tfuml/H4-Proof-of-Coverage-1.14.25.pdf?rlkey=gr3shvnutg3b91synaahd87dp&dl=0", "note": "", "status": "expired"}, {"id": "recRopiDyhAzCLYYF", "entity": "Unbridled Companies LLC", "building": "414 Main", "address": "414 Main St.", "type": "Property Insurance", "effective": "2023-03-12", "expiration": "2024-03-12", "premium": 5240.64, "link": "https://www.dropbox.com/s/kd3cqc5f6dys7sg/Unbridled%20Companies%2C%20LLC%20_%202023-2024%20Century%20Surety%20Company%20Commercial%20Package%20Proposal%20-%20signed.pdf?dl=0", "note": "", "status": "expired"}, {"id": "recYWQm9Da9zkhvQ3", "entity": "Fremont Provisions, LLC", "building": "Fremont Provisions", "address": "507 Main St.", "type": "Catering & Event Business Insurance", "effective": "2022-12-15", "expiration": "2024-12-15", "premium": 2894, "link": "https://www.dropbox.com/s/b7espnfcfbfjgqd/FP%20Business%20Owner%27s%2012.15.23%20.pdf?dl=0", "note": "first bill is under \"Freemont Proivsions LLC\" so if you have to look it up it may be under this name", "status": "expired"}, {"id": "recZh7QcisMUCJrbH", "entity": "Unbridled Holdings III", "building": "Hotel St. Cloud", "address": "631 Main St.", "type": "Owner's Interest (policy during construction)", "effective": "2021-11-08", "expiration": "2025-03-22", "premium": 17301.94, "link": "https://www.dropbox.com/s/51zurwbel5yfw9e/HSC%20Owner%27s%20Interest%20%28Executed%29?dl=0", "note": "extended this policy from expiring in feb 2024, to march 2025. Esther and Tyler have full policy docs", "status": "expired"}, {"id": "recvpCYb3wb5rsQpM", "entity": "Unbridled Holdings VI", "building": "Post Office", "address": "505 Macon Ave. ", "type": "Property Insurance", "effective": "2022-07-29", "expiration": "2025-07-29", "premium": 5241, "link": "", "note": "", "status": "expired"}], "licenses": [{"id": "rec3H7mXzcElqU51W", "entity": "Fremont Provisions LLC", "type": "Sales Tax License", "address": "507 Main St.", "number": "94468681-0000", "expiration": "2025-12-31", "link": "https://www.dropbox.com/s/3jb5y0baf0rz2gf/License.pdf?dl=0", "status": "expired"}, {"id": "rec5rkLi71UHMw1wT", "entity": "Fremont Provisions LLC", "type": "Retail Food License", "address": "507 Main St.", "number": "RFE17228", "expiration": "2025-12-31", "link": "https://www.dropbox.com/scl/fi/asy60792xkxg969d7et9h/Fremont-Provisions-Retail-License-12.31.24.pdf?rlkey=ofv0fty5fe6tuhn7n8bde6d7c&dl=0", "status": "expired"}, {"id": "rec6AHFh7YnLkKXrz", "entity": "Unbridled Holdings VI LLC dba Post Office Event Center", "type": "Entertainment Facility License (City)", "address": "505 Macon Ave, Canon City CO 81212", "number": "03-12673", "expiration": "2026-12-08", "link": "https://www.dropbox.com/s/7xeset7ilwu6nrp/Post%20Office%20Liquor%20License%2022-23.pdf?dl=0", "status": "current"}, {"id": "rec9fB5p8HRg6dFiF", "entity": "Fremont Provisions LLC", "type": "Manufactured Food License", "address": "507 Main St.", "number": "MFE22139", "expiration": "2022-06-30", "link": "https://www.dropbox.com/s/tpbqech9qhjasfi/Temp%20-%20Registration%20White%20Fremont%20Provisions%20MFE22139%206.7.22.pdf?dl=0", "status": "expired"}, {"id": "recGbpq8cWMheC1gR", "entity": "Fremont Public House LLC", "type": "Wage Withholding License", "address": "631 Main St.", "number": "L 121522 // 95488092", "expiration": "", "link": "https://www.dropbox.com/s/ysin2nm1591ejqg/FPH%20Wage%20Withholding%20License.pdf?dl=0", "status": "unknown"}, {"id": "recJeNBRxgxdZeqpa", "entity": "Unbridled Holdings III", "type": "Sales Tax License", "address": "631 Main St.", "number": "79174881-0000", "expiration": "2023-12-31", "link": "https://www.dropbox.com/s/pfg40iz3911t2c4/Sales%20Tax%20LIcense%20%28Exp%2012.312023.pdf?dl=0", "status": "expired"}, {"id": "recOA7PWn2KtGkFJI", "entity": "", "type": "", "address": "", "number": "", "expiration": "", "link": "", "status": "unknown"}, {"id": "recfFsQBEOhyTJ3Cy", "entity": "Unbridled Hospitality Group (Standard Oil)", "type": "Liquor License", "address": "701 Main St.", "number": "03-23578", "expiration": "2027-05-05", "link": "", "status": "current"}, {"id": "recjpzQuJy2HitNr2", "entity": "Fremont Public House LLC", "type": "Sales Tax License", "address": "631 Main St.", "number": "95488092-0000", "expiration": "2023-12-31", "link": "https://www.dropbox.com/s/kv2viodxaso04jx/License.pdf?dl=0", "status": "expired"}, {"id": "recq8Ft6UmDzmVIG5", "entity": "1887 / Unbridled Hospitality Group", "type": "Retail Food License", "address": "631 Main St.", "number": "RFE22917", "expiration": "2024-12-31", "link": "https://www.dropbox.com/scl/fi/xyhzzxetto3jvw5s6pp2e/Retail-License-1887-12.31.24.pdf?rlkey=5pddd1vi8mq6cgvq612eeg6ee&dl=0", "status": "expired"}, {"id": "recwqWEvGP87boAUV", "entity": "Fremont Provisions LLC dba Fremont Provisions (UHG)", "type": "Liquor & To-Go Liquor \u2014 Hotel & Restaurant (City)", "address": "507 Main St, Canon City CO 81212", "number": "03-14059", "expiration": "2026-12-07", "link": "https://www.dropbox.com/s/jmbud7oi804e7xs/Takeout%20%26%20Delivery%20Permit_FREMONT%20PROVISIONS%20%2303-14059.pdf?dl=0", "status": "current"}, {"id": "recxWZTHOeyWPOSdO", "entity": "Unbridled Hospitality Group (Hotel St Cloud Outlets)", "type": "Liquor & To-Go Liquor", "address": "631 Main St.", "number": "03-17206", "expiration": "2026-08-08", "link": "", "status": "expiring"}], "today": "2026-07-07"};
-const NA = [{"id": "na-1", "category": "Insurance", "building": "Hotel St. Cloud", "entity": "Unbridled Holdings III", "item": "Property Insurance \u2014 current policy", "note": "Previous policy expired Oct 2024. Current certificate needed.", "status": "missing"}, {"id": "na-2", "category": "Insurance", "building": "Apex Commons", "entity": "Unbridled Holdings IV", "item": "Property Insurance \u2014 current policy", "note": "Previous policy expired Jan 2025. Current certificate needed.", "status": "missing"}, {"id": "na-3", "category": "Insurance", "building": "Post Office", "entity": "Unbridled Holdings VI", "item": "Property Insurance \u2014 current policy", "note": "Previous policy expired Jul 2025. Current certificate needed.", "status": "missing"}, {"id": "na-4", "category": "Insurance", "building": "Annex (H7)", "entity": "Unbridled Holdings VII", "item": "Property Insurance \u2014 current policy", "note": "Previous policy expired Oct 2025. Current certificate needed.", "status": "missing"}, {"id": "na-5", "category": "Insurance", "building": "Abstract", "entity": "Unbridled Holdings V", "item": "Property Insurance \u2014 current policy", "note": "Previous policy expired Oct 2025. Current certificate needed.", "status": "missing"}, {"id": "na-6", "category": "Insurance", "building": "Hotel St. Cloud", "entity": "Unbridled Hospitality Group", "item": "Business Owner's Policy (BOP) \u2014 current policy", "note": "Previous BOP expired Feb 2025. Current certificate needed.", "status": "missing"}, {"id": "na-7", "category": "Insurance", "building": "414 Main", "entity": "Unbridled Companies LLC", "item": "Property Insurance \u2014 current policy", "note": "Previous policy expired Mar 2024. Current certificate needed.", "status": "missing"}, {"id": "na-8", "category": "Insurance", "building": "Fremont Provisions", "entity": "Fremont Provisions LLC", "item": "Catering & Event Business Insurance \u2014 current policy", "note": "Previous policy expired Dec 2024. Current certificate needed.", "status": "missing"}, {"id": "na-9", "category": "License", "building": "Hotel St. Cloud", "entity": "Unbridled Hospitality Group", "item": "Liquor and To-Go Liquor License \u2014 631 Main St", "note": "Renewal application submitted early May 2026. Awaiting updated license by mail. Expiration: Aug 8 2026.", "status": "in-process"}, {"id": "na-10", "category": "License", "building": "Fremont Provisions (H7 Annex)", "entity": "Fremont Provisions LLC", "item": "Sales Tax License \u2014 507 Main St", "note": "Expired Dec 31 2025. Renewal needed.", "status": "missing"}, {"id": "na-11", "category": "License", "building": "Fremont Provisions (H7 Annex)", "entity": "Fremont Provisions LLC", "item": "Retail Food License \u2014 507 Main St", "note": "Expired Dec 31 2025. Renewal needed.", "status": "missing"}, {"id": "na-12", "category": "License", "building": "Hotel St. Cloud", "entity": "1887 / Unbridled Hospitality Group", "item": "Retail Food License \u2014 631 Main St", "note": "Expired Dec 31 2024. Renewal or replacement needed.", "status": "missing"}, {"id": "na-13", "category": "Lease", "building": "Apex", "entity": "UnbridledACTS", "item": "Suite 14 lease renewal", "note": "Expired Dec 31 2025. Renewed, vacated, or month-to-month? Needs clarification.", "status": "missing"}, {"id": "na-14", "category": "Lease", "building": "Apex", "entity": "Unbridled Solutions", "item": "Suite 12 lease renewal", "note": "Expired Dec 31 2025. Renewed, vacated, or month-to-month? Needs clarification.", "status": "missing"}, {"id": "na-15", "category": "Lease", "building": "Hotel St. Cloud", "entity": "Unbridled Holdings III / UHG", "item": "Rent schedules (Exhibit B) for TNL 148, 149, 150", "note": "Three TNLs on file (Hotel, Bar, Restaurant outlets). Rent amounts per Exhibit B not yet entered.", "status": "missing"}];
+var DATA={"leases": [{"id": "rec1pNuc1Pc1W9LoL", "building": "Hotel St. Cloud", "tenant": "Fremont Public House, LLC (Restaurant/FP)", "suite": "631", "type": "Triple Net Lease", "expiration": "2052-10-31", "rent": 0, "cam": 0, "contact": "Unbridled Holdings III, LLC (Lessor)", "notes": "TNL #149 Restaurant outlet. Dated Sep 30 2023. Lessor: Holdings III. Lessee: Fremont Public House LLC. Rent per Exhibit B. Lessee must carry insurance + name Lessor as additional insured.", "link": "", "status": "current"}, {"id": "rec5Kt03Bub4XfPJJ", "building": "Apex", "tenant": "UnbridledACTS", "suite": "14", "type": "1-year lease", "expiration": "2025-12-31", "rent": 800, "cam": 160, "contact": "Lindsay Wyss", "notes": "", "link": "", "status": "expired"}, {"id": "rec5rigbxh8lmoPa6", "building": "Apex", "tenant": "", "suite": "11", "type": "", "expiration": "", "rent": 0, "cam": 0, "contact": "", "notes": "", "link": "", "status": "unknown"}, {"id": "rec76vqrJjAAZM7bW", "building": "Apex", "tenant": "Unbridled Solutions", "suite": "12", "type": "1-year lease", "expiration": "2025-12-31", "rent": 1200, "cam": 240, "contact": "Lindsay Wyss", "notes": "", "link": "", "status": "expired"}, {"id": "rec7KTgautUVCCo9I", "building": "414 Main", "tenant": "Artists' Gallery, LLC", "suite": "416", "type": "3 year lease", "expiration": "2026-12-31", "rent": 950, "cam": 0, "contact": "Sammy Burman", "notes": "", "link": "https://www.dropbox.com/s/pxt04cu4hw1lcwv/The_Artists__Gallery__LLC_Lease_-_416_Main.pdf?dl=0", "status": "current"}, {"id": "rec8Fm7tbCi3x9hTs", "building": "Harrison", "tenant": "Harrison Suites", "suite": "613", "type": "2 year", "expiration": "2027-04-30", "rent": 0, "cam": 0, "contact": "", "notes": "", "link": "", "status": "current"}, {"id": "recAQPfCHvHjYdn3i", "building": "Apex", "tenant": "", "suite": "13", "type": "", "expiration": "", "rent": 0, "cam": 0, "contact": "", "notes": "", "link": "", "status": "unknown"}, {"id": "recDTMtfoa32ZWHq2", "building": "Apex", "tenant": "Lower Ark", "suite": "4", "type": "2-year ", "expiration": "2027-04-30", "rent": 450, "cam": 90, "contact": "Blake Osborn", "notes": "", "link": "", "status": "current"}, {"id": "recDm6qliibCkcp4n", "building": "Apex", "tenant": "p3 Communities\n", "suite": "2", "type": "", "expiration": "2027-04-30", "rent": 300, "cam": 25, "contact": "Lester Limon\n\n", "notes": "", "link": "", "status": "current"}, {"id": "recMXqwk0GrJyveGQ", "building": "Harrison", "tenant": "Feathered Unicorn", "suite": "611", "type": "3 year lease", "expiration": "2029-12-31", "rent": 2950, "cam": 0, "contact": "Elaine Lucero", "notes": "", "link": "", "status": "current"}, {"id": "recPinfv13fAtvLAT", "building": "Apex", "tenant": "White Sage Massage", "suite": "6", "type": "1-year lease", "expiration": "2027-02-28", "rent": 450, "cam": 90, "contact": "Nadina Menefee", "notes": "", "link": "", "status": "current"}, {"id": "recQXllbSuU3G2HA4", "building": "Hotel St. Cloud", "tenant": "Fremont Public House, LLC (Bar/1887)", "suite": "631", "type": "Triple Net Lease", "expiration": "2052-10-31", "rent": 0, "cam": 0, "contact": "Unbridled Holdings III, LLC (Lessor)", "notes": "TNL #150 Bar outlet. Dated Nov 10 2022. Lessor: Holdings III. Lessee: Fremont Public House LLC. Rent per Exhibit B. Lessee must carry insurance + name Lessor as additional insured.", "link": "", "status": "current"}, {"id": "recTUTMvfOUr4Qwr0", "building": "Apex", "tenant": "", "suite": "3", "type": "", "expiration": "", "rent": 0, "cam": 0, "contact": "", "notes": "", "link": "", "status": "unknown"}, {"id": "recXzu6rt44eZQm9Q", "building": "Harrison", "tenant": "Bella Capelli", "suite": "617", "type": "month to month", "expiration": "", "rent": 925, "cam": 0, "contact": "Elsa\n", "notes": "", "link": "", "status": "unknown"}, {"id": "recYFFujWpQLbUz7q", "building": "Apex", "tenant": "", "suite": "9", "type": "", "expiration": "", "rent": 0, "cam": 0, "contact": "", "notes": "", "link": "", "status": "unknown"}, {"id": "recaY4W7hGoTMeof1", "building": "Annex", "tenant": "Unbridled Hospitality Group", "suite": "507", "type": "1 year", "expiration": "2026-12-31", "rent": 7000, "cam": 0, "contact": "Lindsay Wyss", "notes": "", "link": "", "status": "current"}, {"id": "recbYSvEwd9LC9Cdh", "building": "Harrison", "tenant": "Trevarah Studio", "suite": "609", "type": "month to month", "expiration": "", "rent": 900, "cam": 0, "contact": "Ara\n", "notes": "", "link": "", "status": "unknown"}, {"id": "recbfV7zHmoajzFB1", "building": "Std Oil / UHG Office", "tenant": "Unbridled Hospitality Group, LLC", "suite": "701", "type": "2026-2035 (2nd Amendment)", "expiration": "2035-12-31", "rent": 3200, "cam": 522, "contact": "Josh Ary \u2014 JPA Properties LLC", "notes": "601 Main + 110 N 7th. Landlord: JPA Properties LLC (Josh Ary). $3,200/mo + ~$522 CAM. 3% annual escalator yr 3+. Landlord completing parking lot improvements repaid via rent.", "link": "", "status": "current"}, {"id": "recliip0KpcmAcpLR", "building": "Harrison", "tenant": "Proficient Property Management", "suite": "615", "type": "5 year lease", "expiration": "2029-06-30", "rent": 925, "cam": 0, "contact": "Bernard C Kreul (Lessor)", "notes": "Commercial lease 60 months. Jul 1 2024 \u2013 Jun 30 2029. $925/mo yrs 1-4, $985/mo yr 5. $500 deposit. Lessor: Bernard C Kreul.", "link": "", "status": "current"}, {"id": "recoUiJA5s5IXz5Fv", "building": "414 Main", "tenant": "Red Canyon Cycles (Mel's Mill)", "suite": "414", "type": "3 year lease", "expiration": "2029-03-31", "rent": 950, "cam": 0, "contact": "Scott Eckstrom", "notes": "updated lease from $700 to $950/month in April 2026", "link": "", "status": "current"}, {"id": "recp3zYUBl5FoJFmG", "building": "Apex", "tenant": "", "suite": "10", "type": "", "expiration": "", "rent": 0, "cam": 0, "contact": "", "notes": "", "link": "", "status": "unknown"}, {"id": "recq8rZN8llkmyMcE", "building": "Apex", "tenant": "p3 Communities", "suite": "1", "type": "2-year ", "expiration": "2027-04-30", "rent": 300, "cam": 25, "contact": "Lester Limon\n", "notes": "", "link": "", "status": "current"}, {"id": "recqbj4AZb8wORxWC", "building": "Apex", "tenant": "Savio House", "suite": "8", "type": "1-year lease", "expiration": "2027-04-30", "rent": 450, "cam": 90, "contact": "Mary Vertrees\n", "notes": "", "link": "", "status": "current"}, {"id": "recr1D8tPXr6Tr1uN", "building": "Harrison", "tenant": "James Shannon", "suite": "1", "type": "1 year", "expiration": "2027-05-31", "rent": 850, "cam": 0, "contact": "James Shannon", "notes": "", "link": "", "status": "current"}, {"id": "reczs1fXGtArZ7ZO0", "building": "Hotel St. Cloud", "tenant": "Hotel St. Cloud, LLC", "suite": "631", "type": "Triple Net Lease", "expiration": "2052-10-31", "rent": 0, "cam": 0, "contact": "Unbridled Holdings III, LLC (Lessor)", "notes": "TNL #148 Hotel outlet. Commenced Mar 31 2024. Lessor: Holdings III. Lessee must carry full insurance + name Lessor as additional insured. Rent per Exhibit B.", "link": "", "status": "current"}], "insurance": [{"id": "rec0GSx53WlaOi3VU", "entity": "Unbridled Hospitality Group", "building": "UHG Van Insurance", "address": "631 Main St", "type": "Commercial Auto", "effective": "2026-06-15", "expiration": "2027-06-14", "premium": 4691, "link": "", "note": "Login info:  Account login created for: account.apps.progressive.com Username: unbridledhospitality Password: Hospitality2026!", "status": "current"}, {"id": "rec9v0RpvbUKBPJQ0", "entity": "Unbridled Holdings III", "building": "Standard Oil & Construction Office", "address": "701 Main St. & 110 N 7th St", "type": "Business Owner's", "effective": "2022-10-14", "expiration": "2024-10-14", "premium": 284, "link": "https://www.dropbox.com/s/linqturzd5lwj40/701%20%26%20110%20N%207th%2010.14.23.pdf?dl=0", "note": "", "status": "expired"}, {"id": "recDPQgeUXp4R2wnp", "entity": "Unbridled Holdings V", "building": "Abstract", "address": "709 Main St. ", "type": "Property Insurance", "effective": "2023-10-14", "expiration": "2025-10-14", "premium": 2332, "link": "https://www.dropbox.com/s/y7343k8dufrk61a/H5%20Policy%2010.14.23.pdf?dl=0", "note": "", "status": "expired"}, {"id": "recI7ClqFQ1NEqMdO", "entity": "Unbridled Holdings IX", "building": "Scholastica & Chapel", "address": "701 N 7th St & 707 N 7th St, Canon City CO 81212", "type": "Commercial Package Policy", "effective": "2026-02-28", "expiration": "2027-02-28", "premium": 7025.19, "link": "https://www.dropbox.com/s/xodseguklwanauz/2023-2024%20PKG%20Policy%20%28UH%20IX%20-%20701%20and%20707%207th%20Street%29.pdf?dl=0", "note": "Evanston Insurance Company (Non-Admitted, AM Best A XV). Renewal of policy 2AA424819. Quote #8376042A. RPS Contact: Carl Thompson 210-838-7968 Carl_Thompson@rpsins.com. Producer: Esther Gunsolus, Unbridled Insurance Agency LLC. Bound confirmed Jul 2026.", "status": "current"}, {"id": "recJDPKrCYnkU3IOy", "entity": "Unbridled Holdings VII", "building": "Annex", "address": "507 Main St.", "type": "Property Insurance", "effective": "2022-10-01", "expiration": "2025-10-01", "premium": 8811, "link": "https://www.dropbox.com/s/kwph8sjlcddngp3/H7%20Policy%2010%2001%202023.pdf?dl=0", "note": "", "status": "expired"}, {"id": "recN7zUCGfedOm5wT", "entity": "Unbridled Hospitality Group", "building": "Hotel St. Cloud", "address": "631 Main St.", "type": "Business Owner's", "effective": "2024-02-06", "expiration": "2025-02-06", "premium": 4485, "link": "https://www.dropbox.com/scl/fi/bbok0cnzwqcorlp3sfsn1/FREMONT-PUBLIC-HOUSE-2023-2024-CHUBB-BOP-POLICY.pdf?rlkey=lry6200nq8nysnt8ncwxvclrw&dl=0", "note": "", "status": "expired"}, {"id": "recQENw3IwIebAPUh", "entity": "Unbridled Holdings IV", "building": "Apex Commons", "address": "425-431 Main St.", "type": "Property Insurance", "effective": "2024-01-14", "expiration": "2025-01-14", "premium": 6997, "link": "https://www.dropbox.com/scl/fi/mtpzs9xqq00by811tfuml/H4-Proof-of-Coverage-1.14.25.pdf?rlkey=gr3shvnutg3b91synaahd87dp&dl=0", "note": "", "status": "expired"}, {"id": "recRopiDyhAzCLYYF", "entity": "Unbridled Companies LLC", "building": "414 Main", "address": "414 Main St.", "type": "Property Insurance", "effective": "2023-03-12", "expiration": "2024-03-12", "premium": 5240.64, "link": "https://www.dropbox.com/s/kd3cqc5f6dys7sg/Unbridled%20Companies%2C%20LLC%20_%202023-2024%20Century%20Surety%20Company%20Commercial%20Package%20Proposal%20-%20signed.pdf?dl=0", "note": "", "status": "expired"}, {"id": "recYWQm9Da9zkhvQ3", "entity": "Fremont Provisions, LLC", "building": "Fremont Provisions", "address": "507 Main St.", "type": "Catering & Event Business Insurance", "effective": "2022-12-15", "expiration": "2024-12-15", "premium": 2894, "link": "https://www.dropbox.com/s/b7espnfcfbfjgqd/FP%20Business%20Owner%27s%2012.15.23%20.pdf?dl=0", "note": "first bill is under \"Freemont Proivsions LLC\" so if you have to look it up it may be under this name", "status": "expired"}, {"id": "recZh7QcisMUCJrbH", "entity": "Unbridled Holdings III", "building": "Hotel St. Cloud", "address": "631 Main St.", "type": "Owner's Interest (policy during construction)", "effective": "2021-11-08", "expiration": "2025-03-22", "premium": 17301.94, "link": "https://www.dropbox.com/s/51zurwbel5yfw9e/HSC%20Owner%27s%20Interest%20%28Executed%29?dl=0", "note": "extended this policy from expiring in feb 2024, to march 2025. Esther and Tyler have full policy docs", "status": "expired"}, {"id": "recvpCYb3wb5rsQpM", "entity": "Unbridled Holdings VI", "building": "Post Office", "address": "505 Macon Ave. ", "type": "Property Insurance", "effective": "2022-07-29", "expiration": "2025-07-29", "premium": 5241, "link": "", "note": "", "status": "expired"}], "licenses": [{"id": "rec3H7mXzcElqU51W", "entity": "Fremont Provisions LLC", "type": "Sales Tax License", "address": "507 Main St.", "number": "94468681-0000", "expiration": "2025-12-31", "link": "https://www.dropbox.com/s/3jb5y0baf0rz2gf/License.pdf?dl=0", "status": "expired"}, {"id": "rec5rkLi71UHMw1wT", "entity": "Fremont Provisions LLC", "type": "Retail Food License", "address": "507 Main St.", "number": "RFE17228", "expiration": "2025-12-31", "link": "https://www.dropbox.com/scl/fi/asy60792xkxg969d7et9h/Fremont-Provisions-Retail-License-12.31.24.pdf?rlkey=ofv0fty5fe6tuhn7n8bde6d7c&dl=0", "status": "expired"}, {"id": "rec6AHFh7YnLkKXrz", "entity": "Unbridled Holdings VI LLC dba Post Office Event Center", "type": "Entertainment Facility License (City)", "address": "505 Macon Ave, Canon City CO 81212", "number": "03-12673", "expiration": "2026-12-08", "link": "https://www.dropbox.com/s/7xeset7ilwu6nrp/Post%20Office%20Liquor%20License%2022-23.pdf?dl=0", "status": "current"}, {"id": "rec9fB5p8HRg6dFiF", "entity": "Fremont Provisions LLC", "type": "Manufactured Food License", "address": "507 Main St.", "number": "MFE22139", "expiration": "2022-06-30", "link": "https://www.dropbox.com/s/tpbqech9qhjasfi/Temp%20-%20Registration%20White%20Fremont%20Provisions%20MFE22139%206.7.22.pdf?dl=0", "status": "expired"}, {"id": "recGbpq8cWMheC1gR", "entity": "Fremont Public House LLC", "type": "Wage Withholding License", "address": "631 Main St.", "number": "L 121522 // 95488092", "expiration": "", "link": "https://www.dropbox.com/s/ysin2nm1591ejqg/FPH%20Wage%20Withholding%20License.pdf?dl=0", "status": "unknown"}, {"id": "recJeNBRxgxdZeqpa", "entity": "Unbridled Holdings III", "type": "Sales Tax License", "address": "631 Main St.", "number": "79174881-0000", "expiration": "2023-12-31", "link": "https://www.dropbox.com/s/pfg40iz3911t2c4/Sales%20Tax%20LIcense%20%28Exp%2012.312023.pdf?dl=0", "status": "expired"}, {"id": "recOA7PWn2KtGkFJI", "entity": "", "type": "", "address": "", "number": "", "expiration": "", "link": "", "status": "unknown"}, {"id": "recfFsQBEOhyTJ3Cy", "entity": "Unbridled Hospitality Group (Standard Oil)", "type": "Liquor License", "address": "701 Main St.", "number": "03-23578", "expiration": "2027-05-05", "link": "", "status": "current"}, {"id": "recjpzQuJy2HitNr2", "entity": "Fremont Public House LLC", "type": "Sales Tax License", "address": "631 Main St.", "number": "95488092-0000", "expiration": "2023-12-31", "link": "https://www.dropbox.com/s/kv2viodxaso04jx/License.pdf?dl=0", "status": "expired"}, {"id": "recq8Ft6UmDzmVIG5", "entity": "1887 / Unbridled Hospitality Group", "type": "Retail Food License", "address": "631 Main St.", "number": "RFE22917", "expiration": "2024-12-31", "link": "https://www.dropbox.com/scl/fi/xyhzzxetto3jvw5s6pp2e/Retail-License-1887-12.31.24.pdf?rlkey=5pddd1vi8mq6cgvq612eeg6ee&dl=0", "status": "expired"}, {"id": "recwqWEvGP87boAUV", "entity": "Fremont Provisions LLC dba Fremont Provisions (UHG)", "type": "Liquor & To-Go Liquor \u2014 Hotel & Restaurant (City)", "address": "507 Main St, Canon City CO 81212", "number": "03-14059", "expiration": "2026-12-07", "link": "https://www.dropbox.com/s/jmbud7oi804e7xs/Takeout%20%26%20Delivery%20Permit_FREMONT%20PROVISIONS%20%2303-14059.pdf?dl=0", "status": "current"}, {"id": "recxWZTHOeyWPOSdO", "entity": "Unbridled Hospitality Group (Hotel St Cloud Outlets)", "type": "Liquor & To-Go Liquor", "address": "631 Main St.", "number": "03-17206", "expiration": "2026-08-08", "link": "", "status": "expiring"}], "today": "2026-07-07"};
+var NA=[{"id": "na-1", "category": "Insurance", "building": "Hotel St. Cloud", "entity": "Unbridled Holdings III", "item": "Property Insurance \u2014 current policy", "note": "Previous policy expired Oct 2024. Current certificate needed.", "status": "missing"}, {"id": "na-2", "category": "Insurance", "building": "Apex Commons", "entity": "Unbridled Holdings IV", "item": "Property Insurance \u2014 current policy", "note": "Previous policy expired Jan 2025. Current certificate needed.", "status": "missing"}, {"id": "na-3", "category": "Insurance", "building": "Post Office", "entity": "Unbridled Holdings VI", "item": "Property Insurance \u2014 current policy", "note": "Previous policy expired Jul 2025. Current certificate needed.", "status": "missing"}, {"id": "na-4", "category": "Insurance", "building": "Annex (H7)", "entity": "Unbridled Holdings VII", "item": "Property Insurance \u2014 current policy", "note": "Previous policy expired Oct 2025. Current certificate needed.", "status": "missing"}, {"id": "na-5", "category": "Insurance", "building": "Abstract", "entity": "Unbridled Holdings V", "item": "Property Insurance \u2014 current policy", "note": "Previous policy expired Oct 2025. Current certificate needed.", "status": "missing"}, {"id": "na-6", "category": "Insurance", "building": "Hotel St. Cloud", "entity": "Unbridled Hospitality Group", "item": "Business Owner's Policy (BOP) \u2014 current policy", "note": "Previous BOP expired Feb 2025. Current certificate needed.", "status": "missing"}, {"id": "na-7", "category": "Insurance", "building": "414 Main", "entity": "Unbridled Companies LLC", "item": "Property Insurance \u2014 current policy", "note": "Previous policy expired Mar 2024. Current certificate needed.", "status": "missing"}, {"id": "na-8", "category": "Insurance", "building": "Fremont Provisions", "entity": "Fremont Provisions LLC", "item": "Catering and Event Business Insurance \u2014 current policy", "note": "Previous policy expired Dec 2024. Current certificate needed.", "status": "missing"}, {"id": "na-9", "category": "License", "building": "Hotel St. Cloud", "entity": "Unbridled Hospitality Group", "item": "Liquor and To-Go Liquor License \u2014 631 Main St", "note": "Renewal application submitted early May 2026. Awaiting updated license by mail. Current expiration: Aug 8 2026.", "status": "in-process"}, {"id": "na-10", "category": "License", "building": "Fremont Provisions (H7 Annex)", "entity": "Fremont Provisions LLC", "item": "Sales Tax License \u2014 507 Main St", "note": "Expired Dec 31 2025. Renewal needed.", "status": "missing"}, {"id": "na-11", "category": "License", "building": "Fremont Provisions (H7 Annex)", "entity": "Fremont Provisions LLC", "item": "Retail Food License \u2014 507 Main St", "note": "Expired Dec 31 2025. Renewal needed.", "status": "missing"}, {"id": "na-12", "category": "License", "building": "Hotel St. Cloud", "entity": "1887 / Unbridled Hospitality Group", "item": "Retail Food License \u2014 631 Main St", "note": "Expired Dec 31 2024. Renewal or replacement needed.", "status": "missing"}, {"id": "na-13", "category": "Lease", "building": "Apex", "entity": "UnbridledACTS", "item": "Suite 14 lease renewal", "note": "Expired Dec 31 2025. Renewed, vacated, or month-to-month? Needs clarification.", "status": "missing"}, {"id": "na-14", "category": "Lease", "building": "Apex", "entity": "Unbridled Solutions", "item": "Suite 12 lease renewal", "note": "Expired Dec 31 2025. Renewed, vacated, or month-to-month? Needs clarification.", "status": "missing"}, {"id": "na-15", "category": "Lease", "building": "Hotel St. Cloud", "entity": "Unbridled Holdings III / UHG", "item": "Rent schedules (Exhibit B) for TNL 148, 149, 150", "note": "Three TNLs on file. Rent amounts per Exhibit B not yet entered.", "status": "missing"}];
 
-function fmtDate(d){if(!d)return'--';const[y,m,day]=d.split('-');const mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return mn[+m-1]+' '+(+day)+', '+y}
-function fmtMoney(v){if(!v&&v!==0)return'--';return'$'+Number(v).toLocaleString('en-US',{minimumFractionDigits:0})}
-function daysUntil(d){if(!d)return null;const e=new Date(d+'T00:00:00'),n=new Date();n.setHours(0,0,0,0);return Math.round((e-n)/86400000)}
-function statusBadge(s,exp){
-  const d=daysUntil(exp);
-  if(s==='current') return '<span class="badge badge-current"><span class="badge-dot"></span>Current</span>';
-  if(s==='expiring') return '<span class="badge badge-expiring"><span class="badge-dot"></span>Expiring in '+d+'d</span>';
-  if(s==='expired') return '<span class="badge badge-expired"><span class="badge-dot"></span>Expired</span>';
-  return '<span class="badge badge-unknown">No Date</span>';
+// ── utils ─────────────────────────────────────────────────────────────────────
+function fd(d){if(!d)return'--';var p=d.split('-'),mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return mn[+p[1]-1]+' '+(+p[2])+', '+p[0]}
+function fm(v){if(!v&&v!==0)return'--';return'$'+Number(v).toLocaleString('en-US')}
+function sbadge(s,e){
+  if(s==='current') return '<span class="badge b-cur"><span class="dot"></span>Current</span>';
+  if(s==='expiring'){var d=days(e);return'<span class="badge b-exp"><span class="dot"></span>Expiring '+d+'d</span>';}
+  if(s==='expired') return '<span class="badge b-old"><span class="dot"></span>Expired</span>';
+  return '<span class="badge b-none">No Date</span>';
 }
-function naBadge(s){
-  if(s==='in-process') return '<span class="badge badge-inprocess"><span class="badge-dot"></span>In Process</span>';
-  return '<span class="badge badge-missing"><span class="badge-dot"></span>Missing</span>';
+function nabadge(s){
+  if(s==='in-process')return'<span class="badge b-proc"><span class="dot"></span>In Process</span>';
+  return'<span class="badge b-miss"><span class="dot"></span>Missing</span>';
 }
-function extLink(url,label){if(!url)return'';return'<a class="card-link" href="'+url+'" target="_blank">&#10697; '+label+'</a>'}
+function days(d){if(!d)return'?';var e=new Date(d+'T00:00:00'),n=new Date();n.setHours(0,0,0,0);return Math.round((e-n)/86400000)}
+function elink(url,lbl){if(!url)return'';return'<a class="link" href="'+url+'" target="_blank">&#10697; '+lbl+'</a>'}
 
+// ── build unified record list ─────────────────────────────────────────────────
 function allRecs(){
-  const r=[];
-  DATA.insurance.forEach(x=>r.push({...x,_type:'insurance',_search:[x.entity,x.building,x.address,x.type,x.note].join(' ').toLowerCase(),_bld:x.building}));
-  DATA.licenses.forEach(x=>r.push({...x,_type:'licenses',_search:[x.entity,x.type,x.address,x.number].join(' ').toLowerCase(),_bld:x.address}));
-  DATA.leases.forEach(x=>r.push({...x,_type:'leases',_search:[x.building,x.tenant,x.contact,x.notes,x.type].join(' ').toLowerCase(),_bld:x.building}));
+  var r=[];
+  DATA.insurance.forEach(function(x){
+    r.push(Object.assign({},x,{_t:'insurance',_hay:norm([x.entity,x.building,x.address,x.type,x.note,'insurance'].join(' '))}));
+  });
+  DATA.licenses.forEach(function(x){
+    r.push(Object.assign({},x,{_t:'licenses',_hay:norm([x.entity,x.type,x.address,x.number,'license','licenses'].join(' '))}));
+  });
+  DATA.leases.forEach(function(x){
+    r.push(Object.assign({},x,{_t:'leases',_hay:norm([x.building,x.tenant,x.contact,x.notes,x.type,'lease','leases'].join(' '))}));
+  });
   return r;
 }
 
+// ── case-insensitive, punctuation-tolerant search ─────────────────────────────
+function norm(s){return(s||'').toLowerCase().replace(/[\-\.&',]/g,' ').replace(/\s+/g,' ').trim()}
+function matches(r,q){
+  if(!q)return true;
+  var words=norm(q).split(' ').filter(function(w){return w.length>0});
+  var hay=r._hay;
+  return words.every(function(w){return hay.indexOf(w)!==-1});
+}
+
+// ── stats ─────────────────────────────────────────────────────────────────────
 function renderStats(){
-  const all=allRecs();
-  const exp=all.filter(r=>r.status==='expired').length;
-  const soon=all.filter(r=>r.status==='expiring').length;
-  document.getElementById('statsStrip').innerHTML=
-    '<div class="stat-card"><div class="stat-label">Insurance</div><div class="stat-value">'+DATA.insurance.length+'</div><div class="stat-sub">policies on file</div></div>'+
-    '<div class="stat-card"><div class="stat-label">Licenses</div><div class="stat-value">'+DATA.licenses.length+'</div><div class="stat-sub">licenses on file</div></div>'+
-    '<div class="stat-card"><div class="stat-label">Leases</div><div class="stat-value">'+DATA.leases.length+'</div><div class="stat-sub">active leases</div></div>'+
-    '<div class="stat-card"><div class="stat-label">Expired</div><div class="stat-value '+(exp>0?'stat-warn':'')+'">'+exp+'</div><div class="stat-sub '+(soon>0?'stat-amber':'')+'">'+soon+' expiring within 60d</div></div>'+
-    '<div class="stat-card"><div class="stat-label">Needs Attention</div><div class="stat-value stat-warn">'+NA.length+'</div><div class="stat-sub">missing or in-process</div></div>';
+  var all=allRecs(),exp=0,soon=0;
+  all.forEach(function(r){if(r.status==='expired')exp++;if(r.status==='expiring')soon++;});
+  document.getElementById('stats').innerHTML=
+    stat('Insurance',DATA.insurance.length,'policies on file','')+
+    stat('Licenses',DATA.licenses.length,'licenses on file','')+
+    stat('Leases',DATA.leases.length,'active leases','')+
+    stat('Expired',exp,(soon?soon+' expiring within 60d':'none expiring soon'),exp?'red':'')+
+    stat('Needs Attention',NA.length,'missing or in-process','red');
 }
+function stat(lbl,val,sub,cls){return'<div class="stat"><div class="stat-lbl">'+lbl+'</div><div class="stat-val '+(cls||'')+'">'+val+'</div><div class="stat-sub">'+sub+'</div></div>'}
 
-const BLDGS=[
-  {key:'Hotel St. Cloud',label:'Hotel St. Cloud (H3)'},
-  {key:'Apex',label:'Apex Commons (H4)'},
-  {key:'Annex',label:'Annex (H7)'},
-  {key:'Harrison',label:'Harrison (H10)'},
-  {key:'414 Main',label:'414 Main'},
-  {key:'Std Oil',label:'Std Oil / UHG Office'},
-  {key:'Post Office',label:'Post Office (H6)'},
+// ── building pills ────────────────────────────────────────────────────────────
+var BLDGS=[
+  {key:'Hotel St. Cloud',lbl:'Hotel St. Cloud (H3)'},
+  {key:'Apex',lbl:'Apex Commons (H4)'},
+  {key:'Annex',lbl:'Annex (H7)'},
+  {key:'Harrison',lbl:'Harrison (H10)'},
+  {key:'414 Main',lbl:'414 Main'},
+  {key:'Std Oil',lbl:'Std Oil / UHG Office'},
+  {key:'Post Office',lbl:'Post Office (H6)'}
 ];
-let activePill=null;
+var activePill=null;
 function renderPills(){
-  document.getElementById('buildingPills').innerHTML=BLDGS.map(b=>
-    '<span class="building-pill" data-b="'+b.key+'" onclick="togglePill(this,''+b.key+'')">'+b.label+'</span>'
-  ).join('');
-}
-function togglePill(el,k){
-  if(activePill===k){activePill=null;document.querySelectorAll('.building-pill').forEach(p=>p.classList.remove('active'));}
-  else{activePill=k;document.querySelectorAll('.building-pill').forEach(p=>p.classList.toggle('active',p.dataset.b===k));}
-  render();
+  document.getElementById('pills').innerHTML=BLDGS.map(function(b){
+    return'<span class="pill" data-key="'+b.key+'">'+b.lbl+'</span>';
+  }).join('');
+  document.getElementById('pills').addEventListener('click',function(e){
+    var p=e.target.closest('.pill');if(!p)return;
+    var k=p.dataset.key;
+    if(activePill===k){activePill=null;}else{activePill=k;}
+    document.querySelectorAll('.pill').forEach(function(el){el.classList.toggle('on',el.dataset.key===activePill);});
+    doRender();
+  });
 }
 
+// ── card builders ─────────────────────────────────────────────────────────────
 function insCard(r){
-  const premDisplay=r.premium?'<div class="premium-badge">'+fmtMoney(r.premium)+'/yr</div>':'';
-  return '<div class="card">'+
-    '<div class="card-main">'+
-      '<div class="card-title">'+(r.building||r.entity)+'</div>'+
-      '<div class="card-sub">'+r.entity+' &middot; '+r.type+'</div>'+
-      '<div class="card-meta">'+
+  return'<div class="card">'+
+    '<div class="cm">'+
+      '<div class="ct">'+(r.building||r.entity)+'</div>'+
+      '<div class="cs">'+r.entity+' &middot; '+r.type+'</div>'+
+      '<div class="meta">'+
         '<span><b>Address</b> '+(r.address||'--')+'</span>'+
-        '<span><b>Effective</b> '+fmtDate(r.effective)+'</span>'+
-        '<span><b>Expires</b> '+fmtDate(r.expiration)+'</span>'+
+        '<span><b>Effective</b> '+fd(r.effective)+'</span>'+
+        '<span><b>Expires</b> '+fd(r.expiration)+'</span>'+
       '</div>'+
-      (r.note?'<div class="card-notes">'+r.note+'</div>':'')+
+      (r.note?'<div class="cnotes">'+r.note+'</div>':'')+
     '</div>'+
-    '<div class="card-right">'+statusBadge(r.status,r.expiration)+premDisplay+extLink(r.link,'Policy')+'</div>'+
+    '<div class="cr">'+
+      sbadge(r.status,r.expiration)+
+      (r.premium?'<span class="prem">'+fm(r.premium)+'/yr</span>':'')+
+      elink(r.link,'Policy')+
+    '</div>'+
   '</div>';
 }
 function licCard(r){
-  return '<div class="card">'+
-    '<div class="card-main">'+
-      '<div class="card-title">'+r.entity+'</div>'+
-      '<div class="card-sub">'+r.type+'</div>'+
-      '<div class="card-meta">'+
+  return'<div class="card">'+
+    '<div class="cm">'+
+      '<div class="ct">'+r.entity+'</div>'+
+      '<div class="cs">'+r.type+'</div>'+
+      '<div class="meta">'+
         '<span><b>Address</b> '+(r.address||'--')+'</span>'+
         '<span><b>License #</b> '+(r.number||'--')+'</span>'+
-        '<span><b>Expires</b> '+fmtDate(r.expiration)+'</span>'+
+        '<span><b>Expires</b> '+fd(r.expiration)+'</span>'+
       '</div>'+
     '</div>'+
-    '<div class="card-right">'+statusBadge(r.status,r.expiration)+extLink(r.link,'License')+'</div>'+
+    '<div class="cr">'+sbadge(r.status,r.expiration)+elink(r.link,'License')+'</div>'+
   '</div>';
 }
 function leaseCard(r){
-  return '<div class="card">'+
-    '<div class="card-main">'+
-      '<div class="card-title">'+(r.tenant||'(Vacant)')+'</div>'+
-      '<div class="card-sub">'+r.building+(r.suite?' &middot; Suite '+r.suite:'')+(r.type?' &middot; '+r.type:'')+'</div>'+
-      '<div class="card-meta">'+
+  return'<div class="card">'+
+    '<div class="cm">'+
+      '<div class="ct">'+(r.tenant||'(Vacant)')+'</div>'+
+      '<div class="cs">'+r.building+(r.suite?' &middot; Suite '+r.suite:'')+(r.type?' &middot; '+r.type:'')+'</div>'+
+      '<div class="meta">'+
         (r.contact?'<span><b>Contact</b> '+r.contact+'</span>':'')+
-        '<span><b>Expires</b> '+fmtDate(r.expiration)+'</span>'+
-        (r.rent?'<span><b>Rent</b> '+fmtMoney(r.rent)+'/mo'+(r.cam?' + '+fmtMoney(r.cam)+' CAM':'')+'</span>':'')+
+        '<span><b>Expires</b> '+fd(r.expiration)+'</span>'+
+        (r.rent?'<span><b>Rent</b> '+fm(r.rent)+'/mo'+(r.cam?' + '+fm(r.cam)+' CAM':'')+'</span>':'')+
       '</div>'+
-      (r.notes?'<div class="card-notes">'+r.notes+'</div>':'')+
+      (r.notes?'<div class="cnotes">'+r.notes+'</div>':'')+
     '</div>'+
-    '<div class="card-right">'+statusBadge(r.status,r.expiration)+extLink(r.link,'Lease')+'</div>'+
+    '<div class="cr">'+sbadge(r.status,r.expiration)+elink(r.link,'Lease')+'</div>'+
   '</div>';
 }
 
-let activeFilter='all';
-function matches(r, q){
-  if(!q) return true;
-  const haystack=[r._search,(r.entity||''),(r.address||''),(r.building||''),(r.note||'')].join(' ').toLowerCase();
-  // strip punctuation from both sides so "St Cloud" matches "St. Cloud", "Holdings III" matches etc.
-  const clean=s=>s.replace(/[.\-&']/g,' ').replace(/\s+/g,' ').trim();
-  const words=clean(q).split(' ').filter(Boolean);
-  const hay=clean(haystack);
-  return words.every(w=>hay.includes(w));
-}
-function render(){
-  const q=document.getElementById('searchInput').value.toLowerCase().trim();
-  const all=allRecs();
-  let f=all.filter(r=>{
-    if(activeFilter==='insurance'&&r._type!=='insurance')return false;
-    if(activeFilter==='licenses'&&r._type!=='licenses')return false;
-    if(activeFilter==='leases'&&r._type!=='leases')return false;
-    if(activeFilter==='expired'&&r.status!=='expired')return false;
-    if(activePill){const bp=activePill.toLowerCase(),bld=(r._bld||'').toLowerCase(),ex=((r.entity||'')+(r.address||'')).toLowerCase();if(!bld.includes(bp)&&!ex.includes(bp))return false;}
-    if(!matches(r,q))return false;
-    return true;
+// ── main render ───────────────────────────────────────────────────────────────
+var activeFilter='all';
+
+function doRender(){
+  var q=document.getElementById('sInput').value.trim();
+  var all=allRecs();
+
+  var filtered=all.filter(function(r){
+    if(activeFilter==='insurance'&&r._t!=='insurance')return false;
+    if(activeFilter==='licenses' &&r._t!=='licenses') return false;
+    if(activeFilter==='leases'   &&r._t!=='leases')   return false;
+    if(activeFilter==='expired'  &&r.status!=='expired')return false;
+    if(activePill){
+      var k=norm(activePill),bld=norm(r.building||''),addr=norm(r.address||''),ent=norm(r.entity||'');
+      if(bld.indexOf(k)===-1&&addr.indexOf(k)===-1&&ent.indexOf(k)===-1)return false;
+    }
+    return matches(r,q);
   });
-  document.getElementById('resultCount').textContent=f.length+' record'+(f.length!==1?'s':'');
-  if(!f.length){document.getElementById('resultSections').innerHTML='<div class="no-results">No records match your search.</div>';return;}
-  const grp={insurance:[],licenses:[],leases:[]};
-  f.forEach(r=>grp[r._type].push(r));
-  const meta={insurance:{label:'Insurance Policies',icon:'Shield'},licenses:{label:'Licenses',icon:'Doc'},leases:{label:'Leases',icon:'Building'}};
-  let html='';
-  Object.entries(meta).forEach(([type,m])=>{
-    if(!grp[type].length)return;
-    html+='<div class="section-header"><h2>'+m.label+'</h2><span class="section-count">'+grp[type].length+'</span><div class="section-line"></div></div><div class="cards">';
-    grp[type].forEach(r=>{
-      if(type==='insurance')html+=insCard(r);
-      else if(type==='licenses')html+=licCard(r);
+
+  document.getElementById('rcount').textContent=filtered.length+' record'+(filtered.length!==1?'s':'');
+  document.getElementById('sClear').style.display=q?'block':'none';
+
+  if(!filtered.length){
+    document.getElementById('sections').innerHTML='<div class="empty">No records match. Try fewer words or check the spelling.</div>';
+    return;
+  }
+
+  var grp={insurance:[],licenses:[],leases:[]};
+  filtered.forEach(function(r){grp[r._t].push(r);});
+
+  var secs=[
+    {t:'insurance',lbl:'Insurance Policies'},
+    {t:'licenses', lbl:'Licenses'},
+    {t:'leases',   lbl:'Leases'}
+  ];
+  var html='';
+  secs.forEach(function(s){
+    if(!grp[s.t].length)return;
+    html+='<div class="sec-hdr"><h2>'+s.lbl+'</h2><span class="cnt">'+grp[s.t].length+'</span><div class="line"></div></div><div class="cards">';
+    grp[s.t].forEach(function(r){
+      if(s.t==='insurance')html+=insCard(r);
+      else if(s.t==='licenses')html+=licCard(r);
       else html+=leaseCard(r);
     });
     html+='</div>';
   });
-  document.getElementById('resultSections').innerHTML=html;
+  document.getElementById('sections').innerHTML=html;
 }
 
+// ── needs attention ───────────────────────────────────────────────────────────
 function renderNA(){
-  document.getElementById('naCount').textContent=NA.length+' items';
-  document.getElementById('naItems').innerHTML=NA.map(item=>
-    '<div class="na-item"><div class="na-item-main">'+
-      '<div class="na-item-cat">'+item.category+'</div>'+
-      '<div class="na-item-title">'+item.item+'</div>'+
-      '<div class="na-item-building">'+item.building+' &middot; '+item.entity+'</div>'+
-      '<div class="na-item-note">'+item.note+'</div>'+
-    '</div><div>'+naBadge(item.status)+'</div></div>'
-  ).join('');
+  document.getElementById('naCnt').textContent=NA.length+' items';
+  document.getElementById('naList').innerHTML=NA.map(function(x){
+    return'<div class="na-item">'+
+      '<div class="na-m">'+
+        '<div class="na-cat">'+x.category+'</div>'+
+        '<div class="na-title">'+x.item+'</div>'+
+        '<div class="na-bld">'+x.building+' &middot; '+x.entity+'</div>'+
+        '<div class="na-note">'+x.note+'</div>'+
+      '</div>'+
+      nabadge(x.status)+
+    '</div>';
+  }).join('');
 }
-function toggleNA(){
-  const b=document.getElementById('naBody'),c=document.getElementById('naChevron');
-  const h=b.classList.toggle('hidden');c.classList.toggle('open',!h);
-}
-
-document.getElementById('filterTabs').addEventListener('click',e=>{
-  if(!e.target.classList.contains('filter-tab'))return;
-  document.querySelectorAll('.filter-tab').forEach(t=>t.classList.remove('active'));
-  e.target.classList.add('active');activeFilter=e.target.dataset.filter;render();
+var naOpen=true;
+document.getElementById('naHdr').addEventListener('click',function(){
+  naOpen=!naOpen;
+  document.getElementById('naBody').style.display=naOpen?'block':'none';
+  document.getElementById('naChev').classList.toggle('up',naOpen);
 });
-document.getElementById('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter')render();});
-document.getElementById('footerDate').textContent='Last synced '+new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
 
-renderStats();renderPills();render();renderNA();
+// ── filter tabs ───────────────────────────────────────────────────────────────
+document.getElementById('filters').addEventListener('click',function(e){
+  var t=e.target.closest('.ftab');if(!t)return;
+  document.querySelectorAll('.ftab').forEach(function(el){el.classList.remove('on');});
+  t.classList.add('on');
+  activeFilter=t.dataset.f;
+  doRender();
+});
+
+// ── search button + enter ─────────────────────────────────────────────────────
+document.getElementById('sBtn').addEventListener('click',doRender);
+document.getElementById('sInput').addEventListener('keydown',function(e){if(e.key==='Enter')doRender();});
+document.getElementById('sClear').addEventListener('click',function(){
+  document.getElementById('sInput').value='';
+  document.getElementById('sClear').style.display='none';
+  doRender();
+});
+
+// ── init ──────────────────────────────────────────────────────────────────────
+document.getElementById('fdate').textContent='Last synced '+new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+renderStats();
+renderPills();
+doRender();
+renderNA();
 </script>
 </body>
 </html>
