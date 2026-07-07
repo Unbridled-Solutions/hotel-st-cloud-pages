@@ -33,6 +33,8 @@
     .search-wrap{background:var(--white);border-bottom:1px solid var(--border);padding:1rem clamp(1rem,4vw,2.5rem);position:sticky;top:0;z-index:100;display:flex;flex-wrap:wrap;gap:.75rem;align-items:center}
     .search-input{flex:1;min-width:200px;padding:.65rem 1rem .65rem 2.4rem;border:1.5px solid var(--border);border-radius:100px;font-size:.95rem;outline:none;background:var(--cream) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%234b4f54' stroke-width='2' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center;background-size:16px;transition:border-color .2s}
     .search-input:focus{border-color:var(--blue);background-color:#fff}
+    .search-btn{padding:.65rem 1.4rem;background:var(--navy);color:#fff;border:none;border-radius:100px;font-size:.9rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s}
+    .search-btn:hover{background:var(--blue)}
     .filter-tabs{display:flex;gap:.4rem;flex-wrap:wrap}
     .filter-tab{padding:.4rem .9rem;border-radius:100px;font-size:.8rem;font-weight:600;border:1.5px solid var(--border);background:var(--white);color:var(--gray);cursor:pointer;transition:all .15s}
     .filter-tab:hover{border-color:var(--blue);color:var(--blue)}
@@ -103,6 +105,7 @@
 <div class="stats-strip" id="statsStrip"></div>
 <div class="search-wrap">
   <input type="text" class="search-input" id="searchInput" placeholder="Search building, entity, tenant, address..." autocomplete="off">
+  <button class="search-btn" id="searchBtn" onclick="render()">Search</button>
   <div class="filter-tabs" id="filterTabs">
     <button class="filter-tab active" data-filter="all">All</button>
     <button class="filter-tab" data-filter="insurance">Insurance</button>
@@ -239,6 +242,15 @@ function leaseCard(r){
 }
 
 let activeFilter='all';
+function matches(r, q){
+  if(!q) return true;
+  const haystack=[r._search,(r.entity||''),(r.address||''),(r.building||''),(r.note||'')].join(' ').toLowerCase();
+  // strip punctuation from both sides so "St Cloud" matches "St. Cloud", "Holdings III" matches etc.
+  const clean=s=>s.replace(/[.\-&']/g,' ').replace(/\s+/g,' ').trim();
+  const words=clean(q).split(' ').filter(Boolean);
+  const hay=clean(haystack);
+  return words.every(w=>hay.includes(w));
+}
 function render(){
   const q=document.getElementById('searchInput').value.toLowerCase().trim();
   const all=allRecs();
@@ -248,7 +260,7 @@ function render(){
     if(activeFilter==='leases'&&r._type!=='leases')return false;
     if(activeFilter==='expired'&&r.status!=='expired')return false;
     if(activePill){const bp=activePill.toLowerCase(),bld=(r._bld||'').toLowerCase(),ex=((r.entity||'')+(r.address||'')).toLowerCase();if(!bld.includes(bp)&&!ex.includes(bp))return false;}
-    if(q&&!r._search.includes(q)&&!((r.entity||'')+(r.address||'')+(r.building||'')+(r.note||'')).toLowerCase().includes(q))return false;
+    if(!matches(r,q))return false;
     return true;
   });
   document.getElementById('resultCount').textContent=f.length+' record'+(f.length!==1?'s':'');
@@ -291,7 +303,7 @@ document.getElementById('filterTabs').addEventListener('click',e=>{
   document.querySelectorAll('.filter-tab').forEach(t=>t.classList.remove('active'));
   e.target.classList.add('active');activeFilter=e.target.dataset.filter;render();
 });
-document.getElementById('searchInput').addEventListener('input',render);
+document.getElementById('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter')render();});
 document.getElementById('footerDate').textContent='Last synced '+new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
 
 renderStats();renderPills();render();renderNA();
