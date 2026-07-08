@@ -176,8 +176,9 @@ function norm(s){return(s||'').toLowerCase().replace(/[\-\.&',]/g,' ').replace(/
 function matches(r,q){
   if(!q)return true;
   var words=norm(q).split(' ').filter(function(w){return w.length>0});
-  var hay=r._hay;
-  return words.every(function(w){return hay.indexOf(w)!==-1});
+  // pad haystack with spaces so we can do word-boundary checks via indexOf(' '+word)
+  var hay=' '+r._hay+' ';
+  return words.every(function(w){return hay.indexOf(' '+w)!==-1});
 }
 
 // ── stats ─────────────────────────────────────────────────────────────────────
