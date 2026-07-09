@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Unbridled Ecosystem Technical Playbook — design system, project structure, deployment practices, and data visualization standards for all Unbridled agent teams.">
+  <title>Unbridled Tech Playbook | MC Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy:    #1f2b3f;
+      --blue:    #5a8ba7;
+      --blue-lt: #78b0d1;
+      --gray:    #4b4f54;
+      --cream:   #f4f6f8;
+      --white:   #ffffff;
+      --surface: #111827;
+      --gold:    #ba8032;
+      --teal:    #3de8c8;
+      --green:   #4caf7d;
+      --red:     #e05252;
+      --text:    #1c252d;
+      --muted:   #6b7280;
+      --border:  #dde3e8;
+      --code-bg: #0d1117;
+      --code-border: #30363d;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      background: var(--white);
+      color: var(--text);
+    }
+
+    /* ── HERO ── */
+    .hero {
+      background: var(--navy);
+      color: #fff;
+      padding: clamp(3rem, 8vw, 5rem) clamp(1.5rem, 5vw, 3rem);
+      text-align: center;
+    }
+    .hero-eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(0.7rem, 1.5vw, 0.8rem);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--blue-lt);
+      margin-bottom: 1rem;
+    }
+    .hero img.elk {
+      max-width: clamp(80px, 12vw, 110px);
+      height: auto;
+      margin-bottom: 1.5rem;
+      opacity: 0.92;
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 0.75rem;
+    }
+    .hero h1 em {
+      font-style: italic;
+      color: var(--blue-lt);
+    }
+    .hero p {
+      font-size: clamp(1rem, 2.5vw, 1.15rem);
+      color: rgba(255,255,255,0.72);
+      max-width: 640px;
+      margin: 0 auto 1.5rem;
+    }
+    .hero-meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.4);
+      margin-top: 1rem;
+    }
+
+    /* ── NAV ── */
+    .toc-bar {
+      background: var(--cream);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem clamp(1.5rem, 5vw, 3rem);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      gap: clamp(0.75rem, 3vw, 2rem);
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .toc-bar a {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--navy);
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+      padding: 0.25rem 0;
+      border-bottom: 2px solid transparent;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .toc-bar a:hover { color: var(--blue); border-bottom-color: var(--blue); }
+
+    /* ── SECTIONS ── */
+    .section {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: clamp(2.5rem, 7vw, 4rem) clamp(1.5rem, 5vw, 3rem);
+      border-bottom: 1px solid var(--border);
+    }
+    .section:last-of-type { border-bottom: none; }
+
+    .section-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--blue);
+      margin-bottom: 0.5rem;
+    }
+    .section h2 {
+      font-size: clamp(1.5rem, 3.5vw, 2rem);
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 0.5rem;
+    }
+    .section-intro {
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 720px;
+      margin-bottom: 2rem;
+    }
+
+    /* ── BRAND CARDS ── */
+    .brand-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+    .brand-card {
+      border-radius: 10px;
+      padding: 1.75rem;
+      border: 1px solid var(--border);
+    }
+    .brand-card.unbridled { background: #f7f9fb; border-top: 4px solid #5a8ba7; }
+    .brand-card.hsc       { background: #faf9f6; border-top: 4px solid #ba8032; }
+    .brand-card.beunbridled { background: #0d1219; border-top: 4px solid #d4b104; color: #f5efe6; }
+
+    .brand-card h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 1.25rem;
+    }
+    .brand-card.beunbridled h3 { color: #f5efe6; }
+    .brand-card.beunbridled .swatch-label { color: rgba(245,239,230,0.6); }
+    .brand-card.beunbridled .token-key { color: rgba(245,239,230,0.55); }
+    .brand-card.beunbridled .token-val { color: #f5efe6; }
+
+    .swatch-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-bottom: 1.25rem;
+    }
+    .swatch {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .swatch-dot {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+    .swatch-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .token-list { display: flex; flex-direction: column; gap: 0.4rem; }
+    .token-row { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+    .token-key {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .token-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text);
+      text-align: right;
+    }
+    .brand-rule {
+      font-size: 0.8rem;
+      margin-top: 1rem;
+      padding: 0.6rem 0.75rem;
+      border-radius: 6px;
+      background: rgba(0,0,0,0.04);
+      color: var(--gray);
+    }
+    .brand-card.beunbridled .brand-rule { background: rgba(255,255,255,0.06); color: rgba(245,239,230,0.6); }
+
+    /* ── CODE BLOCKS ── */
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      overflow-x: auto;
+      margin: 1.25rem 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      line-height: 1.65;
+      color: #e6edf3;
+    }
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85em;
+      background: rgba(90, 139, 167, 0.12);
+      padding: 0.15em 0.4em;
+      border-radius: 4px;
+      color: var(--blue);
+    }
+    pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+
+    .comment { color: #8b949e; }
+    .keyword { color: #ff7b72; }
+    .string  { color: #a5d6ff; }
+    .value   { color: #79c0ff; }
+    .fn      { color: #d2a8ff; }
+
+    /* ── RULES GRID ── */
+    .rules-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .rule-card {
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      background: var(--cream);
+      border-left: 3px solid var(--blue);
+    }
+    .rule-card.do { border-left-color: var(--green); }
+    .rule-card.dont { border-left-color: var(--red); }
+    .rule-card h4 { font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--navy); }
+    .rule-card p  { font-size: 0.82rem; color: var(--gray); line-height: 1.5; }
+    .rule-tag {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      font-weight: 500;
+      padding: 0.2em 0.5em;
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .rule-tag.do   { background: rgba(76,175,125,0.15); color: var(--green); }
+    .rule-tag.dont { background: rgba(224,82,82,0.12);  color: var(--red); }
+
+    /* ── DEPLOY STEPS ── */
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-top: 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .step {
+      display: flex;
+      gap: 1.25rem;
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--white);
+      align-items: flex-start;
+    }
+    .step:last-child { border-bottom: none; }
+    .step-num {
+      width: 28px;
+      height: 28px;
+      min-width: 28px;
+      border-radius: 50%;
+      background: var(--navy);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 2px;
+    }
+    .step-body h4 { font-size: 0.9rem; font-weight: 600; color: var(--navy); margin-bottom: 0.25rem; }
+    .step-body p  { font-size: 0.82rem; color: var(--muted); margin-bottom: 0; }
+    .step-body code { font-size: 0.78rem; }
+
+    /* ── VIZ EXAMPLES ── */
+    .viz-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+      gap: 1.25rem;
+      margin-top: 1.5rem;
+    }
+    .viz-card {
+      background: var(--navy);
+      border-radius: 10px;
+      padding: 1.5rem;
+      color: #fff;
+    }
+    .viz-card .viz-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--blue-lt);
+      margin-bottom: 0.4rem;
+    }
+    .viz-card .viz-title { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .viz-card .viz-desc  { font-size: 0.8rem; color: rgba(255,255,255,0.58); line-height: 1.5; }
+    .viz-card .viz-lib {
+      margin-top: 0.9rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--teal);
+    }
+
+    /* ── EXAMPLE LINKS ── */
+    .examples-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .example-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .example-card:hover { border-color: var(--blue); box-shadow: 0 2px 12px rgba(90,139,167,0.15); }
+    .example-card .ex-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--blue);
+      margin-bottom: 0.4rem;
+    }
+    .example-card h4 { font-size: 0.95rem; font-weight: 600; color: var(--navy); margin-bottom: 0.3rem; }
+    .example-card p  { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+
+    /* ── CHECKLIST ── */
+    .checklist { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
+    .check-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+    .check-icon {
+      width: 20px;
+      min-width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+    .check-icon.pass  { background: rgba(76,175,125,0.15); color: var(--green); }
+    .check-icon.block { background: rgba(224,82,82,0.12);  color: var(--red); }
+
+    /* ── FOOTER ── */
+    .footer-dark {
+      background: var(--navy);
+      color: rgba(255,255,255,0.55);
+      text-align: center;
+      padding: clamp(2rem, 6vw, 3rem) clamp(1.5rem, 5vw, 3rem);
+      font-size: 0.82rem;
+    }
+    .footer-dark img { max-width: clamp(40px, 8vw, 56px); height: auto; margin-bottom: 1rem; opacity: 0.7; }
+    .footer-dark a { color: var(--blue-lt); text-decoration: none; }
+
+    /* ── ALERT BOX ── */
+    .alert {
+      padding: 1rem 1.25rem;
+      border-radius: 8px;
+      margin: 1.25rem 0;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+    .alert.info  { background: rgba(90,139,167,0.1); border-left: 3px solid var(--blue); color: var(--navy); }
+    .alert.warn  { background: rgba(186,128,50,0.1); border-left: 3px solid var(--gold); color: #6b4a10; }
+    .alert.crit  { background: rgba(224,82,82,0.08); border-left: 3px solid var(--red);  color: #7a2020; }
+    .alert strong { font-weight: 700; }
+
+    /* ── DIR TREE ── */
+    .dir-tree {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      line-height: 1.8;
+      color: #e6edf3;
+      overflow-x: auto;
+    }
+    .dir-tree .dir  { color: #79c0ff; }
+    .dir-tree .file { color: #a5d6ff; }
+    .dir-tree .note { color: #8b949e; }
+
+    @media (max-width: 640px) {
+      .toc-bar { gap: 0.75rem; }
+      .toc-bar a { font-size: 0.72rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-eyebrow">Unbridled Ecosystem · Agent Architecture</div>
+  <img class="elk" src="logos/unbridled-elk-icon-white.png" alt="Unbridled">
+  <h1>The <em>Unbridled</em><br>Tech Playbook</h1>
+  <p>Design system, project patterns, deployment standards, and data visualization rules for every agent building in the Unbridled ecosystem.</p>
+  <div class="hero-meta">Published by MC Agent · July 2025 · For Grand Poobah and all Unbridled builders</div>
+</header>
+
+<!-- NAV -->
+<nav class="toc-bar">
+  <a href="#design-system">Design System</a>
+  <a href="#project-structure">Project Structure</a>
+  <a href="#data-viz">Data Viz</a>
+  <a href="#deployment">Deployment</a>
+  <a href="#examples">Examples</a>
+  <a href="#pre-deploy">Pre-Deploy</a>
+</nav>
+
+<!-- ── 1. DESIGN SYSTEM ── -->
+<section class="section" id="design-system">
+  <div class="section-label">01 · Foundation</div>
+  <h2>Design System Standards</h2>
+  <p class="section-intro">Three brands live inside the Unbridled ecosystem. Each has its own visual identity. Know which brand you're building for before you write a line of CSS.</p>
+
+  <div class="brand-grid">
+
+    <!-- Unbridled -->
+    <div class="brand-card unbridled">
+      <h3>🦌 Unbridled (Corporate / BeUnbridled product)</h3>
+      <div class="swatch-row">
+        <div class="swatch"><div class="swatch-dot" style="background:#5a8ba7"></div><span class="swatch-label">#5a8ba7</span></div>
+        <div class="swatch"><div class="swatch-dot" style="background:#78b0d1"></div><span class="swatch-label">#78b0d1</span></div>
+        <div class="swatch"><div class="swatch-dot" style="background:#4b4f54"></div><span class="swatch-label">#4b4f54</span></div>
+        <div class="swatch"><div class="swatch-dot" style="background:#1f2b3f"></div><span class="swatch-label">#1f2b3f</span></div>
+        <div class="swatch"><div class="swatch-dot" style="background:#f4f6f8; border:1px solid #dde3e8;"></div><span class="swatch-label">#f4f6f8</span></div>
+      </div>
+      <div class="token-list">
+        <div class="token-row"><span class="token-key">Font</span><span class="token-val">Inter (Google Fonts)</span></div>
+        <div class="token-row"><span class="token-key">Weights</span><span class="token-val">300 · 400 · 500 · 600 · 700</span></div>
+        <div class="token-row"><span class="token-key">CTA shape</span><span class="token-val">border-radius: 100px (pill)</span></div>
+        <div class="token-row"><span class="token-key">Tone</span><span class="token-val">Professional, calm, warm</span></div>
+      </div>
+      <p class="brand-rule">❌ Never em-dashes in prose. Use commas/semicolons. No "world-class" or hollow superlatives.</p>
+    </div>
+
+    <!-- Hotel St. Cloud -->
+    <div class="brand-card hsc">
+      <h3>🏨 Hotel St. Cloud</h3>
+      <div class="swatch-row">
+        <div class="swatch"><div class="swatch-dot" style="background:#1f2b3f"></div><span class="swatch-label">#1f2b3f</span></div>
+        <div class="swatch"><div class="swatch-dot" style="background:#e4e2d9; border:1px solid #ccc;"></div><span class="swatch-label">#e4e2d9</span></div>
+        <div class="swatch"><div class="swatch-dot" style="background:#ba8032"></div><span class="swatch-label">#ba8032</span></div>
+        <div class="swatch"><div class="swatch-dot" style="background:#f5f4f0; border:1px solid #ccc;"></div><span class="swatch-label">#f5f4f0</span></div>
+      </div>
+      <div class="token-list">
+        <div class="token-row"><span class="token-key">Font</span><span class="token-val">Josefin Sans (Google Fonts)</span></div>
+        <div class="token-row"><span class="token-key">Weights</span><span class="token-val">300 · 400 · 600 · 700</span></div>
+        <div class="token-row"><span class="token-key">Page base</span><span class="token-val">Cream #e4e2d9</span></div>
+        <div class="token-row"><span class="token-key">Dark sections</span><span class="token-val">Navy #1f2b3f</span></div>
+        <div class="token-row"><span class="token-key">Accents</span><span class="token-val">Gold #ba8032 — sparingly</span></div>
+      </div>
+      <p class="brand-rule">Always "Hotel St. Cloud" — never "HSC." Always "Cañon City" (ñ with tilde). Never blue buttons. First-person "we" throughout.</p>
+    </div>
+
+    <!-- BeUnbridled AI -->
+    <div class="brand-card beunbridled">
+      <h3>⚡ BeUnbridled AI (v2 — June 2026)</h3>
+      <div class="swatch-row">
+        <div class="swatch"><div class="swatch-dot" style="background:#100e0b; border:1px solid #444;"></div><span class="swatch-label">#100e0b</span></div>
+        <div class="swatch"><div class="swatch-dot" style="background:#d4b104"></div><span class="swatch-label">#d4b104</span></div>
+        <div class="swatch"><div class="swatch-dot" style="background:#2cb0d3"></div><span class="swatch-label">#2cb0d3</span></div>
+        <div class="swatch"><div class="swatch-dot" style="background:#f5efe6; border:1px solid #666;"></div><span class="swatch-label">#f5efe6</span></div>
+      </div>
+      <div class="token-list">
+        <div class="token-row"><span class="token-key">Heading font</span><span class="token-val">Azo Sans</span></div>
+        <div class="token-row"><span class="token-key">Code/badges</span><span class="token-val">JetBrains Mono</span></div>
+        <div class="token-row"><span class="token-key">Primary CTA</span><span class="token-val">Gold #d4b104</span></div>
+        <div class="token-row"><span class="token-key">AI badges</span><span class="token-val">Scuba #2cb0d3</span></div>
+        <div class="token-row"><span class="token-key">Tagline</span><span class="token-val">Room to be human.</span></div>
+      </div>
+      <p class="brand-rule" style="background:rgba(255,255,255,0.06); color:rgba(245,239,230,0.6);">v2 only. Old electric teal (#3de8c8) and cold blue-black are retired. Earth, not ether. No hype, no superlatives.</p>
+    </div>
+
+  </div>
+
+  <h3 style="margin-top:2.5rem; margin-bottom:1rem; font-size:1.1rem; color:var(--navy);">Universal Typography Rules</h3>
+  <pre><code><span class="comment">/* ✅ Always use clamp() — never bare px on headings or outer padding */</span>
+<span class="fn">h1</span> { font-size: <span class="fn">clamp</span>(<span class="value">2rem</span>, <span class="value">5vw</span>, <span class="value">3.5rem</span>); }
+<span class="fn">h2</span> { font-size: <span class="fn">clamp</span>(<span class="value">1.5rem</span>, <span class="value">3.5vw</span>, <span class="value">2.25rem</span>); }
+<span class="fn">body</span> { font-size: <span class="value">16px</span>; <span class="comment">/* min 16px — never below 14px anywhere */</span> }
+
+<span class="comment">/* ✅ Container — always max-width, NEVER fixed width */</span>
+<span class="fn">.container</span> { max-width: <span class="value">1100px</span>; width: <span class="value">100%</span>; margin: <span class="value">0 auto</span>; }
+
+<span class="comment">/* ✅ Outer padding uses clamp() so it breathes on mobile */</span>
+<span class="fn">.section</span> { padding: <span class="fn">clamp</span>(<span class="value">2rem</span>, <span class="value">6vw</span>, <span class="value">4rem</span>) <span class="fn">clamp</span>(<span class="value">1rem</span>, <span class="value">5vw</span>, <span class="value">3rem</span>); }</code></pre>
+
+  <h3 style="margin-top:2rem; margin-bottom:1rem; font-size:1.1rem; color:var(--navy);">Component Rules</h3>
+  <div class="rules-grid">
+    <div class="rule-card do">
+      <span class="rule-tag do">✓ Do</span>
+      <h4>Mobile-first always</h4>
+      <p>Write base styles for mobile. Layer up with <code>@media (min-width: 640px)</code>. Test mentally at 375px (iPhone SE).</p>
+    </div>
+    <div class="rule-card do">
+      <span class="rule-tag do">✓ Do</span>
+      <h4>Touch targets 44px min</h4>
+      <p>Every button and tap target must be at least 44×44px. Users are on phones — fingertips, not cursors.</p>
+    </div>
+    <div class="rule-card do">
+      <span class="rule-tag do">✓ Do</span>
+      <h4>Grid collapses at 640px</h4>
+      <p>Multi-column grids use <code>@media (max-width: 640px) { grid-template-columns: 1fr; }</code> — no orphan cards.</p>
+    </div>
+    <div class="rule-card dont">
+      <span class="rule-tag dont">✕ Never</span>
+      <h4>Fixed width containers</h4>
+      <p>Never <code>width: 1000px</code> on any wrapper. Always <code>max-width: Xpx; width: 100%</code>. Fixed width = broken mobile = caught immediately.</p>
+    </div>
+    <div class="rule-card dont">
+      <span class="rule-tag dont">✕ Never</span>
+      <h4>External frameworks unlocked</h4>
+      <p>No Bootstrap, Tailwind, or Vue without a pinned CDN version. Pin to exact semver, never <code>@latest</code>.</p>
+    </div>
+    <div class="rule-card dont">
+      <span class="rule-tag dont">✕ Never</span>
+      <h4>SVG elk logo custom-drawn</h4>
+      <p>The elk is a covenant symbol. Always use the official PNG assets. Never recreate in SVG — it will look wrong.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── 2. PROJECT STRUCTURE ── -->
+<section class="section" id="project-structure">
+  <div class="section-label">02 · Architecture</div>
+  <h2>Project Structure Patterns</h2>
+  <p class="section-intro">Every project is a single self-contained HTML file. No build step. No bundler. No npm for the output artifact. All CSS and JS inline via <code>&lt;style&gt;</code> and <code>&lt;script&gt;</code>.</p>
+
+  <h3 style="margin-bottom:1rem; font-size:1.05rem; color:var(--navy);">Repository Layout — hotel-st-cloud-pages</h3>
+  <div class="dir-tree">
+<span class="dir">hotel-st-cloud-pages/</span>
+├── <span class="dir">assets/</span>              <span class="note"># All Unbridled tools, dashboards, trackers</span>
+│   ├── <span class="file">mc-overview.html</span>      <span class="note"># One-pager pattern reference</span>
+│   ├── <span class="file">eagles-landing-tracker.html</span>  <span class="note"># Punch list tracker reference</span>
+│   ├── <span class="file">eagles-landing-proforma.html</span> <span class="note"># STR pro forma reference</span>
+│   └── <span class="dir">logos/</span>            <span class="note"># Brand logo PNGs (no SVG)</span>
+│       ├── <span class="file">unbridled-elk-icon-white.png</span>
+│       └── <span class="file">unbridled-logo-white.png</span>
+├── <span class="dir">fremontmakers/</span>       <span class="note"># Fremont Makers brand subdirectory</span>
+├── <span class="dir">standardoil/</span>         <span class="note"># Standard Oil Coffee subdirectory</span>
+├── <span class="dir">&lt;brand-slug&gt;/</span>        <span class="note"># Each brand gets its own subdirectory</span>
+├── <span class="file">src/index.js</span>          <span class="note"># Cloudflare Worker — all API routes here</span>
+└── <span class="file">wrangler.jsonc</span>        <span class="note"># Worker config (NOT Pages)</span>
+  </div>
+
+  <h3 style="margin-top:2rem; margin-bottom:1rem; font-size:1.05rem; color:var(--navy);">Required HTML Boilerplate — every page, no exceptions</h3>
+  <pre><code><span class="keyword">&lt;!DOCTYPE html&gt;</span>
+<span class="keyword">&lt;html</span> lang=<span class="string">"en"</span><span class="keyword">&gt;</span>
+<span class="keyword">&lt;head&gt;</span>
+  <span class="keyword">&lt;meta</span> charset=<span class="string">"UTF-8"</span><span class="keyword">&gt;</span>
+  <span class="keyword">&lt;meta</span> name=<span class="string">"viewport"</span> content=<span class="string">"width=device-width, initial-scale=1.0"</span><span class="keyword">&gt;</span>  <span class="comment">&lt;!-- REQUIRED --&gt;</span>
+  <span class="keyword">&lt;meta</span> name=<span class="string">"robots"</span> content=<span class="string">"noindex, nofollow"</span><span class="keyword">&gt;</span>  <span class="comment">&lt;!-- internal tools stay private --&gt;</span>
+  <span class="keyword">&lt;meta</span> name=<span class="string">"description"</span> content=<span class="string">"..."</span><span class="keyword">&gt;</span>
+  <span class="keyword">&lt;title&gt;</span>Tool Name | Brand Name<span class="keyword">&lt;/title&gt;</span>
+  <span class="keyword">&lt;style&gt;</span>
+    <span class="comment">/* all styles inline — no external CSS files */</span>
+  <span class="keyword">&lt;/style&gt;</span>
+<span class="keyword">&lt;/head&gt;</span>
+<span class="keyword">&lt;body&gt;</span>
+  <span class="comment">&lt;!-- content --&gt;</span>
+  <span class="keyword">&lt;script&gt;</span>
+    <span class="comment">/* all scripts inline */</span>
+  <span class="keyword">&lt;/script&gt;</span>
+<span class="keyword">&lt;/body&gt;</span>
+<span class="keyword">&lt;/html&gt;</span></code></pre>
+
+  <h3 style="margin-top:2rem; margin-bottom:0.75rem; font-size:1.05rem; color:var(--navy);">Naming Conventions</h3>
+  <div class="rules-grid">
+    <div class="rule-card do">
+      <span class="rule-tag do">✓ Do</span>
+      <h4>Lowercase, hyphens</h4>
+      <p>All filenames: <code>wine-club-tracker.html</code>, <code>labor-planner.html</code>. No spaces, no caps, no underscores.</p>
+    </div>
+    <div class="rule-card do">
+      <span class="rule-tag do">✓ Do</span>
+      <h4>Descriptive slugs</h4>
+      <p><code>mark-wine-app.html</code> not <code>tool1.html</code>. Name by purpose — it's the URL the user shares.</p>
+    </div>
+    <div class="rule-card dont">
+      <span class="rule-tag dont">✕ Never</span>
+      <h4>Bare directories without index.html</h4>
+      <p>If you deploy to <code>/wine/</code> it must contain <code>index.html</code>. Cloudflare won't auto-redirect bare paths.</p>
+    </div>
+  </div>
+
+  <div class="alert info" style="margin-top:1.5rem;">
+    <strong>Multi-brand rule:</strong> Each brand gets a subdirectory — <code>/fremontmakers/</code>, <code>/standardoil/</code>, <code>/&lt;brand-slug&gt;/</code>. General Unbridled tools and dashboards live in <code>/assets/</code>. Never mix brand content into another brand's directory.
+  </div>
+</section>
+
+<!-- ── 3. DATA VISUALIZATION ── -->
+<section class="section" id="data-viz">
+  <div class="section-label">03 · Data</div>
+  <h2>Data Visualization Approach</h2>
+  <p class="section-intro">When Stan sends operational data (spreadsheets, POS screenshots, P&L exports), the output is always a <strong>live deployed web app</strong> — not a report, not a summary, not a message. Build it interactive first.</p>
+
+  <div class="alert warn">
+    <strong>Stan's standing preference (June 2026):</strong> "Yes and let's publish it in a researched web application that I can share." If he sends you ops data, assume the deliverable is a URL. Build and deploy before responding.
+  </div>
+
+  <div class="viz-grid">
+    <div class="viz-card">
+      <div class="viz-label">P&L / Revenue</div>
+      <div class="viz-title">Revenue Tier Models</div>
+      <div class="viz-desc">Slider-based HTML app. User drags revenue or occupancy; all metrics recalculate live. Three tiers minimum: conservative / base / optimistic.</div>
+      <div class="viz-lib">Chart.js — pinned CDN version</div>
+    </div>
+    <div class="viz-card">
+      <div class="viz-label">Labor Metrics</div>
+      <div class="viz-title">Weekly Labor Planners</div>
+      <div class="viz-desc">Position × shift matrix. Daily rate guard for salaried roles. 52-week history. PIN-gated submit/approve flow. localStorage persistence.</div>
+      <div class="viz-lib">Vanilla JS — no library needed</div>
+    </div>
+    <div class="viz-card">
+      <div class="viz-label">Sales / KPIs</div>
+      <div class="viz-title">KPI Strip + Stat Cards</div>
+      <div class="viz-desc">Dark navy cards (#1f2b3f), brand-color stat numbers (blue-lt #78b0d1). 4-card grids use repeat(2, 1fr) — never auto-fit for fixed counts.</div>
+      <div class="viz-lib">CSS Grid — no library needed</div>
+    </div>
+    <div class="viz-card">
+      <div class="viz-label">Construction / Project</div>
+      <div class="viz-title">Punch List Trackers</div>
+      <div class="viz-desc">4-status radio pills (Not Started / In Progress / Done / Approved). Owner field per task. Update log. Filter bar. Collapsible rooms. localStorage.</div>
+      <div class="viz-lib">Vanilla JS — no library needed</div>
+    </div>
+    <div class="viz-card">
+      <div class="viz-label">Charts</div>
+      <div class="viz-title">Interactive Charts</div>
+      <div class="viz-desc">Doughnut, bar, and line charts via Chart.js. Always pin to a specific CDN version. Dark canvas backgrounds for dashboard contexts.</div>
+      <div class="viz-lib">cdnjs.cloudflare.com/ajax/libs/Chart.js/4.x.x/</div>
+    </div>
+    <div class="viz-card">
+      <div class="viz-label">Org / Structure</div>
+      <div class="viz-title">Hub-Spoke Org Charts</div>
+      <div class="viz-desc">SVG + JS polar math. Hub-and-spoke radial layout only — never top-down tree. "Hierarchy feels like control, not an ecosystem." — Stan Bullis</div>
+      <div class="viz-lib">SVG + cairosvg for PNG export</div>
+    </div>
+  </div>
+
+  <h3 style="margin-top:2.5rem; margin-bottom:1rem; font-size:1.05rem; color:var(--navy);">Stat Card Pattern (dark)</h3>
+  <pre><code><span class="comment">/* KPI stat card — navy background, brand blue numbers */</span>
+<span class="fn">.stat-card</span> {
+  background: <span class="value">#1f2b3f</span>;  <span class="comment">/* --navy */</span>
+  border-radius: <span class="value">10px</span>;
+  padding: <span class="fn">clamp</span>(<span class="value">1.25rem</span>, <span class="value">3vw</span>, <span class="value">2rem</span>);
+  color: <span class="value">#fff</span>;
+}
+<span class="fn">.stat-number</span> {
+  font-size: <span class="fn">clamp</span>(<span class="value">2rem</span>, <span class="value">5vw</span>, <span class="value">3rem</span>);
+  font-weight: <span class="value">700</span>;
+  color: <span class="value">#78b0d1</span>;  <span class="comment">/* --blue-lt — brand accent */</span>
+  line-height: <span class="value">1</span>;
+}
+<span class="fn">.stat-label</span> {
+  font-size: <span class="value">0.82rem</span>;
+  color: <span class="fn">rgba</span>(<span class="value">255,255,255,0.55</span>);
+  margin-top: <span class="value">0.3rem</span>;
+  text-transform: <span class="value">uppercase</span>;
+  letter-spacing: <span class="value">0.06em</span>;
+}
+<span class="comment">/* 4-card grid — ALWAYS explicit repeat, not auto-fit */</span>
+<span class="fn">.stats-grid</span> {
+  display: <span class="value">grid</span>;
+  grid-template-columns: <span class="fn">repeat</span>(<span class="value">2</span>, <span class="value">1fr</span>);  <span class="comment">/* NOT auto-fit */</span>
+  gap: <span class="fn">clamp</span>(<span class="value">1rem</span>, <span class="value">3vw</span>, <span class="value">1.5rem</span>);
+}
+<span class="keyword">@media</span> (max-width: <span class="value">640px</span>) {
+  <span class="fn">.stats-grid</span> { grid-template-columns: <span class="value">1fr</span>; }
+}</code></pre>
+
+  <div class="alert info">
+    <strong>Data ingestion pattern:</strong> When Stan sends a spreadsheet screenshot or POS export, extract via vision analysis or PDF text extraction first. Build the data model as a <code>const DATA = [...]</code> array at the bottom of the script block. Makes it easy to update without touching the UI code.
+  </div>
+</section>
+
+<!-- ── 4. DEPLOYMENT ── -->
+<section class="section" id="deployment">
+  <div class="section-label">04 · Infrastructure</div>
+  <h2>Deployment Practices</h2>
+  <p class="section-intro">The Unbridled stack is Cloudflare Workers with Assets — not Cloudflare Pages. Git push alone does not deploy. Every deploy requires an explicit wrangler command.</p>
+
+  <div class="alert crit">
+    <strong>Critical:</strong> This is a Cloudflare Worker project, not a Pages project. <code>git push</code> updates the repo only. You must run <code>npm run deploy</code> (or <code>npx wrangler deploy</code>) to publish changes to the live domain.
+  </div>
+
+  <h3 style="margin-top:2rem; margin-bottom:1rem; font-size:1.05rem; color:var(--navy);">Deploy Workflow — Step by Step</h3>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Write the file</h4>
+        <p>Write to <code>/home/hermes/projects/hotel-st-cloud-pages/assets/</code>. Use <code>tee</code> or file write tools — never <code>python3 -c</code> (string escaping breaks HTML).</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Stage and commit</h4>
+        <p><code>git add assets/your-file.html</code> then <code>git commit -m "feat: add tool name"</code>. Use conventional commits: <code>feat:</code> / <code>fix:</code> / <code>chore:</code>. Never use <code>&amp;</code> in commit messages — shell treats it as background operator.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>Push to GitHub</h4>
+        <p><code>git push origin main</code>. If auth error, source <code>~/.hermes/.env</code> and inject <code>GITHUB_TOKEN</code> into the remote URL.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h4>Deploy via Wrangler</h4>
+        <p><code>npm run deploy</code> from the project root — this runs wrangler deploy AND purges the Cloudflare edge cache. Do not skip this step.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <h4>Wait ~30 seconds, then verify</h4>
+        <p><code>curl -s -o /dev/null -w '%{http_code}' -L https://offers.hotelstcloud.com/assets/your-file.html</code> — must return <code>200</code>.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-body">
+        <h4>Curl-verify the actual changed content</h4>
+        <p><code>curl -sL 'https://offers.hotelstcloud.com/assets/your-file.html' | grep -o 'changed text here' | head -3</code> — Never say "it's deployed" based on wrangler output alone. Check the live content explicitly.</p>
+      </div>
+    </div>
+  </div>
+
+  <h3 style="margin-top:2.5rem; margin-bottom:1rem; font-size:1.05rem; color:var(--navy);">Infrastructure Reference</h3>
+  <pre><code><span class="comment"># MC's primary deploy environment</span>
+Local repo:   /home/hermes/projects/hotel-st-cloud-pages/
+Live domain:  https://offers.hotelstcloud.com
+GitHub org:   Unbridled-Solutions
+GitHub repo:  hotel-st-cloud-pages
+Git identity: MC Agent &lt;mc@unbridled.com&gt;
+Auth token:   GITHUB_TOKEN in ~/.hermes/.env
+
+<span class="comment"># Zone IDs (Cloudflare)</span>
+hotelstcloud.com → 90168459c1772b1fc81f0cebdc0e04cc
+
+<span class="comment"># BeUnbridled (separate repo)</span>
+Repo:         Unbridled-Solutions/beunbridled-pages
+Deploy:       npx wrangler pages deploy . --project-name beunbridled
+Domain:       beunbridled.ai</code></pre>
+
+  <h3 style="margin-top:2rem; margin-bottom:1rem; font-size:1.05rem; color:var(--navy);">Versioning Rules</h3>
+  <div class="rules-grid">
+    <div class="rule-card do">
+      <span class="rule-tag do">✓ Do</span>
+      <h4>One file, one feature</h4>
+      <p>Each tool is a self-contained HTML file. Version it by updating the same file. Don't create <code>tool-v2.html</code> — patch <code>tool.html</code>.</p>
+    </div>
+    <div class="rule-card do">
+      <span class="rule-tag do">✓ Do</span>
+      <h4>Redirect stubs for moved pages</h4>
+      <p>If a page moves domains, leave a meta-refresh redirect stub at the original URL. Shared links stay working.</p>
+    </div>
+    <div class="rule-card dont">
+      <span class="rule-tag dont">✕ Never</span>
+      <h4>Read-file-then-write-back pattern</h4>
+      <p>The <code>read_file</code> tool prepends line numbers. If you read a file and write it back via string ops, those line numbers get baked in. Use <code>patch</code> for surgical edits or <code>write_file</code> for full rewrites.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── 5. EXAMPLES ── -->
+<section class="section" id="examples">
+  <div class="section-label">05 · References</div>
+  <h2>Live Example Projects</h2>
+  <p class="section-intro">Every pattern in this guide has a live reference implementation. Tap to open and inspect the source (Ctrl+U / Cmd+U).</p>
+
+  <div class="examples-grid">
+    <a class="example-card" href="https://offers.hotelstcloud.com/assets/mc-overview.html" target="_blank" rel="noopener">
+      <div class="ex-label">One-pager · Internal doc pattern</div>
+      <h4>MC Overview</h4>
+      <p>Leadership one-pager. White background, dark header, stat strip, two-column grid. The internal document pattern to follow.</p>
+    </a>
+    <a class="example-card" href="https://offers.hotelstcloud.com/assets/eagles-landing-tracker.html" target="_blank" rel="noopener">
+      <div class="ex-label">Punch list · Construction tracker</div>
+      <h4>Eagles Landing Tracker</h4>
+      <p>141 tasks, 29 rooms. 4-status radio pills, owner fields, update log, filter bar, localStorage persistence. The definitive tracker reference.</p>
+    </a>
+    <a class="example-card" href="https://offers.hotelstcloud.com/assets/eagles-landing-proforma.html" target="_blank" rel="noopener">
+      <div class="ex-label">STR pro forma · Slider tool</div>
+      <h4>Eagles Landing Pro Forma</h4>
+      <p>Slider-based revenue model. Occupancy and rate inputs drive live P&L calculations. The data visualization slider pattern.</p>
+    </a>
+    <a class="example-card" href="https://offers.hotelstcloud.com/assets/unbridled-tech-playbook.html" target="_blank" rel="noopener">
+      <div class="ex-label">Reference doc · You are here</div>
+      <h4>This Playbook</h4>
+      <p>Dark hero, sticky nav, code blocks, brand cards, step list, card grids. Inspect this page's source as a structural reference.</p>
+    </a>
+    <a class="example-card" href="https://beunbridled.ai/security" target="_blank" rel="noopener">
+      <div class="ex-label">BeUnbridled · Dark brand pattern</div>
+      <h4>BeUnbridled Security Page</h4>
+      <p>Dark near-black background (#100e0b), gold CTA, scuba badges. The v2 BeUnbridled visual system in production.</p>
+    </a>
+    <a class="example-card" href="https://beunbridled.ai" target="_blank" rel="noopener">
+      <div class="ex-label">BeUnbridled · Hero + brand</div>
+      <h4>BeUnbridled Home</h4>
+      <p>Background video pattern with dark overlay. Full v2 BeUnbridled brand in context. Azo Sans headings, gold CTAs, teal not used.</p>
+    </a>
+  </div>
+</section>
+
+<!-- ── 6. PRE-DEPLOY CHECKLIST ── -->
+<section class="section" id="pre-deploy">
+  <div class="section-label">06 · Quality Gate</div>
+  <h2>Pre-Deploy Checklist</h2>
+  <p class="section-intro">Run this before every deploy. Nothing ships without passing these. They're not suggestions — they're the things that get caught immediately when missed.</p>
+
+  <div class="checklist">
+    <div class="check-item"><div class="check-icon pass">✓</div><span><code>&lt;meta name="viewport"&gt;</code> present in <code>&lt;head&gt;</code> — missing this = broken mobile, instant fail</span></div>
+    <div class="check-item"><div class="check-icon pass">✓</div><span>No fixed <code>width: Xpx</code> on outer container — use <code>max-width + width: 100%</code></span></div>
+    <div class="check-item"><div class="check-icon pass">✓</div><span>Font sizes use <code>clamp()</code> — no bare <code>px</code> values on headings</span></div>
+    <div class="check-item"><div class="check-icon pass">✓</div><span>Multi-column grids collapse to <code>1fr</code> at 640px</span></div>
+    <div class="check-item"><div class="check-icon pass">✓</div><span>Touch targets (buttons, links) are at least 44px tall</span></div>
+    <div class="check-item"><div class="check-icon pass">✓</div><span>All images are <code>max-width: 100%</code> — no stretching on narrow screens</span></div>
+    <div class="check-item"><div class="check-icon pass">✓</div><span>No placeholder text — no "Lorem ipsum", "TBD", "[INSERT]", "PLACEHOLDER"</span></div>
+    <div class="check-item"><div class="check-icon pass">✓</div><span><code>&lt;title&gt;</code> and <code>&lt;meta name="description"&gt;</code> are populated with real copy</span></div>
+    <div class="check-item"><div class="check-icon pass">✓</div><span>Any CDN libraries are pinned to a specific version — not <code>@latest</code></span></div>
+    <div class="check-item"><div class="check-icon pass">✓</div><span>Git commit message follows <code>feat:</code> / <code>fix:</code> / <code>chore:</code> convention — no <code>&amp;</code> in message</span></div>
+    <div class="check-item"><div class="check-icon pass">✓</div><span>For JS-heavy files: run <code>grep -n '\\`\|\\${' file.html</code> — escaped backticks = silent JS failure</span></div>
+    <div class="check-item"><div class="check-icon pass">✓</div><span><code>curl</code> returns <code>200</code> and confirms the changed text is live before telling anyone</span></div>
+    <div class="check-item"><div class="check-icon block">✕</div><span>Never send HTML via Telegram file attachment as the deliverable — it can't be opened as a live page. Deploy first, share the URL.</span></div>
+    <div class="check-item"><div class="check-icon block">✕</div><span>Never use <code>auto-fit</code> for a fixed-count grid (4 cards = use <code>repeat(2, 1fr)</code>) — orphan card layouts are caught immediately</span></div>
+  </div>
+
+  <div class="alert info" style="margin-top:2rem;">
+    <strong>The rule of thumb:</strong> Stan and Justin check deliverables on their phones, in Telegram's in-app browser. If it looks broken at 375px, it's wrong — full stop. Build mobile-first, verify mentally at that breakpoint, then deploy.
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer-dark">
+  <img src="logos/unbridled-elk-icon-white.png" alt="Unbridled"><br>
+  <strong style="color:rgba(255,255,255,0.8); font-size:0.9rem;">Doing Good by Doing Well</strong><br><br>
+  Maintained by <strong style="color:rgba(255,255,255,0.7);">MC Agent</strong> — Stan Bullis's Digital Chief of Staff<br>
+  Questions or updates: contact Justin Farr · <a href="https://beunbridled.ai">beunbridled.ai</a>
+</footer>
+
+</body>
+</html>
