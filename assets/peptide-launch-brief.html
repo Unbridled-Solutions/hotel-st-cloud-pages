@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Peptide Company — Launch Brief · Douglas County, CO</title>
+<style>
+  :root {
+    --bg: #0a0f14;
+    --navy: #101e2b;
+    --card: #131f2c;
+    --border: #1e3348;
+    --gold: #c9aa7c;
+    --blue: #5a9fc7;
+    --teal: #3de8c8;
+    --text: #e8e4de;
+    --muted: #7a8fa0;
+    --green: #4caf7d;
+    --red: #e05a5a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 15px;
+    line-height: 1.65;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    height: 540px;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+  }
+  .hero img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 30%;
+  }
+  .hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(10,15,20,0.95) 0%, rgba(10,15,20,0.3) 60%, transparent 100%);
+  }
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    padding: 0 48px 48px;
+    max-width: 780px;
+  }
+  .hero-eyebrow {
+    font-size: 11px;
+    letter-spacing: 3.5px;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 12px;
+  }
+  .hero h1 {
+    font-size: clamp(28px, 5vw, 46px);
+    font-weight: 800;
+    line-height: 1.15;
+    color: #fff;
+    margin-bottom: 16px;
+  }
+  .hero h1 span { color: var(--gold); }
+  .hero-sub {
+    font-size: 17px;
+    color: rgba(232,228,222,0.75);
+    max-width: 560px;
+    margin-bottom: 24px;
+  }
+  .hero-meta {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .meta-pill {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .meta-pill span { color: var(--text); font-weight: 600; }
+
+  /* ── LAYOUT ── */
+  .container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+  .section { padding: 56px 0; border-bottom: 1px solid var(--border); }
+  .section:last-child { border-bottom: none; }
+
+  /* ── SECTION HEADER ── */
+  .sec-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 8px;
+  }
+  .sec-title {
+    font-size: clamp(22px, 3.5vw, 30px);
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 14px;
+    line-height: 1.2;
+  }
+  .sec-body {
+    color: rgba(232,228,222,0.75);
+    max-width: 720px;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+  .sec-body p + p { margin-top: 12px; }
+
+  /* ── TAGLINE GRID ── */
+  .tagline-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+    margin-top: 28px;
+  }
+  .tagline-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 22px;
+    position: relative;
+    overflow: hidden;
+  }
+  .tagline-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .tagline-card.gold::before { background: var(--gold); }
+  .tagline-card.teal::before { background: var(--teal); }
+  .tagline-card.blue::before { background: var(--blue); }
+  .tagline-card.green::before { background: var(--green); }
+  .tagline-cat {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .tagline-main {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    font-style: italic;
+    line-height: 1.3;
+    margin-bottom: 8px;
+  }
+  .tagline-alt {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+  .tagline-alt span {
+    display: block;
+    margin-top: 4px;
+  }
+  .recommended-badge {
+    display: inline-block;
+    background: rgba(201,170,124,0.15);
+    border: 1px solid rgba(201,170,124,0.35);
+    color: var(--gold);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-top: 10px;
+  }
+
+  /* ── IMAGE GALLERY ── */
+  .image-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 14px;
+    margin-top: 28px;
+  }
+  @media (max-width: 640px) { .image-grid { grid-template-columns: 1fr; } }
+  .img-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .img-card.wide { grid-column: span 2; }
+  @media (max-width: 640px) { .img-card.wide { grid-column: span 1; } }
+  .img-card img {
+    width: 100%;
+    height: 260px;
+    object-fit: cover;
+    display: block;
+  }
+  .img-card.wide img { height: 340px; }
+  .img-caption {
+    padding: 14px 16px;
+  }
+  .img-dir {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 4px;
+  }
+  .img-title {
+    font-weight: 700;
+    font-size: 14px;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .img-desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* ── STRATEGY CARDS ── */
+  .strategy-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+    margin-top: 28px;
+  }
+  .strat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 22px 24px;
+  }
+  .strat-icon {
+    font-size: 24px;
+    margin-bottom: 12px;
+  }
+  .strat-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+  .strat-body {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .strat-body strong { color: var(--text); }
+
+  /* ── TIMELINE ── */
+  .timeline { margin-top: 28px; position: relative; }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 18px;
+    top: 0; bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--teal), var(--blue), var(--gold));
+  }
+  .tl-item {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 28px;
+    position: relative;
+  }
+  .tl-dot {
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--navy);
+    border: 2px solid var(--teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--teal);
+    z-index: 1;
+    position: relative;
+  }
+  .tl-dot.gold { border-color: var(--gold); color: var(--gold); }
+  .tl-dot.blue { border-color: var(--blue); color: var(--blue); }
+  .tl-content {
+    flex: 1;
+    padding-top: 6px;
+  }
+  .tl-week {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 4px;
+  }
+  .tl-week.gold { color: var(--gold); }
+  .tl-week.blue { color: var(--blue); }
+  .tl-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+  .tl-tasks {
+    list-style: none;
+    padding: 0;
+  }
+  .tl-tasks li {
+    font-size: 13px;
+    color: var(--muted);
+    padding: 3px 0;
+    padding-left: 16px;
+    position: relative;
+  }
+  .tl-tasks li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--border);
+  }
+  .tl-tasks li strong { color: var(--text); }
+
+  /* ── AD COPY SECTION ── */
+  .ad-copy-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+    margin-top: 28px;
+  }
+  .ad-copy-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .ad-copy-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--teal);
+    font-weight: 700;
+  }
+  .ad-copy-body { padding: 16px; }
+  .ad-headline {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--blue);
+    margin-bottom: 3px;
+    line-height: 1.3;
+  }
+  .ad-url {
+    font-size: 12px;
+    color: var(--green);
+    margin-bottom: 8px;
+  }
+  .ad-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* ── AUDIENCE SECTION ── */
+  .audience-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 28px;
+  }
+  .aud-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    text-align: center;
+  }
+  .aud-icon { font-size: 28px; margin-bottom: 10px; }
+  .aud-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+  .aud-body { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  /* ── WARNING CALLOUT ── */
+  .callout {
+    background: rgba(61, 232, 200, 0.05);
+    border-left: 3px solid var(--teal);
+    border-radius: 0 8px 8px 0;
+    padding: 16px 20px;
+    margin-top: 24px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .callout strong { color: var(--teal); }
+  .callout.warn {
+    background: rgba(224,90,90,0.05);
+    border-color: var(--red);
+  }
+  .callout.warn strong { color: var(--red); }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    padding: 32px 24px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  footer span { color: var(--gold); font-weight: 600; }
+
+  @media (max-width: 600px) {
+    .hero-content { padding: 0 20px 32px; }
+    .timeline::before { left: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <img src="peptide-summit-silhouette.jpg" alt="Summit silhouette — Douglas County peptide brand">
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">Confidential Launch Brief · July 2026</div>
+    <h1>Peptide Brand Launch<br><span>Douglas County, Colorado</span></h1>
+    <p class="hero-sub">Campaign strategy, taglines, visual direction, ad copy, and a 90-day launch timeline — ready to execute.</p>
+    <div class="hero-meta">
+      <div class="meta-pill">Market: <span>Douglas County, CO</span></div>
+      <div class="meta-pill">Launch window: <span>Q3–Q4 2026</span></div>
+      <div class="meta-pill">Prepared by: <span>MC · Unbridled Solutions</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- MARKET OPPORTUNITY -->
+  <div class="section">
+    <div class="sec-label">The Opportunity</div>
+    <div class="sec-title">Why Douglas County. Why Now.</div>
+    <div class="sec-body">
+      <p>Douglas County is one of the wealthiest, most active counties in Colorado — Parker, Castle Rock, Highlands Ranch, Lone Tree. Median household income over $120K. A population that runs, bikes, lifts, and invests heavily in health optimization. They already buy supplements, wear CGMs, and book functional medicine appointments.</p>
+      <p>The peptide market is in a perfect growth window: consumer awareness is spiking off the back of GLP-1 and semaglutide coverage, biohacking culture has gone mainstream, and the regulatory gray zone is starting to clarify as clinic-based models gain legitimacy. A credible, Colorado-rooted brand with a clean aesthetic and science-first positioning can own this market locally — and scale nationally from here.</p>
+      <p>The global peptide therapeutics market is projected at <strong>$164 billion in 2026</strong>, growing to $295 billion by 2033. DTC peptide cosmetics alone hit $34.6B in 2025. The window is open. The question is who claims the high ground first.</p>
+    </div>
+
+    <div class="callout">
+      <strong>The positioning gap:</strong> Most DTC peptide brands look like either gray-market research chemical shops or cold clinical pharma. Neither owns the premium wellness space — the Apple-meets-Colorado-outdoors aesthetic nobody has built yet. That's the white space.
+    </div>
+  </div>
+
+  <!-- TARGET AUDIENCES -->
+  <div class="section">
+    <div class="sec-label">Target Audiences</div>
+    <div class="sec-title">Who You're Talking To</div>
+    <div class="audience-row">
+      <div class="aud-card">
+        <div class="aud-icon">🏃</div>
+        <div class="aud-title">The Optimizer</div>
+        <div class="aud-body">35–55, high income, already tracking HRV, sleep, and VO2 max. Wants measurable edge. Reads Huberman, follows Peter Attia. Not a newbie — needs credibility.</div>
+      </div>
+      <div class="aud-card">
+        <div class="aud-icon">💊</div>
+        <div class="aud-title">The Longevity Seeker</div>
+        <div class="aud-body">45–65, professional, anti-aging focus. Skin, energy, cognitive clarity. Has disposable income for a protocol. Scared of "bro supplements" — wants medical credibility.</div>
+      </div>
+      <div class="aud-card">
+        <div class="aud-icon">⚖️</div>
+        <div class="aud-title">The Weight Management Client</div>
+        <div class="aud-body">GLP-1 adjacent. Post-semaglutide or seeking alternatives. Wants sustainable body composition change with science behind it. High LTV if outcomes are real.</div>
+      </div>
+      <div class="aud-card">
+        <div class="aud-icon">🧬</div>
+        <div class="aud-title">The Biohacker</div>
+        <div class="aud-body">28–45, early adopter, does their own research. Already knows what BPC-157 and TB-500 are. Wants a trusted sourcing partner. Word of mouth is their superpower.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAGLINES -->
+  <div class="section">
+    <div class="sec-label">Brand Voice & Taglines</div>
+    <div class="sec-title">What the Brand Says</div>
+    <div class="sec-body">
+      <p>The voice sits at the intersection of scientific precision and Colorado identity. Not clinical. Not bro. Not woo-woo wellness. Think: the friend who's also a PhD biochemist and runs ultramarathons. Everything it says is true, grounded, and earns trust before making claims.</p>
+    </div>
+
+    <div class="tagline-grid">
+      <div class="tagline-card gold">
+        <div class="tagline-cat">Primary Tagline · Recommended</div>
+        <div class="tagline-main">"Engineered for elevation."</div>
+        <div class="tagline-alt">Double meaning: altitude + ambition. Colorado-specific, aspirational without a health claim. Nobody else in the category is saying it.</div>
+        <div class="recommended-badge">★ MC's Pick</div>
+      </div>
+
+      <div class="tagline-card teal">
+        <div class="tagline-cat">Performance · Science</div>
+        <div class="tagline-main">"Your biology. Optimized."</div>
+        <div class="tagline-alt">
+          <span>"Precision wellness. Colorado made."</span>
+          <span>"Built for peak performance."</span>
+          <span>"Molecular-level wellness."</span>
+        </div>
+      </div>
+
+      <div class="tagline-card blue">
+        <div class="tagline-cat">Colorado Roots · Altitude</div>
+        <div class="tagline-main">"Born at altitude. Built to perform."</div>
+        <div class="tagline-alt">
+          <span>"High country. Higher standards."</span>
+          <span>"From the Rockies, for the driven."</span>
+          <span>"Peptides. Precision. Performance."</span>
+        </div>
+      </div>
+
+      <div class="tagline-card green">
+        <div class="tagline-cat">Anti-Aging · Longevity</div>
+        <div class="tagline-main">"Age is data. Not destiny."</div>
+        <div class="tagline-alt">
+          <span>"Your best decade starts now."</span>
+          <span>"Redefine your prime."</span>
+          <span>"The smallest molecules. The biggest difference."</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VISUAL DIRECTION / IMAGES -->
+  <div class="section">
+    <div class="sec-label">Visual Direction</div>
+    <div class="sec-title">The Images That Sell the Brand</div>
+    <div class="sec-body">
+      <p>Strong visual language keeps FDA and Google/Meta policy clean — no injection imagery, no medical claims, no before/after. Instead: aspiration, precision, and Colorado identity. These four directions were generated specifically for this brand. All are available for use.</p>
+    </div>
+
+    <div class="image-grid">
+      <div class="img-card wide">
+        <img src="peptide-summit-silhouette.jpg" alt="Summit silhouette — Colorado peak at golden hour">
+        <div class="img-caption">
+          <div class="img-dir">Direction 1 · Hero / Brand Awareness</div>
+          <div class="img-title">The Summit Silhouette</div>
+          <div class="img-desc">Athlete at a Colorado peak at golden hour. Says everything without claiming anything. Use this as the hero image across all brand touchpoints — website, social cover, display ads. It owns the "elevation" positioning visually.</div>
+        </div>
+      </div>
+
+      <div class="img-card">
+        <img src="peptide-trail-colorado.jpg" alt="Trail runner — Colorado foothills">
+        <div class="img-caption">
+          <div class="img-dir">Direction 2 · Performance / Active Lifestyle</div>
+          <div class="img-title">The Trail Runner</div>
+          <div class="img-desc">Douglas County's literal backyard. Red rocks, Rockies, movement. Best for Google Display and Meta campaigns targeting fitness audiences.</div>
+        </div>
+      </div>
+
+      <div class="img-card">
+        <img src="peptide-morning-ritual.jpg" alt="Morning wellness ritual — mountain view">
+        <div class="img-caption">
+          <div class="img-dir">Direction 3 · Premium Wellness</div>
+          <div class="img-title">The Morning Ritual</div>
+          <div class="img-desc">Aspirational without overclaiming. Mountain home. Clean light. Hands holding water — the daily protocol. Use for the longevity/anti-aging audience segment and landing page hero.</div>
+        </div>
+      </div>
+
+      <div class="img-card wide">
+        <img src="peptide-precision-drop.jpg" alt="Macro precision drop — molecular aesthetic">
+        <div class="img-caption">
+          <div class="img-dir">Direction 4 · Science / Precision</div>
+          <div class="img-title">The Precision Drop</div>
+          <div class="img-desc">Molecular-level aesthetic. Navy-black background, crystalline drop. Signals "this is serious science" without a single word. Use for product pages, search ad landing page backgrounds, and brand identity details.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CAMPAIGN STRATEGY -->
+  <div class="section">
+    <div class="sec-label">Campaign Strategy</div>
+    <div class="sec-title">How to Go to Market</div>
+    <div class="sec-body">
+      <p>Google/Meta will restrict peptide advertising if you lead with therapeutic claims. The strategy is built around this reality: lead with identity and lifestyle, funnel to consultation or purchase, and let the landing page do the medical/scientific heavy lifting.</p>
+    </div>
+
+    <div class="strategy-grid">
+      <div class="strat-card">
+        <div class="strat-icon">🔍</div>
+        <div class="strat-title">Google Search — Intent Capture</div>
+        <div class="strat-body">
+          Capture high-intent searches without triggering pharmacy policies. Target wellness and lifestyle terms. <strong>Keywords:</strong> "peptide therapy Colorado," "biohacking Douglas County," "performance optimization Parker CO," "anti-aging clinic Castle Rock," "hormonal optimization Colorado." Avoid: injection, dosage, cure, treat.
+        </div>
+      </div>
+
+      <div class="strat-card">
+        <div class="strat-icon">📸</div>
+        <div class="strat-title">Meta / Instagram — Audience Building</div>
+        <div class="strat-body">
+          Lead generation and brand awareness via lookalike audience targeting. <strong>Seed audience:</strong> Huberman Lab listeners, Peter Attia followers, CrossFit/functional fitness, functional medicine interest. Use lifestyle visuals — summit, trail runner. No product claims, no injection imagery.
+        </div>
+      </div>
+
+      <div class="strat-card">
+        <div class="strat-icon">📧</div>
+        <div class="strat-title">Email / SMS Nurture</div>
+        <div class="strat-body">
+          The ad drives to a consult or free protocol guide opt-in. Email sequence of 5–7 touches: education first (what peptides are), then social proof, then offer. <strong>Average protocol value $449–$1,295/cycle</strong> — a well-built email funnel pays off fast.
+        </div>
+      </div>
+
+      <div class="strat-card">
+        <div class="strat-icon">🤝</div>
+        <div class="strat-title">Local Partnerships</div>
+        <div class="strat-body">
+          Douglas County is dense with the target customer. <strong>Partner channels:</strong> functional medicine clinics, CrossFit boxes, boutique fitness studios, sport performance coaches in Parker/Castle Rock/Highlands Ranch. Referral program beats any CPM.
+        </div>
+      </div>
+
+      <div class="strat-card">
+        <div class="strat-icon">🧠</div>
+        <div class="strat-title">Content / SEO Foundation</div>
+        <div class="strat-body">
+          Long game. Peptide education content ranks well because most competitors are thin on substance. <strong>Content angles:</strong> "What is BPC-157?", "Peptides vs. HGH," "How to start a peptide protocol," "Colorado functional wellness guide." Blog + YouTube.
+        </div>
+      </div>
+
+      <div class="strat-card">
+        <div class="strat-icon">⚠️</div>
+        <div class="strat-title">Compliance First</div>
+        <div class="strat-body">
+          Before any ad goes live: legal review of all copy for FDA compliance. All claims reviewed against FTC guidelines. <strong>Safe framing:</strong> "wellness," "optimization," "performance support" — not "treats," "cures," "diagnoses." Consult-first model provides the cleanest regulatory path.
+        </div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>Recommended model:</strong> Clinic-supervised or consult-first DTC. It's the cleanest path through Google/Meta policy, the most defensible from an FDA perspective, and it commands the premium price ($449–$1,295/cycle) that makes the unit economics work.
+    </div>
+  </div>
+
+  <!-- SAMPLE AD COPY -->
+  <div class="section">
+    <div class="sec-label">Sample Ad Copy</div>
+    <div class="sec-title">Headlines That Don't Get Disapproved</div>
+    <div class="sec-body">
+      <p>Every line here is written to stay clean under Google and Meta policies — no therapeutic claims, no unapproved substance language. The copy earns attention without triggering a review flag.</p>
+    </div>
+    <div class="ad-copy-grid">
+      <div class="ad-copy-card">
+        <div class="ad-copy-header">Search Ad · Performance Seekers</div>
+        <div class="ad-copy-body">
+          <div class="ad-headline">Engineered for Elevation</div>
+          <div class="ad-headline">Precision Peptide Protocols, CO</div>
+          <div class="ad-headline">Your Biology, Optimized</div>
+          <div class="ad-url">yoursite.com › peptide-protocols</div>
+          <div class="ad-desc">Douglas County's premier peptide wellness practice. Science-backed protocols for performance, recovery, and longevity. Book your free consult today.</div>
+        </div>
+      </div>
+      <div class="ad-copy-card">
+        <div class="ad-copy-header">Search Ad · Anti-Aging / Longevity</div>
+        <div class="ad-copy-body">
+          <div class="ad-headline">Age Is Data. Not Destiny.</div>
+          <div class="ad-headline">Peptide Therapy · Castle Rock, CO</div>
+          <div class="ad-headline">Redefine Your Prime</div>
+          <div class="ad-url">yoursite.com › longevity</div>
+          <div class="ad-desc">Personalized peptide protocols for energy, skin, and cognitive clarity. Physician-guided. Rooted in the Rockies. Your best decade starts with a conversation.</div>
+        </div>
+      </div>
+      <div class="ad-copy-card">
+        <div class="ad-copy-header">Search Ad · Biohacking / Optimization</div>
+        <div class="ad-copy-body">
+          <div class="ad-headline">Born at Altitude. Built to Perform.</div>
+          <div class="ad-headline">Biohacking · Douglas County</div>
+          <div class="ad-headline">High Country. Higher Standards.</div>
+          <div class="ad-url">yoursite.com › optimization</div>
+          <div class="ad-desc">For those who track everything and settle for nothing. Precision peptide protocols from Colorado's most credible wellness practice. Start with a free consultation.</div>
+        </div>
+      </div>
+      <div class="ad-copy-card">
+        <div class="ad-copy-header">Meta / IG Ad · Awareness</div>
+        <div class="ad-copy-body">
+          <div class="ad-headline">You track your HRV. Your sleep. Your VO2.</div>
+          <div class="ad-url">yoursite.com</div>
+          <div class="ad-desc">Isn't it time your recovery protocol caught up with your data? Colorado's premier peptide wellness practice — built for the optimizer who's done guessing. Complimentary consult this month.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 90-DAY LAUNCH TIMELINE -->
+  <div class="section">
+    <div class="sec-label">Launch Timeline</div>
+    <div class="sec-title">90-Day Playbook</div>
+    <div class="sec-body">
+      <p>Three phases: build the foundation, light the match, then scale what's working. Nothing goes live until it's legally clean and the funnel is built end-to-end.</p>
+    </div>
+
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot">1</div>
+        <div class="tl-content">
+          <div class="tl-week">Weeks 1–2 · Foundation</div>
+          <div class="tl-title">Brand, Legal & Infrastructure</div>
+          <ul class="tl-tasks">
+            <li>Finalize company name, logo, and color system</li>
+            <li>Legal review of all claims — FDA compliance pass on every word</li>
+            <li>Website domain + hosting setup</li>
+            <li>Landing page built: hero → opt-in → consult booking</li>
+            <li>CRM + email sequence wired (5–7 touch nurture flow)</li>
+            <li>Google Ads and Meta ad accounts created and verified</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-dot" style="border-color: var(--blue); color: var(--blue);">2</div>
+        <div class="tl-content">
+          <div class="tl-week tl-week blue">Weeks 3–4 · Soft Launch</div>
+          <div class="tl-title">First Traffic & Local Partnerships</div>
+          <ul class="tl-tasks">
+            <li><strong>Google Search campaigns live</strong> — 3 ad groups, $50–75/day, performance + longevity + biohacking</li>
+            <li>Meta awareness campaign live — brand video + summit image, $25/day</li>
+            <li>Reach out to 5–10 Douglas County functional medicine clinics, CrossFit boxes</li>
+            <li>First content piece published: "What Are Peptides & Why Colorado Athletes Use Them"</li>
+            <li>Set up conversion tracking — form fills, consult bookings, phone calls</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-dot" style="border-color: var(--gold); color: var(--gold);">3</div>
+        <div class="tl-content">
+          <div class="tl-week" style="color: var(--gold);">Weeks 5–8 · Optimization</div>
+          <div class="tl-title">Read the Data, Cut What Doesn't Work</div>
+          <ul class="tl-tasks">
+            <li>First performance review — which ad groups are generating consult bookings?</li>
+            <li>Add negative keywords from search term report</li>
+            <li>OPtimize landing page based on heatmap/scroll data</li>
+            <li>Scale budget 20–30% on top performers</li>
+            <li>Publish 2–3 more content pieces targeting Colorado + peptide search intent</li>
+            <li>First referral program launch — partner clinic incentive</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-dot" style="border-color: var(--green); color: var(--green);">4</div>
+        <div class="tl-content">
+          <div class="tl-week" style="color: var(--green);">Weeks 9–12 · Scale</div>
+          <div class="tl-title">Find the Unit Economics, Then Push</div>
+          <ul class="tl-tasks">
+            <li>Know your cost-per-consult and consult-to-client conversion rate</li>
+            <li>If CPL is under $150 and conversion rate above 20% → aggressively scale ad spend</li>
+            <li>Expand geographic targeting to Denver Metro / Front Range</li>
+            <li>Launch retargeting campaigns — website visitors who didn't book</li>
+            <li>Begin building email list for long-term SEO + authority plays</li>
+            <li><strong>Month 3 goal: 20+ active clients, $10K+ MRR, referral engine running</strong></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <strong>Before anything goes live:</strong> An attorney with FTC/FDA experience needs to review all copy, claims, and product descriptions. This brief is a creative and strategic starting point — not legal clearance. One disapproved ad or one FDA warning letter costs more than the legal review. Do it first.
+    </div>
+  </div>
+
+  <!-- NEXT STEPS -->
+  <div class="section">
+    <div class="sec-label">Next Steps</div>
+    <div class="sec-title">What MC Needs to Move Forward</div>
+    <div class="sec-body">
+      <p>This brief is ready to execute from the moment you answer two questions:</p>
+    </div>
+    <div class="strategy-grid" style="margin-top: 20px;">
+      <div class="strat-card">
+        <div class="strat-icon">🏷️</div>
+        <div class="strat-title">1. What's the company name?</div>
+        <div class="strat-body">Once you've got a name, MC can build the website, landing pages, Google Ads campaigns, and the full brand identity system around it. Everything above is placeholder-ready.</div>
+      </div>
+      <div class="strat-card">
+        <div class="strat-icon">⚕️</div>
+        <div class="strat-title">2. What's the business model?</div>
+        <div class="strat-body">Clinic-supervised? DTC wellness? Research-grade? This determines every single copy decision, what platforms you can run on, and how the landing page converts. One answer unlocks everything.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  Prepared by <span>MC — Unbridled Solutions</span> · Confidential · July 10, 2026 · Douglas County, Colorado
+</footer>
+
+</body>
+</html>
