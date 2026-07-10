@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wealth Commander — Master Deliverables Sheet</title>
+<style>
+  :root {
+    --bg: #0a0f14;
+    --navy: #0f1c2a;
+    --card: #121e2b;
+    --border: #1c3048;
+    --gold: #c9aa7c;
+    --blue: #5a9fc7;
+    --text: #e8e4de;
+    --muted: #7a8fa0;
+    --green: #4caf7d;
+    --red: #e05a5a;
+    --yellow: #e0c44a;
+    --purple: #9b7fe8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, var(--navy) 0%, #080f17 100%);
+    border-bottom: 2px solid var(--gold);
+    padding: 24px 32px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .header-left .eyebrow {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 6px;
+  }
+  header h1 {
+    font-size: clamp(18px, 3vw, 24px);
+    font-weight: 800;
+    color: #fff;
+  }
+  .header-meta {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .meta-pill {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .meta-pill span { color: var(--text); font-weight: 600; }
+
+  /* SUMMARY STRIP */
+  .summary-strip {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .sum-tile {
+    flex: 1;
+    min-width: 120px;
+    padding: 16px 20px;
+    border-right: 1px solid var(--border);
+    text-align: center;
+  }
+  .sum-tile:last-child { border-right: none; }
+  .sum-val {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+  .sum-val.gold { color: var(--gold); }
+  .sum-val.green { color: var(--green); }
+  .sum-val.yellow { color: var(--yellow); }
+  .sum-val.red { color: var(--red); }
+  .sum-label {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* MAIN */
+  .container { padding: 24px 20px; max-width: 1200px; margin: 0 auto; }
+
+  /* SECTION LABEL */
+  .sec-label {
+    font-size: 10px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--gold);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .sec-label .add-btn {
+    background: rgba(201,170,124,0.1);
+    border: 1px solid rgba(201,170,124,0.3);
+    color: var(--gold);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .sec-label .add-btn:hover { background: rgba(201,170,124,0.2); }
+
+  /* TABLE */
+  .table-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    overflow-x: auto;
+    margin-bottom: 28px;
+  }
+  table {
+    width: 100%;
+    min-width: 800px;
+    border-collapse: collapse;
+  }
+  thead th {
+    background: rgba(255,255,255,0.03);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  tbody tr {
+    border-bottom: 1px solid rgba(28,48,72,0.5);
+    transition: background 0.15s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  td {
+    padding: 11px 14px;
+    font-size: 13px;
+    vertical-align: middle;
+  }
+  td.deliverable-name {
+    font-weight: 600;
+    color: #fff;
+    min-width: 200px;
+  }
+  td.deliverable-name .sub {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 400;
+    display: block;
+    margin-top: 2px;
+  }
+
+  /* STATUS BADGE */
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  .badge-done    { background: rgba(76,175,125,0.15);  color: var(--green);  border: 1px solid rgba(76,175,125,0.3); }
+  .badge-in-progress { background: rgba(90,159,199,0.15); color: var(--blue);   border: 1px solid rgba(90,159,199,0.3); }
+  .badge-pending { background: rgba(224,196,74,0.12);  color: var(--yellow); border: 1px solid rgba(224,196,74,0.3); }
+  .badge-blocked { background: rgba(224,90,90,0.12);   color: var(--red);    border: 1px solid rgba(224,90,90,0.3); }
+  .badge-draft   { background: rgba(155,127,232,0.12); color: var(--purple); border: 1px solid rgba(155,127,232,0.3); }
+
+  /* PRIORITY DOT */
+  .priority { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dot-high   { background: var(--red); }
+  .dot-med    { background: var(--yellow); }
+  .dot-low    { background: var(--muted); }
+  .dot-gold   { background: var(--gold); }
+
+  /* PROGRESS BAR */
+  .progress-wrap { min-width: 100px; }
+  .progress-bar {
+    height: 4px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 3px;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(to right, var(--blue), var(--teal, #3de8c8));
+  }
+  .progress-pct { font-size: 11px; color: var(--muted); }
+
+  /* NOTES */
+  .note-cell { max-width: 220px; font-size: 12px; color: var(--muted); line-height: 1.4; }
+
+  /* OWNER AVATAR */
+  .owner {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    white-space: nowrap;
+  }
+  .avatar {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 800;
+    color: var(--gold);
+    flex-shrink: 0;
+  }
+  .owner-name { font-size: 12px; color: var(--text); }
+
+  /* DATE */
+  .date-cell { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .date-cell.overdue { color: var(--red); font-weight: 600; }
+  .date-cell.soon { color: var(--yellow); }
+
+  /* LINKED URL */
+  .link-cell a {
+    color: var(--blue);
+    text-decoration: none;
+    font-size: 12px;
+  }
+  .link-cell a:hover { color: var(--gold); text-decoration: underline; }
+
+  /* CAT SECTION HEADER ROW */
+  tr.cat-row td {
+    background: rgba(201,170,124,0.04);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    padding: 8px 14px;
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* INSTRUCTIONS CALLOUT */
+  .callout {
+    background: rgba(90,159,199,0.05);
+    border-left: 3px solid var(--blue);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .callout strong { color: var(--blue); }
+
+  /* LEGEND */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    padding: 20px;
+    border-top: 1px solid var(--border);
+    margin-top: 12px;
+  }
+  footer span { color: var(--gold); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="eyebrow">Wealth Commander · Master Deliverables</div>
+    <h1>Project Deliverables Tracker</h1>
+  </div>
+  <div class="header-meta">
+    <div class="meta-pill">Owner: <span>Jonathan Wield</span></div>
+    <div class="meta-pill">Entity: <span>Wealth Commander</span></div>
+    <div class="meta-pill">Updated: <span id="last-updated">—</span></div>
+  </div>
+</header>
+
+<!-- SUMMARY STRIP -->
+<div class="summary-strip">
+  <div class="sum-tile">
+    <div class="sum-val gold" id="total-count">—</div>
+    <div class="sum-label">Total Items</div>
+  </div>
+  <div class="sum-tile">
+    <div class="sum-val green" id="done-count">—</div>
+    <div class="sum-label">Complete</div>
+  </div>
+  <div class="sum-tile">
+    <div class="sum-val" style="color:var(--blue)" id="ip-count">—</div>
+    <div class="sum-label">In Progress</div>
+  </div>
+  <div class="sum-tile">
+    <div class="sum-val yellow" id="pending-count">—</div>
+    <div class="sum-label">Pending</div>
+  </div>
+  <div class="sum-tile">
+    <div class="sum-val red" id="blocked-count">—</div>
+    <div class="sum-label">Blocked</div>
+  </div>
+  <div class="sum-tile">
+    <div class="sum-val" id="pct-complete">—</div>
+    <div class="sum-label">% Complete</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="callout">
+    <strong>How to use this sheet:</strong> Each row is a deliverable — a concrete output you can link to, ship, or check off. Update the Status column as work progresses. Link to the live artifact (Google Doc, deployed URL, PDF) in the Deliverable column. Priority drives what gets done first. This sheet is the source of truth for everything Wealth Commander ships.
+  </div>
+
+  <!-- LEGEND -->
+  <div class="legend">
+    <div class="legend-item"><span class="badge badge-done">Complete</span> Shipped & live</div>
+    <div class="legend-item"><span class="badge badge-in-progress">In Progress</span> Actively being worked</div>
+    <div class="legend-item"><span class="badge badge-pending">Pending</span> Not started, queued</div>
+    <div class="legend-item"><span class="badge badge-blocked">Blocked</span> Waiting on dependency</div>
+    <div class="legend-item"><span class="badge badge-draft">Draft</span> In review</div>
+    <div class="legend-item"><span class="dot dot-high" style="display:inline-block"></span> High priority</div>
+    <div class="legend-item"><span class="dot dot-med" style="display:inline-block"></span> Medium priority</div>
+    <div class="legend-item"><span class="dot dot-low" style="display:inline-block"></span> Low priority</div>
+  </div>
+
+  <!-- DELIVERABLES TABLE -->
+  <div class="sec-label">
+    All Deliverables
+    <button class="add-btn" onclick="alert('Add rows directly to the table HTML, or ask MC to update this sheet.')">+ Add Row</button>
+  </div>
+
+  <div class="table-wrap">
+    <table id="deliverables-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Deliverable</th>
+          <th>Category</th>
+          <th>Status</th>
+          <th>Priority</th>
+          <th>Owner</th>
+          <th>Due Date</th>
+          <th>Progress</th>
+          <th>Link / Artifact</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <!-- ── FOUNDATION ── -->
+        <tr class="cat-row"><td colspan="10">Foundation & Setup</td></tr>
+
+        <tr>
+          <td style="color:var(--muted);font-size:12px;">001</td>
+          <td class="deliverable-name">Brand Identity System
+            <span class="sub">Logo, colors, typography, brand guidelines doc</span>
+          </td>
+          <td style="font-size:12px;color:var(--muted);">Branding</td>
+          <td><span class="badge badge-pending">Pending</span></td>
+          <td><div class="priority"><span class="dot dot-high"></span>High</div></td>
+          <td><div class="owner"><div class="avatar">JW</div><span class="owner-name">J. Wield</span></div></td>
+          <td class="date-cell">—</td>
+          <td class="progress-wrap">
+            <div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>
+            <span class="progress-pct">0%</span>
+          </td>
+          <td class="link-cell"><a href="#">—</a></td>
+          <td class="note-cell">Foundation for all outward-facing assets</td>
+        </tr>
+
+        <tr>
+          <td style="color:var(--muted);font-size:12px;">002</td>
+          <td class="deliverable-name">Website — v1 Launch
+            <span class="sub">Homepage, about, services, contact</span>
+          </td>
+          <td style="font-size:12px;color:var(--muted);">Web</td>
+          <td><span class="badge badge-pending">Pending</span></td>
+          <td><div class="priority"><span class="dot dot-high"></span>High</div></td>
+          <td><div class="owner"><div class="avatar">JW</div><span class="owner-name">J. Wield</span></div></td>
+          <td class="date-cell">—</td>
+          <td class="progress-wrap">
+            <div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>
+            <span class="progress-pct">0%</span>
+          </td>
+          <td class="link-cell"><a href="#">carlsonunbridledwealth.com</a></td>
+          <td class="note-cell">Tied to brand identity — can't ship without 001</td>
+        </tr>
+
+        <tr>
+          <td style="color:var(--muted);font-size:12px;">003</td>
+          <td class="deliverable-name">Google Ads Account Setup
+            <span class="sub">Account structure, billing, conversion tracking</span>
+          </td>
+          <td style="font-size:12px;color:var(--muted);">Ads</td>
+          <td><span class="badge badge-in-progress">In Progress</span></td>
+          <td><div class="priority"><span class="dot dot-high"></span>High</div></td>
+          <td><div class="owner"><div class="avatar">MC</div><span class="owner-name">MC</span></div></td>
+          <td class="date-cell">—</td>
+          <td class="progress-wrap">
+            <div class="progress-bar"><div class="progress-fill" style="width:60%"></div></div>
+            <span class="progress-pct">60%</span>
+          </td>
+          <td class="link-cell"><a href="#">Account: 9532574564</a></td>
+          <td class="note-cell">Under MCC 4175269903. TSP campaigns paused.</td>
+        </tr>
+
+        <!-- ── CONTENT ── -->
+        <tr class="cat-row"><td colspan="10">Content & Thought Leadership</td></tr>
+
+        <tr>
+          <td style="color:var(--muted);font-size:12px;">004</td>
+          <td class="deliverable-name">Wealth Commander Origin Story
+            <span class="sub">Founder narrative — why this, why now, who it's for</span>
+          </td>
+          <td style="font-size:12px;color:var(--muted);">Content</td>
+          <td><span class="badge badge-pending">Pending</span></td>
+          <td><div class="priority"><span class="dot dot-high"></span>High</div></td>
+          <td><div class="owner"><div class="avatar">JW</div><span class="owner-name">J. Wield</span></div></td>
+          <td class="date-cell">—</td>
+          <td class="progress-wrap">
+            <div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>
+            <span class="progress-pct">0%</span>
+          </td>
+          <td class="link-cell"><a href="#">—</a></td>
+          <td class="note-cell">Feeds website About page + ad copy</td>
+        </tr>
+
+        <tr>
+          <td style="color:var(--muted);font-size:12px;">005</td>
+          <td class="deliverable-name">Service Menu / Offer Stack
+            <span class="sub">What Wealth Commander offers, pricing, packages</span>
+          </td>
+          <td style="font-size:12px;color:var(--muted);">Content</td>
+          <td><span class="badge badge-pending">Pending</span></td>
+          <td><div class="priority"><span class="dot dot-high"></span>High</div></td>
+          <td><div class="owner"><div class="avatar">JW</div><span class="owner-name">J. Wield</span></div></td>
+          <td class="date-cell">—</td>
+          <td class="progress-wrap">
+            <div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>
+            <span class="progress-pct">0%</span>
+          </td>
+          <td class="link-cell"><a href="#">—</a></td>
+          <td class="note-cell">Needed before any ads or landing pages go live</td>
+        </tr>
+
+        <tr>
+          <td style="color:var(--muted);font-size:12px;">006</td>
+          <td class="deliverable-name">Monthly Newsletter — Issue 1
+            <span class="sub">Intro edition: who WC is, what to expect</span>
+          </td>
+          <td style="font-size:12px;color:var(--muted);">Content</td>
+          <td><span class="badge badge-pending">Pending</span></td>
+          <td><div class="priority"><span class="dot dot-med"></span>Medium</div></td>
+          <td><div class="owner"><div class="avatar">JW</div><span class="owner-name">J. Wield</span></div></td>
+          <td class="date-cell">—</td>
+          <td class="progress-wrap">
+            <div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>
+            <span class="progress-pct">0%</span>
+          </td>
+          <td class="link-cell"><a href="#">—</a></td>
+          <td class="note-cell">—</td>
+        </tr>
+
+        <!-- ── CAMPAIGNS ── -->
+        <tr class="cat-row"><td colspan="10">Ad Campaigns & Lead Generation</td></tr>
+
+        <tr>
+          <td style="color:var(--muted);font-size:12px;">007</td>
+          <td class="deliverable-name">Google Ads — Campaign 1
+            <span class="sub">First live search campaign — keyword strategy TBD</span>
+          </td>
+          <td style="font-size:12px;color:var(--muted);">Ads</td>
+          <td><span class="badge badge-blocked">Blocked</span></td>
+          <td><div class="priority"><span class="dot dot-high"></span>High</div></td>
+          <td><div class="owner"><div class="avatar">MC</div><span class="owner-name">MC</span></div></td>
+          <td class="date-cell">—</td>
+          <td class="progress-wrap">
+            <div class="progress-bar"><div class="progress-fill" style="width:10%"></div></div>
+            <span class="progress-pct">10%</span>
+          </td>
+          <td class="link-cell"><a href="#">—</a></td>
+          <td class="note-cell">Blocked on: landing page + offer stack (005)</td>
+        </tr>
+
+        <tr>
+          <td style="color:var(--muted);font-size:12px;">008</td>
+          <td class="deliverable-name">Landing Page — Lead Capture
+            <span class="sub">Consult booking or lead gen opt-in page</span>
+          </td>
+          <td style="font-size:12px;color:var(--muted);">Web</td>
+          <td><span class="badge badge-pending">Pending</span></td>
+          <td><div class="priority"><span class="dot dot-high"></span>High</div></td>
+          <td><div class="owner"><div class="avatar">MC</div><span class="owner-name">MC</span></div></td>
+          <td class="date-cell">—</td>
+          <td class="progress-wrap">
+            <div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>
+            <span class="progress-pct">0%</span>
+          </td>
+          <td class="link-cell"><a href="#">—</a></td>
+          <td class="note-cell">Blocked on: service offer defined (005)</td>
+        </tr>
+
+        <!-- ── CLIENT MGMT ── -->
+        <tr class="cat-row"><td colspan="10">Client Management & Operations</td></tr>
+
+        <tr>
+          <td style="color:var(--muted);font-size:12px;">009</td>
+          <td class="deliverable-name">Client Onboarding Process
+            <span class="sub">Intake form, welcome sequence, expectations doc</span>
+          </td>
+          <td style="font-size:12px;color:var(--muted);">Operations</td>
+          <td><span class="badge badge-pending">Pending</span></td>
+          <td><div class="priority"><span class="dot dot-med"></span>Medium</div></td>
+          <td><div class="owner"><div class="avatar">JW</div><span class="owner-name">J. Wield</span></div></td>
+          <td class="date-cell">—</td>
+          <td class="progress-wrap">
+            <div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>
+            <span class="progress-pct">0%</span>
+          </td>
+          <td class="link-cell"><a href="#">—</a></td>
+          <td class="note-cell">—</td>
+        </tr>
+
+        <tr>
+          <td style="color:var(--muted);font-size:12px;">010</td>
+          <td class="deliverable-name">Reporting Dashboard — Client-Facing
+            <span class="sub">What clients see: portfolio, performance, milestones</span>
+          </td>
+          <td style="font-size:12px;color:var(--muted);">Operations</td>
+          <td><span class="badge badge-pending">Pending</span></td>
+          <td><div class="priority"><span class="dot dot-med"></span>Medium</div></td>
+          <td><div class="owner"><div class="avatar">MC</div><span class="owner-name">MC</span></div></td>
+          <td class="date-cell">—</td>
+          <td class="progress-wrap">
+            <div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>
+            <span class="progress-pct">0%</span>
+          </td>
+          <td class="link-cell"><a href="#">—</a></td>
+          <td class="note-cell">MC can build once service model is defined</td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+
+  <!-- HOW TO USE -->
+  <div class="sec-label">How to Use This Template</div>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px 24px;margin-bottom:28px;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;">
+      <div>
+        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">Updating Status</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.6;">Tell MC "mark 004 as in progress" or "005 is done, here's the link." MC updates this sheet and redeploys in under 2 minutes.</div>
+      </div>
+      <div>
+        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">Adding Deliverables</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.6;">Describe what you need to ship and MC adds the row. Include: what it is, who owns it, due date, category. That's enough to get it on the board.</div>
+      </div>
+      <div>
+        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">Publishing Your Work</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.6;">When a deliverable is complete, paste the URL in the Link column. This sheet becomes Jonathan's proof-of-work record — everything Wealth Commander has shipped, linked and dated.</div>
+      </div>
+      <div>
+        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">Sharing</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.6;">This URL is public. Share it with Stan, partners, or clients as a live progress view. It updates automatically when MC redeploys — no login required.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <span>Wealth Commander</span> · Master Deliverables Sheet · Powered by MC — Unbridled Solutions · <span id="footer-date">July 2026</span>
+</footer>
+
+<script>
+  // Set last updated
+  const now = new Date();
+  document.getElementById('last-updated').textContent = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+  // Compute summary counts from table
+  const rows = document.querySelectorAll('#deliverables-table tbody tr:not(.cat-row)');
+  let total = 0, done = 0, ip = 0, pending = 0, blocked = 0;
+  rows.forEach(r => {
+    const badge = r.querySelector('.badge');
+    if (!badge) return;
+    total++;
+    const cls = badge.className;
+    if (cls.includes('done')) done++;
+    else if (cls.includes('in-progress')) ip++;
+    else if (cls.includes('pending')) pending++;
+    else if (cls.includes('blocked')) blocked++;
+  });
+  document.getElementById('total-count').textContent = total;
+  document.getElementById('done-count').textContent = done;
+  document.getElementById('ip-count').textContent = ip;
+  document.getElementById('pending-count').textContent = pending;
+  document.getElementById('blocked-count').textContent = blocked;
+  document.getElementById('pct-complete').textContent = total > 0 ? Math.round((done/total)*100) + '%' : '0%';
+</script>
+</body>
+</html>
