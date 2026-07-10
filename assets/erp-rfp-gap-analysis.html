@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unbridled Solutions — ERP RFP Gap Analysis</title>
+<style>
+  :root {
+    --bg: #0a0f14;
+    --navy: #0f1c2a;
+    --card: #121e2b;
+    --border: #1c3048;
+    --gold: #c9aa7c;
+    --blue: #5a9fc7;
+    --teal: #3de8c8;
+    --text: #e8e4de;
+    --muted: #7a8fa0;
+    --green: #4caf7d;
+    --red: #e05a5a;
+    --yellow: #e0c44a;
+    --purple: #9b7fe8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 14px;
+    line-height: 1.65;
+  }
+
+  header {
+    background: linear-gradient(135deg, var(--navy) 0%, #060d14 100%);
+    border-bottom: 2px solid var(--gold);
+    padding: 28px 36px 24px;
+  }
+  .eyebrow { font-size: 10px; letter-spacing: 3.5px; text-transform: uppercase; color: var(--teal); margin-bottom: 8px; }
+  header h1 { font-size: clamp(20px, 3.5vw, 28px); font-weight: 800; color: #fff; margin-bottom: 6px; }
+  .header-sub { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
+  .header-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pill { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 4px 12px; font-size: 11px; color: var(--muted); }
+  .pill span { color: var(--text); font-weight: 600; }
+
+  .container { max-width: 1060px; margin: 0 auto; padding: 0 24px 60px; }
+  .section { padding: 40px 0 0; }
+
+  .sec-num { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--teal); margin-bottom: 4px; }
+  .sec-title { font-size: clamp(18px, 3vw, 23px); font-weight: 800; color: #fff; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+  .sec-body { color: rgba(232,228,222,0.8); font-size: 14px; line-height: 1.7; margin-bottom: 16px; }
+
+  /* SCORECARD */
+  .scorecard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+    margin: 20px 0 32px;
+  }
+  .score-tile {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .score-tile::before { content: ''; display: block; height: 3px; }
+  .score-tile.gold::before { background: var(--gold); }
+  .score-tile.green::before { background: var(--green); }
+  .score-tile.yellow::before { background: var(--yellow); }
+  .score-tile.red::before { background: var(--red); }
+  .score-tile.blue::before { background: var(--blue); }
+  .score-inner { padding: 14px 16px; }
+  .score-val { font-size: clamp(22px, 4vw, 30px); font-weight: 800; color: var(--text); margin-bottom: 3px; }
+  .score-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+
+  /* GAP ITEMS */
+  .gap-list { list-style: none; padding: 0; }
+  .gap-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+  .gap-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .gap-icon { font-size: 20px; flex-shrink: 0; }
+  .gap-title { font-weight: 700; color: #fff; font-size: 14px; flex: 1; }
+  .gap-sev {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .sev-critical { background: rgba(224,90,90,0.15); color: var(--red); border: 1px solid rgba(224,90,90,0.3); }
+  .sev-high { background: rgba(224,196,74,0.12); color: var(--yellow); border: 1px solid rgba(224,196,74,0.3); }
+  .sev-medium { background: rgba(90,159,199,0.12); color: var(--blue); border: 1px solid rgba(90,159,199,0.3); }
+  .sev-low { background: rgba(138,154,170,0.1); color: var(--muted); border: 1px solid var(--border); }
+  .gap-body { padding: 14px 18px; }
+  .gap-issue { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 12px; }
+  .gap-issue strong { color: var(--text); }
+  .gap-fix {
+    background: rgba(61,232,200,0.04);
+    border-left: 3px solid var(--teal);
+    border-radius: 0 6px 6px 0;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.55;
+  }
+  .gap-fix strong { color: var(--teal); }
+
+  /* STRENGTHS */
+  .strength-list { list-style: none; padding: 0; }
+  .strength-item {
+    display: flex;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(28,48,72,0.5);
+  }
+  .strength-item:last-child { border-bottom: none; }
+  .strength-icon { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+  .strength-content {}
+  .strength-title { font-weight: 700; color: #fff; font-size: 14px; margin-bottom: 3px; }
+  .strength-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  /* SUGGESTED LANGUAGE */
+  .suggested {
+    background: rgba(201,170,124,0.05);
+    border: 1px solid rgba(201,170,124,0.2);
+    border-radius: 8px;
+    padding: 16px 18px;
+    margin: 12px 0;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.65;
+  }
+  .suggested .label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .suggested p + p { margin-top: 8px; }
+  .suggested strong { color: var(--text); }
+
+  /* CALLOUT */
+  .callout {
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-size: 13px;
+    line-height: 1.65;
+  }
+  .callout.gold { background: rgba(201,170,124,0.06); border-left: 3px solid var(--gold); color: var(--muted); }
+  .callout.red { background: rgba(224,90,90,0.06); border-left: 3px solid var(--red); color: var(--muted); }
+  .callout.green { background: rgba(76,175,125,0.06); border-left: 3px solid var(--green); color: var(--muted); }
+  .callout strong { color: var(--text); }
+
+  /* SECTION ADDITIONS */
+  .addition-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 14px;
+    margin: 16px 0;
+  }
+  .addition-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .addition-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+  .addition-card.gold::before { background: var(--gold); }
+  .addition-card.teal::before { background: var(--teal); }
+  .addition-card.blue::before { background: var(--blue); }
+  .addition-card.red::before { background: var(--red); }
+  .addition-card.green::before { background: var(--green); }
+  .ac-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .ac-title { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .ac-body { font-size: 13px; color: var(--muted); line-height: 1.6; }
+  .ac-body strong { color: var(--text); }
+
+  /* SECTION DIVIDER */
+  hr { border: none; border-top: 1px solid var(--border); margin: 40px 0 0; }
+
+  footer {
+    text-align: center;
+    padding: 24px;
+    font-size: 11px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+  }
+  footer span { color: var(--gold); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Unbridled Solutions · Confidential</div>
+  <h1>ERP RFP — Direct Gap Analysis</h1>
+  <div class="header-sub">Line-by-line review of your July 10, 2026 RFP draft — gaps, strengthening language, and additions before it goes out</div>
+  <div class="header-pills">
+    <div class="pill">Document: <span>ERP RFP to Share.docx</span></div>
+    <div class="pill">Users scoped: <span>~225 across 5 roles</span></div>
+    <div class="pill">Systems replacing: <span>Deltek · ClickUp · Nimble · Lattice (+ optional UKG)</span></div>
+    <div class="pill">Analyzed: <span>July 10, 2026 by MC</span></div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- OVERALL ASSESSMENT -->
+  <div class="section">
+    <div class="sec-num">Overall Assessment</div>
+    <div class="sec-title">Where This RFP Stands</div>
+    <div class="sec-body">
+      <p>The document is a solid foundation — well-organized, comprehensive in functional scope, and clearly written. The functional requirements sections (5.1–5.8) are notably strong. The gaps are concentrated in the back half: implementation rigor, data migration specifics, multi-entity depth, and the contractual teeth that prevent post-signature surprises.</p>
+      <p>Below are 14 gaps ranked by severity, followed by suggested language to add. Most are additions to existing sections — not rewrites.</p>
+    </div>
+
+    <div class="scorecard">
+      <div class="score-tile green">
+        <div class="score-inner">
+          <div class="score-val">✓</div>
+          <div class="score-label">Structure & Org</div>
+        </div>
+      </div>
+      <div class="score-tile green">
+        <div class="score-inner">
+          <div class="score-val">✓</div>
+          <div class="score-label">Functional Reqs</div>
+        </div>
+      </div>
+      <div class="score-tile yellow">
+        <div class="score-inner">
+          <div class="score-val">~</div>
+          <div class="score-label">Multi-Entity Depth</div>
+        </div>
+      </div>
+      <div class="score-tile red">
+        <div class="score-inner">
+          <div class="score-val">✗</div>
+          <div class="score-label">Data Migration</div>
+        </div>
+      </div>
+      <div class="score-tile red">
+        <div class="score-inner">
+          <div class="score-val">✗</div>
+          <div class="score-label">SLA Definitions</div>
+        </div>
+      </div>
+      <div class="score-tile yellow">
+        <div class="score-inner">
+          <div class="score-val">~</div>
+          <div class="score-label">Implementation</div>
+        </div>
+      </div>
+      <div class="score-tile red">
+        <div class="score-inner">
+          <div class="score-val">✗</div>
+          <div class="score-label">Change Mgmt</div>
+        </div>
+      </div>
+      <div class="score-tile yellow">
+        <div class="score-inner">
+          <div class="score-val">~</div>
+          <div class="score-label">Pricing Rigor</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STRENGTHS -->
+  <div class="section">
+    <div class="sec-num">What's Working</div>
+    <div class="sec-title">Strengths to Keep</div>
+    <ul class="strength-list">
+      <li class="strength-item">
+        <div class="strength-icon">✅</div>
+        <div class="strength-content">
+          <div class="strength-title">Section 5.3 Marketing Operations is an excellent addition</div>
+          <div class="strength-desc">Most ERP RFPs skip this entirely or lump it under CRM. Your inclusion of email/SMS/social campaigns, A/B testing, consent management (CAN-SPAM/CASL/GDPR), and closed-loop CRM reporting is thorough and will surface real platform differences. Keep it exactly as written.</div>
+        </div>
+      </li>
+      <li class="strength-item">
+        <div class="strength-icon">✅</div>
+        <div class="strength-content">
+          <div class="strength-title">User table (Section 6) is specific and useful</div>
+          <div class="strength-desc">~225 total users across 5 roles gives vendors what they need to price correctly. Most RFPs say "approximately X users" without the breakdown — yours is better than most.</div>
+        </div>
+      </li>
+      <li class="strength-item">
+        <div class="strength-icon">✅</div>
+        <div class="strength-content">
+          <div class="strength-title">Deltek/ClickUp/Nimble/Lattice + optional UKG is clearly scoped</div>
+          <div class="strength-desc">Naming the incumbent systems up front is exactly right. Vendors know what they're replacing and can speak to migration paths and feature parity. Don't bury this — consider moving it to an earlier section.</div>
+        </div>
+      </li>
+      <li class="strength-item">
+        <div class="strength-icon">✅</div>
+        <div class="strength-content">
+          <div class="strength-title">EMEA + UK compliance callout in Section 5.6</div>
+          <div class="strength-desc">Most SMB-positioned RFPs miss international compliance entirely. Including US/UK/EMEA data privacy signals organizational sophistication and will filter out vendors who can't actually support it.</div>
+        </div>
+      </li>
+      <li class="strength-item">
+        <div class="strength-icon">✅</div>
+        <div class="strength-content">
+          <div class="strength-title">Evaluation criteria (Section 11) is well-balanced</div>
+          <div class="strength-desc">Six criteria covering functional fit, vendor expertise, methodology, pricing, scalability, and support is a solid rubric. Consider adding weighted percentages so vendors know what matters most.</div>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- CRITICAL GAPS -->
+  <div class="section">
+    <div class="sec-num">Gap Analysis</div>
+    <div class="sec-title">14 Gaps — Ranked by Severity</div>
+
+    <ul class="gap-list">
+
+      <li class="gap-item">
+        <div class="gap-header">
+          <div class="gap-icon">💾</div>
+          <div class="gap-title">Data Migration — Dangerously Underspecified</div>
+          <div class="gap-sev sev-critical">Critical</div>
+        </div>
+        <div class="gap-body">
+          <div class="gap-issue">Section 3 mentions "data migration" as part of scope in one line. That's it. You're migrating from <strong>Deltek Vantagepoint, ClickUp, Nimble, and Lattice</strong> — four systems with very different data models, years of history, and no clean export standards. Data migration is where 20–30% of ERP implementations fail or blow their budget. Without specifics in the RFP, you'll get a generic "we have a migration tool" response and a change order after contract.</div>
+          <div class="gap-fix"><strong>Add to Section 3 (Scope of Work):</strong> A dedicated Data Migration sub-section listing: source systems and approximate record counts (Deltek GL history, Nimble contacts, ClickUp projects, Lattice performance data), years of history required, data cleansing responsibilities (client vs. vendor), validation and sign-off process, cutover approach (big bang vs. parallel run), and who owns post-migration data issues.</div>
+        </div>
+      </li>
+
+      <li class="gap-item">
+        <div class="gap-header">
+          <div class="gap-icon">📋</div>
+          <div class="gap-title">SLA Definitions — Completely Absent</div>
+          <div class="gap-sev sev-critical">Critical</div>
+        </div>
+        <div class="gap-body">
+          <div class="gap-issue">Section 8 asks vendors to "detail SLAs" but provides zero parameters. Without anchoring what you expect, vendors will propose whatever they know they can hit — which is rarely what you actually need. A system-down event at month-end across 32 entities is a P1 emergency with a 1-hour response requirement. Your RFP doesn't say that.</div>
+          <div class="gap-fix"><strong>Add to Section 8 (Post-Implementation Support):</strong> Define SLA tiers explicitly and ask vendors to respond to each. Minimum expectations: P1 system-down = 1-hour response, 4-hour resolution target; P2 major function impaired = 4-hour response; P3 minor issues = next business day. Uptime: 99.9% minimum for cloud, with financial remedies for breach. Scheduled maintenance windows. Ask vendors to propose SLAs above these minimums as a differentiator.</div>
+        </div>
+      </li>
+
+      <li class="gap-item">
+        <div class="gap-header">
+          <div class="gap-icon">🏢</div>
+          <div class="gap-title">Multi-Entity Section (5.6) is Too Thin for a 32-Entity Portfolio</div>
+          <div class="gap-sev sev-critical">Critical</div>
+        </div>
+        <div class="gap-body">
+          <div class="gap-issue">Section 5.6 is three sentences covering "separate ledgers, entity-specific tax requirements, and consolidated reporting." For an organization with 32 entities, this is the most complex requirement in the entire RFP — and it gets less space than the marketing email section. Generic answers to vague requirements lead to surprises post-contract.</div>
+          <div class="gap-fix"><strong>Expand Section 5.6 significantly.</strong> Must add: automated intercompany elimination workflow, consolidated CoA with entity-level mapping, centralized AP/AR with multi-entity payment processing, entity-level P&L and balance sheet generation, time-to-close for consolidated financials (ask for a real number from a reference), process for adding a new entity mid-year (timeline + cost), and RBAC that restricts entity-level users from seeing other entities' data. See suggested language block below.</div>
+        </div>
+      </li>
+
+      <li class="gap-item">
+        <div class="gap-header">
+          <div class="gap-icon">🧠</div>
+          <div class="gap-title">Change Management — Not Mentioned Anywhere</div>
+          <div class="gap-sev sev-critical">Critical</div>
+        </div>
+        <div class="gap-body">
+          <div class="gap-issue">You're asking ~225 users across multiple entities to abandon Deltek, ClickUp, Nimble, and Lattice — four systems with established workflows — and adopt a single new platform. The technology risk is manageable. The people risk is 70% of why implementations fail. The RFP never asks vendors how they handle it.</div>
+          <div class="gap-fix"><strong>Add to Section 8 (Implementation and Support):</strong> Require vendors to submit a change management plan covering stakeholder identification, executive sponsorship approach, communication strategy, resistance mitigation, and role-specific adoption plans. Ask specifically: "How do you handle resistance from power users of the legacy systems being replaced?" Weight this in your evaluation criteria.</div>
+        </div>
+      </li>
+
+      <li class="gap-item">
+        <div class="gap-header">
+          <div class="gap-icon">🚀</div>
+          <div class="gap-title">Hypercare / Go-Live Support Period Not Defined</div>
+          <div class="gap-sev sev-high">High</div>
+        </div>
+        <div class="gap-body">
+          <div class="gap-issue">Section 8 asks for "post-implementation support" details but doesn't distinguish between the hypercare period (first 30–60 days after go-live, highest risk, requires dedicated support) and steady-state support. These are very different things. Many vendors consider go-live the project finish line. It's actually the starting line.</div>
+          <div class="gap-fix"><strong>Add to Section 8:</strong> "Describe your hypercare model — specifically: duration of dedicated hypercare support post-go-live, team availability (hours/days), escalation path for critical issues during hypercare, and the formal criteria and process for transitioning from hypercare to steady-state support."</div>
+        </div>
+      </li>
+
+      <li class="gap-item">
+        <div class="gap-header">
+          <div class="gap-icon">📅</div>
+          <div class="gap-title">RFP Schedule Dates Are All Blank</div>
+          <div class="gap-sev sev-high">High</div>
+        </div>
+        <div class="gap-body">
+          <div class="gap-issue">Section 12 has placeholder [Date] fields for RFP release, submission deadline, shortlist presentations, and final selection. A vendor receiving this RFP can't plan their response effort without a timeline. This also signals the RFP isn't quite ready to send — which you probably know, but it's the first thing vendors notice.</div>
+          <div class="gap-fix"><strong>Fill in all four dates before distributing.</strong> Recommended timeline: 3 weeks for vendor response, 1 week for initial scoring, 2 weeks for shortlist demos, 1 week for final selection. That's a 7-week process from release to decision — realistic for this scope.</div>
+        </div>
+      </li>
+
+      <li class="gap-item">
+        <div class="gap-header">
+          <div class="gap-icon">🗺️</div>
+          <div class="gap-title">No Organizational Structure Context for Vendors</div>
+          <div class="gap-sev sev-high">High</div>
+        </div>
+        <div class="gap-body">
+          <div class="gap-issue">Vendors know you have "multiple companies and regions" (Section 1) but don't know how many entities, what industries they're in, how the shared services relationship works, or which entities are legally distinct vs. divisions of the same entity. This directly affects their scoping, pricing, and proposed architecture.</div>
+          <div class="gap-fix"><strong>Add to Section 2 (Project Background):</strong> A brief org structure note — number of legal entities, general industry mix (hospitality, professional services, etc.), geographic footprint (CO-based? + UK/EMEA?), and how the shared services function operates (centralized finance + HR for all entities). You don't need to name every entity — just give vendors enough to scope correctly.</div>
+        </div>
+      </li>
+
+      <li class="gap-item">
+        <div class="gap-header">
+          <div class="gap-icon">📈</div>
+          <div class="gap-title">Evaluation Criteria Has No Weights</div>
+          <div class="gap-sev sev-high">High</div>
+        </div>
+        <div class="gap-body">
+          <div class="gap-issue">Section 11 lists six evaluation criteria but doesn't weight them. This creates two problems: vendors don't know what to emphasize, and your internal evaluation team will score inconsistently. Functional fit and pricing will get debated endlessly without an agreed-upon weighting framework.</div>
+          <div class="gap-fix"><strong>Add percentage weights to Section 11.</strong> Suggested: Functional/Technical Fit 30%, Implementation Methodology 20%, Vendor Expertise 20%, Pricing/TCO 15%, Scalability 10%, Support/Service 5%. Adjust to your priorities — but commit to weights before proposals arrive.</div>
+        </div>
+      </li>
+
+      <li class="gap-item">
+        <div class="gap-header">
+          <div class="gap-icon">💰</div>
+          <div class="gap-title">Pricing Section Doesn't Ask for 3-Year TCO Model</div>
+          <div class="gap-sev sev-high">High</div>
+        </div>
+        <div class="gap-body">
+          <div class="gap-issue">Section 10 asks for implementation fees, licensing, training, and support — which is good. But it doesn't require a multi-year total cost of ownership model. Year 1 costs are usually distorted by implementation. Years 2–3 reveal whether the platform is actually affordable at scale.</div>
+          <div class="gap-fix"><strong>Add to Section 10:</strong> "Provide a 3-year Total Cost of Ownership model — Year 1 (implementation + licensing + training), Year 2 (steady-state licensing + support), Year 3 (with projected growth to [X] users and [Y] entities). Itemize all cost components. Flag any costs that could vary outside the proposal assumptions."</div>
+        </div>
+      </li>
+
+      <li class="gap-item">
+        <div class="gap-header">
+          <div class="gap-icon">🎓</div>
+          <div class="gap-title">Training Plan Lacks User-Type Differentiation</div>
+          <div class="gap-sev sev-medium">Medium</div>
+        </div>
+        <div class="gap-body">
+          <div class="gap-issue">Section 8 mentions "end-user training plan, documentation, and knowledge transfer to internal IT staff" — which is the right intent. But your user table shows 5 very different user types (Financial Management, CRM, PM, HCM, and General/T&E). A barista logging time has different training needs than a finance controller running consolidations. One training plan cannot serve both.</div>
+          <div class="gap-fix"><strong>Add to Section 8:</strong> "Provide a role-differentiated training plan addressing the five user groups identified in Section 6. Include training modalities for each group (in-person, video, self-paced), duration, materials ownership, and a plan for training new users as staff turns over post-go-live."</div>
+        </div>
+      </li>
+
+      <li class="gap-item">
+        <div class="gap-header">
+          <div class="gap-icon">🔒</div>
+          <div class="gap-title">RBAC Requirements Are Implicit, Not Explicit</div>
+          <div class="gap-sev sev-medium">Medium</div>
+        </div>
+        <div class="gap-body">
+          <div class="gap-issue">Section 7 mentions "role-based security" as a technical requirement but doesn't describe what the access model needs to look like. In a 32-entity shared services model, RBAC is operationally critical — entity-level users should not see other entities' financial data, and shared services staff need cross-entity access. This needs to be specified.</div>
+          <div class="gap-fix"><strong>Add to Section 7:</strong> "Describe your role-based access control model for multi-entity deployments. Specifically: how are permissions scoped to individual entities vs. across entities? Can a single user have different permission levels for different entities? How are new entity-level users provisioned without granting access to other entities?"</div>
+        </div>
+      </li>
+
+      <li class="gap-item">
+        <div class="gap-header">
+          <div class="gap-icon">⚙️</div>
+          <div class="gap-title">Integration Ownership Post-Go-Live Not Addressed</div>
+          <div class="gap-sev sev-medium">Medium</div>
+        </div>
+        <div class="gap-body">
+          <div class="gap-issue">Section 7 says "ability to integrate with third-party solutions, such as sales tax software and UKG payroll" — which surfaces the requirement but leaves a major gap: who maintains integrations when a third-party API changes? UKG releases API updates. Tax software vendors update endpoints. When that happens 18 months after go-live, who owns the fix — and at what cost?</div>
+          <div class="gap-fix"><strong>Add to Section 7:</strong> "For each proposed integration, describe: who owns ongoing maintenance when third-party APIs change, what the update process looks like, and how integration failures are detected and resolved. Is integration maintenance included in the support contract or billed separately?"</div>
+        </div>
+      </li>
+
+      <li class="gap-item">
+        <div class="gap-header">
+          <div class="gap-icon">🏗️</div>
+          <div class="gap-title">Phased vs. Big-Bang Go-Live Not Addressed</div>
+          <div class="gap-sev sev-medium">Medium</div>
+        </div>
+        <div class="gap-body">
+          <div class="gap-issue">Section 8 asks for a project plan but doesn't state whether you intend to go live with all entities simultaneously or in phases. For 32 entities, a big-bang approach is high risk. Your silence on this will produce a mix of proposals — some phased, some not — that are impossible to compare apples-to-apples.</div>
+          <div class="gap-fix"><strong>Add to Section 8:</strong> State your preference or ask vendors to recommend an approach: "Given our 32-entity portfolio, propose a phased implementation approach that balances go-live risk with speed to value. Identify which functional modules or entity groups you would recommend for Phase 1 and your rationale."</div>
+        </div>
+      </li>
+
+      <li class="gap-item">
+        <div class="gap-header">
+          <div class="gap-icon">🌍</div>
+          <div class="gap-title">EMEA/UK Compliance Is Named But Not Specified</div>
+          <div class="gap-sev sev-low">Low</div>
+        </div>
+        <div class="gap-body">
+          <div class="gap-issue">Section 5.6 mentions "United States, United Kingdom, and EMEA regions" without specifying what compliance requirements you actually face (GDPR, UK GDPR post-Brexit, VAT, employment law differences). Vendors will likely respond with boilerplate compliance statements. If you have real exposure in these jurisdictions, you need to be specific.</div>
+          <div class="gap-fix"><strong>Add to Section 5.6:</strong> If you have employees or operations in the UK or EMEA, enumerate the specific requirements: GDPR data residency requirements, UK payroll and employment compliance (HMRC, RTI), VAT treatment in the UK and EU. If you don't currently have EMEA operations but are planning for them, say so — "forward compatibility required."</div>
+        </div>
+      </li>
+
+    </ul>
+  </div>
+
+  <!-- SUGGESTED LANGUAGE -->
+  <div class="section">
+    <div class="sec-num">Ready-to-Use Text</div>
+    <div class="sec-title">Suggested Language to Add</div>
+    <div class="sec-body">These are sections you can drop directly into the RFP with minimal editing.</div>
+
+    <div class="suggested">
+      <div class="label">Add to Section 5.6 — Multi-Entity Support (Expanded)</div>
+      <p>The ERP solution must support Unbridled Solutions' multi-entity structure, which includes up to 32 legal entities operating under a shared services model. The shared services group provides centralized financial management and HR infrastructure for all entities. Specific requirements include:</p>
+      <p><strong>Intercompany management:</strong> Automated intercompany transaction recording, reconciliation, and elimination. Cost recharge workflows from the shared services entity to operating entities. Intercompany loan and equity transaction support.</p>
+      <p><strong>Chart of Accounts:</strong> A standardized group-level CoA that all entities map to, with the flexibility to maintain entity-specific accounts where local operational or regulatory requirements differ.</p>
+      <p><strong>Consolidated reporting:</strong> Real-time or near real-time consolidated P&L, Balance Sheet, and Cash Flow Statement across all entities. Drill-down from consolidated line items to entity-level transactions. Please provide the typical consolidation run time for a client with 20+ entities.</p>
+      <p><strong>Entity scalability:</strong> Describe the process, timeline, and cost to add a new legal entity to the system. We anticipate adding 3–5 entities over the next 3 years.</p>
+      <p><strong>Role-based entity access:</strong> Entity-level users must be restricted to their entity's data. Shared services staff require cross-entity access with configurable permission levels per entity.</p>
+    </div>
+
+    <div class="suggested">
+      <div class="label">Add to Section 3 — Data Migration (New Sub-Section)</div>
+      <p>Data migration is a critical component of this implementation. Unbridled Solutions is migrating from four source systems: <strong>Deltek Vantagepoint</strong> (ERP/financials/project accounting), <strong>ClickUp</strong> (project and resource management), <strong>Nimble</strong> (CRM/contacts), and <strong>Lattice</strong> (performance management). UKG payroll data migration is in scope if UKG is replaced.</p>
+      <p>Vendor proposals must address: (1) migration scope and approach for each source system, (2) years of historical data to be migrated (to be confirmed during discovery), (3) data cleansing responsibilities — what is the client's obligation vs. the vendor's, (4) validation and sign-off process before cutover, (5) cutover approach (big-bang vs. parallel run) with recommendation and rationale, and (6) post-migration support process for data issues discovered after go-live. Please provide an estimated cost range for data migration as a separate line item.</p>
+    </div>
+
+    <div class="suggested">
+      <div class="label">Add to Section 8 — Change Management</div>
+      <p>Given the scope of this implementation — replacing four established systems used by approximately 225 users across multiple entities and functional roles — change management is a required deliverable, not an optional add-on.</p>
+      <p>Vendor proposals must include a change management plan covering: stakeholder identification and engagement approach, executive sponsorship strategy, communication plan for affected user groups, resistance mitigation approach (specifically for power users of the systems being replaced), and role-specific adoption milestones. Please describe how you have handled change management challenges in comparable multi-entity, multi-system replacement implementations.</p>
+    </div>
+
+    <div class="suggested">
+      <div class="label">Add to Section 8 — SLA Requirements</div>
+      <p>Proposals must include defined Service Level Agreements for the following categories. Unbridled Solutions' minimum expectations are listed; vendors are encouraged to propose SLAs that exceed these thresholds:</p>
+      <p><strong>System availability:</strong> 99.9% uptime minimum for production environment, excluding pre-scheduled maintenance windows. Maintenance windows must be outside business hours (MT) and require 5 business days' advance notice.</p>
+      <p><strong>Incident response:</strong> P1 (system down or critical function unavailable) — 1-hour response, 4-hour resolution target. P2 (major function impaired, workaround available) — 4-hour response, next business day resolution. P3 (minor issues, no workaround needed) — next business day acknowledgment.</p>
+      <p><strong>SLA remedies:</strong> Describe financial or service credits applied when SLA thresholds are not met.</p>
+      <p><strong>Hypercare:</strong> Describe the dedicated hypercare support model for the first 60 days post-go-live, including team availability, escalation path, and criteria for transitioning to steady-state support.</p>
+    </div>
+  </div>
+
+  <!-- FINAL CHECKLIST -->
+  <div class="section">
+    <div class="sec-num">Pre-Send Checklist</div>
+    <div class="sec-title">14 Things to Verify Before This Goes Out</div>
+
+    <div class="addition-grid">
+      <div class="addition-card red">
+        <div class="ac-label">Must Fix — Critical</div>
+        <div class="ac-title">Fill in Section 12 dates</div>
+        <div class="ac-body">RFP release, submission deadline, shortlist demos, final selection. All four are blank. Vendors can't respond to a dateless RFP.</div>
+      </div>
+      <div class="addition-card red">
+        <div class="ac-label">Must Fix — Critical</div>
+        <div class="ac-title">Add data migration sub-section to Section 3</div>
+        <div class="ac-body">4 source systems. Years of history. Cleansing responsibilities. Cutover approach. This cannot be one line.</div>
+      </div>
+      <div class="addition-card red">
+        <div class="ac-label">Must Fix — Critical</div>
+        <div class="ac-title">Add SLA parameters to Section 8</div>
+        <div class="ac-body">P1/P2/P3 response times. Uptime. Remedies. Hypercare period. Use the suggested language above verbatim if you like.</div>
+      </div>
+      <div class="addition-card red">
+        <div class="ac-label">Must Fix — Critical</div>
+        <div class="ac-title">Expand Section 5.6 to full multi-entity spec</div>
+        <div class="ac-body">Intercompany eliminations, CoA consolidation, entity scalability, RBAC. Three sentences is not enough for your most complex requirement.</div>
+      </div>
+      <div class="addition-card yellow">
+        <div class="ac-label">Strong Recommendation</div>
+        <div class="ac-title">Add change management requirement to Section 8</div>
+        <div class="ac-body">225 users, 4 systems, 32 entities. Require a formal change management plan as a deliverable.</div>
+      </div>
+      <div class="addition-card yellow">
+        <div class="ac-label">Strong Recommendation</div>
+        <div class="ac-title">Add org structure context to Section 2</div>
+        <div class="ac-body">32 entities, industry mix, how shared services works. Vendors cannot scope or price correctly without this.</div>
+      </div>
+      <div class="addition-card yellow">
+        <div class="ac-label">Strong Recommendation</div>
+        <div class="ac-title">Add weights to Section 11 evaluation criteria</div>
+        <div class="ac-body">Commit to percentages before proposals arrive. Prevents internal scoring disputes.</div>
+      </div>
+      <div class="addition-card yellow">
+        <div class="ac-label">Strong Recommendation</div>
+        <div class="ac-title">Require 3-year TCO in Section 10</div>
+        <div class="ac-body">Year 1 costs are distorted by implementation. Years 2–3 reveal true platform affordability.</div>
+      </div>
+      <div class="addition-card blue">
+        <div class="ac-label">Worth Adding</div>
+        <div class="ac-title">Add phased go-live guidance to Section 8</div>
+        <div class="ac-body">Ask vendors to propose a phased rollout for 32 entities. Otherwise you'll get incomparable proposals.</div>
+      </div>
+      <div class="addition-card blue">
+        <div class="ac-label">Worth Adding</div>
+        <div class="ac-title">Add integration maintenance ownership to Section 7</div>
+        <div class="ac-body">UKG + sales tax integrations will need updates over time. Who owns that? At what cost?</div>
+      </div>
+      <div class="addition-card blue">
+        <div class="ac-label">Worth Adding</div>
+        <div class="ac-title">Role-differentiated training plan in Section 8</div>
+        <div class="ac-body">5 different user types need 5 different training approaches.</div>
+      </div>
+      <div class="addition-card blue">
+        <div class="ac-label">Worth Adding</div>
+        <div class="ac-title">Explicit RBAC requirements in Section 7</div>
+        <div class="ac-body">Entity-level users restricted to their entity. Shared services with cross-entity access. Specify this clearly.</div>
+      </div>
+      <div class="addition-card green">
+        <div class="ac-label">Nice to Have</div>
+        <div class="ac-title">Specify EMEA/UK compliance requirements if real</div>
+        <div class="ac-body">If you have actual UK/EMEA operations: GDPR, UK GDPR, RTI, VAT. If future only, say "forward compatibility required."</div>
+      </div>
+      <div class="addition-card green">
+        <div class="ac-label">Nice to Have</div>
+        <div class="ac-title">Consider moving incumbent systems list to Section 2</div>
+        <div class="ac-body">Deltek/ClickUp/Nimble/Lattice context is buried in Section 1. It's important enough to sit in Project Background.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout gold" style="margin-top:32px;">
+    <strong>Bottom line:</strong> This RFP is 70% of the way there — which is meaningfully better than most. The functional requirements are genuinely strong. Fix the four critical gaps (data migration, SLAs, multi-entity depth, dates) and you have a document that will produce proposals you can actually compare. The suggested language blocks above are ready to drop in. Send it back when revised and MC will do a final review pass before it goes out.
+  </div>
+
+</div>
+
+<footer>
+  Prepared by <span>MC — Unbridled Solutions</span> · ERP RFP Direct Gap Analysis · Confidential · July 10, 2026
+</footer>
+
+</body>
+</html>
