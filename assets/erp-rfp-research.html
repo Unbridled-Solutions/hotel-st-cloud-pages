@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unbridled Shared Services — ERP RFP Research Brief</title>
+<style>
+  :root {
+    --bg: #0a0f14;
+    --navy: #0f1c2a;
+    --card: #121e2b;
+    --border: #1c3048;
+    --gold: #c9aa7c;
+    --blue: #5a9fc7;
+    --teal: #3de8c8;
+    --text: #e8e4de;
+    --muted: #7a8fa0;
+    --green: #4caf7d;
+    --red: #e05a5a;
+    --yellow: #e0c44a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 14px;
+    line-height: 1.65;
+  }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, var(--navy) 0%, #060d14 100%);
+    border-bottom: 2px solid var(--gold);
+    padding: 28px 36px 24px;
+  }
+  .eyebrow {
+    font-size: 10px;
+    letter-spacing: 3.5px;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 8px;
+  }
+  header h1 {
+    font-size: clamp(20px, 3.5vw, 28px);
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+  .header-sub { color: var(--muted); font-size: 13px; }
+  .header-pills {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px;
+  }
+  .pill {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .pill span { color: var(--text); font-weight: 600; }
+
+  /* TOC */
+  .toc {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--gold);
+    border-radius: 0 8px 8px 0;
+    padding: 18px 22px;
+    margin: 28px 0 0;
+  }
+  .toc-title {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 10px;
+  }
+  .toc ol { padding-left: 18px; }
+  .toc li { margin: 4px 0; }
+  .toc a { color: var(--blue); text-decoration: none; font-size: 13px; }
+  .toc a:hover { color: var(--gold); text-decoration: underline; }
+
+  /* LAYOUT */
+  .container { max-width: 1060px; margin: 0 auto; padding: 0 24px 48px; }
+  .section { padding: 44px 0 0; }
+
+  /* SECTION HEADER */
+  .sec-num {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 4px;
+  }
+  .sec-title {
+    font-size: clamp(18px, 3vw, 24px);
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sec-body {
+    color: rgba(232,228,222,0.8);
+    font-size: 14px;
+    line-height: 1.7;
+    margin-bottom: 20px;
+  }
+  .sec-body p + p { margin-top: 10px; }
+
+  /* CARDS */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 14px;
+    margin: 16px 0;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .card.gold::before { background: var(--gold); }
+  .card.blue::before { background: var(--blue); }
+  .card.teal::before { background: var(--teal); }
+  .card.green::before { background: var(--green); }
+  .card.red::before { background: var(--red); }
+  .card.yellow::before { background: var(--yellow); }
+  .card-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+  .card-body { font-size: 13px; color: var(--muted); line-height: 1.6; }
+  .card-body strong { color: var(--text); }
+
+  /* ERP COMPARISON TABLE */
+  .table-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    overflow-x: auto;
+    margin: 16px 0;
+  }
+  table { width: 100%; border-collapse: collapse; min-width: 700px; }
+  thead th {
+    background: rgba(255,255,255,0.03);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  tbody tr { border-bottom: 1px solid rgba(28,48,72,0.5); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  td { padding: 11px 14px; font-size: 13px; vertical-align: top; }
+  td.erp-name { font-weight: 700; color: #fff; white-space: nowrap; }
+  td.erp-fit {
+    font-size: 12px;
+    color: var(--muted);
+    max-width: 200px;
+    line-height: 1.5;
+  }
+
+  /* BADGES */
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  .badge-best   { background: rgba(76,175,125,0.15);  color: var(--green);  border: 1px solid rgba(76,175,125,0.3); }
+  .badge-strong { background: rgba(90,159,199,0.15);  color: var(--blue);   border: 1px solid rgba(90,159,199,0.3); }
+  .badge-ok     { background: rgba(224,196,74,0.12);  color: var(--yellow); border: 1px solid rgba(224,196,74,0.3); }
+  .badge-caution{ background: rgba(224,90,90,0.12);   color: var(--red);    border: 1px solid rgba(224,90,90,0.3); }
+  .badge-mc     { background: rgba(201,170,124,0.15); color: var(--gold);   border: 1px solid rgba(201,170,124,0.3); }
+
+  /* CALLOUT */
+  .callout {
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-size: 13px;
+    line-height: 1.65;
+  }
+  .callout.blue  { background: rgba(90,159,199,0.06); border-left: 3px solid var(--blue); color: var(--muted); }
+  .callout.gold  { background: rgba(201,170,124,0.06); border-left: 3px solid var(--gold); color: var(--muted); }
+  .callout.red   { background: rgba(224,90,90,0.06); border-left: 3px solid var(--red); color: var(--muted); }
+  .callout.green { background: rgba(76,175,125,0.06); border-left: 3px solid var(--green); color: var(--muted); }
+  .callout strong { color: var(--text); }
+
+  /* RFP QUESTION BLOCKS */
+  .rfp-q {
+    background: rgba(61,232,200,0.04);
+    border: 1px solid rgba(61,232,200,0.15);
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 10px 0;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .rfp-q::before {
+    content: '📋 RFP Question: ';
+    color: var(--teal);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  /* GAP ITEMS */
+  .gap-list { list-style: none; padding: 0; margin: 12px 0; }
+  .gap-item {
+    display: flex;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(28,48,72,0.5);
+  }
+  .gap-item:last-child { border-bottom: none; }
+  .gap-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+  .gap-content {}
+  .gap-title { font-weight: 700; color: #fff; font-size: 14px; margin-bottom: 4px; }
+  .gap-desc { font-size: 13px; color: var(--muted); line-height: 1.55; }
+  .gap-desc strong { color: var(--yellow); }
+
+  /* SCORING RUBRIC */
+  .rubric-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin: 8px 0;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .rubric-pct {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(201,170,124,0.1);
+    border: 1px solid rgba(201,170,124,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--gold);
+  }
+  .rubric-body {}
+  .rubric-title { font-weight: 700; color: #fff; font-size: 14px; margin-bottom: 4px; }
+  .rubric-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  /* BUDGET TABLE */
+  .budget-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 16px 0;
+  }
+  @media (max-width: 600px) { .budget-grid { grid-template-columns: 1fr; } }
+  .budget-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .budget-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 700;
+  }
+  .budget-body { padding: 16px; }
+  .budget-range {
+    font-size: clamp(20px, 3vw, 26px);
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+  .budget-note { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  /* DIVIDER */
+  hr { border: none; border-top: 1px solid var(--border); margin: 40px 0 0; }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 24px;
+    font-size: 11px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+  }
+  footer span { color: var(--gold); font-weight: 600; }
+
+  /* RED FLAG LIST */
+  .redflag-list { list-style: none; padding: 0; margin: 12px 0; }
+  .redflag-list li {
+    padding: 7px 0 7px 24px;
+    position: relative;
+    font-size: 13px;
+    color: var(--muted);
+    border-bottom: 1px solid rgba(28,48,72,0.4);
+    line-height: 1.5;
+  }
+  .redflag-list li:last-child { border-bottom: none; }
+  .redflag-list li::before {
+    content: '⚠';
+    position: absolute;
+    left: 0;
+    color: var(--red);
+    font-size: 12px;
+  }
+  .redflag-list li strong { color: var(--text); }
+
+  /* CHECK LIST */
+  .check-list { list-style: none; padding: 0; margin: 10px 0; }
+  .check-list li {
+    padding: 5px 0 5px 22px;
+    position: relative;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .check-list li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--border);
+  }
+  .check-list li strong { color: var(--text); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Unbridled Shared Services · Confidential</div>
+  <h1>ERP RFP — Research & Gap Analysis Brief</h1>
+  <div class="header-sub">Deep research to strengthen the Unbridled Shared Services ERP RFP · 32-entity portfolio · Financial & HR infrastructure</div>
+  <div class="header-pills">
+    <div class="pill">Scope: <span>32 SMB entities</span></div>
+    <div class="pill">Function: <span>Finance + HR Shared Services</span></div>
+    <div class="pill">Prepared: <span>July 10, 2026</span></div>
+    <div class="pill">By: <span>MC — Unbridled Solutions</span></div>
+  </div>
+
+  <div class="toc">
+    <div class="toc-title">Contents</div>
+    <ol>
+      <li><a href="#platforms">ERP Platform Comparison — 7 Vendors Evaluated</a></li>
+      <li><a href="#rfp-structure">What Makes a Strong RFP — Critical Sections</a></li>
+      <li><a href="#multi-entity">Multi-Entity Requirements — Must-Ask Questions</a></li>
+      <li><a href="#hr">HR Module Requirements — Shared Services Function</a></li>
+      <li><a href="#integrations">Integration Landscape — 32-Entity Portfolio</a></li>
+      <li><a href="#partner">Implementation Partner Evaluation — Scoring Rubric</a></li>
+      <li><a href="#gaps">Common RFP Gaps — What Gets Forgotten</a></li>
+      <li><a href="#budget">Budget Benchmarks — Implementation + Licensing</a></li>
+      <li><a href="#mc-take">MC's Take — Top Recommendations</a></li>
+    </ol>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- 1. PLATFORM COMPARISON -->
+  <div class="section" id="platforms">
+    <div class="sec-num">Section 01</div>
+    <div class="sec-title">ERP Platform Comparison — 7 Vendors Evaluated</div>
+    <div class="sec-body">
+      <p>For a 32-entity shared services model, multi-entity financial consolidation is the non-negotiable filter. Two platforms stand well above the rest for this use case. The table below gives you the full picture on each.</p>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Platform</th>
+            <th>Multi-Entity Fit</th>
+            <th>Strengths</th>
+            <th>Weaknesses</th>
+            <th>Pricing (est.)</th>
+            <th>Verdict</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="erp-name">NetSuite OneWorld</td>
+            <td><span class="badge badge-best">Excellent</span></td>
+            <td style="font-size:12px;color:var(--muted);">Built for multi-subsidiary from the ground up. Intercompany eliminations, multi-currency, consolidated P&L. Fast global consolidation.</td>
+            <td style="font-size:12px;color:var(--muted);">Expensive. Implementation complex. Can be over-engineered for simpler entities.</td>
+            <td style="font-size:12px;color:var(--muted);">~$2,500/mo base + $129–$199/user/mo. Implementation $50K–$150K+.</td>
+            <td><span class="badge badge-mc">★ Top Pick</span></td>
+          </tr>
+          <tr>
+            <td class="erp-name">Sage Intacct</td>
+            <td><span class="badge badge-best">Excellent</span></td>
+            <td style="font-size:12px;color:var(--muted);">Best-in-class multi-entity financial management. Lightning consolidation. Dimensional analytics. Purpose-built for shared services finance.</td>
+            <td style="font-size:12px;color:var(--muted);">Finance-first — HR and ops modules less mature. Relies on integrations for full ERP suite.</td>
+            <td style="font-size:12px;color:var(--muted);">Starts ~$12K/yr. Scales by entity and user count.</td>
+            <td><span class="badge badge-mc">★ Top Pick</span></td>
+          </tr>
+          <tr>
+            <td class="erp-name">Acumatica</td>
+            <td><span class="badge badge-strong">Strong</span></td>
+            <td style="font-size:12px;color:var(--muted);">Flexible deployment. Good intercompany accounting. Scales well. Consumption-based pricing (not per user).</td>
+            <td style="font-size:12px;color:var(--muted);">More customization required out of the box for shared services model.</td>
+            <td style="font-size:12px;color:var(--muted);">Transaction/resource based — contact for pricing.</td>
+            <td><span class="badge badge-strong">Evaluate</span></td>
+          </tr>
+          <tr>
+            <td class="erp-name">MS Dynamics 365 BC</td>
+            <td><span class="badge badge-ok">Moderate</span></td>
+            <td style="font-size:12px;color:var(--muted);">Strong Microsoft ecosystem integration. Automatic updates. Good SMB accounting.</td>
+            <td style="font-size:12px;color:var(--muted);">Multi-company is an add-on, not native. Consolidation is less seamless at 32 entities.</td>
+            <td style="font-size:12px;color:var(--muted);">$70–$110/user/mo.</td>
+            <td><span class="badge badge-ok">If MS-Heavy</span></td>
+          </tr>
+          <tr>
+            <td class="erp-name">SAP Business One</td>
+            <td><span class="badge badge-ok">Moderate</span></td>
+            <td style="font-size:12px;color:var(--muted);">Broad ERP + CRM in one. Cloud or on-premise. Strong brand credibility.</td>
+            <td style="font-size:12px;color:var(--muted);">Intercompany requires separate integration engine bolt-on. Not purpose-built for holding company model.</td>
+            <td style="font-size:12px;color:var(--muted);">Starts ~$95/user/mo.</td>
+            <td><span class="badge badge-ok">Consider</span></td>
+          </tr>
+          <tr>
+            <td class="erp-name">Odoo</td>
+            <td><span class="badge badge-caution">Limited</span></td>
+            <td style="font-size:12px;color:var(--muted);">Open-source. Low entry cost. Highly modular and customizable.</td>
+            <td style="font-size:12px;color:var(--muted);">Requires significant dev investment. Support quality variable. Not ideal for 32-entity consolidation without heavy customization.</td>
+            <td style="font-size:12px;color:var(--muted);">Free community / ~$24+/user/mo enterprise.</td>
+            <td><span class="badge badge-caution">Not Recommended</span></td>
+          </tr>
+          <tr>
+            <td class="erp-name">Epicor</td>
+            <td><span class="badge badge-caution">Limited</span></td>
+            <td style="font-size:12px;color:var(--muted);">Strong in manufacturing/distribution. Robust for ops-heavy entities.</td>
+            <td style="font-size:12px;color:var(--muted);">Finance-as-shared-services is not its sweet spot. Overkill if portfolio is service/hospitality-oriented.</td>
+            <td style="font-size:12px;color:var(--muted);">Enterprise pricing — contact vendor.</td>
+            <td><span class="badge badge-caution">Not Recommended</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout gold">
+      <strong>MC Recommendation:</strong> Issue the RFP to NetSuite OneWorld and Sage Intacct as the primary candidates, with Acumatica as the third. NetSuite wins on breadth (full ERP suite); Sage Intacct wins on financial consolidation depth. The right choice depends on how HR-heavy the shared services function is. If you're running payroll, benefits, and onboarding centrally for all 32 entities — NetSuite. If finance consolidation is 80% of the need — Sage Intacct.
+    </div>
+  </div>
+
+  <!-- 2. RFP STRUCTURE -->
+  <div class="section" id="rfp-structure">
+    <div class="sec-num">Section 02</div>
+    <div class="sec-title">What Makes a Strong RFP — Critical Sections</div>
+    <div class="sec-body">
+      <p>Implementation partners consistently say the same thing: weak RFPs produce weak proposals. The gap isn't usually in the feature list — it's in the organizational context that helps a vendor understand <em>what you're actually trying to solve</em>.</p>
+    </div>
+
+    <div class="card-grid">
+      <div class="card teal">
+        <div class="card-label">Must Include · Often Missing</div>
+        <div class="card-title">Organizational Structure Map</div>
+        <div class="card-body">Diagram or narrative of the holding company → 32 entity relationship. Which entities share a legal structure? Which are truly separate legal entities with distinct EINs? Which entities share staff? This is the single most important context for a vendor to scope correctly.</div>
+      </div>
+      <div class="card teal">
+        <div class="card-label">Must Include · Often Missing</div>
+        <div class="card-title">Current State Process Flows</div>
+        <div class="card-body">How does AP work today? How does payroll run today? Who touches each process across which entities? Even a rough narrative eliminates ambiguity that otherwise costs you in change orders post-contract.</div>
+      </div>
+      <div class="card gold">
+        <div class="card-label">Commonly Skimped</div>
+        <div class="card-title">Success Definition & KPIs</div>
+        <div class="card-body"><strong>What does a winning implementation look like in 18 months?</strong> Specific and measurable — "reduce intercompany reconciliation from 5 days to same day," "consolidated P&L available by 2nd business day of each month." Without this, vendors over-promise and you have no basis to hold them accountable.</div>
+      </div>
+      <div class="card gold">
+        <div class="card-label">Commonly Skimped</div>
+        <div class="card-title">Use Cases / Day-in-the-Life Scenarios</div>
+        <div class="card-body">Write 3–5 realistic scenarios: "The shared AP team pays a vendor invoice that spans 4 entities — describe how your system handles cost allocation, intercompany billing, and payment." Vendors who answer well understand your model. Vendors who give generic answers don't.</div>
+      </div>
+      <div class="card blue">
+        <div class="card-label">Strong Differentiator</div>
+        <div class="card-title">Internal Resource Commitment</div>
+        <div class="card-body">Tell vendors exactly who will be on your project team, their time availability (% FTE), and their authority level. Implementations that fail usually do so because the client team was under-resourced. A vendor who asks about this in their questions back to you is a good sign.</div>
+      </div>
+      <div class="card blue">
+        <div class="card-label">Strong Differentiator</div>
+        <div class="card-title">Phased Go-Live Intent</div>
+        <div class="card-body">Are you planning to go live with all 32 entities at once (high risk), or phase by entity group? Stating your intent here lets vendors price and plan accordingly — and surface the risk if your intent is unrealistic.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. MULTI-ENTITY -->
+  <div class="section" id="multi-entity">
+    <div class="sec-num">Section 03</div>
+    <div class="sec-title">Multi-Entity Requirements — Must-Ask Questions</div>
+    <div class="sec-body">
+      <p>This is where most RFPs for multi-entity organizations are weakest. Generic questions get generic answers. These are the specific capabilities you need to probe — with RFP questions that force vendors to show their work, not just check a box.</p>
+    </div>
+
+    <div class="card-grid" style="grid-template-columns:1fr;">
+
+      <div class="card gold" style="grid-column:auto;">
+        <div class="card-label">Chart of Accounts Consolidation</div>
+        <div class="card-title">Standardized Group CoA + Entity-Level Variations</div>
+        <div class="card-body">Can the system maintain a single group-level Chart of Accounts while accommodating entity-specific accounts where local reporting or operational differences require them? How are entity accounts mapped to the consolidated CoA?</div>
+      </div>
+      <div class="rfp-q">Describe how your system supports both a consolidated group Chart of Accounts and entity-specific charts. Walk us through how a new entity (#33) would be integrated into the existing CoA structure. Show us what the mapping interface looks like.</div>
+
+      <div class="card teal" style="grid-column:auto;">
+        <div class="card-label">Intercompany Eliminations</div>
+        <div class="card-title">Automated IC Transaction Detection & Elimination</div>
+        <div class="card-body">This is the most operationally painful task in a multi-entity close. The system must automatically identify and eliminate intercompany sales, expense recharges, loans, and equity transactions — not require manual journal entries.</div>
+      </div>
+      <div class="rfp-q">Demonstrate your system's automated intercompany elimination capabilities. How does it handle: (a) intercompany goods/services sales, (b) cost recharges from a shared services entity to operating entities, (c) intercompany loans. What is the audit trail for eliminations prior to consolidation? Provide a screenshot or demo walkthrough.</div>
+
+      <div class="card blue" style="grid-column:auto;">
+        <div class="card-label">Consolidated Reporting</div>
+        <div class="card-title">Real-Time Consolidated P&L, Balance Sheet, Cash Flow</div>
+        <div class="card-body">How long does it take to produce a consolidated P&L across all 32 entities after month-end? "Lightning-fast" is marketing copy — ask for a real number and a reference client with comparable entity count.</div>
+      </div>
+      <div class="rfp-q">What is the typical time-to-close for a consolidated financial statement across 30+ entities in your platform? Provide a reference client with 20+ entities we can call. Describe how multi-currency translation and FX rate management work during consolidation. Can we drill from a consolidated line item to the originating entity transaction?</div>
+
+      <div class="card green" style="grid-column:auto;">
+        <div class="card-label">Shared AP / AR</div>
+        <div class="card-title">Centralized Payables & Receivables Across All Entities</div>
+        <div class="card-body">A shared services AP team paying invoices on behalf of multiple legal entities is a specific workflow that many ERPs handle awkwardly. This needs to be airtight.</div>
+      </div>
+      <div class="rfp-q">Describe how a centralized AP team in entity "Unbridled Shared Services" can enter, approve, and pay a vendor invoice on behalf of entity "Hotel St. Cloud" — and have that transaction: (1) appear on Hotel St. Cloud's entity P&L, (2) generate an intercompany payable/receivable, and (3) be eliminated correctly in the consolidated view. Walk us through each step.</div>
+
+    </div>
+
+    <div class="callout red">
+      <strong>Critical gap most RFPs miss:</strong> Entity addition scalability. Ask vendors: "If we acquire a 33rd entity mid-year, how long does it take to bring them onto the platform, and what is the cost?" A good answer is "days." A bad answer is "6–8 weeks and a change order."
+    </div>
+  </div>
+
+  <!-- 4. HR -->
+  <div class="section" id="hr">
+    <div class="sec-num">Section 04</div>
+    <div class="sec-title">HR Module Requirements — Shared Services Function</div>
+    <div class="sec-body">
+      <p>A shared HR function running benefits, onboarding, time & attendance, and payroll for 32 entities has specific requirements that a standard HRIS doesn't cover. These need to be in the RFP explicitly.</p>
+    </div>
+
+    <div class="card-grid">
+      <div class="card gold">
+        <div class="card-label">Employee Self-Service</div>
+        <div class="card-title">Multi-Entity ESS Portal</div>
+        <div class="card-body">Employees across all 32 entities need one portal — not 32 separate logins. Policies may differ by entity (different PTO rules, different benefit eligibility). The system must handle entity-specific rulesets within a unified employee experience.</div>
+      </div>
+      <div class="card teal">
+        <div class="card-label">Benefits Administration</div>
+        <div class="card-title">Variable Benefits Across Entity Groups</div>
+        <div class="card-body">Some entities may offer different benefit plans. The system needs to manage different eligibility rules, enrollment windows, and deduction schedules while feeding a single centralized benefits administration workflow.</div>
+      </div>
+      <div class="card blue">
+        <div class="card-label">Compliance — Colorado</div>
+        <div class="card-title">CO-Specific: FAMLI, Paid Leave, New Hire Reporting</div>
+        <div class="card-body"><strong>CO-specific requirements you must ask about:</strong> Colorado FAMLI (Family & Medical Leave Insurance) — mandatory as of 2024. CO Paid Sick Leave. New hire reporting to CO DOLE. COUI (unemployment insurance) rate management per entity. Ask specifically by name — generic "state compliance" answers aren't good enough.</div>
+      </div>
+      <div class="card green">
+        <div class="card-label">Onboarding Workflows</div>
+        <div class="card-title">Automated Multi-Entity Onboarding</div>
+        <div class="card-body">New hires across 32 entities need consistent but entity-configurable onboarding. I-9, W-4, direct deposit, benefits enrollment, IT provisioning trigger — all wired into one flow.</div>
+      </div>
+      <div class="card yellow">
+        <div class="card-label">Time & Attendance</div>
+        <div class="card-title">Multi-Policy Time Tracking at Scale</div>
+        <div class="card-body">Different entities likely have different overtime rules, minimum wage rates (some CO municipalities have rates above state), and shift structures. The system must handle these variations without requiring separate configurations per entity.</div>
+      </div>
+      <div class="card red">
+        <div class="card-label">Payroll Integration</div>
+        <div class="card-title">Financial Posting Across 32 Entities</div>
+        <div class="card-body">Even if payroll processing is outsourced (ADP, Paychex), the ERP must receive gross-to-net data and post payroll costs to the correct entity GL, cost center, and department — automatically.</div>
+      </div>
+    </div>
+
+    <div class="rfp-q">Walk us through how your system handles a new hire at entity 17 (a small restaurant) whose benefits differ from entity 3 (a hotel). How does onboarding workflow configuration differ by entity? How does the ESS experience look from the employee's perspective — do they know they're in a multi-entity system, or is it seamless?</div>
+
+    <div class="rfp-q">Describe your compliance coverage for Colorado-specific requirements: FAMLI, Colorado Paid Sick Leave, new hire reporting to DOLE, and multi-entity COUI management. How does the system alert our HR team to compliance deadlines and changes in state law?</div>
+  </div>
+
+  <!-- 5. INTEGRATIONS -->
+  <div class="section" id="integrations">
+    <div class="sec-num">Section 05</div>
+    <div class="sec-title">Integration Landscape — 32-Entity Portfolio</div>
+    <div class="sec-body">
+      <p>A 32-entity portfolio almost certainly runs on a patchwork of tools. Your RFP needs to surface integration requirements and force vendors to address them specifically — not promise a generic API.</p>
+    </div>
+
+    <div class="card-grid">
+      <div class="card gold">
+        <div class="card-label">Point of Sale</div>
+        <div class="card-title">POS → ERP Daily Sales Flow</div>
+        <div class="card-body"><strong>Include in RFP:</strong> List every POS system in use across the portfolio (Toast, Square, Lightspeed, etc.). Ask vendors whether they have native connectors or require middleware. Request a description of the data flow: how do daily revenue, COGS, and payment-type splits land in the GL for each entity?</div>
+      </div>
+      <div class="card teal">
+        <div class="card-label">Property Management</div>
+        <div class="card-title">PMS → ERP Financial Sync</div>
+        <div class="card-body">For hotel/rental entities — Cloudbeds specifically is in the Unbridled ecosystem. Ask vendors about native Cloudbeds integration or Cloudbeds API compatibility. Reservation revenue, occupancy data, and department-level charges need to flow to the right entity GL automatically.</div>
+      </div>
+      <div class="card blue">
+        <div class="card-label">Banking & Treasury</div>
+        <div class="card-title">Multi-Entity Bank Reconciliation + ACH</div>
+        <div class="card-body">32 entities likely means 32+ bank accounts. Automated bank feeds and reconciliation across all of them is a major time saver. Ask vendors: which banks do they have native feeds with? What's the reconciliation workflow for a newly added entity? Can ACH payments be initiated directly from the ERP?</div>
+      </div>
+      <div class="card green">
+        <div class="card-label">Payroll Processors</div>
+        <div class="card-title">ADP / Paychex / Gusto → GL Posting</div>
+        <div class="card-body">If payroll is processed externally, you need a clean integration that posts payroll journal entries to the correct entity, cost center, and account. Ask for: supported payroll platforms, integration frequency (real-time vs. batch), and how payroll allocation rules are configured per entity.</div>
+      </div>
+      <div class="card yellow">
+        <div class="card-label">Scheduling / Workforce</div>
+        <div class="card-title">WFM → Time & Attendance → Payroll</div>
+        <div class="card-body">For hospitality and F&B entities — 7shifts, HotSchedules, Deputy are common. Approved schedule + actual hours need to flow to payroll without manual re-entry. Ask vendors to demonstrate the end-to-end: schedule approved → hours validated → payroll triggered.</div>
+      </div>
+      <div class="card red">
+        <div class="card-label">Critical Ask</div>
+        <div class="card-title">Integration Ownership Post-Go-Live</div>
+        <div class="card-body"><strong>Most RFPs miss this:</strong> Who maintains integrations when a third-party API changes? When Toast updates their API version, does your team own the fix, or the vendor? Clarify in the contract — this is where post-implementation costs hide.</div>
+      </div>
+    </div>
+
+    <div class="rfp-q">Provide your complete library of pre-built connectors for the following categories: POS (list specific platforms), Property Management Systems, payroll processors, workforce management/scheduling tools, and banking/treasury platforms. For each integration not covered by a native connector, describe your standard middleware or API framework and who owns ongoing maintenance.</div>
+  </div>
+
+  <!-- 6. PARTNER EVALUATION -->
+  <div class="section" id="partner">
+    <div class="sec-num">Section 06</div>
+    <div class="sec-title">Implementation Partner Evaluation — Scoring Rubric</div>
+    <div class="sec-body">
+      <p>The platform choice is table stakes. The partner choice is what determines whether you go live on time, on budget, and actually use the system. Score proposals on these dimensions.</p>
+    </div>
+
+    <div class="rubric-item">
+      <div class="rubric-pct">25%</div>
+      <div class="rubric-body">
+        <div class="rubric-title">Understanding of Requirements</div>
+        <div class="rubric-desc">Did they demonstrate they actually read your RFP? Do they reference your specific 32-entity model, your shared AP/HR structure, your Colorado compliance requirements? Generic answers that could apply to any company = red flag.</div>
+      </div>
+    </div>
+    <div class="rubric-item">
+      <div class="rubric-pct">20%</div>
+      <div class="rubric-body">
+        <div class="rubric-title">Methodology & Project Approach</div>
+        <div class="rubric-desc">Is there a detailed, phased project plan? A realistic timeline that acknowledges 32-entity complexity? A named risk register? Data migration strategy with specific steps? "We use an agile methodology" is not a plan.</div>
+      </div>
+    </div>
+    <div class="rubric-item">
+      <div class="rubric-pct">20%</div>
+      <div class="rubric-body">
+        <div class="rubric-title">Team Expertise & Multi-Entity Experience</div>
+        <div class="rubric-desc">Who specifically will be on your project? Named consultants with resumes and certifications, not "a team of experienced professionals." Require at least one reference from a multi-entity (20+ entities) implementation they led.</div>
+      </div>
+    </div>
+    <div class="rubric-item">
+      <div class="rubric-pct">15%</div>
+      <div class="rubric-body">
+        <div class="rubric-title">Post-Go-Live Support & Training Plan</div>
+        <div class="rubric-desc">Hypercare period — how long? Response SLAs by severity? Who is your named support contact? Training plan that addresses different user types across 32 entities (shared services power users vs. entity-level read-only users).</div>
+      </div>
+    </div>
+    <div class="rubric-item">
+      <div class="rubric-pct">10%</div>
+      <div class="rubric-body">
+        <div class="rubric-title">Pricing Transparency & Total Cost of Ownership</div>
+        <div class="rubric-desc">Itemized breakdown: licensing, implementation, customization, integrations, training, data migration, ongoing support. Ask for a 3-year TCO model. Proposals with vague "to be determined" line items will turn into change orders.</div>
+      </div>
+    </div>
+    <div class="rubric-item">
+      <div class="rubric-pct">10%</div>
+      <div class="rubric-body">
+        <div class="rubric-title">Cultural Fit & Communication Quality</div>
+        <div class="rubric-desc">How did they behave during the RFP process? Did they ask good clarifying questions (a very good sign) or just answer what was written? This relationship lasts 12–18 months of intense collaboration — it matters.</div>
+      </div>
+    </div>
+
+    <div class="sec-body" style="margin-top:20px;"><strong style="color:#fff;">Red Flags — Disqualify or Downweight Heavily:</strong></div>
+    <ul class="redflag-list">
+      <li><strong>Unable to provide a reference with 20+ entities</strong> — this is not a standard implementation; you need someone who's done it</li>
+      <li><strong>Timeline under 9 months for 32 entities</strong> — almost certainly unrealistic; anyone promising faster hasn't scoped it properly</li>
+      <li><strong>No named project team members</strong> — "we'll assign the right resources" means you might get their B team</li>
+      <li><strong>Vague data migration plan</strong> — data migration is always where projects blow up; "we have tools for that" is not an answer</li>
+      <li><strong>No mention of change management</strong> — technology is 30% of the problem; people adopting it is 70%</li>
+      <li><strong>Cost significantly below other proposals</strong> — usually means scope gaps that become change orders post-contract</li>
+      <li><strong>Dismissing your multi-entity complexity</strong> — "it's all standard functionality" from a vendor who hasn't probed your intercompany structure</li>
+    </ul>
+  </div>
+
+  <!-- 7. GAPS -->
+  <div class="section" id="gaps">
+    <div class="sec-num">Section 07</div>
+    <div class="sec-title">Common RFP Gaps — What Gets Forgotten</div>
+    <div class="sec-body">
+      <p>These are the sections that organizations routinely underspec in their RFPs — and that come back as project failures, cost overruns, or post-go-live chaos. Add these to your RFP if they're not already there.</p>
+    </div>
+
+    <ul class="gap-list">
+      <li class="gap-item">
+        <div class="gap-icon">💾</div>
+        <div class="gap-content">
+          <div class="gap-title">Data Migration — The Silent Project Killer</div>
+          <div class="gap-desc">Most RFPs ask "can you migrate our data?" — which every vendor says yes to. <strong>What you actually need to ask:</strong> How many years of history? What source systems are you migrating from? What's the data cleansing process? Who owns validation? What's the cutover plan? Data migration routinely accounts for 20–30% of implementation cost and schedule — if your RFP doesn't address it specifically, expect a large change order.</div>
+        </div>
+      </li>
+      <li class="gap-item">
+        <div class="gap-icon">🧠</div>
+        <div class="gap-content">
+          <div class="gap-title">Change Management — The Human Half</div>
+          <div class="gap-desc">You are asking 32 business units to change how they do everything financial and HR-related. <strong>Require vendors to submit a change management plan</strong> — stakeholder map, communication strategy, resistance mitigation, executive sponsorship approach. Without this baked into the contract, it becomes a nice-to-have that gets cut when timelines compress.</div>
+        </div>
+      </li>
+      <li class="gap-item">
+        <div class="gap-icon">🎓</div>
+        <div class="gap-content">
+          <div class="gap-title">Training — Not One Session, Not One Size</div>
+          <div class="gap-desc">Your user population spans shared services power users (full system access), entity-level managers (departmental reports and approvals), and front-line staff (ESS only). <strong>Each group needs different training.</strong> Ask for: training plan by user type, training modalities (in-person, video, self-paced), materials ownership, and a plan for training new users as staff turns over post-go-live.</div>
+        </div>
+      </li>
+      <li class="gap-item">
+        <div class="gap-icon">🚀</div>
+        <div class="gap-content">
+          <div class="gap-title">Hypercare / Go-Live Support Period</div>
+          <div class="gap-desc">The 30 days after go-live are the highest-risk period of any ERP implementation. <strong>Require vendors to specify:</strong> dedicated hypercare team availability, hours of support during hypercare, escalation path for critical issues, and the formal handover process when hypercare ends. Many vendors consider go-live the finish line. It's actually the starting line.</div>
+        </div>
+      </li>
+      <li class="gap-item">
+        <div class="gap-icon">📋</div>
+        <div class="gap-content">
+          <div class="gap-title">SLA Definitions — Uptime, Response, Resolution</div>
+          <div class="gap-desc">Vague support agreements produce disputes. <strong>Define these explicitly in the RFP and require vendors to respond to each:</strong> Uptime SLA (99.9%? 99.99%?), P1 response time (system down — 1 hour?), P2 response time (major function impaired — 4 hours?), P3 (minor issue — next business day?), scheduled maintenance windows, and remedies for SLA breach.</div>
+        </div>
+      </li>
+      <li class="gap-item">
+        <div class="gap-icon">📈</div>
+        <div class="gap-content">
+          <div class="gap-title">Scalability — Adding Entities</div>
+          <div class="gap-desc"><strong>Ask specifically:</strong> "We may acquire 3–5 additional entities over the next 3 years. What is the process, timeline, and cost to add an entity to the system?" This is often priced per entity in ways that aren't disclosed upfront, and the answer tells you a lot about how the platform is architected.</div>
+        </div>
+      </li>
+      <li class="gap-item">
+        <div class="gap-icon">🔒</div>
+        <div class="gap-content">
+          <div class="gap-title">Role-Based Access Controls Across Entities</div>
+          <div class="gap-desc">Entity-level users should see only their entity. Shared services should see all. Finance managers from Entity 7 should not see Entity 12's P&L. <strong>Ask vendors to demonstrate their RBAC model</strong> for a multi-entity structure — specifically how you configure a user who has full access to entity financials but read-only access to HR, across some but not all entities.</div>
+        </div>
+      </li>
+      <li class="gap-item">
+        <div class="gap-icon">📅</div>
+        <div class="gap-content">
+          <div class="gap-title">Month-End & Year-End Close Process</div>
+          <div class="gap-desc">For 32 entities, the close process is a coordinated exercise across the whole portfolio. <strong>Ask vendors to walk through their close workflow:</strong> entity-level close steps, intercompany reconciliation trigger, consolidation run, approval gates, and final financial statement production. Get a realistic timeline for how long a full portfolio close takes in their system.</div>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- 8. BUDGET -->
+  <div class="section" id="budget">
+    <div class="sec-num">Section 08</div>
+    <div class="sec-title">Budget Benchmarks — Implementation + Licensing</div>
+    <div class="sec-body">
+      <p>These are rough benchmarks based on 32-entity shared services deployments. Actual costs vary significantly based on customization, integration count, and data migration complexity. Use these to sanity-check proposals.</p>
+    </div>
+
+    <div class="budget-grid">
+      <div class="budget-card">
+        <div class="budget-header">Implementation Cost Range</div>
+        <div class="budget-body">
+          <div class="budget-range">$300K–$800K+</div>
+          <div class="budget-note">For a 32-entity shared services deployment. This assumes cloud deployment, 3–6 major integrations, standard data migration from 1–2 legacy systems, and a defined phased rollout. Does NOT include internal staff time (which is significant). Highly customized deployments can exceed $1M.</div>
+        </div>
+      </div>
+      <div class="budget-card">
+        <div class="budget-header">Annual Licensing Cost Range</div>
+        <div class="budget-body">
+          <div class="budget-range">$60K–$300K/yr</div>
+          <div class="budget-note">For 30–75 full users across shared services and entity-level managers. Most platforms also offer cheaper "light" user or ESS-only licenses for employees who only access self-service features — leverage these to reduce per-seat cost.</div>
+        </div>
+      </div>
+      <div class="budget-card">
+        <div class="budget-header">Typical Implementation Timeline</div>
+        <div class="budget-body">
+          <div class="budget-range">12–18 months</div>
+          <div class="budget-note">For a phased rollout across 32 entities. Anyone promising under 9 months has not scoped the data migration and training requirements. A credible phased plan: Shared services core + 5–8 pilot entities in Phase 1 (6–9 months), then rolling entity additions through Phase 2.</div>
+        </div>
+      </div>
+      <div class="budget-card">
+        <div class="budget-header">Per-User Licensing (Reference)</div>
+        <div class="budget-body">
+          <div class="budget-range">$80–$400/user/mo</div>
+          <div class="budget-note">Full user range across evaluated platforms. NetSuite and Sage Intacct tend toward higher end. Acumatica and Dynamics BC tend lower. ESS/light users often $15–$30/mo. At 50 full users + 200 ESS users: ~$7,500–$20,000/mo in licensing alone.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout green">
+      <strong>Budget tip:</strong> Require vendors to provide a 3-year Total Cost of Ownership model in their response — Year 1 (implementation + licensing), Year 2 (steady state + support), Year 3 (with projected entity growth). The delta between Year 1 and Year 2 tells you a lot about how they're structuring their economics.
+    </div>
+  </div>
+
+  <!-- 9. MC'S TAKE -->
+  <div class="section" id="mc-take">
+    <div class="sec-num">Section 09</div>
+    <div class="sec-title">MC's Take — Top Recommendations</div>
+
+    <div class="card-grid" style="grid-template-columns:1fr;">
+      <div class="card gold">
+        <div class="card-label">Platform Shortlist</div>
+        <div class="card-title">1. Send the RFP to NetSuite OneWorld + Sage Intacct First</div>
+        <div class="card-body">These are the two platforms purpose-built for your use case. Add Acumatica as a third if you want pricing competition. Everything else on the market is a compromise for a 32-entity shared services model.</div>
+      </div>
+      <div class="card teal">
+        <div class="card-label">RFP Strengthening — Highest Priority</div>
+        <div class="card-title">2. Add the Organizational Structure Map</div>
+        <div class="card-body">Draw the holding company → entity relationship before you send the RFP. Which entities share a legal structure, share GL codes, share staff? This one artifact will dramatically improve proposal quality and eliminate scoping surprises.</div>
+      </div>
+      <div class="card blue">
+        <div class="card-label">Contract Protection</div>
+        <div class="card-title">3. Define SLAs and Entity-Addition Pricing in the Contract</div>
+        <div class="card-body">Not in the RFP — in the actual contract. Uptime SLA with remedies. Named hypercare team for 60 days post-go-live. Explicit per-entity cost for adding entities in years 2–5. These three items prevent the most common post-contract disputes.</div>
+      </div>
+      <div class="card green">
+        <div class="card-label">Risk Management</div>
+        <div class="card-title">4. Phase the Rollout — Don't Big-Bang 32 Entities at Once</div>
+        <div class="card-body">Start with shared services core + your 3–5 most operationally mature entities. Get to a working state, learn what you didn't know, then roll out in waves. Big-bang go-lives at 32 entities are how ERP projects become cautionary tales.</div>
+      </div>
+      <div class="card red">
+        <div class="card-label">Don't Skip This</div>
+        <div class="card-title">5. Send the Actual RFP Document to MC</div>
+        <div class="card-body">The attachment didn't come through on Telegram. Resend it — PDF, Word, or text — and MC will do a direct gap analysis against your actual draft, flagging specific missing sections, weak language, and questions to add before it goes out the door.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  Prepared by <span>MC — Unbridled Solutions</span> · Unbridled Shared Services ERP RFP Research · Confidential · July 10, 2026
+</footer>
+
+</body>
+</html>
