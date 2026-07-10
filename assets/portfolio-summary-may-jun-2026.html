@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hotel St. Cloud — Portfolio Summary · May–June 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1923;
+    --navy: #1a2e3b;
+    --gold: #c9aa7c;
+    --blue: #5a8ba7;
+    --text: #e8e0d4;
+    --muted: #8a9aaa;
+    --green: #4caf7d;
+    --red: #e05a5a;
+    --card-bg: #162433;
+    --border: #263d52;
+    --orange: #e0924a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  header {
+    background: linear-gradient(135deg, var(--navy) 0%, #0f1923 100%);
+    border-bottom: 2px solid var(--gold);
+    padding: 28px 32px 22px;
+  }
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+  header h1 {
+    font-size: clamp(20px, 4vw, 28px);
+    font-weight: 700;
+    color: var(--text);
+  }
+  header .subtitle {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 4px;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 28px 20px; }
+
+  /* SECTION TITLE */
+  .sec-title {
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--gold);
+    border-bottom: 1px solid var(--gold);
+    padding-bottom: 8px;
+    margin-bottom: 18px;
+  }
+
+  /* KPI STRIP */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+  .kpi-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+  }
+  .kpi-card::before {
+    content: '';
+    display: block;
+    height: 3px;
+  }
+  .kpi-card.gold::before { background: var(--gold); }
+  .kpi-card.blue::before { background: var(--blue); }
+  .kpi-card.green::before { background: var(--green); }
+  .kpi-card.red::before { background: var(--red); }
+  .kpi-card.orange::before { background: var(--orange); }
+  .kpi-inner { padding: 14px 16px; }
+  .kpi-label {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .kpi-val {
+    font-size: clamp(22px, 4vw, 30px);
+    font-weight: 700;
+    color: var(--text);
+  }
+  .kpi-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+  .delta {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-top: 4px;
+  }
+  .delta.up { background: rgba(76,175,125,0.15); color: var(--green); }
+  .delta.down { background: rgba(224,90,90,0.15); color: var(--red); }
+  .delta.neutral { background: rgba(138,154,170,0.15); color: var(--muted); }
+
+  /* MONTH COMPARISON TABLE */
+  .month-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  @media (max-width: 640px) { .month-compare { grid-template-columns: 1fr; } }
+  .month-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .month-header {
+    padding: 14px 18px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .month-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--gold);
+  }
+  .month-spend {
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .month-rows { padding: 4px 0; }
+  .month-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 18px;
+    border-bottom: 1px solid rgba(38,61,82,0.5);
+  }
+  .month-row:last-child { border-bottom: none; }
+  .row-label { color: var(--muted); font-size: 12px; }
+  .row-val { font-weight: 600; font-size: 13px; }
+
+  /* CAMPAIGN BREAKDOWN */
+  .campaign-section { margin-bottom: 32px; }
+  .campaign-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .campaign-table th {
+    font-size: 10px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 8px 12px;
+    text-align: right;
+    border-bottom: 1px solid var(--border);
+  }
+  .campaign-table th:first-child { text-align: left; }
+  .campaign-table td {
+    padding: 11px 12px;
+    text-align: right;
+    border-bottom: 1px solid rgba(38,61,82,0.4);
+    font-size: 13px;
+  }
+  .campaign-table td:first-child { text-align: left; }
+  .campaign-table tr:last-child td { border-bottom: none; }
+  .campaign-table tr.total-row td {
+    border-top: 1px solid var(--border);
+    border-bottom: none;
+    font-weight: 700;
+    color: var(--gold);
+    padding-top: 12px;
+  }
+  .campaign-table .campaign-name { font-weight: 600; color: var(--text); }
+  .campaign-table .campaign-abbr { font-size: 11px; color: var(--muted); display: block; }
+  .badge {
+    display: inline-block;
+    font-size: 9px;
+    letter-spacing: 0.5px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .badge-green { background: rgba(76,175,125,0.15); color: var(--green); }
+  .badge-yellow { background: rgba(201,170,124,0.15); color: var(--gold); }
+  .badge-red { background: rgba(224,90,90,0.15); color: var(--red); }
+  .table-wrap {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    overflow-x: auto;
+  }
+  .table-wrap table { min-width: 540px; }
+
+  /* CHART SECTION */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  @media (max-width: 700px) { .chart-grid { grid-template-columns: 1fr; } }
+  .chart-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px;
+  }
+  .chart-card h3 {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 16px;
+  }
+  .chart-wrap { position: relative; height: 220px; }
+
+  /* MC CARD */
+  .mc-card {
+    background: linear-gradient(135deg, #162433, #1a2e3b);
+    border: 1px solid var(--gold);
+    border-radius: 8px;
+    padding: 22px 24px;
+    margin-bottom: 32px;
+  }
+  .mc-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .mc-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--gold);
+    color: var(--navy);
+    font-weight: 800;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .mc-title { font-weight: 700; font-size: 14px; color: var(--gold); }
+  .mc-sub { font-size: 11px; color: var(--muted); }
+  .mc-obs { margin-top: 10px; display: flex; gap: 10px; align-items: flex-start; }
+  .mc-obs + .mc-obs { margin-top: 8px; }
+  .mc-obs .icon { flex-shrink: 0; font-size: 15px; margin-top: 1px; }
+  .mc-obs p { font-size: 13px; line-height: 1.55; color: var(--text); }
+  .mc-obs strong { color: var(--gold); }
+  .mc-obs .blue { color: var(--blue); }
+
+  footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    padding: 20px;
+    border-top: 1px solid var(--border);
+  }
+  footer span { color: var(--gold); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Hotel St. Cloud · Google Ads</div>
+  <h1>Portfolio Summary — May &amp; June 2026</h1>
+  <div class="subtitle">All active campaigns · Monthly view · Generated July 10, 2026</div>
+</header>
+
+<div class="container">
+
+  <!-- PORTFOLIO KPI STRIP -->
+  <div class="sec-title">Portfolio Totals — May &amp; June Combined</div>
+  <div class="kpi-grid" style="margin-bottom: 32px;">
+    <div class="kpi-card gold">
+      <div class="kpi-inner">
+        <div class="kpi-label">Total Spend</div>
+        <div class="kpi-val">$8,819</div>
+        <div class="kpi-sub">2-month portfolio</div>
+      </div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-inner">
+        <div class="kpi-label">Total Clicks</div>
+        <div class="kpi-val">4,804</div>
+        <div class="kpi-sub">1,720 May · 3,084 Jun</div>
+      </div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-inner">
+        <div class="kpi-label">Impressions</div>
+        <div class="kpi-val">62,644</div>
+        <div class="kpi-sub">18,794 May · 43,850 Jun</div>
+      </div>
+    </div>
+    <div class="kpi-card orange">
+      <div class="kpi-inner">
+        <div class="kpi-label">Conversions</div>
+        <div class="kpi-val">59.5</div>
+        <div class="kpi-sub">32.5 May · 27.0 Jun</div>
+      </div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-inner">
+        <div class="kpi-label">Avg CPC</div>
+        <div class="kpi-val">$1.84</div>
+        <div class="kpi-sub">Blended 2-month</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MONTH-OVER-MONTH COMPARISON -->
+  <div class="sec-title">Month-over-Month Comparison</div>
+  <div class="month-compare">
+    <div class="month-card">
+      <div class="month-header">
+        <div>
+          <div class="month-name">May 2026</div>
+          <div style="font-size:11px;color:var(--muted);">Full month</div>
+        </div>
+        <div class="month-spend">$4,094</div>
+      </div>
+      <div class="month-rows">
+        <div class="month-row">
+          <span class="row-label">Impressions</span>
+          <span class="row-val">18,794</span>
+        </div>
+        <div class="month-row">
+          <span class="row-label">Clicks</span>
+          <span class="row-val">1,720</span>
+        </div>
+        <div class="month-row">
+          <span class="row-label">Blended CTR</span>
+          <span class="row-val">9.15%</span>
+        </div>
+        <div class="month-row">
+          <span class="row-label">Avg CPC</span>
+          <span class="row-val">$2.38</span>
+        </div>
+        <div class="month-row">
+          <span class="row-label">Conversions</span>
+          <span class="row-val">32.5</span>
+        </div>
+        <div class="month-row">
+          <span class="row-label">Cost / Conv</span>
+          <span class="row-val">$126</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="month-card">
+      <div class="month-header">
+        <div>
+          <div class="month-name">June 2026</div>
+          <div style="font-size:11px;color:var(--muted);">Full month</div>
+        </div>
+        <div class="month-spend">$4,725</div>
+      </div>
+      <div class="month-rows">
+        <div class="month-row">
+          <span class="row-label">Impressions</span>
+          <span class="row-val">43,850 <span class="delta up">+133%</span></span>
+        </div>
+        <div class="month-row">
+          <span class="row-label">Clicks</span>
+          <span class="row-val">3,084 <span class="delta up">+79%</span></span>
+        </div>
+        <div class="month-row">
+          <span class="row-label">Blended CTR</span>
+          <span class="row-val">7.03% <span class="delta down">-2.1pp</span></span>
+        </div>
+        <div class="month-row">
+          <span class="row-label">Avg CPC</span>
+          <span class="row-val">$1.53 <span class="delta up">-36%</span></span>
+        </div>
+        <div class="month-row">
+          <span class="row-label">Conversions</span>
+          <span class="row-val">27.0 <span class="delta down">-17%</span></span>
+        </div>
+        <div class="month-row">
+          <span class="row-label">Cost / Conv</span>
+          <span class="row-val">$175 <span class="delta down">+$49</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="chart-grid">
+    <div class="chart-card">
+      <h3>Spend by Campaign</h3>
+      <div class="chart-wrap">
+        <canvas id="spendChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h3>Clicks by Campaign</h3>
+      <div class="chart-wrap">
+        <canvas id="clicksChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAY CAMPAIGN BREAKDOWN -->
+  <div class="campaign-section">
+    <div class="sec-title">May 2026 — Campaign Breakdown</div>
+    <div class="table-wrap">
+      <table class="campaign-table">
+        <thead>
+          <tr>
+            <th>Campaign</th>
+            <th>Impressions</th>
+            <th>Clicks</th>
+            <th>CTR</th>
+            <th>Avg CPC</th>
+            <th>Spend</th>
+            <th>Conversions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <span class="campaign-name">Local Proximity &amp; Through Traffic</span>
+              <span class="campaign-abbr">Brand workhorse · $80/day</span>
+            </td>
+            <td>4,175</td>
+            <td>831</td>
+            <td>19.9%</td>
+            <td>$2.93</td>
+            <td>$2,431</td>
+            <td>22.5 <span class="badge badge-green">best</span></td>
+          </tr>
+          <tr>
+            <td>
+              <span class="campaign-name">Royal Gorge Basecamp</span>
+              <span class="campaign-abbr">Lodging + activity · $35/day</span>
+            </td>
+            <td>4,495</td>
+            <td>369</td>
+            <td>8.21%</td>
+            <td>$2.28</td>
+            <td>$839</td>
+            <td>9.0</td>
+          </tr>
+          <tr>
+            <td>
+              <span class="campaign-name">FP Sports Bar | Fremont Provisions</span>
+              <span class="campaign-abbr">Dining &amp; cocktails · $35/day</span>
+            </td>
+            <td>8,679</td>
+            <td>474</td>
+            <td>5.46%</td>
+            <td>$1.56</td>
+            <td>$737</td>
+            <td>1.0 <span class="badge badge-red">⚠ low</span></td>
+          </tr>
+          <tr>
+            <td>
+              <span class="campaign-name">Standard Oil Coffee Co</span>
+              <span class="campaign-abbr">Coffee + hiring · $25/day</span>
+            </td>
+            <td>1,445</td>
+            <td>46</td>
+            <td>3.18%</td>
+            <td>$1.88</td>
+            <td>$86</td>
+            <td>0.0</td>
+          </tr>
+          <tr class="total-row">
+            <td>Portfolio Total</td>
+            <td>18,794</td>
+            <td>1,720</td>
+            <td>9.15%</td>
+            <td>$2.38</td>
+            <td>$4,094</td>
+            <td>32.5</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- JUNE CAMPAIGN BREAKDOWN -->
+  <div class="campaign-section">
+    <div class="sec-title">June 2026 — Campaign Breakdown</div>
+    <div class="table-wrap">
+      <table class="campaign-table">
+        <thead>
+          <tr>
+            <th>Campaign</th>
+            <th>Impressions</th>
+            <th>Clicks</th>
+            <th>CTR</th>
+            <th>Avg CPC</th>
+            <th>Spend</th>
+            <th>Conversions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <span class="campaign-name">Local Proximity &amp; Through Traffic</span>
+              <span class="campaign-abbr">Brand workhorse · $80/day</span>
+            </td>
+            <td>4,577 <span class="delta up">+10%</span></td>
+            <td>985 <span class="delta up">+19%</span></td>
+            <td>21.52%</td>
+            <td>$2.46</td>
+            <td>$2,426</td>
+            <td>22.0 <span class="badge badge-green">best</span></td>
+          </tr>
+          <tr>
+            <td>
+              <span class="campaign-name">Royal Gorge Basecamp</span>
+              <span class="campaign-abbr">Lodging + activity · $35/day</span>
+            </td>
+            <td>5,989 <span class="delta up">+33%</span></td>
+            <td>549 <span class="delta up">+49%</span></td>
+            <td>9.17%</td>
+            <td>$1.93</td>
+            <td>$1,059</td>
+            <td>3.0 <span class="badge badge-red">⚠ -67%</span></td>
+          </tr>
+          <tr>
+            <td>
+              <span class="campaign-name">FP Sports Bar | Fremont Provisions</span>
+              <span class="campaign-abbr">Dining &amp; cocktails · $35/day</span>
+            </td>
+            <td>31,117 <span class="delta up">+259%</span></td>
+            <td>1,451 <span class="delta up">+206%</span></td>
+            <td>4.66%</td>
+            <td>$0.72</td>
+            <td>$1,051</td>
+            <td>1.0 <span class="badge badge-red">⚠ low</span></td>
+          </tr>
+          <tr>
+            <td>
+              <span class="campaign-name">Standard Oil Coffee Co</span>
+              <span class="campaign-abbr">Coffee + hiring · $25/day</span>
+            </td>
+            <td>2,167 <span class="delta up">+50%</span></td>
+            <td>99 <span class="delta up">+115%</span></td>
+            <td>4.57%</td>
+            <td>$1.91</td>
+            <td>$189</td>
+            <td>1.0 <span class="badge badge-green">first conv</span></td>
+          </tr>
+          <tr class="total-row">
+            <td>Portfolio Total</td>
+            <td>43,850 <span class="delta up">+133%</span></td>
+            <td>3,084 <span class="delta up">+79%</span></td>
+            <td>7.03%</td>
+            <td>$1.53</td>
+            <td>$4,725</td>
+            <td>27.0 <span class="delta down">-17%</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MC'S TAKE -->
+  <div class="sec-title">MC's Take</div>
+  <div class="mc-card">
+    <div class="mc-header">
+      <div class="mc-avatar">MC</div>
+      <div>
+        <div class="mc-title">MC's Portfolio Read</div>
+        <div class="mc-sub">May–June 2026 · Hotel St. Cloud</div>
+      </div>
+    </div>
+
+    <div class="mc-obs">
+      <div class="icon">🏆</div>
+      <p><strong>Local Proximity is your engine — protect it at all costs.</strong> Near-identical spend both months ($2,431 vs $2,426), 22+ conversions each month, CTR improving from 19.9% → 21.5%. This campaign is running like clockwork. Don't touch it.</p>
+    </div>
+
+    <div class="mc-obs">
+      <div class="icon">🚀</div>
+      <p><strong>FP Sports Bar exploded in volume but not in value.</strong> Impressions jumped +259% in June (8,679 → 31,117) after the bid optimizations — that's the bid work paying off. But conversions stayed flat at 1/month both months. We've opened the faucet; the pipe still isn't converting. The issue is landing page or offer alignment, not traffic.</p>
+    </div>
+
+    <div class="mc-obs">
+      <div class="icon">⚠️</div>
+      <p><strong class="blue">Royal Gorge Basecamp conversion drop needs attention.</strong> More impressions (+33%), more clicks (+49%), but conversions fell off a cliff — 9 in May, 3 in June. The traffic is arriving, it's just not booking. Worth a look at whether the landing page experience changed or if the shift was seasonal mix (activity vs. lodging searchers).</p>
+    </div>
+
+    <div class="mc-obs">
+      <div class="icon">📈</div>
+      <p><strong>Standard Oil is on a positive trajectory.</strong> First conversion in June, clicks more than doubled, spend scaled from $86 → $189. Small numbers but the direction is right. Keep the budget steady and let it grow.</p>
+    </div>
+
+    <div class="mc-obs">
+      <div class="icon">💡</div>
+      <p><strong class="blue">The one thing to fix right now: FP Sports Bar conversions.</strong> You're spending ~$1,050/month and getting 1 conversion. The traffic is there. Audit the FP landing page — does it have a clear call to action? Is there a reason to show up today (happy hour, game night)? A single strong offer on that page could turn this from a cost center into a performer.</p>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  Powered by <span>MC — Unbridled Solutions</span> · Portfolio Summary · May–June 2026 · Generated July 10, 2026
+</footer>
+
+<script>
+const maySpend = [2431, 839, 737, 86];
+const junSpend = [2426, 1059, 1051, 189];
+const mayClicks = [831, 369, 474, 46];
+const junClicks = [985, 549, 1451, 99];
+const labels = ['Local Proximity', 'Royal Gorge Basecamp', 'FP Sports Bar', 'Standard Oil'];
+
+const chartDefaults = {
+  plugins: {
+    legend: { labels: { color: '#8a9aaa', font: { size: 11 } } },
+    tooltip: {
+      backgroundColor: '#162433',
+      titleColor: '#c9aa7c',
+      bodyColor: '#e8e0d4',
+      borderColor: '#263d52',
+      borderWidth: 1,
+    }
+  },
+  scales: {
+    x: { ticks: { color: '#8a9aaa', font: { size: 10 } }, grid: { color: 'rgba(38,61,82,0.5)' } },
+    y: { ticks: { color: '#8a9aaa', font: { size: 10 } }, grid: { color: 'rgba(38,61,82,0.5)' } }
+  }
+};
+
+new Chart(document.getElementById('spendChart'), {
+  type: 'bar',
+  data: {
+    labels: labels,
+    datasets: [
+      { label: 'May', data: maySpend, backgroundColor: 'rgba(201,170,124,0.7)', borderRadius: 3 },
+      { label: 'June', data: junSpend, backgroundColor: 'rgba(90,139,167,0.7)', borderRadius: 3 }
+    ]
+  },
+  options: {
+    ...chartDefaults,
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      ...chartDefaults.plugins,
+      tooltip: {
+        ...chartDefaults.plugins.tooltip,
+        callbacks: { label: ctx => ` $${ctx.raw.toLocaleString()}` }
+      }
+    }
+  }
+});
+
+new Chart(document.getElementById('clicksChart'), {
+  type: 'bar',
+  data: {
+    labels: labels,
+    datasets: [
+      { label: 'May', data: mayClicks, backgroundColor: 'rgba(76,175,125,0.7)', borderRadius: 3 },
+      { label: 'June', data: junClicks, backgroundColor: 'rgba(224,146,74,0.7)', borderRadius: 3 }
+    ]
+  },
+  options: {
+    ...chartDefaults,
+    responsive: true,
+    maintainAspectRatio: false,
+  }
+});
+</script>
+</body>
+</html>
