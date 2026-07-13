@@ -268,6 +268,13 @@
       border-color: var(--blue);
       background: var(--white);
     }
+    .task-table td.task-delete { width: 40px; text-align: center; }
+    .delete-btn {
+      background: none; border: none; cursor: pointer;
+      font-size: 1rem; opacity: 0.25; transition: opacity 0.15s;
+      padding: 0.2rem 0.4rem; border-radius: 4px;
+    }
+    .delete-btn:hover { opacity: 0.8; background: #fee2e2; }
     /* ── RADIO STATUS ── */
     .status-group {
       display: flex;
@@ -561,7 +568,7 @@
 <div class="pin-overlay" id="pinOverlay">
   <div class="pin-modal">
     <div class="pin-eyebrow">Owner Approval Required</div>
-    <h3>Enter PIN to Approve</h3>
+    <h3 id="pinTitle">Enter PIN to Approve</h3>
     <input class="pin-input" id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="····" autocomplete="off">
     <div class="pin-error" id="pinError"></div>
     <div class="pin-actions">
@@ -1022,6 +1029,9 @@ function buildRow(task, status, owner) {
     <td>
       <div class="status-group">${radios}</div>
     </td>
+    <td class="task-delete">
+      <button class="delete-btn" title="Delete task" onclick="requestDelete('${task.id}')">🗑</button>
+    </td>
   `;
   return tr;
 }
@@ -1036,6 +1046,7 @@ function escHtml(str) {
 // ════════════════════════════════════════════
 const APPROVED_PIN = '8108'; // Stan's PIN — change via MC if needed
 let pendingApproval = null;  // { taskId } waiting for PIN confirmation
+let pendingDelete   = null;  // { taskId } waiting for PIN confirmation to delete
 
 function onStatusChange(taskId, newStatus) {
   if (newStatus === 'approved') {
@@ -1084,12 +1095,17 @@ function showPinModal() {
 function confirmPin() {
   const input = document.getElementById('pinInput');
   const error = document.getElementById('pinError');
+  const title = document.getElementById('pinTitle');
   if (input.value === APPROVED_PIN) {
     document.getElementById('pinOverlay').classList.remove('show');
-    if (pendingApproval) {
+    if (pendingDelete) {
+      executeDelete(pendingDelete.taskId);
+      pendingDelete = null;
+    } else if (pendingApproval) {
       applyStatusChange(pendingApproval.taskId, 'approved');
       pendingApproval = null;
     }
+    if (title) title.textContent = 'Enter Approval PIN';
   } else {
     error.textContent = 'Incorrect PIN. Try again.';
     input.classList.add('shake');
@@ -1102,6 +1118,32 @@ function confirmPin() {
 function cancelPin() {
   document.getElementById('pinOverlay').classList.remove('show');
   pendingApproval = null;
+  pendingDelete   = null;
+}
+
+function requestDelete(taskId) {
+  pendingDelete = { taskId };
+  pendingApproval = null;
+  // Show PIN modal with delete-specific label
+  const overlay = document.getElementById('pinOverlay');
+  const input   = document.getElementById('pinInput');
+  const error   = document.getElementById('pinError');
+  const title   = document.getElementById('pinTitle');
+  if (title) title.textContent = 'Enter PIN to Delete Task';
+  error.textContent = '';
+  input.value = '';
+  overlay.classList.add('show');
+  setTimeout(() => input.focus(), 100);
+}
+
+function executeDelete(taskId) {
+  // Remove from DOM
+  const row = document.getElementById('row-' + taskId);
+  if (row) row.remove();
+  // Remove from localStorage
+  localStorage.removeItem('el-task-' + taskId);
+  updateCounts();
+  markDirty();
 }
 
 // Allow Enter key to confirm PIN
