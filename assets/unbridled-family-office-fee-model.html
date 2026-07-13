@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Unbridled Companies — Family Office Fee Model">
+  <title>Family Office Fee Model | Unbridled Companies</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #1a2637;
+      --navy-mid: #1f2d44;
+      --navy-light: #243448;
+      --blue: #5a8ba7;
+      --blue-light: #78b0d1;
+      --gold: #c8a84b;
+      --green: #4caf7d;
+      --amber: #e09b3d;
+      --red: #e05c5c;
+      --gray: #4b4f54;
+      --rule: rgba(90,139,167,0.2);
+      --text: rgba(255,255,255,0.88);
+      --text-muted: rgba(255,255,255,0.45);
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--navy);
+      color: var(--text);
+      font-size: 16px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* HEADER */
+    header {
+      background: #0f1c2e;
+      border-bottom: 1px solid var(--rule);
+      padding: 1.25rem clamp(1rem, 4vw, 2.5rem);
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+    }
+    .header-left { display: flex; align-items: center; gap: 0.75rem; }
+    header img { width: 36px; height: auto; opacity: 0.9; }
+    header .brand { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--blue-light); }
+    .header-right { font-size: 0.75rem; color: var(--text-muted); }
+    .save-indicator { font-size: 0.75rem; color: var(--green); display: none; }
+    .save-indicator.visible { display: inline; }
+
+    /* HERO */
+    .hero {
+      background: linear-gradient(160deg, #1a2637 0%, #0f1c2e 100%);
+      padding: clamp(2rem, 6vw, 4rem) clamp(1rem, 5vw, 3rem) clamp(1.5rem, 4vw, 2.5rem);
+      border-bottom: 1px solid var(--rule);
+    }
+    .hero-eyebrow { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--blue); margin-bottom: 0.6rem; }
+    .hero h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 300; color: #fff; margin-bottom: 0.4rem; }
+    .hero h1 strong { font-weight: 600; color: var(--blue-light); }
+    .hero-sub { font-size: 0.9rem; color: var(--text-muted); margin-top: 0.5rem; }
+
+    /* STATS STRIP */
+    .stats-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+      gap: 1px;
+      background: var(--rule);
+      border: 1px solid var(--rule);
+      border-radius: 8px;
+      overflow: hidden;
+      margin: clamp(1.5rem, 4vw, 2.5rem) clamp(1rem, 5vw, 3rem);
+    }
+    .stat-item {
+      background: var(--navy-mid);
+      padding: 1.25rem 1.5rem;
+      text-align: center;
+    }
+    .stat-val { font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 700; color: var(--blue-light); line-height: 1.1; }
+    .stat-val.gold { color: var(--gold); }
+    .stat-val.green { color: var(--green); }
+    .stat-val.amber { color: var(--amber); }
+    .stat-label { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-top: 0.3rem; }
+
+    /* CONTROLS */
+    .controls {
+      padding: 1.25rem clamp(1rem, 5vw, 3rem);
+      background: var(--navy-light);
+      border-bottom: 1px solid var(--rule);
+      display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;
+    }
+    .controls label { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+    .scenario-btns { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .scenario-btn {
+      padding: 0.4rem 1rem; border-radius: 100px; border: 1px solid var(--rule);
+      font-size: 0.8rem; font-weight: 500; cursor: pointer;
+      background: transparent; color: var(--text-muted); transition: all 0.15s;
+    }
+    .scenario-btn:hover { border-color: var(--blue); color: var(--blue-light); }
+    .scenario-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .custom-rate-wrap { display: flex; align-items: center; gap: 0.5rem; }
+    .custom-rate-wrap input {
+      width: 70px; padding: 0.35rem 0.6rem; border-radius: 6px;
+      border: 1px solid var(--rule); background: var(--navy); color: #fff;
+      font-size: 0.9rem; text-align: center;
+    }
+    .custom-rate-wrap span { font-size: 0.85rem; color: var(--text-muted); }
+    .basis-toggle { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .basis-btn {
+      padding: 0.35rem 0.85rem; border-radius: 100px; border: 1px solid var(--rule);
+      font-size: 0.78rem; font-weight: 500; cursor: pointer;
+      background: transparent; color: var(--text-muted); transition: all 0.15s;
+    }
+    .basis-btn.active { background: var(--gold); border-color: var(--gold); color: #1a1a1a; }
+
+    /* MAIN LAYOUT */
+    .main { padding: clamp(1.5rem, 4vw, 2.5rem) clamp(1rem, 5vw, 3rem); }
+
+    /* SEGMENT SECTIONS */
+    .segment { margin-bottom: 2.5rem; }
+    .segment-header {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding-bottom: 0.75rem; margin-bottom: 0;
+      border-bottom: 2px solid var(--blue);
+    }
+    .segment-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .segment-name { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--blue-light); }
+    .segment-total { margin-left: auto; font-size: 0.78rem; color: var(--text-muted); }
+    .segment-total span { color: var(--green); font-weight: 600; }
+
+    /* TABLE */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 640px; }
+    thead th {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--text-muted); padding: 0.75rem 0.75rem 0.5rem; text-align: right; border-bottom: 1px solid var(--rule);
+    }
+    thead th:first-child { text-align: left; }
+    tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.1s; }
+    tbody tr:hover { background: rgba(255,255,255,0.03); }
+    tbody tr.exclude-row { opacity: 0.4; }
+    td { padding: 0.65rem 0.75rem; font-size: 0.9rem; vertical-align: middle; text-align: right; }
+    td:first-child { text-align: left; }
+    .co-name { font-weight: 500; color: var(--text); }
+    .co-note { font-size: 0.72rem; color: var(--text-muted); display: block; }
+
+    /* EDITABLE INPUTS */
+    .num-input {
+      width: 110px; padding: 0.3rem 0.5rem; border-radius: 4px;
+      border: 1px solid transparent; background: transparent; color: var(--text);
+      font-size: 0.88rem; text-align: right; font-family: 'Inter', sans-serif;
+      transition: all 0.15s; cursor: text;
+    }
+    .num-input:hover { border-color: var(--rule); background: rgba(255,255,255,0.04); }
+    .num-input:focus { border-color: var(--blue); background: rgba(90,139,167,0.1); outline: none; }
+    .num-input::placeholder { color: rgba(255,255,255,0.2); }
+
+    .fee-val { font-weight: 600; color: var(--green); }
+    .fee-val.zero { color: var(--text-muted); font-weight: 400; }
+
+    .exclude-toggle {
+      width: 16px; height: 16px; cursor: pointer; accent-color: var(--blue);
+    }
+
+    /* TOTALS ROW */
+    .totals-row td { font-weight: 700; color: #fff; border-top: 2px solid var(--blue); padding-top: 0.9rem; }
+    .totals-row td:first-child { color: var(--blue-light); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.1em; }
+
+    /* CHART */
+    .chart-section {
+      margin-top: 2.5rem;
+      background: var(--navy-mid);
+      border: 1px solid var(--rule);
+      border-radius: 8px;
+      padding: clamp(1.25rem, 3vw, 2rem);
+    }
+    .chart-title { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--blue); margin-bottom: 1.25rem; }
+    .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .chart-wrap { position: relative; }
+    canvas { max-height: 280px; }
+
+    /* SCENARIO COMPARISON */
+    .comparison-section {
+      margin-top: 2rem;
+      background: var(--navy-mid);
+      border: 1px solid var(--rule);
+      border-radius: 8px;
+      padding: clamp(1.25rem, 3vw, 2rem);
+    }
+    .comparison-title { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--blue); margin-bottom: 1.25rem; }
+    .comparison-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 1rem; }
+    .comp-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+    .comp-card.current { border-color: var(--blue); }
+    .comp-card.highlight { border-color: var(--green); background: rgba(76,175,125,0.06); }
+    .comp-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.5rem; }
+    .comp-val { font-size: clamp(1.4rem, 3vw, 1.9rem); font-weight: 700; line-height: 1.1; margin-bottom: 0.25rem; }
+    .comp-desc { font-size: 0.75rem; color: var(--text-muted); }
+    .comp-delta { font-size: 0.78rem; font-weight: 600; margin-top: 0.4rem; }
+    .comp-delta.pos { color: var(--green); }
+    .comp-delta.neg { color: var(--red); }
+
+    /* NOTES */
+    .notes-section { margin-top: 2rem; padding: 1.25rem clamp(1rem, 3vw, 1.75rem); background: rgba(90,139,167,0.07); border-left: 3px solid var(--blue); border-radius: 0 6px 6px 0; }
+    .notes-section p { font-size: 0.85rem; color: rgba(255,255,255,0.65); line-height: 1.7; margin-bottom: 0.4rem; }
+    .notes-section p:last-child { margin-bottom: 0; }
+    .notes-section strong { color: rgba(255,255,255,0.85); }
+
+    /* FOOTER */
+    footer { background: #0f1c2e; border-top: 1px solid var(--rule); padding: 1.5rem clamp(1rem, 4vw, 2.5rem); text-align: center; margin-top: 3rem; }
+    footer img { width: 28px; opacity: 0.3; margin-bottom: 0.5rem; }
+    footer p { font-size: 0.75rem; color: rgba(255,255,255,0.25); letter-spacing: 0.08em; }
+
+    @media (max-width: 700px) {
+      .chart-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      .controls { flex-direction: column; align-items: flex-start; }
+    }
+
+    @media print {
+      body { background: #fff; color: #1a2637; font-size: 11px; }
+      header, .controls { background: #1a2637; }
+      .hero { background: #1a2637; padding: 1rem; }
+      @page { margin: 0.5in; size: landscape; }
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <img src="logos/unbridled-elk-icon-white.png" alt="Unbridled">
+    <span class="brand">Unbridled Companies — Family Office Fee Model</span>
+  </div>
+  <div class="header-right">
+    <span class="save-indicator" id="saveIndicator">✓ Saved</span>
+    &nbsp; Click any revenue or EBITDA field to edit
+  </div>
+</header>
+
+<div class="hero">
+  <p class="hero-eyebrow">Internal Planning Tool</p>
+  <h1>Family Office <strong>Fee Model</strong></h1>
+  <p class="hero-sub">Illustrative figures — update revenue and EBITDA columns with actuals. Data saves automatically to your browser.</p>
+</div>
+
+<!-- Stats Strip -->
+<div class="stats-strip" id="statsStrip">
+  <div class="stat-item"><div class="stat-val" id="statCompanies">32</div><div class="stat-label">Portfolio Companies</div></div>
+  <div class="stat-item"><div class="stat-val gold" id="statRevenue">—</div><div class="stat-label">Total Est. Revenue</div></div>
+  <div class="stat-item"><div class="stat-val" id="statEbitda">—</div><div class="stat-label">Total Est. EBITDA</div></div>
+  <div class="stat-item"><div class="stat-val green" id="statCurrentFee">—</div><div class="stat-label">Current Royalty (2%)</div></div>
+  <div class="stat-item"><div class="stat-val amber" id="statNewFee">—</div><div class="stat-label">Active Scenario Fee</div></div>
+  <div class="stat-item"><div class="stat-val green" id="statUplift">—</div><div class="stat-label">Potential Uplift</div></div>
+</div>
+
+<!-- Controls -->
+<div class="controls">
+  <div>
+    <div class="controls label" style="margin-bottom:0.4rem;">Fee Scenario</div>
+    <div class="scenario-btns">
+      <button class="scenario-btn active" data-rate="2" onclick="setScenario(2, this)">2% (Current)</button>
+      <button class="scenario-btn" data-rate="5" onclick="setScenario(5, this)">5% EBITDA</button>
+      <button class="scenario-btn" data-rate="8" onclick="setScenario(8, this)">8% EBITDA</button>
+      <button class="scenario-btn" data-rate="10" onclick="setScenario(10, this)">10% EBITDA</button>
+      <button class="scenario-btn" data-rate="custom" onclick="setScenario('custom', this)">Custom</button>
+    </div>
+  </div>
+  <div class="custom-rate-wrap" id="customWrap" style="display:none;">
+    <input type="number" id="customRate" value="7" min="0" max="100" step="0.5" oninput="recalc()">
+    <span>%</span>
+  </div>
+  <div>
+    <div class="controls label" style="margin-bottom:0.4rem;">Fee Basis</div>
+    <div class="basis-toggle">
+      <button class="basis-btn active" id="basisGP" onclick="setBasis('gp', this)">Gross Profit</button>
+      <button class="basis-btn" id="basisEBITDA" onclick="setBasis('ebitda', this)">EBITDA</button>
+      <button class="basis-btn" id="basisRev" onclick="setBasis('rev', this)">Revenue</button>
+    </div>
+  </div>
+</div>
+
+<!-- Company Table -->
+<div class="main" id="tableContainer"></div>
+
+<!-- Scenario Comparison -->
+<div class="main" style="padding-top:0;">
+  <div class="comparison-section">
+    <div class="comparison-title">Scenario Comparison — All Fee Structures</div>
+    <div class="comparison-grid" id="comparisonGrid"></div>
+  </div>
+
+  <div class="chart-section">
+    <div class="chart-title">Fee by Segment (Active Scenario)</div>
+    <div class="chart-grid">
+      <div class="chart-wrap"><canvas id="segmentBar"></canvas></div>
+      <div class="chart-wrap"><canvas id="segmentDonut"></canvas></div>
+    </div>
+  </div>
+
+  <div class="notes-section">
+    <p><strong>How to use this model:</strong> Click any Revenue or EBITDA cell to enter real numbers. All figures in thousands (K). The model auto-saves to your browser so your numbers persist between visits.</p>
+    <p><strong>Fee basis matters:</strong> "Gross Profit" = Revenue minus COGS. "EBITDA" = after operating expenses. "Revenue" = top-line. Your current 2% royalty is applied to gross profit per the existing structure.</p>
+    <p><strong>Market context:</strong> Active family offices providing shared services, strategic oversight, and operational support typically charge 5–15% of EBITDA. PE holding companies often charge 1.5–2% of <em>revenue</em> plus management fees. Your current model is conservative — there's room.</p>
+    <p><strong>Excluded companies (unchecked):</strong> UnbridledACTS is a 501(c)3 and excluded by default. Exclude any company not yet generating revenue or where a fee isn't appropriate.</p>
+  </div>
+</div>
+
+<footer>
+  <img src="logos/unbridled-elk-icon-white.png" alt="Unbridled">
+  <p>Unbridled Companies &nbsp;·&nbsp; Confidential &nbsp;·&nbsp; For Internal Use Only</p>
+</footer>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────────────────
+const SEGMENTS = [
+  {
+    id: 'live-events',
+    name: 'Live Events',
+    color: '#5a8ba7',
+    companies: [
+      { id: 'ubs',        name: 'Unbridled Solutions',    note: 'Flagship live events agency',      rev: 12000, ebitda: 2400, gp: 3600 },
+      { id: 'ubm',        name: 'Unbridled Media',        note: 'Media production',                 rev: 1800,  ebitda: 360,  gp: 540  },
+      { id: 'ubp',        name: 'Unbridled Productions',  note: 'AV & production',                  rev: 2200,  ebitda: 440,  gp: 660  },
+      { id: 'ubt',        name: 'Unbridled Travel',       note: 'Incentive & group travel',         rev: 3500,  ebitda: 700,  gp: 1050 },
+      { id: 'giftd',      name: "GIFT'D",                 note: 'Gifting & fulfillment',            rev: 900,   ebitda: 180,  gp: 270  },
+      { id: 'od',         name: 'Orange Door',            note: 'Creative / brand',                 rev: 800,   ebitda: 160,  gp: 240  },
+    ]
+  },
+  {
+    id: 'real-estate',
+    name: 'Real Estate',
+    color: '#c8a84b',
+    companies: [
+      { id: 're1',  name: '225 GCR 465 — Eagles Landing',  note: 'Grand Lake, log cabin build',    rev: 0,    ebitda: 0,   gp: 0   },
+      { id: 're2',  name: '194 GCR 472',                   note: 'Lot 31 Lakeridge Sub, GL',       rev: 18,   ebitda: 10,  gp: 14  },
+      { id: 're3',  name: '276 GCR 480 / Annie Dr',        note: 'Breckon Sub Tract 3, GL',        rev: 18,   ebitda: 10,  gp: 14  },
+      { id: 're4',  name: '719 Main — Fremont Makers',     note: 'Canon City commercial',          rev: 27,   ebitda: 15,  gp: 22  },
+      { id: 're5',  name: '701 + 110 N 7th — JPA/Ary',    note: 'UHG tenant',                     rev: 120,  ebitda: 80,  gp: 96  },
+      { id: 're6',  name: 'Grand Street Mansion',          note: 'HQ / offices',                   rev: 0,    ebitda: 0,   gp: 0   },
+      { id: 're7',  name: 'Additional Properties (9)',     note: 'Portfolio — update with actuals', rev: 400,  ebitda: 180, gp: 280 },
+    ]
+  },
+  {
+    id: 'hospitality',
+    name: 'Hospitality',
+    color: '#4caf7d',
+    companies: [
+      { id: 'hsc',   name: 'Hotel St. Cloud',             note: '1883 boutique hotel, Canon City', rev: 1800, ebitda: 360, gp: 720  },
+      { id: 'fph',   name: 'Fremont Public House',        note: 'Restaurant & bar',                rev: 1100, ebitda: 165, gp: 330  },
+      { id: 'fp',    name: 'Fremont Provisions',          note: 'F&B concept',                     rev: 600,  ebitda: 90,  gp: 180  },
+      { id: 'fm',    name: 'Fremont Makers',              note: 'New — Aug 2026',                  rev: 0,    ebitda: 0,   gp: 0    },
+      { id: 'eatery',name: '1887 Historic Eatery',         note: 'HSC restaurant',                  rev: 800,  ebitda: 120, gp: 240  },
+    ]
+  },
+  {
+    id: 'portfolio',
+    name: 'Portfolio Companies',
+    color: '#9b7fd4',
+    companies: [
+      { id: 'uc',   name: 'Unbridled Contractors',        note: 'Construction services',           rev: 2200,  ebitda: 330, gp: 660  },
+      { id: 'uw',   name: 'Unbridled Wealth',             note: 'Wealth advisory — Jack Carlson',  rev: 400,   ebitda: 160, gp: 200  },
+      { id: 'ui',   name: 'Unbridled Insurance',          note: 'Insurance services',              rev: 200,   ebitda: 80,  gp: 100  },
+      { id: 'au',   name: 'Artist Uprising',              note: 'Artist platform',                 rev: 120,   ebitda: 20,  gp: 40   },
+      { id: 'bua',  name: 'BeUnbridled AI',               note: 'New — Aug 2026',                  rev: 0,     ebitda: 0,   gp: 0    },
+      { id: 'dc',   name: 'Dutch Crossing',               note: 'Publishing imprint',              rev: 50,    ebitda: 20,  gp: 30   },
+      { id: 'other',name: 'Other Portfolio (8)',           note: 'Update with actuals',             rev: 800,   ebitda: 160, gp: 320  },
+    ]
+  },
+  {
+    id: 'mission',
+    name: 'Mission',
+    color: '#e05c5c',
+    companies: [
+      { id: 'acts',  name: 'UnbridledACTS',               note: '501(c)3 — not subject to fee',   rev: 500,   ebitda: 0,   gp: 0,  exclude: true },
+      { id: 'ubco',  name: 'Unbridled Companies',         note: 'Family office entity itself',     rev: 0,     ebitda: 0,   gp: 0,  exclude: true },
+    ]
+  }
+];
+
+// ─── STATE ──────────────────────────────────────────────────────────────────
+let currentRate = 2;
+let currentBasis = 'gp';
+let barChart = null;
+let donutChart = null;
+
+function loadSaved() {
+  try {
+    const saved = localStorage.getItem('ub_fee_model_v1');
+    if (!saved) return;
+    const data = JSON.parse(saved);
+    SEGMENTS.forEach(seg => {
+      seg.companies.forEach(co => {
+        if (data[co.id]) {
+          if (data[co.id].rev !== undefined) co.rev = data[co.id].rev;
+          if (data[co.id].ebitda !== undefined) co.ebitda = data[co.id].ebitda;
+          if (data[co.id].gp !== undefined) co.gp = data[co.id].gp;
+          if (data[co.id].exclude !== undefined) co.exclude = data[co.id].exclude;
+        }
+      });
+    });
+  } catch(e) {}
+}
+
+function saveData() {
+  const data = {};
+  SEGMENTS.forEach(seg => {
+    seg.companies.forEach(co => {
+      data[co.id] = { rev: co.rev, ebitda: co.ebitda, gp: co.gp, exclude: !!co.exclude };
+    });
+  });
+  localStorage.setItem('ub_fee_model_v1', JSON.stringify(data));
+  const ind = document.getElementById('saveIndicator');
+  ind.classList.add('visible');
+  setTimeout(() => ind.classList.remove('visible'), 2000);
+}
+
+// ─── FORMATTING ─────────────────────────────────────────────────────────────
+function fmt(val, prefix='$') {
+  if (!val || val === 0) return '—';
+  if (val >= 1000) return prefix + (val/1000).toFixed(1) + 'M';
+  return prefix + val.toFixed(0) + 'K';
+}
+function fmtFee(val) {
+  if (!val || val === 0) return '<span class="fee-val zero">—</span>';
+  return '<span class="fee-val">' + fmt(val) + '</span>';
+}
+
+// ─── CALCULATIONS ────────────────────────────────────────────────────────────
+function getBasis(co) {
+  if (currentBasis === 'ebitda') return co.ebitda || 0;
+  if (currentBasis === 'rev')    return co.rev    || 0;
+  return co.gp || 0;
+}
+function getRate() {
+  if (currentRate === 'custom') {
+    return parseFloat(document.getElementById('customRate').value) || 0;
+  }
+  return parseFloat(currentRate);
+}
+function calcFee(co) {
+  if (co.exclude) return 0;
+  return getBasis(co) * getRate() / 100;
+}
+function calcCurrentFee(co) {
+  if (co.exclude) return 0;
+  return (co.gp || 0) * 2 / 100;
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+function basisLabel() {
+  if (currentBasis === 'ebitda') return 'EBITDA ($K)';
+  if (currentBasis === 'rev')    return 'Revenue ($K)';
+  return 'Gross Profit ($K)';
+}
+
+function renderTable() {
+  const container = document.getElementById('tableContainer');
+  let html = '';
+
+  SEGMENTS.forEach(seg => {
+    let segFee = 0;
+    seg.companies.forEach(co => { segFee += calcFee(co); });
+
+    html += `
+    <div class="segment">
+      <div class="segment-header">
+        <div class="segment-dot" style="background:${seg.color}"></div>
+        <span class="segment-name">${seg.name}</span>
+        <span class="segment-total">Segment fee: <span>${fmt(segFee)}</span></span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:30%">Company</th>
+              <th>Revenue ($K)</th>
+              <th>${basisLabel()}</th>
+              <th>2% GP (Current)</th>
+              <th>Scenario Fee</th>
+              <th style="width:40px">Incl.</th>
+            </tr>
+          </thead>
+          <tbody>`;
+
+    seg.companies.forEach(co => {
+      const fee = calcFee(co);
+      const currentFee = calcCurrentFee(co);
+      html += `
+            <tr class="${co.exclude ? 'exclude-row' : ''}" id="row-${co.id}">
+              <td><span class="co-name">${co.name}</span><span class="co-note">${co.note}</span></td>
+              <td><input class="num-input" type="number" min="0" value="${co.rev||''}" placeholder="0" onchange="updateVal('${co.id}','rev',this.value)" /></td>
+              <td><input class="num-input" type="number" min="0" value="${getBasis(co)||''}" placeholder="0" onchange="updateVal('${co.id}','${currentBasis}',this.value)" /></td>
+              <td>${co.exclude ? '<span class="fee-val zero">N/A</span>' : fmtFee(currentFee)}</td>
+              <td>${co.exclude ? '<span class="fee-val zero">N/A</span>' : fmtFee(fee)}</td>
+              <td style="text-align:center"><input type="checkbox" class="exclude-toggle" ${co.exclude?'':'checked'} onchange="toggleExclude('${co.id}',this.checked)" /></td>
+            </tr>`;
+    });
+
+    // Totals row for segment
+    let segRev=0, segBasis=0, segCurrFee=0;
+    seg.companies.forEach(co => { segRev+=co.rev||0; segBasis+=getBasis(co)||0; segCurrFee+=calcCurrentFee(co); });
+    html += `
+            <tr class="totals-row">
+              <td>Segment Total</td>
+              <td>${fmt(segRev)}</td>
+              <td>${fmt(segBasis)}</td>
+              <td>${fmtFee(segCurrFee)}</td>
+              <td>${fmtFee(segFee)}</td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+function updateVal(id, field, val) {
+  const num = parseFloat(val) || 0;
+  SEGMENTS.forEach(seg => {
+    seg.companies.forEach(co => {
+      if (co.id === id) co[field] = num;
+    });
+  });
+  recalc();
+  saveData();
+}
+
+function toggleExclude(id, checked) {
+  SEGMENTS.forEach(seg => {
+    seg.companies.forEach(co => {
+      if (co.id === id) co.exclude = !checked;
+    });
+  });
+  const row = document.getElementById('row-'+id);
+  if (row) row.className = checked ? '' : 'exclude-row';
+  recalc();
+  saveData();
+}
+
+function updateStats() {
+  let totalRev=0, totalEbitda=0, totalGp=0, totalCurrentFee=0, totalNewFee=0;
+  SEGMENTS.forEach(seg => {
+    seg.companies.forEach(co => {
+      if (!co.exclude) {
+        totalRev    += co.rev    || 0;
+        totalEbitda += co.ebitda || 0;
+        totalGp     += co.gp    || 0;
+        totalCurrentFee += calcCurrentFee(co);
+        totalNewFee     += calcFee(co);
+      }
+    });
+  });
+  document.getElementById('statRevenue').textContent    = fmt(totalRev);
+  document.getElementById('statEbitda').textContent     = fmt(totalEbitda);
+  document.getElementById('statCurrentFee').textContent = fmt(totalCurrentFee);
+  document.getElementById('statNewFee').textContent     = fmt(totalNewFee);
+  const uplift = totalNewFee - totalCurrentFee;
+  const upliftEl = document.getElementById('statUplift');
+  upliftEl.textContent = (uplift >= 0 ? '+' : '') + fmt(Math.abs(uplift));
+  upliftEl.className = 'stat-val ' + (uplift >= 0 ? 'green' : 'red');
+}
+
+function updateComparison() {
+  const scenarios = [
+    { label: 'Current Model', rate: 2, basis: 'gp', desc: '2% of Gross Profit', css: 'current' },
+    { label: '5% EBITDA',     rate: 5, basis: 'ebitda', desc: 'Market low end', css: '' },
+    { label: '8% EBITDA',     rate: 8, basis: 'ebitda', desc: 'Market midpoint', css: 'highlight' },
+    { label: '10% EBITDA',    rate: 10, basis: 'ebitda', desc: 'Active family office rate', css: '' },
+    { label: '2% Revenue',    rate: 2, basis: 'rev', desc: 'PE-style revenue royalty', css: '' },
+  ];
+
+  let currentTotal = 0;
+  SEGMENTS.forEach(seg => seg.companies.forEach(co => { currentTotal += calcCurrentFee(co); }));
+
+  let html = '';
+  scenarios.forEach(sc => {
+    let total = 0;
+    SEGMENTS.forEach(seg => {
+      seg.companies.forEach(co => {
+        if (!co.exclude) {
+          let b = sc.basis === 'ebitda' ? (co.ebitda||0) : sc.basis === 'rev' ? (co.rev||0) : (co.gp||0);
+          total += b * sc.rate / 100;
+        }
+      });
+    });
+    const delta = total - currentTotal;
+    const deltaStr = delta === 0 ? '' : `<div class="comp-delta ${delta>0?'pos':'neg'}">${delta>0?'▲':'▼'} ${fmt(Math.abs(delta))} vs current</div>`;
+    html += `
+    <div class="comp-card ${sc.css}">
+      <div class="comp-label">${sc.label}</div>
+      <div class="comp-val" style="color:${sc.css==='current'?'#78b0d1':sc.css==='highlight'?'#4caf7d':'#fff'}">${fmt(total)}</div>
+      <div class="comp-desc">${sc.desc}</div>
+      ${deltaStr}
+    </div>`;
+  });
+  document.getElementById('comparisonGrid').innerHTML = html;
+}
+
+function updateCharts() {
+  const labels = SEGMENTS.map(s => s.name);
+  const colors = SEGMENTS.map(s => s.color);
+  const fees   = SEGMENTS.map(seg => {
+    let t = 0;
+    seg.companies.forEach(co => { t += calcFee(co); });
+    return parseFloat(t.toFixed(1));
+  });
+
+  const chartDefaults = {
+    plugins: {
+      legend: { labels: { color: 'rgba(255,255,255,0.6)', font: { size: 11 } } },
+      tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.toFixed(0) + 'K' } }
+    }
+  };
+
+  if (barChart) barChart.destroy();
+  barChart = new Chart(document.getElementById('segmentBar'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Family Office Fee ($K)',
+        data: fees,
+        backgroundColor: colors.map(c => c + 'cc'),
+        borderColor: colors,
+        borderWidth: 1,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { ...chartDefaults.plugins, legend: { display: false } },
+      scales: {
+        x: { ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
+        y: { ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 10 }, callback: v => '$'+v+'K' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+      }
+    }
+  });
+
+  if (donutChart) donutChart.destroy();
+  donutChart = new Chart(document.getElementById('segmentDonut'), {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{
+        data: fees,
+        backgroundColor: colors.map(c => c + 'cc'),
+        borderColor: colors,
+        borderWidth: 2,
+      }]
+    },
+    options: {
+      responsive: true,
+      cutout: '65%',
+      plugins: { ...chartDefaults.plugins }
+    }
+  });
+}
+
+function recalc() {
+  renderTable();
+  updateStats();
+  updateComparison();
+  updateCharts();
+}
+
+function setScenario(rate, btn) {
+  currentRate = rate;
+  document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('customWrap').style.display = rate === 'custom' ? 'flex' : 'none';
+  recalc();
+}
+
+function setBasis(basis, btn) {
+  currentBasis = basis;
+  document.querySelectorAll('.basis-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  recalc();
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+loadSaved();
+recalc();
+</script>
+</body>
+</html>
