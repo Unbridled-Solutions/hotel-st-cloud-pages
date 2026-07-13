@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fremont Provisions - Sports Marketing Command Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #07080f;
+            --card-color: #111827;
+            --accent-blue: #5a8ba7; /* Unbridled blue */
+            --accent-gold: #ba8032; /* Gold for highlights */
+            --text-color: #e0e0e0;
+            --secondary-text-color: #a0a0a0;
+
+            /* Sport Colors */
+            --nfl-color: #004C97;
+            --pga-color: #006400;
+            --nhl-color: #00205B;
+            --nba-color: #C9082A;
+            --mlb-color: #002D62;
+
+            /* Priority Overlays */
+            --critical-glow: 0 0 8px 4px var(--accent-gold), 0 0 20px 8px rgba(255, 215, 0, 0.4); /* Pulsing gold glow */
+            --high-border: 2px solid var(--accent-gold);
+            --medium-border: 1px solid var(--accent-blue);
+            --low-border: 1px dashed var(--secondary-text-color);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: var(--card-color);
+            padding: 20px 30px;
+            border-bottom: 2px solid var(--accent-blue);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            color: var(--text-color);
+        }
+
+        header h1 strong {
+            color: var(--accent-gold);
+        }
+
+        header h2 {
+            margin: 0;
+            font-size: 1.2em;
+            color: var(--secondary-text-color);
+            font-weight: 400;
+        }
+
+        .container {
+            display: flex;
+            flex: 1; /* Take up remaining space */
+            padding: 20px;
+            gap: 20px;
+            max-width: 1800px; /* Constrain width for large screens */
+            margin: 0 auto;
+        }
+
+        .main-content {
+            flex: 3; /* Gantt chart takes more space */
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .right-sidebar {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 300px;
+        }
+
+        section {
+            background-color: var(--card-color);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        h3 {
+            color: var(--accent-blue);
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        h3 span {
+            color: var(--text-color);
+            font-weight: bold;
+        }
+
+        /* Filters */
+        .filter-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: center;
+            font-size: 0.9em;
+        }
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .filter-group label {
+            font-weight: bold;
+            color: var(--accent-blue);
+            white-space: nowrap;
+        }
+        .filter-controls button, .filter-controls select {
+            background-color: var(--accent-blue);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9em;
+        }
+        .filter-controls button:hover, .filter-controls select:hover {
+            background-color: var(--accent-gold);
+        }
+        .filter-controls button.active {
+            background-color: var(--accent-gold);
+            color: var(--card-color);
+            font-weight: bold;
+        }
+        .filter-controls select {
+            background-color: var(--card-color);
+            border: 1px solid var(--accent-blue);
+        }
+
+        /* Gantt Chart */
+        .gantt-chart {
+            overflow-x: auto;
+            position: relative;
+            padding-bottom: 15px; /* Space for scrollbar */
+            background-color: var(--card-color);
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .gantt-timeline-header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background-color: var(--card-color);
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .gantt-timeline-inner {
+            min-width: 1800px; /* Base width for Gantt content */
+            position: relative;
+            height: 60px; /* Space for month/week markers */
+            color: var(--secondary-text-color);
+            font-size: 0.8em;
+        }
+        .month-marker {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            border-left: 1px dashed rgba(255, 255, 255, 0.1);
+            text-align: center;
+            padding-top: 5px;
+            box-sizing: border-box;
+            color: var(--accent-blue);
+            font-weight: bold;
+        }
+        .week-marker {
+            position: absolute;
+            top: 30px; /* Below month marker */
+            height: calc(100% - 30px);
+            border-left: 1px dotted rgba(255, 255, 255, 0.05);
+            text-align: center;
+            font-size: 0.7em;
+            color: var(--secondary-text-color);
+            width: 0; /* Just a line */
+        }
+        .month-marker span, .week-marker span {
+            transform: rotate(-45deg);
+            display: inline-block;
+            transform-origin: 0 0;
+            white-space: nowrap;
+        }
+        .gantt-content {
+            min-width: 1800px; /* Match inner width of timeline header */
+            position: relative;
+            flex-grow: 1; /* Allow content to fill available vertical space */
+            padding-top: 10px;
+            box-sizing: border-box;
+        }
+
+        .gantt-sport-row {
+            position: relative;
+            height: 45px; /* Increased height for better visibility */
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-left: 120px; /* Space for sport label */
+            box-sizing: border-box;
+        }
+        .gantt-sport-row.hidden {
+            display: none;
+        }
+        .gantt-sport-row:last-child {
+            border-bottom: none;
+        }
+        .gantt-sport-label {
+            position: absolute;
+            left: 0;
+            width: 110px;
+            text-align: right;
+            padding-right: 10px;
+            font-weight: bold;
+            color: var(--accent-blue);
+            z-index: 2; /* Keep label above bars */
+        }
+
+        .gantt-bars-container {
+            position: relative; /* All bars are children of this */
+            height: 100%; /* Fill the row height */
+            width: 100%; /* Fill the row width */
+        }
+
+        .gantt-bar {
+            position: absolute;
+            height: 30px; /* Bar height */
+            background-color: rgba(90, 139, 167, 0.7); /* Default color with transparency */
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 10px;
+            box-sizing: border-box;
+            color: var(--text-color);
+            font-size: 0.75em;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            z-index: 1;
+            transition: all 0.2s ease;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: help;
+        }
+        .gantt-bar:hover {
+             transform: translateY(-50%) scale(1.02);
+             box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+             z-index: 5;
+        }
+
+        /* Sport specific colors */
+        .gantt-bar.NFL { background-color: var(--nfl-color); }
+        .gantt-bar.PGA { background-color: var(--pga-color); }
+        .gantt-bar.NHL { background-color: var(--nhl-color); }
+        .gantt-bar.NBA { background-color: var(--nba-color); }
+        .gantt-bar.MLB { background-color: var(--mlb-color); }
+
+        /* Priority styles */
+        .gantt-bar.Critical {
+            border: var(--high-border);
+            animation: pulse-glow 2s infinite alternate;
+        }
+        .gantt-bar.High {
+            border: var(--high-border);
+        }
+        .gantt-bar.Medium {
+            border: var(--medium-border);
+        }
+        .gantt-bar.Low {
+            border: var(--low-border);
+            opacity: 0.6;
+        }
+
+        @keyframes pulse-glow {
+            from { box-shadow: var(--critical-glow); }
+            to { box-shadow: var(--critical-glow), 0 0 15px 7px rgba(255, 215, 0, 0.6); }
+        }
+
+        .current-week-line {
+            position: absolute;
+            top: -10px; /* Extend above timeline header for prominence */
+            bottom: -15px; /* Extend below gantt content for prominence */
+            width: 2px;
+            background-color: var(--accent-gold);
+            z-index: 100;
+            pointer-events: none; /* Make sure it doesn't block clicks */
+            box-shadow: 0 0 5px var(--accent-gold);
+        }
+
+        /* Tooltip */
+        .gantt-tooltip {
+            position: absolute;
+            background-color: var(--card-color);
+            border: 1px solid var(--accent-gold);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1000;
+            font-size: 0.85em;
+            color: var(--text-color);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            transform: translate(-50%, -10px);
+            white-space: normal;
+            max-width: 300px; /* Limit tooltip width */
+            text-align: left;
+        }
+        .gantt-tooltip.visible {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+        .gantt-tooltip h4 {
+            margin: 0 0 5px 0;
+            color: var(--accent-blue);
+            font-size: 1.1em;
+            border-bottom: 1px dotted rgba(255, 255, 255, 0.1);
+            padding-bottom: 5px;
+        }
+        .gantt-tooltip p {
+            margin: 5px 0;
+        }
+        .gantt-tooltip .priority {
+            font-weight: bold;
+        }
+        .gantt-tooltip .priority.Critical { color: var(--accent-gold); }
+        .gantt-tooltip .priority.High { color: orange; }
+        .gantt-tooltip .priority.Medium { color: yellowgreen; }
+        .gantt-tooltip .priority.Low { color: lightblue; }
+
+
+        /* Upcoming Big Games */
+        .upcoming-event {
+            background-color: rgba(90, 139, 167, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .upcoming-event:last-child {
+            margin-bottom: 0;
+        }
+        .upcoming-event h4 {
+            margin-top: 0;
+            margin-bottom: 5px;
+            color: var(--accent-gold);
+            font-size: 1.1em;
+        }
+        .upcoming-event p {
+            margin: 5px 0;
+            font-size: 0.9em;
+        }
+        .upcoming-event .details strong {
+            color: var(--accent-blue);
+        }
+        .upcoming-event .days-until {
+            font-weight: bold;
+            color: orange;
+        }
+        .upcoming-event .promo-suggestion {
+            font-style: italic;
+            color: var(--secondary-text-color);
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+        .run-google-ad-badge {
+            display: inline-block;
+            background-color: #4285F4; /* Google Blue */
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.7em;
+            font-weight: bold;
+            margin-left: 10px;
+            line-height: 1;
+        }
+
+
+        /* Promo Playbook */
+        .tab-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+            overflow-x: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-blue) var(--card-color);
+        }
+        .tab-controls button {
+            background-color: var(--card-color);
+            color: var(--accent-blue);
+            border: 1px solid var(--accent-blue);
+            padding: 8px 15px;
+            border-radius: 5px 5px 0 0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9em;
+            white-space: nowrap;
+        }
+        .tab-controls button:hover {
+            background-color: rgba(90, 139, 167, 0.2);
+        }
+        .tab-controls button.active {
+            background-color: var(--accent-blue);
+            color: var(--text-color);
+            border-color: var(--accent-blue);
+            border-bottom-color: var(--card-color); /* Hide bottom border */
+            position: relative;
+            z-index: 2;
+        }
+
+        .promo-brief-content {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 0 8px 8px 8px;
+            background-color: rgba(90, 139, 167, 0.05);
+            min-height: 250px;
+        }
+        .promo-brief-card {
+            display: none;
+        }
+        .promo-brief-card.active {
+            display: block;
+        }
+        .promo-brief-card h4 {
+            color: var(--accent-gold);
+            font-size: 1.3em;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        .promo-brief-card h5 {
+            color: var(--accent-blue);
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+            border-bottom: 1px dotted rgba(255, 255, 255, 0.1);
+            padding-bottom: 5px;
+        }
+        .promo-brief-card ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        .promo-brief-card ul li {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+        .promo-brief-card ul li:before {
+            content: '•';
+            color: var(--accent-gold);
+            position: absolute;
+            left: 0;
+            font-size: 1.2em;
+            line-height: 1;
+        }
+        .promo-brief-card p {
+            margin-bottom: 10px;
+        }
+        .promo-brief-card .sport-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .promo-brief-card .sport-tag {
+            background-color: var(--accent-blue);
+            color: var(--text-color);
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+        .promo-brief-card .sport-tag.NFL { background-color: var(--nfl-color); }
+        .promo-brief-card .sport-tag.PGA { background-color: var(--pga-color); }
+        .promo-brief-card .sport-tag.NHL { background-color: var(--nhl-color); }
+        .promo-brief-card .sport-tag.NBA { background-color: var(--nba-color); }
+        .promo-brief-card .sport-tag.MLB { background-color: var(--mlb-color); }
+
+
+        /* Google Ads Intelligence */
+        .google-ads-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+        .google-ads-table th, .google-ads-table td {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 12px 15px;
+            text-align: left;
+        }
+        .google-ads-table th {
+            background-color: rgba(90, 139, 167, 0.2);
+            font-weight: bold;
+            color: var(--accent-blue);
+            white-space: nowrap;
+        }
+        .google-ads-table tr:nth-child(even) {
+            background-color: rgba(90, 139, 167, 0.05);
+        }
+        .google-ads-table .budget-signal {
+            font-weight: bold;
+            color: var(--accent-gold);
+        }
+        .google-ads-table .keywords {
+            font-style: italic;
+            color: var(--secondary-text-color);
+        }
+
+        /* Print Button */
+        .print-export-button {
+            background-color: var(--accent-gold);
+            color: var(--card-color);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: background-color 0.2s ease;
+        }
+        .print-export-button:hover {
+            background-color: #d19a4e;
+        }
+        @media print {
+            body { background-color: white; color: black; }
+            header, .main-content h3, .right-sidebar h3,
+            .filter-controls, .tab-controls, .print-export-button {
+                display: none;
+            }
+            .container { flex-direction: column; padding: 0; gap: 0; max-width: none; }
+            .main-content, .right-sidebar, section { flex: none; width: 100%; margin: 0; padding: 10px; box-shadow: none; background-color: white; color: black; border: none; }
+            h1, h2, h3 { color: black !important; }
+            .gantt-chart, .gantt-content { overflow-x: visible; min-width: unset; width: 100%; }
+            .gantt-timeline-inner, .gantt-sport-row { min-width: unset; width: 100%; }
+            .gantt-timeline-header { border-bottom: 1px solid #ccc; background-color: white; }
+            .month-marker, .week-marker { color: #555 !important; border-left-color: #eee !important; opacity: 0.7; }
+            .gantt-sport-label { color: #333 !important; }
+            .gantt-bar {
+                background-color: lightgray !important;
+                color: black !important;
+                border: 1px solid #ccc !important;
+                box-shadow: none !important;
+                animation: none !important;
+                opacity: 1 !important;
+            }
+            .gantt-bar.NFL { background-color: #C6DBED !important; }
+            .gantt-bar.PGA { background-color: #D6EADF !important; }
+            .gantt-bar.NHL { background-color: #CCD9E5 !important; }
+            .gantt-bar.NBA { background-color: #F7D4DA !important; }
+            .gantt-bar.MLB { background-color: #C0DEEB !important; }
+
+            .current-week-line { display: none; } /* Hide print line */
+            .gantt-tooltip { display: none !important; } /* Hide tooltips in print */
+
+            .upcoming-event, .promo-brief-card, .google-ads-table {
+                background-color: #f9f9f9;
+                border: 1px solid #eee;
+                color: black;
+            }
+            .upcoming-event h4, .promo-brief-card h4, h5 { color: #333 !important; }
+            .upcoming-event .promo-suggestion, .google-ads-table .keywords, .promo-brief-card ul li:before { color: #666 !important; }
+            .promo-brief-card .sport-tag { color: white !important; } /* Keep white text on background */
+        }
+
+
+        /* Responsive adjustments */
+        @media (max-width: 1200px) {
+            .container {
+                flex-direction: column;
+                gap: 20px;
+            }
+            .right-sidebar {
+                flex: none; /* Remove flex sizing when stacked */
+                min-width: unset;
+                width: 100%;
+            }
+            .gantt-chart {
+                /* min-height will adjust based on content */
+            }
+        }
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 15px;
+            }
+            header h1 {
+                font-size: 2em;
+            }
+            header h2 {
+                font-size: 1em;
+            }
+            .filter-controls {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            .filter-group {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+            .tab-controls {
+                flex-wrap: nowrap;
+            }
+            .tab-controls button {
+                padding: 6px 10px;
+            }
+            section {
+                padding: 15px;
+            }
+            h3 {
+                font-size: 1.3em;
+            }
+            .gantt-sport-label {
+                width: 90px;
+                font-size: 0.8em;
+            }
+            .gantt-sport-row {
+                padding-left: 100px;
+            }
+            .gantt-bar {
+                font-size: 0.7em;
+                height: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div>
+            <h1><strong>FREMONT PROVISIONS</strong></h1>
+            <h2>Sports Marketing Command Center</h2>
+        </div>
+        <button class="print-export-button" onclick="window.print()">Print / Export</button>
+    </header>
+
+    <div class="container">
+        <div class="main-content">
+            <section id="gantt-section">
+                <h3>GANTT CHART</h3>
+                <div class="filter-controls">
+                    <div class="filter-group">
+                        <label>Filter Sports:</label>
+                        <button data-sport="all" class="active">All</button>
+                        <button data-sport="NFL">NFL</button>
+                        <button data-sport="PGA">PGA</button>
+                        <button data-sport="NHL">NHL</button>
+                        <button data-sport="NBA">NBA</button>
+                        <button data-sport="MLB">MLB</button>
+                    </div>
+                    <div class="filter-group">
+                        <label>Filter Priority:</label>
+                        <button data-priority="all" class="active">All</button>
+                        <button data-priority="critical-high">Critical + High</button>
+                        <button data-priority="critical">Critical Only</button>
+                    </div>
+                </div>
+
+                <div class="gantt-chart">
+                    <div class="gantt-timeline-header">
+                        <div class="gantt-timeline-inner" id="gantt-timeline-header">
+                            <!-- Month and Week Markers will be generated here -->
+                        </div>
+                    </div>
+                    <div class="gantt-content" id="gantt-content">
+                        <!-- Gantt Rows and Bars will be generated here -->
+                        <div class="current-week-line"></div>
+                        <div class="gantt-tooltip"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="promo-playbook-section">
+                <h3>PROMO PLAYBOOK</h3>
+                <div class="tab-controls" id="promo-month-tabs">
+                    <!-- Month tabs generated here -->
+                </div>
+                <div class="promo-brief-content" id="promo-brief-content">
+                    <!-- Promo briefs for each month generated here -->
+                </div>
+            </section>
+        </div>
+
+        <div class="right-sidebar">
+            <section id="upcoming-games-section">
+                <h3>UPCOMING BIG GAMES</h3>
+                <div id="upcoming-events-list">
+                    <!-- Upcoming events generated here -->
+                </div>
+            </section>
+
+            <section id="google-ads-section">
+                <h3>GOOGLE ADS INTELLIGENCE</h3>
+                <table class="google-ads-table">
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>Active Sports</th>
+                            <th>Recommendation</th>
+                            <th>Keywords</th>
+                            <th>Budget Signal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="google-ads-table-body">
+                        <!-- Google Ads data generated here -->
+                    </tbody>
+                </table>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const eventsData = [
+            { Sport: 'NFL', Event: 'Preseason', Start: '2026-08-13', End: '2026-08-29', Priority: 'Medium' },
+            { Sport: 'PGA', Event: 'FedEx St. Jude Championship', Start: '2026-08-13', End: '2026-08-16', Priority: 'High' },
+            { Sport: 'PGA', Event: 'BMW Championship', Start: '2026-08-20', End: '2026-08-23', Priority: 'High' },
+            { Sport: 'PGA', Event: 'Tour Championship', Start: '2026-08-27', End: '2026-08-30', Priority: 'Critical' },
+            { Sport: 'NFL', Event: 'Regular Season', Start: '2026-09-10', End: '2027-01-03', Priority: 'High' },
+            { Sport: 'NHL', Event: 'Preseason', Start: '2026-09-22', End: '2026-10-09', Priority: 'Low' },
+            { Sport: 'PGA', Event: 'Presidents Cup', Start: '2026-09-24', End: '2026-09-27', Priority: 'Critical' },
+            { Sport: 'NBA', Event: 'Preseason', Start: '2026-10-04', End: '2026-10-18', Priority: 'Low' },
+            { Sport: 'NHL', Event: 'Regular Season', Start: '2026-10-12', End: '2027-04-15', Priority: 'Medium' },
+            { Sport: 'NBA', Event: 'Regular Season', Start: '2026-10-20', End: '2027-04-13', Priority: 'Medium' },
+            { Sport: 'NFL', Event: 'Wild Card Weekend', Start: '2027-01-09', End: '2027-01-10', Priority: 'High' },
+            { Sport: 'NFL', Event: 'Divisional Round', Start: '2027-01-16', End: '2027-01-17', Priority: 'High' },
+            { Sport: 'NFL', Event: 'Conference Championships', Start: '2027-01-24', End: '2027-01-24', Priority: 'Critical' },
+            { Sport: 'PGA', Event: 'AT&T Pebble Beach Pro-Am', Start: '2027-02-03', End: '2027-02-06', Priority: 'High' },
+            { Sport: 'PGA', Event: 'WM Phoenix Open', Start: '2027-02-05', End: '2027-02-08', Priority: 'High' },
+            { Sport: 'NFL', Event: 'Super Bowl LXI', Start: '2027-02-07', End: '2027-02-07', Priority: 'Critical' },
+            { Sport: 'PGA', Event: 'The Genesis Invitational', Start: '2027-02-18', End: '2027-02-21', Priority: 'High' },
+            { Sport: 'MLB', Event: 'Spring Training', Start: '2027-02-20', End: '2027-03-28', Priority: 'Low' },
+            { Sport: 'PGA', Event: 'Arnold Palmer Invitational', Start: '2027-03-04', End: '2027-03-07', Priority: 'High' },
+            { Sport: 'PGA', Event: 'The Players Championship', Start: '2027-03-11', End: '2027-03-14', Priority: 'High' },
+            { Sport: 'MLB', Event: 'Regular Season', Start: '2027-03-31', End: '2027-10-03', Priority: 'Medium' },
+            { Sport: 'PGA', Event: 'The Masters', Start: '2027-04-08', End: '2027-04-11', Priority: 'Critical' },
+            { Sport: 'NBA', Event: 'Play-In Tournament', Start: '2027-04-14', End: '2027-04-17', Priority: 'Medium' },
+            { Sport: 'NHL', Event: 'First Round', Start: '2027-04-16', End: '2027-05-01', Priority: 'High' },
+            { Sport: 'NBA', Event: 'First Round', Start: '2027-04-18', End: '2027-05-03', Priority: 'High' },
+            { Sport: 'NHL', Event: 'Second Round', Start: '2027-05-02', End: '2027-05-16', Priority: 'High' },
+            { Sport: 'NBA', Event: 'Conference Semifinals', Start: '2027-05-04', End: '2027-05-18', Priority: 'High' },
+            { Sport: 'NHL', Event: 'Conference Finals', Start: '2027-05-17', End: '2027-06-03', Priority: 'High' },
+            { Sport: 'NBA', Event: 'Conference Finals', Start: '2027-05-19', End: '2027-06-01', Priority: 'High' },
+            { Sport: 'NHL', Event: 'Stanley Cup Finals', Start: '2027-06-05', End: '2027-06-25', Priority: 'Critical' },
+            { Sport: 'NBA', Event: 'Finals', Start: '2027-06-03', End: '2027-06-22', Priority: 'Critical' },
+            { Sport: 'MLB', Event: 'Wild Card', Start: '2027-10-05', End: '2027-10-07', Priority: 'High' },
+            { Sport: 'MLB', Event: 'Division Series', Start: '2027-10-08', End: '2027-10-17', Priority: 'High' },
+            { Sport: 'MLB', Event: 'League Championships', Start: '2027-10-18', End: '2027-10-25', Priority: 'High' },
+            { Sport: 'MLB', Event: 'World Series', Start: '2027-10-26', End: '2027-11-02', Priority: 'Critical' },
+        ];
+
+        const promoLibrary = {
+            NFL: [
+                "First Down Fridays — $1 off drafts all day Friday during NFL season",
+                "Sunday Funday Packages — $35 table package: appetizer + 4 drafts + reserved seat",
+                "Touchdown = Free Shot — for every TD scored by [local team], free well shot for table",
+                "Monday Night Specials — half-price wings on Monday nights",
+                "Wild Card Weekend: Upset Special — if an underdog wins, shots are $3 all night",
+                "Super Bowl Party: ticket packages, halftime specials, prop bet boards on screens"
+            ],
+            PGA: [
+                "Birdie Bar Tab — every birdie on leaderboard = $0.50 off your next round of drinks",
+                "Hole-in-One Happy Hour — extended happy hour during major rounds",
+                "Masters Watch Party: Green Jacket Night — dress code: green, first drink free",
+                "Tour Championship: FedEx Cup Final — fan bracket board on wall",
+                "Presidents Cup: Team USA vs International watch party"
+            ],
+            NHL: [
+                "Hat Trick Happy Hour — when any team scores a hat trick, next 15 min drinks half off",
+                "Hockey Night weekly promos during regular season",
+                "Playoff: Bracket Challenge posted at bar, winner gets bar tab"
+            ],
+            NBA: [
+                "Buzzer Beater promo — if a game goes to OT, first drink for all tables is free",
+                "Triple Double Tuesday — 3 items + double the value special",
+                "Playoffs: King's Court reserved seating packages"
+            ],
+            MLB: [
+                "Baseball & Brews — pint + hot dog special during games",
+                "Extra Innings — late-night special if game goes extra innings (kitchen stays open +1hr)",
+                "World Series: full watch party packages"
+            ]
+        };
+
+        const googleAdsSuggestions = [
+            { Month: 'August', Sports: ['NFL', 'PGA'], Recommendation: 'PGA End-of-Season push. Light NFL preseason awareness.', Keywords: "'PGA tour watch party', 'golf bar Fremont'", Budget: "Normal" },
+            { Month: 'September', Sports: ['NFL', 'NHL', 'PGA'], Recommendation: 'NFL Kickoff Week: increase geo-targeted search around Fremont CO for \'sports bar near me\', \'watch NFL Fremont\', budget +30%. PGA Presidents Cup high priority.', Keywords: "'sports bar Fremont', 'watch NFL Colorado', 'football bar near me', 'Presidents Cup watch party'", Budget: "+30%" },
+            { Month: 'October', Sports: ['NHL', 'NBA', 'MLB'], Recommendation: 'NHL & NBA season launches. MLB Playoffs high priority. Increase bids 20-30% for early season.', Keywords: "'NHL bar', 'NBA bar', 'baseball bar', 'World Series watch party'", Budget: "+20-30%" },
+            { Month: 'November', Sports: ['NFL', 'NHL', 'NBA'], Recommendation: 'Thanksgiving / holiday season sports traffic. Maintain bids for NFL, NHL, NBA.', Keywords: "'Thanksgiving sports bar', 'NFL games near me'", Budget: "Normal" },
+            { Month: 'December', Sports: ['NFL', 'NHL', 'NBA'], Recommendation: 'Peak holiday season for all active leagues. Consider targeted ads for last-minute office parties/gatherings.', Keywords: "'Christmas sports bar', 'holiday game watch'", Budget: "Normal" },
+            { Month: 'January', Sports: ['NFL', 'NHL', 'NBA'], Recommendation: 'NFL Playoffs & Conference Championships. Increase bids for critical games. Leverage "Super Bowl party Fremont" early.', Keywords: "'NFL playoffs bar', 'super bowl watch party Fremont'", Budget: "+50% for NFL playoffs" },
+            { Month: 'February', Sports: ['NFL', 'PGA', 'MLB', 'NHL', 'NBA'], Recommendation: 'Super Bowl week: Max budget, all formats, 2 weeks out. Early PGA major awareness. MLB Spring Training low-key.', Keywords: "'Super Bowl party Fremont', 'Super Bowl watch party', 'sports bar Super Bowl Sunday', 'golf bar'", Budget: "Max" },
+            { Month: 'March', Sports: ['PGA', 'MLB', 'NHL', 'NBA'], Recommendation: 'Masters Week awareness. MLB Regular Season launch. NHL/NBA regular season close.', Keywords: "'Masters watch party Colorado', 'golf happy hour', 'baseball bar'", Budget: "Normal, +20% PGA" },
+            { Month: 'April', Sports: ['PGA', 'MLB', 'NHL', 'NBA'], Recommendation: 'The Masters: High budget for golf fans. NHL/NBA Playoffs begin: increase geo-targeted ads for playoff games.', Keywords: "'Masters watch party Colorado', 'NHL playoffs bar', 'NBA playoff bar'", Budget: "+50% PGA, +30% NHL/NBA playoffs" },
+            { Month: 'May', Sports: ['NHL', 'NBA', 'MLB'], Recommendation: 'NHL/NBA Conference Playoffs. Continue high bids for regional searches. MLB regular season.', Keywords: "'NHL conference finals', 'NBA conference semifinals'", Budget: "+30% NHL/NBA playoffs" },
+            { Month: 'June', Sports: ['NHL', 'NBA', 'MLB'], Recommendation: 'Stanley Cup Finals & NBA Finals: Critical push with max budget. Geo-target highly.', Keywords: "'Stanley Cup finals bar', 'NBA finals view party'", Budget: "Max" },
+            { Month: 'July', Sports: ['MLB'], Recommendation: 'Mid-summer MLB. Light ads, focus on local summer events.', Keywords: "'baseball and brews', 'MLB games near me'", Budget: "Low" },
+            { Month: 'October', Sports: ['MLB'], Recommendation: 'MLB Playoffs (Oct): Keywords: baseball bar, World Series watch party. High push for World Series.', Keywords: "'baseball bar', 'World Series watch party'", Budget: "+40%" },
+        ];
+
+
+        // Utility Functions
+        const parseDate = (dateString) => new Date(dateString + 'T00:00:00'); // Ensure UTC for consistent parsing
+        const formatDate = (date) => date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const formatMonthYear = (date) => date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        const getDaysBetween = (d1, d2) => Math.ceil(Math.abs(d2 - d1) / (1000 * 60 * 60 * 24));
+
+        const getPromoSuggestion = (event) => {
+            let chosenPromo = "No specific promo suggestion.";
+
+            // Specific event promos
+            if (event.Event.includes("Super Bowl")) return "Super Bowl Party: ticket packages, halftime specials, prop bet boards on screens";
+            if (event.Event.includes("Wild Card Weekend")) return "Wild Card Weekend: Upset Special — if an underdog wins, shots are $3 all night";
+            if (event.Event.includes("Masters")) return "Masters Watch Party: Green Jacket Night — dress code: green, first drink free";
+            if (event.Event.includes("Presidents Cup")) return "Presidents Cup: Team USA vs International watch party";
+            if (event.Event.includes("Tour Championship")) return "Tour Championship: FedEx Cup Final — fan bracket board on wall";
+            if (event.Event === "World Series") return "World Series: full watch party packages"; // Specific check for exact match
+            if (event.Event.includes("Stanley Cup Finals")) return "Hockey Night weekly promos, Playoff: Bracket Challenge, Hat Trick Happy Hour";
+            if (event.Event.includes("NBA Finals")) return "Playoffs: King's Court reserved seating packages, Buzzer Beater promo";
+
+
+            // General season-based promos
+            if (event.Sport === "NFL") {
+                if (event.Event === "Regular Season") chosenPromo = "First Down Fridays, Sunday Funday Packages, Monday Night Specials";
+                else chosenPromo = "Check NFL season general promos.";
+            } else if (event.Sport === "PGA") {
+                 chosenPromo = "Birdie Bar Tab, Hole-in-One Happy Hour";
+            } else if (event.Sport === "NHL") {
+                if (event.Event.includes("Playoff")) chosenPromo = "Playoff: Bracket Challenge posted at bar, winner gets bar tab";
+                else chosenPromo = "Hockey Night weekly promos, Hat Trick Happy Hour";
+            } else if (event.Sport === "NBA") {
+                if (event.Event.includes("Playoff") || event.Event.includes("Finals")) chosenPromo = "Playoffs: King's Court reserved seating packages, Buzzer Beater promo";
+                else chosenPromo = "Triple Double Tuesday, Buzzer Beater promo";
+            } else if (event.Sport === "MLB") {
+                 if (event.Event.includes("Series") || event.Event.includes("Playoff") || event.Event.includes("Wild Card")) chosenPromo = "World Series: full watch party packages, Extra Innings";
+                 else chosenPromo = "Baseball & Brews, Extra Innings";
+            }
+
+            return chosenPromo;
+        };
+
+
+        // Gantt Chart Configuration
+        const ganttStartDate = parseDate('2026-08-01');
+        const ganttEndDate = parseDate('2027-11-30');
+        const totalGanttMilliseconds = ganttEndDate - ganttStartDate;
+        const totalGanttDays = totalGanttMilliseconds / (1000 * 60 * 60 * 24);
+
+        const sportsMapping = {
+            NFL: { label: 'NFL', rows: [] },
+            PGA: { label: 'PGA', rows: [] },
+            NHL: { label: 'NHL', rows: [] },
+            NBA: { label: 'NBA', rows: [] },
+            MLB: { label: 'MLB', rows: [] },
+        };
+        const allSports = Object.keys(sportsMapping);
+        const allPriorities = ['Critical', 'High', 'Medium', 'Low'];
+
+        let activeSportsFilter = 'all';
+        let activePriorityFilter = 'all';
+
+        // Elements
+        const ganttContent = document.getElementById('gantt-content');
+        const ganttTimelineHeader = document.getElementById('gantt-timeline-header');
+        const upcomingEventsList = document.getElementById('upcoming-events-list');
+        const promoMonthTabs = document.getElementById('promo-month-tabs');
+        const promoBriefContent = document.getElementById('promo-brief-content');
+        const googleAdsTableBody = document.getElementById('google-ads-table-body');
+        const filterSportButtons = document.querySelectorAll('.filter-controls button[data-sport]');
+        const filterPriorityButtons = document.querySelectorAll('.filter-controls button[data-priority]');
+        let ganttTooltip = document.querySelector('.gantt-tooltip'); // Define globally for reuse
+
+
+        // Hardcoded "today" for the timeline marker
+        const today = parseDate('2026-07-12');
+        const todayOffsetDays = (today - ganttStartDate) / (1000 * 60 * 60 * 24);
+        const todayLinePosition = (todayOffsetDays / totalGanttDays) * 100;
+
+
+        function renderGanttChart() {
+            ganttContent.innerHTML = '<div class="current-week-line"></div>'; // Re-add current week line
+            ganttTimelineHeader.innerHTML = '';
+            
+            // Re-create tooltip element if it was removed in previous render for clarity
+            if (!ganttTooltip || !document.body.contains(ganttTooltip)) {
+                ganttTooltip = document.createElement('div');
+                ganttTooltip.className = 'gantt-tooltip';
+                ganttContent.appendChild(ganttTooltip);
+            }
+
+
+            // Render Timeline Header (Months and Weeks)
+            let currentMonth = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth(), 1);
+            while (currentMonth <= ganttEndDate) {
+                const nextMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
+                const monthStartOffsetDays = (currentMonth - ganttStartDate) / (1000 * 60 * 60 * 24);
+                
+                // Calculate month end relative to ganttStartDate or ganttEndDate if nextMonth exceeds it
+                let monthEndAbsolute = new Date(nextMonth);
+                if (monthEndAbsolute > ganttEndDate) {
+                    monthEndAbsolute = new Date(ganttEndDate);
+                    monthEndAbsolute.setDate(monthEndAbsolute.getDate() + 1); // Ensure it extends to end of end day
+                }
+
+                const monthEndOffsetDays = (monthEndAbsolute - ganttStartDate) / (1000 * 60 * 60 * 24);
+                const monthWidthDays = monthEndOffsetDays - monthStartOffsetDays;
+
+
+                const monthLeft = (monthStartOffsetDays / totalGanttDays) * 100;
+                const monthWidth = (monthWidthDays / totalGanttDays) * 100;
+
+                const monthDiv = document.createElement('div');
+                monthDiv.className = 'month-marker';
+                monthDiv.style.left = `${monthLeft}%`;
+                monthDiv.style.width = `${monthWidth}%`;
+                monthDiv.innerHTML = `<span>${currentMonth.toLocaleString('en-US', { month: 'short' })} ${currentMonth.getFullYear()}</span>`;
+                ganttTimelineHeader.appendChild(monthDiv);
+
+                // Add week markers (first Sunday of each week)
+                let tempMonthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+                // Find the first Sunday *on or after* the start of the current month.
+                // If the month starts on a Sunday, currentWeekDay will be tempMonthStart.
+                // Otherwise, it will find the next Sunday.
+                let firstSunday = new Date(tempMonthStart);
+                firstSunday.setDate(firstSunday.getDate() + (7 - firstSunday.getDay()) % 7);
+
+
+                let currentWeekDay = firstSunday;
+
+                while (currentWeekDay < nextMonth && currentWeekDay <= ganttEndDate) {
+                    const weekOffsetDays = (currentWeekDay - ganttStartDate) / (1000 * 60 * 60 * 24);
+                    const weekLeft = (weekOffsetDays / totalGanttDays) * 100;
+                    
+                    // Only add if within current month's calculated total Gantt percentage
+                    // This was previously `monthLeft + monthWidth` which might create small gaps/overlaps.
+                    // Instead, we check it's within the overall gantt's range for this month
+                    if (weekLeft >= monthLeft && weekLeft < (monthLeft + monthWidth + 0.1)) { // Added tolerance
+                        const weekDiv = document.createElement('div');
+                        weekDiv.className = 'week-marker';
+                        weekDiv.style.left = `${weekLeft}%`;
+                        ganttTimelineHeader.appendChild(weekDiv);
+                    }
+                    currentWeekDay.setDate(currentWeekDay.getDate() + 7);
+                }
+
+
+                currentMonth = nextMonth;
+            }
+
+            // Render Gantt Rows and Bars
+            allSports.forEach(sport => {
+                const sportRow = document.createElement('div');
+                sportRow.className = `gantt-sport-row ${sport}`; // Add sport class for filtering
+                sportRow.dataset.sport = sport;
+
+                const sportLabel = document.createElement('div');
+                sportLabel.className = 'gantt-sport-label';
+                sportLabel.textContent = sport;
+                sportRow.appendChild(sportLabel);
+
+                const barsContainer = document.createElement('div');
+                barsContainer.className = 'gantt-bars-container';
+                sportRow.appendChild(barsContainer);
+
+                ganttContent.appendChild(sportRow);
+
+                const sportEvents = eventsData.filter(event => event.Sport === sport);
+
+                sportEvents.forEach(event => {
+                    const eventStartDate = parseDate(event.Start);
+                    const eventEndDate = parseDate(event.End);
+                    const durationDays = getDaysBetween(eventStartDate, eventEndDate) + 1; // +1 to include end day
+                    const offsetDays = (eventStartDate - ganttStartDate) / (1000 * 60 * 60 * 24);
+
+                    const left = (offsetDays / totalGanttDays) * 100;
+                    const width = (durationDays / totalGanttDays) * 100;
+
+                    const barDiv = document.createElement('div');
+                    barDiv.className = `gantt-bar ${event.Sport} ${event.Priority}`;
+                    barDiv.style.left = `${left}%`;
+                    barDiv.style.width = `${width}%`;
+                    barDiv.textContent = event.Event;
+                    barDiv.dataset.event = JSON.stringify(event); // Store event data for tooltip
+
+                    barsContainer.appendChild(barDiv);
+
+                    // Tooltip logic
+                    barDiv.addEventListener('mousemove', (e) => {
+                        const eventData = JSON.parse(e.target.dataset.event);
+                        ganttTooltip.innerHTML = `
+                            <h4>${eventData.Event}</h4>
+                            <p><strong>Sport:</strong> ${eventData.Sport}</p>
+                            <p><strong>Dates:</strong> ${formatDate(eventStartDate)} - ${formatDate(eventEndDate)}</p>
+                            <p><strong>Priority:</strong> <span class="priority ${eventData.Priority}">${eventData.Priority}</span></p>
+                            <p><strong>Promo Idea:</strong> ${getPromoSuggestion(eventData)}</p>
+                        `;
+                        // Positioning relative to the ganttContent div to keep it within scrollable area
+                        const ganttRect = ganttContent.getBoundingClientRect();
+                        const barRect = e.target.getBoundingClientRect();
+                        
+                        let tooltipX = barRect.left - ganttRect.left + (barRect.width / 2);
+                        let tooltipY = barRect.top - ganttRect.top - ganttTooltip.offsetHeight - 10; // 10px above the bar
+
+                        // Adjust if too far left
+                        if (tooltipX < ganttTooltip.offsetWidth / 2) {
+                            tooltipX = ganttTooltip.offsetWidth / 2;
+                        }
+                        // Adjust if too far right
+                        if (tooltipX > ganttRect.width - ganttTooltip.offsetWidth / 2) {
+                             tooltipX = ganttRect.width - ganttTooltip.offsetWidth / 2;
+                        }
+                        // Adjust if too far up (above header)
+                        if (tooltipY < 0) {
+                            tooltipY = barRect.bottom - ganttRect.top + 10; // Position below the bar
+                        }
+
+                        ganttTooltip.style.left = `${tooltipX}px`;
+                        ganttTooltip.style.top = `${tooltipY}px`;
+                        ganttTooltip.classList.add('visible');
+                    });
+                    barDiv.addEventListener('mouseleave', () => {
+                        ganttTooltip.classList.remove('visible');
+                    });
+                     // For touch devices, sometimes hover doesn't clear. Add a click to toggle.
+                    barDiv.addEventListener('click', (e) => {
+                        const eventData = JSON.parse(e.target.dataset.event);
+                         if (ganttTooltip.classList.contains('visible') && ganttTooltip.dataset.activeEvent === eventData.Event) {
+                            ganttTooltip.classList.remove('visible');
+                            delete ganttTooltip.dataset.activeEvent;
+                        } else {
+                            ganttTooltip.innerHTML = `
+                                <h4>${eventData.Event}</h4>
+                                <p><strong>Sport:</strong> ${eventData.Sport}</p>
+                                <p><strong>Dates:</strong> ${formatDate(eventStartDate)} - ${formatDate(eventEndDate)}</p>
+                                <p><strong>Priority:</strong> <span class="priority ${eventData.Priority}">${eventData.Priority}</span></p>
+                                <p><strong>Promo Idea:</strong> ${getPromoSuggestion(eventData)}</p>
+                            `;
+                            const ganttRect = ganttContent.getBoundingClientRect();
+                            const barRect = e.target.getBoundingClientRect();
+                            let tooltipX = barRect.left - ganttRect.left + (barRect.width / 2);
+                            let tooltipY = barRect.top - ganttRect.top - ganttTooltip.offsetHeight - 10;
+
+                            if (tooltipX < ganttTooltip.offsetWidth / 2) tooltipX = ganttTooltip.offsetWidth / 2;
+                            if (tooltipX > ganttRect.width - ganttTooltip.offsetWidth / 2) tooltipX = ganttRect.width - ganttTooltip.offsetWidth / 2;
+                            if (tooltipY < 0) tooltipY = barRect.bottom - ganttRect.top + 10;
+
+                            ganttTooltip.style.left = `${tooltipX}px`;
+                            ganttTooltip.style.top = `${tooltipY}px`;
+                            ganttTooltip.dataset.activeEvent = eventData.Event; // Store active event to prevent closing on same bar click
+                            ganttTooltip.classList.add('visible');
+                        }
+                    });
+                });
+            });
+
+            // Position Current Week Line
+            const currentWeekLine = ganttContent.querySelector('.current-week-line');
+            if (currentWeekLine) {
+                currentWeekLine.style.left = `${todayLinePosition}%`;
+            }
+
+            applyGanttFilters(); // Apply initial filters after rendering
+        }
+
+        function applyGanttFilters() {
+            const allRows = document.querySelectorAll('.gantt-sport-row');
+            allRows.forEach(row => {
+                const sport = row.dataset.sport;
+                const bars = row.querySelectorAll('.gantt-bar');
+                let rowHasVisibleBars = false;
+
+                bars.forEach(bar => {
+                    const eventData = JSON.parse(bar.dataset.event);
+                    const matchesSport = (activeSportsFilter === 'all' || activeSportsFilter === sport);
+                    let matchesPriority = true;
+
+                    if (activePriorityFilter === 'critical-high') {
+                        matchesPriority = (eventData.Priority === 'Critical' || eventData.Priority === 'High');
+                    } else if (activePriorityFilter === 'critical') {
+                        matchesPriority = (eventData.Priority === 'Critical');
+                    }
+
+                    if (matchesSport && matchesPriority) {
+                        bar.style.display = 'flex';
+                        rowHasVisibleBars = true;
+                    } else {
+                        bar.style.display = 'none';
+                    }
+                });
+
+                if (rowHasVisibleBars) {
+                    row.classList.remove('hidden');
+                } else {
+                    row.classList.add('hidden');
+                }
+
+                // If filtering by sport, ensure the row is hidden if it doesn't match the active sport filter.
+                // This is redundant with matchesSport in bar loop but ensures the entire row is hidden.
+                if (activeSportsFilter !== 'all' && sport !== activeSportsFilter) {
+                    row.classList.add('hidden');
+                }
+            });
+        }
+
+        filterSportButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                filterSportButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                activeSportsFilter = button.dataset.sport;
+                applyGanttFilters();
+            });
+        });
+
+        filterPriorityButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                filterPriorityButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                activePriorityFilter = button.dataset.priority;
+                applyGanttFilters();
+            });
+        });
+
+
+        // Upcoming Big Games
+        function renderUpcomingEvents() {
+            upcomingEventsList.innerHTML = '';
+            const now = today; // Use hardcoded "today"
+
+            const upcomingCriticalHighEvents = eventsData
+                .map(event => ({ ...event, StartDate: parseDate(event.Start), EndDate: parseDate(event.End) }))
+                .filter(event => (event.Priority === 'Critical' || event.Priority === 'High') && event.EndDate >= now)
+                .sort((a, b) => a.StartDate - b.StartDate)
+                .slice(0, 6);
+
+            if (upcomingCriticalHighEvents.length === 0) {
+                 upcomingEventsList.innerHTML = '<p style="color:var(--secondary-text-color);">No critical/high priority upcoming events at the moment.</p>';
+                 return;
+            }
+
+            upcomingCriticalHighEvents.forEach(event => {
+                const daysUntil = getDaysBetween(now, event.StartDate);
+                const eventDiv = document.createElement('div');
+                eventDiv.className = 'upcoming-event';
+                eventDiv.innerHTML = `
+                    <h4>${event.Event} <span class="run-google-ad-badge">Run Google Ad</span></h4>
+                    <p class="details"><strong>Sport:</strong> ${event.Sport}</p>
+                    <p class="details"><strong>Dates:</strong> ${formatDate(event.StartDate)} - ${formatDate(event.EndDate)}</p>
+                    <p class="days-until">${daysUntil > 0 ? daysUntil : 'Today'} days until</p>
+                    <p class="promo-suggestion">${getPromoSuggestion(event)}</p>
+                `;
+                upcomingEventsList.appendChild(eventDiv);
+            });
+        }
+
+        // Promo Playbook
+        const GanttMonths = [];
+        let currentIterMonth = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth(), 1);
+        while (currentIterMonth <= ganttEndDate) {
+            GanttMonths.push(new Date(currentIterMonth));
+            currentIterMonth = new Date(currentIterMonth.getFullYear(), currentIterMonth.getMonth() + 1, 1);
+        }
+
+        function getActiveSportsForMonth(monthDate) {
+            const startOfMonth = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+            const endOfMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0, 23, 59, 59);
+
+            const activeSports = new Set();
+            eventsData.forEach(event => {
+                const eventStart = parseDate(event.Start);
+                const eventEnd = parseDate(event.End);
+                if ((eventStart <= endOfMonth && eventEnd >= startOfMonth) || (eventStart >= startOfMonth && eventStart <= endOfMonth)) {
+                    activeSports.add(event.Sport);
+                }
+            });
+            return Array.from(activeSports).sort();
+        }
+
+        function createPromoMonthBriefs() {
+            promoMonthTabs.innerHTML = '';
+            promoBriefContent.innerHTML = '';
+
+            GanttMonths.forEach((monthDate, index) => {
+                const monthName = monthDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+                const monthNameShort = monthDate.toLocaleString('en-US', { month: 'short' });
+                const monthYearKey = `${monthNameShort} ${monthDate.getFullYear()}`;
+
+                // Create Tab button
+                const tabButton = document.createElement('button');
+                tabButton.textContent = monthName;
+                tabButton.dataset.month = monthYearKey;
+                tabButton.addEventListener('click', () => {
+                    document.querySelectorAll('.tab-controls button').forEach(btn => btn.classList.remove('active'));
+                    tabButton.classList.add('active');
+                    document.querySelectorAll('.promo-brief-card').forEach(card => card.classList.remove('active'));
+                    document.getElementById(`brief-${monthYearKey.replace(/\s/g, '-')}`).classList.add('active');
+                });
+                promoMonthTabs.appendChild(tabButton);
+
+                // Create Brief content
+                const briefCard = document.createElement('div');
+                briefCard.id = `brief-${monthYearKey.replace(/\s/g, '-')}`;
+                briefCard.className = 'promo-brief-card';
+
+                const activeSportsInMonth = getActiveSportsForMonth(monthDate);
+                let promosHtml = '';
+                let fbHtml = '';
+                let googleAdsHtml = '';
+
+                activeSportsInMonth.forEach(sport => {
+                    const sportPromos = promoLibrary[sport] || [];
+                    if (sportPromos.length > 0) {
+                        promosHtml += `<h5>${sport} Promotions:</h5><ul>`;
+                        sportPromos.slice(0, 2).forEach(promo => { // Take first 2 promos
+                            promosHtml += `<li>${promo}</li>`;
+                        });
+                        promosHtml += `</ul>`;
+                    }
+                    // Simple F&B idea based on sport
+                    if (sport === 'NFL') fbHtml += `<li>Game Day Platter: Wings, Nachos, Sliders combo.</li>`;
+                    else if (sport === 'PGA') fbHtml += `<li>"19th Hole" Cocktail specials, light bites.</li>`;
+                    else if (sport === 'NHL') fbHtml += `<li>Poutine special, Craft beer bucket deals.</li>`;
+                    else if (sport === 'NBA') fbHtml += `<li>Basketball themed cocktails, Giant pretzel with cheese.</li>`;
+                    else if (sport === 'MLB') fbHtml += `<li>All-American Hot Dogs & Burgers, local craft brews.</li>`;
+                });
+
+                 // Google Ads recommendation for the month
+                const monthNameFull = monthDate.toLocaleString('en-US', { month: 'long' });
+                const adsRec = googleAdsSuggestions.find(rec => rec.Month === monthNameFull);
+                if (adsRec) {
+                    googleAdsHtml = `
+                        <h5>Google Ads Recommendation:</h5>
+                        <p><strong>Push:</strong> ${adsRec.Recommendation}</p>
+                        <p><strong>Keywords:</strong> <em>${adsRec.Keywords}</em></p>
+                        <p><strong>Budget Signal:</strong> <span class="budget-signal">${adsRec.Budget}</span></p>
+                    `;
+                } else {
+                    googleAdsHtml = `<h5>Google Ads Recommendation:</h5><p>No specific recommendation for this month. Maintain base campaigns.</p>`;
+                }
+
+
+                briefCard.innerHTML = `
+                    <h4>${monthName} Marketing Brief</h4>
+                    <h5>Active Sports:</h5>
+                    <div class="sport-list">
+                        ${activeSportsInMonth.map(s => `<span class="sport-tag ${s}">${s}</span>`).join('')}
+                    </div>
+                    ${promosHtml}
+                    <h5>F&B Specials Ideas:</h5>
+                    <ul>${fbHtml || "<li>Get creative with seasonal ingredients and game-day favorites!</li>"}</ul>
+                    ${googleAdsHtml}
+                `;
+                promoBriefContent.appendChild(briefCard);
+
+                // Set first month as active
+                if (index === 0) {
+                    tabButton.classList.add('active');
+                    briefCard.classList.add('active');
+                }
+            });
+        }
+
+
+        // Google Ads Intelligence Table
+        function renderGoogleAdsTable() {
+            googleAdsTableBody.innerHTML = '';
+            googleAdsSuggestions.forEach(rec => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${rec.Month}</td>
+                    <td>${rec.Sports.map(s => `<span class="sport-tag ${s}">${s}</span>`).join(', ')}</td>
+                    <td>${rec.Recommendation}</td>
+                    <td class="keywords">${rec.Keywords}</td>
+                    <td class="budget-signal">${rec.Budget}</td>
+                `;
+                googleAdsTableBody.appendChild(row);
+            });
+        }
+
+
+        // Initial Render
+        document.addEventListener('DOMContentLoaded', () => {
+            renderGanttChart();
+            renderUpcomingEvents();
+            createPromoMonthBriefs();
+            renderGoogleAdsTable();
+
+            // Scroll Gantt to current week line for better UX
+            const ganttScrollContainer = document.querySelector('.gantt-chart');
+            const currentWeekLine = ganttContent.querySelector('.current-week-line');
+            if (ganttScrollContainer && currentWeekLine) {
+                 // Calculate scroll position to center the line
+                const lineLeft = currentWeekLine.offsetLeft;
+                const containerWidth = ganttScrollContainer.offsetWidth;
+                const scrollLeft = lineLeft - (containerWidth / 2);
+                ganttScrollContainer.scrollLeft = Math.max(0, scrollLeft);
+            }
+        });
+
+    </script>
+</body>
+</html>
