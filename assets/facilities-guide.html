@@ -398,6 +398,60 @@
     }
     .incident-btn:hover { background: #2d2d2d; }
 
+    /* ── PHOTO GRID ── */
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .photo-item {
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--gray-light);
+      border: 1px solid var(--border);
+    }
+    .photo-item img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      display: block;
+      cursor: zoom-in;
+    }
+    .photo-item .photo-caption {
+      font-size: 0.76rem;
+      color: var(--gray);
+      padding: 6px 10px 8px;
+      line-height: 1.35;
+    }
+    /* Lightbox */
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.88);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .lightbox.active { display: flex; }
+    .lightbox img {
+      max-width: 100%;
+      max-height: 90vh;
+      border-radius: 6px;
+      object-fit: contain;
+    }
+    .lightbox-close {
+      position: absolute;
+      top: 16px;
+      right: 20px;
+      color: white;
+      font-size: 2rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+
     /* ── PRINT ── */
     @media print {
       .site-header { position: static; }
@@ -426,6 +480,12 @@
   </style>
 </head>
 <body>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <span class="lightbox-close">&times;</span>
+  <img id="lightbox-img" src="" alt="" />
+</div>
 
 <!-- HEADER -->
 <header class="site-header">
@@ -560,6 +620,12 @@
           <li>To drain remaining water from pipes: open sink faucets at <strong>both ends of the hallway</strong> until water stops running.</li>
           <li>Notify guests on the floor and contact a manager immediately.</li>
         </ol>
+        <div class="photo-grid">
+          <div class="photo-item">
+            <img src="facilities-images/image3.png" alt="Hot and cold water shut-off valves in housekeeping closet" onclick="openLightbox(this)" />
+            <div class="photo-caption">Hot Water Shut Off (red tag) and Water Shut Off (blue tag) — in housekeeping closet on each floor</div>
+          </div>
+        </div>
       </div>
 
       <div class="subsection">
@@ -573,6 +639,12 @@
           <li>Locate the main water line to the right.</li>
           <li>Close the valve on the <strong>LEFT side</strong> (marked/tagged).</li>
         </ol>
+        <div class="photo-grid">
+          <div class="photo-item">
+            <img src="facilities-images/image11.jpg" alt="Main building water shut-off valve in hobbit closet" onclick="openLightbox(this)" />
+            <div class="photo-caption">Main building water line — hobbit closet near elevator, 1st floor. Close the tagged valve on the LEFT.</div>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -610,6 +682,39 @@
           <li>To reset tripped breaker: flip it fully <strong>OFF</strong> first → wait 5 seconds → flip it <strong>ON.</strong></li>
           <li>If problem persists: notify manager and consider relocating the guest.</li>
         </ol>
+        <div class="photo-grid">
+          <div class="photo-item">
+            <img src="facilities-images/image23.jpg" alt="Breaker panel showing tripped breaker position" onclick="openLightbox(this)" />
+            <div class="photo-caption">Tripped breaker (stuck in middle). Flip fully OFF first, wait, then flip ON.</div>
+          </div>
+          <div class="photo-item">
+            <img src="facilities-images/image22.jpg" alt="Breaker panel showing ON and OFF positions" onclick="openLightbox(this)" />
+            <div class="photo-caption">Normal breaker positions: fully left = ON, fully right = OFF.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h4>Electrical Panel Floor Maps</h4>
+        <p style="font-size:0.88rem; margin-bottom:10px;">Use these maps to locate the correct panel box on each floor. X marks the panel locations.</p>
+        <div class="photo-grid">
+          <div class="photo-item">
+            <img src="facilities-images/image1.jpg" alt="1st floor / lobby panel map" onclick="openLightbox(this)" />
+            <div class="photo-caption">1st Floor — Lobby, Kitchen, Manager's Office panel locations</div>
+          </div>
+          <div class="photo-item">
+            <img src="facilities-images/image21.jpg" alt="2nd floor panel map" onclick="openLightbox(this)" />
+            <div class="photo-caption">2nd Floor — Room layout with panel (X) locations marked</div>
+          </div>
+          <div class="photo-item">
+            <img src="facilities-images/image18.jpg" alt="3rd floor panel map" onclick="openLightbox(this)" />
+            <div class="photo-caption">3rd Floor — Room layout with panel (X) locations marked</div>
+          </div>
+          <div class="photo-item">
+            <img src="facilities-images/image20.jpg" alt="4th floor panel map" onclick="openLightbox(this)" />
+            <div class="photo-caption">4th Floor — Room layout with panel (X) locations marked</div>
+          </div>
+        </div>
       </div>
 
       <div class="subsection">
@@ -662,6 +767,16 @@
           <li>Remove the vent panel.</li>
           <li>Turn the <strong>blue knob</strong> to cut the gas supply.</li>
         </ol>
+        <div class="photo-grid">
+          <div class="photo-item">
+            <img src="facilities-images/image13.png" alt="Lobby fireplace vent panel location" onclick="openLightbox(this)" />
+            <div class="photo-caption">Lobby fireplace — arrow points to vent panel. Remove with Phillips screwdriver to access blue gas knob.</div>
+          </div>
+          <div class="photo-item">
+            <img src="facilities-images/image16.png" alt="Lobby fireplace blue gas shut-off knob" onclick="openLightbox(this)" />
+            <div class="photo-caption">Blue gas shut-off knob inside the fireplace vent — turn to cut gas supply.</div>
+          </div>
+        </div>
       </div>
 
       <div class="subsection">
@@ -671,6 +786,12 @@
           <li>Find the yellow tag labeled <strong>"Gas Shut Off."</strong></li>
           <li>Turn the handle until it stops.</li>
         </ol>
+        <div class="photo-grid">
+          <div class="photo-item">
+            <img src="facilities-images/image9.jpg" alt="Water heater gas shut-off valve with yellow tag" onclick="openLightbox(this)" />
+            <div class="photo-caption">Water heater gas shut-off — yellow tag reads "Water Heater Gas Shut Off." Turn handle until it stops.</div>
+          </div>
+        </div>
       </div>
 
       <div class="subsection">
@@ -679,6 +800,12 @@
           <li>Gas handles are <strong>green</strong>, located behind each appliance.</li>
           <li>Turn fully until the handle stops (handle perpendicular to the pipe = OFF).</li>
         </ul>
+        <div class="photo-grid">
+          <div class="photo-item">
+            <img src="facilities-images/image15.jpg" alt="Green gas shut-off handle behind kitchen appliance" onclick="openLightbox(this)" />
+            <div class="photo-caption">Green gas handle behind the grill — turn until perpendicular to the pipe to shut off.</div>
+          </div>
+        </div>
       </div>
 
       <div class="subsection">
@@ -694,6 +821,24 @@
             </ul>
           </li>
         </ol>
+        <div class="photo-grid">
+          <div class="photo-item">
+            <img src="facilities-images/image14.jpg" alt="Hood vent control panel with GAS ON button highlighted" onclick="openLightbox(this)" />
+            <div class="photo-caption">Hood vent screen on ceiling — press the top right button (GAS ON) to open gas lines to kitchen.</div>
+          </div>
+          <div class="photo-item">
+            <img src="facilities-images/image10.jpg" alt="Grill pilot light lit and visible through slot" onclick="openLightbox(this)" />
+            <div class="photo-caption">Grill pilot light lit (blue flame visible through slot). Confirm flame before moving to next section.</div>
+          </div>
+          <div class="photo-item">
+            <img src="facilities-images/image6.jpg" alt="Stovetop pilot light lit under grate hole" onclick="openLightbox(this)" />
+            <div class="photo-caption">Stovetop pilot — blue flame visible through the hole under the grate. Lit and confirmed.</div>
+          </div>
+          <div class="photo-item">
+            <img src="facilities-images/image4.jpg" alt="Kitchen appliance internal gas assembly" onclick="openLightbox(this)" />
+            <div class="photo-caption">Internal gas assembly behind appliance — for reference if a pilot won't catch.</div>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -887,6 +1032,28 @@
         <div><strong>Assembly point:</strong> Standard Oil — 110 N 7th St (behind the hotel). Keep everyone together and away from the building.</div>
       </div>
 
+      <div class="subsection">
+        <h4>Fire Alarm System & Emergency Phones</h4>
+        <div class="photo-grid">
+          <div class="photo-item">
+            <img src="facilities-images/image5.jpg" alt="Fire alarm control panel (Edwards) and system record documents" onclick="openLightbox(this)" />
+            <div class="photo-caption">Fire alarm control panel (Edwards) — located near the elevator. System Record Documents are posted to the left.</div>
+          </div>
+          <div class="photo-item">
+            <img src="facilities-images/image19.jpg" alt="Fire alarm panel display showing Hotel St Cloud 631 Main St and ACK/Panel Silence button" onclick="openLightbox(this)" />
+            <div class="photo-caption">Alarm panel display — shows "Hotel St Cloud, 631 Main St." Arrow points to ACK/Panel Silence button.</div>
+          </div>
+          <div class="photo-item">
+            <img src="facilities-images/image8.jpg" alt="Emergency communication phone panel at front desk" onclick="openLightbox(this)" />
+            <div class="photo-caption">Emergency communication system at front desk — floor-by-floor indicator lights and red emergency handset.</div>
+          </div>
+          <div class="photo-item">
+            <img src="facilities-images/image12.jpg" alt="Stairwell emergency communication phone panel" onclick="openLightbox(this)" />
+            <div class="photo-caption">Stairwell emergency phone (2nd floor lobby) — push for help. For guests who need assistance evacuating.</div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -988,6 +1155,25 @@
         <strong>Laundry email:</strong> <a href="mailto:adam@cleandesigns.com">adam@cleandesigns.com</a> or <a href="mailto:jay@cleandesigns.com">jay@cleandesigns.com</a>
       </div>
 
+      <div class="subsection">
+        <h4>Kitchen Appliance Service Agents</h4>
+        <p style="font-size:0.88rem; margin-bottom:10px;">Authorized service agent report from W. West Equipment — use this to find the right service contact for each appliance by manufacturer.</p>
+        <div class="photo-grid">
+          <div class="photo-item">
+            <img src="facilities-images/image17.png" alt="Kitchen appliance service agent report page 1" onclick="openLightbox(this)" />
+            <div class="photo-caption">W. West Equipment service report — hoods, refrigeration, ovens, fryers (page 1)</div>
+          </div>
+          <div class="photo-item">
+            <img src="facilities-images/image2.png" alt="Kitchen appliance service agent report page 2" onclick="openLightbox(this)" />
+            <div class="photo-caption">Service report continued — mixers, walk-in cooler, bar equipment (page 2)</div>
+          </div>
+          <div class="photo-item">
+            <img src="facilities-images/image7.png" alt="Kitchen appliance emergency service contacts" onclick="openLightbox(this)" />
+            <div class="photo-caption">Emergency/after-hours service numbers — Hawkins Commercial (719) 477-1242, Cooling Cubed (719) 439-6140, Hobart (303) 294-0784</div>
+          </div>
+        </div>
+      </div>
+
       <div class="callout info" style="margin-top:14px;">
         <span class="callout-icon">ℹ️</span>
         <div>Weekdays: attempt in-house repair first. Weekends and holidays: call the trade directly based on urgency.</div>
@@ -1019,6 +1205,22 @@
     body.classList.toggle('open', !isOpen);
     chevron.classList.toggle('open', !isOpen);
   }
+
+  function openLightbox(img) {
+    document.getElementById('lightbox-img').src = img.src;
+    document.getElementById('lightbox-img').alt = img.alt;
+    document.getElementById('lightbox').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeLightbox();
+  });
 
   // Auto-open section if linked directly via anchor
   window.addEventListener('DOMContentLoaded', () => {
