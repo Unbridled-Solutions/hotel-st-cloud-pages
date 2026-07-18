@@ -1250,25 +1250,48 @@ async function elCloudPull() {
     if (!data || Object.keys(data).length === 0) return;
     Object.entries(data).forEach(([k, v]) => {
       if (k.startsWith('el-task-') || k === 'el-log') {
-        try { localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v)); } catch(e) {}
+        try {
+          const incoming = typeof v === 'string' ? v : JSON.stringify(v);
+          const existing = localStorage.getItem(k);
+          if (k.startsWith('el-task-') && existing) {
+            // Keep whichever has a more advanced status (local wins if not not-started)
+            const localStatus = JSON.parse(existing).status || 'not-started';
+            const cloudStatus = (typeof v === 'object' ? v : JSON.parse(v)).status || 'not-started';
+            const rank = {'not-started':0,'in-progress':1,'completed':2,'approved':3};
+            if ((rank[localStatus]||0) >= (rank[cloudStatus]||0)) return; // local is same or better
+          }
+          if (k === 'el-log' && existing) {
+            // Merge logs — combine cloud + local, dedupe by time+task, keep newest 200
+            try {
+              const cloudLog = typeof v === 'object' ? v : JSON.parse(v);
+              const localLog = JSON.parse(existing);
+              const seen = new Set();
+              const merged = [...localLog, ...cloudLog].filter(e => {
+                const key = e.time + e.task;
+                if (seen.has(key)) return false;
+                seen.add(key); return true;
+              }).slice(0, 200);
+              localStorage.setItem(k, JSON.stringify(merged));
+              return;
+            } catch(e) {}
+          }
+          localStorage.setItem(k, incoming);
+        } catch(e) {}
       }
     });
   } catch(e) { /* offline */ }
 }
 
 async function elForceSync() {
-  showToast('Syncing from cloud…');
-  // Clear local tracker keys
-  const toRemove = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const k = localStorage.key(i);
-    if (k && (k.startsWith('el-task-') || k === 'el-log')) toRemove.push(k);
-  }
-  toRemove.forEach(k => localStorage.removeItem(k));
+  showToast('Saving then syncing…');
+  // ALWAYS push local state to cloud FIRST before wiping anything
+  await elCloudPush();
+  showToast('✓ Saved to cloud — pulling latest…');
+  // Now pull (merge, not wipe — cloud pull overwrites only task-by-task, never deletes)
   await elCloudPull();
   buildTracker();
   loadLog();
-  showToast('✓ Synced from cloud');
+  showToast('✓ Synced');
 }
 
 function saveAll() {
