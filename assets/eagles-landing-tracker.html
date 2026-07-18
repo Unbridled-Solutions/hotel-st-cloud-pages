@@ -547,6 +547,7 @@
     <button class="filter-btn" onclick="filterTasks('not-started',this)">○ Not Started</button>
   </div>
   <button class="save-btn" onclick="saveAll()">💾 Save Progress</button>
+    <button class="save-btn" onclick="elForceSync()" style="background:#0e4a5c;border-color:#3de8c8;color:#3de8c8;margin-left:8px;">☁️ Sync from Cloud</button>
 </div>
 
 <!-- MAIN TASK LIST -->
@@ -1203,11 +1204,58 @@ function toggleRoom(roomId) {
 }
 
 // ════════════════════════════════════════════
-//  SAVE / LOAD  (localStorage)
+//  CLOUD SYNC (KV) + SAVE / LOAD
 // ════════════════════════════════════════════
+const EL_CLOUD_URL = '/api/planner/bundle?ns=el-tracker';
 let dirty = false;
+let _elReady = false;
 
 function markDirty() { dirty = true; }
+
+async function elCloudPush() {
+  try {
+    // Read-then-merge: never overwrite keys we don't have locally
+    const kvRes = await fetch(EL_CLOUD_URL);
+    const kvData = kvRes.ok ? ((await kvRes.json()).data || {}) : {};
+    const bundle = { ...kvData };
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && (k.startsWith('el-task-') || k === 'el-log')) {
+        try { bundle[k] = JSON.parse(localStorage.getItem(k)); } catch(e) { bundle[k] = localStorage.getItem(k); }
+      }
+    }
+    await fetch(EL_CLOUD_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bundle) });
+  } catch(e) { /* offline — localStorage is the fallback */ }
+}
+
+async function elCloudPull() {
+  try {
+    const res = await fetch(EL_CLOUD_URL);
+    if (!res.ok) return;
+    const { data } = await res.json();
+    if (!data || Object.keys(data).length === 0) return;
+    Object.entries(data).forEach(([k, v]) => {
+      if (k.startsWith('el-task-') || k === 'el-log') {
+        try { localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v)); } catch(e) {}
+      }
+    });
+  } catch(e) { /* offline */ }
+}
+
+async function elForceSync() {
+  showToast('Syncing from cloud…');
+  // Clear local tracker keys
+  const toRemove = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && (k.startsWith('el-task-') || k === 'el-log')) toRemove.push(k);
+  }
+  toRemove.forEach(k => localStorage.removeItem(k));
+  await elCloudPull();
+  buildTracker();
+  loadLog();
+  showToast('✓ Synced from cloud');
+}
 
 function saveAll() {
   const changes = [];
@@ -1232,6 +1280,7 @@ function saveAll() {
   if (changes.length > 0) {
     addLogEntries(changes);
   }
+  elCloudPush(); // sync to cloud immediately after every save
   showToast('Progress saved ✓');
   dirty = false;
 }
@@ -1277,6 +1326,7 @@ function addLogEntries(changes) {
   });
   // Keep last 200 entries
   localStorage.setItem('el-log', JSON.stringify(stored.slice(0, 200)));
+  if (_elReady) elCloudPush();
 }
 
 function formatStatus(s) {
@@ -1317,8 +1367,13 @@ function showToast(msg) {
 // ════════════════════════════════════════════
 //  INIT
 // ════════════════════════════════════════════
-buildTracker();
-loadLog();
+// Pull from cloud first, then render
+(async () => {
+  await elCloudPull();
+  buildTracker();
+  loadLog();
+  _elReady = true;
+})();
 
 // Warn on unsaved changes
 window.addEventListener('beforeunload', e => {
