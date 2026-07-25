@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>APEX Commons — Suite Pricing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --navy:    #0d1b2a;
+    --navy2:   #152236;
+    --gold:    #c9aa7c;
+    --gold2:   #a8883e;
+    --green:   #3a7d5a;
+    --green2:  #2d6147;
+    --blue:    #5a8ba7;
+    --text:    #1a2332;
+    --muted:   #6b7a8f;
+    --border:  #d8dde6;
+    --bg:      #f7f8fa;
+    --white:   #ffffff;
+    --window-bg: #eef4f8;
+    --int-bg:    #f3f6f0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--navy);
+    color: #fff;
+    padding: 36px 48px 28px;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 24px; flex-wrap: wrap;
+  }
+  .header-left h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 36px; font-weight: 700; letter-spacing: .02em;
+    color: #fff; line-height: 1.1;
+  }
+  .header-left .sub {
+    font-size: 13px; color: var(--gold); font-weight: 500;
+    letter-spacing: .08em; text-transform: uppercase; margin-top: 6px;
+  }
+  .header-right {
+    text-align: right;
+  }
+  .header-right .address {
+    font-size: 14px; color: rgba(255,255,255,.75); line-height: 1.7;
+  }
+  .header-right .address strong { color: var(--gold); }
+  .broker-tag {
+    display: inline-block; margin-top: 10px;
+    background: rgba(201,170,124,.15); border: 1px solid rgba(201,170,124,.4);
+    color: var(--gold); font-size: 11px; font-weight: 600;
+    letter-spacing: .06em; text-transform: uppercase;
+    padding: 4px 12px; border-radius: 4px;
+  }
+
+  /* ── SUMMARY CARDS ── */
+  .summary-bar {
+    background: var(--navy2);
+    padding: 20px 48px;
+    display: flex; gap: 0; flex-wrap: wrap;
+    border-bottom: 2px solid var(--gold2);
+  }
+  .sum-card {
+    flex: 1; min-width: 140px;
+    padding: 14px 24px 14px 0;
+    border-right: 1px solid rgba(255,255,255,.1);
+  }
+  .sum-card:last-child { border-right: none; }
+  .sum-label { font-size: 10px; color: rgba(255,255,255,.5); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+  .sum-val { font-size: 22px; font-weight: 700; color: #fff; margin-top: 4px; font-family: 'Playfair Display', serif; }
+  .sum-val.gold { color: var(--gold); }
+  .sum-val.green { color: #6ecf9a; }
+  .sum-sub { font-size: 11px; color: rgba(255,255,255,.4); margin-top: 2px; }
+
+  /* ── MAIN CONTENT ── */
+  .main { max-width: 1100px; margin: 0 auto; padding: 40px 32px; }
+
+  /* ── SECTION HEADERS ── */
+  .section-head {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 16px; margin-top: 36px;
+  }
+  .section-head:first-child { margin-top: 0; }
+  .section-head h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px; font-weight: 700; color: var(--navy);
+  }
+  .section-rule { flex: 1; height: 1px; background: var(--border); }
+  .pill {
+    font-size: 11px; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; padding: 3px 10px; border-radius: 20px;
+  }
+  .pill-window { background: #dceaf3; color: #2c6283; }
+  .pill-interior { background: #dff0e6; color: #2d6147; }
+
+  /* ── SUITE TABLE ── */
+  .suite-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .suite-table thead th {
+    background: var(--navy); color: rgba(255,255,255,.8);
+    font-size: 10px; font-weight: 600; letter-spacing: .07em;
+    text-transform: uppercase; padding: 10px 14px; text-align: right;
+  }
+  .suite-table thead th:first-child { text-align: left; border-radius: 6px 0 0 0; }
+  .suite-table thead th:last-child { border-radius: 0 6px 0 0; }
+  .suite-table tbody tr { border-bottom: 1px solid var(--border); }
+  .suite-table tbody tr:hover { background: #eef2f7; }
+  .suite-table tbody td { padding: 11px 14px; text-align: right; }
+  .suite-table tbody td:first-child { text-align: left; }
+
+  .win-row { background: var(--window-bg); }
+  .int-row { background: var(--int-bg); }
+  .suite-num { font-weight: 700; color: var(--navy); font-size: 14px; }
+  .facing-badge {
+    display: inline-block; font-size: 10px; font-weight: 700;
+    padding: 2px 7px; border-radius: 3px; margin-left: 6px;
+    background: #dceaf3; color: #2c6283;
+  }
+  .int-badge {
+    display: inline-block; font-size: 10px; font-weight: 700;
+    padding: 2px 7px; border-radius: 3px; margin-left: 6px;
+    background: #dff0e6; color: #2d6147;
+  }
+  .monthly-rate { font-weight: 700; color: var(--navy); font-size: 15px; }
+  .annual-rate { font-weight: 600; color: var(--muted); }
+  .sf-rate { font-size: 12px; color: var(--muted); }
+  tfoot td {
+    padding: 12px 14px; font-weight: 700;
+    background: var(--navy); color: #fff; font-size: 14px;
+    text-align: right;
+  }
+  tfoot td:first-child { text-align: left; border-radius: 0 0 0 6px; }
+  tfoot td:last-child { border-radius: 0 0 6px 0; }
+  tfoot .gold { color: var(--gold); }
+
+  /* ── SCENARIO COMPARISON ── */
+  .scenario-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+    margin-top: 8px;
+  }
+  .scenario-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 8px; padding: 20px 22px;
+  }
+  .scenario-card.highlight {
+    border-color: var(--gold); background: #fdf8f0;
+    box-shadow: 0 2px 12px rgba(201,170,124,.2);
+  }
+  .sc-label { font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+  .sc-name { font-size: 16px; font-weight: 700; color: var(--navy); margin: 6px 0 14px; font-family: 'Playfair Display', serif; }
+  .sc-row { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; border-bottom: 1px solid var(--border); }
+  .sc-row:last-child { border-bottom: none; font-weight: 700; font-size: 15px; }
+  .sc-row span:last-child { font-weight: 600; }
+  .sc-annual { margin-top: 12px; padding: 10px 0 0; border-top: 2px solid var(--border); font-size: 13px; color: var(--muted); }
+  .sc-annual strong { font-size: 20px; color: var(--navy); font-family: 'Playfair Display', serif; display: block; margin-top: 2px; }
+  .sc-annual strong.gold { color: var(--gold2); }
+  .rec-badge {
+    display: inline-block; background: var(--gold); color: var(--navy);
+    font-size: 10px; font-weight: 800; letter-spacing: .08em;
+    text-transform: uppercase; padding: 3px 9px; border-radius: 3px; margin-bottom: 8px;
+  }
+
+  /* ── MARKET CONTEXT ── */
+  .market-box {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 8px; padding: 24px 28px; margin-top: 8px;
+  }
+  .market-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13.5px;
+  }
+  .market-row:last-child { border-bottom: none; }
+  .market-name { font-weight: 600; }
+  .market-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .market-rate { font-weight: 700; font-size: 15px; text-align: right; }
+  .market-rate .range { font-size: 12px; color: var(--muted); display: block; }
+  .you-marker {
+    display: inline-block; background: var(--navy); color: var(--gold);
+    font-size: 10px; font-weight: 800; letter-spacing: .06em;
+    text-transform: uppercase; padding: 2px 8px; border-radius: 3px; margin-left: 8px;
+  }
+
+  /* ── NOTES ── */
+  .notes-box {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 8px; padding: 20px 24px; margin-top: 8px;
+    font-size: 13px; line-height: 1.7; color: var(--text);
+  }
+  .notes-box ul { padding-left: 18px; }
+  .notes-box li { margin-bottom: 6px; }
+  .notes-box strong { color: var(--navy); }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center; padding: 28px;
+    font-size: 12px; color: var(--muted);
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+  }
+  footer strong { color: var(--navy); }
+
+  /* ── PRINT ── */
+  @media print {
+    body { background: #fff; }
+    .header { padding: 24px 32px 20px; }
+    .main { padding: 24px; }
+    .no-print { display: none; }
+    .scenario-grid { page-break-inside: avoid; }
+    .suite-table { page-break-inside: auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>APEX Commons</h1>
+    <div class="sub">Office Suite Pricing — Unbridled Holdings</div>
+  </div>
+  <div class="header-right">
+    <div class="address">
+      <strong>425 Main Street</strong><br>
+      Cañon City, Colorado 81212<br>
+      Historic Downtown · Fully Restored
+    </div>
+    <div class="broker-tag">Unbridled Holdings X LLC</div>
+  </div>
+</div>
+
+<div class="summary-bar">
+  <div class="sum-card">
+    <div class="sum-label">Total Suites</div>
+    <div class="sum-val">23</div>
+    <div class="sum-sub">All floors combined</div>
+  </div>
+  <div class="sum-card">
+    <div class="sum-label">Total Square Feet</div>
+    <div class="sum-val">4,680</div>
+    <div class="sum-sub">Rentable SF</div>
+  </div>
+  <div class="sum-card">
+    <div class="sum-label">Window Suites</div>
+    <div class="sum-val gold">15</div>
+    <div class="sum-sub">S, E &amp; W facing · 2,989 SF</div>
+  </div>
+  <div class="sum-card">
+    <div class="sum-label">Interior Suites</div>
+    <div class="sum-val gold">8</div>
+    <div class="sum-sub">Climate controlled · 1,691 SF</div>
+  </div>
+  <div class="sum-card">
+    <div class="sum-label">Full Occupancy Revenue</div>
+    <div class="sum-val green">$14,365</div>
+    <div class="sum-sub">Per month · $172,374/yr</div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- SUITE PRICING TABLE -->
+  <div class="section-head">
+    <h2>Suite-by-Suite Pricing</h2>
+    <div class="section-rule"></div>
+    <span class="pill pill-window">Window $3.25/SF</span>
+    <span class="pill pill-interior">Interior $2.75/SF</span>
+  </div>
+
+  <table class="suite-table">
+    <thead>
+      <tr>
+        <th>Suite</th>
+        <th>Sq Ft</th>
+        <th>Type</th>
+        <th>$/SF/mo</th>
+        <th>Monthly Rent</th>
+        <th>Annual Rent</th>
+        <th>$/SF/yr</th>
+      </tr>
+    </thead>
+    <tbody id="suite-tbody"></tbody>
+    <tfoot>
+      <tr>
+        <td>TOTALS</td>
+        <td id="foot-sf"></td>
+        <td>23 Suites</td>
+        <td>—</td>
+        <td class="gold" id="foot-mo"></td>
+        <td class="gold" id="foot-yr"></td>
+        <td>—</td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <!-- SCENARIO COMPARISON -->
+  <div class="section-head" style="margin-top:44px;">
+    <h2>Scenario Comparison</h2>
+    <div class="section-rule"></div>
+    <span style="font-size:12px;color:var(--muted)">Full occupancy</span>
+  </div>
+
+  <div class="scenario-grid">
+    <div class="scenario-card">
+      <div class="sc-label">Previous Rate</div>
+      <div class="sc-name">Flat High<br><small style="font-size:13px;font-family:Inter">$650 window / $550 interior</small></div>
+      <div class="sc-row"><span>15 Window suites</span><span>$9,750</span></div>
+      <div class="sc-row"><span>8 Interior suites</span><span>$4,400</span></div>
+      <div class="sc-row"><span>Total / month</span><span>$14,150</span></div>
+      <div class="sc-annual">Annual Revenue<strong>$169,800</strong></div>
+    </div>
+
+    <div class="scenario-card">
+      <div class="sc-label">Previous Rate</div>
+      <div class="sc-name">Flat Low<br><small style="font-size:13px;font-family:Inter">$450 window / $400 interior</small></div>
+      <div class="sc-row"><span>15 Window suites</span><span>$6,750</span></div>
+      <div class="sc-row"><span>8 Interior suites</span><span>$3,200</span></div>
+      <div class="sc-row"><span>Total / month</span><span>$9,950</span></div>
+      <div class="sc-annual">Annual Revenue<strong>$119,400</strong><span style="font-size:11px;color:#c04;">⚠ $52,974 left on the table vs. current</span></div>
+    </div>
+
+    <div class="scenario-card highlight">
+      <div class="rec-badge">✓ Recommended</div>
+      <div class="sc-label">Current Rate</div>
+      <div class="sc-name">Per Square Foot<br><small style="font-size:13px;font-family:Inter">$3.25 window / $2.75 interior</small></div>
+      <div class="sc-row"><span>15 Window suites</span><span>$9,714</span></div>
+      <div class="sc-row"><span>8 Interior suites</span><span>$4,651</span></div>
+      <div class="sc-row"><span>Total / month</span><span>$14,365</span></div>
+      <div class="sc-annual">Annual Revenue<strong class="gold">$172,374</strong><span style="font-size:11px;color:var(--green2)">✓ Fair to all tenants · LoopNet-ready</span></div>
+    </div>
+  </div>
+
+  <!-- MARKET CONTEXT -->
+  <div class="section-head" style="margin-top:44px;">
+    <h2>Market Context</h2>
+    <div class="section-rule"></div>
+    <span style="font-size:12px;color:var(--muted)">$/SF/year · comparable markets</span>
+  </div>
+
+  <div class="market-box">
+    <div class="market-row">
+      <div>
+        <div class="market-name">613 Main St, Cañon City CO <span class="you-marker">Same Block</span></div>
+        <div class="market-sub">Historic Main Street office · 280–2,740 SF</div>
+      </div>
+      <div class="market-rate">$28.85–$35.66<span class="range">per SF / year</span></div>
+    </div>
+    <div class="market-row">
+      <div>
+        <div class="market-name">425–431 Main St, Cañon City CO <span class="you-marker">APEX Commons</span></div>
+        <div class="market-sub">Historic Main Street · fully restored · 122–4,026 SF</div>
+      </div>
+      <div class="market-rate" style="color:var(--gold2)">$33–$39<span class="range">per SF / year · this building</span></div>
+    </div>
+    <div class="market-row">
+      <div>
+        <div class="market-name">1202 Royal Gorge Blvd, Cañon City CO</div>
+        <div class="market-sub">Historic building · executive suites · 64–576 SF</div>
+      </div>
+      <div class="market-rate">$36.00–$46.88<span class="range">per SF / year</span></div>
+    </div>
+    <div class="market-row">
+      <div>
+        <div class="market-name">Salida, CO — Downtown Professional</div>
+        <div class="market-sub">Remodeled small-town historic offices · 150–200 SF suites</div>
+      </div>
+      <div class="market-rate">$57–$60<span class="range">per SF / year (small suites)</span></div>
+    </div>
+    <div class="market-row">
+      <div>
+        <div class="market-name">Pueblo, CO — General Market</div>
+        <div class="market-sub">Larger market average · various quality levels</div>
+      </div>
+      <div class="market-rate">$15–$30<span class="range">per SF / year avg</span></div>
+    </div>
+  </div>
+
+  <!-- NOTES -->
+  <div class="section-head" style="margin-top:44px;">
+    <h2>Listing Notes</h2>
+    <div class="section-rule"></div>
+  </div>
+
+  <div class="notes-box">
+    <ul>
+      <li><strong>Lease structure:</strong> Full-service gross — all utilities, internet, CAM included in the rate. No NNN add-ons.</li>
+      <li><strong>Window classification:</strong> South-facing suites (#4, 6, 8, 10, 12) receive maximum Colorado sunshine. East/West facing (#11, 14, 16, 18, 20 / #2, 21, 22, 23) offer morning/afternoon light. Suite #1 is corner facing S &amp; W — premium position.</li>
+      <li><strong>LoopNet format:</strong> Rates listed per SF/year. Window rate = <strong>$39/SF/yr</strong> ($3.25/mo). Interior rate = <strong>$33/SF/yr</strong> ($2.75/mo).</li>
+      <li><strong>Note:</strong> $100,000 building improvement note pending funding — does not affect tenant pricing.</li>
+      <li><strong>Contact:</strong> Unbridled Holdings X LLC · Cañon City, CO · Available immediately</li>
+    </ul>
+  </div>
+
+</div>
+
+<footer>
+  <strong>APEX Commons · 425 Main Street · Cañon City, CO 81212</strong><br>
+  Prepared by MC — Unbridled Solutions · <span id="gen-date"></span> · Confidential — Not for distribution without authorization
+</footer>
+
+<script>
+const SUITES = [
+  {num:1,  sf:157, type:'Window',   facing:'S & W'},
+  {num:2,  sf:209, type:'Window',   facing:'W'},
+  {num:3,  sf:170, type:'Interior', facing:''},
+  {num:4,  sf:223, type:'Window',   facing:'S'},
+  {num:5,  sf:165, type:'Interior', facing:''},
+  {num:6,  sf:222, type:'Window',   facing:'S'},
+  {num:7,  sf:123, type:'Interior', facing:''},
+  {num:8,  sf:174, type:'Window',   facing:'S'},
+  {num:9,  sf:124, type:'Interior', facing:''},
+  {num:10, sf:256, type:'Window',   facing:'S'},
+  {num:11, sf:155, type:'Window',   facing:'E'},
+  {num:12, sf:207, type:'Window',   facing:'S'},
+  {num:13, sf:267, type:'Interior', facing:''},
+  {num:14, sf:167, type:'Window',   facing:'E'},
+  {num:15, sf:272, type:'Interior', facing:''},
+  {num:16, sf:184, type:'Window',   facing:'E'},
+  {num:17, sf:303, type:'Interior', facing:''},
+  {num:18, sf:164, type:'Window',   facing:'E'},
+  {num:19, sf:267, type:'Interior', facing:''},
+  {num:20, sf:210, type:'Window',   facing:'E'},
+  {num:21, sf:284, type:'Window',   facing:'W'},
+  {num:22, sf:163, type:'Window',   facing:'W'},
+  {num:23, sf:214, type:'Window',   facing:'W'},
+];
+
+const W_RATE = 3.25, I_RATE = 2.75;
+const fmt = n => '$' + n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+let totalSF = 0, totalMo = 0;
+const tbody = document.getElementById('suite-tbody');
+
+SUITES.forEach(s => {
+  const rate = s.type === 'Window' ? W_RATE : I_RATE;
+  const monthly = s.sf * rate;
+  const annual  = monthly * 12;
+  const sfYr    = rate * 12;
+  totalSF += s.sf; totalMo += monthly;
+
+  const isWin = s.type === 'Window';
+  const badge = isWin
+    ? `<span class="facing-badge">${s.facing}</span>`
+    : `<span class="int-badge">Interior</span>`;
+
+  const tr = document.createElement('tr');
+  tr.className = isWin ? 'win-row' : 'int-row';
+  tr.innerHTML = `
+    <td><span class="suite-num">#${s.num}</span>${badge}</td>
+    <td>${s.sf.toLocaleString()}</td>
+    <td>${s.type}</td>
+    <td class="sf-rate">${fmt(rate)}</td>
+    <td><span class="monthly-rate">${fmt(monthly)}</span></td>
+    <td><span class="annual-rate">${fmt(annual)}</span></td>
+    <td class="sf-rate">${fmt(sfYr)}</td>
+  `;
+  tbody.appendChild(tr);
+});
+
+document.getElementById('foot-sf').textContent = totalSF.toLocaleString() + ' SF';
+document.getElementById('foot-mo').textContent = fmt(totalMo) + ' / mo';
+document.getElementById('foot-yr').textContent = fmt(totalMo * 12) + ' / yr';
+
+// Date
+document.getElementById('gen-date').textContent = new Date().toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'});
+</script>
+</body>
+</html>

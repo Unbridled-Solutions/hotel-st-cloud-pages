@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Holy Cross Abbey — Guest Room Concept Rev 3</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --stone:#3d3530; --warm:#6b5c3e; --parchment:#f5f0e8; --cream:#fffdf8;
+      --blue:#5a8ba7; --muted:#857a6e; --border:#ddd6c8;
+      --cloister:#c8c0ac; --corridor:#ddd8cc; --wall:#2a2520;
+    }
+    body { font-family:'Source Sans 3',sans-serif; background:var(--parchment); color:var(--stone); line-height:1.6; }
+    .header { background:var(--stone); color:#f5f0e8; padding:52px 40px 44px; text-align:center; }
+    .header .elk { width:44px; opacity:.85; margin-bottom:18px; }
+    .header .overtitle { font-size:.72rem; font-weight:600; letter-spacing:.22em; text-transform:uppercase; color:var(--blue); margin-bottom:10px; }
+    .header h1 { font-family:'Playfair Display',serif; font-size:2.4rem; font-weight:700; margin-bottom:8px; }
+    .header .subtitle { font-size:.9rem; opacity:.6; letter-spacing:.08em; text-transform:uppercase; }
+    .container { max-width:1020px; margin:0 auto; padding:48px 24px 80px; }
+    .section-label { font-size:.68rem; font-weight:600; letter-spacing:.18em; text-transform:uppercase; color:var(--blue); margin-bottom:6px; }
+    .section-title { font-family:'Playfair Display',serif; font-size:1.5rem; color:var(--stone); margin-bottom:24px; padding-bottom:16px; border-bottom:1px solid var(--border); }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:36px; }
+    .stat { background:var(--cream); border:1px solid var(--border); border-radius:8px; padding:22px 20px; text-align:center; }
+    .stat-val { font-family:'Playfair Display',serif; font-size:2rem; font-weight:700; color:var(--warm); line-height:1; margin-bottom:6px; }
+    .stat-label { font-size:.78rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+    .plan-wrap { overflow-x:auto; background:var(--cream); border:1px solid var(--border); border-radius:10px; padding:24px; margin-bottom:32px; }
+    .plan-wrap svg { display:block; margin:0 auto; }
+    .legend { display:flex; flex-wrap:wrap; gap:12px 24px; margin-top:16px; justify-content:center; }
+    .legend-item { display:flex; align-items:center; gap:8px; font-size:.8rem; color:var(--muted); }
+    .legend-swatch { width:20px; height:14px; border-radius:3px; border:1px solid rgba(0,0,0,.15); }
+    .callout { background:#f0ebe0; border-left:4px solid var(--warm); border-radius:0 8px 8px 0; padding:16px 20px; margin-bottom:28px; font-size:.92rem; }
+    .callout strong { color:var(--warm); }
+    .callout.red { border-left-color:#c0392b; background:#fdf0ee; }
+    .callout.red strong { color:#c0392b; }
+    .two-col { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:32px; }
+    .card { background:var(--cream); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+    .card-head { padding:16px 20px; color:#f5f0e8; }
+    .card-head h3 { font-family:'Playfair Display',serif; font-size:1.1rem; margin-bottom:2px; }
+    .card-head .tag { font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; opacity:.75; }
+    .card-body { padding:20px; }
+    .spec { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); font-size:.9rem; }
+    .spec:last-child { border-bottom:none; }
+    .spec-label { color:var(--muted); }
+    .spec-val { font-weight:600; }
+    .badge { display:inline-block; background:var(--blue); color:#fff; font-size:.68rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:2px 8px; border-radius:20px; }
+    .badge.warn { background:#b07d2a; }
+    .notes-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:32px; }
+    .note-block { background:var(--cream); border:1px solid var(--border); border-radius:10px; padding:24px; }
+    .note-block h4 { font-family:'Playfair Display',serif; font-size:1rem; margin-bottom:12px; color:var(--warm); }
+    .note-block ul { list-style:none; padding:0; }
+    .note-block li { padding:5px 0 5px 18px; position:relative; font-size:.89rem; border-bottom:1px solid var(--parchment); }
+    .note-block li:last-child { border-bottom:none; }
+    .note-block li::before { content:'›'; position:absolute; left:0; color:var(--warm); font-weight:700; }
+    .footer { text-align:center; font-size:.78rem; color:var(--muted); padding-top:12px; border-top:1px solid var(--border); }
+    @media(max-width:640px){ .stats,.two-col,.notes-grid { grid-template-columns:1fr; } .header h1 { font-size:1.7rem; } }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <img class="elk" src="https://offers.hotelstcloud.com/assets/logos/unbridled-elk-icon-white.png" alt="" />
+  <div class="overtitle">Preliminary Design Concept — Rev 3 · Fixed Corridor</div>
+  <h1>Holy Cross Abbey</h1>
+  <div class="subtitle">Guest Room Floor Plan Recommendation &nbsp;·&nbsp; 4-Star Hospitality Conversion</div>
+</div>
+
+<div class="container">
+
+  <div class="stats">
+    <div class="stat"><div class="stat-val">16</div><div class="stat-label">Rooms / Level</div></div>
+    <div class="stat"><div class="stat-val">8+8</div><div class="stat-label">N Row / S Row</div></div>
+    <div class="stat"><div class="stat-val">~280</div><div class="stat-label">Min Net Sq Ft</div></div>
+    <div class="stat"><div class="stat-val">4</div><div class="stat-label">Corner Suites</div></div>
+  </div>
+
+  <!-- Fixed corridor constraint callout -->
+  <div class="callout red">
+    <strong>Fixed Corridor Constraint.</strong> The existing corridor is locked in place — position, width (~8'), and both face walls are immovable historic structure. This fixes the depth of every room on both sides of the building. <strong>North rooms are fixed at ~20' deep</strong> (corridor face to north exterior wall). <strong>South rooms are fixed at ~27' deep</strong> (corridor face to south exterior wall). The only design lever is the interior partition walls between cells, which can be removed or relocated to create wider rooms that compensate for fixed depth.
+  </div>
+
+  <div class="callout">
+    <strong>Cell-Combining Strategy.</strong> Original monastic cells are ~11'-10" to ~14'-2" wide. At the fixed north depth (~20'), a single 12'-wide cell yields only ~240 sq ft — just under the 250 sq ft minimum. The solution: <strong>combine adjacent narrow cells into single guest rooms ~17–20' wide.</strong> This reduces the count from ~14 original cells per side to 8 guest rooms per side, comfortably clearing 250 sq ft on north and 340+ sq ft on south. No structural or exterior walls are touched. Only interior partitions between original cells are opened up.
+  </div>
+
+  <!-- ─── FLOOR PLAN OVERVIEW ─── -->
+  <div class="section-label">Level Overview — Fixed Corridor, Accurate Room Depths</div>
+  <div class="section-title">Schematic Floor Plan</div>
+
+  <div class="plan-wrap">
+    <!--
+      REAL DIMENSIONS (from blueprint):
+        Building width: 165'-9"
+        North rooms depth (corridor wall → N exterior): ~20' fixed
+        Corridor width: ~8' fixed
+        South rooms depth (corridor wall → S exterior): ~27' fixed
+        Cloister arcade: outdoor colonnade attached to north face (~11' projection)
+
+      SVG SCALE: 1px = 0.55ft approx
+        Building width: 165'-9" → ~916px  (use 900px inner)
+        Cloister (outside): 11' → 60px
+        North rooms: 20' → 110px
+        Corridor: 8' → 44px
+        South rooms: 27' → 148px
+        Total SVG height: 60(cloister) + 8(wall) + 110(N rooms) + 8(wall) + 44(corridor) + 8(wall) + 148(S rooms) + 8(wall) = 394px + margins
+
+      Room widths (8 per side, combining original narrow cells):
+        2 corner suites: ~22' each → 121px
+        6 standard rooms: remaining 165'-9" - 44' = ~121'-9" ÷ 6 = ~20'-3" → ~112px each
+        All rooms divided by 7px walls
+    -->
+    <svg viewBox="0 0 960 420" width="960" height="420" style="max-width:100%;" xmlns="http://www.w3.org/2000/svg">
+
+      <!-- ─ background ─ -->
+      <rect x="0" y="0" width="960" height="420" fill="#ddd8cc" rx="4"/>
+
+      <!-- ─── CLOISTER ARCADE (outdoor, attached to north face) ─── -->
+      <!-- Hatched to show it's outside the building envelope -->
+      <rect x="24" y="8"  width="912" height="56" fill="#c8c0ac" rx="3"/>
+      <!-- Hatch lines to indicate outdoor/covered -->
+      <line x1="24" y1="8"  x2="936" y2="64" stroke="#b0a890" stroke-width="0.5" opacity="0.4"/>
+      <line x1="80" y1="8"  x2="936" y2="64" stroke="#b0a890" stroke-width="0.5" opacity="0.3"/>
+      <line x1="136" y1="8" x2="936" y2="64" stroke="#b0a890" stroke-width="0.5" opacity="0.3"/>
+      <line x1="24" y1="8"  x2="880" y2="64" stroke="#b0a890" stroke-width="0.5" opacity="0.3"/>
+      <line x1="24" y1="8"  x2="824" y2="64" stroke="#b0a890" stroke-width="0.5" opacity="0.3"/>
+      <!-- Arcade columns -->
+      <rect x="100" y="14" width="8" height="44" fill="#a89880" rx="4"/>
+      <rect x="214" y="14" width="8" height="44" fill="#a89880" rx="4"/>
+      <rect x="322" y="14" width="8" height="44" fill="#a89880" rx="4"/>
+      <rect x="430" y="14" width="8" height="44" fill="#a89880" rx="4"/>
+      <rect x="538" y="14" width="8" height="44" fill="#a89880" rx="4"/>
+      <rect x="646" y="14" width="8" height="44" fill="#a89880" rx="4"/>
+      <rect x="754" y="14" width="8" height="44" fill="#a89880" rx="4"/>
+      <rect x="862" y="14" width="8" height="44" fill="#a89880" rx="4"/>
+      <text x="480" y="40" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="9" fill="#6a5e4e" letter-spacing="3" font-weight="600">COVERED CLOISTER ARCADE — OUTDOOR COLONNADE (FIXED / HISTORIC)</text>
+      <text x="480" y="55" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="8" fill="#8a7e6e">~11' projection from north wall · windows look out through arcade columns</text>
+
+      <!-- ─── NORTH EXTERIOR WALL ─── -->
+      <rect x="24" y="64"  width="912" height="8" fill="#2a2520"/>
+
+      <!-- ─── NORTH ROOMS (depth=110px ≈ 20' FIXED) ─── -->
+      <!-- Windows on north wall (y=64–72) — breaks shown in cyan -->
+      <!-- Fill -->
+      <rect x="24" y="72" width="912" height="110" fill="#f0ebe0"/>
+
+      <!-- N1 Corner Suite: x=24–146 (122px ≈ 22') -->
+      <rect x="24"  y="72" width="122" height="110" fill="#ede8d8"/>
+      <!-- N windows (2) -->
+      <rect x="34"  y="64" width="30"  height="8"  fill="#c4d8e4"/>
+      <rect x="80"  y="64" width="30"  height="8"  fill="#c4d8e4"/>
+      <!-- W wall window (corner dual exposure) -->
+      <rect x="24"  y="88" width="8"   height="26" fill="#c4d8e4"/>
+      <!-- Bath (SE, away from windows) -->
+      <rect x="90"  y="140" width="48"  height="34" fill="#ccdde6"/>
+      <text x="114" y="160" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#4a7080">BATH</text>
+      <!-- Closet SW -->
+      <rect x="32"  y="140" width="42"  height="34" fill="#ddd8c8"/>
+      <text x="53"  y="161" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#6b5c3e">CLO</text>
+      <!-- Desk at N window -->
+      <rect x="36"  y="76"  width="40"  height="18" fill="#c8b890" rx="2"/>
+      <!-- Bed: headboard S, foot toward arcade windows -->
+      <rect x="34"  y="100" width="86"  height="34" fill="#d8cdb8" rx="3"/>
+      <rect x="34"  y="130" width="86"  height="6"  fill="#b8a888" rx="2"/>
+      <text x="77"  y="187" text-anchor="middle" font-family="'Playfair Display',serif" font-size="9.5" fill="#3d3530">N1 · CORNER SUITE</text>
+      <!-- Door to corridor (bottom) -->
+      <path d="M70,182 A12,12 0 0,0 82,182" fill="none" stroke="#8a6030" stroke-width="1" stroke-dasharray="2,2"/>
+
+      <rect x="146" y="72" width="7"   height="110" fill="#2a2520"/>
+
+      <!-- N2–N7: six standard rooms, each 112px ≈ 20'-3" wide -->
+      <!-- Helper macro: each room at x=153+i*119, width=112 -->
+
+      <!-- N2: x=153 -->
+      <rect x="153" y="72" width="112" height="110" fill="#f5f0e5"/>
+      <rect x="178"  y="64" width="60"  height="8"  fill="#c4d8e4"/>
+      <rect x="217" y="142" width="40"  height="32" fill="#ccdde6"/>
+      <text x="237" y="161" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#4a7080">BATH</text>
+      <rect x="161" y="142" width="44"  height="22" fill="#ddd8c8"/>
+      <text x="183" y="157" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#6b5c3e">CLO</text>
+      <rect x="170" y="78"  width="44"  height="16" fill="#c8b890" rx="2"/>
+      <rect x="160" y="100" width="88"  height="34" fill="#d8cdb8" rx="3"/>
+      <rect x="160" y="128" width="88"  height="6"  fill="#b8a888" rx="2"/>
+      <text x="209" y="187" text-anchor="middle" font-family="'Playfair Display',serif" font-size="9.5" fill="#3d3530">N2</text>
+      <path d="M200,182 A10,10 0 0,0 210,182" fill="none" stroke="#8a6030" stroke-width="1" stroke-dasharray="2,2"/>
+
+      <rect x="265" y="72" width="7"   height="110" fill="#2a2520"/>
+
+      <!-- N3: x=272 -->
+      <rect x="272" y="72" width="112" height="110" fill="#f5f0e5"/>
+      <rect x="297"  y="64" width="60"  height="8"  fill="#c4d8e4"/>
+      <rect x="336" y="142" width="40"  height="32" fill="#ccdde6"/>
+      <text x="356" y="161" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#4a7080">BATH</text>
+      <rect x="280" y="142" width="44"  height="22" fill="#ddd8c8"/>
+      <text x="302" y="157" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#6b5c3e">CLO</text>
+      <rect x="289" y="78"  width="44"  height="16" fill="#c8b890" rx="2"/>
+      <rect x="279" y="100" width="88"  height="34" fill="#d8cdb8" rx="3"/>
+      <rect x="279" y="128" width="88"  height="6"  fill="#b8a888" rx="2"/>
+      <text x="328" y="187" text-anchor="middle" font-family="'Playfair Display',serif" font-size="9.5" fill="#3d3530">N3</text>
+      <path d="M319,182 A10,10 0 0,0 329,182" fill="none" stroke="#8a6030" stroke-width="1" stroke-dasharray="2,2"/>
+
+      <rect x="384" y="72" width="7"   height="110" fill="#2a2520"/>
+
+      <!-- N4: x=391 -->
+      <rect x="391" y="72" width="112" height="110" fill="#f5f0e5"/>
+      <rect x="416"  y="64" width="60"  height="8"  fill="#c4d8e4"/>
+      <rect x="455" y="142" width="40"  height="32" fill="#ccdde6"/>
+      <text x="475" y="161" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#4a7080">BATH</text>
+      <rect x="399" y="142" width="44"  height="22" fill="#ddd8c8"/>
+      <text x="421" y="157" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#6b5c3e">CLO</text>
+      <rect x="408" y="78"  width="44"  height="16" fill="#c8b890" rx="2"/>
+      <rect x="398" y="100" width="88"  height="34" fill="#d8cdb8" rx="3"/>
+      <rect x="398" y="128" width="88"  height="6"  fill="#b8a888" rx="2"/>
+      <text x="447" y="187" text-anchor="middle" font-family="'Playfair Display',serif" font-size="9.5" fill="#3d3530">N4</text>
+      <path d="M438,182 A10,10 0 0,0 448,182" fill="none" stroke="#8a6030" stroke-width="1" stroke-dasharray="2,2"/>
+
+      <rect x="503" y="72" width="7"   height="110" fill="#2a2520"/>
+
+      <!-- N5: x=510 -->
+      <rect x="510" y="72" width="112" height="110" fill="#f5f0e5"/>
+      <rect x="535"  y="64" width="60"  height="8"  fill="#c4d8e4"/>
+      <rect x="574" y="142" width="40"  height="32" fill="#ccdde6"/>
+      <text x="594" y="161" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#4a7080">BATH</text>
+      <rect x="518" y="142" width="44"  height="22" fill="#ddd8c8"/>
+      <text x="540" y="157" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#6b5c3e">CLO</text>
+      <rect x="527" y="78"  width="44"  height="16" fill="#c8b890" rx="2"/>
+      <rect x="517" y="100" width="88"  height="34" fill="#d8cdb8" rx="3"/>
+      <rect x="517" y="128" width="88"  height="6"  fill="#b8a888" rx="2"/>
+      <text x="566" y="187" text-anchor="middle" font-family="'Playfair Display',serif" font-size="9.5" fill="#3d3530">N5</text>
+      <path d="M557,182 A10,10 0 0,0 567,182" fill="none" stroke="#8a6030" stroke-width="1" stroke-dasharray="2,2"/>
+
+      <rect x="622" y="72" width="7"   height="110" fill="#2a2520"/>
+
+      <!-- N6: x=629 -->
+      <rect x="629" y="72" width="112" height="110" fill="#f5f0e5"/>
+      <rect x="654"  y="64" width="60"  height="8"  fill="#c4d8e4"/>
+      <rect x="693" y="142" width="40"  height="32" fill="#ccdde6"/>
+      <text x="713" y="161" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#4a7080">BATH</text>
+      <rect x="637" y="142" width="44"  height="22" fill="#ddd8c8"/>
+      <text x="659" y="157" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#6b5c3e">CLO</text>
+      <rect x="646" y="78"  width="44"  height="16" fill="#c8b890" rx="2"/>
+      <rect x="636" y="100" width="88"  height="34" fill="#d8cdb8" rx="3"/>
+      <rect x="636" y="128" width="88"  height="6"  fill="#b8a888" rx="2"/>
+      <text x="685" y="187" text-anchor="middle" font-family="'Playfair Display',serif" font-size="9.5" fill="#3d3530">N6</text>
+      <path d="M676,182 A10,10 0 0,0 686,182" fill="none" stroke="#8a6030" stroke-width="1" stroke-dasharray="2,2"/>
+
+      <rect x="741" y="72" width="7"   height="110" fill="#2a2520"/>
+
+      <!-- N7: x=748 -->
+      <rect x="748" y="72" width="112" height="110" fill="#f5f0e5"/>
+      <rect x="773"  y="64" width="60"  height="8"  fill="#c4d8e4"/>
+      <rect x="812" y="142" width="40"  height="32" fill="#ccdde6"/>
+      <text x="832" y="161" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#4a7080">BATH</text>
+      <rect x="756" y="142" width="44"  height="22" fill="#ddd8c8"/>
+      <text x="778" y="157" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#6b5c3e">CLO</text>
+      <rect x="765" y="78"  width="44"  height="16" fill="#c8b890" rx="2"/>
+      <rect x="755" y="100" width="88"  height="34" fill="#d8cdb8" rx="3"/>
+      <rect x="755" y="128" width="88"  height="6"  fill="#b8a888" rx="2"/>
+      <text x="804" y="187" text-anchor="middle" font-family="'Playfair Display',serif" font-size="9.5" fill="#3d3530">N7</text>
+      <path d="M795,182 A10,10 0 0,0 805,182" fill="none" stroke="#8a6030" stroke-width="1" stroke-dasharray="2,2"/>
+
+      <rect x="860" y="72" width="7"   height="110" fill="#2a2520"/>
+
+      <!-- N8 Corner Suite SE: x=867–936 (122px ≈ 22') -->
+      <rect x="867" y="72" width="117" height="110" fill="#ede8d8"/>
+      <rect x="875"  y="64" width="30"  height="8"  fill="#c4d8e4"/>
+      <rect x="920"  y="64" width="30"  height="8"  fill="#c4d8e4"/>
+      <!-- E wall window -->
+      <rect x="936"  y="88" width="8"   height="26" fill="#c4d8e4"/>
+      <rect x="913" y="140" width="46"  height="34" fill="#ccdde6"/>
+      <text x="936" y="160" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#4a7080">BATH</text>
+      <rect x="875" y="140" width="32"  height="34" fill="#ddd8c8"/>
+      <text x="891" y="161" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#6b5c3e">CLO</text>
+      <rect x="880" y="78"  width="38"  height="18" fill="#c8b890" rx="2"/>
+      <rect x="873" y="100" width="82"  height="34" fill="#d8cdb8" rx="3"/>
+      <rect x="873" y="128" width="82"  height="6"  fill="#b8a888" rx="2"/>
+      <text x="917" y="187" text-anchor="middle" font-family="'Playfair Display',serif" font-size="9.5" fill="#3d3530">N8 · CORNER SUITE</text>
+      <path d="M907,182 A10,10 0 0,0 917,182" fill="none" stroke="#8a6030" stroke-width="1" stroke-dasharray="2,2"/>
+
+      <!-- East outer wall -->
+      <rect x="936" y="72" width="8"   height="110" fill="#2a2520"/>
+      <!-- West outer wall -->
+      <rect x="24"  y="72" width="8"   height="110" fill="#2a2520"/>
+
+      <!-- ─── CORRIDOR WALL (N side) ─── -->
+      <rect x="24" y="182" width="920" height="6"  fill="#2a2520"/>
+
+      <!-- ─── CORRIDOR (8' FIXED — IMMOVABLE) ─── -->
+      <rect x="24" y="188" width="920" height="44" fill="#ddd8cc"/>
+      <!-- Fixed label with lock icon -->
+      <text x="480" y="212" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="9" fill="#5a4a2e" letter-spacing="3" font-weight="700">CORRIDOR — 8'-0" FIXED · IMMOVABLE HISTORIC STRUCTURE</text>
+      <!-- Dashed centerline -->
+      <line x1="32" y1="210" x2="940" y2="210" stroke="#a89870" stroke-width="1" stroke-dasharray="6,4" opacity="0.5"/>
+
+      <!-- ─── CORRIDOR WALL (S side) ─── -->
+      <rect x="24" y="232" width="920" height="6"  fill="#2a2520"/>
+
+      <!-- ─── SOUTH ROOMS (depth=148px ≈ 27' FIXED) ─── -->
+      <rect x="24" y="238" width="920" height="148" fill="#f0ebe0"/>
+
+      <!-- S1 Corner Suite SW: x=24–146 -->
+      <rect x="24"  y="238" width="122" height="148" fill="#ede8d8"/>
+      <!-- S windows (bottom wall, y=378–386) -->
+      <rect x="34"  y="378" width="30"  height="8"  fill="#c4d8e4"/>
+      <rect x="80"  y="378" width="30"  height="8"  fill="#c4d8e4"/>
+      <!-- W wall window -->
+      <rect x="24"  y="290" width="8"   height="26" fill="#c4d8e4"/>
+      <!-- Bath NE corner (away from windows) -->
+      <rect x="90"  y="238" width="48"  height="52" fill="#ccdde6"/>
+      <text x="114" y="267" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#4a7080">BATH</text>
+      <!-- Closet NW -->
+      <rect x="32"  y="238" width="42"  height="34" fill="#ddd8c8"/>
+      <text x="53"  y="259" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#6b5c3e">CLO</text>
+      <!-- Desk at S window -->
+      <rect x="36"  y="352" width="40"  height="18" fill="#c8b890" rx="2"/>
+      <!-- Chair at window -->
+      <rect x="38"  y="322" width="36"  height="28" fill="#c4b890" rx="5"/>
+      <!-- Bed: headboard N, foot toward south windows -->
+      <rect x="34"  y="292" width="86"  height="24" fill="#b8a888" rx="2"/><!-- headboard -->
+      <rect x="34"  y="296" width="86"  height="54" fill="#d8cdb8" rx="3"/>
+      <text x="77"  y="390" text-anchor="middle" font-family="'Playfair Display',serif" font-size="9.5" fill="#3d3530">S1 · CORNER SUITE</text>
+      <path d="M64,238 A12,12 0 0,1 76,238" fill="none" stroke="#8a6030" stroke-width="1" stroke-dasharray="2,2"/>
+
+      <rect x="146" y="238" width="7"  height="148" fill="#2a2520"/>
+
+      <!-- S2–S7: six standard south rooms each 112px wide × 148px deep -->
+      <!-- S2: x=153 -->
+      <rect x="153" y="238" width="112" height="148" fill="#f5f0e5"/>
+      <rect x="178"  y="378" width="60"  height="8"  fill="#c4d8e4"/>
+      <rect x="217" y="238" width="40"  height="48" fill="#ccdde6"/>
+      <text x="237" y="266" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#4a7080">BATH</text>
+      <rect x="161" y="238" width="44"  height="28" fill="#ddd8c8"/>
+      <text x="183" y="256" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#6b5c3e">CLO</text>
+      <rect x="170" y="354" width="44"  height="16" fill="#c8b890" rx="2"/>
+      <rect x="164" y="320" width="44"  height="28" fill="#c4b890" rx="5"/>
+      <rect x="160" y="298" width="88"  height="14" fill="#b8a888" rx="2"/>
+      <rect x="160" y="304" width="88"  height="52" fill="#d8cdb8" rx="3"/>
+      <text x="209" y="395" text-anchor="middle" font-family="'Playfair Display',serif" font-size="9.5" fill="#3d3530">S2</text>
+      <path d="M199,238 A10,10 0 0,1 209,238" fill="none" stroke="#8a6030" stroke-width="1" stroke-dasharray="2,2"/>
+
+      <rect x="265" y="238" width="7"  height="148" fill="#2a2520"/>
+
+      <!-- S3: x=272 -->
+      <rect x="272" y="238" width="112" height="148" fill="#f5f0e5"/>
+      <rect x="297"  y="378" width="60"  height="8"  fill="#c4d8e4"/>
+      <rect x="336" y="238" width="40"  height="48" fill="#ccdde6"/>
+      <text x="356" y="266" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#4a7080">BATH</text>
+      <rect x="280" y="238" width="44"  height="28" fill="#ddd8c8"/>
+      <text x="302" y="256" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#6b5c3e">CLO</text>
+      <rect x="289" y="354" width="44"  height="16" fill="#c8b890" rx="2"/>
+      <rect x="283" y="320" width="44"  height="28" fill="#c4b890" rx="5"/>
+      <rect x="279" y="298" width="88"  height="14" fill="#b8a888" rx="2"/>
+      <rect x="279" y="304" width="88"  height="52" fill="#d8cdb8" rx="3"/>
+      <text x="328" y="395" text-anchor="middle" font-family="'Playfair Display',serif" font-size="9.5" fill="#3d3530">S3</text>
+      <path d="M318,238 A10,10 0 0,1 328,238" fill="none" stroke="#8a6030" stroke-width="1" stroke-dasharray="2,2"/>
+
+      <rect x="384" y="238" width="7"  height="148" fill="#2a2520"/>
+
+      <!-- S4: x=391 -->
+      <rect x="391" y="238" width="112" height="148" fill="#f5f0e5"/>
+      <rect x="416"  y="378" width="60"  height="8"  fill="#c4d8e4"/>
+      <rect x="455" y="238" width="40"  height="48" fill="#ccdde6"/>
+      <text x="475" y="266" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#4a7080">BATH</text>
+      <rect x="399" y="238" width="44"  height="28" fill="#ddd8c8"/>
+      <text x="421" y="256" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#6b5c3e">CLO</text>
+      <rect x="408" y="354" width="44"  height="16" fill="#c8b890" rx="2"/>
+      <rect x="402" y="320" width="44"  height="28" fill="#c4b890" rx="5"/>
+      <rect x="398" y="298" width="88"  height="14" fill="#b8a888" rx="2"/>
+      <rect x="398" y="304" width="88"  height="52" fill="#d8cdb8" rx="3"/>
+      <text x="447" y="395" text-anchor="middle" font-family="'Playfair Display',serif" font-size="9.5" fill="#3d3530">S4</text>
+      <path d="M437,238 A10,10 0 0,1 447,238" fill="none" stroke="#8a6030" stroke-width="1" stroke-dasharray="2,2"/>
+
+      <rect x="503" y="238" width="7"  height="148" fill="#2a2520"/>
+
+      <!-- S5: x=510 -->
+      <rect x="510" y="238" width="112" height="148" fill="#f5f0e5"/>
+      <rect x="535"  y="378" width="60"  height="8"  fill="#c4d8e4"/>
+      <rect x="574" y="238" width="40"  height="48" fill="#ccdde6"/>
+      <text x="594" y="266" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#4a7080">BATH</text>
+      <rect x="518" y="238" width="44"  height="28" fill="#ddd8c8"/>
+      <text x="540" y="256" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#6b5c3e">CLO</text>
+      <rect x="527" y="354" width="44"  height="16" fill="#c8b890" rx="2"/>
+      <rect x="521" y="320" width="44"  height="28" fill="#c4b890" rx="5"/>
+      <rect x="517" y="298" width="88"  height="14" fill="#b8a888" rx="2"/>
+      <rect x="517" y="304" width="88"  height="52" fill="#d8cdb8" rx="3"/>
+      <text x="566" y="395" text-anchor="middle" font-family="'Playfair Display',serif" font-size="9.5" fill="#3d3530">S5</text>
+      <path d="M556,238 A10,10 0 0,1 566,238" fill="none" stroke="#8a6030" stroke-width="1" stroke-dasharray="2,2"/>
+
+      <rect x="622" y="238" width="7"  height="148" fill="#2a2520"/>
+
+      <!-- S6: x=629 -->
+      <rect x="629" y="238" width="112" height="148" fill="#f5f0e5"/>
+      <rect x="654"  y="378" width="60"  height="8"  fill="#c4d8e4"/>
+      <rect x="693" y="238" width="40"  height="48" fill="#ccdde6"/>
+      <text x="713" y="266" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#4a7080">BATH</text>
+      <rect x="637" y="238" width="44"  height="28" fill="#ddd8c8"/>
+      <text x="659" y="256" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#6b5c3e">CLO</text>
+      <rect x="646" y="354" width="44"  height="16" fill="#c8b890" rx="2"/>
+      <rect x="640" y="320" width="44"  height="28" fill="#c4b890" rx="5"/>
+      <rect x="636" y="298" width="88"  height="14" fill="#b8a888" rx="2"/>
+      <rect x="636" y="304" width="88"  height="52" fill="#d8cdb8" rx="3"/>
+      <text x="685" y="395" text-anchor="middle" font-family="'Playfair Display',serif" font-size="9.5" fill="#3d3530">S6</text>
+      <path d="M675,238 A10,10 0 0,1 685,238" fill="none" stroke="#8a6030" stroke-width="1" stroke-dasharray="2,2"/>
+
+      <rect x="741" y="238" width="7"  height="148" fill="#2a2520"/>
+
+      <!-- S7: x=748 -->
+      <rect x="748" y="238" width="112" height="148" fill="#f5f0e5"/>
+      <rect x="773"  y="378" width="60"  height="8"  fill="#c4d8e4"/>
+      <rect x="812" y="238" width="40"  height="48" fill="#ccdde6"/>
+      <text x="832" y="266" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#4a7080">BATH</text>
+      <rect x="756" y="238" width="44"  height="28" fill="#ddd8c8"/>
+      <text x="778" y="256" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#6b5c3e">CLO</text>
+      <rect x="765" y="354" width="44"  height="16" fill="#c8b890" rx="2"/>
+      <rect x="759" y="320" width="44"  height="28" fill="#c4b890" rx="5"/>
+      <rect x="755" y="298" width="88"  height="14" fill="#b8a888" rx="2"/>
+      <rect x="755" y="304" width="88"  height="52" fill="#d8cdb8" rx="3"/>
+      <text x="804" y="395" text-anchor="middle" font-family="'Playfair Display',serif" font-size="9.5" fill="#3d3530">S7</text>
+      <path d="M794,238 A10,10 0 0,1 804,238" fill="none" stroke="#8a6030" stroke-width="1" stroke-dasharray="2,2"/>
+
+      <rect x="860" y="238" width="7"  height="148" fill="#2a2520"/>
+
+      <!-- S8 Corner Suite SE: x=867 -->
+      <rect x="867" y="238" width="117" height="148" fill="#ede8d8"/>
+      <rect x="875"  y="378" width="30"  height="8"  fill="#c4d8e4"/>
+      <rect x="920"  y="378" width="30"  height="8"  fill="#c4d8e4"/>
+      <!-- E wall window -->
+      <rect x="936"  y="290" width="8"   height="26" fill="#c4d8e4"/>
+      <!-- Bath NW -->
+      <rect x="867" y="238" width="48"  height="52" fill="#ccdde6"/>
+      <text x="891" y="267" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#4a7080">BATH</text>
+      <!-- Closet NE -->
+      <rect x="921" y="238" width="39"  height="34" fill="#ddd8c8"/>
+      <text x="940" y="259" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="7.5" fill="#6b5c3e">CLO</text>
+      <rect x="876" y="354" width="38"  height="18" fill="#c8b890" rx="2"/>
+      <rect x="920" y="320" width="36"  height="28" fill="#c4b890" rx="5"/>
+      <rect x="875" y="298" width="80"  height="14" fill="#b8a888" rx="2"/>
+      <rect x="875" y="304" width="80"  height="52" fill="#d8cdb8" rx="3"/>
+      <text x="917" y="395" text-anchor="middle" font-family="'Playfair Display',serif" font-size="9.5" fill="#3d3530">S8 · CORNER SUITE</text>
+      <path d="M907,238 A10,10 0 0,1 917,238" fill="none" stroke="#8a6030" stroke-width="1" stroke-dasharray="2,2"/>
+
+      <!-- Outer walls south -->
+      <rect x="936" y="238" width="8"  height="148" fill="#2a2520"/>
+      <rect x="24"  y="238" width="8"  height="148" fill="#2a2520"/>
+
+      <!-- ─── SOUTH EXTERIOR WALL ─── -->
+      <rect x="24" y="386" width="920" height="8"  fill="#2a2520"/>
+
+      <!-- ─── DIMENSION CALLOUTS ─── -->
+      <!-- Building width -->
+      <line x1="24"  y1="410" x2="944" y2="410" stroke="#857a6e" stroke-width="1"/>
+      <line x1="24"  y1="406" x2="24"  y2="414" stroke="#857a6e" stroke-width="1"/>
+      <line x1="944" y1="406" x2="944" y2="414" stroke="#857a6e" stroke-width="1"/>
+      <text x="484" y="407" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="9" fill="#857a6e">165'-9" (EXISTING BUILDING WIDTH)</text>
+
+      <!-- N room depth -->
+      <line x1="948" y1="72"  x2="948" y2="182" stroke="#5a8ba7" stroke-width="1"/>
+      <line x1="944" y1="72"  x2="952" y2="72"  stroke="#5a8ba7" stroke-width="1"/>
+      <line x1="944" y1="182" x2="952" y2="182" stroke="#5a8ba7" stroke-width="1"/>
+      <text x="956" y="132" text-anchor="start" font-family="'Source Sans 3',sans-serif" font-size="8.5" fill="#5a8ba7" transform="rotate(90,956,132)">~20' FIXED</text>
+
+      <!-- Corridor depth -->
+      <line x1="948" y1="188" x2="948" y2="232" stroke="#c0392b" stroke-width="1.5"/>
+      <line x1="944" y1="188" x2="952" y2="188" stroke="#c0392b" stroke-width="1.5"/>
+      <line x1="944" y1="232" x2="952" y2="232" stroke="#c0392b" stroke-width="1.5"/>
+      <text x="956" y="215" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="8.5" fill="#c0392b" transform="rotate(90,956,215)">8' FIXED</text>
+
+      <!-- S room depth -->
+      <line x1="948" y1="238" x2="948" y2="386" stroke="#5a8ba7" stroke-width="1"/>
+      <line x1="944" y1="238" x2="952" y2="238" stroke="#5a8ba7" stroke-width="1"/>
+      <line x1="944" y1="386" x2="952" y2="386" stroke="#5a8ba7" stroke-width="1"/>
+      <text x="956" y="315" text-anchor="start" font-family="'Source Sans 3',sans-serif" font-size="8.5" fill="#5a8ba7" transform="rotate(90,956,315)">~27' FIXED</text>
+
+      <!-- Directions -->
+      <text x="484" y="7"   text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="8" fill="#6b5c3e" font-weight="700" letter-spacing="4">N — ARCADE / CLOISTER COLONNADE</text>
+      <text x="484" y="418" text-anchor="middle" font-family="'Source Sans 3',sans-serif" font-size="8" fill="#6b5c3e" font-weight="700" letter-spacing="4">S — EXTERIOR GROUNDS / GARDENS</text>
+
+    </svg>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-swatch" style="background:#ede8d8;"></div>Corner Suite</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#f5f0e5;"></div>Standard Room</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#ccdde6;"></div>Bathroom</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#ddd8c8;"></div>Closet / Wardrobe</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#c8b890;"></div>Desk</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#c4b890;"></div>Seating</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#d8cdb8;"></div>Bed</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#c4d8e4;"></div>Windows</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#ddd8cc;"></div>Corridor (fixed)</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#c8c0ac;"></div>Cloister Arcade (outdoor)</div>
+    </div>
+  </div>
+
+  <!-- Room program cards -->
+  <div class="section-label">Room Program — Fixed-Corridor Constraints</div>
+  <div class="section-title">Two Room Types, Sized to Fixed Depths</div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-head" style="background:#5a6a5a;">
+        <div class="tag">8 rooms · N1–N8 · shallow side</div>
+        <h3>Cloister Room — North</h3>
+      </div>
+      <div class="card-body">
+        <div class="spec"><span class="spec-label">Fixed depth</span><span class="spec-val">~20'-0" (corridor wall → N exterior)</span></div>
+        <div class="spec"><span class="spec-label">Room width (combined cells)</span><span class="spec-val">~20'-3" standard / ~22' corner</span></div>
+        <div class="spec"><span class="spec-label">Gross sq ft</span><span class="spec-val">~405 sq ft standard</span></div>
+        <div class="spec"><span class="spec-label">Bathroom</span><span class="spec-val">7' × 6' = 42 sq ft</span></div>
+        <div class="spec"><span class="spec-label">Wardrobe</span><span class="spec-val">4' × 5' = 20 sq ft</span></div>
+        <div class="spec"><span class="spec-label">Net living area</span><span class="spec-val">~280 sq ft <span class="badge">✓ Meets 250</span></span></div>
+        <div class="spec"><span class="spec-label">Window wall</span><span class="spec-val">North — arcade colonnade view</span></div>
+        <div class="spec"><span class="spec-label">Bed orientation</span><span class="spec-val">Headboard south, foot toward arcade</span></div>
+        <div class="spec"><span class="spec-label">Cell combining</span><span class="spec-val">~1.5 original cells per room</span></div>
+        <div class="spec"><span class="spec-label">Rate positioning</span><span class="spec-val">Base — "monastery room" character</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head" style="background:var(--warm);">
+        <div class="tag">8 rooms · S1–S8 · deep side</div>
+        <h3>Garden Room — South</h3>
+      </div>
+      <div class="card-body">
+        <div class="spec"><span class="spec-label">Fixed depth</span><span class="spec-val">~27'-0" (corridor wall → S exterior)</span></div>
+        <div class="spec"><span class="spec-label">Room width (combined cells)</span><span class="spec-val">~20'-3" standard / ~22' corner</span></div>
+        <div class="spec"><span class="spec-label">Gross sq ft</span><span class="spec-val">~547 sq ft standard</span></div>
+        <div class="spec"><span class="spec-label">Bathroom</span><span class="spec-val">7' × 9' = 63 sq ft</span></div>
+        <div class="spec"><span class="spec-label">Wardrobe</span><span class="spec-val">4' × 5' = 20 sq ft</span></div>
+        <div class="spec"><span class="spec-label">Net living area</span><span class="spec-val">~380 sq ft <span class="badge">✓ 4-Star</span></span></div>
+        <div class="spec"><span class="spec-label">Window wall</span><span class="spec-val">South — exterior grounds / gardens</span></div>
+        <div class="spec"><span class="spec-label">Bed orientation</span><span class="spec-val">Headboard north, seating at south windows</span></div>
+        <div class="spec"><span class="spec-label">Cell combining</span><span class="spec-val">~1.5 original cells per room</span></div>
+        <div class="spec"><span class="spec-label">Rate positioning</span><span class="spec-val">Premium — light, views, more space</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key constraints -->
+  <div class="section-label">Design + Structural Notes</div>
+  <div class="section-title">Fixed Constraints vs. Flexible Elements</div>
+
+  <div class="notes-grid">
+    <div class="note-block">
+      <h4>🔒 Fixed — Cannot Change</h4>
+      <ul>
+        <li>Corridor: position, width (~8'), both face walls — all immovable</li>
+        <li>North exterior wall and window openings</li>
+        <li>South exterior wall and window openings</li>
+        <li>East and west end walls</li>
+        <li>All room depths: both sides fixed by corridor position</li>
+        <li>Floor-to-floor height (important for MEP routing)</li>
+      </ul>
+    </div>
+    <div class="note-block">
+      <h4>✏️ Flexible — Can Be Modified</h4>
+      <ul>
+        <li>Interior partition walls between original cells — can be removed or repositioned</li>
+        <li>New bathroom locations (anywhere interior, with new plumbing rough-in)</li>
+        <li>Closet / wardrobe sizing and placement within room envelope</li>
+        <li>New corridor doors (new openings through corridor face walls — structural review required)</li>
+        <li>Window treatments, sills, glazing system (within historic opening)</li>
+      </ul>
+    </div>
+    <div class="note-block">
+      <h4>📐 Cell-Combining Math</h4>
+      <ul>
+        <li>Original cells: ~12' wide (11'-10") and ~14' wide (14'-2")</li>
+        <li>North rooms at ~20' deep: need ~14' wide minimum to hit 250 sq ft → wider cells can stand alone; narrow 12' cells must combine</li>
+        <li>South rooms at ~27' deep: even a 10' cell = 270 sq ft → most can stand alone, but combining gives premium sizing</li>
+        <li>Recommended: standardize all rooms at ~20' wide by combining 1–2 original cells per room</li>
+        <li>This yields 8 rooms per side = 16 total, consistent room sizing, simpler FF&amp;E procurement</li>
+      </ul>
+    </div>
+    <div class="note-block">
+      <h4>🚿 Bathroom Placement</h4>
+      <ul>
+        <li>Bathrooms should stack vertically between floors — locate on same wall each level to share a plumbing chase</li>
+        <li>Keep baths away from window walls — don't sacrifice the view with a bathroom</li>
+        <li>North rooms: bath on corridor side or east/west partition (south-inner corner)</li>
+        <li>South rooms: bath on corridor side or east/west partition (north-inner corner)</li>
+        <li>Wet walls back-to-back between adjacent rooms reduces pipe runs</li>
+      </ul>
+    </div>
+    <div class="note-block">
+      <h4>🏛️ Cloister Arcade — Outdoor Colonnade</h4>
+      <ul>
+        <li>The cloister arcade is an <strong>outdoor covered walkway</strong> attached to the north face — not an enclosed interior space</li>
+        <li>North room windows look through the arcade columns to the grounds beyond</li>
+        <li>Opportunity: restore the arcade as a signature guest amenity — morning coffee, reading, contemplative walk</li>
+        <li>Plant climbing vines on columns, stone pavers, simple bench seating</li>
+        <li>Can be glassed in seasonally (retractable system) without altering the structure</li>
+      </ul>
+    </div>
+    <div class="note-block">
+      <h4>📋 Next Steps</h4>
+      <ul>
+        <li>Commission measured as-built drawings — confirm exact room depths and cell widths</li>
+        <li>Structural assessment: which interior partition walls are load-bearing vs. infill</li>
+        <li>Engage SHPO — confirm historic tax credit eligibility before any design work</li>
+        <li>MEP preliminary: plumbing stack locations, HVAC strategy (individual fan coils recommended)</li>
+        <li>Confirm total number of existing cells per floor — affects final room count and width math</li>
+        <li>ADA compliance plan: minimum 2 accessible rooms per level, elevator if multi-story</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer">
+    Preliminary concept only — not for construction &nbsp;·&nbsp; Rev 3 — Fixed corridor, accurate depths, window-correct
+    &nbsp;·&nbsp; Generated by <strong>MC</strong> &nbsp;·&nbsp; July 23, 2026
+  </div>
+
+</div>
+</body>
+</html>

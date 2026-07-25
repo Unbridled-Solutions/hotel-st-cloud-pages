@@ -1,0 +1,2948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fremont Makers — Quote Builder v0719</title>
+<!-- FM-BUILD-v20260719-bulkfix -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Pinyon+Script&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0e1117;
+    --surface: #161b25;
+    --surface2: #1e2535;
+    --border: #2a3347;
+    --accent: #e8a135;
+    --accent2: #c47f1a;
+    --green: #3de8a0;
+    --red: #e85050;
+    --blue: #5a8ba7;
+    --text: #e8eaf0;
+    --muted: #7a8299;
+    --input-bg: #111621;
+    --locked: #0d1220;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap;
+  }
+  .logo { display: flex; align-items: center; gap: 16px; }
+  .logo-mark {
+    width: 44px; height: 52px; background: transparent;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 0;
+  }
+  .logo-mark .fm-letter {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700; font-size: 22px; color: var(--text);
+    line-height: 1; letter-spacing: .02em;
+  }
+  .logo-mark .fm-rule {
+    width: 36px; height: 1.5px; background: var(--text); margin: 3px 0;
+  }
+  .logo-text { display: flex; flex-direction: column; gap: 0; }
+  .logo-text h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 17px; font-weight: 700; color: var(--text);
+    letter-spacing: .08em; text-transform: uppercase; line-height: 1;
+  }
+  .logo-text .tagline {
+    font-family: 'Pinyon Script', cursive;
+    font-size: 14px; color: var(--muted); line-height: 1.3; margin-top: 2px;
+  }
+  .logo-text .subtitle {
+    font-size: 10px; color: var(--muted); letter-spacing: .06em;
+    text-transform: uppercase; margin-top: 1px;
+  }
+
+  /* ── TABS ── */
+  .tabs { display: flex; gap: 8px; }
+  .tab-btn {
+    padding: 8px 18px; border-radius: 6px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); font-size: 13px; cursor: pointer;
+    transition: all .15s;
+  }
+  .tab-btn.active { background: var(--accent); color: #0e1117; border-color: var(--accent); font-weight: 700; }
+  .tab-btn:not(.active):hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── STATUS BAR ── */
+  .status-bar {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 32px;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  .status-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .status-pill {
+    padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;
+    letter-spacing: .04em; text-transform: uppercase;
+  }
+  .pill-proposed { background: #1a2a3a; color: var(--blue); border: 1px solid var(--blue); }
+  .pill-approved  { background: #1a2d1a; color: var(--green); border: 1px solid var(--green); }
+  .pill-contract  { background: #2d1a1a; color: var(--accent); border: 1px solid var(--accent); }
+
+  .status-btns { display: flex; gap: 8px; margin-left: auto; }
+  .status-btn {
+    padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); font-size: 12px; cursor: pointer;
+    transition: all .15s;
+  }
+  .status-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .status-btn.btn-active { background: var(--accent); color: #0e1117; border-color: var(--accent); font-weight: 700; }
+  .status-btn.btn-approved.btn-active { background: var(--green); color: #0e1117; border-color: var(--green); }
+  .status-btn.btn-contract.btn-active { background: var(--accent); }
+
+  /* ── JOB INFO ── */
+  .job-info {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 32px;
+    display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end;
+  }
+  .job-field { display: flex; flex-direction: column; gap: 4px; }
+  .job-field label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .job-field input, .job-field select {
+    background: var(--input-bg); border: 1px solid var(--border);
+    color: var(--text); border-radius: 5px; padding: 6px 10px; font-size: 13px;
+    min-width: 120px;
+  }
+  .job-field input:focus, .job-field select:focus { outline: none; border-color: var(--accent); }
+  .job-code-badge {
+    padding: 6px 14px; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; font-size: 13px; font-family: monospace; color: var(--accent);
+    font-weight: 700; letter-spacing: .06em;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .main { padding: 24px 32px; max-width: 1100px; }
+  .section { margin-bottom: 28px; }
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-size: 13px; font-weight: 700; color: var(--accent);
+    text-transform: uppercase; letter-spacing: .08em;
+  }
+
+  /* ── TABLE ── */
+  .quote-table { width: 100%; border-collapse: separate; border-spacing: 0 3px; }
+  .quote-table thead th {
+    text-align: left; font-size: 10px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .07em;
+    padding: 4px 8px 8px;
+  }
+  .quote-table thead th:last-child { text-align: right; }
+  .quote-table tbody tr { background: var(--surface); }
+  .quote-table tbody tr:hover { background: var(--surface2); }
+  .quote-table tbody td { padding: 5px 4px; }
+  .quote-table tbody td:first-child { padding-left: 8px; border-radius: 6px 0 0 6px; }
+  .quote-table tbody td:last-child  { padding-right: 8px; border-radius: 0 6px 6px 0; text-align: right; }
+
+  .tbl-input {
+    background: var(--input-bg); border: 1px solid var(--border);
+    color: var(--text); border-radius: 4px; padding: 5px 8px; font-size: 13px;
+    width: 100%;
+  }
+  .tbl-input:focus { outline: none; border-color: var(--accent); }
+  .tbl-input.locked { background: var(--locked); color: var(--muted); pointer-events: none; }
+  .tbl-input.serial { font-family: monospace; font-size: 11px; }
+  .qty-cell { display: flex; align-items: center; gap: 4px; }
+  .qty-btn {
+    width: 22px; height: 22px; border-radius: 4px; border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text); cursor: pointer;
+    font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+    line-height: 1; transition: border-color .1s;
+  }
+  .qty-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .qty-display {
+    min-width: 28px; text-align: center; font-size: 13px; font-weight: 600;
+    color: var(--text);
+  }
+  .markup-select {
+    background: var(--input-bg); border: 1px solid var(--border);
+    color: var(--text); border-radius: 4px; padding: 5px 4px; font-size: 12px;
+    width: 100%;
+  }
+  .markup-select:focus { outline: none; border-color: var(--accent); }
+  .line-total { font-size: 13px; font-weight: 600; color: var(--text); min-width: 80px; }
+  .del-btn {
+    background: transparent; border: none; color: var(--muted); cursor: pointer;
+    font-size: 16px; padding: 2px 6px; border-radius: 4px; transition: color .1s;
+  }
+  .del-btn:hover { color: var(--red); }
+  .add-line-btn {
+    margin-top: 8px; padding: 7px 16px; border-radius: 6px;
+    border: 1px dashed var(--border); background: transparent;
+    color: var(--muted); font-size: 12px; cursor: pointer; transition: all .15s;
+  }
+  .add-line-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── LABOR SECTION ── */
+  .labor-table { width: 100%; border-collapse: separate; border-spacing: 0 3px; }
+  .labor-table thead th {
+    text-align: left; font-size: 10px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .07em; padding: 4px 8px 8px;
+  }
+  .labor-table thead th:last-child { text-align: right; }
+  .labor-table tbody tr { background: var(--surface); }
+  .labor-table tbody tr:hover { background: var(--surface2); }
+  .labor-table tbody td { padding: 5px 4px; }
+  .labor-table tbody td:first-child { padding-left: 8px; border-radius: 6px 0 0 6px; }
+  .labor-table tbody td:last-child  { padding-right: 8px; border-radius: 0 6px 6px 0; text-align: right; }
+
+  /* ── GNA + TOTALS ── */
+  .totals-block {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 20px 24px; max-width: 420px; margin-left: auto;
+  }
+  .totals-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 6px 0; border-bottom: 1px solid var(--border);
+  }
+  .totals-row:last-child { border-bottom: none; }
+  .totals-row.grand { padding-top: 12px; border-top: 2px solid var(--accent); border-bottom: none; margin-top: 4px; }
+  .totals-label { font-size: 13px; color: var(--muted); }
+  .totals-value { font-size: 13px; font-weight: 600; color: var(--text); }
+  .totals-value.big { font-size: 18px; color: var(--accent); }
+  .totals-row.grand .totals-label { color: var(--text); font-weight: 700; font-size: 14px; }
+  .gna-row { display: flex; align-items: center; gap: 10px; }
+  .gna-select {
+    background: var(--input-bg); border: 1px solid var(--border);
+    color: var(--text); border-radius: 4px; padding: 4px 8px; font-size: 12px;
+    min-width: 70px;
+  }
+  .tax-input {
+    background: var(--input-bg); border: 1px solid var(--border);
+    color: var(--text); border-radius: 4px; padding: 4px 8px; font-size: 12px;
+    width: 65px; text-align: right;
+  }
+  .tax-input:focus, .gna-select:focus { outline: none; border-color: var(--accent); }
+
+  /* ── INVOICE VIEW ── */
+  #invoice-view {
+    display: none;
+    background: #fff; color: #222; max-width: 800px; padding: 48px;
+    border-radius: 12px; margin: 24px auto; font-family: Georgia, serif;
+  }
+  .inv-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; }
+  .inv-brand { display: flex; align-items: center; gap: 14px; }
+  .inv-brand-mark {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 0; border: 1.5px solid #222; border-radius: 4px; padding: 6px 10px;
+  }
+  .inv-brand-mark .fm-l {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700; font-size: 18px; color: #1a1a1a; line-height: 1;
+  }
+  .inv-brand-mark .fm-r {
+    width: 28px; height: 1.5px; background: #1a1a1a; margin: 2px 0;
+  }
+  .inv-brand-info h2 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 20px; font-weight: 700; color: #1a1a1a;
+    letter-spacing: .06em; text-transform: uppercase; line-height: 1;
+  }
+  .inv-brand-info .inv-tagline {
+    font-family: 'Pinyon Script', cursive;
+    font-size: 15px; color: #666; line-height: 1.3; margin-top: 1px;
+  }
+  .inv-brand-info p { font-size: 11px; color: #888; margin-top: 3px; }
+  .inv-meta { text-align: right; font-size: 13px; color: #555; }
+  .inv-meta strong { display: block; font-size: 20px; color: var(--accent); margin-bottom: 4px; font-family: 'Segoe UI', sans-serif; }
+  .inv-to { margin-bottom: 24px; font-size: 13px; }
+  .inv-to strong { font-weight: 700; color: #111; display: block; margin-bottom: 2px; }
+  .inv-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 13px; }
+  .inv-table th { border-bottom: 2px solid #ddd; padding: 8px 6px; text-align: left; color: #555; font-size: 11px; text-transform: uppercase; }
+  .inv-table td { padding: 8px 6px; border-bottom: 1px solid #eee; }
+  .inv-table td:last-child, .inv-table th:last-child { text-align: right; }
+  .inv-totals { max-width: 280px; margin-left: auto; font-size: 13px; }
+  .inv-totals-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee; }
+  .inv-totals-row.grand { font-weight: 700; font-size: 16px; border-top: 2px solid #222; border-bottom: none; padding-top: 10px; }
+  .inv-footer { margin-top: 32px; font-size: 11px; color: #aaa; text-align: center; border-top: 1px solid #eee; padding-top: 16px; }
+  .print-btn {
+    display: block; margin: 0 auto 16px; padding: 10px 28px;
+    background: var(--accent); color: #0e1117; border: none; border-radius: 6px;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+  }
+
+  /* ── P&L TAB ── */
+  .pnl-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 24px; max-width: 620px; margin: 0 auto;
+  }
+  .pnl-title { font-size: 16px; font-weight: 700; color: var(--accent); margin-bottom: 20px; }
+  .pnl-section-label {
+    font-size: 10px; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--muted); margin: 14px 0 4px;
+  }
+  .pnl-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); align-items: center; }
+  .pnl-row:last-of-type { border-bottom: none; }
+  .pnl-row label { font-size: 13px; color: var(--text); }
+  .pnl-row .pnl-val { font-size: 13px; font-weight: 600; color: var(--text); }
+  .pnl-row .pnl-input {
+    background: var(--input-bg); border: 1px solid var(--border);
+    color: var(--text); border-radius: 4px; padding: 4px 8px; font-size: 13px;
+    width: 110px; text-align: right;
+  }
+  .pnl-row .pnl-input:focus { outline: none; border-color: var(--accent); }
+  .pnl-divider { height: 1px; background: var(--accent); margin: 8px 0; opacity: .4; }
+  .pnl-subtotal { font-weight: 700; color: var(--accent) !important; }
+  .pnl-positive { color: var(--green) !important; }
+  .pnl-negative { color: var(--red) !important; }
+  .pnl-note { font-size: 11px; color: var(--muted); margin-top: 16px; text-align: center; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.7); z-index: 100;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 28px 32px; max-width: 380px; width: 90%;
+    text-align: center;
+  }
+  .modal h3 { font-size: 16px; margin-bottom: 8px; }
+  .modal p  { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+  .modal input {
+    background: var(--input-bg); border: 1px solid var(--border);
+    color: var(--text); border-radius: 5px; padding: 8px 14px;
+    font-size: 16px; text-align: center; width: 100%; letter-spacing: .2em; margin-bottom: 14px;
+  }
+  .modal input:focus { outline: none; border-color: var(--accent); }
+  .modal-btns { display: flex; gap: 10px; justify-content: center; }
+  .modal-btn {
+    padding: 8px 22px; border-radius: 6px; border: 1px solid var(--border);
+    background: transparent; color: var(--text); cursor: pointer; font-size: 13px;
+    transition: all .15s;
+  }
+  .modal-btn.confirm { background: var(--accent); color: #0e1117; border-color: var(--accent); font-weight: 700; }
+  .modal-btn:hover:not(.confirm) { border-color: var(--accent); color: var(--accent); }
+  .modal-error { color: var(--red); font-size: 12px; margin-top: 6px; min-height: 18px; }
+
+  @media (max-width: 700px) {
+    .header, .status-bar, .job-info, .main { padding-left: 14px; padding-right: 14px; }
+    .header { flex-direction: column; align-items: flex-start; }
+  }
+  @media print {
+    body > *:not(#invoice-view) { display: none !important; }
+    #invoice-view { display: block !important; background: #fff; padding: 0; }
+    .print-btn { display: none; }
+  }
+
+  @media print {
+    body > *:not(#print-quote-view) { display: none !important; }
+    #print-quote-view { display: block !important; }
+    #pq-btns { display: none !important; }
+    .screen-header, .status-bar, .job-info { display: none !important; }
+    @page { margin: 0.6in; size: portrait; }
+  }
+
+.bs-input:disabled{background:transparent!important;border-color:transparent!important;color:var(--text)!important;cursor:default;pointer-events:none;}
+.bs-input:not(:disabled){background:var(--surface2);border:1px solid var(--border);}
+
+.cpnl-locked .pnl-input{background:transparent!important;border-color:transparent!important;color:var(--text)!important;cursor:default;pointer-events:none;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">
+    <div class="logo-mark">
+      <span class="fm-letter">F</span>
+      <div class="fm-rule"></div>
+      <span class="fm-letter">M</span>
+    </div>
+    <div class="logo-text">
+      <h1>Fremont Makers</h1>
+      <div class="tagline">making freedom</div>
+      <div class="subtitle">Cabinet Quote Builder</div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn" onclick="switchTab('dashboard')" data-tab="dashboard">📁 All Quotes</button>
+    <button class="tab-btn active" onclick="switchTab('quote')" data-tab="quote">📋 Quote</button>
+    <button class="tab-btn" onclick="switchTab('invoice')" data-tab="invoice">🧾 Invoice</button>
+    <button class="tab-btn" onclick="switchTab('invoice'); setTimeout(()=>window.print(),300)" data-tab="printquote">🖨️ Print Invoice</button>
+    <button class="tab-btn" onclick="switchTab('reconcile')" data-tab="reconcile">🔍 Reconcile</button>
+    <button class="tab-btn" onclick="switchTab('companypnl')" data-tab="companypnl">📈 Company P&L</button>
+    <button class="tab-btn" onclick="switchTab('balancesheet')" data-tab="balancesheet">📋 Balance Sheet</button>
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <div style="display:flex; gap:8px; align-items:center;">
+    <button class="status-btn" style="border-color:var(--accent);color:var(--accent);font-size:0.8rem;" onclick="newQuote()">+ New Quote</button>
+    <button class="status-btn" id="btn-save" style="font-size:0.8rem;" onclick="saveQuoteManual()">💾 Save</button>
+    <button class="status-btn" style="font-size:0.8rem;" onclick="switchTab('dashboard')">📁 All Quotes</button>
+    <button class="status-btn" style="font-size:0.8rem;border-color:#a78bfa;color:#a78bfa;" onclick="showImportModal()">📥 Import Supplier Quote</button>
+    <button class="status-btn" style="font-size:0.8rem;border-color:#3de8c8;color:#3de8c8;font-weight:700;" onclick="fmForceSync()" title="Clear local cache and reload all quotes from cloud">☁️ Sync from Cloud</button>
+    <input type="file" id="restore-file-input" accept=".json" style="display:none" onchange="importBackupFile(event)" />
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0719</span>
+  </div>
+  <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
+    <span class="status-label">Status:</span>
+    <span class="status-pill pill-proposed" id="status-pill">PROPOSED</span>
+    <div class="status-btns">
+      <button class="status-btn btn-active" id="btn-proposed" onclick="setStatus('proposed')">Proposed</button>
+      <button class="status-btn btn-approved" id="btn-approved" onclick="setStatus('approved')">Approved</button>
+      <button class="status-btn btn-contract" id="btn-contract" onclick="requestContract()">Contract &#x1F512;</button>
+    </div>
+  </div>
+</div>
+
+<!-- JOB INFO -->
+<div class="job-info">
+  <div class="job-field">
+    <label>Job Code</label>
+    <div class="job-code-badge" id="job-code-display">—</div>
+  </div>
+  <div class="job-field">
+    <label>Customer / Builder</label>
+    <input type="text" id="customer-name" placeholder="e.g. Sunrise Builders" oninput="recalc(); saveLocal()" />
+  </div>
+  <div class="job-field">
+    <label>Project Name</label>
+    <input type="text" id="project-name" placeholder="e.g. Lot 14 Kitchen" oninput="saveLocal()" />
+  </div>
+  <div class="job-field">
+    <label>Quote Date</label>
+    <input type="date" id="quote-date" oninput="saveLocal()" />
+  </div>
+  <div class="job-field">
+    <label>Install Address</label>
+    <input type="text" id="install-address" placeholder="123 Main St, Canon City CO" style="min-width:220px" oninput="saveLocal()" />
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+
+  <!-- ── DASHBOARD VIEW ── -->
+  <div id="dashboard-view" style="display: none;">
+    <div class="section">
+      <div class="section-header" style="justify-content: space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+        <input type="text" id="dashboard-search" placeholder="🔍  Search customer, project, date…"
+          oninput="renderDashboard(); updateSearchSuggestions(this.value)"
+          list="dashboard-search-list"
+          autocomplete="off"
+          style="flex:1;min-width:200px;max-width:420px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 12px;color:var(--text);font-size:13px;outline:none;" />
+        <datalist id="dashboard-search-list"></datalist>
+        <div style="display:flex;gap:8px;flex-shrink:0;">
+          <button class="add-line-btn" style="margin-top:0; border-style:solid; border-color:#3de8c8; color:#3de8c8;" onclick="seedAllModelQuotes()">🏗️ Generate All Model Quotes</button>
+          <button class="add-line-btn" style="margin-top:0; border-style: solid;" onclick="newQuote()">+ New Quote</button>
+          <button class="add-line-btn" style="margin-top:0; border-style:solid; border-color:#3de8c8; color:#3de8c8; font-weight:700;" onclick="fmForceSync()" id="dash-sync-btn">☁️ Sync from Cloud</button>
+        </div>
+      </div>
+
+      <div class="totals-block" style="max-width: none; margin-left: 0; margin-bottom: 20px; padding: 15px 20px; display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 15px;">
+        <div>
+          <span class="status-label">Quoted:</span>
+          <span class="totals-value big" id="dashboard-total-quoted">$0.00</span>
+        </div>
+        <div>
+          <span class="status-label">Approved:</span>
+          <span class="totals-value big pnl-positive" id="dashboard-total-approved">$0.00</span>
+        </div>
+        <div>
+          <span class="status-label">Contracted:</span>
+          <span class="totals-value big" style="color: var(--accent);" id="dashboard-total-contracted">$0.00</span>
+        </div>
+        <div>
+          <span class="status-label">Total Active:</span>
+          <span class="totals-value big" id="dashboard-total-active">$0.00</span>
+        </div>
+      </div>
+
+      <table class="quote-table">
+        <thead>
+          <tr>
+            <th style="width:12%">Job Code</th>
+            <th style="width:20%">Customer</th>
+            <th style="width:25%">Project</th>
+            <th style="width:12%">Date</th>
+            <th style="width:10%">Status</th>
+            <th style="width:10%; text-align:right">Total</th>
+            <th style="width:11%">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="quotes-table-body">
+          <tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 20px;">No quotes yet. Click "+ New Quote" to start.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── QUOTE TAB ── -->
+  <div id="quote-view">
+
+    <!-- CABINETS SECTION -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">📦 Cabinet Line Items</span>
+      </div>
+      <table class="quote-table">
+        <datalist id="markup-presets">
+          <option value="25"><option value="30"><option value="35"><option value="40">
+          <option value="45"><option value="50"><option value="55"><option value="60">
+          <option value="65"><option value="70"><option value="75"><option value="80">
+          <option value="85"><option value="90"><option value="95"><option value="100">
+        </datalist>
+        <thead>
+          <tr>
+            <th style="width:26%">Cabinet Description</th>
+            <th style="width:13%">Serial / Model #</th>
+            <th style="width:7%">Qty</th>
+            <th style="width:10%">Unit Cost</th>
+            <th style="width:11%; text-align:right; color:var(--muted)">Net Total</th>
+            <th style="width:9%; text-align:center">Markup</th>
+            <th style="width:11%; text-align:right">Customer Total</th>
+            <th style="width:4%"></th>
+          </tr>
+        </thead>
+        <tbody id="cabinet-tbody"></tbody>
+        <tfoot>
+          <tr style="border-top:2px solid var(--accent); background:var(--surface2);">
+            <td colspan="4" style="padding:6px 8px; font-size:12px; color:var(--muted); font-weight:600;">COLUMN TOTALS</td>
+            <td style="text-align:right; padding:6px 4px; font-weight:700; color:var(--muted); font-size:13px;" id="col-net-total">$0.00</td>
+            <td style="text-align:center; padding:6px 4px;"></td>
+            <td style="text-align:right; padding:6px 8px; font-weight:700; color:var(--accent); font-size:13px;" id="col-customer-total">$0.00</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+      <button class="add-line-btn" onclick="addCabinetRow()">+ Add Cabinet Line</button>
+    </div>
+
+    <!-- LABOR SECTION -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">👷 Labor</span>
+        <button class="add-line-btn" style="margin-top:0" onclick="addLaborRow()">+ Add Worker</button>
+      </div>
+      <table class="labor-table">
+        <thead>
+          <tr>
+            <th style="width:28%">Name / Role</th>
+            <th style="width:14%">Hourly Rate</th>
+            <th style="width:14%">Hours</th>
+            <th style="width:14%; text-align:right">Labor Total</th>
+            <th style="width:4%"></th>
+          </tr>
+        </thead>
+        <tbody id="labor-tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- TOTALS -->
+    <div class="section">
+      <div class="totals-block">
+        <div class="totals-row">
+          <span class="totals-label">Cabinets Subtotal</span>
+          <span class="totals-value" id="t-cabinets">$0.00</span>
+        </div>
+        <div class="totals-row" id="bulk-discount-row">
+          <span class="totals-label" style="display:flex;align-items:center;gap:8px;">
+            Mfr. Bulk Order Discount
+            <input type="number" class="tax-input" id="bulk-discount-pct" step="0.5" min="0" max="100" oninput="recalc(); saveLocal()" />%
+          </span>
+          <span class="totals-value" style="color:#e05c5c;" id="t-bulk-discount">−$0.00</span>
+        </div>
+        <div class="totals-row">
+          <span class="totals-label">Labor Subtotal</span>
+          <span class="totals-value" id="t-labor">$0.00</span>
+        </div>
+        <div class="totals-row">
+          <span class="totals-label" style="display:flex;align-items:center;gap:8px">
+            G&amp;A Fee
+            <select class="gna-select" id="gna-pct" onchange="recalc(); saveLocal()">
+            </select>
+          </span>
+          <span class="totals-value" id="t-gna">$0.00</span>
+        </div>
+        <div class="totals-row">
+          <span class="totals-label" style="display:flex;align-items:center;gap:8px">
+            Tax
+            <input type="number" class="tax-input" id="tax-pct" value="8.7" step="0.1" min="0" oninput="recalc(); saveLocal();" />%
+          </span>
+          <span class="totals-value" id="t-tax">$0.00</span>
+        </div>
+        <div class="totals-row grand">
+          <span class="totals-label">Total Quote</span>
+          <span class="totals-value big" id="t-grand">$0.00</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /quote-view -->
+
+
+<div id="print-quote-view" style="display:none">
+  <div id="pq-content" style="background:#fff;color:#111;max-width:780px;margin:0 auto;padding:40px 48px;font-family:'Segoe UI',system-ui,sans-serif;border:1px solid #ddd;border-radius:8px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:16px;border-bottom:2px solid #111">
+      <div>
+        <div style="font-size:22px;font-weight:900;color:#111">Fremont Makers</div>
+        <div style="font-size:11px;color:#888;margin-top:2px;text-transform:uppercase;letter-spacing:.06em">Cabinet Quote</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:13px;font-weight:700" id="pq-jobcode">-</div>
+        <div style="font-size:11px;color:#666" id="pq-date">-</div>
+        <div style="display:inline-block;margin-top:6px;padding:3px 10px;border-radius:3px;font-size:10px;font-weight:800;text-transform:uppercase;border:1px solid #ccc;color:#888" id="pq-status-badge">PROPOSED</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:32px;margin-bottom:24px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px">Customer</div>
+        <div style="font-size:14px;font-weight:700" id="pq-customer">-</div>
+        <div style="font-size:12px;color:#555" id="pq-project"></div>
+      </div>
+      <div>
+        <div style="font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px">Install Address</div>
+        <div style="font-size:12px;color:#555" id="pq-address">-</div>
+      </div>
+    </div>
+    <div style="font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#aaa;margin-bottom:8px">Cabinet Line Items</div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:20px">
+      <thead><tr style="border-bottom:2px solid #111">
+        <th style="text-align:left;padding:6px 4px;font-size:10px;color:#555;font-weight:700;text-transform:uppercase">Description</th>
+        <th style="text-align:left;padding:6px 4px;font-size:10px;color:#555;font-weight:700;text-transform:uppercase">Serial/Model</th>
+        <th style="text-align:center;padding:6px 4px;font-size:10px;color:#555;font-weight:700;text-transform:uppercase">Qty</th>
+        <th style="text-align:right;padding:6px 4px;font-size:10px;color:#555;font-weight:700;text-transform:uppercase">Unit Price</th>
+        <th style="text-align:right;padding:6px 4px;font-size:10px;color:#555;font-weight:700;text-transform:uppercase">Total</th>
+      </tr></thead>
+      <tbody id="pq-cab-rows"></tbody>
+    </table>
+    <div style="font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#aaa;margin-bottom:8px">Labor</div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:24px">
+      <thead><tr style="border-bottom:2px solid #111">
+        <th style="text-align:left;padding:6px 4px;font-size:10px;color:#555;font-weight:700;text-transform:uppercase">Name / Role</th>
+        <th style="text-align:right;padding:6px 4px;font-size:10px;color:#555;font-weight:700;text-transform:uppercase">Rate</th>
+        <th style="text-align:right;padding:6px 4px;font-size:10px;color:#555;font-weight:700;text-transform:uppercase">Hours</th>
+        <th style="text-align:right;padding:6px 4px;font-size:10px;color:#555;font-weight:700;text-transform:uppercase">Total</th>
+      </tr></thead>
+      <tbody id="pq-labor-rows"></tbody>
+    </table>
+    <div style="max-width:320px;margin-left:auto">
+      <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eee;font-size:12px"><span style="color:#555">Cabinets</span><span id="pq-t-cabinets">$0.00</span></div>
+      <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eee;font-size:12px" id="pq-bulk-row"><span style="color:#e05c5c" id="pq-bulk-label">Mfr. Bulk Discount</span><span style="color:#e05c5c" id="pq-t-bulk-discount">−$0.00</span></div>
+      <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eee;font-size:12px"><span style="color:#555">Assembly Labor</span><span id="pq-t-labor">$0.00</span></div>
+      <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eee;font-size:12px"><span style="color:#555" id="pq-gna-label">G&amp;A Fee</span><span id="pq-t-gna">$0.00</span></div>
+      <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:2px solid #111;font-size:12px"><span style="color:#555" id="pq-tax-label">Tax</span><span id="pq-t-tax">$0.00</span></div>
+      <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:16px;font-weight:800"><span>TOTAL</span><span id="pq-t-grand">$0.00</span></div>
+    </div>
+    <div style="margin-top:32px;padding-top:16px;border-top:1px solid #eee;font-size:10px;color:#aaa;display:flex;justify-content:space-between">
+      <span>Fremont Makers &middot; Flat-pack cabinets, assembled and delivered.</span>
+      <span id="pq-footer-date">-</span>
+    </div>
+  </div>
+  <div style="max-width:780px;margin:12px auto;display:flex;gap:10px" id="pq-btns">
+    <button onclick="window.print()" style="padding:10px 24px;background:#e8a135;color:#0e1117;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">Print / Save PDF</button>
+    <button onclick="switchTab('quote')" style="padding:10px 18px;background:transparent;border:1px solid #444;color:#aaa;border-radius:6px;font-size:13px;cursor:pointer">Back to Quote</button>
+  </div>
+</div>
+
+  <!-- ── INVOICE VIEW ── -->
+  <div id="invoice-view">
+    <button class="print-btn" onclick="window.print()">🖨️ Print / Save PDF</button>
+    <div class="inv-header">
+      <div class="inv-brand">
+        <div class="inv-brand-mark">
+          <span class="fm-l">F</span>
+          <div class="fm-r"></div>
+          <span class="fm-l">M</span>
+        </div>
+        <div class="inv-brand-info">
+          <h2>Fremont Makers</h2>
+          <div class="inv-tagline">making freedom</div>
+          <p>Flat-pack cabinets, assembled and delivered.</p>
+        </div>
+      </div>
+      <div class="inv-meta">
+        <strong>INVOICE</strong>
+        Job: <span id="inv-job-code">—</span><br />
+        Date: <span id="inv-date">—</span>
+      </div>
+    </div>
+    <div class="inv-to">
+      <strong id="inv-customer">—</strong>
+      <span id="inv-address"></span>
+      <span id="inv-project" style="display:block;font-size:13px;color:#555;margin-top:4px;font-style:italic;"></span>
+    </div>
+    <table class="inv-table">
+      <thead><tr><th>Description</th><th>Qty</th><th>Serial/Model</th><th>Unit</th><th>Total</th></tr></thead>
+      <tbody id="inv-cabinet-rows"></tbody>
+      <tbody id="inv-labor-rows"></tbody>
+    </table>
+    <div class="inv-totals">
+      <div class="inv-totals-row"><span>Cabinets</span><span id="inv-t-cabinets">—</span></div>
+      <div class="inv-totals-row" id="inv-bulk-row"><span style="color:#e05c5c" id="inv-bulk-label">Mfr. Bulk Discount</span><span style="color:#e05c5c" id="inv-t-bulk-discount">—</span></div>
+      <div class="inv-totals-row"><span>Assembly Labor</span><span id="inv-t-labor">—</span></div>
+      <div class="inv-totals-row"><span id="inv-gna-label">G&amp;A Fee</span><span id="inv-t-gna">—</span></div>
+      <div class="inv-totals-row"><span id="inv-tax-label">Tax</span><span id="inv-t-tax">—</span></div>
+      <div class="inv-totals-row grand"><span>TOTAL DUE</span><span id="inv-t-grand">—</span></div>
+    </div>
+    <div class="inv-footer">Fremont Makers &mdash; <em>making freedom</em> &nbsp;·&nbsp; Thank you for your business.</div>
+  </div>
+
+  <!-- ── RECONCILE VIEW ── -->
+  <div id="reconcile-view" style="display: none;">
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">🧾 Vendor Invoice Upload & Cross-Check</span>
+      </div>
+      <div class="drag-drop-zone" id="vendor-invoice-upload-zone" style="border: 2px dashed var(--border); padding: 20px; text-align: center; color: var(--muted); margin-bottom: 15px; border-radius: 8px;">
+        Upload Vendor Invoice (CSV or paste data)
+      </div>
+      <textarea id="vendor-invoice-data" class="tbl-input" rows="10" placeholder="Paste vendor invoice line items here (Description, Qty, Unit Cost, Serial)" style="margin-bottom: 15px;"></textarea>
+      <button class="add-line-btn" onclick="parseAndCompareVendorInvoice()" style="margin-bottom: 25px;">Parse & Compare</button>
+      
+      <div id="comparison-results" style="display: none;">
+        <div class="totals-block" style="max-width: none; margin-left: 0; margin-bottom: 20px; padding: 15px 20px;">
+          <div class="totals-row">
+            <span class="totals-label">Total Quote Value</span>
+            <span class="totals-value" id="reconcile-quote-value">$0.00</span>
+          </div>
+          <div class="totals-row">
+            <span class="totals-label">Total Vendor Invoice Value</span>
+            <span class="totals-value" id="reconcile-vendor-value">$0.00</span>
+          </div>
+          <div class="totals-row grand">
+            <span class="totals-label">Net Variance</span>
+            <span class="totals-value big" id="reconcile-net-variance">$0.00</span>
+          </div>
+        </div>
+        <table class="quote-table" id="comparison-table">
+          <thead>
+            <tr>
+              <th style="width:25%">Item</th>
+              <th style="width:10%">Quote Qty</th>
+              <th style="width:10%">Vendor Qty</th>
+              <th style="width:15%">Quote Cost</th>
+              <th style="width:15%">Vendor Cost</th>
+              <th style="width:15%">Variance $</th>
+              <th style="width:10%">Status</th>
+            </tr>
+          </thead>
+          <tbody id="comparison-tbody">
+            <tr><td colspan="7" style="text-align: center; color: var(--muted);">No data to display</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section" style="margin-top: 40px;">
+      <div class="section-header">
+        <span class="section-title">💰 Final Customer Payment Reconciliation</span>
+      </div>
+      <div class="totals-block" style="max-width: 500px; margin-left: 0;">
+        <div class="totals-row">
+          <label class="totals-label">Final invoice amount received from customer</label>
+          <input type="number" class="tbl-input" id="final-customer-invoice" value="0" step="0.01" min="0" oninput="recalcFinalReconciliation()" style="width: 120px; text-align: right;" />
+        </div>
+        <div class="totals-row">
+          <label class="totals-label">Final vendor invoice amount (actual cost)</label>
+          <input type="number" class="tbl-input" id="final-vendor-invoice" value="0" step="0.01" min="0" oninput="recalcFinalReconciliation()" style="width: 120px; text-align: right;" />
+        </div>
+        <div class="totals-row">
+          <span class="totals-label">Gross Margin $</span>
+          <span class="totals-value" id="reconcile-gross-margin-dollar">$0.00</span>
+        </div>
+        <div class="totals-row">
+          <span class="totals-label">Gross Margin %</span>
+          <span class="totals-value" id="reconcile-gross-margin-pct">0.00%</span>
+        </div>
+        <div class="totals-row">
+          <span class="totals-label">Labor Cost (from labor section)</span>
+          <span class="totals-value" id="reconcile-labor-cost">$0.00</span>
+        </div>
+        <div class="totals-row grand">
+          <span class="totals-label">Net Project Profit</span>
+          <span class="totals-value big" id="reconcile-net-profit">$0.00</span>
+        </div>
+        <div class="totals-row" style="border-bottom: none; display: block;">
+          <label class="totals-label" style="margin-bottom: 5px; display: block;">Any change orders or adjustments</label>
+          <textarea class="tbl-input" id="reconcile-notes" rows="3" placeholder="Enter notes here..."></textarea>
+        </div>
+        <div class="totals-row" style="border-bottom: none; justify-content: center; padding-top: 20px;">
+          <button class="modal-btn confirm" onclick="lockReconciliation()">Lock Reconciliation &#x1F512;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ── P&L VIEW ── -->
+  
+
+  <!-- ── COMPANY P&L VIEW ── -->
+  <div id="company-pnl-view" style="display:none;">
+
+    <!-- HEADER -->
+    <div style="padding:20px 24px 0; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+      <span style="font-size:17px;font-weight:700;letter-spacing:.5px;">Fremont Makers — Company P&L</span>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <select id="cpnl-view-mode" class="gna-select" onchange="renderCpnl()" style="font-size:12px;">
+          <option value="rolling3">Rolling 3-Month</option>
+          <option value="month">Single Month</option>
+          <option value="quarter">Quarter</option>
+          <option value="year">Year</option>
+        </select>
+        <input type="month" id="cpnl-month-picker" class="week-input" style="display:none;font-size:12px;" onchange="renderCpnl()" value="2026-07" />
+        <select id="cpnl-quarter-picker" class="gna-select" style="display:none;font-size:12px;" onchange="renderCpnl()">
+          <option value="2026-Q3">2026 Q3 (Jul–Sep)</option>
+          <option value="2026-Q4">2026 Q4 (Oct–Dec)</option>
+          <option value="2027-Q1">2027 Q1 (Jan–Mar)</option>
+          <option value="2027-Q2">2027 Q2 (Apr–Jun)</option>
+          <option value="2027-Q3">2027 Q3 (Jul–Sep)</option>
+          <option value="2027-Q4">2027 Q4 (Oct–Dec)</option>
+        </select>
+        <select id="cpnl-year-picker" class="gna-select" style="display:none;font-size:12px;" onchange="renderCpnl()">
+          <option value="2026">2026</option>
+          <option value="2027">2027</option>
+          <option value="2028">2028</option>
+        </select>
+        <button id="cpnl-lock-btn" class="status-btn" style="font-size:0.8rem;border-color:#facc15;color:#facc15;" onclick="cpnlToggleLock()">🔐 Edit</button>
+      </div>
+    </div>
+
+    <!-- MULTI-COLUMN P&L TABLE -->
+    <div style="padding:16px 24px 0;overflow-x:auto;">
+      <table id="cpnl-table" style="width:100%;border-collapse:collapse;min-width:600px;">
+        <thead id="cpnl-thead"></thead>
+        <tbody id="cpnl-tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- METRICS STRIP -->
+    <div id="cpnl-metrics" style="display:flex;gap:16px;padding:20px 24px;flex-wrap:wrap;"></div>
+
+    <!-- CONTRACTED JOBS TABLE -->
+    <div class="section" style="margin:8px 24px 0;">
+      <div class="section-header">
+        <span class="section-title">Revenue Sources — Contracted Jobs</span>
+      </div>
+      <table class="quote-table">
+        <thead>
+          <tr>
+            <th style="width:20%">Job Code</th>
+            <th style="width:30%">Customer</th>
+            <th style="width:30%">Project</th>
+            <th style="width:20%;text-align:right">Contract Value</th>
+          </tr>
+        </thead>
+        <tbody id="cpnl-contracted-jobs-tbody">
+          <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px;">No contracted jobs yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PIPELINE SUMMARY -->
+    <div class="section" style="margin:24px 24px 32px;">
+      <div class="section-header">
+        <span class="section-title">Pipeline Summary</span>
+      </div>
+      <div class="totals-block" style="max-width:500px;margin-left:0;padding:15px 20px;">
+        <div class="totals-row"><label>Proposed Pipeline</label><span class="totals-value" id="cpnl-pipeline-proposed">$0.00</span></div>
+        <div class="totals-row"><label>Proposed Gross Profit <span style="font-size:10px;color:var(--muted);font-weight:400">(revenue minus cabinet cost)</span></label><span class="totals-value" id="cpnl-pipeline-proposed-margin">—</span></div>
+        <div class="totals-row"><label>Approved (pending contract)</label><span class="totals-value" id="cpnl-pipeline-approved">$0.00</span></div>
+        <div class="totals-row grand"><label>Total Pipeline</label><span class="totals-value big" id="cpnl-pipeline-total">$0.00</span></div>
+      </div>
+    </div>
+
+  </div><!-- /company-pnl-view -->
+
+  <!-- BALANCE SHEET VIEW -->
+  <div id="balance-sheet-view" style="display:none; padding: 20px; max-width: 900px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Fremont Makers Cabinet Co.</div>
+        <h2 style="margin:4px 0 0; font-size:20px;">Balance Sheet</h2>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">As of: <span id="bs-as-of-date" style="color:var(--accent)"></span> &nbsp;
+          <input type="date" id="bs-date-input" oninput="document.getElementById('bs-as-of-date').textContent=this.value; bsSave()" style="background:var(--surface2);border:1px solid #333;color:var(--fg);padding:2px 6px;border-radius:4px;font-size:12px;" />
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="status-btn" id="bs-lock-btn" style="font-size:0.8rem;border-color:#facc15;color:#facc15;" onclick="bsToggleLock()">🔐 Edit</button>
+        <button class="status-btn" style="font-size:0.8rem;border-color:#4ade80;color:#4ade80;" onclick="bsExport()">⬇️ Export</button>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+
+      <!-- ASSETS -->
+      <div>
+        <div class="pnl-section-label" style="margin-bottom:12px;">Assets</div>
+
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Current Assets</div>
+        <div class="pnl-row"><label>Cash &amp; Checking</label><input type="number" class="pnl-input bs-input" id="bs-cash" value="4807.72" placeholder="0" oninput="bsRecalc()" /></div>
+        <div class="pnl-row"><label>Accounts Receivable</label><input type="number" class="pnl-input bs-input" id="bs-ar" value="0" placeholder="0" oninput="bsRecalc()" /></div>
+        <div class="pnl-row"><label>Inventory (cabinet stock)</label><input type="number" class="pnl-input bs-input" id="bs-inventory" value="0" placeholder="0" oninput="bsRecalc()" /></div>
+        <div class="pnl-row"><label>Prepaid / Deposits</label><input type="number" class="pnl-input bs-input" id="bs-prepaid" value="0" placeholder="0" oninput="bsRecalc()" /></div>
+        <div class="pnl-row" style="margin-top:6px;">
+          <label><strong>Total Current Assets</strong></label>
+          <span class="pnl-val pnl-subtotal" id="bs-total-current-assets">$0.00</span>
+        </div>
+
+        <div class="pnl-divider" style="margin:12px 0;"></div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Fixed Assets</div>
+        <div class="pnl-row"><label>Shop Equipment (FCA financed)</label><input type="number" class="pnl-input bs-input" id="bs-equipment" value="19323.35" placeholder="0" oninput="bsRecalc()" /></div>
+        <div class="pnl-row"><label>Vehicles / Trucks</label><input type="number" class="pnl-input bs-input" id="bs-vehicles" value="0" placeholder="0" oninput="bsRecalc()" /></div>
+        <div class="pnl-row"><label>Leasehold Improvements</label><input type="number" class="pnl-input bs-input" id="bs-leasehold" value="0" placeholder="0" oninput="bsRecalc()" /></div>
+        <div class="pnl-row"><label>Less: Accumulated Depreciation</label><input type="number" class="pnl-input bs-input" id="bs-accum-dep" value="18723.35" placeholder="0" oninput="bsRecalc()" /></div>
+        <div class="pnl-row" style="margin-top:6px;">
+          <label><strong>Total Fixed Assets (Net)</strong></label>
+          <span class="pnl-val pnl-subtotal" id="bs-total-fixed-assets">$0.00</span>
+        </div>
+
+        <div class="pnl-divider" style="margin:12px 0;"></div>
+        <div class="pnl-row">
+          <label style="font-size:15px;font-weight:700;">TOTAL ASSETS</label>
+          <span class="pnl-val" style="font-size:17px;font-weight:800;" id="bs-total-assets">$0.00</span>
+        </div>
+      </div>
+
+      <!-- LIABILITIES + EQUITY -->
+      <div>
+        <div class="pnl-section-label" style="margin-bottom:12px;">Liabilities &amp; Equity</div>
+
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Current Liabilities</div>
+        <div class="pnl-row"><label>Accounts Payable</label><input type="number" class="pnl-input bs-input" id="bs-ap" value="4528.86" placeholder="0" oninput="bsRecalc()" /></div>
+        <div class="pnl-row"><label>Credit Cards</label><input type="number" class="pnl-input bs-input" id="bs-cc" value="0" placeholder="0" oninput="bsRecalc()" /></div>
+        <div class="pnl-row"><label>Accrued Expenses</label><input type="number" class="pnl-input bs-input" id="bs-accrued" value="0" placeholder="0" oninput="bsRecalc()" /></div>
+        <div class="pnl-row"><label>Current Portion — Note Payable</label><input type="number" class="pnl-input bs-input" id="bs-note-current" value="17196" placeholder="0" oninput="bsRecalc()" /></div>
+        <div class="pnl-row" style="margin-top:6px;">
+          <label><strong>Total Current Liabilities</strong></label>
+          <span class="pnl-val pnl-subtotal" id="bs-total-current-liab">$0.00</span>
+        </div>
+
+        <div class="pnl-divider" style="margin:12px 0;"></div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Long-Term Liabilities</div>
+        <div class="pnl-row"><label>Note Payable — Stan Bullis <span style="font-size:10px;color:var(--muted);">($100K @ 6%, 60mo)</span></label><input type="number" class="pnl-input bs-input" id="bs-note-lt" value="82804" placeholder="0" oninput="bsRecalc()" /></div>
+        <div class="pnl-row"><label>FCA Equipment Financing</label><input type="number" class="pnl-input bs-input" id="bs-fca-loan" value="0" placeholder="0" oninput="bsRecalc()" /></div>
+        <div class="pnl-row" style="margin-top:6px;">
+          <label><strong>Total Long-Term Liabilities</strong></label>
+          <span class="pnl-val pnl-subtotal" id="bs-total-lt-liab">$0.00</span>
+        </div>
+
+        <div class="pnl-divider" style="margin:12px 0;"></div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Members' Equity</div>
+        <div class="pnl-row"><label>Unbridled Companies — Capital</label><input type="number" class="pnl-input bs-input" id="bs-equity-stan" value="108562.77" placeholder="0" oninput="bsRecalc()" /></div>
+        <div class="pnl-row"><label>BigFam, LLC — Capital</label><input type="number" class="pnl-input bs-input" id="bs-equity-partner" value="0" placeholder="0" oninput="bsRecalc()" /></div>
+        <div class="pnl-row"><label>Retained Earnings</label><input type="number" class="pnl-input bs-input" id="bs-retained" value="-100196.88" placeholder="0" oninput="bsRecalc()" /></div>
+        <div class="pnl-row"><label>Net Income (YTD)</label><input type="number" class="pnl-input bs-input" id="bs-net-income" value="-7487.03" placeholder="0" oninput="bsRecalc()" /></div>
+        <div class="pnl-row" style="margin-top:6px;">
+          <label><strong>Total Equity</strong></label>
+          <span class="pnl-val pnl-subtotal" id="bs-total-equity">$0.00</span>
+        </div>
+
+        <div class="pnl-divider" style="margin:12px 0;"></div>
+        <div class="pnl-row">
+          <label style="font-size:15px;font-weight:700;">TOTAL LIAB + EQUITY</label>
+          <span class="pnl-val" style="font-size:17px;font-weight:800;" id="bs-total-liab-equity">$0.00</span>
+        </div>
+        <div class="pnl-row" style="margin-top:8px;">
+          <label>Balance Check</label>
+          <span id="bs-balance-check" style="font-size:13px;font-weight:700;color:#4ade80;">✓ Balanced</span>
+        </div>
+      </div>
+    </div>
+  </div><!-- /balance-sheet-view -->
+
+</div><!-- /main -->
+
+<!-- IMPORT SUPPLIER QUOTE MODAL -->
+<div class="modal-overlay" id="import-modal">
+  <div class="modal" style="max-width:580px;width:95%">
+    <h3>📥 Supplier Quotes</h3>
+    <!-- Tab bar -->
+    <div style="display:flex;gap:0;margin-bottom:16px;border-bottom:1px solid var(--border);">
+      <button id="sq-tab-library" onclick="switchSQTab('library')"
+        style="background:none;border:none;border-bottom:2px solid var(--accent);color:var(--accent);padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;">📦 Library</button>
+      <button id="sq-tab-archive" onclick="switchSQTab('archive')"
+        style="background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;">🗂️ Archive</button>
+    </div>
+    <!-- Library panel -->
+    <div id="sq-panel-library">
+      <p style="color:var(--muted);font-size:13px;margin-bottom:12px;">Select a supplier quote to load into the current quote as cabinet line items. Costs are set to the supplier's unit price — you set the markup.</p>
+      <div id="import-supplier-list" style="display:flex;flex-direction:column;gap:10px;max-height:300px;overflow-y:auto;"></div>
+    </div>
+    <!-- Archive panel -->
+    <div id="sq-panel-archive" style="display:none;">
+      <p style="color:var(--muted);font-size:13px;margin-bottom:12px;">Previously loaded supplier quotes. Re-load any of these into the current quote at any time.</p>
+      <div id="import-archive-list" style="display:flex;flex-direction:column;gap:10px;max-height:300px;overflow-y:auto;"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end;">
+      <button class="modal-btn" onclick="closeImportModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONTRACT PASSWORD MODAL -->
+<div class="modal-overlay" id="contract-modal">
+  <div class="modal">
+    <h3>🔐 Contract Lock</h3>
+    <p>Enter the contract password to lock this quote and generate the invoice.</p>
+    <input type="password" id="contract-pw" placeholder="••••" maxlength="10" onkeydown="if(event.key==='Enter') confirmContract()" />
+    <div class="modal-error" id="pw-error"></div>
+    <div class="modal-btns">
+      <button class="modal-btn" onclick="closeModal()">Cancel</button>
+      <button class="modal-btn confirm" onclick="confirmContract()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CONTRACT_PW = '5476';
+let activeQuoteId = null;
+let quotesIndex = []; // {id, jobCode, customer, project, date, status, total, createdAt}
+let quoteData = {};   // {id: {cabinets: [], labor: [], ...}}
+
+// ── CLOUD SYNC (KV) ────────────────────────────────────────────────
+// Syncs quote data across browsers/devices via /api/planner/bundle?ns=fm-quotes
+// Uses the same KV infra as the labor planners.
+const FM_CLOUD_URL = '/api/planner/bundle?ns=fm-quotes';
+const FM_CLOUD_PREFIXES = ['fm-quotes-index', 'fm-quote-', 'fm-active-quote', 'fm-cpnl-', 'fm-balance-sheet', 'fm-sq-archive'];
+
+// Block pushes until page init is complete — prevents fresh browser from wiping KV
+let _fmReady = false;
+let sqArchive = [];
+let _bsUnlocked = false;
+let _cpnlUnlocked = false;
+
+// Debounced push — coalesces rapid saves into one network call
+let _fmPushTimer = null;
+function fmCloudPushDebounced() {
+  if (!_fmReady) return; // never push during init
+  clearTimeout(_fmPushTimer);
+  _fmPushTimer = setTimeout(fmCloudPush, 1500);
+}
+
+async function fmCloudPullForce() {
+  // Like fmCloudPull but cloud always wins — used by fmForceSync
+  try {
+    const res = await fetch(FM_CLOUD_URL);
+    if (!res.ok) return;
+    const { data } = await res.json();
+    if (!data || typeof data !== 'object' || Object.keys(data).length === 0) return;
+    Object.entries(data).forEach(([k, v]) => {
+      try {
+        const incoming = typeof v === 'string' ? v : JSON.stringify(v);
+        localStorage.setItem(k, incoming);
+      } catch(e) {}
+    });
+    // Load cpnl month data
+    cpnlLoadFromKV(data);
+    // Populate sqArchive
+    try {
+      const raw = localStorage.getItem('fm-sq-archive');
+      if (raw) sqArchive = JSON.parse(raw);
+    } catch(e) { sqArchive = []; }
+  } catch(e) {}
+}
+
+async function fmCloudPull() {
+  try {
+    const res = await fetch(FM_CLOUD_URL);
+    if (!res.ok) return;
+    const { data } = await res.json();
+    if (!data || typeof data !== 'object' || Object.keys(data).length === 0) return; // empty cloud → never wipe local
+    Object.entries(data).forEach(([k, v]) => {
+      try {
+        const incoming = typeof v === 'string' ? v : JSON.stringify(v);
+        const existing = localStorage.getItem(k);
+        // For the quotes index: merge — keep whichever has more/newer quotes
+        if (k === 'fm-quotes-index') {
+          try {
+            const cloudArr = typeof v === 'object' ? v : JSON.parse(v);
+            if (!existing) {
+              localStorage.setItem(k, incoming);
+              return;
+            }
+            const localArr = JSON.parse(existing);
+            const localIds = new Set(localArr.map(q => q.id));
+            // Add any cloud quotes not in local
+            const merged = [...localArr];
+            cloudArr.forEach(cq => { if (!localIds.has(cq.id)) merged.push(cq); });
+            localStorage.setItem(k, JSON.stringify(merged));
+          } catch(e) { localStorage.setItem(k, incoming); }
+          return;
+        }
+        // For individual quotes: cloud wins UNLESS local has a strictly newer saved_at.
+        // Cabinet-count comparison was the bug — same count + stale local = overwrote KV.
+        // Zero saved_at on either side → cloud wins (treat missing timestamp as oldest).
+        if (k.startsWith('fm-quote-')) {
+          try {
+            if (existing) {
+              const localQ = JSON.parse(existing);
+              const cloudQ = typeof v === 'object' ? v : JSON.parse(v);
+              const localTs = localQ.saved_at || 0;
+              const cloudTs = cloudQ.saved_at || 0;
+              if (localTs > cloudTs) return; // local is strictly newer — keep it
+              // ties (both 0 or same): cloud wins
+            }
+          } catch(e) {}
+          localStorage.setItem(k, incoming);
+          return;
+        }
+        // For company P&L: skip if incoming is all zeros
+        if (k === 'fm-company-pnl') {
+          try {
+            const obj = typeof v === 'object' ? v : JSON.parse(v);
+            const hasValues = Object.values(obj).some(val => parseFloat(val) !== 0);
+            if (!hasValues) return;
+          } catch(e) {}
+        }
+        localStorage.setItem(k, incoming);
+      } catch(e) {}
+    });
+  } catch(e) { /* offline — use in-memory state */ }
+  // Populate in-memory sqArchive from what was just pulled into localStorage
+  try {
+    const raw = localStorage.getItem('fm-sq-archive');
+    if (raw) sqArchive = JSON.parse(raw);
+  } catch(e) { sqArchive = []; }
+  // Populate monthly cpnl data from localStorage (already synced above)
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('fm-cpnl-')) {
+        const ym = k.replace('fm-cpnl-', '');
+        try { _cpnlMonthData[ym] = JSON.parse(localStorage.getItem(k)); } catch(e) {}
+      }
+    }
+  } catch(e) {}
+}
+
+async function fmCloudPush() {
+  if (!_fmReady) return; // safety — never push during init
+  try {
+    // Start with current KV state so we never lose quotes this browser doesn't have locally
+    const kvRes = await fetch(FM_CLOUD_URL);
+    const kvData = kvRes.ok ? ((await kvRes.json()).data || {}) : {};
+
+    // Overlay local data on top of KV — local wins for keys it has, KV preserved for the rest
+    const bundle = { ...kvData };
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (FM_CLOUD_PREFIXES.some(p => k.startsWith(p))) {
+        const raw = localStorage.getItem(k);
+        try { bundle[k] = JSON.parse(raw); } catch(e) { bundle[k] = raw; }
+      }
+    }
+    await fetch(FM_CLOUD_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(bundle),
+    });
+  } catch(e) { /* offline — data safe in localStorage */ }
+}
+// ── END CLOUD SYNC ─────────────────────────────────────────────────
+
+async function fmForceSync() {
+  // Update all sync buttons (status bar + dashboard)
+  const syncBtns = document.querySelectorAll('[onclick="fmForceSync()"]');
+  const btn = syncBtns[0] || null;
+  if (btn) { btn.textContent = '⏳ Syncing...'; btn.disabled = true; }
+
+  try {
+    // Fetch KV directly
+    const res = await fetch(FM_CLOUD_URL);
+    if (!res.ok) throw new Error('KV fetch failed: ' + res.status);
+    const { data } = await res.json();
+    if (!data || Object.keys(data).length === 0) throw new Error('KV returned empty bundle');
+
+    // Clear ALL fm- keys from localStorage first
+    const toRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('fm-')) toRemove.push(k);
+    }
+    toRemove.forEach(k => localStorage.removeItem(k));
+
+    // Write all KV data into localStorage
+    Object.entries(data).forEach(([k, v]) => {
+      try {
+        const str = typeof v === 'string' ? v : JSON.stringify(v);
+        localStorage.setItem(k, str);
+      } catch(e) {}
+    });
+
+    // Directly populate in-memory state
+    const rawIdx = data['fm-quotes-index'];
+    const newIndex = Array.isArray(rawIdx) ? rawIdx : (typeof rawIdx === 'string' ? JSON.parse(rawIdx) : []);
+    quotesIndex = newIndex;
+    quoteData = {};
+    Object.entries(data).forEach(([k, v]) => {
+      if (k.startsWith('fm-quote-')) {
+        const id = k.replace('fm-quote-', '');
+        quoteData[id] = typeof v === 'object' ? v : JSON.parse(v);
+      }
+    });
+
+    // Set active quote
+    const storedActive = data['fm-active-quote'];
+    if (storedActive && quotesIndex.some(q => q.id === storedActive)) {
+      activeQuoteId = storedActive;
+    } else if (quotesIndex.length > 0) {
+      activeQuoteId = quotesIndex[0].id;
+    }
+    if (activeQuoteId) loadQuote(activeQuoteId);
+
+    // cpnl data
+    cpnlLoadFromKV(data);
+
+    // Re-render
+    renderDashboard();
+    switchTab('dashboard');
+
+    syncBtns.forEach(b => { b.textContent = '✅ Synced!'; b.style.color = '#4ade80'; b.style.borderColor = '#4ade80'; });
+    setTimeout(() => {
+      syncBtns.forEach(b => { b.textContent = '☁️ Sync from Cloud'; b.style.color = ''; b.style.borderColor = ''; b.disabled = false; });
+    }, 2500);
+
+  } catch(e) {
+    console.error('fmForceSync error:', e);
+    syncBtns.forEach(b => { b.textContent = '❌ Sync Failed'; b.style.color = '#f87171'; b.style.borderColor = '#f87171'; });
+    setTimeout(() => {
+      syncBtns.forEach(b => { b.textContent = '☁️ Sync from Cloud'; b.style.color = ''; b.style.borderColor = ''; b.disabled = false; });
+    }, 3000);
+    alert('Sync failed: ' + e.message + '\nTry refreshing the page manually.');
+  }
+}
+
+// ── DASHBOARD RENDERING ────────────────────────────────────────────
+function updateSearchSuggestions(val) {
+  const dl = document.getElementById('dashboard-search-list');
+  if (!dl) return;
+  const term = (val || '').toLowerCase().trim();
+  const seen = new Set();
+  const options = [];
+  quotesIndex.forEach(q => {
+    [q.customer, q.project, q.jobCode].forEach(field => {
+      if (!field) return;
+      if (term && !field.toLowerCase().includes(term)) return;
+      if (!seen.has(field)) {
+        seen.add(field);
+        options.push(field);
+      }
+    });
+  });
+  dl.innerHTML = options.slice(0, 8).map(o => `<option value="${o}">`).join('');
+}
+
+function renderDashboard() {
+  const tbody = document.getElementById('quotes-table-body');
+  tbody.innerHTML = ''; // Clear existing rows
+
+  let totalQuoted = 0;
+  let totalApproved = 0;
+  let totalContracted = 0;
+  let totalActive = 0;
+
+  if (quotesIndex.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 20px;">No quotes yet. Click "+ New Quote" to start.</td></tr>';
+    document.getElementById('dashboard-total-quoted').textContent = fmt(0);
+    document.getElementById('dashboard-total-approved').textContent = fmt(0);
+    document.getElementById('dashboard-total-contracted').textContent = fmt(0);
+    document.getElementById('dashboard-total-active').textContent = fmt(0);
+    return;
+  }
+
+  const searchEl = document.getElementById('dashboard-search');
+  const searchTerm = searchEl ? searchEl.value.trim().toLowerCase() : '';
+
+  const sortedQuotes = [...quotesIndex]
+    .filter(q => {
+      if (!searchTerm) return true;
+      return (q.customer || '').toLowerCase().includes(searchTerm)
+          || (q.project || '').toLowerCase().includes(searchTerm)
+          || (q.date || '').toLowerCase().includes(searchTerm)
+          || (q.jobCode || '').toLowerCase().includes(searchTerm);
+    })
+    .sort((a,b) => {
+      // Sort by quote date descending (newest first); fall back to creation time
+      const da = a.date || '', db = b.date || '';
+      if (da && db) return db.localeCompare(da);
+      if (da) return -1;
+      if (db) return 1;
+      return b.createdAt - a.createdAt;
+    });
+
+  sortedQuotes.forEach(quote => {
+    // Ensure total is up-to-date, if not, try to load the full quote and recalc to get the total
+    let quoteTotal = quote.total;
+    if (quoteTotal === 0 && quoteData[quote.id]) {
+        // Temporarily load quote to recalculate its total if it's 0 in the index
+        const tempActiveId = activeQuoteId; // Save current active ID
+        activeQuoteId = quote.id;
+        // saveActiveQuoteId(); // No need to save to local storage during temporary load
+        loadQuote(quote.id); // This will call recalc() and update quote.total in index
+        quoteTotal = quoteData[quote.id].total || 0; // Get the newly calculated total
+        quote.total = quoteTotal; // Update the index with the calculated total
+        activeQuoteId = tempActiveId; // Restore active ID
+        if (activeQuoteId) loadQuote(activeQuoteId); // Re-load original active quote
+    }
+
+    // Tally totals for the dashboard display
+    totalActive += quoteTotal;
+    if (quote.status === 'proposed') {
+      totalQuoted += quoteTotal;
+    } else if (quote.status === 'approved') {
+      totalApproved += quoteTotal;
+    } else if (quote.status === 'contract') {
+      totalContracted += quoteTotal;
+    }
+
+    const statusClass = `pill-${quote.status}`;
+    tbody.innerHTML += `
+      <tr>
+        <td><span style="font-family: monospace; color: var(--accent); font-weight: 700;">${quote.jobCode}</span></td>
+        <td>${quote.customer || '—'}</td>
+        <td>${quote.project || '—'}</td>
+        <td>${quote.date || '—'}</td>
+        <td><span class="status-pill ${statusClass}">${quote.status.toUpperCase()}</span></td>
+        <td style="text-align:right">${fmt(quoteTotal)}</td>
+        <td>
+          <button class="modal-btn" onclick="loadQuoteAndSwitchTab('${quote.id}')" style="padding: 4px 8px; font-size: 11px;">Load</button>
+          <button class="modal-btn" onclick="duplicateQuote('${quote.id}')" style="padding: 4px 8px; font-size: 11px;">Duplicate</button>
+          <button class="del-btn" onclick="deleteQuote('${quote.id}')">✕</button>
+        </td>
+      </tr>
+    `;
+  });
+
+  document.getElementById('dashboard-total-quoted').textContent = fmt(totalQuoted);
+  document.getElementById('dashboard-total-approved').textContent = fmt(totalApproved);
+  document.getElementById('dashboard-total-contracted').textContent = fmt(totalContracted);
+  document.getElementById('dashboard-total-active').textContent = fmt(totalActive);
+}
+
+function loadQuoteAndSwitchTab(id) {
+  loadQuote(id);
+  switchTab('quote');
+}
+
+// ── INIT ───────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  // Populate G&A dropdown 0–30% every 1%
+  const gnaEl = document.getElementById('gna-pct');
+  if (gnaEl && gnaEl.options.length === 0) {
+    for (let i = 0; i <= 30; i++) {
+      const opt = document.createElement('option');
+      opt.value = i; opt.textContent = i + '%';
+      if (i === 10) opt.selected = true;
+      gnaEl.appendChild(opt);
+    }
+  }
+
+  // Pull latest data from cloud before loading — so any device sees the most current quotes
+  await fmCloudPull();
+
+  migrateOldQuote(); // Attempt migration first
+  loadQuotesIndex();
+  
+  if (activeQuoteId) {
+    loadQuote(activeQuoteId); // Pre-load active quote data
+  } else if (quotesIndex.length > 0) {
+    loadQuote(quotesIndex[0].id); // Pre-load first quote data
+  } else {
+    newQuote(false); // Create a new blank quote if none exist
+  }
+  switchTab('dashboard'); // Always land on All Quotes
+  
+  recalc();
+  renderDashboard();
+  _fmReady = true; // all init done — pushes now safe
+});
+
+function today() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function generateQuoteId() {
+  return Date.now().toString(36) + Math.random().toString(36).substring(2);
+}
+
+function generateJobCode() {
+  const d = new Date();
+  const yr = String(d.getFullYear()).slice(2);
+  const mo = String(d.getMonth()+1).padStart(2,'0');
+  const seq = String(Math.floor(Math.random()*900)+100);
+  return `FM-${yr}${mo}-${seq}`;
+}
+
+function saveQuoteManual() {
+  saveLocal();
+  const btn = document.getElementById('btn-save');
+  if (!btn) return;
+  btn.textContent = '✓ Saved';
+  btn.style.color = 'var(--green)';
+  btn.style.borderColor = 'var(--green)';
+  setTimeout(() => {
+    btn.textContent = '💾 Save';
+    btn.style.color = '';
+    btn.style.borderColor = '';
+  }, 2000);
+}
+
+function newQuote(activate = true) {
+  const newId = generateQuoteId();
+  const newJobCode = generateJobCode();
+  const newQuoteDate = today();
+
+  const blankQuoteData = {
+    id: newId,
+    status: 'proposed',
+    jobCode: newJobCode,
+    customer: '',
+    project: '',
+    date: newQuoteDate,
+    address: '',
+    gnaPct: '10',
+    taxPct: '8.7',
+    bulkDiscPct: '0',
+    cabinets: [],
+    labor: [],
+    reconciliationData: null
+  };
+
+  quoteData[newId] = blankQuoteData;
+  quotesIndex.unshift({
+    id: newId,
+    jobCode: newJobCode,
+    customer: '',
+    project: '',
+    date: newQuoteDate,
+    status: 'proposed',
+    total: 0,
+    createdAt: Date.now()
+  });
+
+  saveQuotesIndex();
+  saveQuoteData(newId);
+  if (activate) {
+    activeQuoteId = newId;
+    saveActiveQuoteId();
+    loadQuote(newId);
+    switchTab('quote');
+  }
+  renderDashboard();
+}
+
+function loadQuote(id) {
+  activeQuoteId = id;
+  saveActiveQuoteId();
+
+  const q = quoteData[id];
+  if (!q) {
+    console.error(`Quote with ID ${id} not found.`);
+    return;
+  }
+
+  // Clear current form
+  document.getElementById('cabinet-tbody').innerHTML = '';
+  document.getElementById('labor-tbody').innerHTML = '';
+
+  // Populate form with loaded data
+  document.getElementById('job-code-display').textContent     = q.jobCode;
+  document.getElementById('customer-name').value              = q.customer || '';
+  document.getElementById('project-name').value               = q.project  || '';
+  document.getElementById('quote-date').value                 = q.date     || today();
+  document.getElementById('install-address').value            = q.address  || '';
+  document.getElementById('gna-pct').value                    = q.gnaPct  || '10';
+  document.getElementById('tax-pct').value                    = q.taxPct  || '8.7';
+  document.getElementById('bulk-discount-pct').value          = (q.bulkDiscPct !== undefined && q.bulkDiscPct !== null) ? q.bulkDiscPct : '0';
+
+  (q.cabinets || []).forEach(c => addCabinetRow(c.desc, c.qty, c.cost, c.markup, c.serial, c.id));
+  (q.labor || []).forEach(l => addLaborRow(l.name, l.rate, l.hours));
+  
+  if (q.cabinets.length === 0) {
+    for (let i = 0; i < 2; i++) addCabinetRow();
+  }
+  if (q.labor.length === 0) {
+    addLaborRow('Assembly', 40);
+  }
+
+  setStatus(q.status);
+  recalc();
+  loadReconciliationData(id); // Load reconciliation data for this quote
+}
+
+function duplicateQuote(id) {
+  const originalQuote = quoteData[id];
+  if (!originalQuote) return;
+
+  const newId = generateQuoteId();
+  const newJobCode = generateJobCode();
+  const createdAt = Date.now();
+
+  const duplicatedQuote = JSON.parse(JSON.stringify(originalQuote)); // Deep copy
+  duplicatedQuote.id = newId;
+  duplicatedQuote.jobCode = newJobCode;
+  duplicatedQuote.status = 'proposed'; // Duplicates always start as proposed
+  duplicatedQuote.reconciliationData = null; // Clear reconciliation data for duplicated quote
+
+  quoteData[newId] = duplicatedQuote;
+  quotesIndex.unshift({
+    id: newId,
+    jobCode: newJobCode,
+    customer: duplicatedQuote.customer,
+    project: duplicatedQuote.project,
+    date: duplicatedQuote.date,
+    status: 'proposed',
+    total: 0, // Will be recalculated on load
+    createdAt: createdAt
+  });
+
+  saveQuotesIndex();
+  saveQuoteData(newId);
+  renderDashboard();
+  switchTab('dashboard'); // Stay on dashboard after duplicating
+}
+
+function deleteQuote(id) {
+  if (!confirm('Are you sure you want to delete this quote? This action cannot be undone.')) {
+    return;
+  }
+
+  delete quoteData[id];
+  quotesIndex = quotesIndex.filter(q => q.id !== id);
+
+  localStorage.removeItem(`fm-quote-${id}`); // Remove from localStorage
+  saveQuotesIndex();
+
+  if (activeQuoteId === id) {
+    // If the deleted quote was active, load another or create a new one
+    activeQuoteId = null;
+    saveActiveQuoteId();
+    if (quotesIndex.length > 0) {
+      loadQuote(quotesIndex[0].id);
+      switchTab('quote');
+    } else {
+      newQuote();
+    }
+  }
+  renderDashboard();
+}
+
+function updateQuoteIndexEntry(quoteId, newStatus, newTotal, customer, project, date) {
+  const indexEntry = quotesIndex.find(q => q.id === quoteId);
+  if (indexEntry) {
+    indexEntry.status = newStatus;
+    indexEntry.total = newTotal;
+    indexEntry.customer = customer;
+    indexEntry.project = project;
+    indexEntry.date = date;
+    saveQuotesIndex();
+    renderDashboard(); // Re-render dashboard to show updated entry
+  }
+}
+
+// ── LOCAL STORAGE ──────────────────────────────────────────────────
+function collectData() {
+  const cabinets = [];
+  document.querySelectorAll('#cabinet-tbody tr').forEach(tr => {
+    cabinets.push({
+      desc:   tr.querySelector('input[type=text]')?.value || '',
+      qty:    parseInt(tr.querySelector('.qty-display')?.textContent) || 1,
+      cost:   tr.querySelectorAll('input[type=number]')[0]?.value || '',
+      markup: tr.querySelector('.markup-select')?.value || '35',
+      serial: tr.querySelectorAll('input[type=text]')[1]?.value || '',
+      id:     tr.dataset.id,
+    });
+  });
+  const labor = [];
+  document.querySelectorAll('#labor-tbody tr').forEach(tr => {
+    labor.push({
+      name:  tr.querySelector('input[type=text]')?.value || '',
+      rate:  tr.querySelectorAll('input[type=number]')[0]?.value || '',
+      hours: tr.querySelectorAll('input[type=number]')[1]?.value || '',
+    });
+  });
+
+  // Collect reconciliation data if available
+  const currentReconciliationData = getReconciliationDataFromForm();
+
+  return {
+    id:       activeQuoteId,
+    status:   quoteData[activeQuoteId]?.status || 'proposed', // Use active quote's status
+    jobCode:  document.getElementById('job-code-display')?.textContent || '', // jobCode from display
+    customer: document.getElementById('customer-name')?.value || '',
+    project:  document.getElementById('project-name')?.value  || '',
+    date:     document.getElementById('quote-date')?.value    || '',
+    address:  document.getElementById('install-address')?.value || '',
+    gnaPct:   document.getElementById('gna-pct')?.value  || '10',
+    taxPct:   document.getElementById('tax-pct')?.value  || '8.7',
+    bulkDiscPct: document.getElementById('bulk-discount-pct')?.value || '0',
+    cabinets,
+    labor,
+    reconciliationData: currentReconciliationData || quoteData[activeQuoteId].reconciliationData // Preserve existing if not updated by form
+  };
+}
+
+function saveLocal() {
+  if (!activeQuoteId) return;
+  const currentQuote = collectData();
+  quoteData[activeQuoteId] = currentQuote;
+  saveQuoteData(activeQuoteId);
+
+  // Update index entry
+  const totalRaw = parseAmount('t-grand');
+  const customer = document.getElementById('customer-name')?.value || '';
+  const project = document.getElementById('project-name')?.value || '';
+  const date = document.getElementById('quote-date')?.value || today();
+  updateQuoteIndexEntry(activeQuoteId, currentQuote.status, totalRaw, customer, project, date);
+  fmCloudPushDebounced(); // sync to cloud so all devices see latest
+}
+
+// New functions for multi-quote management
+function saveActiveQuoteId() {
+  try {
+    localStorage.setItem('fm-active-quote', activeQuoteId);
+  } catch (e) { console.error('Error saving active quote ID', e); }
+}
+
+function loadActiveQuoteId() {
+  try {
+    return localStorage.getItem('fm-active-quote');
+  } catch (e) { console.error('Error loading active quote ID', e); return null; }
+}
+
+function saveQuotesIndex() {
+  try {
+    localStorage.setItem('fm-quotes-index', JSON.stringify(quotesIndex));
+    fmCloudPushDebounced();
+  } catch (e) { console.error('Error saving quotes index', e); }
+}
+
+function loadQuotesIndex() {
+  try {
+    const rawIndex = localStorage.getItem('fm-quotes-index');
+    if (rawIndex) {
+      quotesIndex = JSON.parse(rawIndex);
+    } else {
+      quotesIndex = [];
+    }
+    const storedActiveId = loadActiveQuoteId();
+    if (storedActiveId && quotesIndex.some(q => q.id === storedActiveId)) {
+      activeQuoteId = storedActiveId;
+    } else if (quotesIndex.length > 0) {
+      activeQuoteId = quotesIndex[0].id; // Fallback to first quote
+      saveActiveQuoteId();
+    } else {
+      activeQuoteId = null;
+    }
+
+    // Load all full quote data into memory from individual localStorage keys
+    quotesIndex.forEach(q => {
+      const rawQuote = localStorage.getItem(`fm-quote-${q.id}`);
+      if (rawQuote) {
+        quoteData[q.id] = JSON.parse(rawQuote);
+      } else {
+        // If index entry exists but full data doesn't, create a placeholder
+        quoteData[q.id] = { id: q.id, jobCode: q.jobCode, customer: q.customer, project: q.project, date: q.date, status: q.status, cabinets: [], labor: [], gnaPct: '10', taxPct: '8.7', reconciliationData: null };
+      }
+    });
+
+  } catch (e) {
+    console.error('Error loading quotes index', e);
+    quotesIndex = [];
+    activeQuoteId = null;
+  }
+}
+
+function saveQuoteData(id) {
+  try {
+    const dataToSave = quoteData[id];
+    dataToSave.saved_at = Date.now(); // always stamp — prevents stale localStorage from beating cloud
+    localStorage.setItem(`fm-quote-${id}`, JSON.stringify(dataToSave));
+  } catch (e) { console.error(`Error saving quote data for ${id}`, e); }
+}
+
+function migrateOldQuote() {
+  try {
+    const oldRawQuote = localStorage.getItem('fm-quote');
+    const indexExists = localStorage.getItem('fm-quotes-index');
+
+    if (oldRawQuote && !indexExists) {
+      console.log('Migrating old fm-quote data...');
+      const oldQuote = JSON.parse(oldRawQuote);
+      const newId = generateQuoteId();
+      
+      // Ensure jobCode is present, generate if missing
+      if (!oldQuote.jobCode) {
+          oldQuote.jobCode = generateJobCode();
+      }
+
+      oldQuote.id = newId;
+      oldQuote.status = oldQuote.status || 'proposed';
+      oldQuote.createdAt = Date.now();
+      
+      // Clear reconciliation data for migrated quote if it exists, as it's scope changed.
+      oldQuote.reconciliationData = null;
+
+      // Update the state variables
+      activeQuoteId = newId;
+      quotesIndex = [{
+        id: newId,
+        jobCode: oldQuote.jobCode,
+        customer: oldQuote.customer || '',
+        project: oldQuote.project || '',
+        date: oldQuote.date || today(),
+        status: oldQuote.status,
+        total: 0, // Will be updated on first recalc/save
+        createdAt: oldQuote.createdAt
+      }];
+      quoteData[newId] = oldQuote;
+
+      saveActiveQuoteId();
+      saveQuotesIndex();
+      saveQuoteData(newId);
+      
+      localStorage.removeItem('fm-quote'); // Remove old single quote key
+      console.log('Migration complete.');
+    } else if (!oldRawQuote && !indexExists) {
+        newQuote(false); // If neither exists, create a fresh one and set it as active
+        activeQuoteId = quotesIndex[0].id;
+        saveActiveQuoteId();
+    }
+  } catch (e) {
+    console.error('Error during migration', e);
+  }
+}
+
+// ── CABINET ROWS ───────────────────────────────────────────────────
+function markupOptions(sel) {
+  let html = '';
+  for (let i = 0; i <= 100; i++) {
+    html += `<option value="${i}"${i==sel?' selected':''}>${i}%</option>`;
+  }
+  return html;
+}
+
+function addCabinetRow(desc='', qty=1, cost='', markup=35, serial='', id = null) {
+  const rowId = id || Date.now() + Math.random();
+  const tr = document.createElement('tr');
+  tr.dataset.id = rowId;
+  tr.innerHTML = `
+    <td><input class="tbl-input" type="text" placeholder="e.g. Upper Wall Cabinet 30×12" value="${desc}" oninput="rowCalc(this)" /></td>
+    <td><input class="tbl-input serial" type="text" placeholder="SKU / Serial" value="${serial}" oninput="saveLocal()" /></td>
+    <td>
+      <div class="qty-cell">
+        <button class="qty-btn" onclick="changeQty(this,-1)">−</button>
+        <span class="qty-display">${qty}</span>
+        <button class="qty-btn" onclick="changeQty(this,1)">+</button>
+      </div>
+    </td>
+    <td><input class="tbl-input" type="number" placeholder="0.00" value="${cost}" step="0.01" min="0" oninput="rowCalc(this)" /></td>
+    <td style="text-align:right;color:var(--muted)"><span class="net-cost">$0.00</span></td>
+    <td>
+      <select class="markup-select" onchange="rowCalc(this)">
+        ${markupOptions(markup)}
+      </select>
+    </td>
+    <td style="text-align:right"><span class="line-total">$0.00</span></td>
+    <td><button class="del-btn" onclick="deleteRow(this,'cabinet-tbody')">✕</button></td>
+  `;
+  document.getElementById('cabinet-tbody').appendChild(tr);
+  rowCalc(tr.querySelector('input'));
+}
+
+function changeQty(btn, delta) {
+  const span = btn.parentElement.querySelector('.qty-display');
+  let q = parseInt(span.textContent) + delta;
+  if (q < 1) q = 1;
+  span.textContent = q;
+  rowCalc(btn);
+}
+
+function rowCalc(el) {
+  const tr = el.closest('tr');
+  const qty    = parseInt(tr.querySelector('.qty-display').textContent) || 1;
+  const cost   = parseFloat(tr.querySelectorAll('input[type=number]')[0]?.value) || 0;
+  const markup = parseFloat(tr.querySelector('.markup-select')?.value) || 0;
+  const netCost = qty * cost;
+  const total   = netCost * (1 + markup/100);
+  tr.querySelector('.net-cost').textContent  = fmt(netCost);
+  tr.querySelector('.line-total').textContent = fmt(total);
+  recalc();
+  saveLocal();
+}
+
+// ── LABOR ROWS ─────────────────────────────────────────────────────
+function addLaborRow(name='Assembly', rate=40, hours='') {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input class="tbl-input" type="text" placeholder="Name or Role" value="${name}" oninput="laborCalc(this)" /></td>
+    <td><input class="tbl-input" type="number" placeholder="20.00" value="${rate||''}" step="0.5" min="0" oninput="laborCalc(this)" /></td>
+    <td><input class="tbl-input" type="number" placeholder="0" value="${hours||''}" step="0.5" min="0" oninput="laborCalc(this)" /></td>
+    <td><span class="line-total">$0.00</span></td>
+    <td><button class="del-btn" onclick="deleteRow(this,'labor-tbody')">✕</button></td>
+  `;
+  document.getElementById('labor-tbody').appendChild(tr);
+  laborCalc(tr.querySelector('input'));
+}
+
+function laborCalc(el) {
+  const tr   = el.closest('tr');
+  const rate = parseFloat(tr.querySelectorAll('input[type=number]')[0]?.value) || 0;
+  const hrs  = parseFloat(tr.querySelectorAll('input[type=number]')[1]?.value) || 0;
+  tr.querySelector('.line-total').textContent = fmt(rate * hrs);
+  recalc();
+  saveLocal();
+}
+
+function deleteRow(btn, tbodyId) {
+  btn.closest('tr').remove();
+  recalc(); saveLocal();
+}
+
+// ── RECALC ─────────────────────────────────────────────────────────
+function recalc() {
+  // Cabinets
+  let cabTotal = 0, cabCost = 0;
+  document.querySelectorAll('#cabinet-tbody tr').forEach(tr => {
+    const qty    = parseInt(tr.querySelector('.qty-display')?.textContent) || 1;
+    const cost   = parseFloat(tr.querySelectorAll('input[type=number]')[0]?.value) || 0;
+    const markup = parseFloat(tr.querySelector('.markup-select')?.value) || 0;
+    cabCost  += qty * cost;
+    cabTotal += qty * cost * (1 + markup/100);
+  });
+
+  // Labor
+  let laborTotal = 0;
+  document.querySelectorAll('#labor-tbody tr').forEach(tr => {
+    const rate = parseFloat(tr.querySelectorAll('input[type=number]')[0]?.value) || 0;
+    const hrs  = parseFloat(tr.querySelectorAll('input[type=number]')[1]?.value) || 0;
+    laborTotal += rate * hrs;
+  });
+
+  const gnaPct         = parseFloat(document.getElementById('gna-pct')?.value) || 0;
+  const taxPct         = parseFloat(document.getElementById('tax-pct')?.value) || 0;
+  const bulkDiscPct    = parseFloat(document.getElementById('bulk-discount-pct')?.value) || 0;
+  const bulkDiscount   = cabCost * bulkDiscPct / 100;   // discount off net cost (manufacturer price), not sell price
+  const cabAfterDisc   = cabTotal - bulkDiscount;
+  const sub     = cabAfterDisc + laborTotal;
+  const gna     = sub * gnaPct / 100;
+  const taxBase = sub + gna;
+  const tax     = taxBase * taxPct / 100;
+  const grand   = taxBase + tax;
+
+  document.getElementById('t-cabinets').textContent      = fmt(cabTotal);
+  // Column footer totals
+  const colNet = document.getElementById('col-net-total');
+  const colCust = document.getElementById('col-customer-total');
+  if (colNet) colNet.textContent = fmt(cabCost);
+  if (colCust) colCust.textContent = fmt(cabTotal);
+  document.getElementById('t-bulk-discount').textContent = bulkDiscount > 0 ? '−' + fmt(bulkDiscount) : '−$0.00';
+  document.getElementById('t-labor').textContent         = fmt(laborTotal);
+  document.getElementById('t-gna').textContent           = fmt(gna);
+  document.getElementById('t-tax').textContent           = fmt(tax);
+  document.getElementById('t-grand').textContent         = fmt(grand);
+
+  // per-job P&L removed July 2026
+}
+
+// recalcPnl removed — per-job P&L tab retired July 2026
+function recalcPnl() {}
+
+function fmt(n) {
+  return '$' + (Math.round(n * 100) / 100).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
+function parseAmount(id) {
+  const el = document.getElementById(id);
+  if (!el) return 0;
+  return parseFloat(el.textContent.replace(/[$,−()]/g,'').replace(/^\s*-/,'')) || 0;
+}
+
+// ── STATUS ─────────────────────────────────────────────────────────
+function setStatus(s) {
+  if (!activeQuoteId) return;
+  quoteData[activeQuoteId].status = s;
+  const pill = document.getElementById('status-pill');
+  pill.textContent = s.toUpperCase();
+  pill.className   = 'status-pill pill-' + s;
+
+  ['proposed','approved','contract'].forEach(k => {
+    const b = document.getElementById('btn-' + k);
+    if (b) b.classList.toggle('btn-active', k === s);
+  });
+
+  const locked = s === 'contract';
+  document.querySelectorAll('.tbl-input, .markup-select, .gna-select, .tax-input, #customer-name, #project-name, #install-address').forEach(el => {
+    if (locked) el.classList.add('locked');
+    else el.classList.remove('locked');
+  });
+  document.querySelectorAll('.qty-btn, .del-btn, .add-line-btn').forEach(el => {
+    el.style.pointerEvents = locked ? 'none' : '';
+    el.style.opacity = locked ? '.35' : '';
+  });
+
+  saveLocal();
+}
+
+function requestContract() {
+  document.getElementById('contract-modal').classList.add('open');
+  setTimeout(() => document.getElementById('contract-pw').focus(), 50);
+}
+
+function confirmContract() {
+  const pw = document.getElementById('contract-pw').value;
+  if (pw === CONTRACT_PW) {
+    closeModal();
+    setStatus('contract');
+    // Prompt backup whenever a quote is locked to contract
+    setTimeout(() => {
+      if (confirm('✅ Quote locked to CONTRACT.\n\nDownload a backup now to protect your data?\n(Recommended — browser storage can be cleared.)')) {
+        exportAllQuotes();
+      }
+    }, 300);
+  } else {
+    document.getElementById('pw-error').textContent = 'Incorrect password. Try again.';
+    document.getElementById('contract-pw').value = '';
+  }
+}
+
+function closeModal() {
+  document.getElementById('contract-modal').classList.remove('open');
+  document.getElementById('contract-pw').value = '';
+  document.getElementById('pw-error').textContent = '';
+}
+
+// ── TABS ───────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    if (b.dataset.tab === tab) {
+      b.classList.add('active');
+    } else {
+      b.classList.remove('active');
+    }
+  });
+
+  document.getElementById('dashboard-view').style.display = tab==='dashboard' ? '' : 'none';
+  document.getElementById('quote-view').style.display   = tab==='quote'   ? '' : 'none';
+  document.getElementById('invoice-view').style.display = tab==='invoice' ? 'block' : 'none';
+  document.getElementById('print-quote-view').style.display = tab==='printquote' ? '' : 'none';
+  document.getElementById('reconcile-view').style.display = tab==='reconcile' ? '' : 'none';
+  document.getElementById('company-pnl-view').style.display = tab==='companypnl' ? '' : 'none';
+  document.getElementById('balance-sheet-view').style.display = tab==='balancesheet' ? '' : 'none';
+
+  // Hide status bar + job info on non-quote tabs (they're only relevant when editing a quote)
+  const quoteChromeTabs = ['quote','invoice','printquote','reconcile'];
+  const showQuoteChrome = quoteChromeTabs.includes(tab);
+  const statusBar = document.querySelector('.status-bar');
+  const jobInfo   = document.querySelector('.job-info');
+  if (statusBar) statusBar.style.display = showQuoteChrome ? '' : 'none';
+  if (jobInfo)   jobInfo.style.display   = showQuoteChrome ? '' : 'none';
+
+  if (tab === 'dashboard') renderDashboard();
+  if (tab === 'quote') {
+    recalc();
+    // Ensure the current active quote's status is reflected in the main status bar
+    document.getElementById('status-pill').textContent = quoteData[activeQuoteId]?.status.toUpperCase() || 'PROPOSED';
+    document.getElementById('status-pill').className = 'status-pill pill-' + (quoteData[activeQuoteId]?.status || 'proposed');
+    // Also update the active status buttons
+    ['proposed','approved','contract'].forEach(k => {
+      const b = document.getElementById('btn-' + k);
+      if (b) b.classList.toggle('btn-active', k === (quoteData[activeQuoteId]?.status || 'proposed'));
+    });
+  }
+  if (tab === 'invoice') buildInvoice();
+  if (tab === 'printquote') buildPrintQuote();
+  if (tab === 'companypnl') {
+    fmCloudPull().then(() => renderCpnl()); // always pull fresh P&L inputs before rendering
+  }
+  if (tab === 'balancesheet') {
+    bsLoad();
+  }
+  if (tab === 'reconcile') {
+    recalcFinalReconciliation();
+    loadReconciliationData(activeQuoteId); // Load reconciliation data for the active quote
+  }
+}
+
+function buildInvoice() {
+  const currentQuoteData = quoteData[activeQuoteId];
+  if (!currentQuoteData) return;
+
+  document.getElementById('inv-job-code').textContent  = currentQuoteData.jobCode || '—';
+  document.getElementById('inv-date').textContent      = currentQuoteData.date || today();
+  document.getElementById('inv-customer').textContent  = currentQuoteData.customer || '(Customer)';
+  document.getElementById('inv-address').textContent   = currentQuoteData.address;
+  document.getElementById('inv-project').textContent   = currentQuoteData.project ? `Model: ${currentQuoteData.project}` : '';
+
+  // Cabinet rows
+  const cabHtml = [];
+  document.querySelectorAll('#cabinet-tbody tr').forEach(tr => {
+    const desc   = tr.querySelector('input[type=text]')?.value || '—';
+    const qty    = tr.querySelector('.qty-display')?.textContent || '1';
+    const cost   = parseFloat(tr.querySelectorAll('input[type=number]')[0]?.value) || 0;
+    const markup = parseFloat(tr.querySelector('.markup-select')?.value) || 0;
+    const serial = tr.querySelectorAll('input[type=text]')[1]?.value || '';
+    const unit   = cost * (1 + markup/100);
+    const total  = parseInt(qty) * unit;
+    if (cost > 0 || desc.trim()) {
+      cabHtml.push(`<tr><td>${desc}</td><td>${qty}</td><td style="font-family:monospace;font-size:11px">${serial||'—'}</td><td>${fmt(unit)}</td><td>${fmt(total)}</td></tr>`);
+    }
+  });
+  document.getElementById('inv-cabinet-rows').innerHTML = cabHtml.join('');
+
+  // Labor rows
+  const labHtml = [];
+  document.querySelectorAll('#labor-tbody tr').forEach(tr => {
+    const name = tr.querySelector('input[type=text]')?.value || 'Labor';
+    const rate = parseFloat(tr.querySelectorAll('input[type=number]')[0]?.value) || 0;
+    const hrs  = parseFloat(tr.querySelectorAll('input[type=number]')[1]?.value) || 0;
+    if (hrs > 0) {
+      labHtml.push(`<tr><td>${name}</td><td>${hrs} hrs</td><td>—</td><td>${fmt(rate)}/hr</td><td>${fmt(rate*hrs)}</td></tr>`);
+    }
+  });
+  document.getElementById('inv-labor-rows').innerHTML = labHtml.join('');
+
+  // Totals
+  const cabTotal  = parseAmount('t-cabinets');
+  const labTotal  = parseAmount('t-labor');
+  const gna       = parseAmount('t-gna');
+  const tax       = parseAmount('t-tax');
+  const grand     = parseAmount('t-grand');
+  const gnaPct    = document.getElementById('gna-pct')?.value || '0';
+  const taxPct    = document.getElementById('tax-pct')?.value || '0';
+  const bulkPct   = parseFloat(document.getElementById('bulk-discount-pct')?.value) || 0;
+  const bulkDisc  = parseAmount('t-bulk-discount') || 0;
+
+  document.getElementById('inv-t-cabinets').textContent = fmt(cabTotal);
+  const invBulkRow = document.getElementById('inv-bulk-row');
+  if (invBulkRow) invBulkRow.style.display = bulkPct > 0 ? '' : 'none';
+  if (document.getElementById('inv-bulk-label')) document.getElementById('inv-bulk-label').textContent = `Mfr. Bulk Discount (${bulkPct}%)`;
+  if (document.getElementById('inv-t-bulk-discount')) document.getElementById('inv-t-bulk-discount').textContent = '−' + fmt(bulkDisc);
+  document.getElementById('inv-t-labor').textContent    = fmt(labTotal);
+  document.getElementById('inv-gna-label').textContent  = `G&A Fee (${gnaPct}%)`;
+  document.getElementById('inv-t-gna').textContent      = fmt(gna);
+  document.getElementById('inv-tax-label').textContent  = `Tax (${taxPct}%)`;
+  document.getElementById('inv-t-tax').textContent      = fmt(tax);
+  document.getElementById('inv-t-grand').textContent    = fmt(grand);
+}
+
+function buildPrintQuote() {
+  const q = quoteData[activeQuoteId];
+  if (!q) return;
+
+  // Header
+  const jc = document.getElementById('job-code-display')?.textContent || q.jobCode || '—';
+  const el = id => document.getElementById(id);
+  if (el('pq-jobcode'))    el('pq-jobcode').textContent    = jc;
+  if (el('pq-date'))       el('pq-date').textContent       = q.date || today();
+  if (el('pq-customer'))   el('pq-customer').textContent   = q.customer || '(Customer)';
+  if (el('pq-address'))    el('pq-address').textContent    = q.address || '';
+  if (el('pq-project'))    el('pq-project').textContent    = q.project ? 'Model: ' + q.project : '';
+  if (el('pq-status-badge')) el('pq-status-badge').textContent = (q.status || 'proposed').toUpperCase();
+  if (el('pq-footer-date'))  el('pq-footer-date').textContent  = q.date || today();
+
+  // Cabinet rows
+  const cabHtml = [];
+  document.querySelectorAll('#cabinet-tbody tr').forEach(tr => {
+    const desc   = tr.querySelector('input[type=text]')?.value || '—';
+    const qty    = tr.querySelector('.qty-display')?.textContent || '1';
+    const cost   = parseFloat(tr.querySelectorAll('input[type=number]')[0]?.value) || 0;
+    const markup = parseFloat(tr.querySelector('.markup-select')?.value) || 0;
+    const serial = tr.querySelectorAll('input[type=text]')[1]?.value || '';
+    const unit   = cost * (1 + markup / 100);
+    const total  = parseInt(qty) * unit;
+    if (cost > 0 || desc.trim()) {
+      cabHtml.push(`<tr><td>${desc}</td><td style="font-family:monospace;font-size:11px">${serial||'—'}</td><td style="text-align:center">${qty}</td><td style="text-align:right">${fmt(unit)}</td><td style="text-align:right">${fmt(total)}</td></tr>`);
+    }
+  });
+  if (el('pq-cab-rows')) el('pq-cab-rows').innerHTML = cabHtml.join('') || '<tr><td colspan="5" style="color:#aaa">No cabinets</td></tr>';
+
+  // Bulk discount
+  const bulkPct  = parseFloat(document.getElementById('bulk-discount-pct')?.value) || 0;
+  const cabTotal = parseAmount('t-cabinets');
+  const cabNetTotal = parseAmount('col-net-total') || cabTotal; // net cost from manufacturer
+  const bulkDisc = cabNetTotal * bulkPct / 100;   // discount off net cost
+  const pqBulkRow = el('pq-bulk-row');
+  if (pqBulkRow) pqBulkRow.style.display = bulkPct > 0 ? '' : 'none';
+  if (el('pq-bulk-label'))    el('pq-bulk-label').textContent    = 'Mfr. Bulk Discount (' + bulkPct + '%)';
+  if (el('pq-t-bulk-discount')) el('pq-t-bulk-discount').textContent = '−' + fmt(bulkDisc);
+
+  // Labor rows
+  const labHtml = [];
+  document.querySelectorAll('#labor-tbody tr').forEach(tr => {
+    const name = tr.querySelector('input[type=text]')?.value || 'Assembly';
+    const rate = parseFloat(tr.querySelectorAll('input[type=number]')[0]?.value) || 0;
+    const hrs  = parseFloat(tr.querySelectorAll('input[type=number]')[1]?.value) || 0;
+    if (hrs > 0) {
+      labHtml.push(`<tr><td>${name}</td><td style="text-align:center">${hrs} hrs</td><td style="text-align:right">${fmt(rate)}/hr</td><td style="text-align:right">${fmt(rate * hrs)}</td></tr>`);
+    }
+  });
+  if (el('pq-labor-rows')) el('pq-labor-rows').innerHTML = labHtml.join('') || '<tr><td colspan="4" style="color:#aaa">No labor</td></tr>';
+
+  // Totals
+  const labTotal = parseAmount('t-labor');
+  const gna      = parseAmount('t-gna');
+  const tax      = parseAmount('t-tax');
+  const grand    = parseAmount('t-grand');
+  const gnaPct   = document.getElementById('gna-pct')?.value || '0';
+  const taxPct   = document.getElementById('tax-pct')?.value || '0';
+
+  if (el('pq-t-cabinets'))  el('pq-t-cabinets').textContent  = fmt(cabTotal);
+  if (el('pq-t-labor'))     el('pq-t-labor').textContent     = fmt(labTotal);
+  if (el('pq-gna-label'))   el('pq-gna-label').textContent   = 'G&A Fee (' + gnaPct + '%)';
+  if (el('pq-t-gna'))       el('pq-t-gna').textContent       = fmt(gna);
+  if (el('pq-tax-label'))   el('pq-tax-label').textContent   = 'Tax (' + taxPct + '%)';
+  if (el('pq-t-tax'))       el('pq-t-tax').textContent       = fmt(tax);
+  if (el('pq-t-grand'))     el('pq-t-grand').textContent     = fmt(grand);
+}
+
+// ── RECONCILIATION FUNCTIONS ─────────────────────────────────────────
+
+function parseAndCompareVendorInvoice() {
+  const vendorDataRaw = document.getElementById('vendor-invoice-data').value;
+  const quoteRows = collectData().cabinets; // Get cabinet data from quote
+  const comparisonResultsBody = document.getElementById('comparison-tbody');
+  let totalQuoteValue = 0;
+  let totalVendorValue = 0;
+
+  comparisonResultsBody.innerHTML = ''; // Clear previous results
+
+  // Parse vendor data
+  const vendorLines = vendorDataRaw.split('\n').map(line => {
+    const parts = line.split(',').map(p => p.trim());
+    if (parts.length >= 4) {
+      return {
+        description: parts[0],
+        qty: parseInt(parts[1]) || 0,
+        unitCost: parseFloat(parts[2]) || 0,
+        serial: parts[3]
+      };
+    }
+    return null;
+  }).filter(Boolean);
+
+  const matchedQuoteIds = new Set();
+  const comparisonData = [];
+
+  vendorLines.forEach(vendorItem => {
+    let match = null;
+    let matchType = '';
+
+    // Try to match by serial first
+    if (vendorItem.serial) {
+      match = quoteRows.find(quoteItem => quoteItem.serial && quoteItem.serial.toLowerCase() === vendorItem.serial.toLowerCase());
+      if (match) matchType = 'serial';
+    }
+
+    // If no serial match, try fuzzy description match
+    if (!match && vendorItem.description) {
+      const vendorDescLower = vendorItem.description.toLowerCase();
+      match = quoteRows.find(quoteItem => {
+        const quoteDescLower = quoteItem.desc.toLowerCase();
+        return quoteDescLower.includes(vendorDescLower) || vendorDescLower.includes(quoteDescLower);
+      });
+      if (match) matchType = 'description';
+    }
+
+    if (match && !matchedQuoteIds.has(match.id)) { // Prevent matching same quote item multiple times
+      matchedQuoteIds.add(match.id);
+      const quoteQty = match.qty;
+      const quoteCost = parseFloat(match.cost) || 0;
+      const quoteMarkup = parseFloat(match.markup) || 0;
+      const quoteUnitCostWithMarkup = quoteCost * (1 + quoteMarkup / 100);
+
+      const vendorQty = vendorItem.qty;
+      const vendorUnitCost = vendorItem.unitCost;
+
+      const qtyMismatch = quoteQty !== vendorQty;
+      const costMismatch = Math.abs(quoteUnitCostWithMarkup - vendorUnitCost) / quoteUnitCostWithMarkup > 0.02; // 2% tolerance
+
+      let status = '✅ Match';
+      if (qtyMismatch || costMismatch) {
+        status = '⚠️ Mismatch';
+      }
+
+      const variance = (vendorUnitCost * vendorQty) - (quoteUnitCostWithMarkup * quoteQty);
+      totalQuoteValue += (quoteUnitCostWithMarkup * quoteQty);
+      totalVendorValue += (vendorUnitCost * vendorQty);
+
+      comparisonData.push({
+        item: vendorItem.description,
+        quoteQty: quoteQty,
+        vendorQty: vendorQty,
+        quoteCost: fmt(quoteUnitCostWithMarkup),
+        vendorCost: fmt(vendorUnitCost),
+        variance: fmt(variance),
+        status: status,
+        statusClass: status === '✅ Match' ? '' : (status === '⚠️ Mismatch' ? 'pnl-negative' : '') 
+      });
+    } else {
+      // Extra item on vendor invoice
+      const variance = vendorItem.unitCost * vendorItem.qty;
+      totalVendorValue += variance;
+      comparisonData.push({
+        item: vendorItem.description,
+        quoteQty: 0,
+        vendorQty: vendorItem.qty,
+        quoteCost: fmt(0),
+        vendorCost: fmt(vendorItem.unitCost),
+        variance: fmt(variance),
+        status: '❌ Extra (Vendor)',
+        statusClass: 'pnl-negative'
+      });
+    }
+  });
+
+  // Check for missing items from quote (not found in vendor invoice)
+  quoteRows.forEach(quoteItem => {
+    if (!matchedQuoteIds.has(quoteItem.id)) {
+      const quoteCost = parseFloat(quoteItem.cost) || 0;
+      const quoteMarkup = parseFloat(quoteItem.markup) || 0;
+      const quoteUnitCostWithMarkup = quoteCost * (1 + quoteMarkup / 100);
+      const missingValue = quoteUnitCostWithMarkup * quoteItem.qty;
+      totalQuoteValue += missingValue;
+      comparisonData.push({
+        item: quoteItem.desc,
+        quoteQty: quoteItem.qty,
+        vendorQty: 0,
+        quoteCost: fmt(quoteUnitCostWithMarkup),
+        vendorCost: fmt(0),
+        variance: fmt(-missingValue),
+        status: '❌ Missing (Quote)',
+        statusClass: 'pnl-negative'
+      });
+    }
+  });
+
+  if (comparisonData.length === 0) {
+    comparisonResultsBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--muted);">No items to compare or parse errors.</td></tr>';
+  } else {
+    comparisonData.forEach(item => {
+      comparisonResultsBody.innerHTML += `
+        <tr>
+          <td>${item.item}</td>
+          <td>${item.quoteQty}</td>
+          <td>${item.vendorQty}</td>
+          <td>${item.quoteCost}</td>
+          <td><span class="${item.statusClass}">${item.vendorCost}</span></td>
+          <td><span class="${item.statusClass}">${item.variance}</span></td>
+          <td><span class="${item.statusClass}">${item.status}</span></td>
+        </tr>
+      `;
+    });
+  }
+
+  document.getElementById('reconcile-quote-value').textContent = fmt(totalQuoteValue);
+  document.getElementById('reconcile-vendor-value').textContent = fmt(totalVendorValue);
+  document.getElementById('reconcile-net-variance').textContent = fmt(totalVendorValue - totalQuoteValue);
+
+  document.getElementById('comparison-results').style.display = 'block';
+  saveReconciliationData(activeQuoteId);
+}
+
+function recalcFinalReconciliation() {
+  const finalCustomerInvoice = parseFloat(document.getElementById('final-customer-invoice').value) || 0;
+  const finalVendorInvoice = parseFloat(document.getElementById('final-vendor-invoice').value) || 0;
+
+  let totalLaborCost = 0;
+  // Ensure activeQuoteId exists before accessing quoteData
+  if (activeQuoteId && quoteData[activeQuoteId]) {
+    totalLaborCost = quoteData[activeQuoteId].labor.reduce((sum, item) => sum + (parseFloat(item.rate) || 0) * (parseFloat(item.hours) || 0), 0);
+  }
+
+  const grossMarginDollar = finalCustomerInvoice - finalVendorInvoice;
+  const grossMarginPct = finalCustomerInvoice > 0 ? (grossMarginDollar / finalCustomerInvoice * 100) : 0;
+  const netProjectProfit = grossMarginDollar - totalLaborCost;
+
+  document.getElementById('reconcile-gross-margin-dollar').textContent = fmt(grossMarginDollar);
+  document.getElementById('reconcile-gross-margin-pct').textContent = grossMarginPct.toFixed(2) + '%';
+  document.getElementById('reconcile-labor-cost').textContent = fmt(totalLaborCost);
+  document.getElementById('reconcile-net-profit').textContent = fmt(netProjectProfit);
+  
+  // Apply visual styling based on profit
+  const netProfitEl = document.getElementById('reconcile-net-profit');
+  if (netProjectProfit >= 0) {
+    netProfitEl.classList.remove('pnl-negative');
+    netProfitEl.classList.add('pnl-positive');
+  } else {
+    netProfitEl.classList.remove('pnl-positive');
+    netProfitEl.classList.add('pnl-negative');
+  }
+
+  saveReconciliationData(activeQuoteId);
+}
+
+function lockReconciliation() {
+  const password = prompt('Enter password to lock reconciliation:');
+  if (password === CONTRACT_PW) { // Using the same password as contract lock for simplicity
+    document.getElementById('final-customer-invoice').classList.add('locked');
+    document.getElementById('final-vendor-invoice').classList.add('locked');
+    document.getElementById('reconcile-notes').classList.add('locked');
+    alert('Reconciliation locked!');
+    saveReconciliationData(activeQuoteId);
+  } else if (password !== null) {
+    alert('Incorrect password!');
+  }
+}
+
+// DRAG AND DROP for vendor invoice
+document.addEventListener('DOMContentLoaded', () => {
+  const dropZone = document.getElementById('vendor-invoice-upload-zone');
+  const vendorInvoiceData = document.getElementById('vendor-invoice-data');
+
+  if (dropZone) {
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.style.borderColor = 'var(--accent)';
+    });
+
+    dropZone.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      dropZone.style.borderColor = 'var(--border)';
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.style.borderColor = 'var(--border)';
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        const file = files[0];
+        if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            vendorInvoiceData.value = event.target.result;
+          };
+          reader.readAsText(file);
+        } else {
+          alert('Please upload a CSV file.');
+        }
+      }
+    });
+
+    dropZone.addEventListener('click', () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.csv';
+        input.onchange = (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              vendorInvoiceData.value = event.target.result;
+            };
+            reader.readAsText(file);
+          }
+        };
+        input.click();
+      });
+  }
+});
+
+function saveReconciliationData(quoteId) {
+  if (!quoteId) return;
+  try {
+    const reconciliationData = {
+      finalCustomerInvoice: document.getElementById('final-customer-invoice').value,
+      finalVendorInvoice: document.getElementById('final-vendor-invoice').value,
+      reconcileNotes: document.getElementById('reconcile-notes').value,
+      vendorInvoiceRaw: document.getElementById('vendor-invoice-data').value,
+      comparisonHTML: document.getElementById('comparison-tbody').innerHTML,
+      reconcileQuoteValue: document.getElementById('reconcile-quote-value').textContent,
+      reconcileVendorValue: document.getElementById('reconcile-vendor-value').textContent,
+      reconcileNetVariance: document.getElementById('reconcile-net-variance').textContent,
+      isLocked: document.getElementById('final-customer-invoice').classList.contains('locked'),
+    };
+    quoteData[quoteId].reconciliationData = reconciliationData;
+    saveQuoteData(quoteId);
+    // localStorage.setItem('fm-reconciliation', JSON.stringify(reconciliationData)); /* REMOVED */
+  } catch (e) {
+    console.error('Error saving reconciliation data:', e);
+  }
+}
+
+function loadReconciliationData(quoteId) {
+  if (!quoteId) return;
+  try {
+    const d = quoteData[quoteId].reconciliationData;
+    // const raw = localStorage.getItem('fm-reconciliation'); /* REMOVED */
+    // if (!raw) return;
+    // const d = JSON.parse(raw);
+    
+    // Clear form fields first in case data is null
+    document.getElementById('final-customer-invoice').value = '';
+    document.getElementById('final-vendor-invoice').value = '';
+    document.getElementById('reconcile-notes').value = '';
+    document.getElementById('vendor-invoice-data').value = '';
+    document.getElementById('comparison-tbody').innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--muted);">No data to display</td></tr>';
+    document.getElementById('comparison-results').style.display = 'none';
+    document.getElementById('reconcile-quote-value').textContent = fmt(0);
+    document.getElementById('reconcile-vendor-value').textContent = fmt(0);
+    document.getElementById('reconcile-net-variance').textContent = fmt(0);
+
+    if (!d) return; // No reconciliation data for this quote
+
+    if (d.finalCustomerInvoice) document.getElementById('final-customer-invoice').value = d.finalCustomerInvoice;
+    if (d.finalVendorInvoice) document.getElementById('final-vendor-invoice').value = d.finalVendorInvoice;
+    if (d.reconcileNotes) document.getElementById('reconcile-notes').value = d.reconcileNotes;
+    if (d.vendorInvoiceRaw) document.getElementById('vendor-invoice-data').value = d.vendorInvoiceRaw;
+    if (d.comparisonHTML) {
+      document.getElementById('comparison-tbody').innerHTML = d.comparisonHTML;
+      document.getElementById('comparison-results').style.display = 'block';
+    }
+    if (d.reconcileQuoteValue) document.getElementById('reconcile-quote-value').textContent = d.reconcileQuoteValue;
+    if (d.reconcileVendorValue) document.getElementById('reconcile-vendor-value').textContent = d.reconcileVendorValue;
+    if (d.reconcileNetVariance) document.getElementById('reconcile-net-variance').textContent = d.reconcileNetVariance;
+    
+    if (d.isLocked) {
+      document.getElementById('final-customer-invoice').classList.add('locked');
+      document.getElementById('final-vendor-invoice').classList.add('locked');
+      document.getElementById('reconcile-notes').classList.add('locked');
+    } else {
+      document.getElementById('final-customer-invoice').classList.remove('locked');
+      document.getElementById('final-vendor-invoice').classList.remove('locked');
+      document.getElementById('reconcile-notes').classList.remove('locked');
+    }
+
+    recalcFinalReconciliation(); // Ensure calculations are up-to-date with loaded data
+  } catch (e) {
+    console.error('Error loading reconciliation data:', e);
+  }
+}
+
+function getReconciliationDataFromForm() {
+  // Only return reconciliation data if the section is visible or has values
+  const hasCustomerInvoice = document.getElementById('final-customer-invoice').value !== '';
+  const hasVendorInvoice = document.getElementById('final-vendor-invoice').value !== '';
+  const hasNotes = document.getElementById('reconcile-notes').value !== '';
+  const hasVendorRaw = document.getElementById('vendor-invoice-data').value !== '';
+
+  if (!(hasCustomerInvoice || hasVendorInvoice || hasNotes || hasVendorRaw)) {
+    return null;
+  }
+
+  return {
+    finalCustomerInvoice: document.getElementById('final-customer-invoice').value,
+    finalVendorInvoice: document.getElementById('final-vendor-invoice').value,
+    reconcileNotes: document.getElementById('reconcile-notes').value,
+    vendorInvoiceRaw: document.getElementById('vendor-invoice-data').value,
+    comparisonHTML: document.getElementById('comparison-tbody').innerHTML,
+    reconcileQuoteValue: document.getElementById('reconcile-quote-value').textContent,
+    reconcileVendorValue: document.getElementById('reconcile-vendor-value').textContent,
+    reconcileNetVariance: document.getElementById('reconcile-net-variance').textContent,
+    isLocked: document.getElementById('final-customer-invoice').classList.contains('locked'),
+  };
+}
+
+
+// ======================================================================
+// COMPANY P&L — monthly-column engine (July 2026+)
+// Storage: one KV key per month: fm-cpnl-YYYY-MM
+// ======================================================================
+
+const CPNL_DEFAULTS = {
+  'other-revenue':  0,
+  'freight':        0,
+  'salaries':       10550,
+  'owner-draw':     3293,
+  'rent':           2255,
+  'vehicle':        72.86,
+  'fuel':           0,
+  'insurance':      0,
+  'tools':          0,
+  'tech':           1308.58,
+  'marketing':      0,
+  'professional':   4250,
+  'office':         60.24,
+  'misc':           207,
+  'depreciation':   182.14,
+  'interest':       500,
+  'principal':      1433,
+};
+
+// In-memory monthly data cache
+let _cpnlMonthData = {};
+// _cpnlUnlocked and CPNL_PW declared above
+
+function cpnlMonthKey(ym) { return 'fm-cpnl-' + ym; }
+
+function cpnlGetMonth(ym) {
+  if (_cpnlMonthData[ym]) return _cpnlMonthData[ym];
+  try {
+    const raw = localStorage.getItem(cpnlMonthKey(ym));
+    if (raw) { _cpnlMonthData[ym] = JSON.parse(raw); return _cpnlMonthData[ym]; }
+  } catch(e) {}
+  return null;
+}
+
+function cpnlSaveMonth(ym, data) {
+  _cpnlMonthData[ym] = data;
+  try { localStorage.setItem(cpnlMonthKey(ym), JSON.stringify(data)); } catch(e) {}
+  fmCloudPushDebounced();
+}
+
+function cpnlGetVal(ym, field) {
+  const saved = cpnlGetMonth(ym);
+  if (saved && saved[field] !== undefined) return parseFloat(saved[field]) || 0;
+  return CPNL_DEFAULTS[field] !== undefined ? CPNL_DEFAULTS[field] : 0;
+}
+
+function cpnlLoadFromKV(kvData) {
+  Object.keys(kvData).forEach(k => {
+    if (k.startsWith('fm-cpnl-')) {
+      const ym = k.replace('fm-cpnl-', '');
+      if (!_cpnlMonthData[ym]) {
+        try { _cpnlMonthData[ym] = typeof kvData[k] === 'object' ? kvData[k] : JSON.parse(kvData[k]); } catch(e) {}
+      }
+    }
+  });
+}
+
+function cpnlYM(date) {
+  return date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0');
+}
+
+function cpnlMonthLabel(ym) {
+  const [y,m] = ym.split('-');
+  const d = new Date(parseInt(y), parseInt(m)-1, 1);
+  return d.toLocaleString('default', {month:'short', year:'numeric'});
+}
+
+function cpnlIsPast(ym) {
+  return ym < cpnlYM(new Date());
+}
+
+function cpnlRolling3() {
+  const now = new Date();
+  const out = [];
+  for (let i = 0; i < 3; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    out.push(cpnlYM(d));
+  }
+  return out;
+}
+
+function cpnlQuarterMonths(qstr) {
+  const [yr, q] = qstr.split('-Q');
+  const startMo = (parseInt(q) - 1) * 3 + 1;
+  const out = [];
+  for (let i = 0; i < 3; i++) {
+    const mo = startMo + i;
+    const y = parseInt(yr) + (mo > 12 ? 1 : 0);
+    const m = mo > 12 ? mo - 12 : mo;
+    out.push(y + '-' + String(m).padStart(2,'0'));
+  }
+  return out;
+}
+
+function cpnlYearMonths(yr) {
+  const out = [];
+  for (let m = 1; m <= 12; m++) out.push(yr + '-' + String(m).padStart(2,'0'));
+  return out;
+}
+
+function cpnlGetColumns() {
+  const mode = document.getElementById('cpnl-view-mode')?.value || 'rolling3';
+  if (mode === 'rolling3') return cpnlRolling3();
+  if (mode === 'month') {
+    const v = document.getElementById('cpnl-month-picker')?.value || cpnlYM(new Date());
+    return [v];
+  }
+  if (mode === 'quarter') {
+    const v = document.getElementById('cpnl-quarter-picker')?.value || '2026-Q3';
+    return cpnlQuarterMonths(v);
+  }
+  if (mode === 'year') {
+    const v = document.getElementById('cpnl-year-picker')?.value || '2026';
+    return cpnlYearMonths(v);
+  }
+  return cpnlRolling3();
+}
+
+function cpnlCalcMonth(ym) {
+  const [yr, mo] = ym.split('-').map(Number);
+  let contractedRevenue = 0, cabCost = 0;
+  quotesIndex.forEach(q => {
+    if (q.status !== 'contract') return;
+    if (!q.date) return;
+    const d = new Date(q.date + 'T00:00:00');
+    if (d.getFullYear() === yr && d.getMonth()+1 === mo) {
+      contractedRevenue += (q.total || 0);
+      const qd = quoteData[q.id];
+      if (qd && qd.cabinets) {
+        cabCost += qd.cabinets.reduce((s,c) => s + (parseFloat(c.qty)||0)*(parseFloat(c.cost)||0), 0);
+      }
+    }
+  });
+  const get = f => cpnlGetVal(ym, f);
+  const otherRev = get('other-revenue');
+  const totalRev = contractedRevenue + otherRev;
+  const freight = get('freight');
+  const totalCOGS = cabCost + freight;
+  const grossProfit = totalRev - totalCOGS;
+  const grossMargin = totalRev > 0 ? (grossProfit / totalRev * 100) : 0;
+  const salaries = get('salaries'), ownerDraw = get('owner-draw'), rent = get('rent');
+  const vehicle = get('vehicle'), fuel = get('fuel'), insurance = get('insurance');
+  const tools = get('tools'), tech = get('tech'), marketing = get('marketing');
+  const professional = get('professional'), office = get('office'), misc = get('misc');
+  const totalOpex = salaries + ownerDraw + rent + vehicle + fuel + insurance + tools + tech + marketing + professional + office + misc;
+  const ebitda = grossProfit - totalOpex;
+  const depreciation = get('depreciation'), interest = get('interest'), principal = get('principal');
+  const netIncome = ebitda - depreciation - interest - principal;
+  const netMargin = totalRev > 0 ? (netIncome / totalRev * 100) : 0;
+  return { contractedRevenue, otherRev, totalRev, cabCost, freight, totalCOGS, grossProfit, grossMargin,
+    salaries, ownerDraw, rent, vehicle, fuel, insurance, tools, tech, marketing, professional, office, misc, totalOpex,
+    ebitda, depreciation, interest, principal, netIncome, netMargin };
+}
+
+function renderCpnl() {
+  const mode = document.getElementById('cpnl-view-mode')?.value || 'rolling3';
+  document.getElementById('cpnl-month-picker').style.display   = mode === 'month'   ? '' : 'none';
+  document.getElementById('cpnl-quarter-picker').style.display = mode === 'quarter' ? '' : 'none';
+  document.getElementById('cpnl-year-picker').style.display    = mode === 'year'    ? '' : 'none';
+
+  const cols = cpnlGetColumns();
+  const calcs = cols.map(ym => ({ ym, calc: cpnlCalcMonth(ym) }));
+  const now = cpnlYM(new Date());
+  const multiCol = cols.length > 1;
+
+  // HEADER
+  let thead = '<tr style="background:var(--surface2);">'
+    + '<th style="text-align:left;padding:8px 12px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Line Item</th>';
+  cols.forEach(ym => {
+    const past = cpnlIsPast(ym);
+    const cur  = ym === now;
+    const clr  = cur ? 'var(--accent)' : past ? 'var(--muted)' : 'var(--text)';
+    const lock = (past && !_cpnlUnlocked) ? ' \uD83D\uDD12' : '';
+    thead += `<th style="text-align:right;padding:8px 12px;font-size:13px;font-weight:700;color:${clr};">${cpnlMonthLabel(ym)}${lock}</th>`;
+  });
+  if (multiCol) thead += '<th style="text-align:right;padding:8px 12px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Total</th>';
+  thead += '</tr>';
+
+  // HELPERS
+  const fv = (v, neg) => {
+    if (v === 0) return '<span style="color:var(--muted);">—</span>';
+    const clr = neg ? '#f87171' : v >= 0 ? '#4ade80' : '#f87171';
+    const txt = neg
+      ? `($${Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})})`
+      : `$${v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+    return `<span style="color:${clr};">${txt}</span>`;
+  };
+  const fp = v => `<span style="color:${v>=0?'#4ade80':'#f87171'};">${v.toFixed(1)}%</span>`;
+  const totSum = key => calcs.reduce((s,c)=>s+c.calc[key],0);
+  const totAvg = key => calcs.reduce((s,c)=>s+c.calc[key],0)/calcs.length;
+
+  const boldRow = (label, key, neg, big) => {
+    const fs = big ? 'font-size:14px;font-weight:800;' : 'font-size:12px;font-weight:700;';
+    let tr = `<tr style="border-top:1px solid var(--border);background:var(--surface2);">`;
+    tr += `<td style="padding:8px 12px;${fs}">${label}</td>`;
+    calcs.forEach(c => { tr += `<td style="text-align:right;padding:8px 12px;${fs}">${fv(c.calc[key],neg)}</td>`; });
+    if (multiCol) tr += `<td style="text-align:right;padding:8px 12px;${fs}">${fv(totSum(key),neg)}</td>`;
+    return tr + '</tr>';
+  };
+  const pctRow = (label, key) => {
+    let tr = `<tr style="background:var(--surface2);border-bottom:1px solid var(--border);">`;
+    tr += `<td style="padding:2px 12px 8px;font-size:11px;color:var(--muted);">${label}</td>`;
+    calcs.forEach(c => { tr += `<td style="text-align:right;padding:2px 12px 8px;font-size:11px;">${fp(c.calc[key])}</td>`; });
+    if (multiCol) tr += `<td style="text-align:right;padding:2px 12px 8px;font-size:11px;">${fp(totAvg(key))}</td>`;
+    return tr + '</tr>';
+  };
+  const autoRow = (label, key) => {
+    let tr = `<tr><td style="padding:5px 12px;font-size:12px;color:var(--muted);">${label} <span style="font-size:9px;">(auto)</span></td>`;
+    calcs.forEach(c => { const v=c.calc[key]; tr += `<td style="text-align:right;padding:5px 12px;font-size:12px;color:var(--muted);">${v>0?'$'+v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'—'}</td>`; });
+    if (multiCol) { const t=totSum(key); tr += `<td style="text-align:right;padding:5px 12px;font-size:12px;color:var(--muted);">$${t.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>`; }
+    return tr + '</tr>';
+  };
+  const inputRow = (field, label, note) => {
+    let tr = `<tr class="cpnl-input-row"><td style="padding:5px 12px;font-size:12px;">${label}${note?`<span style="font-size:10px;color:var(--muted);margin-left:6px;">${note}</span>`:''}  </td>`;
+    cols.forEach(ym => {
+      const editable = !cpnlIsPast(ym) || _cpnlUnlocked;
+      const val = cpnlGetVal(ym, field);
+      if (editable) {
+        tr += `<td style="text-align:right;padding:4px 8px;"><input type="number" step="0.01" class="pnl-input cpnl-col-input" data-ym="${ym}" data-field="${field}" value="${val}" style="width:100%;max-width:130px;text-align:right;" oninput="cpnlInputChanged(this)" /></td>`;
+      } else {
+        tr += `<td style="text-align:right;padding:5px 12px;font-size:12px;color:var(--muted);">$${val.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>`;
+      }
+    });
+    if (multiCol) {
+      const tot = cols.reduce((s,ym)=>s+cpnlGetVal(ym,field),0);
+      tr += `<td style="text-align:right;padding:5px 12px;font-size:12px;color:var(--muted);">$${tot.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>`;
+    }
+    return tr + '</tr>';
+  };
+  const secLabel = label => `<tr><td colspan="${cols.length+(multiCol?2:1)}" style="padding:12px 12px 4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--blue);background:var(--bg);">${label}</td></tr>`;
+  const payrollRow = () => {
+    let tr = `<tr><td style="padding:3px 12px;font-size:11px;color:var(--muted);">Payroll Taxes</td>`
+      + cols.map(()=>'<td style="text-align:right;padding:3px 12px;font-size:11px;color:var(--muted);">$0.00 <span style="font-size:9px;">(K1)</span></td>').join('')
+      + (multiCol?'<td></td>':'')
+      + '</tr>';
+    return tr;
+  };
+
+  let tbody = '';
+  tbody += secLabel('Revenue');
+  tbody += autoRow('Contracted Revenue', 'contractedRevenue');
+  tbody += inputRow('other-revenue', 'Other Revenue');
+  tbody += boldRow('Total Revenue', 'totalRev', false, true);
+
+  tbody += secLabel('Cost of Goods Sold');
+  tbody += autoRow('Cabinet Cost (materials)', 'cabCost');
+  tbody += inputRow('freight', 'Freight / Delivery');
+  tbody += boldRow('Total COGS', 'totalCOGS', true, false);
+
+  tbody += boldRow('GROSS PROFIT', 'grossProfit', false, true);
+  tbody += pctRow('Gross Margin %', 'grossMargin');
+
+  tbody += secLabel('Operating Expenses');
+  tbody += inputRow('salaries',     'Guaranteed Payments (K1)', 'Tim $85K/yr + Kristey');
+  tbody += inputRow('owner-draw',   'Contract Labor (1099)',    'Tayler');
+  tbody += payrollRow();
+  tbody += inputRow('rent',         'Rent / Warehouse',         '719 Main');
+  tbody += inputRow('vehicle',      'Vehicle / Truck');
+  tbody += inputRow('fuel',         'Fuel');
+  tbody += inputRow('insurance',    'Insurance');
+  tbody += inputRow('tools',        'Tools & Equipment');
+  tbody += inputRow('tech',         'Cell / Technology');
+  tbody += inputRow('marketing',    'Marketing');
+  tbody += inputRow('professional', 'Professional Fees');
+  tbody += inputRow('office',       'Office Supplies');
+  tbody += inputRow('misc',         'Miscellaneous',            'FCA frame shop $207/mo');
+  tbody += boldRow('Total OpEx', 'totalOpex', true, false);
+  tbody += boldRow('EBITDA', 'ebitda', false, true);
+
+  tbody += secLabel('Below the Line');
+  tbody += inputRow('depreciation', 'Depreciation');
+  tbody += inputRow('interest',     'Interest Expense',         '$100K note @ 6%');
+  tbody += inputRow('principal',    'Principal Payment',        '$1,933/mo total');
+
+  tbody += boldRow('NET INCOME (Pre-Tax)', 'netIncome', false, true);
+  tbody += pctRow('Net Margin %', 'netMargin');
+
+  document.getElementById('cpnl-thead').innerHTML = thead;
+  document.getElementById('cpnl-tbody').innerHTML = tbody;
+
+  // METRICS
+  const metricsData = [
+    { label:'Revenue',      val: calcs[0]?.calc.totalRev,    fmt: v=>'$'+Math.round(v).toLocaleString() },
+    { label:'Gross Margin', val: calcs[0]?.calc.grossMargin, fmt: v=>v.toFixed(1)+'%' },
+    { label:'Net Income',   val: calcs[0]?.calc.netIncome,   fmt: v=>'$'+Math.round(v).toLocaleString() },
+    { label:'Total OpEx',   val: calcs[0]?.calc.totalOpex,   fmt: v=>'$'+Math.round(v).toLocaleString() },
+  ];
+  const metricsEl = document.getElementById('cpnl-metrics');
+  if (metricsEl) metricsEl.innerHTML = metricsData.map(m => {
+    const v = m.val || 0;
+    const clr = v >= 0 ? '#4ade80' : '#f87171';
+    return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 18px;min-width:140px;"><div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px;">${m.label}</div><div style="font-size:18px;font-weight:800;color:${clr};">${m.fmt(v)}</div></div>`;
+  }).join('');
+
+  // PIPELINE
+  let contractedRevenue=0, proposedPipeline=0, approvedPipeline=0, proposedCabCost=0;
+  let jobsHtml='';
+  quotesIndex.forEach(q => {
+    const qd = quoteData[q.id];
+    const cc = qd && qd.cabinets ? qd.cabinets.reduce((s,c)=>s+(parseFloat(c.qty)||0)*(parseFloat(c.cost)||0),0) : 0;
+    if (q.status==='contract') {
+      contractedRevenue += (q.total||0);
+      jobsHtml += `<tr><td>${q.jobCode||'—'}</td><td>${q.customer||'—'}</td><td>${q.project||'—'}</td><td style="text-align:right">$${(q.total||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td></tr>`;
+    } else if (q.status==='proposed') { proposedPipeline+=(q.total||0); proposedCabCost+=cc; }
+    else if (q.status==='approved')   { approvedPipeline+=(q.total||0); }
+  });
+  const tb2 = document.getElementById('cpnl-contracted-jobs-tbody');
+  if (tb2) tb2.innerHTML = jobsHtml || '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px;">No contracted jobs yet.</td></tr>';
+  const propGP = proposedPipeline - proposedCabCost;
+  const propGPPct = proposedPipeline > 0 ? (propGP/proposedPipeline*100).toFixed(1)+'%' : '—';
+  const se = id => document.getElementById(id);
+  if(se('cpnl-pipeline-proposed'))       se('cpnl-pipeline-proposed').textContent       = '$'+proposedPipeline.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  if(se('cpnl-pipeline-proposed-margin')) se('cpnl-pipeline-proposed-margin').textContent= `$${propGP.toFixed(2)} (${propGPPct})`;
+  if(se('cpnl-pipeline-approved'))       se('cpnl-pipeline-approved').textContent       = '$'+approvedPipeline.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  if(se('cpnl-pipeline-total'))          se('cpnl-pipeline-total').textContent          = '$'+(proposedPipeline+approvedPipeline+contractedRevenue).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+  cpnlApplyLockState();
+}
+
+function cpnlInputChanged(el) {
+  const ym = el.dataset.ym;
+  const field = el.dataset.field;
+  const val = parseFloat(el.value) || 0;
+  let data = Object.assign({}, cpnlGetMonth(ym));
+  if (Object.keys(data).length === 0) {
+    Object.assign(data, CPNL_DEFAULTS);
+  }
+  data[field] = val;
+  cpnlSaveMonth(ym, data);
+  // re-render totals without full teardown
+  renderCpnl();
+}
+
+function cpnlApplyLockState() {
+  const btn = document.getElementById('cpnl-lock-btn');
+  if (!btn) return;
+  btn.textContent = _cpnlUnlocked ? '\uD83D\uDD13 Lock' : '\uD83D\uDD10 Edit';
+  btn.style.borderColor = _cpnlUnlocked ? '#f87171' : '#facc15';
+  btn.style.color = _cpnlUnlocked ? '#f87171' : '#facc15';
+}
+
+function cpnlToggleLock() {
+  if (!_cpnlUnlocked) {
+    const pw = prompt('Company P&L password:');
+    if (pw === null) return;
+    if (pw !== CPNL_PW) { alert('Incorrect password.'); return; }
+    _cpnlUnlocked = true;
+  } else {
+    _cpnlUnlocked = false;
+  }
+  renderCpnl();
+}
+
+// Legacy alias
+function recalcCompanyPnl() { renderCpnl(); }
+
+function applyPnlStyling(elementId, value) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  if (typeof value === 'number') {
+    el.textContent = fmt(value);
+    el.classList.toggle('pnl-positive', value >= 0);
+    el.classList.toggle('pnl-negative', value < 0);
+  } else {
+    el.textContent = value;
+    const num = parseFloat(value);
+    if (!isNaN(num)) {
+      el.classList.toggle('pnl-positive', num >= 0);
+      el.classList.toggle('pnl-negative', num < 0);
+    }
+  }
+}
+
+
+const BS_PW='6525';
+function bsApplyLockState(){
+  const locked=!_bsUnlocked;
+  BS_FIELDS.forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=locked;});
+  const d=document.getElementById('bs-date-input');if(d)d.disabled=locked;
+  const btn=document.getElementById('bs-lock-btn');
+  if(btn){btn.textContent=locked?'🔐 Edit':'🔒 Lock';btn.style.borderColor=locked?'#facc15':'#f87171';btn.style.color=locked?'#facc15':'#f87171';}
+}
+function bsToggleLock(){
+  if(!_bsUnlocked){
+    const pw=prompt('Balance Sheet password:');
+    if(pw===null)return;
+    if(pw!==BS_PW){alert('Incorrect password.');return;}
+    _bsUnlocked=true;
+  }else{_bsUnlocked=false;}
+  bsApplyLockState();
+}
+const BS_FIELDS = ['bs-cash','bs-ar','bs-inventory','bs-prepaid',
+  'bs-equipment','bs-vehicles','bs-leasehold','bs-accum-dep',
+  'bs-ap','bs-cc','bs-accrued','bs-note-current',
+  'bs-note-lt','bs-fca-loan',
+  'bs-equity-stan','bs-equity-partner','bs-retained','bs-net-income'];
+
+function bsVal(id) { return parseFloat(document.getElementById(id)?.value) || 0; }
+function bsFmt(n) { return '$' + n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+function bsRecalc() {
+  const currentAssets = bsVal('bs-cash') + bsVal('bs-ar') + bsVal('bs-inventory') + bsVal('bs-prepaid');
+  const fixedAssets   = bsVal('bs-equipment') + bsVal('bs-vehicles') + bsVal('bs-leasehold') - bsVal('bs-accum-dep');
+  const totalAssets   = currentAssets + fixedAssets;
+
+  const currentLiab   = bsVal('bs-ap') + bsVal('bs-cc') + bsVal('bs-accrued') + bsVal('bs-note-current');
+  const ltLiab        = bsVal('bs-note-lt') + bsVal('bs-fca-loan');
+  const totalEquity   = bsVal('bs-equity-stan') + bsVal('bs-equity-partner') + bsVal('bs-retained') + bsVal('bs-net-income');
+  const totalLiabEq   = currentLiab + ltLiab + totalEquity;
+
+  document.getElementById('bs-total-current-assets').textContent = bsFmt(currentAssets);
+  document.getElementById('bs-total-fixed-assets').textContent   = bsFmt(fixedAssets);
+  document.getElementById('bs-total-assets').textContent         = bsFmt(totalAssets);
+  document.getElementById('bs-total-current-liab').textContent   = bsFmt(currentLiab);
+  document.getElementById('bs-total-lt-liab').textContent        = bsFmt(ltLiab);
+  document.getElementById('bs-total-equity').textContent         = bsFmt(totalEquity);
+  document.getElementById('bs-total-liab-equity').textContent    = bsFmt(totalLiabEq);
+
+  const diff = Math.abs(totalAssets - totalLiabEq);
+  const chk  = document.getElementById('bs-balance-check');
+  if (diff < 0.02) {
+    chk.textContent = '✓ Balanced'; chk.style.color = '#4ade80';
+  } else {
+    chk.textContent = `⚠ Off by ${bsFmt(diff)}`; chk.style.color = '#f87171';
+  }
+  bsSave();
+}
+
+function bsSave() {
+  const data = { date: document.getElementById('bs-date-input')?.value || '' };
+  BS_FIELDS.forEach(id => { data[id] = document.getElementById(id)?.value || '0'; });
+  try {
+    localStorage.setItem('fm-balance-sheet', JSON.stringify(data));
+    fmCloudPushDebounced();
+  } catch(e) {}
+}
+
+function bsLoad() {
+  try {
+    const raw = localStorage.getItem('fm-balance-sheet');
+    if (!raw) { bsRecalc(); return; }
+    const data = JSON.parse(raw);
+    if (data.date) {
+      document.getElementById('bs-date-input').value = data.date;
+      document.getElementById('bs-as-of-date').textContent = data.date;
+    }
+    BS_FIELDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && data[id] !== undefined) el.value = data[id];
+    });
+  } catch(e) {}
+  bsRecalc();
+  bsApplyLockState();
+}
+
+function bsExport() {
+  const rows = [
+    ['Fremont Makers Cabinet Co. — Balance Sheet'],
+    ['As of', document.getElementById('bs-date-input')?.value || ''],
+    [],
+    ['ASSETS'],
+    ['Cash & Checking', bsVal('bs-cash')],
+    ['Accounts Receivable', bsVal('bs-ar')],
+    ['Inventory', bsVal('bs-inventory')],
+    ['Prepaid / Deposits', bsVal('bs-prepaid')],
+    ['Shop Equipment', bsVal('bs-equipment')],
+    ['Vehicles', bsVal('bs-vehicles')],
+    ['Leasehold Improvements', bsVal('bs-leasehold')],
+    ['Less: Accumulated Depreciation', -bsVal('bs-accum-dep')],
+    [],
+    ['LIABILITIES'],
+    ['Accounts Payable', bsVal('bs-ap')],
+    ['Credit Cards', bsVal('bs-cc')],
+    ['Accrued Expenses', bsVal('bs-accrued')],
+    ['Current Portion — Note Payable', bsVal('bs-note-current')],
+    ['Note Payable — Stan Bullis (LT)', bsVal('bs-note-lt')],
+    ['FCA Equipment Financing', bsVal('bs-fca-loan')],
+    [],
+    ["MEMBERS' EQUITY"],
+    ['Unbridled Companies', bsVal('bs-equity-stan')],
+    ['BigFam, LLC', bsVal('bs-equity-partner')],
+    ['Retained Earnings', bsVal('bs-retained')],
+    ['Net Income (YTD)', bsVal('bs-net-income')],
+  ];
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'fremont-makers-balance-sheet-' + (document.getElementById('bs-date-input')?.value || 'draft') + '.csv';
+  a.click();
+}
+// ── END BALANCE SHEET ──────────────────────────────────────────────
+</script>
+</body>
+</html>

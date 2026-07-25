@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kitchen Reboot Guide — Hotel St. Cloud</title>
+  <style>
+    :root {
+      --black: #111111;
+      --white: #ffffff;
+      --gold: #c9a84c;
+      --red: #c0392b;
+      --red-light: #fdf0ee;
+      --orange: #d4651c;
+      --orange-light: #fdf3ec;
+      --green: #1a6e3a;
+      --green-light: #eaf5ee;
+      --blue: #1a4a6e;
+      --blue-light: #eaf2f8;
+      --gray: #4b4f54;
+      --gray-light: #f2f2f2;
+      --border: #d0cbbf;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--white);
+      color: var(--black);
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+      padding: 24px;
+      max-width: 780px;
+      margin: 0 auto;
+    }
+
+    /* ── HEADER ── */
+    .doc-header {
+      background: var(--black);
+      color: var(--white);
+      border-radius: 10px;
+      padding: 18px 24px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .doc-header h1 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+    .doc-header .sub {
+      font-size: 0.78rem;
+      color: var(--gold);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+    .doc-header .print-note {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.5);
+      text-align: right;
+    }
+
+    /* ── EMERGENCY STRIP ── */
+    .emergency-strip {
+      background: var(--red);
+      color: var(--white);
+      border-radius: 8px;
+      padding: 12px 18px;
+      margin-bottom: 14px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .emergency-strip .icon { font-size: 1.3rem; flex-shrink: 0; }
+
+    /* ── CONTACT BAR ── */
+    .contact-bar {
+      background: var(--gray-light);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 18px;
+      margin-bottom: 16px;
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .contact-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .contact-item .label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--gray);
+    }
+    .contact-item .number {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--black);
+    }
+    .contact-item .company {
+      font-size: 0.75rem;
+      color: var(--gray);
+    }
+
+    /* ── SECTION ── */
+    .section {
+      margin-bottom: 18px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .section.danger-section { border-color: #e8b4b0; }
+    .section.warn-section { border-color: #f0d490; }
+    .section.success-section { border-color: #a8d0b8; }
+
+    .section-head {
+      padding: 10px 16px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-head .hicon { font-size: 1.1rem; }
+    .section.danger-section .section-head { background: var(--red-light); color: var(--red); }
+    .section.warn-section .section-head { background: #fffbea; color: #8a6200; }
+    .section.success-section .section-head { background: var(--green-light); color: var(--green); }
+    .section.blue-section .section-head { background: var(--blue-light); color: var(--blue); }
+    .section.blue-section { border-color: #b0c8e0; }
+
+    .section-body { padding: 14px 18px; }
+
+    /* ── STEPS ── */
+    ol.steps { padding-left: 22px; }
+    ol.steps li {
+      font-size: 0.93rem;
+      margin-bottom: 10px;
+      line-height: 1.5;
+      padding-left: 4px;
+    }
+    ol.steps li:last-child { margin-bottom: 0; }
+    ol.steps li strong { font-weight: 800; }
+
+    /* Sub-bullets */
+    ul.sub {
+      padding-left: 18px;
+      margin-top: 6px;
+    }
+    ul.sub li {
+      font-size: 0.88rem;
+      margin-bottom: 5px;
+      line-height: 1.45;
+    }
+
+    /* ── APPLIANCE GRID ── */
+    .appliance-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .appliance-card {
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      background: var(--gray-light);
+    }
+    .appliance-card .aname {
+      font-size: 0.88rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 4px;
+    }
+    .appliance-card .ainstruct {
+      font-size: 0.82rem;
+      line-height: 1.45;
+      color: var(--gray);
+    }
+    .appliance-card .confirm {
+      margin-top: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--green);
+    }
+
+    /* ── GAS OFF TABLE ── */
+    .shutoff-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+    .shutoff-row:last-child { border-bottom: none; }
+    .shutoff-row .appliance { flex: 1; font-weight: 700; }
+    .shutoff-row .location { flex: 2; color: var(--gray); font-size: 0.85rem; }
+    .shutoff-row .status {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 12px;
+      background: var(--gray-light);
+      border: 1px solid var(--border);
+      color: var(--gray);
+      white-space: nowrap;
+    }
+
+    /* ── CALLOUT ── */
+    .callout {
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin: 10px 0;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+    .callout.danger { background: var(--red-light); border-left: 3px solid var(--red); }
+    .callout.warn { background: var(--orange-light); border-left: 3px solid var(--orange); }
+    .callout.success { background: var(--green-light); border-left: 3px solid var(--green); }
+    .callout-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+
+    /* ── CHECKLIST ── */
+    .checklist {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .checklist li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+    .checklist li:last-child { border-bottom: none; }
+    .check-box {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border);
+      border-radius: 4px;
+      flex-shrink: 0;
+      margin-top: 1px;
+      background: white;
+    }
+
+    /* ── FOOTER ── */
+    .doc-footer {
+      margin-top: 20px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      font-size: 0.72rem;
+      color: var(--gray);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    /* ── PRINT ── */
+    @media print {
+      body { padding: 16px; font-size: 13px; }
+      .no-print { display: none !important; }
+      .section { break-inside: avoid; }
+      .appliance-grid { grid-template-columns: 1fr 1fr 1fr; }
+    }
+
+    @media (max-width: 600px) {
+      .appliance-grid { grid-template-columns: 1fr 1fr; }
+      .contact-bar { flex-direction: column; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- PRINT BUTTON (hidden on print) -->
+<div class="no-print" style="text-align:right; margin-bottom:12px;">
+  <button onclick="window.print()" style="background:var(--black);color:white;border:none;padding:9px 18px;border-radius:6px;font-size:0.85rem;font-weight:700;cursor:pointer;letter-spacing:0.05em;">🖨️ Print / Save as PDF</button>
+</div>
+
+<!-- HEADER -->
+<div class="doc-header">
+  <div>
+    <div class="sub">Hotel St. Cloud · Kitchen Team</div>
+    <h1>Kitchen Reboot Guide</h1>
+  </div>
+  <div class="print-note">Print &amp; laminate.<br/>Post in the kitchen.</div>
+</div>
+
+<!-- EMERGENCY STRIP -->
+<div class="emergency-strip">
+  <span class="icon">🚨</span>
+  <span>Smell gas? Do NOT flip any switches. Evacuate immediately → Call 911 → Call Atmos Energy: 888-286-6700</span>
+</div>
+
+<!-- CONTACT BAR -->
+<div class="contact-bar">
+  <div class="contact-item">
+    <span class="label">Gas Leak</span>
+    <span class="number">911</span>
+    <span class="company">then Atmos 888-286-6700</span>
+  </div>
+  <div class="contact-item">
+    <span class="label">Kitchen Repairs (urgent / OOW)</span>
+    <span class="number">Five Star · 719-344-5050</span>
+    <span class="company">Out of warranty or urgent appliance issue</span>
+  </div>
+  <div class="contact-item">
+    <span class="label">Manager on Duty</span>
+    <span class="number">Notify after ANY incident</span>
+    <span class="company">No exceptions — no surprises</span>
+  </div>
+</div>
+
+<!-- SECTION 1: POWER OUTAGE SEQUENCE -->
+<div class="section blue-section">
+  <div class="section-head"><span class="hicon">⚡</span> Power Outage — Kitchen Reboot Sequence</div>
+  <div class="section-body">
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><strong>Wait until power is fully restored before starting.</strong> Tell the manager you're beginning the reboot.</div>
+    </div>
+    <ol class="steps">
+      <li><strong>Hood vent control panel</strong> — find it on the ceiling above the cooking line toward the back of the kitchen (mounted on the underside of the hood). Press the <strong>top right button</strong> to open gas lines to the kitchen.</li>
+      <li>Check each appliance: confirm the <strong>green gas handle</strong> behind it is <strong>parallel to the pipe</strong> (= ON).</li>
+      <li>Light pilots on each appliance — see appliance cards below.</li>
+      <li>Confirm all appliances are lit and operational, then <strong>notify the manager.</strong></li>
+    </ol>
+
+    <div class="appliance-grid">
+      <div class="appliance-card">
+        <div class="aname">🔥 Grill</div>
+        <div class="ainstruct">Light each section individually using a lighter. Hold near each pilot point and confirm ignition across the full grill surface.</div>
+        <div class="confirm">✓ Blue flame visible through slot on each section</div>
+      </div>
+      <div class="appliance-card">
+        <div class="aname">🍳 Stovetop</div>
+        <div class="ainstruct">Pilots are under the grates — accessible from the front. Insert lighter through the hole under each grate.</div>
+        <div class="confirm">✓ Blue flame visible through hole under grate</div>
+      </div>
+      <div class="appliance-card">
+        <div class="aname">🍟 Fryer</div>
+        <div class="ainstruct">The pilot light indicator is the blue light on the front face of the unit. If not lit, reignite at the pilot location on the unit.</div>
+        <div class="confirm">✓ Blue indicator light ON before use</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 2: GAS SHUTOFF -->
+<div class="section danger-section">
+  <div class="section-head"><span class="hicon">🔥</span> Gas Shutoff — Individual Appliances</div>
+  <div class="section-body">
+    <p style="font-size:0.9rem; margin-bottom:12px;">Each appliance has a <strong>green handle</strong> located behind it. Turn until the handle stops — <strong>perpendicular to the pipe = OFF.</strong></p>
+    <div class="shutoff-row">
+      <div class="appliance">Grill</div>
+      <div class="location">Green handle behind grill, right side</div>
+      <div class="status">⊥ = OFF</div>
+    </div>
+    <div class="shutoff-row">
+      <div class="appliance">Stovetop</div>
+      <div class="location">Green handle behind stovetop unit</div>
+      <div class="status">⊥ = OFF</div>
+    </div>
+    <div class="shutoff-row">
+      <div class="appliance">Fryer</div>
+      <div class="location">Green handle behind fryer unit</div>
+      <div class="status">⊥ = OFF</div>
+    </div>
+    <div class="callout danger" style="margin-top:12px;">
+      <span class="callout-icon">🚨</span>
+      <div>Gas leak confirmed in kitchen? Shut off valves → do NOT flip switches → evacuate → call 911 → notify manager.</div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 3: AFTER REBOOT CHECKLIST -->
+<div class="section success-section">
+  <div class="section-head"><span class="hicon">✅</span> Post-Reboot Checklist</div>
+  <div class="section-body">
+    <ul class="checklist">
+      <li><span class="check-box"></span>Hood vent GAS ON button pressed — gas lines open to kitchen</li>
+      <li><span class="check-box"></span>Grill: all sections lit, blue flame visible through slot</li>
+      <li><span class="check-box"></span>Stovetop: all pilots lit, blue flame visible under grates</li>
+      <li><span class="check-box"></span>Fryer: blue pilot indicator light confirmed ON</li>
+      <li><span class="check-box"></span>All green gas handles confirmed parallel to pipe (ON)</li>
+      <li><span class="check-box"></span>Manager on duty notified — reboot complete</li>
+    </ul>
+  </div>
+</div>
+
+<!-- SECTION 4: APPLIANCE NOT WORKING -->
+<div class="section warn-section">
+  <div class="section-head"><span class="hicon">🔧</span> Appliance Not Working — Who to Call</div>
+  <div class="section-body">
+    <ul class="sub" style="padding-left:0; list-style:none;">
+      <li style="margin-bottom:8px; font-size:0.9rem;">🔧 <strong>Out of warranty or urgent need:</strong> <strong>Five Star — 719-344-5050</strong></li>
+      <li style="margin-bottom:8px; font-size:0.9rem;">📋 <strong>In-warranty repairs:</strong> refer to W. West Equipment service agent report posted in kitchen or see Facilities Guide → Contacts</li>
+      <li style="font-size:0.9rem;">📲 <strong>After any call to a trade:</strong> notify the manager on duty immediately</li>
+    </ul>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="doc-footer">
+  <span>Hotel St. Cloud · Kitchen Reboot Guide · Last updated July 2026</span>
+  <span>Full guide: <strong>offers.hotelstcloud.com/assets/facilities-guide</strong></span>
+</div>
+
+</body>
+</html>
