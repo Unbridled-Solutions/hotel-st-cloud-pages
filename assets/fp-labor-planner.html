@@ -346,10 +346,13 @@ footer span { color: var(--gold); font-weight: 600; }
 <footer><p>Powered by <span>MC — Unbridled Solutions</span> · Fremont Provisions · FP Sports Bar &amp; Kitchen</p></footer>
 
 <script>
+let TAX_RATE = 0.11; // period-aware: ≥P8 → 0.13, else 0.11
 // ── CLOUD SYNC ──────────────────────────────────────────────────────────────
 const CLOUD_NS = 'fp';
 const CLOUD_URL = '/api/planner/bundle?ns=' + CLOUD_NS;
 const CLOUD_PREFIXES = ['fp-labor-wk-', 'fp-labor-week-index', 'fp-labor-history'];
+// Bump this string any time you change a rate in the POSITIONS array.
+const ROSTER_RATES_VERSION = '2026-06-30-fp';
 
 // Cloud data cache — populated by cloudPull, read by mavg directly
 let _cloudData = null;
@@ -403,8 +406,8 @@ async function cloudPush() {
 
 // ── POSITIONS ─────────────────────────────────────────────────────────────────
 let POSITIONS = [
-  {section:'MANAGEMENT',    name:'General Manager',    sub:'Daily Rate',    role:'MGR', rate:null,  dailyRate:280.00, defH:8 },
-  {section:null,            name:'Executive Chef',      sub:'Daily Rate', role:'MGR', rate:null,  dailyRate:270.00, defH:8 },
+  {section:'MANAGEMENT',    name:'General Manager',    sub:'Daily Rate',    role:'MGR', rate:null,  dailyRate:206.00, defH:8, defOn:true },
+  {section:null,            name:'Executive Chef',      sub:'Daily Rate', role:'MGR', rate:null,  dailyRate:206.00, defH:8, defOn:true },
   {section:null,            name:'Shift Lead / Asst #1', sub:'MGT',                  role:'MGR', rate:18.00, dailyRate:null,   defH:8 },
   {section:null,            name:'Shift Lead / Asst #2', sub:'MGT',                  role:'MGR', rate:18.00, dailyRate:null,   defH:8 },
 
@@ -437,7 +440,7 @@ function initState() {
   POSITIONS.forEach((p, pi) => {
     state[pi] = state[pi] || {};
     for (let di = 0; di < 7; di++) {
-      state[pi][di] = state[pi][di] || { on: false, hours: p.defH };
+      state[pi][di] = state[pi][di] || { on: p.defOn === true ? true : false, hours: p.defH };
     }
   });
 }
@@ -550,7 +553,7 @@ function buildFooter() {
     <tr class="total-row" style="border-top:2px solid var(--border)">
       <td colspan="2" class="pos-name-cell">
         <span class="total-label" style="color:var(--green)">Budget Labor</span>
-        <span style="font-size:10px;color:var(--muted);margin-left:6px">incl. 11% payroll tax</span>
+        <span id="budget-tax-label" style="font-size:10px;color:var(--muted);margin-left:6px">incl. 13% payroll tax</span>
       </td>
       <td class="rate-cell" style="font-size:9px;color:var(--muted);text-align:center">R${++rn}</td>
       ${budCells}
@@ -600,7 +603,7 @@ function buildFooter() {
       <td class="total-val orange week-col" id="tot-mgmt-week">—</td>
     </tr>
     <tr class="total-row">
-      <td colspan="2" class="pos-name-cell"><span class="total-label" style="color:var(--muted)">Tax on Labor</span><span style="font-size:10px;color:var(--muted);margin-left:6px">11% on total wages</span></td>
+      <td colspan="2" class="pos-name-cell"><span class="total-label" style="color:var(--muted)">Tax on Labor</span><span id="tax-rate-label" style="font-size:10px;color:var(--muted);margin-left:6px">13% on total wages</span></td>
       <td class="rate-cell" style="font-size:9px;color:var(--muted);text-align:center">R${++rn}</td>
       ${taxCells}
       <td class="total-val week-col" id="tot-tax-week" style="color:var(--muted)">—</td>
@@ -705,12 +708,13 @@ function updateSchedToggle() {
 
 // ── RECALC ────────────────────────────────────────────────────────────────────
 function recalc() {
-  const TAX = 1.11;
-  const dayTotals = Array(7).fill(0);
+  const TAX = 1 + TAX_RATE; // period-aware: ≥P8=1.13, else 1.11
+  const dayTotalsHrly  = Array(7).fill(0); // hourly — will get TAX applied
+  const dayTotalsDaily = Array(7).fill(0); // daily rate — no TAX markup
 
   // Per-position per-day costs + position weekly totals
   POSITIONS.forEach((p, pi) => {
-    let posWeekCost = 0;
+    let posHrly = 0, posDaily = 0;
     for (let di = 0; di < 7; di++) {
       const costEl = document.getElementById(`cost-${pi}-${di}`);
       if (!costEl) continue;
@@ -719,19 +723,21 @@ function recalc() {
       if (p.dailyRate) {
         cost = p.dailyRate;
         costEl.textContent = `$${cost.toFixed(0)}`;
+        dayTotalsDaily[di] += cost;
+        posDaily += cost;
       } else {
         const rate = p.rate || 0;
         const hrs  = parseFloat(document.getElementById(`hrs-${pi}-${di}`)?.value) || 0;
         cost = rate * hrs;
         costEl.textContent = rate ? `$${cost.toFixed(0)}` : 'salary';
+        dayTotalsHrly[di] += cost;
+        posHrly += cost;
       }
-      dayTotals[di] += cost;
-      posWeekCost   += cost;
     }
     const wkEl = document.getElementById(`wk-pos-${pi}`);
     if (wkEl) {
-      const grossed = posWeekCost * TAX;
-      wkEl.textContent = grossed ? `$${Math.round(grossed).toLocaleString()}` : '—';
+      const wkTotal = posHrly + posDaily;
+      wkEl.textContent = wkTotal ? `$${Math.round(wkTotal).toLocaleString()}` : '—';
     }
   });
 
@@ -739,10 +745,10 @@ function recalc() {
 
   for (let di = 0; di < 7; di++) {
     const rev    = parseFloat(document.getElementById(`rev-${di}`)?.value) || 0;
-    const bud    = dayTotals[di] * TAX;
+    const bud    = dayTotalsHrly[di] * TAX + dayTotalsDaily[di];
     const hrly   = parseFloat(document.getElementById(`tot-hrly-${di}`)?.value) || 0;
     const mgmt   = parseFloat(document.getElementById(`tot-mgmt-${di}`)?.value) || 0;
-    const tax    = (hrly + mgmt) * 0.11;
+    const tax    = (hrly + mgmt) * TAX_RATE;
     const act    = hrly + mgmt + tax;
     const actRev = parseFloat(document.getElementById(`tot-actrev-${di}`)?.value) || 0;
     const evtRev = parseFloat(document.getElementById(`tot-evtrev-${di}`)?.value) || 0;
@@ -845,7 +851,7 @@ function recalc() {
 
   const weekHrly = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`tot-hrly-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
   const weekMgmt = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`tot-mgmt-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
-  const weekTax  = (weekHrly + weekMgmt) * 0.11;
+  const weekTax  = (weekHrly + weekMgmt) * TAX_RATE;
   // weekActual is already computed as sum of act per day
 
   const hrlyWkEl = document.getElementById('tot-hrly-week');
@@ -1036,7 +1042,7 @@ function updateSummary(weekBudget, weekRev, weekActual, weekActRev, weekPct) {
 
   document.getElementById('weekSummary').innerHTML = `
     <div class="sum-card gold"><div class="sum-label">Forecast Revenue</div><div class="sum-val">${weekRev ? '$'+weekRev.toLocaleString() : '—'}</div><div class="sum-sub">Budgeted week total</div></div>
-    <div class="sum-card green"><div class="sum-label">Budget Labor</div><div class="sum-val">${weekBudget ? '$'+Math.round(weekBudget).toLocaleString() : '—'}</div><div class="sum-sub">Incl. 11% tax</div></div>
+    <div class="sum-card green"><div class="sum-label">Budget Labor</div><div class="sum-val">${weekBudget ? '$'+Math.round(weekBudget).toLocaleString() : '—'}</div><div class="sum-sub">Incl. ${Math.round(TAX_RATE*100)}% tax</div></div>
     <div class="sum-card ${pctColor}"><div class="sum-label">Budget Labor %</div><div class="sum-val" style="color:var(--${pctColor})">${pctLabel}</div><div class="sum-sub">${pctNote}</div></div>
     <div class="sum-card blue"><div class="sum-label">Total Actual Revenue</div><div class="sum-val" style="color:var(--blue)">${weekActRev ? '$'+Math.round(weekActRev).toLocaleString() : '—'}</div><div class="sum-sub">${weekActRev && weekRev ? (weekActRev >= weekRev ? '▲ above forecast' : '▼ below forecast') : 'restaurant + events'}</div></div>
     <div class="sum-card orange"><div class="sum-label">Actual Labor</div><div class="sum-val">${weekActual ? '$'+Math.round(weekActual).toLocaleString() : '—'}</div><div class="sum-sub">${actLaborPct ? actLaborPct+'% of actual rev' : 'enter actual labor'}</div></div>
@@ -1109,6 +1115,14 @@ function updateWeekDates() {
   const isoWk = getISOWeek(start);
   const period = Math.ceil(isoWk / 4);
   const wkInPeriod = ((isoWk - 1) % 4) + 1;
+  // ── Period-aware payroll tax rate (P1–7 = 11%, P8+ = 13%) ──
+  TAX_RATE = period >= 8 ? 0.13 : 0.11;
+  const taxPct = Math.round(TAX_RATE * 100);
+  const btl = document.getElementById('budget-tax-label');
+  const trl = document.getElementById('tax-rate-label');
+  if (btl) btl.textContent = `incl. ${taxPct}% payroll tax`;
+  if (trl) trl.textContent = `${taxPct}% on total wages`;
+
 
   const wkChip = document.getElementById('wkChip');
   const perChip = document.getElementById('periodChip');
@@ -1153,6 +1167,11 @@ function saveLocal(notify = true) {
   // Also track which weeks have been saved
   const wkIndex = JSON.parse(localStorage.getItem('fp-labor-week-index') || '[]');
   if (!wkIndex.includes(key)) { wkIndex.unshift(key); localStorage.setItem('fp-labor-week-index', JSON.stringify(wkIndex.slice(0,52))); }
+  // ── Save roster (names + rates) — rates_version guards against stale saved rates ──
+  if (notify) {
+    const roster = POSITIONS.map(p => ({name:p.name, rate:p.rate, dailyRate:p.dailyRate}));
+    localStorage.setItem('fp-labor-roster', JSON.stringify({roster, rates_version: ROSTER_RATES_VERSION, saved_at: Date.now()}));
+  }
   cloudPush();
   if (notify) showBanner('💾 Draft saved for this week.');
 }
@@ -1180,7 +1199,7 @@ function loadWeek(key) {
   // Reset state and UI to blank for this week
   initState();
   POSITIONS.forEach((p, pi) => {
-    for (let di = 0; di < 7; di++) { state[pi][di] = { on: false, hours: p.defH }; }
+    for (let di = 0; di < 7; di++) { state[pi][di] = { on: p.defOn === true ? true : false, hours: p.defH }; }
   });
   for (let di = 0; di < 7; di++) {
     const rv = document.getElementById(`rev-${di}`); if (rv) rv.value = '';
@@ -1214,7 +1233,9 @@ function loadWeek(key) {
   }
 
   // Rebuild table — this recreates all tfoot input elements
+  applyRoster();
   buildTable();
+  updateWeekDates(); // re-apply period-aware TAX_RATE after buildFooter() recreates the DOM
 
   // NOW restore into the freshly-built DOM
   if (_pcts)    _pcts.forEach((v, di)    => { const el = document.getElementById(`pct-${di}`);          if (el && v) el.value = v; });
@@ -1245,12 +1266,22 @@ function loadWeek(key) {
   }
 
 
-  // Lock if approved
+  // Lock if approved; sync approve button state
   (function() {
     const wkStart = document.getElementById('weekStart').value;
     const h = JSON.parse(localStorage.getItem('fp-labor-history') || '[]');
     const entry = h.find(e => e.weekStart === wkStart);
-    lockWeek(!!(entry && entry.approved));
+    const isApproved = !!(entry && entry.approved);
+    lockWeek(isApproved);
+    const btn  = document.getElementById('approveBtn');
+    const btnH = document.getElementById('approveBtnHdr');
+    if (isApproved) {
+      if (btn)  { btn.textContent = '✅ Approved'; btn.classList.add('approved'); btn.onclick = null; }
+      if (btnH) { btnH.textContent = '✅ Approved'; btnH.style.display='inline-block'; btnH.style.background='#1a4a2e'; btnH.style.color='#4cca80'; btnH.onclick = null; }
+    } else {
+      if (btn)  { btn.textContent = 'Approve ✓'; btn.classList.remove('approved'); btn.onclick = approveSchedule; }
+      if (btnH) { btnH.style.display='none'; btnH.textContent = 'Approve ✓'; btnH.style.background=''; btnH.style.color='var(--green)'; btnH.onclick = approveSchedule; }
+    }
   })();
   updateSchedToggle();
 }
@@ -1269,7 +1300,7 @@ function submitSchedule() {
   const weekActual = Array.from({length:7}, (_,di) => {
     const h = parseFloat(document.getElementById(`tot-hrly-${di}`)?.value)||0;
     const m = parseFloat(document.getElementById(`tot-mgmt-${di}`)?.value)||0;
-    return (h + m) * 1.11;
+    return (h + m) * (1 + TAX_RATE); // period-aware
   }).reduce((a,b)=>a+b,0);
   const weekActRev = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`tot-actrev-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
   const weekEvtRev = Array.from({length:7}, (_,di) => parseFloat(document.getElementById(`tot-evtrev-${di}`)?.value)||0).reduce((a,b)=>a+b,0);
@@ -1386,7 +1417,13 @@ function approveSchedule() {
   const weekStart = document.getElementById('weekStart').value;
   const hist = JSON.parse(localStorage.getItem('fp-labor-history') || '[]');
   const entry = hist.find(h => h.weekStart === weekStart);
-  if (entry) { entry.approved = true; localStorage.setItem('fp-labor-history', JSON.stringify(hist)); }
+  if (entry) {
+    entry.approved = true;
+    localStorage.setItem('fp-labor-history', JSON.stringify(hist));
+    // Update in-memory cloud cache so renderHistory shows approved state immediately
+    if (_cloudData) _cloudData['fp-labor-history'] = hist;
+  }
+  cloudPush(); // sync approved flag to KV
   const btn  = document.getElementById('approveBtn');
   const btnH = document.getElementById('approveBtnHdr');
   if (btn)  { btn.textContent = '✅ Approved'; btn.classList.add('approved'); btn.onclick = null; }
@@ -1413,7 +1450,7 @@ function renderHistory() {
   const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
   const rows = [];
-  hist.forEach((h, idx) => {
+  [...hist].sort((a,b) => b.weekStart.localeCompare(a.weekStart)).forEach((h, idx) => {
     const actLaborPct = (h.actual && h.actRev) ? +(h.actual / h.actRev * 100).toFixed(1) : h.actPct;
     const evtTotal = h.evtRev != null ? h.evtRev : (h.evtRevByDay ? h.evtRevByDay.reduce((a,b)=>a+(b||0),0) : null);
     rows.push(`
@@ -1528,7 +1565,23 @@ cloudPull().then(() => {
   try { recalc(); } catch(e) { console.error('recalc:', e); }
   try { renderHistory(); } catch(e) { console.error('renderHistory:', e); }
   try { renderMavg(); } catch(e) { console.error('renderMavg:', e); }
+  applyRoster();
 });
+function applyRoster() {
+  try {
+    const localRaw = localStorage.getItem('fp-labor-roster');
+    const saved = localRaw ? JSON.parse(localRaw) : null;
+    if (!saved || !Array.isArray(saved.roster)) return;
+    saved.roster.forEach((r, pi) => {
+      if (!POSITIONS[pi]) return;
+      if (r.name) POSITIONS[pi].name = r.name;
+      if (saved.rates_version === ROSTER_RATES_VERSION) {
+        if (r.rate != null) POSITIONS[pi].rate = r.rate;
+        if (r.dailyRate != null) POSITIONS[pi].dailyRate = r.dailyRate;
+      }
+    });
+  } catch(e) {}
+}
 
 </script>
 </body>
