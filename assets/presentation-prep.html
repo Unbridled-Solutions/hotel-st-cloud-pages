@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Presentation Prep — Nancy Duarte</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Georgia', serif;
+      background: #0d1117;
+      color: #e6edf3;
+      min-height: 100vh;
+      padding: 40px 20px 80px;
+    }
+
+    .container {
+      max-width: 780px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 48px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid #30363d;
+    }
+    .header .eyebrow {
+      font-family: 'Arial', sans-serif;
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #8b949e;
+      margin-bottom: 12px;
+    }
+    .header h1 {
+      font-size: 28px;
+      font-weight: normal;
+      color: #f0f6fc;
+      line-height: 1.3;
+      margin-bottom: 8px;
+    }
+    .header .subtitle {
+      font-size: 14px;
+      color: #8b949e;
+      font-style: italic;
+    }
+
+    /* Save banner */
+    .save-banner {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 14px 20px;
+      margin-bottom: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .save-banner span {
+      font-family: 'Arial', sans-serif;
+      font-size: 13px;
+      color: #8b949e;
+    }
+    .save-banner .status {
+      font-size: 12px;
+      color: #3fb950;
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+    .save-banner .status.show { opacity: 1; }
+    .btn {
+      font-family: 'Arial', sans-serif;
+      font-size: 13px;
+      padding: 7px 16px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-save {
+      background: #238636;
+      color: #fff;
+    }
+    .btn-save:hover { background: #2ea043; }
+    .btn-clear {
+      background: #21262d;
+      color: #8b949e;
+      border: 1px solid #30363d;
+    }
+    .btn-clear:hover { background: #30363d; color: #e6edf3; }
+    .btn-print {
+      background: #1f6feb;
+      color: #fff;
+    }
+    .btn-print:hover { background: #388bfd; }
+
+    /* Part heading */
+    .part-label {
+      font-family: 'Arial', sans-serif;
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #58a6ff;
+      margin-bottom: 6px;
+    }
+
+    /* Section card */
+    .section {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 10px;
+      padding: 24px 28px;
+      margin-bottom: 20px;
+    }
+    .section.highlight {
+      border-color: #388bfd;
+    }
+    .section h2 {
+      font-size: 18px;
+      font-weight: normal;
+      color: #f0f6fc;
+      margin-bottom: 14px;
+      line-height: 1.3;
+    }
+    .section h2 .num {
+      display: inline-block;
+      background: #1f6feb;
+      color: #fff;
+      font-family: 'Arial', sans-serif;
+      font-size: 11px;
+      font-weight: bold;
+      border-radius: 4px;
+      padding: 2px 7px;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    .bullets {
+      list-style: none;
+      margin-bottom: 16px;
+    }
+    .bullets li {
+      font-size: 14px;
+      color: #c9d1d9;
+      line-height: 1.7;
+      padding-left: 16px;
+      position: relative;
+    }
+    .bullets li::before {
+      content: '→';
+      position: absolute;
+      left: 0;
+      color: #58a6ff;
+      font-size: 12px;
+      top: 2px;
+    }
+    .bullets li strong { color: #f0f6fc; }
+
+    /* Callout */
+    .callout {
+      background: #0d2137;
+      border-left: 3px solid #1f6feb;
+      border-radius: 0 6px 6px 0;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: #79c0ff;
+      font-style: italic;
+      line-height: 1.6;
+    }
+
+    /* Note area */
+    .notes-label {
+      font-family: 'Arial', sans-serif;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #484f58;
+      margin-bottom: 6px;
+    }
+    textarea {
+      width: 100%;
+      background: #0d1117;
+      border: 1px solid #21262d;
+      border-radius: 6px;
+      color: #c9d1d9;
+      font-family: 'Arial', sans-serif;
+      font-size: 13px;
+      line-height: 1.6;
+      padding: 10px 14px;
+      resize: vertical;
+      min-height: 72px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    textarea:focus {
+      border-color: #388bfd;
+    }
+    textarea::placeholder { color: #484f58; }
+
+    /* Arc flow */
+    .arc {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .arc-step {
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 13px;
+      color: #c9d1d9;
+      white-space: nowrap;
+    }
+    .arc-arrow { color: #58a6ff; font-size: 16px; }
+
+    /* Big idea box */
+    .big-idea {
+      background: #0d2137;
+      border: 1px solid #1f6feb;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+    }
+    .big-idea p {
+      font-size: 13px;
+      color: #79c0ff;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+    .big-idea p:last-child { margin-bottom: 0; }
+    .big-idea strong { color: #58a6ff; }
+
+    /* Delivery keys grid */
+    .keys-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .key-item {
+      background: #21262d;
+      border-radius: 6px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .key-num {
+      background: #388bfd;
+      color: #fff;
+      font-family: 'Arial', sans-serif;
+      font-size: 12px;
+      font-weight: bold;
+      border-radius: 50%;
+      min-width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .key-text {
+      font-size: 13px;
+      color: #c9d1d9;
+      line-height: 1.5;
+    }
+
+    /* Trust flow */
+    .trust-flow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .trust-step {
+      background: #21262d;
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-size: 13px;
+      color: #c9d1d9;
+    }
+    .trust-step.final {
+      background: #1f6feb;
+      color: #fff;
+      font-weight: bold;
+    }
+
+    /* Quote */
+    .quote-box {
+      background: #161b22;
+      border: 1px solid #484f58;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .quote-box p {
+      font-size: 16px;
+      color: #f0f6fc;
+      font-style: italic;
+      line-height: 1.6;
+    }
+
+    /* Divider */
+    .divider {
+      height: 1px;
+      background: #21262d;
+      margin: 36px 0 28px;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      margin-top: 48px;
+      font-family: 'Arial', sans-serif;
+      font-size: 11px;
+      color: #484f58;
+    }
+
+    @media print {
+      body { background: #fff; color: #111; padding: 20px; }
+      .save-banner, .btn { display: none; }
+      .section { background: #f9f9f9; border-color: #ddd; break-inside: avoid; }
+      textarea { background: #f5f5f5; border-color: #ccc; }
+      .part-label, .notes-label { color: #666; }
+      h2 .num { background: #333; }
+      .callout { background: #eef4ff; border-color: #336; color: #336; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="eyebrow">Presentation Prep Guide</div>
+    <h1>Strategies to Win the Room</h1>
+    <div class="subtitle">Nancy Duarte — High Stakes Presentations</div>
+  </div>
+
+  <!-- Save banner -->
+  <div class="save-banner">
+    <span>Your notes save automatically in your browser.</span>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <span class="status" id="saveStatus">✓ Saved</span>
+      <button class="btn btn-clear" onclick="clearNotes()">Clear All</button>
+      <button class="btn btn-print" onclick="window.print()">🖨 Print</button>
+      <button class="btn btn-save" onclick="saveNow()">Save Notes</button>
+    </div>
+  </div>
+
+  <!-- PART 1 -->
+  <div class="part-label">Part 1 — High Stakes Audience Strategy</div>
+
+  <!-- Section 1 -->
+  <div class="section">
+    <h2><span class="num">1</span> Know Your Audience</h2>
+    <ul class="bullets">
+      <li>Identify their <strong>pain points</strong> — risks, broken systems</li>
+      <li>Know their <strong>motivations</strong></li>
+      <li>Are they <strong>analytical or intuitive</strong> decision-makers?</li>
+      <li>Are they <strong>risk-averse or risk-tolerant</strong>?</li>
+    </ul>
+    <div class="notes-label">Your Notes</div>
+    <textarea id="note_1" placeholder="Who is in the room? What do you know about them?"></textarea>
+  </div>
+
+  <!-- Section 2 -->
+  <div class="section">
+    <h2><span class="num">2</span> Why Are They Here?</h2>
+    <ul class="bullets">
+      <li>What pressures are they under?</li>
+      <li>What are they afraid of?</li>
+      <li>Are they here because they <em>want</em> to be — or <em>have</em> to be?</li>
+    </ul>
+    <div class="notes-label">Your Notes</div>
+    <textarea id="note_2" placeholder="What's their real motivation for being in the room?"></textarea>
+  </div>
+
+  <!-- Section 3 -->
+  <div class="section">
+    <h2><span class="num">3</span> How Does Your Message Solve Their Problem?</h2>
+    <ul class="bullets">
+      <li>Make the problem <strong>undeniable</strong></li>
+      <li>Position your idea as <strong>the bridge</strong></li>
+      <li>Speak their language — not yours</li>
+    </ul>
+    <div class="notes-label">Your Notes</div>
+    <textarea id="note_3" placeholder="What problem are you solving? How does your message bridge the gap?"></textarea>
+  </div>
+
+  <!-- Section 4 -->
+  <div class="section">
+    <h2><span class="num">4</span> What Do You Want Them to Do?</h2>
+    <ul class="bullets">
+      <li>Land on <strong>one clear ask</strong></li>
+      <li>Make the stakes crystal clear — benefits of action, cost of inaction</li>
+    </ul>
+    <div class="notes-label">Your Notes</div>
+    <textarea id="note_4" placeholder="What's your single call to action? What happens if they don't act?"></textarea>
+  </div>
+
+  <!-- Section 5 -->
+  <div class="section highlight">
+    <h2><span class="num">5</span> What Is the One Big Idea?</h2>
+    <div class="big-idea">
+      <p><strong>Formula:</strong> Point of view + what's at stake</p>
+      <p>A single sentence containing a <strong>verb</strong> — memorable, understandable, shareable.</p>
+    </div>
+    <div class="notes-label">Your Big Idea (write it here)</div>
+    <textarea id="note_5" placeholder='Draft your one big idea: "Because [X], we must [Y] in order to [Z]..."' style="min-height:90px;"></textarea>
+  </div>
+
+  <!-- Section 6 -->
+  <div class="section">
+    <h2><span class="num">6</span> Everything Supports the Big Idea</h2>
+    <div class="callout">Every slide, story, data point, and visual must connect back to your one big idea. If it doesn't serve it — cut it.</div>
+    <div class="notes-label">What needs to be cut from your deck?</div>
+    <textarea id="note_6" placeholder="Review your current slides — what doesn't support the big idea?"></textarea>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- PART 2 -->
+  <div class="part-label">Part 2 — Story Frameworks</div>
+
+  <div class="section">
+    <h2>The Story Arc</h2>
+    <div class="arc">
+      <span class="arc-step">What Is</span>
+      <span class="arc-arrow">→</span>
+      <span class="arc-step">Tension &amp; Contrast</span>
+      <span class="arc-arrow">→</span>
+      <span class="arc-step">What Could Be</span>
+      <span class="arc-arrow">→</span>
+      <span class="arc-step">Inspire</span>
+      <span class="arc-arrow">→</span>
+      <span class="arc-step">Direct (Next Right Actions)</span>
+    </div>
+    <ul class="bullets">
+      <li><strong>Three Acts:</strong> Set up the world → Introduce the conflict → Resolution or Cliffhanger</li>
+      <li>Give characters the audience cares about</li>
+      <li>Build toward the <strong>"Whoa" moment</strong></li>
+    </ul>
+    <div class="notes-label">Your Story</div>
+    <textarea id="note_7" placeholder="What's your 'what is' and 'what could be'? Where's your tension? What's the 'Whoa' moment?"></textarea>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- PART 3 -->
+  <div class="part-label">Part 3 — Data Story</div>
+
+  <div class="section">
+    <h2>Turn Data Into Decisions</h2>
+    <ul class="bullets">
+      <li>Data needs to arrive as a <strong>recommendation</strong>, not a raw number</li>
+      <li><strong>Visualize meaning</strong> — show the outcome, not just the chart</li>
+    </ul>
+    <div class="callout">"Because [data]… we must [action]… in order to [outcome]."</div>
+    <div class="notes-label">Your Data Points</div>
+    <textarea id="note_8" placeholder="List your key data. Rewrite each as a recommendation using the formula above."></textarea>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- PART 4 -->
+  <div class="part-label">Part 4 — Design Your Story</div>
+
+  <div class="section">
+    <h2>Slide Design Principles</h2>
+    <ul class="bullets">
+      <li>Choose color <strong>with purpose</strong> — not default themes</li>
+      <li><strong>One idea per slide</strong> — ruthless density control</li>
+      <li>Use animation <strong>only when it earns its place</strong></li>
+      <li>If a slide can't be understood in <strong>3 seconds</strong>, redesign it</li>
+    </ul>
+    <div class="notes-label">Design Notes</div>
+    <textarea id="note_9" placeholder="Which slides need a redesign? What's cluttered or confusing?"></textarea>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- PART 5 -->
+  <div class="part-label">Part 5 — Delivery</div>
+
+  <div class="section">
+    <h2>Deliver With Conviction</h2>
+    <div class="quote-box">
+      <p>"You must believe in your message.<br/>The audience will match your energy."</p>
+    </div>
+    <div class="trust-flow">
+      <span class="trust-step">Attention</span>
+      <span class="arc-arrow">→</span>
+      <span class="trust-step">Understanding</span>
+      <span class="arc-arrow">→</span>
+      <span class="trust-step final">Trust</span>
+    </div>
+    <div class="keys-grid">
+      <div class="key-item">
+        <div class="key-num">1</div>
+        <div class="key-text">Own the space</div>
+      </div>
+      <div class="key-item">
+        <div class="key-num">2</div>
+        <div class="key-text">Use pauses strategically</div>
+      </div>
+      <div class="key-item">
+        <div class="key-num">3</div>
+        <div class="key-text">Match tone to message</div>
+      </div>
+      <div class="key-item">
+        <div class="key-num">4</div>
+        <div class="key-text">Manage your nerves</div>
+      </div>
+    </div>
+    <div class="notes-label">Delivery Notes</div>
+    <textarea id="note_10" placeholder="What do you need to practice? Where do you lose your energy or confidence?"></textarea>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>Based on Nancy Duarte · Strategies to Win the Room · High Stakes Presentations</p>
+  </footer>
+
+</div>
+
+<script>
+  const KEYS = ['note_1','note_2','note_3','note_4','note_5','note_6','note_7','note_8','note_9','note_10'];
+
+  function loadNotes() {
+    KEYS.forEach(k => {
+      const saved = localStorage.getItem('pres_' + k);
+      if (saved) document.getElementById(k).value = saved;
+    });
+  }
+
+  function saveNow() {
+    KEYS.forEach(k => {
+      localStorage.setItem('pres_' + k, document.getElementById(k).value);
+    });
+    const s = document.getElementById('saveStatus');
+    s.classList.add('show');
+    setTimeout(() => s.classList.remove('show'), 2500);
+  }
+
+  function clearNotes() {
+    if (!confirm('Clear all notes? This cannot be undone.')) return;
+    KEYS.forEach(k => {
+      localStorage.removeItem('pres_' + k);
+      document.getElementById(k).value = '';
+    });
+  }
+
+  // Autosave on change
+  KEYS.forEach(k => {
+    document.getElementById(k).addEventListener('input', () => {
+      localStorage.setItem('pres_' + k, document.getElementById(k).value);
+    });
+  });
+
+  loadNotes();
+</script>
+</body>
+</html>
