@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Wish You Were Here — OrangeDoor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Special+Elite&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream:    #f5edda;
+      --cream-dk: #e8dfc5;
+      --ink:      #2c1a0e;
+      --ink-lt:   #5a3e28;
+      --red:      #b83227;
+      --blue:     #1e5f8a;
+      --gold:     #c8922a;
+      --stamp-bg: #d4e8c2;
+      --page-bg:  #1c1008;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Playfair Display', Georgia, serif;
+      background: var(--page-bg);
+      color: var(--cream);
+      min-height: 100vh;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      text-align: center;
+      padding: 80px 24px 64px;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        repeating-linear-gradient(
+          135deg,
+          transparent,
+          transparent 14px,
+          rgba(184,50,39,0.06) 14px,
+          rgba(184,50,39,0.06) 28px
+        );
+    }
+    .hero-airmail {
+      display: flex;
+      height: 10px;
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      overflow: hidden;
+    }
+    .hero-airmail span {
+      flex: 1;
+      background: repeating-linear-gradient(
+        90deg,
+        var(--red) 0, var(--red) 20px,
+        var(--blue) 20px, var(--blue) 40px
+      );
+    }
+    .hero-eyebrow {
+      position: relative;
+      font-family: 'Special Elite', monospace;
+      font-size: 11px;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 20px;
+    }
+    .hero h1 {
+      position: relative;
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(44px, 8vw, 88px);
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -1px;
+      color: var(--cream);
+      margin-bottom: 8px;
+    }
+    .hero h1 em {
+      font-style: italic;
+      color: var(--gold);
+    }
+    .hero-sub {
+      position: relative;
+      font-family: 'Special Elite', monospace;
+      font-size: 13px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: rgba(245,237,218,0.5);
+      margin-bottom: 32px;
+    }
+    .hero-rule {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .hero-rule::before,
+    .hero-rule::after {
+      content: '';
+      width: 80px;
+      height: 1px;
+      background: var(--gold);
+      opacity: 0.5;
+    }
+    .hero-rule span {
+      font-size: 20px;
+      color: var(--gold);
+    }
+    .hero-tagline {
+      position: relative;
+      font-family: 'Caveat', cursive;
+      font-size: 22px;
+      color: rgba(245,237,218,0.75);
+      max-width: 560px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* ── NAV PILLS ── */
+    .nav-pills {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 0 24px 48px;
+    }
+    .pill {
+      font-family: 'Special Elite', monospace;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--cream);
+      background: rgba(245,237,218,0.08);
+      border: 1px solid rgba(245,237,218,0.2);
+      border-radius: 20px;
+      padding: 7px 16px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .pill:hover {
+      background: var(--gold);
+      border-color: var(--gold);
+      color: var(--ink);
+    }
+
+    /* ── SECTION WRAPPER ── */
+    .section {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px 72px;
+    }
+    .section-label {
+      font-family: 'Special Elite', monospace;
+      font-size: 10px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+    .section-title {
+      font-size: clamp(24px, 4vw, 36px);
+      font-weight: 700;
+      color: var(--cream);
+      margin-bottom: 32px;
+      line-height: 1.2;
+    }
+    .section-title em { font-style: italic; color: var(--gold); }
+
+    /* ── CONCEPT PANEL ── */
+    .concept {
+      background: rgba(245,237,218,0.05);
+      border: 1px solid rgba(245,237,218,0.12);
+      border-radius: 12px;
+      padding: 40px 48px;
+      margin-bottom: 48px;
+      position: relative;
+      overflow: hidden;
+    }
+    .concept::before {
+      content: '"';
+      position: absolute;
+      top: -20px; left: 24px;
+      font-size: 180px;
+      color: rgba(200,146,42,0.08);
+      font-family: 'Playfair Display', serif;
+      line-height: 1;
+    }
+    .concept p {
+      font-size: 17px;
+      line-height: 1.9;
+      color: rgba(245,237,218,0.85);
+      margin-bottom: 16px;
+      position: relative;
+    }
+    .concept p:last-child { margin-bottom: 0; }
+    .concept p strong { color: var(--cream); }
+
+    /* ── GOLDEN RULE ── */
+    .golden-rule {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      margin-bottom: 72px;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    @media (max-width: 600px) { .golden-rule { grid-template-columns: 1fr; } }
+    .rule-never, .rule-always {
+      padding: 32px 36px;
+    }
+    .rule-never {
+      background: rgba(184,50,39,0.15);
+      border: 1px solid rgba(184,50,39,0.3);
+      border-right: none;
+    }
+    .rule-always {
+      background: rgba(30,95,138,0.15);
+      border: 1px solid rgba(30,95,138,0.3);
+    }
+    .rule-label {
+      font-family: 'Special Elite', monospace;
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .rule-never .rule-label { color: var(--red); }
+    .rule-always .rule-label { color: #5ba8d4; }
+    .rule-text {
+      font-family: 'Caveat', cursive;
+      font-size: 22px;
+      line-height: 1.5;
+    }
+    .rule-never .rule-text { color: rgba(245,237,218,0.6); text-decoration: line-through; text-decoration-color: var(--red); }
+    .rule-always .rule-text { color: var(--cream); }
+
+    /* ── POSTCARDS ── */
+    .postcards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
+      gap: 36px;
+    }
+    @media (max-width: 540px) {
+      .postcards-grid { grid-template-columns: 1fr; }
+    }
+
+    .postcard {
+      background: var(--cream);
+      border-radius: 4px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3);
+      overflow: hidden;
+      position: relative;
+      transform: rotate(var(--tilt, 0deg));
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .postcard:hover {
+      transform: rotate(0deg) translateY(-4px);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+    }
+
+    /* Airmail stripe at top of postcard */
+    .pc-stripe {
+      height: 8px;
+      background: repeating-linear-gradient(
+        90deg,
+        var(--red) 0, var(--red) 16px,
+        var(--blue) 16px, var(--blue) 32px
+      );
+    }
+
+    .pc-body {
+      display: grid;
+      grid-template-columns: 1fr 130px;
+      gap: 0;
+      padding: 20px 20px 16px;
+      min-height: 220px;
+    }
+
+    /* Left: message */
+    .pc-message {
+      padding-right: 16px;
+      border-right: 1px dashed rgba(44,26,14,0.2);
+    }
+    .pc-category {
+      font-family: 'Special Elite', monospace;
+      font-size: 9px;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 10px;
+    }
+    .pc-text {
+      font-family: 'Caveat', cursive;
+      font-size: 16px;
+      line-height: 1.65;
+      color: var(--ink);
+      margin-bottom: 12px;
+    }
+    .pc-sign {
+      font-family: 'Caveat', cursive;
+      font-size: 14px;
+      color: var(--ink-lt);
+      font-style: italic;
+    }
+    .pc-closing {
+      font-family: 'Caveat', cursive;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-top: 8px;
+    }
+
+    /* Right: stamp + address */
+    .pc-meta {
+      padding-left: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .pc-stamp {
+      width: 58px;
+      height: 70px;
+      background: var(--stamp-bg);
+      border: 3px solid var(--cream);
+      outline: 2px solid rgba(44,26,14,0.15);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      font-family: 'Special Elite', monospace;
+      overflow: hidden;
+    }
+    /* Perforated stamp edge via box-shadow dots */
+    .pc-stamp::before {
+      content: '';
+      position: absolute;
+      inset: -5px;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 6px, var(--cream) 6px, var(--cream) 8px
+      ),
+      repeating-linear-gradient(
+        90deg, transparent, transparent 6px, var(--cream) 6px, var(--cream) 8px
+      );
+    }
+    .pc-stamp-inner {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+    .pc-stamp-icon {
+      font-size: 22px;
+      line-height: 1;
+      display: block;
+    }
+    .pc-stamp-text {
+      font-size: 7px;
+      letter-spacing: 1px;
+      color: var(--ink);
+      text-transform: uppercase;
+      display: block;
+      margin-top: 3px;
+    }
+    .pc-stamp-val {
+      font-size: 11px;
+      font-weight: bold;
+      color: var(--red);
+      display: block;
+    }
+
+    .pc-postmark {
+      width: 68px;
+      height: 40px;
+      border: 2px solid rgba(44,26,14,0.3);
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.4;
+    }
+    .pc-postmark span {
+      font-family: 'Special Elite', monospace;
+      font-size: 7px;
+      letter-spacing: 1px;
+      color: var(--ink);
+      text-transform: uppercase;
+      line-height: 1.4;
+      text-align: center;
+    }
+
+    .pc-address {
+      font-family: 'Special Elite', monospace;
+      font-size: 8.5px;
+      color: var(--ink);
+      line-height: 1.8;
+      letter-spacing: 0.5px;
+    }
+    .pc-address strong {
+      font-size: 9.5px;
+      display: block;
+    }
+
+    /* Footer strip */
+    .pc-footer {
+      background: var(--cream-dk);
+      border-top: 1px dashed rgba(44,26,14,0.15);
+      padding: 8px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .pc-location {
+      font-family: 'Special Elite', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--ink-lt);
+    }
+    .pc-od-badge {
+      font-family: 'Special Elite', monospace;
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--red);
+      border: 1px solid var(--red);
+      border-radius: 2px;
+      padding: 2px 6px;
+    }
+
+    /* ── PILLARS ── */
+    .pillars-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 32px;
+    }
+    .pillar {
+      background: rgba(245,237,218,0.05);
+      border: 1px solid rgba(245,237,218,0.12);
+      border-top: 3px solid var(--gold);
+      border-radius: 0 0 8px 8px;
+      padding: 20px;
+    }
+    .pillar h3 {
+      font-family: 'Special Elite', monospace;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 10px;
+    }
+    .pillar ul {
+      list-style: none;
+    }
+    .pillar ul li {
+      font-family: 'Caveat', cursive;
+      font-size: 15px;
+      color: rgba(245,237,218,0.7);
+      line-height: 1.8;
+    }
+
+    /* ── SIGNOFFS ── */
+    .signoffs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 24px;
+    }
+    .signoff-tag {
+      font-family: 'Caveat', cursive;
+      font-size: 15px;
+      color: var(--cream);
+      background: rgba(245,237,218,0.08);
+      border: 1px solid rgba(245,237,218,0.15);
+      border-radius: 4px;
+      padding: 6px 14px;
+    }
+
+    /* ── HASHTAGS ── */
+    .hashtags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 24px;
+    }
+    .hashtag {
+      font-family: 'Special Elite', monospace;
+      font-size: 12px;
+      letter-spacing: 1px;
+      color: #5ba8d4;
+      background: rgba(30,95,138,0.12);
+      border: 1px solid rgba(30,95,138,0.3);
+      border-radius: 4px;
+      padding: 6px 12px;
+    }
+
+    /* ── FOOTER ── */
+    .page-footer {
+      border-top: 1px solid rgba(245,237,218,0.1);
+      padding: 40px 24px;
+      text-align: center;
+    }
+    .page-footer .od-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--cream);
+      margin-bottom: 6px;
+    }
+    .page-footer .od-name em {
+      color: var(--gold);
+      font-style: italic;
+    }
+    .page-footer p {
+      font-family: 'Special Elite', monospace;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(245,237,218,0.35);
+    }
+
+    /* Divider ornament */
+    .ornament {
+      text-align: center;
+      color: var(--gold);
+      font-size: 18px;
+      opacity: 0.5;
+      margin: 0 auto 40px;
+      letter-spacing: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-airmail"><span></span></div>
+  <div class="hero-eyebrow">OrangeDoor · A Campaign Creative Brief</div>
+  <h1><em>Wish You</em><br/>Were Here.</h1>
+  <div class="hero-sub">Postcards from the World's Greatest Events, Venues &amp; Experiences</div>
+  <div class="hero-rule"><span>✦</span></div>
+  <div class="hero-tagline">Not showing where we are. Sharing what we've learned.</div>
+</div>
+
+<!-- NAV -->
+<div class="nav-pills">
+  <a class="pill" href="#concept">The Concept</a>
+  <a class="pill" href="#rule">The Golden Rule</a>
+  <a class="pill" href="#postcards">Sample Postcards</a>
+  <a class="pill" href="#pillars">Content Pillars</a>
+  <a class="pill" href="#signoffs">Sign-offs</a>
+  <a class="pill" href="#hashtags">Hashtags</a>
+</div>
+
+<!-- CONCEPT -->
+<div class="section" id="concept">
+  <div class="section-label">The Concept</div>
+  <div class="section-title">Every great journey<br/>deserves a <em>postcard.</em></div>
+  <div class="concept">
+    <p>For generations, postcards captured moments worth sharing. A snapshot of somewhere remarkable. A few handwritten thoughts. A simple message: <strong>Wish You Were Here.</strong></p>
+    <p>OrangeDoor is bringing that tradition into the digital world. Every time one of our team visits a destination, discovers an extraordinary venue, experiences a new hotel, attends an event, meets an inspiring partner or uncovers an idea that could benefit our clients — we send a postcard home.</p>
+    <p>Not simply showing where we are. But sharing <strong>what we've learned.</strong> Because every journey makes us better. And everything we discover becomes part of the value we bring to our clients.</p>
+    <p>This isn't a social campaign. It's a <strong>brand asset</strong> — a living, growing archive of global knowledge united by one simple phrase. Over time it becomes OrangeDoor's collective intelligence: destinations, venues, hotels, suppliers and experiences from around the world, all earned through genuine curiosity.</p>
+  </div>
+</div>
+
+<!-- GOLDEN RULE -->
+<div class="section" id="rule" style="padding-bottom:40px;">
+  <div class="section-label">The Golden Rule</div>
+  <div class="section-title">One rule.<br/><em>Absolute.</em></div>
+  <div class="golden-rule">
+    <div class="rule-never">
+      <div class="rule-label">Never say</div>
+      <div class="rule-text">Look where we are.</div>
+    </div>
+    <div class="rule-always">
+      <div class="rule-label">Always say</div>
+      <div class="rule-text">Look what we've learned for our clients.</div>
+    </div>
+  </div>
+</div>
+
+<!-- POSTCARDS -->
+<div class="section" id="postcards">
+  <div class="section-label">Sample Postcard Copy</div>
+  <div class="section-title">Eight postcards.<br/><em>Eight lessons.</em></div>
+
+  <div class="postcards-grid">
+
+    <!-- 1: Venue Discovery -->
+    <div class="postcard" style="--tilt:-0.8deg;">
+      <div class="pc-stripe"></div>
+      <div class="pc-body">
+        <div class="pc-message">
+          <div class="pc-category">Venue Discovery</div>
+          <div class="pc-text">There's a palace here that doesn't appear in any conference brochure. No capacity sheet. No day delegate rate. Just 400 years of history and acoustics that would make your CEO's keynote sound like poetry.<br/><br/>We've walked every square metre. We know who it's perfect for.</div>
+          <div class="pc-closing">Wish You Were Here.</div>
+          <div class="pc-sign">— The OrangeDoor Team</div>
+        </div>
+        <div class="pc-meta">
+          <div class="pc-stamp">
+            <div class="pc-stamp-inner">
+              <span class="pc-stamp-icon">🏛️</span>
+              <span class="pc-stamp-text">OrangeDoor</span>
+              <span class="pc-stamp-val">1st</span>
+            </div>
+          </div>
+          <div class="pc-postmark"><span>Lisbon<br/>Portugal<br/>2025</span></div>
+          <div class="pc-address"><strong>OrangeDoor</strong>26 Scotts Road<br/>Bromley, Kent</div>
+        </div>
+      </div>
+      <div class="pc-footer">
+        <div class="pc-location">Lisbon, Portugal</div>
+        <div class="pc-od-badge">OrangeDoor</div>
+      </div>
+    </div>
+
+    <!-- 2: Hotel -->
+    <div class="postcard" style="--tilt:0.6deg;">
+      <div class="pc-stripe"></div>
+      <div class="pc-body">
+        <div class="pc-message">
+          <div class="pc-category">Hotel First Look</div>
+          <div class="pc-text">Checked in at 6am. By 6:15, we already knew three of our clients would love it here.<br/><br/>The concierge remembered our names before we reached the desk. The breakout space has natural light on three sides. The F&amp;B team gave us an hour we hadn't asked for.<br/><br/>We've done the homework.</div>
+          <div class="pc-closing">Wish You Were Here.</div>
+          <div class="pc-sign">— The OrangeDoor Team</div>
+        </div>
+        <div class="pc-meta">
+          <div class="pc-stamp">
+            <div class="pc-stamp-inner">
+              <span class="pc-stamp-icon">🏨</span>
+              <span class="pc-stamp-text">OrangeDoor</span>
+              <span class="pc-stamp-val">1st</span>
+            </div>
+          </div>
+          <div class="pc-postmark"><span>Singapore<br/>Asia Pacific<br/>2025</span></div>
+          <div class="pc-address"><strong>OrangeDoor</strong>26 Scotts Road<br/>Bromley, Kent</div>
+        </div>
+      </div>
+      <div class="pc-footer">
+        <div class="pc-location">Singapore</div>
+        <div class="pc-od-badge">OrangeDoor</div>
+      </div>
+    </div>
+
+    <!-- 3: Learning -->
+    <div class="postcard" style="--tilt:-0.4deg;">
+      <div class="pc-stripe"></div>
+      <div class="pc-body">
+        <div class="pc-message">
+          <div class="pc-category">Learning</div>
+          <div class="pc-text">They said AI would replace the event planner. We sat in four sessions, spoke to twelve technology partners, and came home with something better than a verdict.<br/><br/>We came home with a perspective.<br/><br/>Today's insight becomes tomorrow's client advantage.</div>
+          <div class="pc-closing">Wish You Were Here.</div>
+          <div class="pc-sign">— The OrangeDoor Team</div>
+        </div>
+        <div class="pc-meta">
+          <div class="pc-stamp">
+            <div class="pc-stamp-inner">
+              <span class="pc-stamp-icon">💡</span>
+              <span class="pc-stamp-text">OrangeDoor</span>
+              <span class="pc-stamp-val">1st</span>
+            </div>
+          </div>
+          <div class="pc-postmark"><span>Las Vegas<br/>IMEX America<br/>2025</span></div>
+          <div class="pc-address"><strong>OrangeDoor</strong>26 Scotts Road<br/>Bromley, Kent</div>
+        </div>
+      </div>
+      <div class="pc-footer">
+        <div class="pc-location">Las Vegas, Nevada</div>
+        <div class="pc-od-badge">OrangeDoor</div>
+      </div>
+    </div>
+
+    <!-- 4: Behind the Scenes -->
+    <div class="postcard" style="--tilt:0.5deg;">
+      <div class="pc-stripe"></div>
+      <div class="pc-body">
+        <div class="pc-message">
+          <div class="pc-category">Behind the Scenes</div>
+          <div class="pc-text">4:47am. The freight lift is stuck. The florals are in a van on the M25. The client presents in six hours.<br/><br/>And somehow — this is our favourite part.<br/><br/>Because this is where ordinary venues become extraordinary events. Early mornings. Late nights. Worth every second.</div>
+          <div class="pc-closing">Wish You Were Here.</div>
+          <div class="pc-sign">— The OrangeDoor Team</div>
+        </div>
+        <div class="pc-meta">
+          <div class="pc-stamp">
+            <div class="pc-stamp-inner">
+              <span class="pc-stamp-icon">🎭</span>
+              <span class="pc-stamp-text">OrangeDoor</span>
+              <span class="pc-stamp-val">1st</span>
+            </div>
+          </div>
+          <div class="pc-postmark"><span>London<br/>Build Day<br/>2025</span></div>
+          <div class="pc-address"><strong>OrangeDoor</strong>26 Scotts Road<br/>Bromley, Kent</div>
+        </div>
+      </div>
+      <div class="pc-footer">
+        <div class="pc-location">London, UK</div>
+        <div class="pc-od-badge">OrangeDoor</div>
+      </div>
+    </div>
+
+    <!-- 5: Destination Discovery -->
+    <div class="postcard" style="--tilt:-0.6deg;">
+      <div class="pc-stripe"></div>
+      <div class="pc-body">
+        <div class="pc-message">
+          <div class="pc-category">Destination Discovery</div>
+          <div class="pc-text">Before you plan an event here, walk the walls. All 1,940 metres of them. Your delegates will — and when they do, they'll already know this city, because you thought to tell them.<br/><br/>Destination knowledge isn't a nice-to-have. It's the difference between an itinerary and an experience.</div>
+          <div class="pc-closing">Wish You Were Here.</div>
+          <div class="pc-sign">— The OrangeDoor Team</div>
+        </div>
+        <div class="pc-meta">
+          <div class="pc-stamp">
+            <div class="pc-stamp-inner">
+              <span class="pc-stamp-icon">🗺️</span>
+              <span class="pc-stamp-text">OrangeDoor</span>
+              <span class="pc-stamp-val">1st</span>
+            </div>
+          </div>
+          <div class="pc-postmark"><span>Dubrovnik<br/>Croatia<br/>2025</span></div>
+          <div class="pc-address"><strong>OrangeDoor</strong>26 Scotts Road<br/>Bromley, Kent</div>
+        </div>
+      </div>
+      <div class="pc-footer">
+        <div class="pc-location">Dubrovnik, Croatia</div>
+        <div class="pc-od-badge">OrangeDoor</div>
+      </div>
+    </div>
+
+    <!-- 6: Inspiration -->
+    <div class="postcard" style="--tilt:0.3deg;">
+      <div class="pc-stripe"></div>
+      <div class="pc-body">
+        <div class="pc-message">
+          <div class="pc-category">Inspiration</div>
+          <div class="pc-text">There's a sushi counter here with exactly 8 seats and a 3-month waiting list. The chef has been perfecting the same 12 dishes for over 40 years.<br/><br/>We didn't put it in a venue database. We put it in a proposal.<br/><br/>Ideas have no borders.</div>
+          <div class="pc-closing">Wish You Were Here.</div>
+          <div class="pc-sign">— The OrangeDoor Team</div>
+        </div>
+        <div class="pc-meta">
+          <div class="pc-stamp">
+            <div class="pc-stamp-inner">
+              <span class="pc-stamp-icon">✨</span>
+              <span class="pc-stamp-text">OrangeDoor</span>
+              <span class="pc-stamp-val">1st</span>
+            </div>
+          </div>
+          <div class="pc-postmark"><span>Tokyo<br/>Japan<br/>2025</span></div>
+          <div class="pc-address"><strong>OrangeDoor</strong>26 Scotts Road<br/>Bromley, Kent</div>
+        </div>
+      </div>
+      <div class="pc-footer">
+        <div class="pc-location">Tokyo, Japan</div>
+        <div class="pc-od-badge">OrangeDoor</div>
+      </div>
+    </div>
+
+    <!-- 7: People -->
+    <div class="postcard" style="--tilt:-0.5deg;">
+      <div class="pc-stripe"></div>
+      <div class="pc-body">
+        <div class="pc-message">
+          <div class="pc-category">People &amp; Relationships</div>
+          <div class="pc-text">We met Michiel here eight years ago at a tradeshow neither of us wanted to be at. He's been our best venue partner in the Benelux ever since.<br/><br/>The relationships that shape our work never start in a boardroom.<br/><br/>Every conversation makes us stronger.</div>
+          <div class="pc-closing">Wish You Were Here.</div>
+          <div class="pc-sign">— The OrangeDoor Team</div>
+        </div>
+        <div class="pc-meta">
+          <div class="pc-stamp">
+            <div class="pc-stamp-inner">
+              <span class="pc-stamp-icon">🤝</span>
+              <span class="pc-stamp-text">OrangeDoor</span>
+              <span class="pc-stamp-val">1st</span>
+            </div>
+          </div>
+          <div class="pc-postmark"><span>Amsterdam<br/>Netherlands<br/>2025</span></div>
+          <div class="pc-address"><strong>OrangeDoor</strong>26 Scotts Road<br/>Bromley, Kent</div>
+        </div>
+      </div>
+      <div class="pc-footer">
+        <div class="pc-location">Amsterdam, Netherlands</div>
+        <div class="pc-od-badge">OrangeDoor</div>
+      </div>
+    </div>
+
+    <!-- 8: Supplier / Operational Excellence -->
+    <div class="postcard" style="--tilt:0.7deg;">
+      <div class="pc-stripe"></div>
+      <div class="pc-body">
+        <div class="pc-message">
+          <div class="pc-category">Operational Excellence</div>
+          <div class="pc-text">The AV team here doesn't just set up screens. They study your brand, watch how your audience sits, ask about the moment you most want people to remember.<br/><br/>Then they design the room around the answer.<br/><br/>Operational Excellence isn't a standard. It's a commitment.</div>
+          <div class="pc-closing">Wish You Were Here.</div>
+          <div class="pc-sign">— The OrangeDoor Team</div>
+        </div>
+        <div class="pc-meta">
+          <div class="pc-stamp">
+            <div class="pc-stamp-inner">
+              <span class="pc-stamp-icon">🎬</span>
+              <span class="pc-stamp-text">OrangeDoor</span>
+              <span class="pc-stamp-val">1st</span>
+            </div>
+          </div>
+          <div class="pc-postmark"><span>Barcelona<br/>Spain<br/>2025</span></div>
+          <div class="pc-address"><strong>OrangeDoor</strong>26 Scotts Road<br/>Bromley, Kent</div>
+        </div>
+      </div>
+      <div class="pc-footer">
+        <div class="pc-location">Barcelona, Spain</div>
+        <div class="pc-od-badge">OrangeDoor</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- PILLARS -->
+<div class="section" id="pillars">
+  <div class="section-label">Content Pillars</div>
+  <div class="section-title">Six lenses.<br/><em>Infinite stories.</em></div>
+  <div class="pillars-grid">
+    <div class="pillar">
+      <h3>New Hotels</h3>
+      <ul>
+        <li>A first look</li>
+        <li>What impressed us</li>
+        <li>Who it's perfect for</li>
+      </ul>
+    </div>
+    <div class="pillar">
+      <h3>New Venues</h3>
+      <ul>
+        <li>Hidden gems</li>
+        <li>Congress centres</li>
+        <li>Unexpected spaces</li>
+        <li>Luxury properties</li>
+      </ul>
+    </div>
+    <div class="pillar">
+      <h3>Learning</h3>
+      <ul>
+        <li>Supplier showcases</li>
+        <li>Masterclasses</li>
+        <li>Site inspections</li>
+        <li>Industry education</li>
+      </ul>
+    </div>
+    <div class="pillar">
+      <h3>Behind the Scenes</h3>
+      <ul>
+        <li>Build days</li>
+        <li>Rehearsals</li>
+        <li>Early mornings</li>
+        <li>The moments clients never see</li>
+      </ul>
+    </div>
+    <div class="pillar">
+      <h3>Destination Discovery</h3>
+      <ul>
+        <li>Culture &amp; food</li>
+        <li>What delegates will love</li>
+        <li>Accessibility</li>
+        <li>Local experiences</li>
+      </ul>
+    </div>
+    <div class="pillar">
+      <h3>Inspiration</h3>
+      <ul>
+        <li>Design &amp; technology</li>
+        <li>Sustainability</li>
+        <li>Architecture</li>
+        <li>Ideas worth bringing home</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- SIGNOFFS -->
+<div class="section" id="signoffs">
+  <div class="section-label">Sign-off Library</div>
+  <div class="section-title">Never repeat the same<br/><em>closing line.</em></div>
+  <div class="signoffs">
+    <div class="signoff-tag">Every day is a school day.</div>
+    <div class="signoff-tag">Curiosity travels well.</div>
+    <div class="signoff-tag">Today's insight becomes tomorrow's client advantage.</div>
+    <div class="signoff-tag">We've done the homework.</div>
+    <div class="signoff-tag">Found somewhere rather special.</div>
+    <div class="signoff-tag">Luxury is in the detail.</div>
+    <div class="signoff-tag">Seeing beyond the brochure.</div>
+    <div class="signoff-tag">Pictures never tell the whole story.</div>
+    <div class="signoff-tag">Worth every step.</div>
+    <div class="signoff-tag">Relationships travel further than passports.</div>
+    <div class="signoff-tag">Every conversation makes us stronger.</div>
+    <div class="signoff-tag">Ideas have no borders.</div>
+    <div class="signoff-tag">Taking inspiration home.</div>
+    <div class="signoff-tag">Not all postcards come from holidays.</div>
+    <div class="signoff-tag">Another stamp in the passport.</div>
+    <div class="signoff-tag">Always exploring. Always learning. Always improving.</div>
+    <div class="signoff-tag">This one's too good not to share.</div>
+    <div class="signoff-tag">Saving you a seat.</div>
+    <div class="signoff-tag">See you on the next adventure.</div>
+    <div class="signoff-tag">Collecting knowledge one destination at a time.</div>
+    <div class="signoff-tag">Adding another page to our global playbook.</div>
+    <div class="signoff-tag">Checking in so our clients can check in with confidence.</div>
+  </div>
+</div>
+
+<!-- HASHTAGS -->
+<div class="section" id="hashtags">
+  <div class="section-label">Hashtags</div>
+  <div class="section-title">One campaign.<br/><em>One voice.</em></div>
+  <div class="hashtags">
+    <div class="hashtag">#WishYouWereHere</div>
+    <div class="hashtag">#OrangeDoor</div>
+    <div class="hashtag">#GlobalEvents</div>
+    <div class="hashtag">#EventProfs</div>
+    <div class="hashtag">#VenueFinding</div>
+    <div class="hashtag">#MeetingsAndEvents</div>
+    <div class="hashtag">#DestinationDiscovery</div>
+    <div class="hashtag">#OperationalExcellence</div>
+    <div class="hashtag">#LearningNeverStops</div>
+    <div class="hashtag">#EventInspiration</div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="page-footer">
+  <div class="od-name"><em>Orange</em>Door</div>
+  <p>Bromley · Kent · Global · B Corp Certified</p>
+  <br/>
+  <p style="margin-top:8px; color:rgba(245,237,218,0.2);">Creative brief — Wish You Were Here campaign · 2025</p>
+</div>
+
+</body>
+</html>
