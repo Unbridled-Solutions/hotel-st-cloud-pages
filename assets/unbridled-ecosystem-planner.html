@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unbridled Ecosystem Planner</title>
+<style>
+  :root {
+    --ub-blue: #5a8ba7;
+    --ub-blue-dark: #3d6478;
+    --ub-gray: #4b4f54;
+    --ub-light: #f4f6f8;
+    --ub-white: #ffffff;
+    --seg-events: #5a8ba7;
+    --seg-hospitality: #b07842;
+    --seg-realestate: #5a7a5a;
+    --seg-emergent: #7a5a8b;
+    --seg-nonprofit: #8b5a5a;
+    --in-bg: #e8f4f0;
+    --in-border: #4caf7d;
+    --out-bg: #f5f5f5;
+    --out-border: #cccccc;
+    --controlled-yes: #4caf50;
+    --controlled-maybe: #ff9800;
+    --controlled-no: #f44336;
+    --controlled-unknown: #9e9e9e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #eef1f4; color: #2c3035; min-height: 100vh; }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--ub-gray);
+    color: white;
+    padding: 18px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+  }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .header-elk { font-size: 28px; }
+  .header-title { font-size: 18px; font-weight: 700; letter-spacing: 0.5px; }
+  .header-sub { font-size: 12px; opacity: 0.7; margin-top: 2px; }
+
+  /* ── STATS BAR ── */
+  .stats-bar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .stat-pill {
+    background: rgba(255,255,255,0.12);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .stat-pill .val { font-weight: 700; font-size: 15px; }
+  .stat-pill.ale-ok { background: rgba(76,175,80,0.3); }
+  .stat-pill.ale-warn { background: rgba(255,152,0,0.4); }
+  .stat-pill.ale-over { background: rgba(244,67,54,0.4); }
+
+  /* ── FTE PROGRESS BAR ── */
+  .fte-bar-wrap {
+    background: rgba(255,255,255,0.15);
+    border-radius: 6px;
+    height: 8px;
+    width: 140px;
+    overflow: hidden;
+  }
+  .fte-bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    background: var(--in-border);
+    transition: width 0.4s, background 0.4s;
+  }
+
+  /* ── LAYOUT ── */
+  .main-layout {
+    display: flex;
+    gap: 0;
+    min-height: calc(100vh - 68px);
+  }
+  .segments-panel {
+    flex: 1;
+    padding: 20px 20px 40px;
+    overflow-y: auto;
+  }
+  .sidebar {
+    width: 300px;
+    min-width: 300px;
+    background: white;
+    border-left: 1px solid #dde2e8;
+    padding: 20px;
+    position: sticky;
+    top: 68px;
+    height: calc(100vh - 68px);
+    overflow-y: auto;
+  }
+
+  /* ── SEGMENT SECTIONS ── */
+  .segment-section { margin-bottom: 24px; }
+  .segment-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid currentColor;
+  }
+  .segment-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+  .segment-header h2 { font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .segment-count { margin-left: auto; font-size: 12px; opacity: 0.6; font-weight: 600; }
+
+  .seg-events { color: var(--seg-events); }
+  .seg-hospitality { color: var(--seg-hospitality); }
+  .seg-realestate { color: var(--seg-realestate); }
+  .seg-emergent { color: var(--seg-emergent); }
+  .seg-nonprofit { color: var(--seg-nonprofit); }
+
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 10px;
+  }
+
+  /* ── BRAND CARD ── */
+  .brand-card {
+    background: white;
+    border-radius: 10px;
+    border: 2px solid #e0e4ea;
+    padding: 14px;
+    transition: all 0.25s;
+    cursor: pointer;
+    position: relative;
+  }
+  .brand-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1); transform: translateY(-1px); }
+  .brand-card.included {
+    border-color: var(--in-border);
+    background: var(--in-bg);
+  }
+  .brand-card.included .card-header { }
+
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .card-name { font-weight: 700; font-size: 13px; line-height: 1.3; flex: 1; }
+  .card-parent { font-size: 11px; color: #888; margin-top: 1px; }
+
+  .include-toggle {
+    width: 36px; height: 20px;
+    background: #ccc;
+    border-radius: 10px;
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.2s;
+    border: none;
+    outline: none;
+  }
+  .include-toggle::after {
+    content: '';
+    position: absolute;
+    width: 16px; height: 16px;
+    background: white;
+    border-radius: 50%;
+    top: 2px; left: 2px;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+  .include-toggle.on { background: var(--in-border); }
+  .include-toggle.on::after { transform: translateX(16px); }
+
+  /* ── CARD STATS ROW ── */
+  .card-stats {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .card-field {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 60px;
+  }
+  .card-field label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: #888; font-weight: 600; }
+  .card-field input {
+    border: 1px solid #d0d5dd;
+    border-radius: 5px;
+    padding: 4px 7px;
+    font-size: 12px;
+    font-family: inherit;
+    width: 100%;
+    background: white;
+    transition: border 0.15s;
+  }
+  .card-field input:focus { outline: none; border-color: var(--ub-blue); }
+
+  /* ── CONTROLLED GROUP BADGE ── */
+  .cg-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 10px;
+  }
+  .cg-yes { background: #e8f5e9; color: #2e7d32; }
+  .cg-maybe { background: #fff3e0; color: #e65100; }
+  .cg-no { background: #ffebee; color: #c62828; }
+  .cg-unknown { background: #f5f5f5; color: #757575; }
+  .cg-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  /* ── SERVICES ── */
+  .services-toggle-btn {
+    width: 100%;
+    background: none;
+    border: 1px solid #e0e4ea;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 11px;
+    cursor: pointer;
+    color: #555;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .services-toggle-btn:hover { background: #f5f8fa; border-color: var(--ub-blue); color: var(--ub-blue); }
+  .services-toggle-btn .arrow { transition: transform 0.2s; }
+  .services-toggle-btn.open .arrow { transform: rotate(180deg); }
+
+  .services-panel {
+    display: none;
+    margin-top: 8px;
+    padding: 10px;
+    background: #f8fafc;
+    border-radius: 6px;
+    border: 1px solid #e8ecf0;
+  }
+  .services-panel.open { display: block; }
+  .service-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .service-item input[type=checkbox] {
+    width: 14px; height: 14px;
+    accent-color: var(--ub-blue);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .service-item label { cursor: pointer; flex: 1; }
+
+  /* ── SIDEBAR ── */
+  .sidebar h3 {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--ub-gray);
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--ub-blue);
+  }
+  .sidebar-section { margin-bottom: 24px; }
+
+  /* FTE Meter */
+  .fte-meter {
+    background: #f0f4f8;
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 16px;
+  }
+  .fte-meter-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+  .fte-number { font-size: 32px; font-weight: 800; color: var(--ub-blue); line-height: 1; }
+  .fte-label { font-size: 11px; color: #888; }
+  .fte-threshold-bar {
+    background: #dde2e8;
+    border-radius: 6px;
+    height: 10px;
+    overflow: hidden;
+    position: relative;
+  }
+  .fte-threshold-fill {
+    height: 100%;
+    border-radius: 6px;
+    background: var(--in-border);
+    transition: width 0.4s, background 0.4s;
+  }
+  .fte-threshold-marker {
+    position: absolute;
+    top: -3px;
+    width: 2px;
+    height: 16px;
+    background: #e53935;
+    border-radius: 1px;
+  }
+  .fte-threshold-note {
+    font-size: 11px;
+    color: #888;
+    margin-top: 6px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .ale-status-box {
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    margin-top: 10px;
+  }
+  .ale-ok-box { background: #e8f5e9; color: #2e7d32; }
+  .ale-warn-box { background: #fff3e0; color: #e65100; }
+  .ale-over-box { background: #ffebee; color: #c62828; }
+
+  /* Services demand */
+  .service-demand-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 7px;
+    font-size: 12px;
+  }
+  .service-bar-wrap {
+    flex: 1;
+    background: #eef1f4;
+    border-radius: 4px;
+    height: 8px;
+    overflow: hidden;
+  }
+  .service-bar-fill {
+    height: 100%;
+    background: var(--ub-blue);
+    border-radius: 4px;
+    transition: width 0.4s;
+  }
+  .service-count { font-size: 11px; color: #888; min-width: 20px; text-align: right; }
+
+  /* Included brands list */
+  .included-brand-chip {
+    display: inline-block;
+    background: var(--in-bg);
+    border: 1px solid var(--in-border);
+    border-radius: 12px;
+    padding: 3px 10px;
+    font-size: 11px;
+    margin: 3px;
+    color: #1a5c3a;
+    font-weight: 600;
+  }
+  .controlled-brand-chip {
+    display: inline-block;
+    background: #e8f5e9;
+    border: 1px solid #4caf50;
+    border-radius: 12px;
+    padding: 3px 10px;
+    font-size: 11px;
+    margin: 3px;
+    color: #2e7d32;
+    font-weight: 600;
+  }
+  .unknown-brand-chip {
+    display: inline-block;
+    background: #fff3e0;
+    border: 1px solid #ffb74d;
+    border-radius: 12px;
+    padding: 3px 10px;
+    font-size: 11px;
+    margin: 3px;
+    color: #e65100;
+    font-weight: 600;
+  }
+
+  .sidebar-divider { border: none; border-top: 1px solid #eee; margin: 16px 0; }
+
+  .reset-btn {
+    width: 100%;
+    padding: 10px;
+    background: none;
+    border: 1px solid #dde2e8;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    color: #888;
+    font-family: inherit;
+    transition: all 0.15s;
+    margin-top: 8px;
+  }
+  .reset-btn:hover { border-color: #f44336; color: #f44336; }
+
+  /* Tooltip */
+  .tooltip-wrap { position: relative; display: inline-block; }
+  .tooltip-wrap .tip {
+    display: none;
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    white-space: nowrap;
+    z-index: 200;
+  }
+  .tooltip-wrap:hover .tip { display: block; }
+
+  @media (max-width: 900px) {
+    .main-layout { flex-direction: column; }
+    .sidebar { width: 100%; min-width: unset; position: static; height: auto; border-left: none; border-top: 1px solid #dde2e8; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div class="header-elk">🦌</div>
+    <div>
+      <div class="header-title">UNBRIDLED ECOSYSTEM PLANNER</div>
+      <div class="header-sub">Family Office · Controlled Group Analysis · Shared Services</div>
+    </div>
+  </div>
+  <div class="stats-bar">
+    <div class="stat-pill" id="stat-brands">
+      <span>Brands In FO:</span><span class="val" id="val-brands">0</span>
+    </div>
+    <div class="stat-pill" id="stat-fte">
+      <span>FTE (in group):</span><span class="val" id="val-fte">0</span>
+      <div class="fte-bar-wrap"><div class="fte-bar-fill" id="hdr-fte-fill" style="width:0%"></div></div>
+    </div>
+    <div class="stat-pill" id="stat-ale">
+      <span id="ale-hdr-text">ALE Status: Calculating…</span>
+    </div>
+    <div class="stat-pill" id="stat-cg">
+      <span>Controlled Group:</span><span class="val" id="val-cg">0</span><span>entities</span>
+    </div>
+  </div>
+</div>
+
+<div class="main-layout">
+  <div class="segments-panel" id="segments-panel">
+    <!-- injected by JS -->
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <div class="sidebar-section">
+      <h3>FTE Tracker</h3>
+      <div class="fte-meter">
+        <div class="fte-meter-top">
+          <div><div class="fte-number" id="sb-fte-count">0</div><div class="fte-label">Full-Time Equivalents</div></div>
+          <div style="text-align:right"><div class="fte-number" style="font-size:14px;color:#888">/ 50</div><div class="fte-label">ALE threshold</div></div>
+        </div>
+        <div class="fte-threshold-bar">
+          <div class="fte-threshold-fill" id="sb-fte-fill" style="width:0%"></div>
+          <div class="fte-threshold-marker" style="left:calc(min(100%, var(--marker-pct, 100%)))"></div>
+        </div>
+        <div class="fte-threshold-note">
+          <span id="sb-fte-note">0 of 50 FTE threshold</span>
+          <span id="sb-fte-remain">50 to go</span>
+        </div>
+      </div>
+      <div class="ale-status-box ale-ok-box" id="ale-status-box">
+        ✅ Below ALE threshold — no employer mandate
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <h3>Controlled Group</h3>
+      <div style="font-size:12px;color:#666;margin-bottom:8px;">Entities where Stan owns ≥80% equity are in the IRS controlled group. Between 50–79% is a flag to verify with ERISA counsel.</div>
+      <div id="cg-list-confirmed" style="margin-bottom:6px;"></div>
+      <div id="cg-list-maybe" style="margin-bottom:6px;"></div>
+      <div style="font-size:11px;color:#888;margin-top:6px;">* Set equity % on each card to update status</div>
+    </div>
+
+    <hr class="sidebar-divider">
+
+    <div class="sidebar-section">
+      <h3>Services Demand</h3>
+      <div style="font-size:12px;color:#666;margin-bottom:10px;">How many included brands need each service:</div>
+      <div id="services-demand"></div>
+    </div>
+
+    <hr class="sidebar-divider">
+
+    <div class="sidebar-section">
+      <h3>In Family Office</h3>
+      <div id="included-list" style="line-height:1.8;">
+        <div style="font-size:12px;color:#aaa;font-style:italic;">Toggle cards to include brands</div>
+      </div>
+    </div>
+
+    <button class="reset-btn" onclick="resetAll()">↺ Reset all to defaults</button>
+
+  </div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+
+const SERVICES = [
+  { id: 'marketing',   label: 'Marketing & Brand' },
+  { id: 'finance',     label: 'Finance Administration' },
+  { id: 'people',      label: 'People & Possibilities (HR)' },
+  { id: 'facilities',  label: 'Facilities & Infrastructure' },
+  { id: 'learning',    label: 'Learning & Development' },
+  { id: 'it',          label: 'Information Technology' },
+];
+
+const BRANDS = [
+  // LIVE EVENTS
+  { id: 'solutions',    name: 'Unbridled Solutions',    sub: 'Flagship live events agency',         segment: 'events',       equity: 100, ft: 45, pt: 10, included: true,  services: ['finance','people','it'] },
+  { id: 'travel',       name: 'Unbridled Travel',       sub: 'Incentive & group travel',             segment: 'events',       equity: 100, ft: 8,  pt: 2,  included: true,  services: ['finance','people'] },
+  { id: 'productions',  name: 'Unbridled Productions',  sub: 'AV & production',                     segment: 'events',       equity: 100, ft: 12, pt: 8,  included: true,  services: ['finance','people','facilities'] },
+  { id: 'media',        name: 'Unbridled Media',        sub: 'Media production',                     segment: 'events',       equity: 100, ft: 4,  pt: 2,  included: true,  services: ['finance','marketing'] },
+  { id: 'captureco',   name: 'Capture Co',             sub: 'Photography & capture',                segment: 'events',       equity: 0,   ft: 3,  pt: 2,  included: false, services: [] },
+  { id: 'giftd',        name: "GIFT'D",                 sub: 'Gifting & fulfillment',                segment: 'events',       equity: 100, ft: 4,  pt: 2,  included: true,  services: ['finance','people'] },
+  { id: 'orangedoor',   name: 'OrangeDoor',             sub: 'Creative / brand agency',              segment: 'events',       equity: 100, ft: 5,  pt: 2,  included: true,  services: ['marketing','finance','it'] },
+
+  // HOSPITALITY
+  { id: 'uhg',          name: 'Unbridled Hospitality Group', sub: 'Hospitality holding entity',    segment: 'hospitality',  equity: 100, ft: 2,  pt: 0,  included: true,  services: ['finance','people'] },
+  { id: 'hsc',          name: 'Hotel St. Cloud',        sub: 'Boutique hotel, Cañon City',           segment: 'hospitality',  equity: 100, ft: 12, pt: 8,  included: true,  services: ['finance','people','facilities','it'] },
+  { id: 'fremont-makers',name: 'Fremont Makers',        sub: 'New — Aug 2026',                       segment: 'hospitality',  equity: 100, ft: 2,  pt: 3,  included: true,  services: ['people','facilities'] },
+  { id: 'fremont-prov', name: 'Fremont Provisions',     sub: 'F&B concept',                          segment: 'hospitality',  equity: 100, ft: 5,  pt: 5,  included: true,  services: ['finance','people'] },
+  { id: 'fremont-pub',  name: 'Fremont Public House',   sub: 'Restaurant & bar',                     segment: 'hospitality',  equity: 100, ft: 8,  pt: 10, included: true,  services: ['finance','people','facilities'] },
+  { id: 'eatery1887',   name: '1887 Historic Eatery',   sub: 'HSC restaurant',                       segment: 'hospitality',  equity: 100, ft: 6,  pt: 8,  included: true,  services: ['finance','people'] },
+  { id: 'warroom',      name: 'The War Room',           sub: 'Cocktail lounge',                      segment: 'hospitality',  equity: 0,   ft: 4,  pt: 6,  included: false, services: [] },
+  { id: 'standardoil',  name: 'Standard Oil Coffee Co', sub: 'Coffee concept, Cañon City',           segment: 'hospitality',  equity: 0,   ft: 3,  pt: 4,  included: false, services: [] },
+
+  // REAL ESTATE
+  { id: 'holdings',     name: 'Unbridled Holdings',     sub: 'Real estate holding entity',           segment: 'realestate',   equity: 100, ft: 2,  pt: 0,  included: true,  services: ['finance','facilities'] },
+  { id: 'grant-mansion',name: 'Grant Street Mansion',   sub: 'Unbridled community property',         segment: 'realestate',   equity: 100, ft: 1,  pt: 2,  included: true,  services: ['facilities'] },
+  { id: 'josie-mansion',name: 'Josephine Mansion',      sub: 'Unbridled community property',         segment: 'realestate',   equity: 100, ft: 1,  pt: 2,  included: true,  services: ['facilities'] },
+  { id: 'apex',         name: 'The Apex Building',      sub: 'Commercial property',                  segment: 'realestate',   equity: 100, ft: 0,  pt: 1,  included: true,  services: ['facilities','finance'] },
+  { id: 'postoffice',   name: 'The Post Office',        sub: 'Unbridled community property',         segment: 'realestate',   equity: 100, ft: 0,  pt: 1,  included: true,  services: ['facilities'] },
+  { id: 'abstract',     name: 'The Abstract',           sub: 'Unbridled community property',         segment: 'realestate',   equity: 100, ft: 0,  pt: 1,  included: false, services: [] },
+  { id: 'annex',        name: 'The Annex',              sub: 'Unbridled community property',         segment: 'realestate',   equity: 100, ft: 0,  pt: 1,  included: false, services: [] },
+  { id: 'cabrini',      name: 'Cabrini',                sub: 'Unbridled community property',         segment: 'realestate',   equity: 100, ft: 0,  pt: 1,  included: false, services: [] },
+  { id: 'tradecenter',  name: '024 Trade Center',       sub: 'Commercial property',                  segment: 'realestate',   equity: 100, ft: 0,  pt: 1,  included: false, services: [] },
+  { id: 'harrison',     name: 'The Harrison',           sub: 'Harrison building',                    segment: 'realestate',   equity: 100, ft: 0,  pt: 1,  included: false, services: [] },
+
+  // EMERGENT BRANDS
+  { id: 'contractors',  name: 'Unbridled Contractors',  sub: 'Construction services',                segment: 'emergent',     equity: 0,   ft: 8,  pt: 4,  included: false, services: [] },
+  { id: 'wealth',       name: 'Unbridled Wealth',       sub: 'Wealth management',                    segment: 'emergent',     equity: 0,   ft: 5,  pt: 0,  included: false, services: [] },
+  { id: 'insurance',    name: 'Unbridled Insurance',    sub: 'Insurance solutions',                  segment: 'emergent',     equity: 0,   ft: 2,  pt: 1,  included: false, services: [] },
+  { id: 'emergent',     name: 'Emergent',               sub: 'Emerging brand',                       segment: 'emergent',     equity: 0,   ft: 0,  pt: 0,  included: false, services: [] },
+  { id: 'dmi',          name: 'Denver Music Institute', sub: 'Music education',                      segment: 'emergent',     equity: 0,   ft: 5,  pt: 10, included: false, services: [] },
+  { id: 'solve4',       name: 'Solve4',                 sub: 'Technology / consulting',              segment: 'emergent',     equity: 0,   ft: 3,  pt: 0,  included: false, services: [] },
+  { id: 'goodthink',    name: 'Goodthink',              sub: 'Consulting',                           segment: 'emergent',     equity: 0,   ft: 2,  pt: 0,  included: false, services: [] },
+  { id: 'redriverturbine', name: 'Red River Turbine Co', sub: 'Energy / industrial',                segment: 'emergent',     equity: 0,   ft: 0,  pt: 0,  included: false, services: [] },
+  { id: 'elevation',    name: 'Elevation Connect',      sub: 'Connectivity / tech',                  segment: 'emergent',     equity: 0,   ft: 0,  pt: 0,  included: false, services: [] },
+  { id: 'artistuprising',name:'Artist Uprising',        sub: 'Arts organization',                    segment: 'emergent',     equity: 0,   ft: 0,  pt: 0,  included: false, services: [] },
+  { id: 'logtimber',    name: 'TJ Log & Timber',        sub: 'Construction / timber',                segment: 'emergent',     equity: 0,   ft: 0,  pt: 0,  included: false, services: [] },
+
+  // NONPROFIT
+  { id: 'acts',         name: 'UnbridledACTS',          sub: '501(c)(3) philanthropy',               segment: 'nonprofit',    equity: 0,   ft: 2,  pt: 2,  included: false, services: [] },
+];
+
+const DEFAULTS = JSON.parse(JSON.stringify(BRANDS));
+
+const SEG_META = {
+  events:      { label: 'LIVE EVENTS',      cls: 'seg-events' },
+  hospitality: { label: 'HOSPITALITY',      cls: 'seg-hospitality' },
+  realestate:  { label: 'REAL ESTATE',      cls: 'seg-realestate' },
+  emergent:    { label: 'EMERGENT BRANDS',  cls: 'seg-emergent' },
+  nonprofit:   { label: 'NONPROFIT',        cls: 'seg-nonprofit' },
+};
+const SEG_ORDER = ['events','hospitality','realestate','emergent','nonprofit'];
+
+// ── STATE from localStorage ────────────────────────────────────────────────────
+const STORAGE_KEY = 'ub_ecosystem_planner_v2';
+function loadState() {
+  try {
+    const s = localStorage.getItem(STORAGE_KEY);
+    if (s) {
+      const saved = JSON.parse(s);
+      saved.forEach(sv => {
+        const b = BRANDS.find(x => x.id === sv.id);
+        if (b) { Object.assign(b, sv); }
+      });
+    }
+  } catch(e) {}
+}
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(BRANDS.map(b => ({
+      id: b.id, equity: b.equity, ft: b.ft, pt: b.pt,
+      included: b.included, services: b.services
+    }))));
+  } catch(e) {}
+}
+function resetAll() {
+  if (!confirm('Reset all cards to defaults?')) return;
+  DEFAULTS.forEach(d => {
+    const b = BRANDS.find(x => x.id === d.id);
+    if (b) { b.equity = d.equity; b.ft = d.ft; b.pt = d.pt; b.included = d.included; b.services = [...d.services]; }
+  });
+  localStorage.removeItem(STORAGE_KEY);
+  renderAll();
+}
+
+// ── COMPUTED ──────────────────────────────────────────────────────────────────
+function fte(b) {
+  // FTE = full-time + (part-time hours / 120). Approximation: each PT = ~60hrs/mo
+  return b.ft + Math.round(b.pt * 60 / 120 * 10) / 10;
+}
+function cgStatus(b) {
+  if (b.equity === 0 || b.equity === '' || isNaN(b.equity)) return 'unknown';
+  if (b.equity >= 80) return 'yes';
+  if (b.equity >= 50) return 'maybe';
+  return 'no';
+}
+function cgLabel(status) {
+  if (status === 'yes')     return { cls: 'cg-yes',     text: '✓ Controlled Group' };
+  if (status === 'maybe')   return { cls: 'cg-maybe',   text: '⚠ Verify w/ ERISA' };
+  if (status === 'no')      return { cls: 'cg-no',      text: '✗ Outside Group' };
+  return { cls: 'cg-unknown', text: '? Equity Unknown' };
+}
+
+function calcTotals() {
+  const included = BRANDS.filter(b => b.included);
+  const totalFTE = included.reduce((s, b) => s + fte(b), 0);
+  const cgCount  = included.filter(b => cgStatus(b) === 'yes').length;
+  const svcCount = {};
+  SERVICES.forEach(s => svcCount[s.id] = 0);
+  included.forEach(b => b.services.forEach(s => { if (svcCount[s] !== undefined) svcCount[s]++; }));
+  return { included, totalFTE: Math.round(totalFTE * 10)/10, cgCount, svcCount };
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function renderAll() {
+  renderSegments();
+  renderSidebar();
+  saveState();
+}
+
+function renderSegments() {
+  const panel = document.getElementById('segments-panel');
+  panel.innerHTML = '';
+  SEG_ORDER.forEach(segId => {
+    const meta   = SEG_META[segId];
+    const brands = BRANDS.filter(b => b.segment === segId);
+    const section = document.createElement('div');
+    section.className = 'segment-section';
+    section.innerHTML = `
+      <div class="segment-header ${meta.cls}">
+        <div class="segment-dot"></div>
+        <h2>${meta.label}</h2>
+        <span class="segment-count">${brands.filter(b=>b.included).length} / ${brands.length} in FO</span>
+      </div>
+      <div class="cards-grid" id="grid-${segId}"></div>
+    `;
+    panel.appendChild(section);
+    const grid = section.querySelector(`#grid-${segId}`);
+    brands.forEach(b => grid.appendChild(buildCard(b, meta)));
+  });
+}
+
+function buildCard(b, meta) {
+  const div = document.createElement('div');
+  div.className = 'brand-card' + (b.included ? ' included' : '');
+  div.id = 'card-' + b.id;
+
+  const cg = cgStatus(b);
+  const cgl = cgLabel(cg);
+  const openServices = b._servicesOpen || false;
+  const svcChecked = id => b.services.includes(id) ? 'checked' : '';
+
+  div.innerHTML = `
+    <div class="card-header">
+      <div>
+        <div class="card-name ${meta.cls}">${b.name}</div>
+        <div class="card-parent">${b.sub}</div>
+      </div>
+      <button class="include-toggle ${b.included ? 'on' : ''}" id="tog-${b.id}" title="${b.included ? 'Remove from Family Office' : 'Add to Family Office'}"></button>
+    </div>
+
+    <div class="card-stats">
+      <div class="card-field">
+        <label>Equity %</label>
+        <input type="number" min="0" max="100" value="${b.equity}" placeholder="?" id="eq-${b.id}" />
+      </div>
+      <div class="card-field">
+        <label>FT Staff</label>
+        <input type="number" min="0" value="${b.ft}" id="ft-${b.id}" />
+      </div>
+      <div class="card-field">
+        <label>PT Staff</label>
+        <input type="number" min="0" value="${b.pt}" id="pt-${b.id}" />
+      </div>
+    </div>
+
+    <div class="cg-badge ${cgl.cls}"><span class="cg-dot"></span>${cgl.text}</div>
+
+    <button class="services-toggle-btn ${openServices ? 'open' : ''}" id="svtog-${b.id}">
+      <span>${b.services.length ? b.services.length + ' service' + (b.services.length>1?'s':'') + ' selected' : 'Select services…'}</span>
+      <span class="arrow">▾</span>
+    </button>
+    <div class="services-panel ${openServices ? 'open' : ''}" id="svpanel-${b.id}">
+      ${SERVICES.map(s => `
+        <label class="service-item">
+          <input type="checkbox" ${svcChecked(s.id)} data-brand="${b.id}" data-svc="${s.id}" />
+          <span>${s.label}</span>
+        </label>
+      `).join('')}
+    </div>
+  `;
+
+  // TOGGLE include
+  div.querySelector(`#tog-${b.id}`).addEventListener('click', e => {
+    e.stopPropagation();
+    b.included = !b.included;
+    renderAll();
+  });
+
+  // SERVICES toggle
+  div.querySelector(`#svtog-${b.id}`).addEventListener('click', e => {
+    e.stopPropagation();
+    b._servicesOpen = !b._servicesOpen;
+    const panel = div.querySelector(`#svpanel-${b.id}`);
+    const btn   = div.querySelector(`#svtog-${b.id}`);
+    panel.classList.toggle('open', b._servicesOpen);
+    btn.classList.toggle('open', b._servicesOpen);
+  });
+
+  // EQUITY input
+  div.querySelector(`#eq-${b.id}`).addEventListener('change', e => {
+    b.equity = parseFloat(e.target.value) || 0;
+    renderAll();
+  });
+  div.querySelector(`#ft-${b.id}`).addEventListener('change', e => {
+    b.ft = parseInt(e.target.value) || 0;
+    renderAll();
+  });
+  div.querySelector(`#pt-${b.id}`).addEventListener('change', e => {
+    b.pt = parseInt(e.target.value) || 0;
+    renderAll();
+  });
+
+  // SERVICE checkboxes
+  div.querySelectorAll('input[type=checkbox]').forEach(chk => {
+    chk.addEventListener('change', () => {
+      const svc = chk.dataset.svc;
+      if (chk.checked) { if (!b.services.includes(svc)) b.services.push(svc); }
+      else { b.services = b.services.filter(s => s !== svc); }
+      // update button text without full re-render
+      const btn = div.querySelector(`#svtog-${b.id} span`);
+      if (btn) btn.textContent = b.services.length
+        ? b.services.length + ' service' + (b.services.length>1?'s':'') + ' selected'
+        : 'Select services…';
+      renderSidebar();
+      saveState();
+    });
+  });
+
+  return div;
+}
+
+function renderSidebar() {
+  const { included, totalFTE, cgCount, svcCount } = calcTotals();
+
+  // Header stats
+  document.getElementById('val-brands').textContent = included.length;
+  document.getElementById('val-fte').textContent = totalFTE;
+  document.getElementById('val-cg').textContent = cgCount;
+
+  // Header FTE bar
+  const pct = Math.min(100, (totalFTE / 50) * 100);
+  document.getElementById('hdr-fte-fill').style.width = pct + '%';
+  document.getElementById('hdr-fte-fill').style.background = totalFTE >= 50 ? '#f44336' : totalFTE >= 40 ? '#ff9800' : '#4caf7d';
+
+  // Header ALE pill
+  const alePill = document.getElementById('stat-ale');
+  const aleText = document.getElementById('ale-hdr-text');
+  alePill.className = 'stat-pill ' + (totalFTE >= 50 ? 'ale-over' : totalFTE >= 40 ? 'ale-warn' : 'ale-ok');
+  aleText.textContent = totalFTE >= 50 ? '🔴 ALE: Employer mandate applies' : totalFTE >= 40 ? '🟠 ALE: Watch — approaching 50' : '🟢 ALE: Below threshold';
+
+  // Sidebar FTE meter
+  document.getElementById('sb-fte-count').textContent = totalFTE;
+  const sbPct = Math.min(100, (totalFTE / 50) * 100);
+  const fill = document.getElementById('sb-fte-fill');
+  fill.style.width = sbPct + '%';
+  fill.style.background = totalFTE >= 50 ? '#f44336' : totalFTE >= 40 ? '#ff9800' : '#4caf7d';
+  document.getElementById('sb-fte-note').textContent = `${totalFTE} FTE counted toward threshold`;
+  const remain = Math.max(0, 50 - totalFTE);
+  document.getElementById('sb-fte-remain').textContent = totalFTE >= 50 ? '⚠ ALE' : `${remain} to ALE`;
+
+  // ALE status box
+  const box = document.getElementById('ale-status-box');
+  if (totalFTE >= 50) {
+    box.className = 'ale-status-box ale-over-box';
+    box.innerHTML = `🔴 ALE — Employer mandate applies to ALL entities in group. Each must offer ACA-compliant coverage or face penalties.`;
+  } else if (totalFTE >= 40) {
+    box.className = 'ale-status-box ale-warn-box';
+    box.innerHTML = `🟠 ${50-totalFTE} FTE away from ALE threshold. Adding seasonal or PT workers could tip you over.`;
+  } else {
+    box.className = 'ale-status-box ale-ok-box';
+    box.innerHTML = `✅ ${remain} FTE below the 50-employee ALE threshold. No employer mandate yet.`;
+  }
+
+  // Controlled group lists
+  const cgConfirmed = BRANDS.filter(b => b.included && cgStatus(b) === 'yes');
+  const cgMaybe     = BRANDS.filter(b => b.included && cgStatus(b) === 'maybe');
+  const cgConfEl = document.getElementById('cg-list-confirmed');
+  const cgMayEl  = document.getElementById('cg-list-maybe');
+  cgConfEl.innerHTML = cgConfirmed.length
+    ? `<div style="font-size:11px;color:#555;margin-bottom:4px;font-weight:600;">CONFIRMED (≥80% equity):</div>` + cgConfirmed.map(b=>`<span class="controlled-brand-chip">${b.name}</span>`).join('')
+    : `<div style="font-size:11px;color:#aaa;font-style:italic;">No entities with ≥80% equity set</div>`;
+  cgMayEl.innerHTML = cgMaybe.length
+    ? `<div style="font-size:11px;color:#555;margin-bottom:4px;margin-top:8px;font-weight:600;">VERIFY WITH ERISA (50–79%):</div>` + cgMaybe.map(b=>`<span class="unknown-brand-chip">${b.name}</span>`).join('')
+    : '';
+
+  // Services demand
+  const maxSvc = Math.max(1, ...Object.values(svcCount));
+  const sdEl = document.getElementById('services-demand');
+  sdEl.innerHTML = SERVICES.map(s => `
+    <div class="service-demand-item">
+      <span style="font-size:11px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.label}</span>
+      <div class="service-bar-wrap">
+        <div class="service-bar-fill" style="width:${svcCount[s.id]/maxSvc*100}%"></div>
+      </div>
+      <span class="service-count">${svcCount[s.id]}</span>
+    </div>
+  `).join('');
+
+  // Included list
+  const incEl = document.getElementById('included-list');
+  incEl.innerHTML = included.length
+    ? included.map(b=>`<span class="included-brand-chip">${b.name}</span>`).join('')
+    : `<div style="font-size:12px;color:#aaa;font-style:italic;">Toggle cards on the left to include brands</div>`;
+
+  // Refresh segment counts
+  SEG_ORDER.forEach(segId => {
+    const countEl = document.querySelector(`#grid-${segId}`)?.closest('.segment-section')?.querySelector('.segment-count');
+    if (countEl) {
+      const brands = BRANDS.filter(b => b.segment === segId);
+      countEl.textContent = `${brands.filter(b=>b.included).length} / ${brands.length} in FO`;
+    }
+  });
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+loadState();
+renderAll();
+</script>
+</body>
+</html>
