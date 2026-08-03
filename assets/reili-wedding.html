@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- v4 -->
+<title>Reili Bullis &amp; Chris Taplin — Wedding</title>
+<style>
+  :root {
+    --bg:        #0f1923;
+    --navy:      #1a2e3b;
+    --navy2:     #162636;
+    --blue:      #5a8ba7;
+    --blue-dark: #3d6e87;
+    --gold:      #c9aa7c;
+    --gold-dark: #a8854a;
+    --text:      #e8e0d8;
+    --text-light:#8ea8b8;
+    --white:     #ffffff;
+    --border:    rgba(90,139,167,0.22);
+    --border2:   rgba(90,139,167,0.12);
+    --shadow:    rgba(0,0,0,0.35);
+    --red:       #e05050;
+    --row-hover: rgba(90,139,167,0.07);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Georgia, 'Times New Roman', serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  .header {
+    background: linear-gradient(135deg, var(--navy) 0%, #0f1923 100%);
+    padding: 36px 24px 28px; text-align: center;
+    border-bottom: 1px solid rgba(90,139,167,0.3);
+  }
+  .header::before { content: '✦  ✦  ✦'; display: block; color: var(--gold); font-size: 14px; letter-spacing: 12px; margin-bottom: 12px; opacity: 0.6; }
+  .header h1 { font-size: clamp(22px, 5vw, 38px); color: var(--white); font-weight: normal; letter-spacing: 1px; line-height: 1.3; }
+  .header h1 span { color: var(--white); font-style: italic; }
+  .header p { color: rgba(255,255,255,0.75); font-size: 14px; margin-top: 8px; letter-spacing: 2px; text-transform: uppercase; font-family: Arial, sans-serif; }
+
+  .controls {
+    background: var(--navy); border-bottom: 1px solid var(--border);
+    padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 10px; position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 12px var(--shadow);
+  }
+  .controls-left, .controls-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .btn { font-family: Arial, sans-serif; font-size: 13px; font-weight: 600; padding: 8px 18px; border-radius: 6px; border: none; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .btn-gold { background: var(--gold); color: #0f1923; }
+  .btn-gold:hover { background: var(--gold-dark); color: #fff; }
+  .btn-sage { background: var(--blue); color: #0f1923; }
+  .btn-sage:hover { background: var(--blue-dark); color: #fff; }
+  .btn-outline { background: transparent; border: 1.5px solid var(--blue); color: var(--blue); }
+  .btn-outline:hover { background: rgba(90,139,167,0.15); }
+  .status-msg { font-family: Arial, sans-serif; font-size: 12px; color: var(--text-light); font-style: italic; }
+
+  .grand-total-bar {
+    background: linear-gradient(135deg, var(--navy2) 0%, #0d1a27 100%);
+    border-bottom: 2px solid rgba(90,139,167,0.4);
+    padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+  }
+  .grand-total-bar .label { color: rgba(255,255,255,0.8); font-family: Arial, sans-serif; font-size: 14px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+  .grand-total-bar .amount { color: var(--white); font-size: clamp(22px, 4vw, 32px); font-weight: bold; }
+  .grand-total-bar .sub { color: rgba(255,255,255,0.65); font-family: Arial, sans-serif; font-size: 13px; text-align: right; }
+
+  .content { max-width: 900px; margin: 0 auto; padding: 24px 16px 60px; }
+
+  .attendee-card {
+    background: var(--navy); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px 24px; margin-bottom: 16px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  }
+  .attendee-card label { font-family: Arial, sans-serif; font-size: 14px; font-weight: 600; color: var(--text); }
+  .attendee-card input { font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; width: 90px; padding: 6px 10px; border: 2px solid var(--blue); border-radius: 8px; color: var(--blue); text-align: center; background: rgba(90,139,167,0.1); }
+  .attendee-card input:focus { outline: none; border-color: var(--gold); color: var(--gold); }
+  .attendee-card .note { font-family: Arial, sans-serif; font-size: 12px; color: var(--text-light); font-style: italic; }
+
+  .tax-config {
+    background: var(--navy); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    font-family: Arial, sans-serif; font-size: 13px; color: var(--text);
+  }
+  .tax-config label { font-weight: 600; color: var(--text-light); }
+  .tax-config input { width: 70px; padding: 5px 8px; border: 1.5px solid var(--blue); border-radius: 6px; text-align: center; font-size: 14px; font-weight: bold; color: var(--blue); background: rgba(90,139,167,0.1); }
+  .tax-config input:focus { outline: none; border-color: var(--gold); color: var(--gold); }
+  .tax-config .tax-note { color: var(--text-light); font-style: italic; font-size: 12px; }
+
+  .category { background: var(--navy); border-radius: 12px; margin-bottom: 16px; overflow: hidden; box-shadow: 0 2px 16px var(--shadow); border: 1px solid var(--border); }
+  .cat-header { background: linear-gradient(135deg, #0d1a27, var(--navy2)); padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; border-bottom: 1px solid var(--border2); }
+  .cat-header:hover { background: linear-gradient(135deg, #131f2d, #1e3040); }
+  .cat-title { color: var(--blue); font-size: 15px; font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase; font-family: Arial, sans-serif; }
+  .cat-right { display: flex; align-items: center; gap: 14px; }
+  .cat-total { color: var(--gold); font-family: Arial, sans-serif; font-size: 15px; font-weight: 700; }
+  .cat-toggle { color: var(--blue); font-size: 16px; transition: transform 0.2s; opacity: 0.7; }
+  .cat-toggle.open { transform: rotate(180deg); }
+  .cat-body { padding: 0 0 6px; }
+  .cat-body.collapsed { display: none; }
+
+  .col-headers { display: grid; grid-template-columns: 1fr 90px 110px 110px 36px; gap: 6px; padding: 6px 16px 5px; background: #0d1620; border-bottom: 1px solid var(--border2); }
+  .col-headers span { font-family: Arial, sans-serif; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--blue); text-align: right; }
+  .col-headers span:first-child { text-align: left; }
+
+  .line-item { display: grid; grid-template-columns: 1fr 90px 110px 110px 36px; gap: 6px; padding: 7px 16px; align-items: center; border-bottom: 1px solid var(--border2); background: #162433; }
+  .line-item:last-child { border-bottom: none; }
+  .line-item:hover { background: #1a2e3b; }
+  .line-item input[type="text"] { font-family: Georgia, serif; font-size: 14px; border: none; border-bottom: 1px solid rgba(90,139,167,0.3); padding: 4px 6px; border-radius: 0; background: transparent; color: var(--text); width: 100%; min-width: 0; }
+  .line-item input[type="text"]:focus { outline: none; border-bottom-color: var(--gold); background: rgba(201,170,124,0.05); color: var(--text); }
+  .line-item input[type="number"] { font-family: Arial, sans-serif; font-size: 13px; border: none; border-bottom: 1px solid rgba(90,139,167,0.3); padding: 4px 4px; border-radius: 0; text-align: right; color: var(--text); width: 100%; min-width: 0; background: transparent; }
+  .line-item input[type="number"]:focus { outline: none; border-bottom-color: var(--gold); color: var(--text); }
+  .line-item .line-total { font-family: Arial, sans-serif; font-size: 13px; font-weight: 700; text-align: right; color: var(--gold); padding-right: 4px; white-space: nowrap; }
+  .line-item .del-btn { background: none; border: none; color: rgba(255,255,255,0.15); font-size: 15px; cursor: pointer; padding: 2px 4px; border-radius: 4px; line-height: 1; }
+  .line-item .del-btn:hover { color: var(--red); background: rgba(224,80,80,0.1); }
+
+  .tax-pill {
+    position: relative; display: inline-block;
+  }
+  .tax-pill select {
+    font-size: 11px; font-weight: 700; font-family: Arial, sans-serif;
+    padding: 2px 20px 2px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.5);
+    background: #ffffff;
+    color: #1a2e3b;
+    cursor: pointer;
+    height: 22px;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .tax-pill::after {
+    content: '▾';
+    position: absolute; right: 5px; top: 50%;
+    transform: translateY(-50%);
+    color: #1a2e3b; font-size: 10px;
+    pointer-events: none;
+  }
+
+  /* Custom dropdown — replaces native select on dark backgrounds */
+  .tax-badge {
+    position: relative; display: inline-block;
+    font-family: Arial, sans-serif; font-size: 11px; font-weight: 700;
+  }
+  .tax-badge-btn {
+    background: #0d1a27; color: var(--gold);
+    border: 1px solid rgba(201,170,124,0.4);
+    border-radius: 4px; padding: 2px 18px 2px 8px;
+    cursor: pointer; white-space: nowrap;
+    height: 22px; line-height: 18px;
+    display: inline-flex; align-items: center; gap: 4px;
+    font-weight: 700;
+  }
+  .tax-badge-btn::after { content: ' ▾'; font-size: 9px; color: var(--gold); }
+  .tax-badge-menu {
+    display: none; position: absolute; top: 24px; left: 0;
+    background: #ffffff; border: 1px solid #ccc; border-radius: 4px;
+    z-index: 999; min-width: 130px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+  .tax-badge-menu.open { display: block; }
+  .tax-badge-item {
+    padding: 7px 12px; color: #1a2e3b; font-size: 12px;
+    cursor: pointer; white-space: nowrap;
+  }
+  .tax-badge-item:hover { background: #e8f0f8; }
+  .tax-badge-item.active { font-weight: 700; background: #ddeeff; }
+  .add-line-btn { font-family: Arial, sans-serif; font-size: 12px; color: var(--blue); background: none; border: 1px dashed rgba(90,139,167,0.4); border-radius: 5px; padding: 5px 12px; cursor: pointer; transition: all 0.15s; }
+  .add-line-btn:hover { background: rgba(90,139,167,0.12); border-style: solid; }
+  .del-cat-btn { font-family: Arial, sans-serif; font-size: 12px; color: var(--red); background: none; border: 1px dashed rgba(224,80,80,0.3); border-radius: 5px; padding: 5px 12px; cursor: pointer; }
+  .del-cat-btn:hover { background: rgba(224,80,80,0.08); border-style: solid; }
+
+  .summary-section { background: var(--navy); border-radius: 12px; box-shadow: 0 2px 16px var(--shadow); border: 1px solid var(--border); overflow: hidden; margin-top: 30px; }
+  .summary-header { background: linear-gradient(135deg, #0d1a27, var(--navy2)); padding: 14px 20px; color: var(--blue); font-family: Arial, sans-serif; font-size: 15px; font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+  .summary-table { width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 14px; }
+  .summary-table tr { border-bottom: 1px solid var(--border2); }
+  .summary-table td { padding: 10px 20px; color: var(--text); }
+  .summary-table td:last-child { text-align: right; font-weight: 600; color: var(--gold); }
+  .summary-table .tax-row td { color: var(--text-light); font-style: italic; }
+  .summary-table .total-row { background: rgba(90,139,167,0.08); }
+  .summary-table .total-row td { font-size: 15px; font-weight: bold; color: var(--text); }
+  .summary-table .total-row td:last-child { color: var(--gold); font-size: 17px; }
+  .summary-table .grand-row { background: linear-gradient(135deg, rgba(201,170,124,0.15), rgba(90,139,167,0.15)); border-top: 2px solid rgba(201,170,124,0.4); }
+  .summary-table .grand-row td { color: var(--gold); font-size: 17px; font-weight: bold; padding: 16px 20px; }
+  .summary-table .grand-row td:last-child { color: var(--gold); font-size: 22px; }
+
+  .notes-area { background: var(--navy); border-radius: 12px; border: 1px solid var(--border); padding: 16px 20px; margin-top: 20px; }
+  .notes-area label { display: block; font-family: Arial, sans-serif; font-size: 13px; font-weight: 600; color: var(--text-light); margin-bottom: 8px; letter-spacing: 0.5px; text-transform: uppercase; }
+  .notes-area textarea { width: 100%; min-height: 80px; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-family: Georgia, serif; font-size: 14px; color: var(--text); resize: vertical; background: rgba(0,0,0,0.2); }
+  .notes-area textarea:focus { outline: none; border-color: var(--blue); }
+
+  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #1a2e3b; border: 1px solid var(--border); color: #fff; padding: 12px 24px; border-radius: 8px; font-family: Arial, sans-serif; font-size: 14px; transition: transform 0.3s; z-index: 9999; pointer-events: none; }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+  #toast.success { background: #0d2a1e; border-color: rgba(76,202,128,0.5); color: #4cca80; }
+  #toast.error { background: #2a0d0d; border-color: rgba(224,80,80,0.5); color: var(--red); }
+
+  @media (max-width: 600px) {
+    .line-item { grid-template-columns: 1fr 60px 85px 85px 28px; gap: 3px; }
+    .col-headers { grid-template-columns: 1fr 60px 85px 85px 28px; gap: 3px; }
+    .controls { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1><span>Reili Bullis</span> &amp; <span>Chris Taplin</span></h1>
+  <p>Wedding Budget Planner &nbsp;·&nbsp; Shared by Stan &amp; Reili</p>
+</div>
+
+<div class="controls">
+  <div class="controls-left">
+    <button class="btn btn-gold" onclick="saveToCloud()">☁ Save to Cloud</button>
+    <button class="btn btn-sage" onclick="loadFromCloud()">↓ Load from Cloud</button>
+    <span class="status-msg" id="status-msg">Loading…</span>
+  </div>
+  <div class="controls-right">
+    <button class="btn btn-outline" onclick="addCategory()">+ Add Category</button>
+  </div>
+</div>
+
+<div class="grand-total-bar">
+  <div class="label">Total Wedding Budget</div>
+  <div>
+    <div class="amount" id="grand-total-display">$0</div>
+    <div class="sub" id="grand-total-sub">incl. tax &amp; gratuity</div>
+  </div>
+</div>
+
+<div class="content">
+
+  <div class="attendee-card">
+    <label>👥 Number of Guests:</label>
+    <input type="number" id="attendees" min="0" value="0" oninput="recalc()">
+    <span class="note">Used for per-head F&amp;B line items</span>
+  </div>
+
+  <div class="tax-config">
+    <label>Sales Tax %:</label>
+    <input type="number" id="tax-rate" value="8.5" step="0.1" min="0" oninput="recalc()">
+    <label style="margin-left:10px;">Gratuity %:</label>
+    <input type="number" id="grat-rate" value="20" step="0.5" min="0" oninput="recalc()">
+    <span class="tax-note">Gratuity applies to Food &amp; Beverage only. All other taxable categories get sales tax only.</span>
+  </div>
+
+  <div id="categories-container"></div>
+
+  <div class="summary-section">
+    <div class="summary-header">📋 Budget Summary</div>
+    <table class="summary-table"><tbody id="summary-body"></tbody></table>
+  </div>
+
+  <div class="notes-area" style="margin-top:20px;">
+    <label>📝 Notes &amp; Reminders</label>
+    <textarea id="notes-field" placeholder="Wedding date, venue contacts, vendor notes, to-do reminders..."></textarea>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ─── CONSTANTS ────────────────────────────────────────────────────────────────
+const KV_KEY = 'reili-wedding';
+const API    = '/api/planner/bundle';
+
+let categories = [];
+let _catIdSeq  = 0;
+let _itemIdSeq = 0;
+function newCatId()  { return 'c' + (++_catIdSeq); }
+function newItemId() { return 'i' + (++_itemIdSeq); }
+
+// ─── DEFAULT CATEGORIES ───────────────────────────────────────────────────────
+// taxable: 'tax' = sales tax only | 'taxgrat' = tax + gratuity | 'none' = no markup
+const DEFAULTS = [
+  {
+    name: 'VENUE & RENTALS', taxable: 'tax', items: [
+      { name: 'Ceremony Venue / Site Fee',           qty: 1, unitCost: 0 },
+      { name: 'Reception Venue Rental',              qty: 1, unitCost: 0 },
+      { name: 'Rehearsal Dinner Space',              qty: 1, unitCost: 0 },
+      { name: 'Tent / Canopy Rental',                qty: 1, unitCost: 0 },
+      { name: 'Tables (if not included)',            qty: 0, unitCost: 0 },
+      { name: 'Chairs / Chair Covers (if not incl)',qty: 0, unitCost: 0 },
+      { name: 'China / Glassware / Flatware Rental', qty: 0, unitCost: 0 },
+      { name: 'Venue Setup / Breakdown Fee',         qty: 1, unitCost: 0 },
+      { name: 'Parking / Valet',                     qty: 1, unitCost: 0 },
+      { name: 'Generator / Power Rental',            qty: 1, unitCost: 0 },
+      { name: 'Coat Check',                          qty: 1, unitCost: 0 },
+    ]
+  },
+  {
+    name: 'FOOD & BEVERAGE', taxable: 'taxgrat', items: [
+      { name: 'Catering — Per Head',                 qty: 0, unitCost: 0 },
+      { name: 'Rehearsal Dinner — Per Head',         qty: 0, unitCost: 0 },
+      { name: 'Cocktail Hour Appetizers',            qty: 1, unitCost: 0 },
+      { name: 'Wedding Cake',                        qty: 1, unitCost: 0 },
+      { name: 'Cake Cutting Fee',                    qty: 1, unitCost: 0 },
+      { name: 'Groom\'s Cake',                       qty: 1, unitCost: 0 },
+      { name: 'Late Night Snack / Dessert Bar',      qty: 1, unitCost: 0 },
+      { name: 'Open Bar — Per Head',                 qty: 0, unitCost: 0 },
+      { name: 'Champagne Toast',                     qty: 0, unitCost: 0 },
+      { name: 'Non-Alcoholic Beverages',             qty: 1, unitCost: 0 },
+      { name: 'Coffee / Tea Station',                qty: 1, unitCost: 0 },
+      { name: 'Vendor Meals',                        qty: 0, unitCost: 0 },
+      { name: 'Post-Wedding Brunch',                 qty: 0, unitCost: 0 },
+    ]
+  },
+  {
+    name: 'HOTEL ROOMS', taxable: 'tax', items: [
+      { name: 'Bridal Suite (nights)',               qty: 1, unitCost: 0 },
+      { name: 'Honeymoon Suite Night-Of',            qty: 1, unitCost: 0 },
+      { name: 'Guest Room Block (rooms × nights)',   qty: 1, unitCost: 0 },
+      { name: 'Groomsmen Rooms',                     qty: 1, unitCost: 0 },
+      { name: 'Family Rooms',                        qty: 1, unitCost: 0 },
+      { name: 'Out-of-Town Guest Welcome Bags',      qty: 0, unitCost: 0 },
+    ]
+  },
+  {
+    name: 'FLOWERS & FLORAL', taxable: 'tax', items: [
+      { name: 'Bridal Bouquet',                      qty: 1, unitCost: 0 },
+      { name: 'Toss Bouquet',                        qty: 1, unitCost: 0 },
+      { name: 'Bridesmaid Bouquets',                 qty: 0, unitCost: 0 },
+      { name: 'Boutonnieres',                        qty: 0, unitCost: 0 },
+      { name: 'Corsages (mothers / grandmothers)',   qty: 0, unitCost: 0 },
+      { name: 'Ceremony Arch / Altar Florals',       qty: 1, unitCost: 0 },
+      { name: 'Aisle Pew / Aisle Flowers',           qty: 0, unitCost: 0 },
+      { name: 'Reception Centerpieces',              qty: 0, unitCost: 0 },
+      { name: 'Head Table Florals',                  qty: 1, unitCost: 0 },
+      { name: 'Cake Florals',                        qty: 1, unitCost: 0 },
+      { name: 'Flower Girl Crown / Petals',          qty: 1, unitCost: 0 },
+      { name: 'Floral Delivery & Setup Fee',         qty: 1, unitCost: 0 },
+    ]
+  },
+  {
+    name: 'ATTIRE & BEAUTY', taxable: 'tax', items: [
+      { name: 'Wedding Dress',                       qty: 1, unitCost: 0 },
+      { name: 'Dress Alterations',                   qty: 1, unitCost: 0 },
+      { name: 'Dress Preservation / Cleaning',       qty: 1, unitCost: 0 },
+      { name: 'Veil',                                qty: 1, unitCost: 0 },
+      { name: 'Bridal Jewelry / Accessories',        qty: 1, unitCost: 0 },
+      { name: 'Bridal Shoes',                        qty: 1, unitCost: 0 },
+      { name: 'Rehearsal Dinner Outfit',             qty: 1, unitCost: 0 },
+      { name: 'Getting-Ready / Brunch Outfit',       qty: 1, unitCost: 0 },
+      { name: 'Bridesmaids Dresses',                 qty: 0, unitCost: 0 },
+      { name: 'Flower Girl Dress',                   qty: 1, unitCost: 0 },
+      { name: 'Groom Suit / Tux',                    qty: 1, unitCost: 0 },
+      { name: 'Groomsmen Attire',                    qty: 0, unitCost: 0 },
+      { name: 'Ring Bearer Outfit',                  qty: 1, unitCost: 0 },
+      { name: 'Father of Bride Attire',              qty: 1, unitCost: 0 },
+      { name: 'Bridal Hair (day-of)',                qty: 1, unitCost: 0 },
+      { name: 'Bridal Makeup (day-of)',              qty: 1, unitCost: 0 },
+      { name: 'Hair Trial',                          qty: 1, unitCost: 0 },
+      { name: 'Makeup Trial',                        qty: 1, unitCost: 0 },
+      { name: 'Bridesmaids Hair & Makeup',           qty: 0, unitCost: 0 },
+      { name: 'Manicure / Pedicure',                 qty: 1, unitCost: 0 },
+      { name: 'Spray Tan',                           qty: 1, unitCost: 0 },
+    ]
+  },
+  {
+    name: 'CEREMONY', taxable: 'none', items: [
+      { name: 'Officiant / Pastor Stipend',          qty: 1, unitCost: 0 },
+      { name: 'Church / Ceremony Site Donation',     qty: 1, unitCost: 0 },
+      { name: 'Marriage License',                    qty: 1, unitCost: 0 },
+      { name: 'Bride\'s Wedding Ring',               qty: 1, unitCost: 0 },
+      { name: 'Groom\'s Wedding Ring',               qty: 1, unitCost: 0 },
+      { name: 'Ring Pillow',                         qty: 1, unitCost: 0 },
+      { name: 'Flower Girl Basket',                  qty: 1, unitCost: 0 },
+      { name: 'Unity Candle / Sand / Other',         qty: 1, unitCost: 0 },
+      { name: 'Ceremony Programs',                   qty: 0, unitCost: 0 },
+      { name: 'Pre-Marital Counseling',              qty: 1, unitCost: 0 },
+    ]
+  },
+  {
+    name: 'ENTERTAINMENT', taxable: 'tax', items: [
+      { name: 'Band',                                qty: 1, unitCost: 0 },
+      { name: 'DJ',                                  qty: 1, unitCost: 0 },
+      { name: 'Ceremony Musician(s)',                qty: 1, unitCost: 0 },
+      { name: 'Cocktail Hour Music',                 qty: 1, unitCost: 0 },
+      { name: 'Sound System / AV Rental',            qty: 1, unitCost: 0 },
+      { name: 'Microphone / PA for Ceremony',        qty: 1, unitCost: 0 },
+      { name: 'Photo Booth',                         qty: 1, unitCost: 0 },
+      { name: 'Live Painter',                        qty: 1, unitCost: 0 },
+      { name: 'Caricature Artist',                   qty: 1, unitCost: 0 },
+      { name: 'Lighting (uplighting, dance floor)',  qty: 1, unitCost: 0 },
+      { name: 'Fireworks / Sparkler Send-Off',       qty: 1, unitCost: 0 },
+    ]
+  },
+  {
+    name: 'PHOTOGRAPHY & VIDEO', taxable: 'tax', items: [
+      { name: 'Photographer',                        qty: 1, unitCost: 0 },
+      { name: 'Second Shooter',                      qty: 1, unitCost: 0 },
+      { name: 'Videographer',                        qty: 1, unitCost: 0 },
+      { name: 'Drone Footage',                       qty: 1, unitCost: 0 },
+      { name: 'Engagement Session',                  qty: 1, unitCost: 0 },
+      { name: 'Bridal Portrait Session',             qty: 1, unitCost: 0 },
+      { name: 'Photo Albums / Prints',               qty: 1, unitCost: 0 },
+      { name: 'Photo Delivery / Digital Gallery',    qty: 1, unitCost: 0 },
+    ]
+  },
+  {
+    name: 'INVITATIONS & STATIONERY', taxable: 'tax', items: [
+      { name: 'Save-the-Dates',                      qty: 0, unitCost: 0 },
+      { name: 'Invitations (per set)',               qty: 0, unitCost: 0 },
+      { name: 'RSVP Cards',                          qty: 0, unitCost: 0 },
+      { name: 'Envelope Addressing / Calligraphy',   qty: 0, unitCost: 0 },
+      { name: 'Postage — Save-the-Dates',            qty: 0, unitCost: 0 },
+      { name: 'Postage — Invitations',               qty: 0, unitCost: 0 },
+      { name: 'Postage — RSVP Return',               qty: 0, unitCost: 0 },
+      { name: 'Menu Cards',                          qty: 0, unitCost: 0 },
+      { name: 'Place Cards / Escort Cards',          qty: 0, unitCost: 0 },
+      { name: 'Seating Chart',                       qty: 1, unitCost: 0 },
+      { name: 'Thank You Cards',                     qty: 0, unitCost: 0 },
+      { name: 'Thank You Card Postage',              qty: 0, unitCost: 0 },
+      { name: 'Wedding Website (premium)',           qty: 1, unitCost: 0 },
+    ]
+  },
+  {
+    name: 'DÉCOR & LINENS', taxable: 'tax', items: [
+      { name: 'Table Linens (per table)',            qty: 0, unitCost: 0 },
+      { name: 'Napkins',                             qty: 0, unitCost: 0 },
+      { name: 'Chair Sashes / Covers',               qty: 0, unitCost: 0 },
+      { name: 'Candles / Votives',                   qty: 1, unitCost: 0 },
+      { name: 'Welcome Sign',                        qty: 1, unitCost: 0 },
+      { name: 'Directional / Bar / Menu Signs',      qty: 1, unitCost: 0 },
+      { name: 'Table Numbers',                       qty: 0, unitCost: 0 },
+      { name: 'Aisle Runner',                        qty: 1, unitCost: 0 },
+      { name: 'Arch / Backdrop Rental',              qty: 1, unitCost: 0 },
+      { name: 'Lounge Furniture Rental',             qty: 1, unitCost: 0 },
+      { name: 'Patio Heaters',                       qty: 0, unitCost: 0 },
+      { name: 'String Lights / Edison Bulbs',        qty: 1, unitCost: 0 },
+      { name: 'Guest Book + Pen',                    qty: 1, unitCost: 0 },
+      { name: 'Miscellaneous DIY Décor',             qty: 1, unitCost: 0 },
+    ]
+  },
+  {
+    name: 'GIFTS & FAVORS', taxable: 'tax', items: [
+      { name: 'Guest Favors (per guest)',            qty: 0, unitCost: 0 },
+      { name: 'Favor Packaging / Display',           qty: 1, unitCost: 0 },
+      { name: 'Bridesmaid Gifts',                    qty: 0, unitCost: 0 },
+      { name: 'Groomsmen Gifts',                     qty: 0, unitCost: 0 },
+      { name: 'Gift from Groom to Bride',            qty: 1, unitCost: 0 },
+      { name: 'Gift from Bride to Groom',            qty: 1, unitCost: 0 },
+      { name: 'Parents Gifts (both sides)',          qty: 1, unitCost: 0 },
+      { name: 'Flower Girl / Ring Bearer Gifts',     qty: 1, unitCost: 0 },
+    ]
+  },
+  {
+    name: 'TRANSPORTATION', taxable: 'tax', items: [
+      { name: 'Bridal Car / Limo',                   qty: 1, unitCost: 0 },
+      { name: 'Guest Shuttle (ceremony → reception)',qty: 1, unitCost: 0 },
+      { name: 'Guest Shuttle (reception → hotels)',  qty: 1, unitCost: 0 },
+      { name: 'Bridal Party Transportation',         qty: 1, unitCost: 0 },
+      { name: 'Getaway Car / Send-Off Vehicle',      qty: 1, unitCost: 0 },
+      { name: 'Parking / Valet',                     qty: 1, unitCost: 0 },
+      { name: 'Fuel / Tips for Drivers',             qty: 1, unitCost: 0 },
+    ]
+  },
+  {
+    name: 'PRE-WEDDING EVENTS', taxable: 'tax', items: [
+      { name: 'Engagement Party',                    qty: 1, unitCost: 0 },
+      { name: 'Engagement Photo Session',            qty: 1, unitCost: 0 },
+      { name: 'Bridal Shower',                       qty: 1, unitCost: 0 },
+      { name: 'Bachelorette Party',                  qty: 1, unitCost: 0 },
+      { name: 'Bachelor Party',                      qty: 1, unitCost: 0 },
+      { name: 'Rehearsal Dinner (venue + food)',     qty: 1, unitCost: 0 },
+      { name: 'Day-After Brunch',                    qty: 0, unitCost: 0 },
+    ]
+  },
+  {
+    name: 'WEDDING PLANNER & ADMIN', taxable: 'tax', items: [
+      { name: 'Full-Service Wedding Planner',        qty: 1, unitCost: 0 },
+      { name: 'Day-Of / Month-Of Coordinator',       qty: 1, unitCost: 0 },
+      { name: 'Wedding Insurance',                   qty: 1, unitCost: 0 },
+      { name: 'Vendor Contract Review',              qty: 1, unitCost: 0 },
+    ]
+  },
+  {
+    name: 'HONEYMOON', taxable: 'none', items: [
+      { name: 'Flights',                             qty: 1, unitCost: 0 },
+      { name: 'Hotel / Resort (nights)',             qty: 1, unitCost: 0 },
+      { name: 'Activities / Excursions',             qty: 1, unitCost: 0 },
+      { name: 'Dining',                              qty: 1, unitCost: 0 },
+      { name: 'Spending / Shopping',                 qty: 1, unitCost: 0 },
+      { name: 'Travel Insurance',                    qty: 1, unitCost: 0 },
+    ]
+  },
+  {
+    name: 'VENDOR GRATUITIES & TIPS', taxable: 'none', items: [
+      { name: 'Caterer / Banquet Staff Tips',        qty: 1, unitCost: 0 },
+      { name: 'Bartender Tips',                      qty: 1, unitCost: 0 },
+      { name: 'DJ / Band Tips',                      qty: 1, unitCost: 0 },
+      { name: 'Photographer / Videographer Tips',    qty: 1, unitCost: 0 },
+      { name: 'Hair & Makeup Tips',                  qty: 1, unitCost: 0 },
+      { name: 'Florist Tip',                         qty: 1, unitCost: 0 },
+      { name: 'Driver / Transportation Tips',        qty: 1, unitCost: 0 },
+      { name: 'Officiant Tip',                       qty: 1, unitCost: 0 },
+      { name: 'Venue / Coordinator Staff Tips',      qty: 1, unitCost: 0 },
+    ]
+  },
+  {
+    name: 'CONTINGENCY & MISC', taxable: 'tax', items: [
+      { name: 'Contingency Fund (unexpected)',       qty: 1, unitCost: 0 },
+      { name: 'Overtime Charges (venue / vendors)',  qty: 1, unitCost: 0 },
+      { name: 'Alterations Overrun',                 qty: 1, unitCost: 0 },
+      { name: 'Last-Minute Supplies',                qty: 1, unitCost: 0 },
+      { name: 'Vendor Audition / Trial Costs',       qty: 1, unitCost: 0 },
+    ]
+  },
+];
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => { loadFromCloud(); });
+
+function buildFromDefaults() {
+  _catIdSeq = 0; _itemIdSeq = 0;
+  categories = DEFAULTS.map(d => ({
+    id: newCatId(), name: d.name, taxable: d.taxable, collapsed: true,
+    items: d.items.map(it => ({ id: newItemId(), name: it.name, qty: it.qty, unitCost: it.unitCost }))
+  }));
+  // Expand first three by default
+  if (categories[0]) categories[0].collapsed = false;
+  if (categories[1]) categories[1].collapsed = false;
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function render() {
+  const container = document.getElementById('categories-container');
+  container.innerHTML = '';
+  categories.forEach(cat => container.appendChild(renderCategory(cat)));
+  recalc();
+}
+
+function renderCategory(cat) {
+  const div = document.createElement('div');
+  div.className = 'category';
+  div.id = 'cat-' + cat.id;
+
+  const taxOptions = [
+    {v:'tax',     l:'Tax only'},
+    {v:'taxgrat', l:'Tax + Gratuity'},
+    {v:'none',    l:'No markup'},
+  ].map(o => `<option value="${o.v}" ${cat.taxable===o.v?'selected':''}>${o.l}</option>`).join('');
+
+  div.innerHTML = `
+    <div class="cat-header" onclick="toggleCat('${cat.id}')">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="cat-title">${escHtml(cat.name)}</span>
+        <div class="tax-badge" id="taxbadge-${cat.id}">
+          <button class="tax-badge-btn" onclick="event.stopPropagation();toggleTaxMenu('${cat.id}')" id="taxbtn-${cat.id}">${{tax:'Tax only',taxgrat:'Tax + Gratuity',none:'No markup'}[cat.taxable]||'Tax only'}</button>
+          <div class="tax-badge-menu" id="taxmenu-${cat.id}">
+            <div class="tax-badge-item${cat.taxable==='tax'?' active':''}" onclick="event.stopPropagation();pickTax('${cat.id}','tax')">Tax only</div>
+            <div class="tax-badge-item${cat.taxable==='taxgrat'?' active':''}" onclick="event.stopPropagation();pickTax('${cat.id}','taxgrat')">Tax + Gratuity</div>
+            <div class="tax-badge-item${cat.taxable==='none'?' active':''}" onclick="event.stopPropagation();pickTax('${cat.id}','none')">No markup</div>
+          </div>
+        </div>
+      </div>
+      <div class="cat-right">
+        <span class="cat-total" id="cat-total-${cat.id}">$0</span>
+        <span class="cat-toggle ${cat.collapsed?'':'open'}" id="cat-toggle-${cat.id}">▼</span>
+      </div>
+    </div>
+    <div class="cat-body${cat.collapsed?' collapsed':''}" id="cat-body-${cat.id}">
+      <div class="col-headers">
+        <span>Item</span><span>Qty</span><span>Unit Cost</span><span>Subtotal</span><span></span>
+      </div>
+      <div id="items-${cat.id}"></div>
+      <div class="add-line-row">
+        <button class="add-line-btn" onclick="addLine('${cat.id}')">+ Add Line</button>
+        <button class="del-cat-btn" onclick="deleteCategory('${cat.id}')">✕ Remove Category</button>
+      </div>
+    </div>`;
+
+  const itemsDiv = div.querySelector('#items-' + cat.id);
+  cat.items.forEach(item => itemsDiv.appendChild(renderItem(cat.id, item)));
+  return div;
+}
+
+function renderItem(catId, item) {
+  const row = document.createElement('div');
+  row.className = 'line-item';
+  row.id = 'item-' + item.id;
+  row.innerHTML = `
+    <input type="text" value="${escHtml(item.name)}" placeholder="Line item..." oninput="setItemName('${catId}','${item.id}',this.value)">
+    <input type="number" value="${item.qty||''}" min="0" placeholder="0" oninput="setItemQty('${catId}','${item.id}',this.value)">
+    <input type="number" value="${item.unitCost||''}" min="0" step="0.01" placeholder="$0.00" oninput="setItemCost('${catId}','${item.id}',this.value)">
+    <div class="line-total" id="lt-${item.id}">$0</div>
+    <button class="del-btn" onclick="deleteLine('${catId}','${item.id}')">✕</button>`;
+  return row;
+}
+
+function escHtml(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── INTERACTIONS ─────────────────────────────────────────────────────────────
+function toggleCat(catId) {
+  const cat = categories.find(c => c.id === catId);
+  if (!cat) return;
+  cat.collapsed = !cat.collapsed;
+  document.getElementById('cat-body-' + catId).classList.toggle('collapsed', cat.collapsed);
+  document.getElementById('cat-toggle-' + catId).classList.toggle('open', !cat.collapsed);
+}
+
+function setCatTax(catId, val) {
+  const cat = categories.find(c => c.id === catId);
+  if (cat) { cat.taxable = val; recalc(); }
+}
+
+function toggleTaxMenu(catId) {
+  const menu = document.getElementById('taxmenu-' + catId);
+  if (!menu) return;
+  const isOpen = menu.classList.contains('open');
+  // close all menus first
+  document.querySelectorAll('.tax-badge-menu.open').forEach(m => m.classList.remove('open'));
+  if (!isOpen) menu.classList.add('open');
+}
+
+function pickTax(catId, val) {
+  const cat = categories.find(c => c.id === catId);
+  if (!cat) return;
+  cat.taxable = val;
+  const labels = {tax:'Tax only', taxgrat:'Tax + Gratuity', none:'No markup'};
+  const btn  = document.getElementById('taxbtn-' + catId);
+  const menu = document.getElementById('taxmenu-' + catId);
+  if (btn)  btn.textContent  = labels[val] || val;
+  if (menu) {
+    menu.classList.remove('open');
+    menu.querySelectorAll('.tax-badge-item').forEach(el => {
+      el.classList.toggle('active', el.textContent.trim() === labels[val]);
+    });
+  }
+  recalc();
+}
+
+// Close tax menus when clicking elsewhere
+document.addEventListener('click', () => {
+  document.querySelectorAll('.tax-badge-menu.open').forEach(m => m.classList.remove('open'));
+});
+
+function setItemName(catId, itemId, val) {
+  const cat  = categories.find(c => c.id === catId);
+  const item = cat && cat.items.find(i => i.id === itemId);
+  if (item) item.name = val;
+}
+
+function setItemQty(catId, itemId, val) {
+  const cat  = categories.find(c => c.id === catId);
+  const item = cat && cat.items.find(i => i.id === itemId);
+  if (item) { item.qty = parseFloat(val) || 0; recalc(); }
+}
+
+function setItemCost(catId, itemId, val) {
+  const cat  = categories.find(c => c.id === catId);
+  const item = cat && cat.items.find(i => i.id === itemId);
+  if (item) { item.unitCost = parseFloat(val) || 0; recalc(); }
+}
+
+function addLine(catId) {
+  const cat = categories.find(c => c.id === catId);
+  if (!cat) return;
+  const item = { id: newItemId(), name: '', qty: 1, unitCost: 0 };
+  cat.items.push(item);
+  document.getElementById('items-' + catId).appendChild(renderItem(catId, item));
+  recalc();
+}
+
+function deleteLine(catId, itemId) {
+  const cat = categories.find(c => c.id === catId);
+  if (cat) cat.items = cat.items.filter(i => i.id !== itemId);
+  const el = document.getElementById('item-' + itemId);
+  if (el) el.remove();
+  recalc();
+}
+
+function deleteCategory(catId) {
+  categories = categories.filter(c => c.id !== catId);
+  const el = document.getElementById('cat-' + catId);
+  if (el) el.remove();
+  recalc();
+}
+
+function addCategory() {
+  const name = prompt('Category name:');
+  if (!name || !name.trim()) return;
+  const cat = { id: newCatId(), name: name.trim().toUpperCase(), taxable: 'tax', collapsed: false,
+    items: [{ id: newItemId(), name: '', qty: 1, unitCost: 0 }] };
+  categories.push(cat);
+  document.getElementById('categories-container').appendChild(renderCategory(cat));
+  recalc();
+}
+
+// ─── RECALC ───────────────────────────────────────────────────────────────────
+function recalc() {
+  const taxRate  = (parseFloat(document.getElementById('tax-rate').value)  || 0) / 100;
+  const gratRate = (parseFloat(document.getElementById('grat-rate').value) || 0) / 100;
+  let grandBase = 0, grandTax = 0, grandGrat = 0;
+  const summaryRows = [];
+
+  categories.forEach(cat => {
+    let catBase = 0;
+    cat.items.forEach(item => {
+      const lineAmt = (item.qty || 0) * (item.unitCost || 0);
+      catBase += lineAmt;
+      const el = document.getElementById('lt-' + item.id);
+      if (el) el.textContent = fmt(lineAmt);
+    });
+    let catTax = 0, catGrat = 0;
+    if (cat.taxable === 'tax')     catTax  = catBase * taxRate;
+    if (cat.taxable === 'taxgrat') { catGrat = catBase * gratRate; catTax = catBase * taxRate; }
+    const catTotal = catBase + catTax + catGrat;
+    grandBase += catBase; grandTax += catTax; grandGrat += catGrat;
+    const el = document.getElementById('cat-total-' + cat.id);
+    if (el) el.textContent = fmt(catTotal);
+    summaryRows.push({ name: cat.name, base: catBase, tax: catTax, grat: catGrat, total: catTotal });
+  });
+
+  const grandTotal = grandBase + grandTax + grandGrat;
+  document.getElementById('grand-total-display').textContent = fmt(grandTotal);
+  const sub = [];
+  if (grandTax  > 0) sub.push('Tax: ' + fmt(grandTax));
+  if (grandGrat > 0) sub.push('Gratuity: ' + fmt(grandGrat));
+  document.getElementById('grand-total-sub').textContent = sub.length ? sub.join('  ·  ') : 'Enter amounts to see total';
+
+  // Summary
+  const tbody = document.getElementById('summary-body');
+  tbody.innerHTML = '';
+  summaryRows.forEach(r => {
+    const tr = document.createElement('tr');
+    let detail = '';
+    const parts = [];
+    if (r.tax  > 0) parts.push('tax ' + fmt(r.tax));
+    if (r.grat > 0) parts.push('grat ' + fmt(r.grat));
+    if (parts.length) detail = ` <span style="color:var(--text-light);font-size:12px;">(${parts.join(', ')})</span>`;
+    tr.innerHTML = `<td>${escHtml(r.name)}${detail}</td><td>${fmt(r.total)}</td>`;
+    tbody.appendChild(tr);
+  });
+  const subRow = document.createElement('tr'); subRow.className = 'total-row';
+  subRow.innerHTML = `<td>Subtotal (before tax &amp; gratuity)</td><td>${fmt(grandBase)}</td>`;
+  tbody.appendChild(subRow);
+  if (grandTax > 0) {
+    const tr = document.createElement('tr'); tr.className = 'tax-row';
+    tr.innerHTML = `<td>Sales Tax (${(taxRate*100).toFixed(1)}%)</td><td>${fmt(grandTax)}</td>`;
+    tbody.appendChild(tr);
+  }
+  if (grandGrat > 0) {
+    const tr = document.createElement('tr'); tr.className = 'tax-row';
+    tr.innerHTML = `<td>Gratuity (${(gratRate*100).toFixed(1)}%)</td><td>${fmt(grandGrat)}</td>`;
+    tbody.appendChild(tr);
+  }
+  const gtRow = document.createElement('tr'); gtRow.className = 'grand-row';
+  gtRow.innerHTML = `<td>🌸 TOTAL WEDDING BUDGET</td><td>${fmt(grandTotal)}</td>`;
+  tbody.appendChild(gtRow);
+}
+
+function fmt(n) {
+  return '$' + (n||0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
+// ─── CLOUD SAVE / LOAD ────────────────────────────────────────────────────────
+function serializeState() {
+  // Flush DOM values to model first
+  categories.forEach(cat => {
+    cat.items.forEach(item => {
+      const row = document.getElementById('item-' + item.id);
+      if (!row) return;
+      const inputs = row.querySelectorAll('input');
+      item.name     = inputs[0] ? inputs[0].value : item.name;
+      item.qty      = inputs[1] ? (parseFloat(inputs[1].value) || 0) : item.qty;
+      item.unitCost = inputs[2] ? (parseFloat(inputs[2].value) || 0) : item.unitCost;
+    });
+  });
+  return {
+    v: 2,
+    saved_at: Date.now(),
+    attendees: parseFloat(document.getElementById('attendees').value) || 0,
+    taxRate:   parseFloat(document.getElementById('tax-rate').value)  || 8.5,
+    gratRate:  parseFloat(document.getElementById('grat-rate').value) || 20,
+    notes:     document.getElementById('notes-field').value || '',
+    categories: categories.map(c => ({
+      id: c.id, name: c.name, taxable: c.taxable, collapsed: c.collapsed,
+      items: c.items.map(i => ({ id: i.id, name: i.name, qty: i.qty, unitCost: i.unitCost }))
+    }))
+  };
+}
+
+function applyState(data) {
+  if (!data || !data.categories) return false;
+  _catIdSeq = 0; _itemIdSeq = 0;
+  categories = data.categories.map(c => {
+    const cn = parseInt((c.id||'').replace('c','')) || 0;
+    if (cn > _catIdSeq) _catIdSeq = cn;
+    return {
+      id: c.id || newCatId(), name: c.name || '', taxable: c.taxable || 'tax', collapsed: !!c.collapsed,
+      items: (c.items || []).map(i => {
+        const inum = parseInt((i.id||'').replace('i','')) || 0;
+        if (inum > _itemIdSeq) _itemIdSeq = inum;
+        return { id: i.id || newItemId(), name: i.name || '', qty: i.qty || 0, unitCost: i.unitCost || 0 };
+      })
+    };
+  });
+  document.getElementById('attendees').value   = data.attendees || 0;
+  document.getElementById('tax-rate').value    = data.taxRate   || 8.5;
+  document.getElementById('grat-rate').value   = data.gratRate  || 20;
+  document.getElementById('notes-field').value = data.notes     || '';
+  return true;
+}
+
+async function saveToCloud() {
+  setStatus('Saving…');
+  try {
+    const payload = serializeState();
+    const res = await fetch(`${API}?ns=${KV_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    setStatus('Saved ✓ ' + new Date().toLocaleTimeString());
+    toast('Saved to cloud ☁', 'success');
+  } catch (e) {
+    setStatus('Save failed');
+    toast('Save failed: ' + e.message, 'error');
+  }
+}
+
+async function loadFromCloud() {
+  setStatus('Loading…');
+  try {
+    const res = await fetch(`${API}?ns=${KV_KEY}`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    // API wraps: { success, data } — unwrap; empty = first visit
+    const data = (json.data && Object.keys(json.data).length > 0) ? json.data : null;
+    if (!data) {
+      buildFromDefaults();
+      render();
+      setStatus('First visit — loaded starter template');
+      return;
+    }
+    if (applyState(data)) {
+      render();
+      const ts = data.saved_at ? new Date(data.saved_at).toLocaleString() : 'unknown';
+      setStatus('Loaded from cloud · last saved ' + ts);
+      toast('Loaded from cloud ☁', 'success');
+    } else {
+      buildFromDefaults();
+      render();
+      setStatus('Cloud data unreadable — loaded starter template');
+    }
+  } catch (e) {
+    buildFromDefaults();
+    render();
+    setStatus('Could not reach cloud — showing starter template');
+    toast('Load failed: ' + e.message, 'error');
+  }
+}
+
+function setStatus(msg) {
+  document.getElementById('status-msg').textContent = msg;
+}
+
+let _toastTimer;
+function toast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = (type || '') + ' show';
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,2665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master Deliverables | Unbridled · Stan Bullis</title>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0f1923;--navy:#1a2e3b;--card:#162433;--border:#1e3347;
+  --gold:#c9aa7c;--gold-light:#e0c99a;--blue:#5a8ba7;--green:#4caf7d;
+  --red:#e05a5a;--amber:#e0a040;--text:#e8e0d4;--muted:#6a8a9a;--white:#f5f5f5;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-serif;font-weight:300;min-height:100vh;padding-bottom:5rem}
+
+.topbar{background:#0a1219;border-bottom:1px solid var(--border);padding:.75rem clamp(1rem,4vw,2rem);display:flex;align-items:center;justify-content:space-between}
+.topbar-brand{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--white)}
+.topbar-brand span{color:var(--gold)}
+.topbar-date{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+
+.hero{background:linear-gradient(180deg,#0a1219 0%,var(--bg) 100%);border-bottom:1px solid var(--border);padding:2.5rem clamp(1rem,4vw,2rem) 2rem;position:relative}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.hero-eyebrow{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:.5rem}
+.hero-title{font-size:clamp(24px,4vw,40px);font-weight:700;color:var(--white);letter-spacing:-.5px;line-height:1.1;margin-bottom:.5rem}
+.hero-title em{color:var(--gold);font-style:normal}
+.hero-sub{font-size:13px;color:var(--muted);line-height:1.6;max-width:560px}
+
+.wrap{max-width:900px;margin:0 auto;padding:0 clamp(1rem,4vw,1.5rem)}
+
+.section{margin:2.5rem 0}
+.section-header{display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;padding-bottom:.6rem;border-bottom:1px solid var(--border)}
+.section-icon{font-size:16px}
+.section-title{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);font-weight:700}
+.section-count{font-size:10px;letter-spacing:1px;color:var(--muted);margin-left:auto}
+
+.item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem;margin-bottom:.6rem;display:flex;align-items:flex-start;gap:1rem;transition:border-color .2s}
+.item:hover{border-color:var(--blue)}
+.item-body{flex:1;min-width:0}
+.item-title{font-size:14px;font-weight:600;color:var(--white);margin-bottom:.2rem;line-height:1.3}
+.item-desc{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:.5rem}
+.item-meta{display:flex;align-items:center;flex-wrap:wrap;gap:.5rem}
+.item-link{font-size:11px;color:var(--blue);text-decoration:none;letter-spacing:.5px;transition:color .2s}
+.item-link:hover{color:var(--gold)}
+.item-week{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.item-actions{display:flex;flex-direction:column;align-items:flex-end;gap:.4rem;flex-shrink:0}
+
+.badge{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:.2rem .65rem;border-radius:10px;font-weight:700;white-space:nowrap}
+.badge-live{background:rgba(76,175,125,.12);color:var(--green);border:1px solid rgba(76,175,125,.25)}
+.badge-in-progress{background:rgba(224,160,64,.12);color:var(--amber);border:1px solid rgba(224,160,64,.25)}
+.badge-draft{background:rgba(90,139,167,.12);color:var(--blue);border:1px solid rgba(90,139,167,.25)}
+.badge-paused{background:rgba(224,90,90,.12);color:var(--red);border:1px solid rgba(224,90,90,.25)}
+
+/* Book chapter items get a gold left accent */
+.item.book{border-left:3px solid var(--gold)}
+
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:.4rem}
+.dot-live{background:var(--green)}
+.dot-progress{background:var(--amber)}
+.dot-draft{background:var(--blue)}
+
+.updated-note{text-align:center;margin-top:2rem;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+.updated-note span{color:var(--gold)}
+
+/* Trash can button */
+.btn-trash{background:none;border:none;cursor:pointer;padding:.25rem .3rem;border-radius:6px;color:var(--muted);font-size:14px;line-height:1;transition:all .2s;flex-shrink:0;opacity:.4}
+.btn-trash:hover{color:var(--red);opacity:1;background:rgba(224,90,90,.08)}
+.item-deleted{display:none!important}
+
+/* Restore bar */
+#restoreBar{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:#1e3347;border:1px solid var(--gold);border-radius:8px;padding:.6rem 1.2rem;font-size:12px;color:var(--text);display:none;align-items:center;gap:.75rem;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+#restoreBar button{background:none;border:none;color:var(--gold);cursor:pointer;font-size:12px;font-family:'Josefin Sans',sans-serif;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+
+/* Archive section */
+.archive-toggle{display:flex;align-items:center;gap:.6rem;cursor:pointer;padding:.6rem 0;border:none;background:none;color:var(--muted);font-family:'Josefin Sans',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;width:100%;margin-top:1.5rem}
+.archive-toggle:hover{color:var(--text)}
+.archive-toggle .caret{font-size:10px;transition:transform .2s;display:inline-block}
+.archive-toggle.open .caret{transform:rotate(90deg)}
+.archive-count{background:rgba(106,138,154,.15);border:1px solid var(--border);border-radius:10px;padding:.1rem .5rem;font-size:10px;color:var(--muted);margin-left:.25rem}
+#archiveList{display:none;margin-top:.5rem}
+.archive-item{background:rgba(22,36,51,.5);border:1px solid var(--border);border-radius:10px;padding:.7rem 1rem;margin-bottom:.4rem;display:flex;align-items:center;gap:.75rem;opacity:.6}
+.archive-item-label{flex:1;font-size:12px;color:var(--muted);line-height:1.3}
+.btn-restore{background:none;border:1px solid var(--border);cursor:pointer;padding:.2rem .65rem;border-radius:20px;color:var(--muted);font-size:10px;letter-spacing:1px;text-transform:uppercase;font-family:'Josefin Sans',sans-serif;transition:all .2s;white-space:nowrap}
+.btn-restore:hover{border-color:var(--blue);color:var(--blue)}
+
+/* To-do list styles */
+.todo-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.85rem 1.2rem;margin-bottom:.5rem;display:flex;align-items:center;gap:.9rem;transition:border-color .2s}
+.todo-item:hover{border-color:var(--blue)}
+.todo-check{width:18px;height:18px;border-radius:4px;border:1px solid var(--border);background:transparent;cursor:pointer;flex-shrink:0;appearance:none;-webkit-appearance:none;transition:all .2s;position:relative}
+.todo-check:checked{background:var(--green);border-color:var(--green)}
+.todo-check:checked::after{content:'✓';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:11px;color:#0a1a12;font-weight:700}
+.todo-label{flex:1;font-size:13px;color:var(--text);line-height:1.4;cursor:pointer}
+.todo-check:checked + .todo-label{text-decoration:line-through;color:var(--muted)}
+.todo-date{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);flex-shrink:0}
+
+/* MC Mic button */
+#mc-mic-btn{position:fixed;bottom:2rem;right:1.5rem;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#a07840);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 20px rgba(0,0,0,.5);z-index:1000;transition:all .2s;-webkit-tap-highlight-color:transparent}
+#mc-mic-btn:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(201,170,124,.4)}
+#mc-mic-btn.listening{background:linear-gradient(135deg,var(--red),#a03030);animation:pulse-mic 1.2s infinite}
+#mc-mic-btn.sending{background:linear-gradient(135deg,var(--blue),#3a6a8a);animation:none}
+@keyframes pulse-mic{0%,100%{box-shadow:0 4px 20px rgba(224,90,90,.4)}50%{box-shadow:0 4px 32px rgba(224,90,90,.8)}}
+#mc-toast{position:fixed;bottom:6.5rem;right:1.5rem;background:#1e3347;border:1px solid var(--border);border-radius:10px;padding:.6rem 1rem;font-size:12px;color:var(--text);max-width:240px;display:none;z-index:1001;line-height:1.5;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+#mc-toast.visible{display:block}
+#mc-transcript{font-style:italic;color:var(--gold);font-size:11px;margin-top:.3rem}
+.call-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.85rem 1.2rem;margin-bottom:.5rem;display:flex;align-items:center;gap:1rem;transition:border-color .2s}
+.call-card:hover{border-color:var(--green)}
+.call-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--navy),var(--border));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--gold);flex-shrink:0;letter-spacing:0}
+.call-body{flex:1;min-width:0}
+.call-name{font-size:14px;font-weight:600;color:var(--white);margin-bottom:.15rem}
+.call-role{font-size:11px;color:var(--muted);line-height:1.3}
+.call-note{font-size:11px;color:var(--amber);margin-top:.2rem}
+.btn-call{display:inline-flex;align-items:center;gap:.4rem;background:rgba(76,175,125,.1);border:1px solid rgba(76,175,125,.3);border-radius:20px;padding:.35rem .9rem;font-size:12px;font-weight:600;color:var(--green);text-decoration:none;letter-spacing:.5px;transition:all .2s;white-space:nowrap;flex-shrink:0}
+.btn-call:hover{background:rgba(76,175,125,.2);border-color:var(--green)}
+.btn-no-number{font-size:11px;color:var(--muted);border:1px dashed var(--border);border-radius:20px;padding:.35rem .8rem;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0}
+.btn-no-number:hover{border-color:var(--gold);color:var(--gold)}
+.inline-number-form{display:flex;align-items:center;gap:.4rem;flex-shrink:0}
+.inline-number-input{background:var(--navy);border:1px solid var(--blue);border-radius:6px;padding:.3rem .6rem;font-size:13px;color:var(--white);font-family:'Josefin Sans',sans-serif;width:140px;outline:none}
+.inline-number-input:focus{border-color:var(--gold)}
+.btn-save-number{background:var(--green);border:none;border-radius:6px;padding:.3rem .65rem;font-size:11px;font-weight:700;color:#0a1a12;cursor:pointer;font-family:'Josefin Sans',sans-serif;letter-spacing:.5px}
+.btn-paste-number{background:var(--navy);border:1px solid var(--border);border-radius:6px;padding:.3rem .5rem;font-size:13px;cursor:pointer;transition:all .2s}
+.btn-paste-number:hover{border-color:var(--gold)}
+.btn-cancel-number{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:.2rem}
+.btn-call-trash{background:none;border:none;cursor:pointer;padding:.2rem .3rem;color:var(--muted);font-size:13px;opacity:.4;transition:all .2s;flex-shrink:0}
+.btn-call-trash:hover{color:var(--red);opacity:1}
+.outline-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.2rem 1.4rem;margin-bottom:.6rem}
+.outline-section-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:.6rem}
+.outline-section-title{font-size:15px;font-weight:700;color:var(--white);margin-bottom:.5rem}
+.outline-chapter{font-size:12px;color:var(--muted);padding:.2rem 0 .2rem .75rem;border-left:2px solid var(--border);margin:.2rem 0;display:flex;align-items:center;gap:.5rem}
+.outline-chapter.done{color:var(--text);border-color:var(--gold)}
+.outline-chapter.done::before{content:'✓';font-size:10px;color:var(--green);font-weight:700}
+.outline-chapter.in-progress::before{content:'◐';font-size:10px;color:var(--amber);font-weight:700}
+.outline-chapter a{color:var(--blue);text-decoration:none;font-size:11px;margin-left:.5rem}
+.outline-chapter a:hover{color:var(--gold)}
+
+@media(max-width:600px){
+  .item{flex-direction:column;gap:.5rem}
+  .item-actions{flex-direction:row;align-items:center}
+}
+
+/* ── V2: Profile Selector Modal ─────────────────────────────── */
+#profile-modal{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+#profile-modal.hidden{display:none}
+.profile-box{background:#0f1923;border:1px solid var(--gold);border-radius:14px;padding:2.5rem 2rem;max-width:420px;width:90%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.7)}
+.profile-box h2{font-size:18px;font-weight:700;color:var(--white);letter-spacing:-.3px;margin-bottom:.4rem}
+.profile-box p{font-size:12px;color:var(--muted);margin-bottom:1.75rem;line-height:1.5}
+.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin-bottom:1.25rem}
+.profile-btn{background:var(--navy);border:1px solid var(--border);border-radius:10px;padding:.85rem .75rem;cursor:pointer;font-family:'Josefin Sans',sans-serif;color:var(--text);font-size:13px;font-weight:600;letter-spacing:.5px;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:.35rem}
+.profile-btn:hover{border-color:var(--gold);color:var(--gold);background:#1a2e3b}
+.profile-btn .pav{font-size:22px;line-height:1}
+.profile-switch{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);background:none;border:none;cursor:pointer;font-family:'Josefin Sans',sans-serif;padding:.3rem .5rem;transition:color .2s}
+.profile-switch:hover{color:var(--gold)}
+
+/* ── V2: Topbar profile chip ───────────────────────────────── */
+#profile-chip{display:flex;align-items:center;gap:.4rem;cursor:pointer;padding:.2rem .6rem .2rem .4rem;border-radius:20px;border:1px solid var(--border);background:rgba(255,255,255,.03);transition:all .2s;font-size:11px;color:var(--muted);letter-spacing:.5px}
+#profile-chip:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ── V2: Tabs ────────────────────────────────────────────────── */
+.v2-tabs{display:flex;align-items:center;gap:.5rem;padding:.85rem clamp(1rem,4vw,2rem) 0;background:var(--bg);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.v2-tabs::-webkit-scrollbar{display:none}
+.v2-tab{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;padding:.5rem .9rem .55rem;border-radius:6px 6px 0 0;border:1px solid transparent;border-bottom:none;cursor:pointer;font-family:'Josefin Sans',sans-serif;font-weight:700;color:var(--muted);background:none;white-space:nowrap;transition:all .2s;position:relative;bottom:-1px}
+.v2-tab:hover{color:var(--text)}
+.v2-tab.active{background:var(--bg);border-color:var(--border);border-bottom-color:var(--bg);color:var(--gold)}
+.v2-tab .tab-count{font-size:9px;margin-left:.3rem;background:rgba(201,170,124,.15);border:1px solid rgba(201,170,124,.2);border-radius:10px;padding:.05rem .4rem;color:var(--gold)}
+.v2-tab.fav-tab .tab-count{background:rgba(76,175,125,.12);border-color:rgba(76,175,125,.2);color:var(--green)}
+
+/* ── V2: Search + Filter bar ────────────────────────────────── */
+.v2-toolbar{padding:.85rem clamp(1rem,4vw,1.5rem);display:flex;align-items:center;gap:.65rem;flex-wrap:wrap;background:var(--bg);border-bottom:1px solid var(--border)}
+.v2-search{flex:1;min-width:180px;background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:.5rem .85rem;font-family:'Josefin Sans',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color .2s}
+.v2-search::placeholder{color:var(--muted)}
+.v2-search:focus{border-color:var(--gold)}
+.brand-pills{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
+.brand-pill{font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:.3rem .7rem;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;font-family:'Josefin Sans',sans-serif;font-weight:700;transition:all .2s;white-space:nowrap}
+.brand-pill:hover{border-color:var(--blue);color:var(--blue)}
+.brand-pill.active{border-color:var(--gold);color:var(--gold);background:rgba(201,170,124,.08)}
+
+/* ── V2: Star button ─────────────────────────────────────────── */
+.btn-star{background:none;border:1px solid rgba(201,170,124,.25);border-radius:6px;cursor:pointer;font-size:15px;line-height:1;padding:.2rem .35rem;transition:all .15s;flex-shrink:0;color:var(--gold);opacity:.45}
+.btn-star:hover{opacity:1;transform:scale(1.15);border-color:var(--gold);background:rgba(201,170,124,.08)}
+.btn-star.starred{opacity:1;border-color:var(--gold);background:rgba(201,170,124,.1)}
+
+/* ── V2: Favorites empty state ──────────────────────────────── */
+#fav-empty{display:none;text-align:center;padding:4rem 1rem;color:var(--muted)}
+#fav-empty .empty-star{font-size:40px;margin-bottom:1rem;opacity:.3}
+#fav-empty h3{font-size:16px;font-weight:600;color:var(--text);margin-bottom:.5rem}
+#fav-empty p{font-size:13px;line-height:1.6;max-width:360px;margin:0 auto}
+
+/* ── V2: Search empty state ─────────────────────────────────── */
+#search-empty{display:none;text-align:center;padding:3rem 1rem;color:var(--muted);font-size:13px}
+
+/* ── V2: Hidden items ───────────────────────────────────────── */
+.item.v2-hidden{display:none!important}
+
+/* ── V2: Sort toggle ─────────────────────────────────────────── */
+.sort-toggle{display:flex;align-items:center;gap:.3rem;background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:.25rem .3rem;flex-shrink:0}
+.sort-btn{font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:.25rem .55rem;border-radius:6px;border:none;cursor:pointer;font-family:'Josefin Sans',sans-serif;font-weight:700;color:var(--muted);background:none;transition:all .2s;white-space:nowrap}
+.sort-btn:hover{color:var(--text)}
+.sort-btn.active{background:rgba(201,170,124,.12);color:var(--gold)}
+
+/* ── V2: Result count ────────────────────────────────────────── */
+.v2-result-count{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:.5rem clamp(1rem,4vw,1.5rem);border-bottom:1px solid var(--border);background:var(--bg)}
+.v2-result-count span{color:var(--gold);font-weight:700}
+</style>
+</head>
+<body>
+<!-- ── V2: Profile Selector Modal ─────────────────────── -->
+<div id="profile-modal">
+  <div class="profile-box">
+    <h2>Who's viewing?</h2>
+    <p>Your favorites are saved just for you — nobody else sees them.</p>
+    <div class="profile-grid">
+      <button class="profile-btn" onclick="selectProfile('stan','Stan Bullis','🦌')">
+        <span class="pav">🦌</span>Stan
+      </button>
+      <button class="profile-btn" onclick="selectProfile('lindsay','Lindsay Wyss','⭐')">
+        <span class="pav">⭐</span>Lindsay
+      </button>
+      <button class="profile-btn" onclick="selectProfile('justin','Justin Farr','⚙️')">
+        <span class="pav">⚙️</span>Justin
+      </button>
+      <button class="profile-btn" onclick="selectProfile('phillina','Phillina Morgan','💼')">
+        <span class="pav">💼</span>Phillina
+      </button>
+    </div>
+    <button class="profile-switch" onclick="selectProfile('guest','Guest','👁️')">Continue as Guest</button>
+  </div>
+</div>
+
+<!-- FLOATING BACK BUTTON -->
+<a href="javascript:history.back()" title="Go back" style="position:fixed;bottom:1.25rem;left:1.25rem;z-index:9999;background:#1f2b3f;color:#ba8032;border:1px solid #ba8032;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:20px;box-shadow:0 2px 12px rgba(0,0,0,.35);opacity:.92;transition:opacity .2s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.92">←</a>
+
+
+
+<nav class="topbar">
+  <div class="topbar-brand">Unbridled <span>·</span> Stan Bullis</div>
+  <div style="display:flex;align-items:center;gap:1rem">
+    <button id="profile-chip" onclick="openProfileSelector()" title="Switch profile">👤 …</button>
+    <a href="https://offers.hotelstcloud.com/assets/master-deliverables-archive.html" style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#8a7a6a;text-decoration:none;font-family:'Josefin Sans',sans-serif;transition:color .2s" onmouseover="this.style.color='#c9aa7c'" onmouseout="this.style.color='#8a7a6a'">Archive →</a>
+    <div class="topbar-date" id="topDate"></div>
+  </div>
+</nav>
+
+<!-- ── V2: Tabs ─────────────────────────────────────────────── -->
+<div class="v2-tabs">
+  <button class="v2-tab active" id="tab-all" onclick="switchTab('all')">All <span class="tab-count" id="count-all">–</span></button>
+  <button class="v2-tab fav-tab" id="tab-favs" onclick="switchTab('favs')">⭐ My Favorites <span class="tab-count" id="count-favs">0</span></button>
+</div>
+
+<!-- ── V2: Search + Brand Filter ────────────────────────────── -->
+<div class="v2-toolbar">
+  <input class="v2-search" id="v2-search" type="text" placeholder="Search deliverables…" oninput="applyFilters()" autocomplete="off" spellcheck="false">
+  <div class="sort-toggle">
+    <button class="sort-btn active" data-sort="newest" onclick="setSort(this)">Newest</button>
+    <button class="sort-btn" data-sort="oldest" onclick="setSort(this)">Oldest</button>
+    <button class="sort-btn" data-sort="az" onclick="setSort(this)">A–Z</button>
+  </div>
+  <div class="brand-pills">
+    <button class="brand-pill active" data-brand="all" onclick="setBrand(this)">All</button>
+    <button class="brand-pill" data-brand="unbridled" onclick="setBrand(this)">Unbridled</button>
+    <button class="brand-pill" data-brand="hsc" onclick="setBrand(this)">Hotel St. Cloud</button>
+    <button class="brand-pill" data-brand="fremont" onclick="setBrand(this)">Fremont Makers</button>
+    <button class="brand-pill" data-brand="holdings" onclick="setBrand(this)">Holdings</button>
+    <button class="brand-pill" data-brand="beunbridled" onclick="setBrand(this)">BeUnbridled</button>
+    <button class="brand-pill" data-brand="book" onclick="setBrand(this)">📖 Book</button>
+    <button class="brand-pill" data-brand="dutch" onclick="setBrand(this)">🗂 Dutch Crossing</button>
+  </div>
+</div>
+
+<!-- ── V2: Result count bar ──────────────────────────────────── -->
+<div class="v2-result-count" id="v2-result-count">Showing <span id="count-visible">–</span> of <span id="count-total">–</span> deliverables</div>
+
+<div class="hero">
+  
+<div class="wrap">
+
+  <!-- ───────────────────── BOOK PROJECT ───────────────────── -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-icon">📖</span>
+      <span class="section-title">The Unbridled Way · Book Project</span>
+      <span class="section-count">15 chapters drafted · Version B locked · Ch3 expanded July 2026</span>
+    </div>
+
+    <!-- Book Outline -->
+    <div class="outline-card">
+      <div class="outline-section-label">Approved Structure · Version B · Locked</div>
+      <div class="outline-section-title">The Unbridled Way: Doing Good by Doing Well</div>
+      <div style="margin-top:.75rem;display:grid;gap:.75rem">
+        <div>
+          <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:.3rem">Front Matter</div>
+          <div class="outline-chapter done">Introduction · The Journey Is the Point <a href="https://offers.hotelstcloud.com/assets/unbridled-way-intro.html" target="_blank">↗</a></div>
+          <div class="outline-chapter done">Chapter 1 · Doing Good by Doing Well <a href="https://offers.hotelstcloud.com/assets/unbridled-way-ch1.html" target="_blank">↗</a></div>
+        </div>
+        <div>
+          <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:.3rem">Part I · A Collaboration of Destiny</div>
+          <div class="outline-chapter done">Section Opener · Destiny <a href="https://offers.hotelstcloud.com/assets/unbridled-way-destiny.html" target="_blank">↗</a></div>
+          <div class="outline-chapter done">Chapter 2 · Adjacent Opportunities <a href="https://offers.hotelstcloud.com/assets/unbridled-way-ch3.html" target="_blank">↗</a></div>
+          <div class="outline-chapter done">Chapter 3 · Ecosystems Over Egosystems <a href="https://offers.hotelstcloud.com/assets/unbridled-way-ch2.html" target="_blank">↗</a></div>
+        </div>
+        <div>
+          <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:.3rem">Part II · A Culture of Authenticity</div>
+          <div class="outline-chapter done">Chapter 4 · A Culture of Authenticity <a href="https://offers.hotelstcloud.com/assets/unbridled-way-authenticity-intro.html" target="_blank">↗</a></div>
+          <div class="outline-chapter done">Chapter 5 · Our Mission: Unbridling Human Purpose and Potential <a href="https://offers.hotelstcloud.com/assets/unbridled-way-ch5-purpose.html" target="_blank">↗</a></div>
+          <div class="outline-chapter done">Chapter 6 · Our Values <a href="https://offers.hotelstcloud.com/assets/unbridled-way-ch6-values.html" target="_blank">↗</a></div>
+          <div class="outline-chapter done">Chapter 7 · The Unbridled Journey <a href="https://offers.hotelstcloud.com/assets/unbridled-way-ch7-journey.html" target="_blank">↗</a></div>
+          <div class="outline-chapter done">Chapter 8 · Deliver Exceptional. Build World Class. <a href="https://offers.hotelstcloud.com/assets/unbridled-way-ch8-client-experience.html" target="_blank">↗</a></div>
+        </div>
+        <div>
+          <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:.3rem">Part III · A Business of Generosity</div>
+          <div class="outline-chapter done">Part III Intro · The Proof Is in the People <a href="https://offers.hotelstcloud.com/assets/unbridled-way-part3-generosity.html" target="_blank">↗</a></div>
+          <div class="outline-chapter done">UnbridledACTS · A Business of Generosity <a href="https://offers.hotelstcloud.com/assets/unbridled-way-acts.html" target="_blank">↗</a></div>
+          <div class="outline-chapter done">Generosity of Spirit <a href="https://offers.hotelstcloud.com/assets/unbridled-way-generosity-spirit.html" target="_blank">↗</a></div>
+        </div>
+        <div>
+          <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:.3rem">Back Matter</div>
+          <div class="outline-chapter done">Closing · At Least We're in the Arena <a href="https://offers.hotelstcloud.com/assets/unbridled-way-closing.html" target="_blank">↗</a></div>
+          <div class="outline-chapter done">Appendix · The Ancient Roots <a href="https://offers.hotelstcloud.com/assets/unbridled-way-appendix-scripture.html" target="_blank">↗</a></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="item-book-toc" class="item book">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Book · Table of Contents & Hub</div>
+        <div class="item-desc">Reader's home base. All parts and chapters linked. Elk logo, gold accents, Josefin Sans + Lora. Updated as new chapters ship.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-toc.html" target="_blank">↗ Open TOC</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-book-intro" class="item book">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Introduction · The Journey Is the Point</div>
+        <div class="item-desc">The motorcycle ride, the elk, the hillside download. Stan's CIA upbringing, hero's zero moment, Habakkuk. The origin of everything Unbridled.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-intro.html" target="_blank">↗ Read Draft</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Drafted</span></div>
+    </div>
+
+    <div id="item-book-ch1" class="item book">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Chapter 1 · Doing Good by Doing Well</div>
+        <div class="item-desc">The thesis. The 20/20/60 model. Why generosity is the engine, not the exhaust. The frame for everything that follows.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-ch1.html" target="_blank">↗ Read Draft</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Drafted</span></div>
+    </div>
+
+    <div id="item-book-destiny" class="item book">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Part I Opener · Destiny</div>
+        <div class="item-desc">OrangeDoor, the 51% buy-back, Jesse and the Sheedy Mansion, Jonathan Weald. Three stories of destiny and business intersecting.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-destiny.html" target="_blank">↗ Read Draft</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Drafted</span></div>
+    </div>
+
+    <div id="item-book-ch2" class="item book">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Chapter 2 · Adjacent Opportunities</div>
+        <div class="item-desc">How Unbridled spots the opportunity hidden right next to the work already done. Hotel St. Cloud, Productions, Gift'd, Travel — all adjacent moves.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-ch3.html" target="_blank">↗ Read Draft</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Drafted</span></div>
+    </div>
+
+    <div id="item-book-ch3" class="item book">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Chapter 3 · Ecosystems Over Egosystems</div>
+        <div class="item-desc">Relational equity, proximity, global sales presence, 80% in-office — how Unbridled builds through people, not hierarchy.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-ch2.html" target="_blank">↗ Read Draft</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Drafted</span></div>
+    </div>
+
+    <div id="item-book-ch4" class="item book">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Chapter 4 · A Culture of Authenticity</div>
+        <div class="item-desc">The opening of Part II. Universal premise → two dispositions (past-present vs present-future) → Unbridled mission bridge → Stan's personal story. CIA childhood, hero to zero, four limiting beliefs, Brené Brown, the Unbridled Journey.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-authenticity-intro.html" target="_blank">↗ Read Draft</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Drafted</span></div>
+    </div>
+
+    <div id="item-book-ch5" class="item book">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Chapter 5 · Our Mission: Unbridling Human Purpose and Potential</div>
+        <div class="item-desc">The mission as a standalone chapter. Inside job / structural job / organizational job. The highest form of leadership = seeing purpose, not managing performance. Three pillars as prose and visual grid.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-ch5-purpose.html" target="_blank">↗ Read Draft</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Drafted</span></div>
+    </div>
+
+    <div id="item-book-ch6" class="item book">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Chapter 6 · Values in Action</div>
+        <div class="item-desc">Four cornerstones + three Ways of Being each. Peer-on-peer recognition (Seen · Known · Valued). The Always & Never (8+8 relational commitments). Complete values architecture table: Cornerstone → Ways of Being → Client Expression.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-ch6-values.html" target="_blank">↗ Read Draft</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Drafted</span></div>
+    </div>
+
+    <div id="item-book-ch7" class="item book">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Chapter 7 · The Unbridled Journey</div>
+        <div class="item-desc">The 9-stage employee journey, 5 pivotal moments, the Epic Tale framework, and 4 support programs. Identity thesis: Unbridled is something you become, not somewhere you work.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-ch7-journey.html" target="_blank">↗ Read Draft</a> <span class="item-week">Week of May 25</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Drafted</span></div>
+    </div>
+
+    <div id="item-book-ch8" class="item book">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Chapter 8 · Deliver Exceptional. Build World Class.</div>
+        <div class="item-desc">Six pillars of exceptional client experience. Brand promises, client journey map, the DAG arc, and the output chain from individual behavior to Unbridled's reputation. Client quote: "Life is just better when Unbridled is around."</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-ch8-client-experience.html" target="_blank">↗ Read Draft</a> <span class="item-week">Week of May 25</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Drafted</span></div>
+    </div>
+
+    <div id="item-book-closing" class="item book">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Closing · At Least We're in the Arena</div>
+        <div class="item-desc">The final chapter. Arena quote, the Cañon City story (Bosworth Mansion, Hotel St. Cloud, 8 years no profit), the 9-building prototype vision, the Cindy tribute, and the covenant for what comes next.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-closing.html" target="_blank">↗ Read Draft</a> <span class="item-week">Week of May 25</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Drafted</span></div>
+    </div>
+
+    <div id="item-book-part3" class="item book">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Part III · The Proof Is in the People</div>
+        <div class="item-desc">Full Part III chapter with Lindsay, Lorelei and Megg, and the UnbridledACTS story woven together. Generosity as proof of character.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-part3-generosity.html" target="_blank">↗ Read Draft</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Drafted</span></div>
+    </div>
+
+    <div id="item-book-acts" class="item book">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">UnbridledACTS · A Business of Generosity</div>
+        <div class="item-desc">The 501(c)3 chapter. Programs, proof of impact, and why the mission isn't a slogan — it's the structure.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-acts.html" target="_blank">↗ Read Draft</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Drafted</span></div>
+    </div>
+
+    <div id="item-book-generosity-spirit" class="item book">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Generosity of Spirit</div>
+        <div class="item-desc">Holt-Lunstad loneliness research, Pygmalion effect, Project Aristotle, Hebrews 12:1. The science and soul of what it means to be genuinely generous with others.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-generosity-spirit.html" target="_blank">↗ Read Draft</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Drafted</span></div>
+    </div>
+
+    <div id="item-book-appendix" class="item book">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Appendix · The Ancient Roots</div>
+        <div class="item-desc">Psalms 112, Habakkuk 2:3, the scripture underpinning the Unbridled covenant. Faith-informed, not Bible-forward.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-appendix-scripture.html" target="_blank">↗ Read Draft</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Drafted</span></div>
+    </div>
+
+    <div id="item-book-compare" class="item book">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Book Structure Comparison · Version A vs B</div>
+        <div class="item-desc">Side-by-side of the original outline vs the approved Version B. Reference for understanding what changed and why.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/book-structure-comparison.html" target="_blank">↗ Open</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-draft">Reference</span></div>
+    </div>
+
+    <div id="item-book-full-manuscript" class="item book">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">The Unbridled Way · Complete Manuscript</div>
+        <div class="item-desc">All 15 chapters, cover, TOC, and section openers in a single scrollable HTML — plus a print-ready PDF. Progress bar, section tracker, and chapter nav included. The full book in one place.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-full.html" target="_blank">↗ Full HTML</a> <a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-complete.pdf" target="_blank">↗ Download PDF</a> <span class="item-week">Week of May 25</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+  </div>
+
+  <!-- ───────────────────── LIVE EVENTS ───────────────────── -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-icon">🎪</span>
+      <span class="section-title">Live Events · Ecosystem OS</span>
+      <span class="section-count">CCO toolkit + ecosystem OS</span>
+    </div>
+
+    <div id="item-le-os" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Live Events Ecosystem OS · v2</div>
+        <div class="item-desc">Operating system for the 6-company live events ecosystem. Scott's CCO resource — strategy, values, org structure, and always/never commitments.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/live-events-os-v2.html" target="_blank">↗ Open OS v2</a> <a class="item-link" href="https://offers.hotelstcloud.com/assets/live-events-os.html" target="_blank">↗ v1</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-le-cco" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">CCO Letter + OS · Combined Document</div>
+        <div class="item-desc">Stan's personal letter to the incoming CCO, followed by the full Live Events OS. Everything Scott needs to understand the role, the vision, and the culture.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/cco-letter-plus-os.html" target="_blank">↗ Open Letter + OS</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-le-always-never" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Always and Never · Leadership Commitments</div>
+        <div class="item-desc">Stan's leadership code. Two columns — what Unbridled will always do and will never do. The cultural contract, plain and direct.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/always-and-never.html" target="_blank">↗ Open</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-le-caseys" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Casey's C3 2026 · Production Runsheet</div>
+        <div class="item-desc">Full production runsheet for Casey's C3 conference 2026 — crew, show flows, meals, vendors, breakout sessions. Kevin Miller as producer.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/caseys-c3-2026.html" target="_blank">↗ Open</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-le-lm-analyzer" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Live Music ROI Analyzer</div>
+        <div class="item-desc">Interactive calculator for live music investment. Models revenue impact, licensing costs, cover charge scenarios — built for venues and event teams.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/live-music-analyzer.html" target="_blank">↗ Open Tool</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-le-experience-grid" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Experience Layer Grid</div>
+        <div class="item-desc">Visual matrix of Unbridled's live events experience design principles. Framework for how moments are designed across the ecosystem.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/experience-layer-grid.html" target="_blank">↗ Open</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+  </div>
+
+  <!-- ───────────────────── HOSPITALITY OPERATIONS ───────────────────── -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-icon">🏨</span>
+      <span class="section-title">Hotel St. Cloud · Hospitality Operations</span>
+      <span class="section-count">Manuals, tools, HR, training · 25 items</span>
+    </div>
+
+    <div id="item-hosp-onsite-manual" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Onsite Manual · Introduction</div>
+        <div class="item-desc">Chapter 1 of the Hotel St. Cloud staff onsite manual. Brand story, mission, culture expectations, and how to represent the property.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/onsite-manual-01-introduction.html" target="_blank">↗ Open</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-hosp-table-training" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Table Service Training · Hotel St. Cloud</div>
+        <div class="item-desc">Full table service training guide for 1887 and FP. Standards, sequence of service, upselling, complaint handling, and floor choreography.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/table-service-training-hsc.html" target="_blank">↗ HSC Version</a> <a class="item-link" href="https://offers.hotelstcloud.com/assets/table-service-training-generic.html" target="_blank">↗ Generic</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-hosp-hr-hub" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">HR Hub · Hotel St. Cloud</div>
+        <div class="item-desc">HR portal for staff — onboarding docs, policies, benefits, emergency contacts. Single URL the team can bookmark.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/hr-hub.html" target="_blank">↗ Open HR Hub</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-hosp-dress-quiz" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Dress & Attire Quiz · HSC</div>
+        <div class="item-desc">Interactive style quiz for Hotel St. Cloud staff — guides them to the right dress code for their role, venue, and shift. Mobile-first.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/dress-attire-quiz-hsc.html" target="_blank">↗ Open Quiz</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-hosp-wine-finder" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Wine Finder · Guest Sommelier Tool</div>
+        <div class="item-desc">5-question wine pairing tool for Hotel St. Cloud guests. All 30+ wines profiled, smart scoring engine, instant recommendation. Tablet-optimized.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/wine-finder/" target="_blank">↗ Open Wine Finder</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-hosp-capacity" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Room Capacity Calculator</div>
+        <div class="item-desc">Event capacity tool — enter room dimensions, setup style, stage size. Instant fire-code-safe headcount with density toggles.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/room-capacity-calculator.html" target="_blank">↗ Open Calculator</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-hosp-gm-intake" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">GM / F&B Search Brief · Headhunter Intake</div>
+        <div class="item-desc">Confidential search brief for the outside search firm recruiting Hotel St. Cloud's GM and F&B director. Includes deal-breakers and comp range.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/hsc-gm-fb-headhunter-intake.html" target="_blank">↗ Open Brief</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-hosp-policy" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Work From Office Policy · Unbridled</div>
+        <div class="item-desc">Stan's WFO policy document — expectations, rationale, the 80/20 principle, and cultural reasoning. Clean, branded, plain-spoken.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-work-from-office-policy.html" target="_blank">↗ Open Policy</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-hosp-rv-barn" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">RV Barn Design Spec · TJ's Log & Timber</div>
+        <div class="item-desc">20'×40' log-and-timber RV barn design document for TJ's Log & Timber. 12″ log construction, 16' wide garage door, single personnel door, 5/12 pitch metal roof. Complete spec sheet ready to send to the manufacturer.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/rv-barn-design.html" target="_blank">↗ Open Spec</a> <span class="item-week">Week of May 25</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-hosp-eagles-tracker" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Eagles Landing Cabin · Construction Tracker</div>
+        <div class="item-desc">Room-by-room punch list for the Eagles Landing Cabin build. Covers all major areas — kitchen, bedrooms, baths, garage, exterior, AV/electronics, and more. PIN-protected approval workflow, filter bar, and completion summary.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/eagles-landing-tracker.html" target="_blank">↗ Open Tracker</a> <span class="item-week">May 31, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-hosp-sped-standard" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">SPED Standard · Coaching Field Guide (Sam Wyss)</div>
+        <div class="item-desc">Sam Wyss's coaching field guide built on the SPED Standard framework. Portable, field-ready reference for coaching conversations, assessments, and development planning.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/sped-standard.html" target="_blank">↗ Open Field Guide</a> <span class="item-week">May 31, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-hosp-labor-scheduler" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">F&amp;B Labor Scheduler · Hotel St. Cloud</div>
+        <div class="item-desc">Revenue-tiered staffing tool built from 12 months of actual sales data. Three-tier model (Mon/Tue/Wed · Thu/Sun · Fri/Sat), interactive schedule builder with live labor % calculation, prep vs. service labor split, front bar bartender (10am–9pm), and full staff roster. Print-ready.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/hsc-labor-scheduler" target="_blank">↗ Open Scheduler</a> <span class="item-week">June 2, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-hosp-fremont-makers" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Fremont Makers · Harrison Building Tracker</div>
+        <div class="item-desc">Project to-do list for Fremont Makers and the Harrison Building (611 Main St). Covers demo, construction, TI, tenant, business activation, and website launch. Status dots cycle in real time — tap to update.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/fremont-makers-todos.html" target="_blank">↗ Open Tracker</a> <span class="item-week">June 3, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-hosp-fremont-mou" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Fremont Makers LLC · MOU — Slaughenhoupt Partnership</div>
+        <div class="item-desc">Memorandum of Understanding for the Fremont Makers LLC partnership with Tim &amp; Kristi Slaughenhoupt. Covers ownership, real estate (719 Main), woodshop, frame shop (FCA financed), employment terms (Tim as President, Kristi as Director of Ops), and e-signature pads.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/fremont-makers-mou.html" target="_blank">↗ Open MOU</a> <span class="item-week">June 3, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-hosp-fremont-legal" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Fremont Makers · Commercial Lease &amp; Promissory Note v3</div>
+        <div class="item-desc">Two signed legal documents: Commercial Lease for 719 Main St and a $100K Promissory Note for the Slaughenhoupt partnership. Both at v3 — final drafts ready for attorney review and execution.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/Fremont_Makers_Commercial_Lease_719_Main_v3.docx" target="_blank">↗ Lease (docx)</a> <a class="item-link" href="https://offers.hotelstcloud.com/assets/Fremont_Makers_Promissory_Note_100K_v3.docx" target="_blank">↗ Note (docx)</a> <span class="item-week">July 10, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-hosp-room-layout" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Room Layout Diagram · 100×200 ft · Rounds of 10</div>
+        <div class="item-desc">Visual event layout diagram for a 100×200 ft space. Rounds of 10, 36×24 stage configuration. Shareable reference for event setup and capacity planning.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/room-layout-diagram.html" target="_blank">↗ Open Diagram</a> <span class="item-week">June 4, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-hosp-july4-prep" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">July 4th Prep List · Grand Lake Cabin</div>
+        <div class="item-desc">106-item punch list across 27 rooms — built via voice walkthrough June 14. Chinking, trim, stain touchups, switch plates, baseboard installs, and cleaning crew tasks from basement to loft. Checkboxes save in real time.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/july4-prep.html" target="_blank">↗ Open Punch List</a> <span class="item-week">June 14, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-hosp-josh-elder-review" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Executive Chef Review · Josh Elder</div>
+        <div class="item-desc">Confidential performance review for Hotel St. Cloud's Executive Chef. Covers performance, culture fit, and path forward — structured as a leadership document for Stan's review and decision-making.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/josh-elder-review.html" target="_blank">↗ Open Review</a> <span class="item-week">June 15, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-hosp-josh-elder-agreement" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">30-Day Behavioral Agreement · Josh Elder</div>
+        <div class="item-desc">Formal 30-day behavioral agreement for Josh Elder (Executive Chef). Specific expectations, accountability checkpoints, and e-signature pads for both parties. Attorney disclaimer included.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/josh-elder-agreement.html" target="_blank">↗ Open Agreement</a> <span class="item-week">June 15, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-hosp-josh-termination" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Notice of Employment Termination · Josh Elder</div>
+        <div class="item-desc">Formal termination letter for Josh Elder (Executive Chef), effective immediately. Paired with a supporting handbook-violation reference document prepared for attorney review.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/josh-elder-letter.html" target="_blank">↗ Termination Letter</a> <a class="item-link" href="https://offers.hotelstcloud.com/assets/josh-elder-termination.html" target="_blank">↗ Supporting Reference</a> <span class="item-week">June 23, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-hosp-staff-transition-memo" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Team Memo · Staff Transition · Hotel St. Cloud</div>
+        <div class="item-desc">Stan's all-hands memo dated June 25. Announces Josh Elder's departure, promotes Lorin Tedesko to Director of Hotel & Events and Jeremy Rieth to Director of Restaurants. Acknowledges Jessica Carter, Chris Taplin, and the kitchen team.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/hsc-staff-transition-memo.html" target="_blank">↗ Open Memo</a> <span class="item-week">June 25, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-hosp-hsc-chef-jd" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Chef Job Description · Hotel St. Cloud</div>
+        <div class="item-desc">Branded hiring page for the Executive Chef role at Hotel St. Cloud. Full JD, culture fit expectations, and Unbridled context. Ready to post or send to search firms.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/hsc-chef-jd.html" target="_blank">↗ Open JD</a> <span class="item-week">June 26, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-hosp-portfolio-summary" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Hotel St. Cloud · Portfolio Summary May–June 2026</div>
+        <div class="item-desc">Two-month Google Ads performance dashboard for the Hotel St. Cloud portfolio. Impressions, clicks, CTR, spend, and campaign-level breakdowns — shareable with ownership and leadership.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/portfolio-summary-may-jun-2026.html" target="_blank">↗ Open Dashboard</a> <span class="item-week">July 10, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-hosp-facilities-guide" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Facilities &amp; Emergency Guide · Hotel St. Cloud</div>
+        <div class="item-desc">Complete facilities reference for staff and ownership — emergency contacts, utility shutoffs, vendor list, room-by-room equipment notes, and 23 property photos with a full lightbox viewer. The single source of truth when something goes wrong.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/facilities-guide.html" target="_blank">↗ Open Guide</a> <span class="item-week">July 13, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+  </div>
+
+  <!-- ───────────────────── DUTCH NOVELS ───────────────────── -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-icon">📚</span>
+      <span class="section-title">The Dutch Crossing Series · Fiction</span>
+      <span class="section-count">5 novels · Full manuscripts</span>
+    </div>
+
+    <div id="item-dutch-ghost" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Ghost Among the Wolves — Dutch · Book 1</div>
+        <div class="item-desc">Origin story of the character Dutch. Subtitle: "A Life Undercover." Fictionalized account of a federal undercover career — the world, the tradecraft, the cost. Full manuscript.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/ghost-among-the-wolves.html" target="_blank">↗ Read</a> <span class="item-week">June 23, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-dutch-jinja" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">The Jinja Crossing — A Dutch Novel</div>
+        <div class="item-desc">Dutch in Uganda. Full novel set in Jinja — geography and atmosphere drawn from firsthand experience. Part of the Dutch Crossing series of international thrillers.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/jinja-crossing.html" target="_blank">↗ Read</a> <span class="item-week">June 24, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-dutch-wana" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">The Wana Crossing — A Dutch Novel</div>
+        <div class="item-desc">Dutch in Pakistan's tribal belt. Full novel set in Wana, South Waziristan — real locations, original events and characters.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/wana-crossing.html" target="_blank">↗ Read</a> <span class="item-week">June 24, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-dutch-yucatan" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">The Yucatán Crossing — A Dutch Novel</div>
+        <div class="item-desc">Dutch in Mexico. Full novel set in the Yucatán — the fourth book in the Dutch Crossing series. Real geography, entirely original fiction.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/yucatan-crossing.html" target="_blank">↗ Read</a> <span class="item-week">June 24, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-dutch-quetta" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">The Quetta Crossing — A Dutch Novel</div>
+        <div class="item-desc">Dutch in Quetta, Pakistan. The fifth book in the Dutch Crossing series — real geography, original operations, entirely fictionalized characters and events.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/quetta-crossing.html" target="_blank">↗ Read</a> <span class="item-week">June 26, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+  </div>
+
+  <!-- ───────────────────── CANON CITY LABOR ───────────────────── -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-icon">📊</span>
+      <span class="section-title">Canon City Labor</span>
+      <span class="section-count">3 venues · Live tools · Week-by-week tracking</span>
+    </div>
+
+    <div id="item-labor-fp-sports" class="item">
+      <div class="item-body">
+        <div class="item-title">FP Sports Bar &amp; Kitchen · Weekly Labor Planner</div>
+        <div class="item-desc">Weekly labor scheduling tool for FP Sports Bar & Kitchen. Toggle staff on/off by day, forecast revenue, track budget vs. actual labor and revenue, and submit to 52-week rolling history. Includes Management, BOH, FOH, and Bar sections.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/fp-labor-planner.html" target="_blank">↗ Open Planner</a> <span class="item-week">June 9, 2026</span></div>
+      </div>
+    </div>
+
+    <div id="item-labor-fp-ph" class="item">
+      <div class="item-body">
+        <div class="item-title">Fremont Public House, 1887 &amp; War Room · Weekly Labor Planner</div>
+        <div class="item-desc">Weekly labor scheduling tool for Fremont Public House, 1887, and War Room. Management includes Executive Chef, Restaurant Manager, Asst Manager/Events, and two Shift Leads. Bar sections split between Fremont Public House and War Room. Full revenue and labor tracking. Roster names and rates now persist across weeks via cloud key — no re-entering staff each week.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/fp-ph-planner.html" target="_blank">↗ Open Planner</a> <span class="item-week">Updated June 28, 2026</span></div>
+      </div>
+    </div>
+
+    <div id="item-labor-hsc" class="item">
+      <div class="item-body">
+        <div class="item-title">Hotel St. Cloud · Weekly Labor Planner</div>
+        <div class="item-desc">Weekly labor scheduling tool for Hotel St. Cloud. Sections include Management, Front Desk, Housekeeping, Laundry, and Night Audit/Cleaning. Salary and hourly positions, full revenue and labor % tracking, and 52-week history. Now always opens to the current week and roster persists across weeks via cloud sync.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/hsc-labor-planner.html" target="_blank">↗ Open Planner</a> <span class="item-week">Updated June 28, 2026</span></div>
+      </div>
+    </div>
+
+  </div>
+
+<!-- ───────────────────── GOOGLE ADS & MARKETING ───────────────────── -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-icon">📣</span>
+      <span class="section-title">Google Ads & Marketing</span>
+      <span class="section-count">5 active campaigns · Live dashboard · Ad previews · Hiring pipeline</span>
+    </div>
+
+    <div id="item-ads-live-dash" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Live Campaign Dashboard · All Campaigns</div>
+        <div class="item-desc">7-day view across all 5 active campaigns. 10,187 impressions · 736 clicks · 7.2% blended CTR · $1,553 spend (May 18–24). Auto-refreshes every 15 min.</div>
+        <div class="item-meta">
+          <a class="item-link" href="https://offers.hotelstcloud.com/assets/live-dashboard.html" target="_blank">↗ Open Dashboard</a>
+          <span class="item-week">Updated May 25</span>
+        </div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">🟢 Live Data</span></div>
+    </div>
+
+    <div id="item-ads-local" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Local Proximity & Through Traffic</div>
+        <div class="item-desc">$80/day · 7-day: 817 impr · 164 clicks · 20.1% CTR 🔥 · $527 spend. Highest CTR of any campaign. High-intent local searches near the hotel.</div>
+        <div class="item-meta"><span class="item-week">Campaign ID: 22674299702</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">🟢 Enabled</span></div>
+    </div>
+
+    <div id="item-ads-bb" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Bars & Bathrooms Campaign</div>
+        <div class="item-desc">$50/day · Thu–Sun · 7-day: 3,429 impr · 211 clicks · 6.15% CTR · $340 spend. The workhorse. Consistent volume driver.</div>
+        <div class="item-meta">
+          <a class="item-link" href="https://offers.hotelstcloud.com/assets/dashboard-bars-bathrooms.html" target="_blank">↗ Campaign Dashboard</a>
+          <a class="item-link" href="https://offers.hotelstcloud.com/assets/ad-headlines-preview.html" target="_blank">↗ Ad Previews</a>
+        </div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">🟢 Enabled</span></div>
+    </div>
+
+    <div id="item-ads-fp" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">FP Sports Bar | Fremont Provisions</div>
+        <div class="item-desc">$35/day · 7-day: 3,955 impr · 219 clicks · 5.54% CTR · $363 spend. Volume leader. Peak May 20 (705 impressions).</div>
+        <div class="item-meta">
+          <a class="item-link" href="https://offers.hotelstcloud.com/assets/fp-sports-campaign.html" target="_blank">↗ Campaign Page</a>
+          <a class="item-link" href="https://offers.hotelstcloud.com/assets/fp-sports-ad-preview.html" target="_blank">↗ Ad Previews</a>
+        </div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">🟢 Enabled</span></div>
+    </div>
+
+    <div id="item-ads-fp-sports-preview" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Fremont Provisions · Sports Campaigns Preview</div>
+        <div class="item-desc">NFL and Golf campaign ad previews for Fremont Provisions. Visual preview of ad creative across both sports verticals — ready for review and launch.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/fp-sports-events-preview.html" target="_blank">↗ Open Preview</a> <span class="item-week">July 13, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-ads-fp-sports-gantt" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Fremont Provisions · Sports Marketing Command Center</div>
+        <div class="item-desc">Gantt-style command center for FP's full sports marketing calendar. NFL season and Golf campaign planning in one view — built for execution.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/fremont-sports-gantt.html" target="_blank">↗ Open Command Center</a> <span class="item-week">July 13, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-ads-bc" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Royal Gorge Basecamp</div>
+        <div class="item-desc">$35/day · 7-day: 1,403 impr · 123 clicks · 8.77% CTR · $286 spend. Trending up — May 24 was the best day. Traveler intent, high quality.</div>
+        <div class="item-meta">
+          <a class="item-link" href="https://offers.hotelstcloud.com/assets/dashboard-basecamp.html" target="_blank">↗ Campaign Dashboard</a>
+          <a class="item-link" href="https://offers.hotelstcloud.com/assets/basecamp-ad-preview.html" target="_blank">↗ Ad Previews</a>
+        </div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">🟢 Enabled</span></div>
+    </div>
+
+    <div id="item-ads-so" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Standard Oil Coffee Co</div>
+        <div class="item-desc">$25/day · 7-day: 583 impr · 19 clicks · 3.26% CTR · $36 spend. Building momentum — tripled impressions by end of week. More time needed.</div>
+        <div class="item-meta">
+          <a class="item-link" href="https://offers.hotelstcloud.com/assets/standard-oil-ad-preview.html" target="_blank">↗ Ad Previews</a>
+          <a class="item-link" href="https://offers.hotelstcloud.com/assets/standard-oil-hiring-preview.html" target="_blank">↗ Hiring Angle Preview</a>
+        </div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">🟢 Enabled</span></div>
+    </div>
+
+    <div id="item-ads-socc-hiring" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Standard Oil · Barista Hiring Pipeline</div>
+        <div class="item-desc">Job application landing page for Standard Oil Coffee Co — Airtable backend, resume upload, success state. Paired with a live candidates dashboard for admin review: AI-generated resume summaries and one-tap delete.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/standard-oil-apply.html" target="_blank">↗ Apply Page</a> <a class="item-link" href="https://offers.hotelstcloud.com/assets/socc-candidates.html" target="_blank">↗ Candidates Dashboard</a> <span class="item-week">June 9, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-ads-marketing-plan" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Unbridled Solutions · Marketing Plan 2026</div>
+        <div class="item-desc">Full 2026 marketing strategy. Password protected (DGBDW). Campaigns, channels, budget breakdown, and quarterly objectives.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/marketing-plan.html" target="_blank">↗ Open Plan</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+  </div>
+
+  <!-- ───────────────────── BEUNBRIDLED / AI ───────────────────── -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-icon">🤖</span>
+      <span class="section-title">BeUnbridled · AI Chief of Staff</span>
+      <span class="section-count">Product pages, architecture, economics · 10 items</span>
+    </div>
+
+    <div id="item-bu-landing" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">BeUnbridled Landing Page</div>
+        <div class="item-desc">Public-facing product page for the BeUnbridled AI Chief of Staff service. $750–$1k/mo. Apply link, value prop, brand voice.</div>
+        <div class="item-meta"><a class="item-link" href="https://beunbridled.ai" target="_blank">↗ beunbridled.ai</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-bu-arch" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">AI Chief of Staff · Architecture Diagram</div>
+        <div class="item-desc">Infrastructure diagram showing the multi-agent stack — MC, specialist agents, gateway, Telegram, and the Unbridled ecosystem they serve.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/ai-chief-of-staff-architecture.html" target="_blank">↗ Open Diagram</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-bu-economics" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">BeUnbridled Unit Economics Calculator</div>
+        <div class="item-desc">Interactive model — revenue, margin, and break-even at different client counts and price tiers. $500/mo through $1k/mo scenarios.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/beunbridled-economics.html" target="_blank">↗ Open Calculator</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-bu-onboarding" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">BeUnbridled Customer Onboarding Form</div>
+        <div class="item-desc">Client intake questionnaire — business DNA, goals, tools, communication prefs. What MC needs to get started for a new customer.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/beunbridled-onboarding.html" target="_blank">↗ Open Form</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-bu-mc-overview" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">MC Overview · One-Pager</div>
+        <div class="item-desc">What MC is, what MC does, how the system works. Stan's shareable one-pager for introducing the AI Chief of Staff concept to leadership and partners.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/mc-overview.html" target="_blank">↗ Open</a> <a class="item-link" href="https://offers.hotelstcloud.com/assets/mc-in-action.html" target="_blank">↗ MC in Action</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-bu-agent-roster" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Agent Roster · Hub-Spoke + Org Tree</div>
+        <div class="item-desc">Two visual formats of the MC agent ecosystem — the hub-and-spoke radial (Stan's preference) and the org tree. Shows all deployed agents and their roles.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/agent-roster-hub-spoke.html" target="_blank">↗ Hub-Spoke</a> <a class="item-link" href="https://offers.hotelstcloud.com/assets/agent-roster-org-tree.html" target="_blank">↗ Org Tree</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-bu-dashboard" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">BeUnbridled Operations Dashboard</div>
+        <div class="item-desc">Internal dashboard — all client agents, server status, backup health, security posture. Justin and Stan's real-time view of the fleet.</div>
+        <div class="item-meta"><a class="item-link" href="https://beunbridled.ai/dashboard" target="_blank">↗ beunbridled.ai/dashboard</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-bu-strategy-notes" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">BeUnbridled · Launch Strategy Notes</div>
+        <div class="item-desc">Password-gated strategy document — specialization play, the demo-as-sales-pitch approach, vertical focus, and the go-to-market framework for launching BeUnbridled as a commercial product.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/beunbridled-strategy.html" target="_blank">↗ Open Notes</a> <span class="item-week">June 4, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-bu-launch-notes" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">BeUnbridled · Stan &amp; Tim Launch Meeting Notes</div>
+        <div class="item-desc">Full notes from the June 4 launch meeting with Stan and Tim. Three distinct products, three hats Stan sees AI through, proposed cap table, the inside-vs-outside debate, Justin's situation, and why the live demo IS the sales pitch.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/beunbridled-launch-notes.html" target="_blank">↗ Open Meeting Notes</a> <span class="item-week">June 5, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-bu-tech-playbook" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Unbridled Tech Playbook · Agent Architecture Standards</div>
+        <div class="item-desc">Design system, project structure, deployment practices, and data visualization standards for all Unbridled agent teams. The canonical reference for how MC and all agents build and ship.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-tech-playbook.html" target="_blank">↗ Open Playbook</a> <span class="item-week">July 9, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+  </div>
+
+  <!-- ───────────────────── RESEARCH & STRATEGY ───────────────────── -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-icon">📋</span>
+      <span class="section-title">Research, Strategy & Org</span>
+      <span class="section-count">Internal docs, reports, org charts</span>
+    </div>
+
+    <div id="item-rs-org-chart" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Unbridled Org Chart · Hub-Spoke</div>
+        <div class="item-desc">Full ecosystem org chart in Stan's preferred hub-and-spoke format. All 6 live events companies, key roles, open positions, and MC's position in the ecosystem.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-org-chart.html" target="_blank">↗ Open</a> <a class="item-link" href="https://offers.hotelstcloud.com/assets/cc-org-chart.html" target="_blank">↗ Cañon City</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-rs-stan-playbook" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Stan Playbook · Leadership One-Pager</div>
+        <div class="item-desc">Stan's operational playbook — how he works, what he delegates, what he keeps, how decisions get made. MC's field guide to supporting him well.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/stan-playbook.html" target="_blank">↗ Open</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-rs-career-plan" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">10-Year Career Plan · Hospitality to Real Estate</div>
+        <div class="item-desc">Long-arc career planning document — hospitality experience to RE development path, financial targets, skill gaps, and milestone sequence to 2034.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/career-plan-2034.html" target="_blank">↗ Open</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-rs-log-cabin" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Log Cabin Viability Report · Grand & Park County CO</div>
+        <div class="item-desc">Deep research report on log cabin retreat development viability in Grand County and Park County, Colorado. Site analysis, permit, market comps.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/log-cabin-viability-report.html" target="_blank">↗ Open Report</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-rs-cabin-budget" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Grand County Cabin · Construction Budget</div>
+        <div class="item-desc">Line-item cost estimate for the Grand County log cabin retreat build. Full budget breakdown across all phases — site, structure, interior, mechanical, and finish-out.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/grand-county-cabin-budget.html" target="_blank">↗ Open Budget</a> <span class="item-week">June 6, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-rs-cabin-timeline" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Grand County Cabin · 18-Month Build Timeline</div>
+        <div class="item-desc">Gantt chart covering the full 18-month construction schedule for the Grand County cabin retreat. Milestones, phase sequencing, and dependencies mapped.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/grand-county-cabin-timeline.html" target="_blank">↗ Open Gantt</a> <span class="item-week">June 6, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-rs-amortization" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">$2.6M Commercial Loan · Amortization Schedule</div>
+        <div class="item-desc">Full amortization table for a $2.6M commercial real estate loan. Monthly payment breakdown — principal, interest, and running balance across the full loan term. Built for project planning and lender conversations.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/amortization-2600k.html" target="_blank">↗ Open Schedule</a> <span class="item-week">June 9, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-rs-pnp-dashboard" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">PNP Event · Registration + Admin Dashboard</div>
+        <div class="item-desc">Event registration form and admin dashboard for PNP (Pleasures & Perils). Airtable backend via Cloudflare Worker proxy.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/pnp-register.html" target="_blank">↗ Register</a> <a class="item-link" href="https://offers.hotelstcloud.com/assets/pnp-dashboard.html" target="_blank">↗ Admin</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-rs-quiz" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Training Quiz Tally Dashboard</div>
+        <div class="item-desc">Staff training quiz results aggregator. Tracks completion rates and scores for Hotel St. Cloud onboarding training.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/quiz-tally-dashboard.html" target="_blank">↗ Open</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-rs-session-may11" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Session Summary · May 11</div>
+        <div class="item-desc">The first full working session recap. Decisions made, agreements locked, action items assigned. Reference for everything that was agreed that day.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/session-summary-may11.html" target="_blank">↗ Open</a></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-draft">Reference</span></div>
+    </div>
+
+    <div id="item-rs-woodring" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Woodring Dissertation · Responsible Leadership Summary</div>
+        <div class="item-desc">Research summary of Tim Woodring's dissertation on responsible leadership. Key findings, frameworks, and application to Unbridled's leadership development philosophy.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/woodring-dissertation.html" target="_blank">↗ Open Summary</a> <span class="item-week">Week of May 25</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-rs-lakeridge-budget" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Lakeridge · Lot 31 — Budget Estimate</div>
+        <div class="item-desc">Research-based cost ranges for a 3,750 SF lakefront log home in Grand Lake's Lakeridge Subdivision. Full-round log exterior, stone base, black standing-seam roof, 45% slope site — three finished levels plus bunk shell. Line-item estimates across all phases.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/lakeridge-lot31-budget.html" target="_blank">↗ Open Budget</a> <span class="item-week">June 13, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-rs-lakeridge-timeline" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Lakeridge · Lot 31 — Build Timeline</div>
+        <div class="item-desc">18-month construction schedule for the Lakeridge Lot 31 lakefront log home. Phased Gantt covering site prep through final punch — companion to the budget estimate.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/lakeridge-lot31-timeline.html" target="_blank">↗ Open Timeline</a> <span class="item-week">June 13, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-rs-pharma-pipeline" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Top 10 FDA Pipeline Candidates · 2026</div>
+        <div class="item-desc">Unbridled Intelligence Brief from June 2026. The 10 most promising drug approvals expected in the next 18 months — biotech companies, indications, timeline, and investment context. Research-grade deep dive.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/pharma-pipeline-2026.html" target="_blank">↗ Open Brief</a> <span class="item-week">June 18, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+  </div>
+
+  <!-- ───────────────────── BUSINESS STRATEGY & CLIENTS ───────────────────── -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-icon">💼</span>
+      <span class="section-title">Business Strategy & Client Work</span>
+      <span class="section-count">ERP · Peptide · Wealth Commander · 4 items</span>
+    </div>
+
+    <div id="item-bsc-erp-research" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Unbridled Shared Services · ERP RFP Research Brief</div>
+        <div class="item-desc">Deep research to strengthen the Unbridled Shared Services ERP RFP. 32-entity portfolio covering Financial & HR shared services — vendor landscape, key questions, and RFP strengthening language.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/erp-rfp-research.html" target="_blank">↗ Open Brief</a> <span class="item-week">July 10, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-bsc-erp-gap" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">ERP RFP · Direct Gap Analysis</div>
+        <div class="item-desc">Line-by-line review of the July 10 RFP draft — gaps identified, strengthening language added, missing sections flagged. Ready to incorporate before the RFP goes out.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/erp-rfp-gap-analysis.html" target="_blank">↗ Open Analysis</a> <span class="item-week">July 10, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-bsc-peptide" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Peptide Company · Launch Brief · Douglas County, CO</div>
+        <div class="item-desc">Full launch brief for a peptide company in Douglas County. Campaign strategy, taglines, visual direction, ad copy, and a 90-day launch timeline — with AI-generated imagery. Confidential.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/peptide-launch-brief.html" target="_blank">↗ Open Brief</a> <span class="item-week">July 10, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-bsc-wealth-commander" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Wealth Commander · Master Deliverables Sheet</div>
+        <div class="item-desc">Project deliverables tracker for the Wealth Commander engagement (Jonathan Wield). Tracks all active deliverables, status, links, and notes — same architecture as this page.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/wealth-commander-deliverables.html" target="_blank">↗ Open Tracker</a> <span class="item-week">July 10, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-bsc-family-office" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Unbridled Companies · Family Office Fee Model</div>
+        <div class="item-desc">Financial model for an Unbridled Companies family office structure. Fee tiers, AUM scenarios, and revenue projections — built for ownership and advisory conversations.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-family-office-fee-model.html" target="_blank">↗ Open Model</a> <span class="item-week">July 13, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-bsc-phillina-letter" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Letter to Phillina Morgan · From Stan Bullis</div>
+        <div class="item-desc">Stan's personal letter to Phillina Morgan, July 2026. Written in Stan's voice — direct, specific, human. Final version after multiple rounds of edits per Stan's voice notes.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/phillina-letter.html" target="_blank">↗ Open Letter</a> <span class="item-week">July 13, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+  </div>
+
+  <!-- ───────────────────── REAL ESTATE ───────────────────── -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-icon">🏡</span>
+      <span class="section-title">Real Estate · Unbridled Holdings</span>
+      <span class="section-count">Grand Lake parcels · Eagles Landing build</span>
+    </div>
+
+    <div class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Culture Presentation — Story Beats &amp; Book Content</div>
+        <div class="item-desc">8 stories flagged for the book from Stan's revised culture presentation. Shared document with Lindsay. Includes the 7 Steps to Adjacent Opportunity and gratitude research.</div>
+        <div class="item-meta"><span class="item-week">July 7, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Shared</span></div>
+    </div>
+
+    <div class="item">
+      <div class="dot" style="background:var(--gold)"></div>
+      <div class="item-body">
+        <div class="item-title">Eagles Landing — Log Cabin Build</div>
+        <div class="item-desc">225 GCR 465, Grand Lake CO 80447. Current active build. CWRC Class 2 HIGH intensity (red zone). Unbridled Holdings X LLC.</div>
+        <div class="item-meta"><span class="item-week">Active</span></div>
+      </div>
+      <div class="item-actions"><span class="badge" style="background:#3a2a0a;color:var(--gold)">In Progress</span></div>
+    </div>
+
+    <div id="item-re-eagles-proforma" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Eagles Landing · Short-Term Rental Pro Forma</div>
+        <div class="item-desc">Interactive STR pro forma for 225 GCR 465. 12,000 sf, sleeps 22, 5 Kings + 10 bunk beds. Revenue scenarios, occupancy modeling, operating cost breakdown, and net return projections. Built for lender and ownership review.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/eagles-landing-proforma.html" target="_blank">↗ Open Pro Forma</a> <span class="item-week">July 8, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div id="item-re-unbridled-properties" class="item">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Unbridled Properties · Insurance, Licenses & Leases</div>
+        <div class="item-desc">Internal property management hub — insurance policies, licenses, and lease documents across the Unbridled portfolio. Searchable, filterable, keyword-matched. Single source of truth for all property docs.</div>
+        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-properties.html" target="_blank">↗ Open Hub</a> <span class="item-week">July 8, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge badge-live">Live</span></div>
+    </div>
+
+    <div class="item">
+      <div class="dot" style="background:var(--muted)"></div>
+      <div class="item-body">
+        <div class="item-title">Lot 31 Lakeridge Sub — 194 GCR 472</div>
+        <div class="item-desc">Grand Lake CO 80447. Acquired June 4, 2026 from Steven Lee Tukua. $205K. Three Lakes Water Acct #4476-1. CWRC Class 2 MODERATE (orange).</div>
+        <div class="item-meta"><span class="item-week">Acquired Jun 4, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge" style="background:#1a2a1a;color:#6bcf7f">Owned</span></div>
+    </div>
+
+    <div class="item">
+      <div class="dot" style="background:var(--muted)"></div>
+      <div class="item-body">
+        <div class="item-title">Breckon Sub Tract 3 — 276 GCR 480 / Annie Drive</div>
+        <div class="item-desc">Grand Lake CO 80447. PIN 119306206002. Well permit #339661 transferred June 4, 2026. CWRC Class 2 MODERATE (orange).</div>
+        <div class="item-meta"><span class="item-week">Acquired Jun 4, 2026</span></div>
+      </div>
+      <div class="item-actions"><span class="badge" style="background:#1a2a1a;color:#6bcf7f">Owned</span></div>
+    </div>
+
+  </div>
+
+  <!-- ───────────────────── TO-DO LIST ───────────────────── -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-icon">✅</span>
+      <span class="section-title">Stan's To-Do List</span>
+      <span class="section-count">Live · status tracking · all active projects</span>
+    </div>
+
+    <div class="item" id="item-todo">
+      <div class="dot dot-live"></div>
+      <div class="item-body">
+        <div class="item-title">Unbridled Ecosystem To-Do List</div>
+        <div class="item-desc">Full project task tracker — Harrison Building (611), Hotel St. Cloud, Google Ads, and all active Unbridled projects. Tap status buttons to update.</div>
+        <div class="item-meta">
+          <a class="item-link" href="https://offers.hotelstcloud.com/assets/todos.html" target="_blank">↗ Open To-Do List</a>
+          <span class="item-week">Updated weekly</span>
+        </div>
+      </div>
+      <div class="item-actions">
+        <span class="badge badge-live">Live</span>
+      </div>
+    </div>
+
+     <div id="item-stan-todos" class="item">
+       <div class="dot dot-live"></div>
+       <div class="item-body">
+         <div class="item-title">Stan's Personal List</div>
+         <div class="item-desc">Stan's own task list — separate from the full ecosystem tracker. Personal action items, follow-ups, and things only Stan touches.</div>
+         <div class="item-meta">
+           <a class="item-link" href="https://offers.hotelstcloud.com/assets/stan-todos.html" target="_blank">↗ Open Stan's List</a>
+           <span class="item-week">Week of May 25</span>
+         </div>
+       </div>
+       <div class="item-actions">
+         <span class="badge badge-live">Live</span>
+       </div>
+     </div>
+  </div>
+
+  <p class="updated-note">Last updated: <span>July 18, 2026</span> · MC adds to this every Friday · Tap 🗑 to remove any item · Tell MC what to add</p>
+
+</div><!-- /wrap -->
+
+<!-- ── CALLS TO MAKE ───────────────────────────────────────── -->
+<div class="wrap">
+  <div class="section">
+    <div class="section-header">
+      <span class="section-icon">📞</span>
+      <span class="section-title">Calls to Make</span>
+      <span class="section-count" id="calls-count"></span>
+    </div>
+
+    <!-- Quick-add bar -->
+    <div style="display:flex;gap:.5rem;margin-bottom:1rem;align-items:center">
+      <input id="callNameInput" type="text"
+        placeholder="Type a name and tap Add…"
+        onkeydown="if(event.key==='Enter')quickAddCall()"
+        style="flex:1;background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:.55rem .9rem;font-size:14px;color:var(--text);outline:none">
+      <button onclick="quickAddCall()"
+        style="background:var(--gold);color:#0f1923;border:none;border-radius:8px;padding:.55rem 1.1rem;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">Add</button>
+      <button id="callMicBtn" onclick="speakCallName()" title="Speak a name"
+        style="background:linear-gradient(135deg,var(--gold),#a07840);border:none;border-radius:8px;width:38px;height:38px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">🎙️</button>
+    </div>
+
+    <!-- Call cards rendered here by JS -->
+    <div id="calls-list"></div>
+  </div>
+</div>
+
+<!-- ── CALL LOG ────────────────────────────────────────────── -->
+<div class="wrap">
+  <div class="section">
+    <div class="section-header">
+      <span class="section-icon">📋</span>
+      <span class="section-title">Call Log</span>
+      <span class="section-count" id="call-log-count">0 entries</span>
+    </div>
+
+    <!-- Log entry form -->
+    <div id="call-log-form" style="background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:1rem">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:.6rem">
+        <input id="log-name" type="text" placeholder="Who did you call?"
+          style="background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:.5rem .8rem;font-size:13px;color:var(--text);outline:none;grid-column:1/-1">
+        <input id="log-date" type="date"
+          style="background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:.5rem .8rem;font-size:13px;color:var(--text);outline:none">
+        <select id="log-outcome"
+          style="background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:.5rem .8rem;font-size:13px;color:var(--text);outline:none;-webkit-appearance:none">
+          <option value="">Outcome…</option>
+          <option value="✅ Connected">✅ Connected</option>
+          <option value="📭 Left voicemail">📭 Left voicemail</option>
+          <option value="🔁 Call back needed">🔁 Call back needed</option>
+          <option value="❌ No answer">❌ No answer</option>
+          <option value="✉️ Followed up by text">✉️ Followed up by text</option>
+        </select>
+      </div>
+      <textarea id="log-notes" placeholder="Notes / next steps…" rows="2"
+        style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:.5rem .8rem;font-size:13px;color:var(--text);outline:none;resize:vertical;margin-bottom:.6rem;font-family:inherit"></textarea>
+      <div style="display:flex;gap:.5rem;justify-content:flex-end">
+        <button onclick="clearLogForm()" style="background:transparent;border:1px solid var(--border);border-radius:7px;padding:.45rem 1rem;font-size:12px;color:var(--muted);cursor:pointer">Clear</button>
+        <button onclick="addLogEntry()" style="background:var(--gold);color:#0f1923;border:none;border-radius:7px;padding:.45rem 1.1rem;font-size:13px;font-weight:700;cursor:pointer">Log Call</button>
+      </div>
+    </div>
+
+    <!-- Log entries rendered here -->
+    <div id="call-log-list"></div>
+  </div>
+</div>
+
+<!-- Archive section -->
+<div class="wrap" style="padding-bottom:3rem">
+  <button class="archive-toggle" id="archiveToggle" onclick="toggleArchive()">
+    <span class="caret">▶</span>
+    <span>🗄 Archive</span>
+    <span class="archive-count" id="archiveCount">0 items</span>
+    <span style="margin-left:auto;font-size:10px;color:var(--muted)">Items you've removed — tap Restore to bring back</span>
+  </button>
+  <div id="archiveList"></div>
+  <div style="margin-top:.75rem;text-align:right">
+    <a href="archive.html" style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--blue);text-decoration:none;transition:color .2s" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--blue)'">
+      📋 View full archive →
+    </a>
+  </div>
+</div>
+
+<!-- Restore snackbar -->
+<div id="restoreBar">
+  <span id="restoreMsg">Item removed</span>
+  <button onclick="restoreLast()">Undo</button>
+</div>
+
+<script>
+// ─── CALL LOG ──────────────────────────────────────────────────
+const CALL_LOG_KEY = 'mc_call_log';
+
+function getCallLog() {
+  try { return JSON.parse(localStorage.getItem(CALL_LOG_KEY) || '[]'); } catch { return []; }
+}
+function saveCallLog(arr) {
+  localStorage.setItem(CALL_LOG_KEY, JSON.stringify(arr));
+}
+
+function addLogEntry() {
+  const name    = (document.getElementById('log-name').value || '').trim();
+  const date    = document.getElementById('log-date').value;
+  const outcome = document.getElementById('log-outcome').value;
+  const notes   = (document.getElementById('log-notes').value || '').trim();
+  if (!name) { document.getElementById('log-name').focus(); return; }
+  const entry = {
+    id: 'log-' + Date.now(),
+    name,
+    date: date || new Date().toISOString().slice(0,10),
+    outcome: outcome || '—',
+    notes,
+    ts: Date.now()
+  };
+  const log = getCallLog();
+  log.unshift(entry);
+  saveCallLog(log);
+  renderCallLog();
+  clearLogForm();
+  showToast('📋 Logged', name, 2500);
+}
+
+function clearLogForm() {
+  document.getElementById('log-name').value = '';
+  document.getElementById('log-date').value = '';
+  document.getElementById('log-outcome').value = '';
+  document.getElementById('log-notes').value = '';
+}
+
+function deleteLogEntry(id) {
+  const log = getCallLog().filter(e => e.id !== id);
+  saveCallLog(log);
+  renderCallLog();
+}
+
+function renderCallLog() {
+  const list  = document.getElementById('call-log-list');
+  const count = document.getElementById('call-log-count');
+  if (!list) return;
+  const log = getCallLog();
+  count.textContent = log.length + (log.length === 1 ? ' entry' : ' entries');
+
+  if (log.length === 0) {
+    list.innerHTML = '<div style="font-size:13px;color:var(--muted);padding:.75rem 0;text-align:center">No calls logged yet. Fill in the form above.</div>';
+    return;
+  }
+
+  list.innerHTML = log.map(e => {
+    const d = e.date ? new Date(e.date + 'T12:00:00').toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) : '';
+    const outcomeColor = e.outcome.includes('✅') ? 'var(--green)' : e.outcome.includes('🔁') ? 'var(--gold)' : e.outcome.includes('❌') ? 'var(--red)' : 'var(--muted)';
+    return `
+    <div id="${e.id}" style="background:var(--card-bg);border:1px solid var(--border);border-radius:9px;padding:.9rem 1rem;margin-bottom:.6rem;display:flex;gap:.9rem;align-items:flex-start">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.3rem">
+          <span style="font-size:14px;font-weight:700;color:var(--text)">${e.name}</span>
+          ${d ? `<span style="font-size:11px;color:var(--muted)">${d}</span>` : ''}
+          ${e.outcome && e.outcome !== '—' ? `<span style="font-size:11px;color:${outcomeColor}">${e.outcome}</span>` : ''}
+        </div>
+        ${e.notes ? `<div style="font-size:12px;color:var(--muted);line-height:1.5">${e.notes}</div>` : ''}
+      </div>
+      <button onclick="deleteLogEntry('${e.id}')" title="Delete entry"
+        style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:.1rem .3rem;flex-shrink:0;opacity:.6" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.6">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+// Set today's date as default in log form
+(function() {
+  const d = document.getElementById('log-date');
+  if (d) d.value = new Date().toISOString().slice(0,10);
+})();
+
+// ─── ARCHIVE / TRASH LOGIC ─────────────────────────────────────
+const DELETED_KEY = 'mc_deleted_items'; // [{id, label}]
+let lastDeleted = null;
+let restoreTimer = null;
+
+function getArchive() {
+  try { return JSON.parse(localStorage.getItem(DELETED_KEY) || '[]'); } catch { return []; }
+}
+function saveArchive(arr) {
+  localStorage.setItem(DELETED_KEY, JSON.stringify(arr));
+}
+
+function deleteItem(id, label) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add('item-deleted');
+  lastDeleted = { id, label };
+  const archive = getArchive();
+  if (!archive.find(a => a.id === id)) {
+    archive.push({ id, label, date: new Date().toISOString(), source: 'Master Deliverables' });
+  }
+  saveArchive(archive);
+  showRestore(label);
+  renderArchive();
+}
+
+function restoreItem(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('item-deleted');
+  const archive = getArchive().filter(a => a.id !== id);
+  saveArchive(archive);
+  if (lastDeleted && lastDeleted.id === id) { lastDeleted = null; hideRestore(); }
+  renderArchive();
+}
+
+function restoreLast() {
+  if (!lastDeleted) return;
+  restoreItem(lastDeleted.id);
+}
+
+function showRestore(label) {
+  const bar = document.getElementById('restoreBar');
+  document.getElementById('restoreMsg').textContent = '"' + label.substring(0,38) + (label.length > 38 ? '…' : '') + '" archived';
+  bar.style.display = 'flex';
+  clearTimeout(restoreTimer);
+  restoreTimer = setTimeout(hideRestore, 5000);
+}
+function hideRestore() {
+  document.getElementById('restoreBar').style.display = 'none';
+}
+
+function renderArchive() {
+  const archive = getArchive();
+  const list = document.getElementById('archiveList');
+  const count = document.getElementById('archiveCount');
+  count.textContent = archive.length + (archive.length === 1 ? ' item' : ' items');
+  if (archive.length === 0) {
+    list.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:.5rem 0">Nothing archived yet. Tap 🗑 on any item to archive it.</div>';
+    return;
+  }
+  list.innerHTML = archive.map(a => `
+    <div class="archive-item">
+      <span class="archive-item-label">${a.label}</span>
+      <button class="btn-restore" onclick="restoreItem('${a.id}')">↩ Restore</button>
+    </div>`).join('');
+}
+
+function toggleArchive() {
+  const btn = document.getElementById('archiveToggle');
+  const list = document.getElementById('archiveList');
+  const isOpen = btn.classList.toggle('open');
+  list.style.display = isOpen ? 'block' : 'none';
+}
+
+// Apply saved archive on load — hide items that are archived
+function applyDeleted() {
+  getArchive().forEach(a => {
+    const el = document.getElementById(a.id);
+    if (el) el.classList.add('item-deleted');
+  });
+}
+
+// Add trash button to every .item that has an id
+function wireTrashButtons() {
+  document.querySelectorAll('.item[id]').forEach(el => {
+    const titleEl = el.querySelector('.item-title');
+    const label = titleEl ? titleEl.textContent.trim() : el.id;
+    const actionsEl = el.querySelector('.item-actions');
+    if (actionsEl && !actionsEl.querySelector('.btn-trash')) {
+      const btn = document.createElement('button');
+      btn.className = 'btn-trash';
+      btn.title = 'Archive this item';
+      btn.innerHTML = '🗑';
+      btn.onclick = () => deleteItem(el.id, label);
+      actionsEl.appendChild(btn);
+    }
+  });
+}
+
+// ─── TO-DO PERSISTENCE ─────────────────────────────────────────
+const TODO_KEY = 'mc_todo_checks';
+function loadTodos() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(TODO_KEY) || '{}');
+    Object.keys(saved).forEach(id => {
+      const el = document.getElementById(id);
+      if (el && el.type === 'checkbox') el.checked = saved[id];
+    });
+  } catch {}
+}
+function saveTodo(id, checked) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(TODO_KEY) || '{}');
+    saved[id] = checked;
+    localStorage.setItem(TODO_KEY, JSON.stringify(saved));
+  } catch {}
+}
+document.querySelectorAll('.todo-check').forEach(cb => {
+  cb.addEventListener('change', () => saveTodo(cb.id, cb.checked));
+});
+
+// ─── WEEK LABEL ────────────────────────────────────────────────
+const d = new Date();
+const monday = new Date(d);
+monday.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+const label = monday.toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'});
+document.getElementById('dateStamp').textContent = 'Week of ' + label;
+
+// ─── CALL LIST ─────────────────────────────────────────────────
+// All contacts are hardcoded here — immune to Safari localStorage wipes.
+// To add/change a number permanently: tell MC and it gets updated in the code.
+
+const PINNED_CALLS = [
+  { id: 'pinned-lindsay', name: 'Lindsay Wiss',  phone: '(303) 217-1067', role: 'Chief of Staff, Cañon City Unbridled' },
+  { id: 'pinned-justin',  name: 'Justin Farr',   phone: '(956) 367-0188', role: 'Operations & Tech, Unbridled' },
+  { id: 'pinned-cindy',   name: 'Cindy Bullis',  phone: '(303) 513-1486', role: '' },
+];
+
+// Runtime state — hidden cards, extra cards added this session, edited numbers/names
+let hiddenIds   = new Set();
+let sessionCards = [];  // [{id, name, phone, role}] added via quick-add bar this session
+let editingId     = null;
+let editingNameId = null;
+
+function fmtPhone(raw) {
+  const d = (raw||'').replace(/\D/g,'');
+  if (d.length === 10) return `(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`;
+  if (d.length === 11 && d[0]==='1') return `(${d.slice(1,4)}) ${d.slice(4,7)}-${d.slice(7)}`;
+  return raw;
+}
+
+// ── Trash / restore ───────────────────────────────────────────
+function removeCall(id) {
+  hiddenIds.add(id);
+  renderCalls();
+}
+function restoreAll() {
+  hiddenIds.clear();
+  sessionCards = [];
+  editingId = null;
+  editingNameId = null;
+  renderCalls();
+}
+
+// ── Number edit ───────────────────────────────────────────────
+function openEdit(id) {
+  editingId = id; editingNameId = null;
+  renderCalls();
+  setTimeout(() => document.getElementById('numinput-'+id)?.focus(), 30);
+}
+function cancelEdit() { editingId = null; renderCalls(); }
+function saveEdit(id) {
+  const raw = document.getElementById('numinput-'+id)?.value.trim();
+  if (!raw) { cancelEdit(); return; }
+  const fmt = fmtPhone(raw);
+  const p = PINNED_CALLS.find(p=>p.id===id);
+  if (p) { p.phone = fmt; }
+  else {
+    const s = sessionCards.find(c=>c.id===id);
+    if (s) s.phone = fmt;
+  }
+  editingId = null; renderCalls();
+}
+function pasteIntoEdit(id) {
+  navigator.clipboard?.readText().then(t => {
+    const inp = document.getElementById('numinput-'+id);
+    if (inp) { inp.value = t.trim(); inp.focus(); }
+  }).catch(()=>{ document.getElementById('numinput-'+id)?.focus(); });
+}
+
+// ── Name edit ─────────────────────────────────────────────────
+function openNameEdit(id) {
+  editingNameId = id; editingId = null;
+  renderCalls();
+  setTimeout(() => document.getElementById('nameinput-'+id)?.focus(), 30);
+}
+function cancelNameEdit() { editingNameId = null; renderCalls(); }
+function saveName(id) {
+  const name = document.getElementById('nameinput-'+id)?.value.trim();
+  if (!name) { cancelNameEdit(); return; }
+  const p = PINNED_CALLS.find(p=>p.id===id);
+  if (p) { p.name = name; }
+  else {
+    const s = sessionCards.find(c=>c.id===id);
+    if (s) s.name = name;
+  }
+  editingNameId = null; renderCalls();
+}
+
+// ── Add new card (from quick-add bar) ─────────────────────────
+function addSessionCard(name, phone, role) {
+  const id = 'sess-' + Date.now();
+  sessionCards.push({ id, name: name||'', phone: phone||'', role: role||'' });
+  renderCalls();
+}
+
+// ── Render ────────────────────────────────────────────────────
+function renderCalls() {
+  const list = document.getElementById('calls-list');
+  if (!list) return;
+
+  const all = [
+    ...PINNED_CALLS.map(p => ({ ...p, pinned: true })),
+    ...sessionCards.map(s => ({ ...s, pinned: false }))
+  ].filter(c => !hiddenIds.has(c.id));
+
+  function makeCard(c) {
+    const initials = c.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase()||'?';
+    const tel = (c.phone||'').replace(/\D/g,'');
+
+    // Name
+    const nameHtml = editingNameId === c.id
+      ? `<span style="display:flex;align-items:center;gap:.3rem">
+           <input id="nameinput-${c.id}" value="${c.name.replace(/"/g,'&quot;')}"
+             style="background:rgba(255,255,255,.07);border:1px solid var(--gold);border-radius:6px;padding:.2rem .5rem;color:var(--white);font-size:13px;font-family:inherit;width:130px"
+             onkeydown="if(event.key==='Enter')saveName('${c.id}');if(event.key==='Escape')cancelNameEdit()"/>
+           <button onclick="saveName('${c.id}')" style="background:none;border:none;color:var(--green);cursor:pointer;font-size:14px">✓</button>
+           <button onclick="cancelNameEdit()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px">✕</button>
+         </span>`
+      : `<div class="call-name" onclick="openNameEdit('${c.id}')" style="cursor:pointer" title="Tap to edit name">${c.name||'—'}</div>`;
+
+    // Phone
+    let phoneHtml;
+    if (editingId === c.id) {
+      phoneHtml = `<span style="display:flex;align-items:center;gap:.3rem;flex-wrap:wrap">
+        <input id="numinput-${c.id}" type="tel" value="${(c.phone||'').replace(/"/g,'&quot;')}" placeholder="Type or paste…"
+          style="background:rgba(255,255,255,.07);border:1px solid var(--gold);border-radius:6px;padding:.3rem .6rem;color:var(--white);font-size:12px;font-family:inherit;width:130px"
+          onkeydown="if(event.key==='Enter')saveEdit('${c.id}');if(event.key==='Escape')cancelEdit()"/>
+        <button onclick="pasteIntoEdit('${c.id}')" title="Paste" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px">📋</button>
+        <button onclick="saveEdit('${c.id}')" style="background:none;border:none;color:var(--green);cursor:pointer;font-weight:700;font-size:13px">Save</button>
+        <button onclick="cancelEdit()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px">✕</button>
+      </span>`;
+    } else if (c.phone) {
+      phoneHtml = `<a class="btn-call" href="tel:${tel}">📞 ${c.phone}</a>`;
+    } else {
+      phoneHtml = `<span class="btn-no-number" onclick="openEdit('${c.id}')">📞 No number — tap to add</span>`;
+    }
+
+    const editBtn  = (c.phone && editingId!==c.id)
+      ? `<button class="btn-call-trash" onclick="openEdit('${c.id}')" title="Edit number" style="opacity:.45;font-size:12px">✏️</button>` : '';
+    const vcardBtn = (c.phone && editingId!==c.id)
+      ? `<button class="btn-call-trash" onclick="exportVCard('${c.name.replace(/'/g,"\\'")}','${c.phone}','${(c.role||'').replace(/'/g,"\\'")}' )" title="Save to Apple Contacts" style="opacity:.55;font-size:12px">📇</button>` : '';
+    // Trash on EVERY card — pinned just hides for this session
+    const trashBtn = `<button class="btn-call-trash" onclick="removeCall('${c.id}')" title="Remove">🗑</button>`;
+
+    return `<div class="call-card">
+      <div class="call-avatar">${initials}</div>
+      <div class="call-body">
+        ${nameHtml}
+        <div class="call-role" style="font-size:11px;color:var(--muted)">${c.role||''}</div>
+      </div>
+      ${phoneHtml}${editBtn}${vcardBtn}${trashBtn}
+    </div>`;
+  }
+
+  const hasHidden = hiddenIds.size > 0;
+  list.innerHTML = (all.length ? all.map(makeCard).join('') :
+    '<div style="text-align:center;padding:1.5rem 1rem;color:var(--muted);font-size:13px">No calls queued.</div>')
+    + (hasHidden ? `<div style="text-align:right;margin-top:.5rem"><button onclick="restoreAll()" style="background:none;border:none;color:var(--blue);font-size:11px;cursor:pointer;letter-spacing:.5px">↩ Restore all</button></div>` : '');
+}
+
+// Init
+loadTodos();
+wireTrashButtons();
+applyDeleted();
+renderArchive();
+renderCalls();
+renderCallLog();
+</script>
+
+<!-- MC Mic Button -->
+<button id="mc-mic-btn" title="Talk to MC" onclick="toggleMic()">🎙️</button>
+<div id="mc-toast">
+  <div id="mc-toast-msg">Listening…</div>
+  <div id="mc-toast-sub" style="font-size:10px;color:var(--muted);margin-top:3px;display:none"></div>
+  <div id="mc-transcript"></div>
+</div>
+
+<!-- ── V2: Empty states ──────────────────────────────────────── -->
+<div class="wrap">
+  <div id="fav-empty">
+    <div class="empty-star">⭐</div>
+    <h3>No favorites yet</h3>
+    <p>Tap the ☆ star on any deliverable to pin it here. Your stars are saved just for you.</p>
+  </div>
+  <div id="search-empty"></div>
+</div>
+
+<script>
+// ─── MC MIC — SMART VOICE COMMANDS ────────────────────────────
+const BOT_TOKEN='8673964185:AAEW-bpYDGzfa1Ir2FJtWvx-kUPkT1HgXNI';
+const CHAT_ID   = '1588031229';
+
+// ── Persistent contacts database (localStorage) ───────────────
+const CONTACTS_DB_KEY = 'mc_contacts_db';
+
+function getContactsDB() {
+  return JSON.parse(localStorage.getItem(CONTACTS_DB_KEY) || '[]');
+}
+function saveContactsDB(arr) {
+  localStorage.setItem(CONTACTS_DB_KEY, JSON.stringify(arr));
+}
+
+// Upsert: add or update a contact by name match
+function upsertContact(name, phone, role) {
+  const db = getContactsDB();
+  const lower = name.toLowerCase();
+  const idx = db.findIndex(c => c.name.toLowerCase() === lower);
+  if (idx !== -1) {
+    if (phone) db[idx].phone = phone;
+    if (role)  db[idx].role  = role;
+  } else {
+    db.unshift({ name, phone: phone || '', role: role || '', added: new Date().toISOString() });
+  }
+  saveContactsDB(db);
+}
+
+// Look up by name (fuzzy first-name / last-name match)
+function lookupContact(spoken) {
+  const lower = spoken.toLowerCase();
+  const db = getContactsDB();
+  // Exact first
+  let match = db.find(c => c.name.toLowerCase() === lower);
+  if (match) return match;
+  // First name or last name
+  match = db.find(c => {
+    const parts = c.name.toLowerCase().split(' ');
+    return parts.some(p => lower.includes(p) || p.includes(lower));
+  });
+  return match || null;
+}
+
+// Export a single contact as vCard and trigger download → iOS "Add to Contacts"
+function exportVCard(name, phone, role) {
+  const tel = phone ? phone.replace(/\D/g,'') : '';
+  const org = role  ? `ORG:${role}\n` : '';
+  const telLine = tel ? `TEL;TYPE=CELL:+1${tel.replace(/^1/,'')}\n` : '';
+  const vcf = `BEGIN:VCARD\nVERSION:3.0\nFN:${name}\nN:${name.split(' ').reverse().join(';')}\n${org}${telLine}END:VCARD`;
+  const blob = new Blob([vcf], { type: 'text/vcard' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = name.replace(/\s+/g,'_') + '.vcf';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── Known contacts directory ──────────────────────────────────
+const DIRECTORY = [
+  { name: 'Lindsay Wyss',  phone: '',              role: 'Chief of Staff, Cañon City Unbridled',  aliases: ['lindsay','lindsey','wyss','lyndsey'] },
+  { name: 'Justin Farr',   phone: '(956) 367-0188', role: 'Operations & Tech, Unbridled',           aliases: ['justin','farr'] },
+  { name: 'Scott',         phone: '',              role: 'CCO, Live Events',                       aliases: ['scott','cco'] },
+  { name: 'Jenny Farr',    phone: '',              role: 'BeUnbridled Client',                     aliases: ['jenny','ruby'] },
+];
+
+// Merge DIRECTORY into contacts DB on load (no overwrite if already there)
+(function seedDB() {
+  DIRECTORY.forEach(c => {
+    const db = getContactsDB();
+    if (!db.find(d => d.name.toLowerCase() === c.name.toLowerCase())) {
+      db.push({ name: c.name, phone: c.phone || '', role: c.role || '', added: new Date().toISOString() });
+      saveContactsDB(db);
+    }
+  });
+})();
+
+// ── Fuzzy name match ──────────────────────────────────────────
+function findContact(spoken) {
+  const lower = spoken.toLowerCase();
+  return DIRECTORY.find(c => {
+    if (c.aliases.some(a => lower.includes(a))) return true;
+    const parts = c.name.toLowerCase().split(' ');
+    if (lower.includes(parts[0])) return true;
+    if (parts[1] && lower.includes(parts[1])) return true;  // only match last name if it exists
+    return false;
+  });
+}
+
+// ── Parse voice command ───────────────────────────────────────
+function parseCommand(text) {
+  const t = text.toLowerCase().trim();
+
+  // "call [name]" / "add [name] to my call list"
+  const callPatterns = [
+    /^(?:call|phone|dial|ring)\s+(.+)/i,
+    /^(?:add|put)\s+(.+?)\s+(?:to\s+)?(?:my\s+)?(?:call\s+list|calls)/i,
+    /^i\s+need\s+to\s+call\s+(.+)/i,
+    /^(?:remind me to\s+)?call\s+(.+)/i,
+  ];
+  for (const pat of callPatterns) {
+    const m = text.match(pat);
+    if (m) return { action: 'call', name: m[1].trim() };
+  }
+
+  // "[name]'s number is [number]" / "add number [number] for [name]"
+  const numberPatterns = [
+    /^(.+?)(?:'s| his| her)?\s+(?:number|phone|cell|mobile)\s+is\s+([\d\s\-\.\(\)]+)/i,
+    /^(?:the\s+)?(?:number|phone|cell|mobile)\s+for\s+(.+?)\s+is\s+([\d\s\-\.\(\)]+)/i,
+    /^(?:add|save|update)\s+(?:number\s+)?([\d\s\-\.\(\)]+)\s+for\s+(.+)/i,
+  ];
+  for (let i = 0; i < numberPatterns.length; i++) {
+    const m = text.match(numberPatterns[i]);
+    if (m) {
+      // first two patterns: name then number; third: number then name
+      const name = i < 2 ? m[1].trim() : m[2].trim();
+      const number = i < 2 ? m[2].trim() : m[1].trim();
+      return { action: 'addnumber', name, number };
+    }
+  }
+
+  // "remove/done with [name]"
+  const removePatterns = [
+    /^(?:remove|delete|done with|finished with)\s+(.+?)(?:\s+from\s+(?:my\s+)?(?:call\s+list|calls))?$/i,
+  ];
+  for (const pat of removePatterns) {
+    const m = text.match(pat);
+    if (m) return { action: 'remove', name: m[1].trim() };
+  }
+
+  return { action: 'forward', text };
+}
+
+// ── Execute command ───────────────────────────────────────────
+function executeCommand(cmd, rawText) {
+  if (cmd.action === 'call') {
+    const name = cmd.name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    const existing = [...PINNED_CALLS, ...sessionCards].find(c => c.name.toLowerCase() === name.toLowerCase());
+    if (existing) {
+      showToast('Already on your list', name, 2500);
+    } else {
+      addSessionCard(name, '', '');
+      showToast('✅ Added', name + ' · tap the card to add a number', 3500);
+    }
+    resetBtn(); return;
+  }
+  if (cmd.action === 'remove') {
+    // Try session cards first
+    const si = sessionCards.findIndex(c => c.name.toLowerCase().includes(cmd.name.toLowerCase()));
+    if (si !== -1) {
+      const removed = sessionCards.splice(si, 1)[0];
+      renderCalls();
+      showToast('✅ Removed', removed.name, 3000);
+      resetBtn(); return;
+    }
+    // Try pinned (just hide)
+    const pinned = PINNED_CALLS.find(p => p.name.toLowerCase().includes(cmd.name.toLowerCase()));
+    if (pinned) {
+      hiddenIds.add(pinned.id);
+      renderCalls();
+      showToast('✅ Removed for this session', pinned.name, 3000);
+      resetBtn(); return;
+    }
+    showToast('⚠ Couldn\'t find that name', '', 3000);
+    resetBtn(); return;
+  }
+  // Default: forward to MC on Telegram
+  forwardToMC(rawText, 'Sending to MC…');
+}
+
+// Quick-add: type/paste a name and hit Add or Enter
+function quickAddCall() {
+  const input = document.getElementById('callNameInput');
+  const name = (input.value || '').trim();
+  if (!name) { input.focus(); return; }
+  // Don't add duplicate (check pinned + session)
+  const allNames = [...PINNED_CALLS, ...sessionCards].map(c => c.name.toLowerCase());
+  if (allNames.includes(name.toLowerCase())) {
+    showToast('Already on your call list', name, 2500);
+    input.value = ''; return;
+  }
+  addSessionCard(name, '', '');
+  showToast('➕ Added', name + ' — tap the card to add a number', 3500);
+  input.value = '';
+  input.blur();
+}
+
+function addCallCard(name, phone, role) {
+  // Compatibility shim — route through addSessionCard
+  addSessionCard(name, phone||'', role||'');
+}
+
+// Mic button dedicated to speaking a name into the call box
+function speakCallName() {
+  const btn = document.getElementById('callMicBtn');
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) { showToast('⚠ Speech not supported', 'Try typing or pasting instead', 3000); return; }
+
+  const rec = new SpeechRecognition();
+  rec.lang = 'en-US';
+  rec.interimResults = false;
+  rec.maxAlternatives = 1;
+
+  // Go red while listening
+  btn.style.background = 'linear-gradient(135deg,var(--red),#a03030)';
+  btn.style.animation = 'pulse-mic 1.2s infinite';
+  btn.textContent = '🔴';
+
+  function resetBtn() {
+    btn.style.background = 'linear-gradient(135deg,var(--gold),#a07840)';
+    btn.style.animation = 'none';
+    btn.textContent = '🎙️';
+  }
+
+  rec.onresult = e => {
+    const spoken = e.results[0][0].transcript.trim();
+    resetBtn();
+
+    // Remove command: "remove [name]" or "delete [name]"
+    const removeMatch = spoken.match(/^(?:remove|delete|done with)\s+(.+)/i);
+    if (removeMatch) {
+      const name = removeMatch[1].trim();
+      const si = sessionCards.findIndex(c => c.name.toLowerCase().includes(name.toLowerCase()));
+      if (si !== -1) {
+        const gone = sessionCards.splice(si, 1)[0];
+        renderCalls();
+        showToast('🗑 Removed', gone.name, 3000);
+      } else {
+        const pinned = PINNED_CALLS.find(p => p.name.toLowerCase().includes(name.toLowerCase()));
+        if (pinned) {
+          hiddenIds.add(pinned.id);
+          renderCalls();
+          showToast('🗑 Removed for this session', pinned.name, 3000);
+        } else {
+          showToast('⚠ Couldn\'t find', '"' + name + '" on your list', 3000);
+        }
+      }
+      return;
+    }
+
+    // Add command — strip verb prefixes, keep the name
+    const name = spoken
+      .replace(/^(call|add|phone|dial|ring)\s+/i, '')
+      .replace(/\s+(to\s+(my\s+)?call\s+list)$/i, '')
+      .trim();
+
+    document.getElementById('callNameInput').value = name;
+    quickAddCall();
+  };
+
+  rec.onerror = () => { resetBtn(); showToast('⚠ Couldn\'t hear that', 'Try again', 3000); };
+  rec.onend   = () => { resetBtn(); };
+  rec.start();
+}
+
+async function forwardToMC(text, toastMsg) {
+  const btn = document.getElementById('mc-mic-btn');
+  btn.classList.remove('listening');
+  btn.classList.add('sending');
+  btn.textContent = '⏳';
+  showToast('Sending to MC…', '', 0);
+  const msg = '🎙️ [Master Deliverables]\n' + text;
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: CHAT_ID, text: msg })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      showToast('✅ Sent to MC', 'I\'ll respond on Telegram shortly', 5000);
+      btn.textContent = '✓';
+      setTimeout(resetBtn, 3500);
+    } else throw new Error(data.description);
+  } catch(err) {
+    showToast('⚠ Couldn\'t reach MC — check connection', '', 4000);
+    resetBtn();
+  }
+}
+
+function resetBtn() {
+  const btn = document.getElementById('mc-mic-btn');
+  setTimeout(() => {
+    btn.textContent = '🎙️';
+    btn.classList.remove('listening','sending');
+  }, 100);
+}
+
+// ── Toast helpers ─────────────────────────────────────────────
+function showToast(msg, sub = '', duration = 0) {
+  const toast = document.getElementById('mc-toast');
+  document.getElementById('mc-toast-msg').textContent = msg;
+  document.getElementById('mc-transcript').textContent = '';  // never show transcript
+  const subEl = document.getElementById('mc-toast-sub');
+  if (subEl) { subEl.textContent = sub; subEl.style.display = sub ? 'block' : 'none'; }
+  toast.classList.add('visible');
+  if (duration) setTimeout(hideToast, duration);
+}
+function hideToast() {
+  document.getElementById('mc-toast').classList.remove('visible');
+}
+
+// ── Speech recognition ────────────────────────────────────────
+let recognition = null;
+let isListening = false;
+
+function toggleMic() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    showToast('⚠ Use Safari on iPhone or Chrome on Android for voice', '', 4000);
+    return;
+  }
+  const btn = document.getElementById('mc-mic-btn');
+
+  // Tap again to cancel
+  if (isListening) {
+    if (recognition) recognition.abort();
+    isListening = false;
+    resetBtn();
+    hideToast();
+    return;
+  }
+
+  recognition = new SR();
+  recognition.lang = 'en-US';
+  recognition.continuous = false;
+  recognition.interimResults = false;  // iOS Safari: interimResults=true can prevent isFinal
+
+  recognition.onstart = () => {
+    isListening = true;
+    btn.classList.add('listening');
+    btn.textContent = '🔴';
+    showToast('Listening…', '', 0);
+  };
+
+  recognition.onresult = (e) => {
+    // Grab best result — works on both iOS (no isFinal) and Chrome
+    let final = '';
+    for (let i = 0; i < e.results.length; i++) {
+      if (e.results[i].isFinal || e.results.length === 1) {
+        final = e.results[i][0].transcript.trim();
+        break;
+      }
+    }
+    if (!final && e.results.length > 0) {
+      final = e.results[e.results.length - 1][0].transcript.trim();
+    }
+    if (!final) return;
+
+    isListening = false;
+    // Don't reset btn yet — let executeCommand/forwardToMC control the state
+    const cmd = parseCommand(final);
+    executeCommand(cmd, final);
+  };
+
+  recognition.onerror = (e) => {
+    isListening = false;
+    resetBtn();
+    if (e.error === 'not-allowed') {
+      showToast('⚠ Mic access denied', 'Go to Settings → Safari → Microphone → Allow', 5000);
+    } else if (e.error === 'no-speech') {
+      showToast('⚠ No speech detected', 'Tap and speak clearly', 3000);
+    } else if (e.error !== 'aborted') {
+      showToast('⚠ Mic error: ' + e.error, '', 3000);
+    } else {
+      hideToast();
+    }
+  };
+
+  recognition.onend = () => {
+    isListening = false;
+    // Only reset if not already in sending state
+    const btn2 = document.getElementById('mc-mic-btn');
+    if (!btn2.classList.contains('sending')) {
+      btn2.classList.remove('listening');
+      if (btn2.textContent === '🔴') btn2.textContent = '🎙️';
+    }
+  };
+
+  recognition.start();
+}
+</script>
+
+<script>
+// MASTER DELIVERABLES V2 — Profile + Stars + Tabs + Search + Sort · v2.1
+
+// ─── Brand tagging ────────────────────────────────────────────
+// Primary: section title → brand. Secondary: item ID prefix overrides.
+const BRAND_MAP = {
+  'The Unbridled Way · Book Project':         'book',
+  'Live Events · Ecosystem OS':               'unbridled',
+  'Hotel St. Cloud · Hospitality Operations': 'hsc',
+  'The Dutch Crossing Series · Fiction':      'dutch',
+  'Canon City Labor':                         'hsc',
+  'Google Ads & Marketing':                   'unbridled',
+  'BeUnbridled · AI Chief of Staff':          'beunbridled',
+  'Research, Strategy & Org':                 'unbridled',
+  'Business Strategy & Client Work':          'unbridled',
+  'Real Estate · Unbridled Holdings':         'holdings',
+  "Stan's To-Do List":                        'unbridled',
+  'Calls to Make':                            'unbridled',
+  'Call Log':                                 'unbridled',
+};
+
+// ID-prefix overrides — applied after section tagging
+const ID_BRAND_OVERRIDES = {
+  'item-book-':    'book',
+  'item-le-':      'unbridled',
+  'item-hosp-fremont': 'fremont',
+  'item-hosp-':    'hsc',
+  'item-labor-fp': 'fremont',
+  'item-labor-':   'hsc',
+  'item-dutch-':   'dutch',
+  'item-ads-bb':   'beunbridled',
+  'item-ads-':     'unbridled',
+  'item-bu-':      'beunbridled',
+  'item-bsc-':     'unbridled',
+  'item-rs-':      'unbridled',
+  'item-re-':      'holdings',
+  'item-stan-':    'unbridled',
+  'item-todo':     'unbridled',
+};
+
+function getBrandForItem(item) {
+  const id = item.id;
+  // Check ID overrides first (longer match wins)
+  const matchingKeys = Object.keys(ID_BRAND_OVERRIDES).filter(k => id.startsWith(k));
+  if (matchingKeys.length) {
+    // Pick longest match
+    const best = matchingKeys.sort((a,b) => b.length - a.length)[0];
+    return ID_BRAND_OVERRIDES[best];
+  }
+  // Fall back to section title
+  const section = item.closest('.section');
+  if (section) {
+    const title = section.querySelector('.section-title')?.textContent?.trim();
+    if (title && BRAND_MAP[title]) return BRAND_MAP[title];
+  }
+  return 'unbridled';
+}
+
+function tagItemsWithBrands() {
+  document.querySelectorAll('.item[id]').forEach(item => {
+    item.dataset.brand = getBrandForItem(item);
+  });
+}
+
+// ─── Profile system ───────────────────────────────────────────
+const PROFILE_KEY = 'md_v2_profile';
+let currentProfile = null;
+
+function getProfile() {
+  try { return JSON.parse(localStorage.getItem(PROFILE_KEY)); } catch { return null; }
+}
+function saveProfile(p) { localStorage.setItem(PROFILE_KEY, JSON.stringify(p)); }
+
+function selectProfile(id, name, avatar) {
+  currentProfile = { id, name, avatar };
+  saveProfile(currentProfile);
+  document.getElementById('profile-modal').classList.add('hidden');
+  updateProfileChip();
+  renderStars();
+  updateFavCount();
+  applyFilters();
+}
+
+function openProfileSelector() {
+  document.getElementById('profile-modal').classList.remove('hidden');
+}
+
+function updateProfileChip() {
+  const chip = document.getElementById('profile-chip');
+  if (!chip || !currentProfile) return;
+  chip.innerHTML = currentProfile.avatar + ' ' + currentProfile.name.split(' ')[0] + ' <span style="font-size:9px;opacity:.5">▾</span>';
+}
+
+// ─── Favorites system ─────────────────────────────────────────
+function favKey(pid) { return 'md_v2_favs_' + pid; }
+function getFavs() {
+  if (!currentProfile) return new Set();
+  try { return new Set(JSON.parse(localStorage.getItem(favKey(currentProfile.id)) || '[]')); } catch { return new Set(); }
+}
+function saveFavs(set) {
+  if (!currentProfile) return;
+  localStorage.setItem(favKey(currentProfile.id), JSON.stringify([...set]));
+}
+
+function toggleStar(itemId) {
+  if (!currentProfile || currentProfile.id === 'guest') { openProfileSelector(); return; }
+  const favs = getFavs();
+  if (favs.has(itemId)) { favs.delete(itemId); } else { favs.add(itemId); }
+  saveFavs(favs);
+  const btn = document.querySelector('.btn-star[data-id="' + itemId + '"]');
+  if (btn) {
+    const starred = favs.has(itemId);
+    btn.classList.toggle('starred', starred);
+    btn.textContent = starred ? '⭐' : '☆';
+    btn.title = starred ? 'Remove from My Favorites' : 'Add to My Favorites';
+    btn.style.transform = 'scale(1.5)';
+    setTimeout(() => { btn.style.transform = ''; }, 200);
+  }
+  updateFavCount();
+  if (currentTab === 'favs') applyFilters();
+}
+
+function updateFavCount() {
+  const favs = getFavs();
+  document.getElementById('count-favs').textContent = favs.size;
+}
+
+function renderStars() {
+  const favs = getFavs();
+  document.querySelectorAll('.btn-star').forEach(btn => {
+    const starred = favs.has(btn.dataset.id);
+    btn.classList.toggle('starred', starred);
+    btn.textContent = starred ? '⭐' : '☆';
+    btn.title = starred ? 'Remove from My Favorites' : 'Add to My Favorites';
+  });
+}
+
+function wireStars() {
+  document.querySelectorAll('.item[id]').forEach(item => {
+    if (item.querySelector('.btn-star')) return;
+    const actionsEl = item.querySelector('.item-actions');
+    if (!actionsEl) return;
+    const btn = document.createElement('button');
+    btn.className = 'btn-star';
+    btn.dataset.id = item.id;
+    btn.textContent = '☆';
+    btn.title = 'Add to My Favorites';
+    btn.setAttribute('aria-label', 'Star this item');
+    btn.onclick = (e) => { e.stopPropagation(); toggleStar(item.id); };
+    // Insert before the trash button if it exists, otherwise append
+    const trash = actionsEl.querySelector('.btn-trash');
+    if (trash) {
+      actionsEl.insertBefore(btn, trash);
+    } else {
+      actionsEl.appendChild(btn);
+    }
+  });
+}
+
+// ─── Tabs ──────────────────────────────────────────────────────
+let currentTab = 'all';
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.v2-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('v2-search').value = '';
+  applyFilters();
+}
+
+// ─── Sort ──────────────────────────────────────────────────────
+let currentSort = 'newest';
+
+function setSort(el) {
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  currentSort = el.dataset.sort;
+  applyFilters();
+}
+
+// Extract sort key from item: use data-week attr or item-week text or fallback to DOM order
+function getSortKey(item) {
+  const weekEl = item.querySelector('.item-week');
+  const text = weekEl ? weekEl.textContent.trim() : '';
+  // Try to parse "Built Week of Month DD" or "Week of Month DD, YYYY"
+  const match = text.match(/(\w+ \d{1,2},?\s*\d{0,4})/);
+  if (match) {
+    const d = new Date(match[1]);
+    if (!isNaN(d)) return d.getTime();
+  }
+  // Fallback: DOM position (index in parent)
+  return 0;
+}
+
+function sortItems(items) {
+  if (currentSort === 'az') {
+    return items.sort((a, b) => {
+      const ta = (a.querySelector('.item-title')?.textContent || '').toLowerCase();
+      const tb = (b.querySelector('.item-title')?.textContent || '').toLowerCase();
+      return ta.localeCompare(tb);
+    });
+  }
+  if (currentSort === 'newest') {
+    // When no reliable dates, keep DOM order (newest added = lower in DOM for this page)
+    // Use dataset.domIndex set at boot
+    return items.sort((a, b) => parseInt(b.dataset.domIndex||0) - parseInt(a.dataset.domIndex||0));
+  }
+  if (currentSort === 'oldest') {
+    return items.sort((a, b) => parseInt(a.dataset.domIndex||0) - parseInt(b.dataset.domIndex||0));
+  }
+  return items;
+}
+
+// ─── Search + Brand filter ─────────────────────────────────────
+let currentBrand = 'all';
+
+function setBrand(el) {
+  document.querySelectorAll('.brand-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  currentBrand = el.dataset.brand;
+  applyFilters();
+}
+
+function applyFilters() {
+  const query = (document.getElementById('v2-search').value || '').toLowerCase().trim();
+  const favs = getFavs();
+  const deletedIds = new Set((typeof getArchive === 'function' ? getArchive() : []).map(a => a.id));
+
+  const allItems = Array.from(document.querySelectorAll('.item[id]'));
+  const total = allItems.filter(i => !deletedIds.has(i.id)).length;
+  let visible = 0;
+
+  // First pass: determine visibility
+  allItems.forEach(item => {
+    if (deletedIds.has(item.id)) { item.classList.add('v2-hidden'); return; }
+    const brand = item.dataset.brand || 'unbridled';
+    const title = (item.querySelector('.item-title')?.textContent || '').toLowerCase();
+    const desc  = (item.querySelector('.item-desc')?.textContent || '').toLowerCase();
+    const sec   = (item.closest('.section')?.querySelector('.section-title')?.textContent || '').toLowerCase();
+    const links = [...item.querySelectorAll('a')].map(a => a.textContent).join(' ').toLowerCase();
+    const matchesBrand  = currentBrand === 'all' || brand === currentBrand;
+    const matchesSearch = !query || title.includes(query) || desc.includes(query) || sec.includes(query) || links.includes(query) || item.id.toLowerCase().includes(query);
+    const matchesFav    = currentTab !== 'favs' || favs.has(item.id);
+    const show = matchesBrand && matchesSearch && matchesFav;
+    item.classList.toggle('v2-hidden', !show);
+    if (show) visible++;
+  });
+
+  // Second pass: sort visible items within each section container
+  document.querySelectorAll('.section').forEach(section => {
+    const sectionItems = Array.from(section.querySelectorAll('.item[id]:not(.v2-hidden):not(.item-deleted)'));
+    if (sectionItems.length < 2) return;
+    const sorted = sortItems([...sectionItems]);
+    // Re-append in sorted order — find a stable insertion point
+    const parent = sectionItems[0].parentNode;
+    sorted.forEach(item => parent.appendChild(item));
+  });
+
+  // Hide sections with nothing visible
+  document.querySelectorAll('.section').forEach(sec => {
+    const hasVisible = sec.querySelectorAll('.item[id]:not(.v2-hidden):not(.item-deleted)').length > 0;
+    sec.style.display = hasVisible ? '' : 'none';
+  });
+
+  // Update count badges
+  document.getElementById('count-all').textContent = visible;
+  const countVisible = document.getElementById('count-visible');
+  const countTotal   = document.getElementById('count-total');
+  if (countVisible) countVisible.textContent = visible;
+  if (countTotal)   countTotal.textContent = total;
+
+  // Result count label
+  const countBar = document.getElementById('v2-result-count');
+  if (countBar) {
+    if (currentTab === 'favs') {
+      countBar.innerHTML = 'Showing <span>' + visible + '</span> favorited deliverable' + (visible !== 1 ? 's' : '');
+    } else if (query || currentBrand !== 'all') {
+      countBar.innerHTML = 'Showing <span>' + visible + '</span> of <span>' + total + '</span> deliverables';
+    } else {
+      countBar.innerHTML = '<span>' + total + '</span> deliverables total';
+    }
+  }
+
+  // Empty states
+  const favEmpty    = document.getElementById('fav-empty');
+  const searchEmpty = document.getElementById('search-empty');
+  if (favEmpty) favEmpty.style.display = (currentTab === 'favs' && visible === 0) ? 'block' : 'none';
+  if (searchEmpty) {
+    if (query && visible === 0 && currentTab !== 'favs') {
+      searchEmpty.style.display = 'block';
+      searchEmpty.innerHTML = '<p style="color:var(--muted)">No results for &ldquo;' + query + '&rdquo;</p>';
+    } else {
+      searchEmpty.style.display = 'none';
+    }
+  }
+}
+
+// ─── Boot ────────────────────────────────────────────────────
+(function v2Init() {
+  const saved = getProfile();
+  if (saved) {
+    currentProfile = saved;
+    document.getElementById('profile-modal').classList.add('hidden');
+    updateProfileChip();
+  }
+  tagItemsWithBrands();
+  // Stamp DOM order index for sort (0 = first in DOM = oldest added)
+  document.querySelectorAll('.item[id]').forEach((item, i) => {
+    item.dataset.domIndex = i;
+  });
+  wireStars();
+  renderStars();
+  updateFavCount();
+  // Initialize count bars
+  const total = document.querySelectorAll('.item[id]').length;
+  document.getElementById('count-all').textContent = total;
+  const countVisible = document.getElementById('count-visible');
+  const countTotal   = document.getElementById('count-total');
+  if (countVisible) countVisible.textContent = total;
+  if (countTotal)   countTotal.textContent = total;
+  const countBar = document.getElementById('v2-result-count');
+  if (countBar) countBar.innerHTML = '<span>' + total + '</span> deliverables total';
+})();
+</script>
+
+</body>
+</html>

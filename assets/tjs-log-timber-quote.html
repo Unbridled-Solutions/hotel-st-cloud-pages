@@ -1,0 +1,1726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TJ's Log & Timber — Quote Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Pinyon+Script&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0e1117;
+    --surface: #161b25;
+    --surface2: #1e2535;
+    --border: #2a3347;
+    --accent: #c8832a; /* TJ's warm amber */
+    --accent2: #a1641f;
+    --green: #3de8a0;
+    --red: #e85050;
+    --blue: #5a8ba7;
+    --text: #e8eaf0;
+    --muted: #7a8299;
+    --input-bg: #111621;
+    --locked: #0d1220;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap;
+  }
+  .logo { display: flex; align-items: center; gap: 16px; }
+  .logo-mark {
+    width: 44px; height: 52px; background: transparent;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 0;
+  }
+  .logo-mark .tj-letter {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700; font-size: 22px; color: var(--text);
+    line-height: 1; letter-spacing: .02em;
+  }
+  .logo-mark .tj-rule {
+    width: 36px; height: 1.5px; background: var(--text); margin: 3px 0;
+  }
+  .logo-text { display: flex; flex-direction: column; gap: 0; }
+  .logo-text h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 17px; font-weight: 700; color: var(--text);
+    letter-spacing: .08em; text-transform: uppercase; line-height: 1;
+  }
+  .logo-text .tagline {
+    font-family: 'Pinyon Script', cursive;
+    font-size: 14px; color: var(--muted); line-height: 1.3; margin-top: 2px;
+  }
+  .logo-text .subtitle {
+    font-size: 10px; color: var(--muted); letter-spacing: .06em;
+    text-transform: uppercase; margin-top: 1px;
+  }
+
+  /* ── TABS ── */
+  .tabs { display: flex; gap: 8px; }
+  .tab-btn {
+    padding: 8px 18px; border-radius: 6px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); font-size: 13px; cursor: pointer;
+    transition: all .15s;
+  }
+  .tab-btn.active { background: var(--accent); color: #0e1117; border-color: var(--accent); font-weight: 700; }
+  .tab-btn:not(.active):hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── STATUS BAR ── */
+  .status-bar {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 32px;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  .status-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .status-pill {
+    padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;
+    letter-spacing: .04em; text-transform: uppercase;
+  }
+  .pill-proposed { background: #1a2a3a; color: var(--blue); border: 1px solid var(--blue); }
+  .pill-approved  { background: #1a2d1a; color: var(--green); border: 1px solid var(--green); }
+  .pill-contract  { background: #2d1a1a; color: var(--accent); border: 1px solid var(--accent); }
+
+  .status-btns { display: flex; gap: 8px; margin-left: auto; }
+  .status-btn {
+    padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); font-size: 12px; cursor: pointer;
+    transition: all .15s;
+  }
+  .status-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .status-btn.btn-active { background: var(--accent); color: #0e1117; border-color: var(--accent); font-weight: 700; }
+  .status-btn.btn-approved.btn-active { background: var(--green); color: #0e1117; border-color: var(--green); }
+  .status-btn.btn-contract.btn-active { background: var(--accent); }
+
+  /* ── JOB INFO ── */
+  .job-info {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 32px;
+    display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end;
+  }
+  .job-field { display: flex; flex-direction: column; gap: 4px; }
+  .job-field label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .job-field input, .job-field select {
+    background: var(--input-bg); border: 1px solid var(--border);
+    color: var(--text); border-radius: 5px; padding: 6px 10px; font-size: 13px;
+    min-width: 120px;
+  }
+  .job-field input:focus, .job-field select:focus { outline: none; border-color: var(--accent); }
+  .job-code-badge {
+    padding: 6px 14px; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; font-size: 13px; font-family: monospace; color: var(--accent);
+    font-weight: 700; letter-spacing: .06em;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .main { padding: 24px 32px; max-width: 1100px; margin: 0 auto; }
+  .section { margin-bottom: 28px; }
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-size: 13px; font-weight: 700; color: var(--accent);
+    text-transform: uppercase; letter-spacing: .08em;
+  }
+
+  /* ── TABLE ── */
+  .quote-table { width: 100%; border-collapse: separate; border-spacing: 0 3px; }
+  .quote-table thead th {
+    text-align: left; font-size: 10px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .07em;
+    padding: 4px 8px 8px;
+  }
+  .quote-table thead th:last-child { text-align: right; }
+  .quote-table tbody tr { background: var(--surface); }
+  .quote-table tbody tr:hover { background: var(--surface2); }
+  .quote-table tbody td { padding: 5px 4px; }
+  .quote-table tbody td:first-child { padding-left: 8px; border-radius: 6px 0 0 6px; }
+  .quote-table tbody td:last-child  { padding-right: 8px; border-radius: 0 6px 6px 0; text-align: right; }
+
+  .tbl-input {
+    background: var(--input-bg); border: 1px solid var(--border);
+    color: var(--text); border-radius: 4px; padding: 5px 8px; font-size: 13px;
+    width: 100%;
+  }
+  .tbl-input:focus { outline: none; border-color: var(--accent); }
+  .tbl-input.locked { background: var(--locked); color: var(--muted); pointer-events: none; }
+  .tbl-input.serial { font-family: monospace; font-size: 11px; }
+  .qty-cell { display: flex; align-items: center; gap: 4px; }
+  .qty-btn {
+    width: 22px; height: 22px; border-radius: 4px; border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text); cursor: pointer;
+    font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+    line-height: 1; transition: border-color .1s;
+  }
+  .qty-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .qty-display {
+    min-width: 28px; text-align: center; font-size: 13px; font-weight: 600;
+    color: var(--text);
+  }
+  .markup-select {
+    background: var(--input-bg); border: 1px solid var(--border);
+    color: var(--text); border-radius: 4px; padding: 5px 4px; font-size: 12px;
+    width: 100%;
+  }
+  .markup-select:focus { outline: none; border-color: var(--accent); }
+  .line-total { font-size: 13px; font-weight: 600; color: var(--text); min-width: 80px; }
+  .del-btn {
+    background: transparent; border: none; color: var(--muted); cursor: pointer;
+    font-size: 16px; padding: 2px 6px; border-radius: 4px; transition: color .1s;
+  }
+  .del-btn:hover { color: var(--red); }
+  .add-line-btn {
+    margin-top: 8px; padding: 7px 16px; border-radius: 6px;
+    border: 1px dashed var(--border); background: transparent;
+    color: var(--muted); font-size: 12px; cursor: pointer; transition: all .15s;
+  }
+  .add-line-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── FORM CARD ── */
+  .form-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 18px 20px;
+  }
+  .form-group { margin-bottom: 12px; }
+  .form-group label {
+    display: block; font-size: 11px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px;
+  }
+  .form-group input[type="number"], .form-group select {
+    background: var(--input-bg); border: 1px solid var(--border);
+    color: var(--text); border-radius: 4px; padding: 6px 10px; font-size: 13px;
+    width: 100%; max-width: 150px;
+  }
+  .form-group input[type="number"]:focus, .form-group select:focus {
+    outline: none; border-color: var(--accent);
+  }
+  .form-group.inline { display: flex; align-items: center; gap: 10px; }
+  .form-group.inline input { max-width: 100px; }
+
+  /* ── LABOR SECTION ── */
+  .labor-table { width: 100%; border-collapse: separate; border-spacing: 0 3px; }
+  .labor-table thead th {
+    text-align: left; font-size: 10px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .07em; padding: 4px 8px 8px;
+  }
+  .labor-table thead th:last-child { text-align: right; }
+  .labor-table tbody tr { background: var(--surface); }
+  .labor-table tbody tr:hover { background: var(--surface2); }
+  .labor-table tbody td { padding: 5px 4px; }
+  .labor-table tbody td:first-child { padding-left: 8px; border-radius: 6px 0 0 6px; }
+  .labor-table tbody td:last-child  { padding-right: 8px; border-radius: 0 6px 6px 0; text-align: right; }
+
+  /* ── GNA + TOTALS ── */
+  .totals-block {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 20px 24px; max-width: 420px; margin-left: auto;
+  }
+  .totals-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 6px 0; border-bottom: 1px solid var(--border);
+  }
+  .totals-row:last-child { border-bottom: none; }
+  .totals-row.grand { padding-top: 12px; border-top: 2px solid var(--accent); border-bottom: none; margin-top: 4px; }
+  .totals-label { font-size: 13px; color: var(--muted); }
+  .totals-value { font-size: 13px; font-weight: 600; color: var(--text); }
+  .totals-value.big { font-size: 18px; color: var(--accent); }
+  .totals-row.grand .totals-label { color: var(--text); font-weight: 700; font-size: 14px; }
+  .gna-row { display: flex; align-items: center; gap: 10px; }
+  .gna-select {
+    background: var(--input-bg); border: 1px solid var(--border);
+    color: var(--text); border-radius: 4px; padding: 4px 8px; font-size: 12px;
+    min-width: 70px;
+  }
+  .tax-input {
+    background: var(--input-bg); border: 1px solid var(--border);
+    color: var(--text); border-radius: 4px; padding: 4px 8px; font-size: 12px;
+    width: 65px; text-align: right;
+  }
+  .tax-input:focus, .gna-select:focus { outline: none; border-color: var(--accent); }
+
+  /* ── INVOICE VIEW ── */
+  #invoice-view {
+    display: none;
+    background: #fff; color: #222; max-width: 800px; padding: 48px;
+    border-radius: 12px; margin: 24px auto; font-family: Georgia, serif;
+  }
+  .inv-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; }
+  .inv-brand { display: flex; align-items: center; gap: 14px; }
+  .inv-brand-mark {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 0; border: 1.5px solid #222; border-radius: 4px; padding: 6px 10px;
+  }
+  .inv-brand-mark .tj-l {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700; font-size: 18px; color: #1a1a1a; line-height: 1;
+  }
+  .inv-brand-mark .tj-r {
+    width: 28px; height: 1.5px; background: #1a1a1a; margin: 2px 0;
+  }
+  .inv-brand-info h2 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 20px; font-weight: 700; color: #1a1a1a;
+    letter-spacing: .06em; text-transform: uppercase; line-height: 1;
+  }
+  .inv-brand-info .inv-tagline {
+    font-family: 'Pinyon Script', cursive;
+    font-size: 15px; color: #666; line-height: 1.3; margin-top: 1px;
+  }
+  .inv-brand-info p { font-size: 11px; color: #888; margin-top: 3px; }
+  .inv-meta { text-align: right; font-size: 13px; color: #555; }
+  .inv-meta strong { display: block; font-size: 20px; color: var(--accent); margin-bottom: 4px; font-family: 'Segoe UI', sans-serif; }
+  .inv-to { margin-bottom: 24px; font-size: 13px; }
+  .inv-to strong { font-weight: 700; color: #111; display: block; margin-bottom: 2px; }
+  .inv-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 13px; }
+  .inv-table th { border-bottom: 2px solid #ddd; padding: 8px 6px; text-align: left; color: #555; font-size: 11px; text-transform: uppercase; }
+  .inv-table td { padding: 8px 6px; border-bottom: 1px solid #eee; }
+  .inv-table td:last-child, .inv-table th:last-child { text-align: right; }
+  .inv-totals { max-width: 280px; margin-left: auto; font-size: 13px; }
+  .inv-totals-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee; }
+  .inv-totals-row.grand { font-weight: 700; font-size: 16px; border-top: 2px solid #222; border-bottom: none; padding-top: 10px; }
+  .inv-footer { margin-top: 32px; font-size: 11px; color: #aaa; text-align: center; border-top: 1px solid #eee; padding-top: 16px; }
+  .print-btn {
+    display: block; margin: 0 auto 16px; padding: 10px 28px;
+    background: var(--accent); color: #0e1117; border: none; border-radius: 6px;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+  }
+
+  /* ── P&L TAB ── */
+  #pnl-view { display: none; }
+  .pnl-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 24px; max-width: 620px; margin: 0 auto;
+  }
+  .pnl-title { font-size: 16px; font-weight: 700; color: var(--accent); margin-bottom: 20px; }
+  .pnl-section-label {
+    font-size: 10px; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--muted); margin: 14px 0 4px;
+  }
+  .pnl-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); align-items: center; }
+  .pnl-row:last-of-type { border-bottom: none; }
+  .pnl-row label { font-size: 13px; color: var(--text); }
+  .pnl-row .pnl-val { font-size: 13px; font-weight: 600; color: var(--text); }
+  .pnl-row .pnl-input {
+    background: var(--input-bg); border: 1px solid var(--border);
+    color: var(--text); border-radius: 4px; padding: 4px 8px; font-size: 13px;
+    width: 110px; text-align: right;
+  }
+  .pnl-row .pnl-input:focus { outline: none; border-color: var(--accent); }
+  .pnl-divider { height: 1px; background: var(--accent); margin: 8px 0; opacity: .4; }
+  .pnl-subtotal { font-weight: 700; color: var(--accent) !important; }
+  .pnl-positive { color: var(--green) !important; }
+  .pnl-negative { color: var(--red) !important; }
+  .pnl-note { font-size: 11px; color: var(--muted); margin-top: 16px; text-align: center; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.7); z-index: 100;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 28px 32px; max-width: 380px; width: 90%;
+    text-align: center;
+  }
+  .modal h3 { font-size: 16px; margin-bottom: 8px; }
+  .modal p  { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+  .modal input {
+    background: var(--input-bg); border: 1px solid var(--border);
+    color: var(--text); border-radius: 5px; padding: 8px 14px;
+    font-size: 16px; text-align: center; width: 100%; letter-spacing: .2em; margin-bottom: 14px;
+  }
+  .modal input:focus { outline: none; border-color: var(--accent); }
+  .modal-btns { display: flex; gap: 10px; justify-content: center; }
+  .modal-btn {
+    padding: 8px 22px; border-radius: 6px; border: 1px solid var(--border);
+    background: transparent; color: var(--text); cursor: pointer; font-size: 13px;
+    transition: all .15s;
+  }
+  .modal-btn.confirm { background: var(--accent); color: #0e1117; border-color: var(--accent); font-weight: 700; }
+  .modal-btn:hover:not(.confirm) { border-color: var(--accent); color: var(--accent); }
+  .modal-error { color: var(--red); font-size: 12px; margin-top: 6px; min-height: 18px; }
+
+  @media (max-width: 700px) {
+    .header, .status-bar, .job-info, .main { padding-left: 14px; padding-right: 14px; }
+    .header { flex-direction: column; align-items: flex-start; }
+  }
+  @media print {
+    body > *:not(#invoice-view) { display: none !important; }
+    #invoice-view { display: block !important; background: #fff; padding: 0; }
+    .print-btn { display: none; }
+    @page { margin: 0.6in; size: portrait; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">
+    <div class="logo-mark">
+      <span class="tj-letter">T</span>
+      <div class="tj-rule"></div>
+      <span class="tj-letter">J</span>
+    </div>
+    <div class="logo-text">
+      <h1>TJ's Log & Timber</h1>
+      <div class="tagline">Built from the land.</div>
+      <div class="subtitle">Quote Builder</div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn" onclick="switchTab('dashboard')" data-tab="dashboard">📁 All Quotes</button>
+    <button class="tab-btn active" onclick="switchTab('quote')" data-tab="quote">📋 Quote</button>
+    <button class="tab-btn" onclick="switchTab('invoice')" data-tab="invoice">🧾 Invoice</button>
+    <button class="tab-btn" onclick="switchTab('invoice'); setTimeout(()=>window.print(),300)" data-tab="printquote">🖨️ Print Invoice</button>
+    <button class="tab-btn" onclick="switchTab('pnl')" data-tab="pnl">📊 P&amp;L</button>
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <div style="display:flex; gap:8px; align-items:center;">
+    <button class="status-btn" style="border-color:var(--accent);color:var(--accent);font-size:0.8rem;" onclick="newQuote()">+ New Quote</button>
+    <button class="status-btn" id="btn-save" style="font-size:0.8rem;" onclick="saveQuoteManual()">💾 Save</button>
+    <button class="status-btn" style="font-size:0.8rem;" onclick="switchTab('dashboard')">📁 All Quotes</button>
+  </div>
+  <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
+    <span class="status-label">Status:</span>
+    <span class="status-pill pill-proposed" id="status-pill">PROPOSED</span>
+    <div class="status-btns">
+      <button class="status-btn btn-active" id="btn-proposed" onclick="setStatus('proposed')">Proposed</button>
+      <button class="status-btn btn-approved" id="btn-approved" onclick="setStatus('approved')">Approved</button>
+      <button class="status-btn btn-contract" id="btn-contract" onclick="requestContract()">Contract &#x1F512;</button>
+    </div>
+  </div>
+</div>
+
+<!-- JOB INFO -->
+<div class="job-info">
+  <div class="job-field">
+    <label>Job Code</label>
+    <div class="job-code-badge" id="job-code-display">—</div>
+  </div>
+  <div class="job-field">
+    <label>Customer / Builder</label>
+    <input type="text" id="customer-name" placeholder="e.g. John Doe" oninput="recalc(); saveLocal()" />
+  </div>
+  <div class="job-field">
+    <label>Project Name</label>
+    <input type="text" id="project-name" placeholder="e.g. River Cabin" oninput="saveLocal()" />
+  </div>
+  <div class="job-field">
+    <label>Quote Date</label>
+    <input type="date" id="quote-date" oninput="saveLocal()" />
+  </div>
+  <div class="job-field">
+    <label>Install Address</label>
+    <input type="text" id="install-address" placeholder="123 Forest Rd, Nowhere" style="min-width:220px" oninput="saveLocal()" />
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+
+  <!-- ── DASHBOARD VIEW ── -->
+  <div id="dashboard-view" style="display: none;">
+    <div class="section">
+      <div class="section-header" style="justify-content: flex-end; gap:10px;">
+        <button class="add-line-btn" style="margin-top:0; border-style: solid;" onclick="newQuote()">+ New Quote</button>
+      </div>
+
+      <div class="totals-block" style="max-width: none; margin-left: 0; margin-bottom: 20px; padding: 15px 20px; display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 15px;">
+        <div>
+          <span class="status-label">Quoted:</span>
+          <span class="totals-value big" id="dashboard-total-proposed">$0.00</span>
+        </div>
+        <div>
+          <span class="status-label">Approved:</span>
+          <span class="totals-value big pnl-positive" id="dashboard-total-approved">$0.00</span>
+        </div>
+        <div>
+          <span class="status-label">Contracted:</span>
+          <span class="totals-value big" style="color: var(--accent);" id="dashboard-total-contracted">$0.00</span>
+        </div>
+        <div>
+          <span class="status-label">Total Active:</span>
+          <span class="totals-value big" id="dashboard-total-active">$0.00</span>
+        </div>
+      </div>
+
+      <table class="quote-table">
+        <thead>
+          <tr>
+            <th style="width:12%">Job Code</th>
+            <th style="width:20%">Customer</th>
+            <th style="width:25%">Project</th>
+            <th style="width:12%">Date</th>
+            <th style="width:10%">Status</th>
+            <th style="width:10%; text-align:right">Total</th>
+            <th style="width:11%">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="quotes-table-body">
+          <tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 20px;">No quotes yet. Click "+ New Quote" to start.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── QUOTE TAB ── -->
+  <div id="quote-view">
+
+    <!-- CABIN SPECS SECTION -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">🪵 Cabin Kit Specs</span>
+      </div>
+      <div class="form-card">
+        <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between;">
+          <div class="form-group">
+            <label for="sq-footage">Total Sq Footage</label>
+            <input type="number" id="sq-footage" value="0" min="0" step="1" oninput="recalc(); saveLocal();" />
+          </div>
+          <div class="form-group">
+            <label for="log-diameter">Log Diameter</label>
+            <select id="log-diameter" onchange="recalc(); saveLocal();">
+              <option value="8">8"</option>
+              <option value="10">10"</option>
+              <option value="12" selected>12"</option>
+              <option value="14">14"</option>
+              <option value="16">16"</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="log-species">Log Species</label>
+            <select id="log-species" onchange="recalc(); saveLocal();">
+              <option value="Pine" selected>Pine</option>
+              <option value="Fir">Fir</option>
+              <option value="Cedar">Cedar</option>
+              <option value="Spruce">Spruce</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="kit-type">Kit Type</label>
+            <select id="kit-type" onchange="updateBaseRate(); recalc(); saveLocal();">
+              <option value="Shell Only" data-base-rate="75" selected>Shell Only</option>
+              <option value="Dry-In Kit" data-base-rate="95">Dry-In Kit</option>
+              <option value="Full Package" data-base-rate="115">Full Package</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="base-rate">Base Rate ($/sqft)</label>
+            <input type="number" id="base-rate" value="75" min="0" step="0.01" oninput="recalc(); saveLocal();" />
+          </div>
+          <div class="form-group">
+            <label>Kit Subtotal</label>
+            <span class="totals-value big" id="kit-subtotal">$0.00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CORNER CONFIGURATION SECTION -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">🏠 Corner Configuration</span>
+        <button class="add-line-btn" style="margin-top:0" onclick="addCornerRow()">+ Add Corner Type</button>
+      </div>
+      <table class="quote-table">
+        <thead>
+          <tr>
+            <th style="width:30%">Corner Style</th>
+            <th style="width:15%"># of Corners</th>
+            <th style="width:15%">Courses</th>
+            <th style="width:20%">Rate ($/course/corner)</th>
+            <th style="width:15%; text-align:right">Corner Total</th>
+            <th style="width:5%"></th>
+          </tr>
+        </thead>
+        <tbody id="corner-tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- ADD-ON LINE ITEMS SECTION -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">➕ Add-On Line Items</span>
+        <button class="add-line-btn" style="margin-top:0" onclick="addAddonRow()">+ Add Add-On</button>
+      </div>
+      <table class="quote-table">
+        <thead>
+          <tr>
+            <th style="width:40%">Description</th>
+            <th style="width:15%">Unit</th>
+            <th style="width:10%">Qty</th>
+            <th style="width:15%">Unit Price ($)</th>
+            <th style="width:15%; text-align:right">Line Total</th>
+            <th style="width:5%"></th>
+          </tr>
+        </thead>
+        <tbody id="addon-tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- LABOR SECTION -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">👷 Labor</span>
+        <button class="add-line-btn" style="margin-top:0" onclick="addLaborRow()">+ Add Worker</button>
+      </div>
+      <table class="labor-table">
+        <thead>
+          <tr>
+            <th style="width:28%">Name / Role</th>
+            <th style="width:14%">Hourly Rate</th>
+            <th style="width:14%">Hours</th>
+            <th style="width:14%; text-align:right">Labor Total</th>
+            <th style="width:4%"></th>
+          </tr>
+        </thead>
+        <tbody id="labor-tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- TOTALS -->
+    <div class="section">
+      <div class="totals-block">
+        <div class="totals-row">
+          <span class="totals-label">Cabin Kit Subtotal</span>
+          <span class="totals-value" id="t-kit-subtotal">$0.00</span>
+        </div>
+        <div class="totals-row">
+          <span class="totals-label">Corner Total</span>
+          <span class="totals-value" id="t-corners">$0.00</span>
+        </div>
+        <div class="totals-row">
+          <span class="totals-label">Add-Ons Subtotal</span>
+          <span class="totals-value" id="t-addons">$0.00</span>
+        </div>
+        <div class="totals-row">
+          <span class="totals-label">Labor Subtotal</span>
+          <span class="totals-value" id="t-labor">$0.00</span>
+        </div>
+        <div class="totals-row" id="bulk-discount-row">
+          <span class="totals-label" style="display:flex;align-items:center;gap:8px;">
+            Bulk Discount
+            <input type="number" class="tax-input" id="bulk-discount-pct" value="0" step="0.5" min="0" max="100" oninput="recalc(); saveLocal()" />%
+          </span>
+          <span class="totals-value" style="color:#e05c5c;" id="t-bulk-discount">−$0.00</span>
+        </div>
+        <div class="totals-row">
+          <span class="totals-label" style="display:flex;align-items:center;gap:8px">
+            G&amp;A Fee
+            <select class="gna-select" id="gna-pct" onchange="recalc(); saveLocal()">
+            </select>
+          </span>
+          <span class="totals-value" id="t-gna">$0.00</span>
+        </div>
+        <div class="totals-row">
+          <span class="totals-label" style="display:flex;align-items:center;gap:8px">
+            Tax
+            <input type="number" class="tax-input" id="tax-pct" value="8.7" step="0.1" min="0" oninput="recalc(); saveLocal();" />%
+          </span>
+          <span class="totals-value" id="t-tax">$0.00</span>
+        </div>
+        <div class="totals-row grand">
+          <span class="totals-label">GRAND TOTAL</span>
+          <span class="totals-value big" id="t-grand">$0.00</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /quote-view -->
+
+
+  <!-- ── INVOICE VIEW ── -->
+  <div id="invoice-view">
+    <button class="print-btn" onclick="window.print()">🖨️ Print / Save PDF</button>
+    <div class="inv-header">
+      <div class="inv-brand">
+        <div class="inv-brand-mark">
+          <span class="tj-l">T</span>
+          <div class="tj-r"></div>
+          <span class="tj-l">J</span>
+        </div>
+        <div class="inv-brand-info">
+          <h2>TJ's Log & Timber</h2>
+          <div class="inv-tagline">Built from the land.</div>
+          <p>Handcrafted log and timber homes.</p>
+        </div>
+      </div>
+      <div class="inv-meta">
+        <strong>INVOICE</strong>
+        Job: <span id="inv-job-code">—</span><br />
+        Date: <span id="inv-date">—</span>
+      </div>
+    </div>
+    <div class="inv-to">
+      <strong id="inv-customer">—</strong>
+      <span id="inv-address"></span>
+      <span id="inv-project" style="display:block;font-size:13px;color:#555;margin-top:4px;font-style:italic;"></span>
+    </div>
+
+    <!-- Cabin Kit Section -->
+    <div style="font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#aaa;margin-bottom:8px;">Cabin Kit</div>
+    <table class="inv-table" style="margin-bottom: 20px;">
+      <thead><tr><th>Description</th><th>SqFt</th><th>Base Rate</th><th>Total</th></tr></thead>
+      <tbody id="inv-kit-rows">
+        <tr><td><span id="inv-kit-desc"></span></td><td><span id="inv-kit-sqft"></span></td><td><span id="inv-kit-baserate"></span></td><td style="text-align:right;"><span id="inv-kit-total"></span></td></tr>
+      </tbody>
+    </table>
+
+    <!-- Corner Work Section -->
+    <div style="font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#aaa;margin-bottom:8px;">Corner Work</div>
+    <table class="inv-table" style="margin-bottom: 20px;">
+      <thead><tr><th>Corner Style</th><th>Corners</th><th>Courses</th><th>Rate</th><th>Total</th></tr></thead>
+      <tbody id="inv-corner-rows"></tbody>
+    </table>
+
+    <!-- Add-Ons Section -->
+    <div style="font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#aaa;margin-bottom:8px;">Add-Ons</div>
+    <table class="inv-table" style="margin-bottom: 20px;">
+      <thead><tr><th>Description</th><th>Unit</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
+      <tbody id="inv-addon-rows"></tbody>
+    </table>
+
+    <!-- Labor Section -->
+    <div style="font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#aaa;margin-bottom:8px;">Labor</div>
+    <table class="inv-table" style="margin-bottom: 24px;">
+      <thead><tr><th>Name / Role</th><th>Rate</th><th>Hours</th><th>Total</th></tr></thead>
+      <tbody id="inv-labor-rows"></tbody>
+    </table>
+
+    <div class="inv-totals">
+      <div class="inv-totals-row"><span>Cabin Kit</span><span id="inv-t-kit-subtotal">—</span></div>
+      <div class="inv-totals-row"><span>Corner Work</span><span id="inv-t-corners">—</span></div>
+      <div class="inv-totals-row"><span>Add-Ons</span><span id="inv-t-addons">—</span></div>
+      <div class="inv-totals-row"><span>Labor</span><span id="inv-t-labor">—</span></div>
+      <div class="inv-totals-row" id="inv-bulk-row"><span style="color:#e05c5c" id="inv-bulk-label">Bulk Discount</span><span style="color:#e05c5c" id="inv-t-bulk-discount">—</span></div>
+      <div class="inv-totals-row"><span id="inv-gna-label">G&amp;A Fee</span><span id="inv-t-gna">—</span></div>
+      <div class="inv-totals-row"><span id="inv-tax-label">Tax</span><span id="inv-t-tax">—</span></div>
+      <div class="inv-totals-row grand"><span>TOTAL DUE</span><span id="inv-t-grand">—</span></div>
+    </div>
+    <div class="inv-footer">TJ's Log & Timber &mdash; <em>Built from the land.</em> &nbsp;·&nbsp; Thank you for your business.</div>
+  </div>
+
+  <!-- ── P&L VIEW ── -->
+  <div id="pnl-view">
+    <div class="pnl-card">
+      <div class="pnl-title">📊 Project P&amp;L — <span id="pnl-job-label">—</span></div>
+
+      <div class="pnl-section-label">Revenue</div>
+      <div class="pnl-row">
+        <label>Contract Price</label>
+        <span class="pnl-val" id="pnl-revenue">$0.00</span>
+      </div>
+
+      <div class="pnl-section-label">Cost of Goods Sold</div>
+      <div class="pnl-row">
+        <label>Cabin Kit Cost</label>
+        <span class="pnl-val" id="pnl-kit-cost">$0.00</span>
+      </div>
+      <div class="pnl-row">
+        <label>Corner Work Cost</label>
+        <span class="pnl-val" id="pnl-corner-cost">$0.00</span>
+      </div>
+      <div class="pnl-row">
+        <label>Add-On Cost</label>
+        <span class="pnl-val" id="pnl-addon-cost">$0.00</span>
+      </div>
+      <div class="pnl-row">
+        <label>Manufacturing/Delivery Costs</label>
+        <input type="number" class="pnl-input" id="pnl-mfg-delivery" value="0" placeholder="0" oninput="recalcPnl()" />
+      </div>
+      <div class="pnl-row">
+        <label><strong>Gross Profit</strong></label>
+        <span class="pnl-val pnl-subtotal" id="pnl-gross">$0.00</span>
+      </div>
+      <div class="pnl-divider"></div>
+
+      <div class="pnl-section-label">Labor</div>
+      <div class="pnl-row">
+        <label>Site Labor</label>
+        <span class="pnl-val" id="pnl-labor">$0.00</span>
+      </div>
+
+      <div class="pnl-section-label">Overhead</div>
+      <div class="pnl-row"><label>Office / Admin</label><input type="number" class="pnl-input" id="pnl-office-admin" value="0" placeholder="0" oninput="recalcPnl()" /></div>
+      <div class="pnl-row"><label>Vehicle / Eqpt. Expense</label><input type="number" class="pnl-input" id="pnl-vehicle-eqpt" value="0" placeholder="0" oninput="recalcPnl()" /></div>
+      <div class="pnl-row"><label>Insurance</label><input type="number" class="pnl-input" id="pnl-insurance" value="0" placeholder="0" oninput="recalcPnl()" /></div>
+      <div class="pnl-row"><label>Marketing</label><input type="number" class="pnl-input" id="pnl-marketing" value="0" placeholder="0" oninput="recalcPnl()" /></div>
+      <div class="pnl-row"><label>Other Overhead</label><input type="number" class="pnl-input" id="pnl-other" value="0" placeholder="0" oninput="recalcPnl()" /></div>
+      <div class="pnl-divider"></div>
+
+      <div class="pnl-row">
+        <label><strong>Total Expenses</strong></label>
+        <span class="pnl-val pnl-subtotal" id="pnl-expenses">$0.00</span>
+      </div>
+      <div class="pnl-row" style="margin-top:8px">
+        <label style="font-size:15px;font-weight:700">Net Profit / Loss</label>
+        <span class="pnl-val" style="font-size:17px;font-weight:800" id="pnl-net">$0.00</span>
+      </div>
+      <div class="pnl-row">
+        <label>Net Margin</label>
+        <span class="pnl-val" id="pnl-margin">0%</span>
+      </div>
+
+      <p class="pnl-note">P&L pulls live from the Quote tab. Enter overhead costs to calculate net profit.</p>
+    </div>
+  </div><!-- /pnl-view -->
+
+</div><!-- /main -->
+
+<!-- CONTRACT PASSWORD MODAL -->
+<div class="modal-overlay" id="contract-modal">
+  <div class="modal">
+    <h3>🔐 Contract Lock</h3>
+    <p>Enter the contract password to lock this quote and generate the invoice.</p>
+    <input type="password" id="contract-pw" placeholder="••••" maxlength="10" onkeydown="if(event.key==='Enter') confirmContract()" />
+    <div class="modal-error" id="pw-error"></div>
+    <div class="modal-btns">
+      <button class="modal-btn" onclick="closeModal()">Cancel</button>
+      <button class="modal-btn confirm" onclick="confirmContract()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CONTRACT_PW = '5476';
+let activeQuoteId = null;
+let quotesIndex = []; // {id, jobCode, customer, project, date, status, total, createdAt}
+let quoteData = {};   // {id: {sqft, logDiameter, ... corners: [], addons: [], labor: []}}
+
+const CORNER_RATES = {
+  'Saddle Notch': 40,
+  'Swedish Cope': 48,
+  'Dovetail': 54,
+  'Butt-n-Pass': 36
+};
+
+// ── DASHBOARD RENDERING ────────────────────────────────────────────
+function renderDashboard() {
+  const tbody = document.getElementById('quotes-table-body');
+  tbody.innerHTML = ''; // Clear existing rows
+
+  let totalProposed = 0;
+  let totalApproved = 0;
+  let totalContracted = 0;
+  let totalActive = 0;
+
+  if (quotesIndex.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 20px;">No quotes yet. Click "+ New Quote" to start.</td></tr>';
+    document.getElementById('dashboard-total-proposed').textContent = fmt(0);
+    document.getElementById('dashboard-total-approved').textContent = fmt(0);
+    document.getElementById('dashboard-total-contracted').textContent = fmt(0);
+    document.getElementById('dashboard-total-active').textContent = fmt(0);
+    return;
+  }
+
+  const sortedQuotes = [...quotesIndex].sort((a,b) => b.createdAt - a.createdAt);
+
+  sortedQuotes.forEach(quote => {
+    let quoteTotal = quote.total;
+    // ensure total is up-to-date and calculated
+    if (quoteTotal === 0 && quoteData[quote.id]) {
+      const tempActiveId = activeQuoteId;
+      activeQuoteId = quote.id;
+      loadQuote(quote.id, false); // load without recalculating PnL, just to get values.
+      recalc(); // recalc manually to update total
+      quoteTotal = parseAmount('t-grand');
+      quote.total = quoteTotal;
+      activeQuoteId = tempActiveId;
+      if (activeQuoteId) loadQuote(activeQuoteId, false);
+      saveQuotesIndex(); // save updated index with new total
+      saveQuoteData(quote.id); // save updated quote data with new total
+    }
+
+    // Tally totals for the dashboard display
+    totalActive += quoteTotal;
+    if (quote.status === 'proposed') {
+      totalProposed += quoteTotal;
+    } else if (quote.status === 'approved') {
+      totalApproved += quoteTotal;
+    } else if (quote.status === 'contract') {
+      totalContracted += quoteTotal;
+    }
+
+    const statusClass = `pill-${quote.status}`;
+    tbody.innerHTML += `
+      <tr>
+        <td><span style="font-family: monospace; color: var(--accent); font-weight: 700;">${quote.jobCode}</span></td>
+        <td>${quote.customer || '—'}</td>
+        <td>${quote.project || '—'}</td>
+        <td>${quote.date || '—'}</td>
+        <td><span class="status-pill ${statusClass}">${quote.status.toUpperCase()}</span></td>
+        <td style="text-align:right">${fmt(quoteTotal)}</td>
+        <td>
+          <button class="modal-btn" onclick="loadQuoteAndSwitchTab('${quote.id}')" style="padding: 4px 8px; font-size: 11px;">Load</button>
+          <button class="modal-btn" onclick="duplicateQuote('${quote.id}')" style="padding: 4px 8px; font-size: 11px;">Duplicate</button>
+          <button class="del-btn" onclick="deleteQuote('${quote.id}')">✕</button>
+        </td>
+      </tr>
+    `;
+  });
+
+  document.getElementById('dashboard-total-proposed').textContent = fmt(totalProposed);
+  document.getElementById('dashboard-total-approved').textContent = fmt(totalApproved);
+  document.getElementById('dashboard-total-contracted').textContent = fmt(totalContracted);
+  document.getElementById('dashboard-total-active').textContent = fmt(totalActive);
+}
+
+function loadQuoteAndSwitchTab(id) {
+  loadQuote(id);
+  switchTab('quote');
+}
+
+// ── INIT ───────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // Populate G&A dropdown 0–30% every 1%
+  const gnaEl = document.getElementById('gna-pct');
+  if (gnaEl && gnaEl.options.length === 0) {
+    for (let i = 0; i <= 30; i++) {
+      const opt = document.createElement('option');
+      opt.value = i; opt.textContent = i + '%';
+      if (i === 10) opt.selected = true;
+      gnaEl.appendChild(opt);
+    }
+  }
+  migrateOldQuote(); // Attempt migration first
+  loadQuotesIndex();
+  
+  if (activeQuoteId) {
+    loadQuote(activeQuoteId); // Load the previously active quote
+    switchTab('quote'); // Ensure quote tab is active after loading
+  } else if (quotesIndex.length > 0) {
+    loadQuote(quotesIndex[0].id); // Load the first quote if no active one
+    switchTab('quote');
+  } else {
+    newQuote(false); // Create a new blank quote if none exist
+    switchTab('quote');
+  }
+  
+  recalc();
+  renderDashboard();
+});
+
+function today() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function generateQuoteId() {
+  return Date.now().toString(36) + Math.random().toString(36).substring(2);
+}
+
+function generateJobCode() {
+  const d = new Date();
+  const yr = String(d.getFullYear()).slice(2);
+  const mo = String(d.getMonth()+1).padStart(2,'0');
+  const seq = String(Math.floor(Math.random()*900)+100);
+  return `TJ-${yr}${mo}-${seq}`;
+}
+
+function saveQuoteManual() {
+  saveLocal();
+  const btn = document.getElementById('btn-save');
+  if (!btn) return;
+  btn.textContent = '✓ Saved';
+  btn.style.color = 'var(--green)';
+  btn.style.borderColor = 'var(--green)';
+  setTimeout(() => {
+    btn.textContent = '💾 Save';
+    btn.style.color = '';
+    btn.style.borderColor = '';
+  }, 2000);
+}
+
+function newQuote(activate = true) {
+  const newId = generateQuoteId();
+  const newJobCode = generateJobCode();
+  const newQuoteDate = today();
+
+  const blankQuoteData = {
+    id: newId,
+    status: 'proposed',
+    jobCode: newJobCode,
+    customer: '',
+    project: '',
+    date: newQuoteDate,
+    address: '',
+    sqft: 0,
+    logDiameter: '12',
+    logSpecies: 'Pine',
+    kitType: 'Shell Only',
+    baseRate: 75,
+    corners: [],
+    addons: [],
+    labor: [],
+    gnaPct: '10',
+    taxPct: '8.7',
+    bulkDiscPct: '0',
+  };
+
+  quoteData[newId] = blankQuoteData;
+  quotesIndex.unshift({
+    id: newId,
+    jobCode: newJobCode,
+    customer: '',
+    project: '',
+    date: newQuoteDate,
+    status: 'proposed',
+    total: 0,
+    createdAt: Date.now()
+  });
+
+  saveQuotesIndex();
+  saveQuoteData(newId);
+  if (activate) {
+    activeQuoteId = newId;
+    saveActiveQuoteId();
+    loadQuote(newId);
+    switchTab('quote');
+  }
+  renderDashboard();
+}
+
+function loadQuote(id, updatePnl = true) {
+  activeQuoteId = id;
+  saveActiveQuoteId();
+
+  const q = quoteData[id];
+  if (!q) {
+    console.error(`Quote with ID ${id} not found.`);
+    return;
+  }
+
+  // Clear current form tables
+  document.getElementById('corner-tbody').innerHTML = '';
+  document.getElementById('addon-tbody').innerHTML = '';
+  document.getElementById('labor-tbody').innerHTML = '';
+
+  // Populate form with loaded data
+  document.getElementById('job-code-display').textContent     = q.jobCode;
+  document.getElementById('customer-name').value              = q.customer || '';
+  document.getElementById('project-name').value               = q.project  || '';
+  document.getElementById('quote-date').value                 = q.date     || today();
+  document.getElementById('install-address').value            = q.address  || '';
+  
+  document.getElementById('sq-footage').value                 = q.sqft || 0;
+  document.getElementById('log-diameter').value               = q.logDiameter || '12';
+  document.getElementById('log-species').value                = q.logSpecies || 'Pine';
+  document.getElementById('kit-type').value                   = q.kitType || 'Shell Only';
+  document.getElementById('base-rate').value                  = q.baseRate || '75';
+
+  document.getElementById('gna-pct').value                    = q.gnaPct  || '10';
+  document.getElementById('tax-pct').value                    = q.taxPct  || '8.7';
+  document.getElementById('bulk-discount-pct').value          = (q.bulkDiscPct !== undefined && q.bulkDiscPct !== null) ? q.bulkDiscPct : '0';
+
+  (q.corners || []).forEach(c => addCornerRow(c.style, c.count, c.courses, c.rate));
+  (q.addons || []).forEach(a => addAddonRow(a.desc, a.unit, a.qty, a.price));
+  (q.labor || []).forEach(l => addLaborRow(l.name, l.rate, l.hours));
+  
+  if (q.corners.length === 0) {
+    addCornerRow();
+  }
+  if (q.addons.length === 0) {
+    addAddonRow();
+  }
+  if (q.labor.length === 0) {
+    addLaborRow('Log Crew', 40, '');
+  }
+
+  setStatus(q.status);
+  recalc();
+  if (updatePnl) {
+    recalcPnl();
+  }
+}
+
+function duplicateQuote(id) {
+  const originalQuote = quoteData[id];
+  if (!originalQuote) return;
+
+  const newId = generateQuoteId();
+  const newJobCode = generateJobCode();
+  const createdAt = Date.now();
+
+  const duplicatedQuote = JSON.parse(JSON.stringify(originalQuote)); // Deep copy
+  duplicatedQuote.id = newId;
+  duplicatedQuote.jobCode = newJobCode;
+  duplicatedQuote.status = 'proposed'; // Duplicates always start as proposed
+
+  quoteData[newId] = duplicatedQuote;
+  quotesIndex.unshift({
+    id: newId,
+    jobCode: newJobCode,
+    customer: duplicatedQuote.customer,
+    project: duplicatedQuote.project,
+    date: duplicatedQuote.date,
+    status: 'proposed',
+    total: 0, // Will be recalculated on load
+    createdAt: createdAt
+  });
+
+  saveQuotesIndex();
+  saveQuoteData(newId);
+  renderDashboard();
+  switchTab('dashboard'); // Stay on dashboard after duplicating
+}
+
+function deleteQuote(id) {
+  if (!confirm('Are you sure you want to delete this quote? This action cannot be undone.')) {
+    return;
+  }
+
+  delete quoteData[id];
+  quotesIndex = quotesIndex.filter(q => q.id !== id);
+
+  localStorage.removeItem(`tj-quote-${id}`); // Remove from localStorage
+  saveQuotesIndex();
+
+  if (activeQuoteId === id) {
+    // If the deleted quote was active, load another or create a new one
+    activeQuoteId = null;
+    saveActiveQuoteId();
+    if (quotesIndex.length > 0) {
+      loadQuote(quotesIndex[0].id);
+      switchTab('quote');
+    } else {
+      newQuote();
+    }
+  }
+  renderDashboard();
+}
+
+function updateQuoteIndexEntry(quoteId, newStatus, newTotal, customer, project, date) {
+  const indexEntry = quotesIndex.find(q => q.id === quoteId);
+  if (indexEntry) {
+    indexEntry.status = newStatus;
+    indexEntry.total = newTotal;
+    indexEntry.customer = customer;
+    indexEntry.project = project;
+    indexEntry.date = date;
+    saveQuotesIndex();
+    renderDashboard(); // Re-render dashboard to show updated entry
+  }
+}
+
+// ── LOCAL STORAGE ──────────────────────────────────────────────────
+function collectData() {
+  const corners = [];
+  document.querySelectorAll('#corner-tbody tr').forEach(tr => {
+    corners.push({
+      style:   tr.querySelector('select')?.value || 'Saddle Notch',
+      count:   parseInt(tr.querySelectorAll('input[type=number]')[0]?.value) || 0,
+      courses: parseFloat(tr.querySelectorAll('input[type=number]')[1]?.value) || 0,
+      rate:    parseFloat(tr.querySelectorAll('input[type=number]')[2]?.value) || 0,
+    });
+  });
+
+  const addons = [];
+  document.querySelectorAll('#addon-tbody tr').forEach(tr => {
+    addons.push({
+      desc:  tr.querySelector('input[type=text]')?.value || '',
+      unit:  tr.querySelector('select')?.value || 'Each',
+      qty:   parseInt(tr.querySelectorAll('input[type=number]')[0]?.value) || 0,
+      price: parseFloat(tr.querySelectorAll('input[type=number]')[1]?.value) || 0,
+    });
+  });
+
+  const labor = [];
+  document.querySelectorAll('#labor-tbody tr').forEach(tr => {
+    labor.push({
+      name:  tr.querySelector('input[type=text]')?.value || '',
+      rate:  parseFloat(tr.querySelectorAll('input[type=number]')[0]?.value) || 0,
+      hours: parseFloat(tr.querySelectorAll('input[type=number]')[1]?.value) || 0,
+    });
+  });
+
+  return {
+    id: activeQuoteId,
+    status:   quoteData[activeQuoteId]?.status || 'proposed',
+    jobCode:  document.getElementById('job-code-display')?.textContent || '',
+    customer: document.getElementById('customer-name')?.value || '',
+    project:  document.getElementById('project-name')?.value  || '',
+    date:     document.getElementById('quote-date')?.value    || '',
+    address:  document.getElementById('install-address')?.value || '',
+    
+    sqft:       parseFloat(document.getElementById('sq-footage')?.value) || 0,
+    logDiameter: document.getElementById('log-diameter')?.value || '12',
+    logSpecies:  document.getElementById('log-species')?.value || 'Pine',
+    kitType:    document.getElementById('kit-type')?.value || 'Shell Only',
+    baseRate:   parseFloat(document.getElementById('base-rate')?.value) || 0,
+
+    corners,
+    addons,
+    labor,
+
+    gnaPct:   document.getElementById('gna-pct')?.value  || '10',
+    taxPct:   document.getElementById('tax-pct')?.value  || '8.7',
+    bulkDiscPct: document.getElementById('bulk-discount-pct')?.value || '0',
+  };
+}
+
+function saveLocal() {
+  if (!activeQuoteId) return;
+  const currentQuote = collectData();
+  quoteData[activeQuoteId] = currentQuote;
+  saveQuoteData(activeQuoteId);
+
+  // Update index entry
+  const totalRaw = parseAmount('t-grand');
+  const customer = document.getElementById('customer-name')?.value || '';
+  const project = document.getElementById('project-name')?.value || '';
+  const date = document.getElementById('quote-date')?.value || today();
+  updateQuoteIndexEntry(activeQuoteId, currentQuote.status, totalRaw, customer, project, date);
+}
+
+// New functions for multi-quote management
+function saveActiveQuoteId() {
+  try {
+    localStorage.setItem('tj-active-quote', activeQuoteId);
+  } catch (e) { console.error('Error saving active quote ID', e); }
+}
+
+function loadActiveQuoteId() {
+  try {
+    return localStorage.getItem('tj-active-quote');
+  } catch (e) { console.error('Error loading active quote ID', e); return null; }
+}
+
+function saveQuotesIndex() {
+  try {
+    localStorage.setItem('tj-quotes-index', JSON.stringify(quotesIndex));
+  } catch (e) { console.error('Error saving quotes index', e); }
+}
+
+function loadQuotesIndex() {
+  try {
+    const rawIndex = localStorage.getItem('tj-quotes-index');
+    if (rawIndex) {
+      quotesIndex = JSON.parse(rawIndex);
+    } else {
+      quotesIndex = [];
+    }
+    const storedActiveId = loadActiveQuoteId();
+    if (storedActiveId && quotesIndex.some(q => q.id === storedActiveId)) {
+      activeQuoteId = storedActiveId;
+    } else if (quotesIndex.length > 0) {
+      activeQuoteId = quotesIndex[0].id; // Fallback to first quote
+      saveActiveQuoteId();
+    } else {
+      activeQuoteId = null;
+    }
+
+    // Load all full quote data into memory from individual localStorage keys
+    quotesIndex.forEach(q => {
+      const rawQuote = localStorage.getItem(`tj-quote-${q.id}`);
+      if (rawQuote) {
+        quoteData[q.id] = JSON.parse(rawQuote);
+      } else {
+        // If index entry exists but full data doesn't, create a placeholder
+        quoteData[q.id] = { 
+          id: q.id, jobCode: q.jobCode, customer: q.customer, project: q.project, date: q.date, status: q.status, 
+          sqft: 0, logDiameter: '12', logSpecies: 'Pine', kitType: 'Shell Only', baseRate: 75,
+          corners: [], addons: [], labor: [], gnaPct: '10', taxPct: '8.7'
+        };
+      }
+    });
+
+  } catch (e) {
+    console.error('Error loading quotes index', e);
+    quotesIndex = [];
+    activeQuoteId = null;
+  }
+}
+
+function saveQuoteData(id) {
+  try {
+    const dataToSave = quoteData[id];
+    localStorage.setItem(`tj-quote-${id}`, JSON.stringify(dataToSave));
+  } catch (e) { console.error(`Error saving quote data for ${id}`, e); }
+}
+
+function migrateOldQuote() {
+  try {
+    const oldRawQuote = localStorage.getItem('tj-quote');
+    const indexExists = localStorage.getItem('tj-quotes-index');
+
+    if (oldRawQuote && !indexExists) {
+      console.log('Migrating old tj-quote data...');
+      const oldQuote = JSON.parse(oldRawQuote);
+      const newId = generateQuoteId();
+      
+      if (!oldQuote.jobCode) {
+          oldQuote.jobCode = generateJobCode();
+      }
+
+      oldQuote.id = newId;
+      oldQuote.status = oldQuote.status || 'proposed';
+      oldQuote.createdAt = Date.now();
+      
+      activeQuoteId = newId;
+      quotesIndex = [{
+        id: newId,
+        jobCode: oldQuote.jobCode,
+        customer: oldQuote.customer || '',
+        project: oldQuote.project || '',
+        date: oldQuote.date || today(),
+        status: oldQuote.status,
+        total: 0, // Will be updated on first recalc/save
+        createdAt: oldQuote.createdAt
+      }];
+      quoteData[newId] = oldQuote;
+
+      saveActiveQuoteId();
+      saveQuotesIndex();
+      saveQuoteData(newId);
+      
+      localStorage.removeItem('tj-quote'); // Remove old single quote key
+      console.log('Migration complete.');
+    } else if (!oldRawQuote && !indexExists) {
+        newQuote(false); // If neither exists, create a fresh one and set it as active
+        activeQuoteId = quotesIndex[0].id;
+        saveActiveQuoteId();
+    }
+  } catch (e) {
+    console.error('Error during migration', e);
+  }
+}
+
+
+// ── CABIN SPECS ────────────────────────────────────────────────────
+function updateBaseRate() {
+  const kitTypeSelect = document.getElementById('kit-type');
+  const baseRateInput = document.getElementById('base-rate');
+  const selectedOption = kitTypeSelect.options[kitTypeSelect.selectedIndex];
+  
+  // Only auto-change if base rate hasn't been manually overridden to something else
+  // For simplicity, we'll just set it. A more robust solution might track user override.
+  const defaultRate = parseFloat(selectedOption.dataset.baseRate);
+  if (baseRateInput.value == "" || parseFloat(baseRateInput.value) === parseFloat(baseRateInput.dataset.initialValue) || defaultRate !== parseFloat(baseRateInput.value)) {
+    baseRateInput.value = defaultRate;
+    baseRateInput.dataset.initialValue = defaultRate; // Store initial value for reference
+  }
+  recalc();
+  saveLocal();
+}
+
+// ── CORNER ROWS ────────────────────────────────────────────────────
+function cornerRateOptions(sel) {
+  let html = '';
+  for (const style in CORNER_RATES) {
+    html += `<option value="${style}"${style===sel?' selected':''}>${style}</option>`;
+  }
+  return html;
+}
+
+function addCornerRow(style='Saddle Notch', count=4, courses=12, rate=null) {
+  if (rate === null) rate = CORNER_RATES[style];
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>
+      <select class="tbl-input" onchange="cornerRecalc(this); updateCornerRate(this);">
+        ${cornerRateOptions(style)}
+      </select>
+    </td>
+    <td><input class="tbl-input" type="number" value="${count}" min="0" step="1" oninput="cornerRecalc(this)" /></td>
+    <td><input class="tbl-input" type="number" value="${courses}" min="0" step="1" oninput="cornerRecalc(this)" /></td>
+    <td><input class="tbl-input" type="number" value="${rate}" min="0" step="0.01" oninput="cornerRecalc(this)" /></td>
+    <td style="text-align:right"><span class="line-total">$0.00</span></td>
+    <td><button class="del-btn" onclick="deleteRow(this,'corner-tbody')">✕</button></td>
+  `;
+  document.getElementById('corner-tbody').appendChild(tr);
+  cornerRecalc(tr.querySelector('input'));
+}
+
+function updateCornerRate(selectElement) {
+  const tr = selectElement.closest('tr');
+  const style = selectElement.value;
+  const rateInput = tr.querySelectorAll('input[type=number]')[2];
+  if (CORNER_RATES[style] !== undefined) {
+    rateInput.value = CORNER_RATES[style];
+  }
+  cornerRecalc(selectElement);
+}
+
+function cornerRecalc(el) {
+  const tr   = el.closest('tr');
+  const count   = parseFloat(tr.querySelectorAll('input[type=number]')[0]?.value) || 0;
+  const courses = parseFloat(tr.querySelectorAll('input[type=number]')[1]?.value) || 0;
+  const rate    = parseFloat(tr.querySelectorAll('input[type=number]')[2]?.value) || 0;
+  const total   = count * courses * rate;
+  tr.querySelector('.line-total').textContent = fmt(total);
+  recalc();
+  saveLocal();
+}
+
+// ── ADD-ON ROWS ────────────────────────────────────────────────────
+function addonUnitOptions(sel) {
+  const units = ['LF', 'Each', 'SqFt', 'Set'];
+  let html = '';
+  units.forEach(unit => {
+    html += `<option value="${unit}"${unit===sel?' selected':''}>${unit}</option>`;
+  });
+  return html;
+}
+
+function addAddonRow(desc='', unit='Each', qty=1, price='') {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input class="tbl-input" type="text" placeholder="e.g. 40LF Stair Railing" value="${desc}" oninput="addonRecalc(this)" /></td>
+    <td>
+      <select class="tbl-input" onchange="addonRecalc(this)">
+        ${addonUnitOptions(unit)}
+      </select>
+    </td>
+    <td><input class="tbl-input" type="number" value="${qty}" min="0" step="1" oninput="addonRecalc(this)" /></td>
+    <td><input class="tbl-input" type="number" placeholder="0.00" value="${price}" min="0" step="0.01" oninput="addonRecalc(this)" /></td>
+    <td style="text-align:right"><span class="line-total">$0.00</span></td>
+    <td><button class="del-btn" onclick="deleteRow(this,'addon-tbody')">✕</button></td>
+  `;
+  document.getElementById('addon-tbody').appendChild(tr);
+  addonRecalc(tr.querySelector('input'));
+}
+
+function addonRecalc(el) {
+  const tr    = el.closest('tr');
+  const qty   = parseFloat(tr.querySelectorAll('input[type=number]')[0]?.value) || 0;
+  const price = parseFloat(tr.querySelectorAll('input[type=number]')[1]?.value) || 0;
+  const total = qty * price;
+  tr.querySelector('.line-total').textContent = fmt(total);
+  recalc();
+  saveLocal();
+}
+
+// ── LABOR ROWS ─────────────────────────────────────────────────────
+function addLaborRow(name='Log Crew', rate=40, hours='') {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input class="tbl-input" type="text" placeholder="Name or Role" value="${name}" oninput="laborRecalc(this)" /></td>
+    <td><input class="tbl-input" type="number" placeholder="40.00" value="${rate||''}" step="0.5" min="0" oninput="laborRecalc(this)" /></td>
+    <td><input class="tbl-input" type="number" placeholder="0" value="${hours||''}" step="0.5" min="0" oninput="laborRecalc(this)" /></td>
+    <td><span class="line-total">$0.00</span></td>
+    <td><button class="del-btn" onclick="deleteRow(this,'labor-tbody')">✕</button></td>
+  `;
+  document.getElementById('labor-tbody').appendChild(tr);
+  laborRecalc(tr.querySelector('input'));
+}
+
+function laborRecalc(el) {
+  const tr   = el.closest('tr');
+  const rate = parseFloat(tr.querySelectorAll('input[type=number]')[0]?.value) || 0;
+  const hrs  = parseFloat(tr.querySelectorAll('input[type=number]')[1]?.value) || 0;
+  tr.querySelector('.line-total').textContent = fmt(rate * hrs);
+  recalc();
+  saveLocal();
+}
+
+function deleteRow(btn, tbodyId) {
+  btn.closest('tr').remove();
+  recalc(); saveLocal();
+}
+
+// ── RECALC ─────────────────────────────────────────────────────────
+function recalc() {
+  // Cabin Kit
+  const sqft = parseFloat(document.getElementById('sq-footage')?.value) || 0;
+  const baseRate = parseFloat(document.getElementById('base-rate')?.value) || 0;
+  const kitSubtotal = sqft * baseRate;
+  document.getElementById('kit-subtotal').textContent = fmt(kitSubtotal);
+
+  // Corners
+  let cornerTotal = 0;
+  document.querySelectorAll('#corner-tbody tr').forEach(tr => {
+    const count   = parseFloat(tr.querySelectorAll('input[type=number]')[0]?.value) || 0;
+    const courses = parseFloat(tr.querySelectorAll('input[type=number]')[1]?.value) || 0;
+    const rate    = parseFloat(tr.querySelectorAll('input[type=number]')[2]?.value) || 0;
+    cornerTotal += count * courses * rate;
+  });
+
+  // Add-Ons
+  let addonsSubtotal = 0;
+  document.querySelectorAll('#addon-tbody tr').forEach(tr => {
+    const qty   = parseFloat(tr.querySelectorAll('input[type=number]')[0]?.value) || 0;
+    const price = parseFloat(tr.querySelectorAll('input[type=number]')[1]?.value) || 0;
+    addonsSubtotal += qty * price;
+  });
+
+  // Labor
+  let laborSubtotal = 0;
+  document.querySelectorAll('#labor-tbody tr').forEach(tr => {
+    const rate = parseFloat(tr.querySelectorAll('input[type=number]')[0]?.value) || 0;
+    const hrs  = parseFloat(tr.querySelectorAll('input[type=number]')[1]?.value) || 0;
+    laborSubtotal += rate * hrs;
+  });
+
+  const gnaPct         = parseFloat(document.getElementById('gna-pct')?.value) || 0;
+  const taxPct         = parseFloat(document.getElementById('tax-pct')?.value) || 0;
+  const bulkDiscPct    = parseFloat(document.getElementById('bulk-discount-pct')?.value) || 0;
+
+  const subtotalBeforeDiscount = kitSubtotal + cornerTotal + addonsSubtotal;
+  const bulkDiscount   = subtotalBeforeDiscount * bulkDiscPct / 100;
+  const subtotalAfterDiscount   = subtotalBeforeDiscount - bulkDiscount;
+  
+  const subtotalForGna = subtotalAfterDiscount + laborSubtotal;
+  const gna     = subtotalForGna * gnaPct / 100;
+  
+  const taxBase = subtotalForGna + gna;
+  const tax     = taxBase * taxPct / 100;
+  const grand   = taxBase + tax;
+
+  document.getElementById('t-kit-subtotal').textContent  = fmt(kitSubtotal);
+  document.getElementById('t-corners').textContent       = fmt(cornerTotal);
+  document.getElementById('t-addons').textContent        = fmt(addonsSubtotal);
+  document.getElementById('t-labor').textContent         = fmt(laborSubtotal);
+  document.getElementById('t-bulk-discount').textContent = bulkDiscount > 0 ? '−' + fmt(bulkDiscount) : '−$0.00';
+  document.getElementById('t-gna').textContent           = fmt(gna);
+  document.getElementById('t-tax').textContent           = fmt(tax);
+  document.getElementById('t-grand').textContent         = fmt(grand);
+
+  // PnL sync
+  document.getElementById('pnl-revenue').textContent = fmt(grand);
+  document.getElementById('pnl-kit-cost').textContent = fmt(kitSubtotal); // Assuming kitSubtotal is the COGS for the kit
+  document.getElementById('pnl-corner-cost').textContent = fmt(cornerTotal); // Assuming cornerTotal is COGS
+  document.getElementById('pnl-addon-cost').textContent = fmt(addonsSubtotal); // Assuming addonsSubtotal is COGS
+  document.getElementById('pnl-labor').textContent   = fmt(laborSubtotal);
+  recalcPnl(kitSubtotal, cornerTotal, addonsSubtotal, laborSubtotal, grand);
+}
+
+function recalcPnl(kitCost, cornerCost, addonCost, laborTotal, revenue) {
+  kitCost    = kitCost    !== undefined ? kitCost    : parseAmount('pnl-kit-cost');
+  cornerCost = cornerCost !== undefined ? cornerCost : parseAmount('pnl-corner-cost');
+  addonCost  = addonCost  !== undefined ? addonCost  : parseAmount('pnl-addon-cost');
+  laborTotal = laborTotal !== undefined ? laborTotal : parseAmount('pnl-labor');
+  revenue    = revenue    !== undefined ? revenue    : parseAmount('pnl-revenue');
+
+  const mfgDelivery = parseFloat(document.getElementById('pnl-mfg-delivery')?.value) || 0;
+  const officeAdmin = parseFloat(document.getElementById('pnl-office-admin')?.value) || 0;
+  const vehicleEqpt = parseFloat(document.getElementById('pnl-vehicle-eqpt')?.value) || 0;
+  const insurance   = parseFloat(document.getElementById('pnl-insurance')?.value) || 0;
+  const marketing   = parseFloat(document.getElementById('pnl-marketing')?.value) || 0;
+  const other       = parseFloat(document.getElementById('pnl-other')?.value) || 0;
+
+  const cogs        = kitCost + cornerCost + addonCost + mfgDelivery;
+  const grossProfit = revenue - cogs;
+  const overhead    = officeAdmin + vehicleEqpt + insurance + marketing + other;
+  const totalExpenses = cogs + laborTotal + overhead;
+  const net         = revenue - totalExpenses;
+  const margin      = revenue > 0 ? (net / revenue * 100).toFixed(1) : 0;
+
+  const gEl = document.getElementById('pnl-gross');
+  gEl.textContent = fmt(grossProfit);
+  gEl.className   = 'pnl-val pnl-subtotal ' + (grossProfit >= 0 ? 'pnl-positive' : 'pnl-negative');
+
+  document.getElementById('pnl-expenses').textContent = fmt(totalExpenses);
+
+  const nEl = document.getElementById('pnl-net');
+  nEl.textContent = fmt(net);
+  nEl.className   = 'pnl-val ' + (net >= 0 ? 'pnl-positive' : 'pnl-negative') ;
+
+  const mEl = document.getElementById('pnl-margin');
+  mEl.textContent = margin + '%';
+  mEl.className   = 'pnl-val ' + (net >= 0 ? 'pnl-positive' : 'pnl-negative');
+
+  // Update P&L job label
+  const jc = quoteData[activeQuoteId]?.jobCode || '';
+  const cn = document.getElementById('customer-name')?.value || '';
+  document.getElementById('pnl-job-label').textContent = [jc, cn].filter(Boolean).join(' · ') || '—';
+}
+
+function parseAmount(id) {
+  const el = document.getElementById(id);
+  if (!el) return 0;
+  return parseFloat(el.textContent.replace(/[$,]/g,'')) || 0;
+}
+
+// ── STATUS ─────────────────────────────────────────────────────────
+function setStatus(s) {
+  if (!activeQuoteId) return;
+  quoteData[activeQuoteId].status = s;
+  const pill = document.getElementById('status-pill');
+  pill.textContent = s.toUpperCase();
+  pill.className   = 'status-pill pill-' + s;
+
+  ['proposed','approved','contract'].forEach(k => {
+    const b = document.getElementById('btn-' + k);
+    if (b) b.classList.toggle('btn-active', k === s);
+  });
+
+  const locked = s === 'contract';
+  document.querySelectorAll('.tbl-input, .markup-select, .gna-select, .tax-input, #customer-name, #project-name, #install-address, #sq-footage, #log-diameter, #log-species, #kit-type, #base-rate').forEach(el => {
+    if (locked) el.classList.add('locked');
+    else el.classList.remove('locked');
+  });
+  document.querySelectorAll('.qty-btn, .del-btn, .add-line-btn').forEach(el => {
+    el.style.pointerEvents = locked ? 'none' : '';
+    el.style.opacity = locked ? '.35' : '';
+  });
+
+  saveLocal();
+}
+
+function requestContract() {
+  document.getElementById('contract-modal').classList.add('open');
+  setTimeout(() => document.getElementById('contract-pw').focus(), 50);
+}
+
+function confirmContract() {
+  const pw = document.getElementById('contract-pw').value;
+  if (pw === CONTRACT_PW) {
+    closeModal();
+    setStatus('contract');
+  } else {
+    document.getElementById('pw-error').textContent = 'Incorrect password. Try again.';
+    document.getElementById('contract-pw').value = '';
+  }
+}
+
+function closeModal() {
+  document.getElementById('contract-modal').classList.remove('open');
+  document.getElementById('contract-pw').value = '';
+  document.getElementById('pw-error').textContent = '';
+}
+
+// ── TABS ───────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    if (b.dataset.tab === tab) {
+      b.classList.add('active');
+    } else {
+      b.classList.remove('active');
+    }
+  });
+
+  document.getElementById('dashboard-view').style.display = tab==='dashboard' ? '' : 'none';
+  document.getElementById('quote-view').style.display   = tab==='quote'   ? '' : 'none';
+  document.getElementById('invoice-view').style.display = tab==='invoice' ? 'block' : 'none';
+  document.getElementById('pnl-view').style.display     = tab==='pnl'     ? '' : 'none';
+
+  if (tab === 'dashboard') renderDashboard();
+  if (tab === 'quote') {
+    recalc();
+    document.getElementById('status-pill').textContent = quoteData[activeQuoteId]?.status.toUpperCase() || 'PROPOSED';
+    document.getElementById('status-pill').className = 'status-pill pill-' + (quoteData[activeQuoteId]?.status || 'proposed');
+    ['proposed','approved','contract'].forEach(k => {
+      const b = document.getElementById('btn-' + k);
+      if (b) b.classList.toggle('btn-active', k === (quoteData[activeQuoteId]?.status || 'proposed'));
+    });
+  }
+  if (tab === 'invoice') buildInvoice();
+  if (tab === 'pnl')     recalcPnl();
+}
+
+
+function buildInvoice() {
+  const currentQuoteData = quoteData[activeQuoteId];
+  if (!currentQuoteData) return;
+
+  document.getElementById('inv-job-code').textContent  = currentQuoteData.jobCode || '—';
+  document.getElementById('inv-date').textContent      = currentQuoteData.date || today();
+  document.getElementById('inv-customer').textContent  = currentQuoteData.customer || '(Customer)';
+  document.getElementById('inv-address').textContent   = currentQuoteData.address;
+  document.getElementById('inv-project').textContent   = currentQuoteData.project ? `Project: ${currentQuoteData.project}` : '';
+
+  // Cabin Kit
+  document.getElementById('inv-kit-desc').textContent     = `${currentQuoteData.logDiameter}" ${currentQuoteData.logSpecies} ${currentQuoteData.kitType} Kit`;
+  document.getElementById('inv-kit-sqft').textContent     = currentQuoteData.sqft;
+  document.getElementById('inv-kit-baserate').textContent = fmt(currentQuoteData.baseRate) + '/sqft';
+  document.getElementById('inv-kit-total').textContent    = fmt(currentQuoteData.sqft * currentQuoteData.baseRate);
+
+
+  // Corner rows
+  const cornerHtml = [];
+  currentQuoteData.corners.forEach(c => {
+    if (c.count > 0 && c.courses > 0 && c.rate > 0) {
+      cornerHtml.push(`<tr><td>${c.style}</td><td>${c.count}</td><td>${c.courses}</td><td>${fmt(c.rate)}</td><td style="text-align:right;">${fmt(c.count * c.courses * c.rate)}</td></tr>`);
+    }
+  });
+  document.getElementById('inv-corner-rows').innerHTML = cornerHtml.join('');
+
+  // Add-On rows
+  const addonHtml = [];
+  currentQuoteData.addons.forEach(a => {
+    if (a.qty > 0 && a.price > 0) {
+      addonHtml.push(`<tr><td>${a.desc}</td><td>${a.unit}</td><td>${a.qty}</td><td>${fmt(a.price)}</td><td style="text-align:right;">${fmt(a.qty * a.price)}</td></tr>`);
+    }
+  });
+  document.getElementById('inv-addon-rows').innerHTML = addonHtml.join('');
+
+  // Labor rows
+  const laborHtml = [];
+  currentQuoteData.labor.forEach(l => {
+    if (l.hours > 0 && l.rate > 0) {
+      laborHtml.push(`<tr><td>${l.name}</td><td>${fmt(l.rate)}/hr</td><td>${l.hours}</td><td style="text-align:right;">${fmt(l.rate * l.hours)}</td></tr>`);
+    }
+  });
+  document.getElementById('inv-labor-rows').innerHTML = laborHtml.join('');
+
+  // Totals
+  const kitSubtotal     = parseFloat(document.getElementById('t-kit-subtotal')?.textContent.replace(/[^0-9.-]+/g,"")) || 0;
+  const cornerTotal     = parseFloat(document.getElementById('t-corners')?.textContent.replace(/[^0-9.-]+/g,"")) || 0;
+  const addonsSubtotal  = parseFloat(document.getElementById('t-addons')?.textContent.replace(/[^0-9.-]+/g,"")) || 0;
+  const laborTotal      = parseFloat(document.getElementById('t-labor')?.textContent.replace(/[^0-9.-]+/g,"")) || 0;
+  const gna             = parseFloat(document.getElementById('t-gna')?.textContent.replace(/[^0-9.-]+/g,"")) || 0;
+  const tax             = parseFloat(document.getElementById('t-tax')?.textContent.replace(/[^0-9.-]+/g,"")) || 0;
+  const grand           = parseFloat(document.getElementById('t-grand')?.textContent.replace(/[^0-9.-]+/g,"")) || 0;
+  const gnaPct          = document.getElementById('gna-pct')?.value || '0';
+  const taxPct          = document.getElementById('tax-pct')?.value || '0';
+  const bulkDiscPct     = parseFloat(document.getElementById('bulk-discount-pct')?.value) || 0;
+  const bulkDisc        = parseFloat(document.getElementById('t-bulk-discount')?.textContent.replace(/[^0-9.-]+/g,"")) || 0;
+
+
+  document.getElementById('inv-t-kit-subtotal').textContent = fmt(kitSubtotal);
+  document.getElementById('inv-t-corners').textContent      = fmt(cornerTotal);
+  document.getElementById('inv-t-addons').textContent       = fmt(addonsSubtotal);
+  document.getElementById('inv-t-labor').textContent        = fmt(laborTotal);
+  
+  const invBulkRow = document.getElementById('inv-bulk-row');
+  if (invBulkRow) invBulkRow.style.display = bulkDiscPct > 0 ? '' : 'none';
+  if (document.getElementById('inv-bulk-label')) document.getElementById('inv-bulk-label').textContent = `Bulk Discount (${bulkDiscPct}%)`;
+  if (document.getElementById('inv-t-bulk-discount')) document.getElementById('inv-t-bulk-discount').textContent = '−' + fmt(bulkDisc);
+  
+  document.getElementById('inv-gna-label').textContent  = `G&A Fee (${gnaPct}%)`;
+  document.getElementById('inv-t-gna').textContent      = fmt(gna);
+  document.getElementById('inv-tax-label').textContent  = `Tax (${taxPct}%)`;
+  document.getElementById('inv-t-tax').textContent      = fmt(tax);
+  document.getElementById('inv-t-grand').textContent    = fmt(grand);
+}
+
+
+function fmt(n) {
+  return '$' + (Math.round(n*100)/100).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+function parseAmount(id) {
+  const el = document.getElementById(id);
+  // for negative numbers (bulk discount) the minus sign is included
+  if (!el) return 0;
+  return parseFloat(el.textContent.replace(/[$,−-]/g,'')) || 0;
+}
+
+// Attach event listeners for P&L manual inputs
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('#pnl-view .pnl-input').forEach(input => {
+        input.addEventListener('input', recalcPnl);
+    });
+    // Call updateBaseRate once on load to set initial value from kitType
+    updateBaseRate(); 
+});
+
+</script>
+</body>
+</html>

@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Supporting Reference — Handbook Violations / Josh Elder</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Georgia', serif;
+    background: #f4f4f0;
+    color: #1a1a1a;
+    padding: 40px 20px;
+  }
+  .wrapper {
+    max-width: 780px;
+    margin: 0 auto;
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 60px 70px;
+  }
+  .ref-bar {
+    background: #2c3e50;
+    color: #fff;
+    text-align: center;
+    padding: 10px;
+    font-family: 'Arial', sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    margin-bottom: 40px;
+  }
+  .draft-bar {
+    background: #8b1a1a;
+    color: #fff;
+    text-align: center;
+    padding: 10px;
+    font-family: 'Arial', sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+  }
+  .ai-disclaimer {
+    border: 1px solid #c0392b;
+    background: #fdf2f2;
+    padding: 14px 18px;
+    margin-bottom: 36px;
+    font-family: 'Arial', sans-serif;
+    font-size: 12px;
+    color: #7b241c;
+    line-height: 1.6;
+  }
+  .letterhead {
+    text-align: center;
+    margin-bottom: 36px;
+    border-bottom: 2px solid #5a8ba7;
+    padding-bottom: 24px;
+  }
+  .letterhead .co-name {
+    font-family: 'Arial', sans-serif;
+    font-size: 18px;
+    font-weight: bold;
+    color: #2c3e50;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .letterhead .co-sub {
+    font-family: 'Arial', sans-serif;
+    font-size: 12px;
+    color: #888;
+    margin-top: 4px;
+  }
+  .purpose-box {
+    background: #f0f4f7;
+    border-left: 4px solid #5a8ba7;
+    padding: 16px 20px;
+    margin-bottom: 32px;
+    font-family: 'Arial', sans-serif;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #2c3e50;
+  }
+  p {
+    font-size: 14px;
+    line-height: 1.8;
+    margin-bottom: 18px;
+    color: #2b2b2b;
+  }
+  h3 {
+    font-family: 'Arial', sans-serif;
+    font-size: 13px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #2c3e50;
+    margin: 28px 0 14px;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 6px;
+  }
+  .violation-card {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .violation-header {
+    background: #2c3e50;
+    color: #fff;
+    padding: 10px 16px;
+    font-family: 'Arial', sans-serif;
+    font-size: 13px;
+    font-weight: bold;
+  }
+  .violation-header.amber { background: #d47c0a; }
+  .violation-header.red { background: #8b1a1a; }
+  .violation-body {
+    padding: 16px 18px;
+    font-family: 'Arial', sans-serif;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .cite-tag {
+    display: inline-block;
+    background: #e8f0f5;
+    color: #2c6a8f;
+    border: 1px solid #b8d4e4;
+    border-radius: 3px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-family: 'Arial', sans-serif;
+    margin: 2px 2px 2px 0;
+  }
+  .cite-row {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+  }
+  .labor-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Arial', sans-serif;
+    font-size: 13px;
+    margin: 14px 0 18px;
+  }
+  .labor-table th {
+    background: #2c3e50;
+    color: #fff;
+    padding: 8px 12px;
+    text-align: left;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+  }
+  .labor-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #eee;
+  }
+  .labor-table tr:nth-child(even) td { background: #f9f9f9; }
+  .labor-table tr.total-row td {
+    font-weight: bold;
+    background: #f0f4f7;
+    border-top: 2px solid #5a8ba7;
+  }
+  .labor-table td.over { color: #c0392b; font-weight: bold; }
+  .note {
+    font-family: 'Arial', sans-serif;
+    font-size: 12px;
+    color: #666;
+    font-style: italic;
+    margin-top: 6px;
+  }
+  .print-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: #2c3e50;
+    color: #fff;
+    border: none;
+    padding: 12px 22px;
+    font-family: 'Arial', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  .print-btn:hover { background: #5a8ba7; }
+  @media print {
+    body { background: #fff; padding: 0; }
+    .wrapper { border: none; padding: 40px; }
+    .ref-bar, .draft-bar { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .print-btn { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <div class="ref-bar">SUPPORTING REFERENCE DOCUMENT &nbsp;·&nbsp; ATTORNEY USE &nbsp;·&nbsp; NOT FOR DELIVERY TO EMPLOYEE</div>
+  <div class="draft-bar">DRAFT &nbsp;·&nbsp; PENDING ATTORNEY REVIEW</div>
+
+  <div class="ai-disclaimer">
+    ⚠️ <strong>Attorney Review Required.</strong> This document was drafted by an AI legal agent as a supporting reference. It has not been reviewed by a licensed attorney. It is intended to support attorney review of the accompanying termination letter — not for delivery to the employee. Unbridled Solutions and MC make no representation that this document is legally sufficient or enforceable.
+  </div>
+
+  <div class="letterhead">
+    <div class="co-name">Hotel St. Cloud &nbsp;/&nbsp; Unbridled Hospitality Group, LLC</div>
+    <div class="co-sub">Supporting Reference — Employee Handbook Violations &nbsp;·&nbsp; Josh Elder &nbsp;·&nbsp; June 2026</div>
+  </div>
+
+  <div class="purpose-box">
+    <strong>Purpose of this document:</strong> This is a supporting reference for attorney review of the Josh Elder termination. It maps each cited ground in the termination letter to the specific Employee Handbook section(s) that govern it. It is not intended for delivery to the employee. The operative document is the termination letter.
+  </div>
+
+  <h3>Violation 1 — Possession of Marijuana Vaping Materials on Premises</h3>
+  <div class="violation-card">
+    <div class="violation-header red">SEVERITY: IMMEDIATE TERMINATION &nbsp;·&nbsp; No prior warning required</div>
+    <div class="violation-body">
+      <p style="margin:0 0 10px;">Josh Elder possessed marijuana vaping materials in a food preparation area and walk-in freezer at Hotel St. Cloud. This constitutes a simultaneous violation of three handbook provisions:</p>
+      <ul style="padding-left:20px; line-height:2; margin-bottom:10px;">
+        <li><strong>§5-17(8)</strong> — <em>"Possession of, or being under the influence of, alcohol/illegal drugs on premises"</em> — explicitly listed as a ground for disciplinary action including termination.</li>
+        <li><strong>§5-13 (Health &amp; Safety)</strong> — employees are required to keep work areas safe and free of hazardous conditions; a controlled substance in a food prep area and walk-in freezer directly violates this obligation. Employee signed acknowledgment of Colorado Retail Food Establishment Rules and Regulations on file.</li>
+        <li><strong>§5-17(12)</strong> — <em>"Violation of health code or other unsanitary practices"</em> — possession in active food storage and prep areas constitutes a food code concern under Colorado Retail Food Establishment Rules.</li>
+      </ul>
+      <div class="cite-row">
+        <span class="cite-tag">§5-17(8)</span>
+        <span class="cite-tag">§5-13 Health &amp; Safety</span>
+        <span class="cite-tag">§5-17(12)</span>
+        <span class="cite-tag">CO Retail Food Establishment Rules</span>
+      </div>
+    </div>
+  </div>
+
+  <h3>Violation 2 — Threatening Language Toward Ownership ("Leverage" Comment)</h3>
+  <div class="violation-card">
+    <div class="violation-header red">SEVERITY: IMMEDIATE TERMINATION &nbsp;·&nbsp; Recorded meeting on file</div>
+    <div class="violation-body">
+      <p style="margin:0 0 10px;">During a workplace conversation with ownership, Josh Elder made a comment characterizing information in his possession as "leverage." This exchange was captured in a recorded meeting with ownership (Colorado one-party consent, C.R.S. 18-9-303 — Stan Bullis was a party to the conversation). This conduct violates:</p>
+      <ul style="padding-left:20px; line-height:2; margin-bottom:10px;">
+        <li><strong>§5-1(6)</strong> — <em>"serious breach of acceptable behavior, including but not limited to using obscene, abusive, or threatening language and/or gestures"</em></li>
+        <li><strong>§5-17(6)</strong> — <em>"Intimidating or threatening language towards guests, vendors, management, or other team members"</em> — explicitly listed ground for disciplinary action</li>
+        <li><strong>§5-1(10)</strong> — <em>"Insubordination or disobedience of a lawful Management directive"</em></li>
+      </ul>
+      <div class="cite-row">
+        <span class="cite-tag">§5-1(6)</span>
+        <span class="cite-tag">§5-17(6)</span>
+        <span class="cite-tag">§5-1(10)</span>
+        <span class="cite-tag">C.R.S. 18-9-303 (one-party consent)</span>
+      </div>
+    </div>
+  </div>
+
+  <h3>Violation 3 — Pattern of Conduct Incidents (5 Documented / 1 Formal Complaint)</h3>
+  <div class="violation-card">
+    <div class="violation-header amber">SEVERITY: PATTERN — Supports termination within 90-day introductory period</div>
+    <div class="violation-body">
+      <p style="margin:0 0 10px;">Five documented conduct incidents involving team members, leadership, and consultants working alongside the kitchen — including one formal complaint. This pattern establishes a sustained failure to meet the Company's workplace conduct standard:</p>
+      <ul style="padding-left:20px; line-height:2; margin-bottom:10px;">
+        <li><strong>§1-5 (Discrimination, Harassment, and Retaliation Prevention Policy)</strong> — signed acknowledgment on file; conduct pattern is inconsistent with this policy</li>
+        <li><strong>§5-1(23)</strong> — <em>"Violation of the Company's Harassment or Equal Employment Opportunity Policies"</em></li>
+        <li><strong>§5-17(7)</strong> — <em>"Harassment of any kind towards guests, vendors, management, or other team members"</em></li>
+        <li><strong>§5-1(6)</strong> — <em>"serious breach of acceptable behavior"</em> — supporting the pattern argument</li>
+        <li><strong>§5-17(13)</strong> — <em>"Any other activity deemed unsafe for guests, vendors, management, or other team members"</em> — consultants withdrawing from the engagement due to conduct falls within this provision</li>
+      </ul>
+      <div class="cite-row">
+        <span class="cite-tag">§1-5</span>
+        <span class="cite-tag">§5-1(23)</span>
+        <span class="cite-tag">§5-17(7)</span>
+        <span class="cite-tag">§5-1(6)</span>
+        <span class="cite-tag">§5-17(13)</span>
+      </div>
+    </div>
+  </div>
+
+  <h3>Violation 4 — Labor Performance (Secondary / Contextual)</h3>
+  <div class="violation-card">
+    <div class="violation-header" style="background:#4b4f54;">SEVERITY: SECONDARY — Supporting context, not primary termination ground</div>
+    <div class="violation-body">
+      <p style="margin:0 0 10px;">Kitchen operations under Josh Elder's supervision consistently ran above the agreed labor cost target of 36% of revenue. The data below reflects property-wide kitchen labor — Josh was not solely responsible for all FOH labor — and is presented as contributing context rather than a primary ground:</p>
+      <table class="labor-table">
+        <thead>
+          <tr><th>Week</th><th>Revenue</th><th>Kitchen Labor</th><th>Labor %</th><th>Target</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>May 18–24, 2026</td><td>$26,771</td><td>$15,129</td><td class="over">56.5%</td><td>36%</td></tr>
+          <tr><td>May 25–31, 2026</td><td>$29,885</td><td>$13,571</td><td class="over">45.4%</td><td>36%</td></tr>
+          <tr><td>Jun 1–7, 2026</td><td>$31,106</td><td>$14,240</td><td class="over">45.8%</td><td>36%</td></tr>
+          <tr><td>Jun 8–14, 2026</td><td>$38,372</td><td>$15,163</td><td class="over">39.5%</td><td>36%</td></tr>
+          <tr><td>Jun 15–21, 2026</td><td>$36,112</td><td>$15,256</td><td class="over">42.2%</td><td>36%</td></tr>
+          <tr class="total-row"><td>5-Week Average</td><td>$162,246</td><td>$73,359</td><td class="over">45.2%</td><td>36%</td></tr>
+        </tbody>
+      </table>
+      <p class="note">Note: Labor figures reflect property-wide kitchen labor (hourly + management), computed as (hrlyacts + mgmtacts) / actrevs per week. FOH labor is included in these totals. Josh Elder's direct responsibility was kitchen operations; full FOH attribution should not be assigned to him.</p>
+      <div class="cite-row">
+        <span class="cite-tag">§5-1(26) Unsatisfactory job performance</span>
+        <span class="cite-tag">§5-17(9) Inhospitable behavior</span>
+      </div>
+    </div>
+  </div>
+
+  <h3>Colorado Legal Notes for Attorney</h3>
+  <div class="violation-body" style="background:#f9f9f9; border:1px solid #ddd; border-radius:4px; padding:16px 18px; font-family:'Arial',sans-serif; font-size:13px; line-height:1.8;">
+    <ul style="padding-left:20px;">
+      <li><strong>At-will employment:</strong> Colorado at-will state. Employee was within 90-day introductory period (§2-3) at time of termination, further supporting Company's discretion.</li>
+      <li><strong>One-party consent recording:</strong> C.R.S. 18-9-303 — Stan Bullis was a party to the conversation; recording is legally obtained in Colorado.</li>
+      <li><strong>Final pay:</strong> Colorado requires same-day final paycheck on involuntary termination. Final paycheck must be ready at time of letter delivery.</li>
+      <li><strong>Behavioral agreement:</strong> Employee never signed a formal behavioral agreement — language in the termination letter references "performance conversations" only, not a signed agreement.</li>
+      <li><strong>Consultant reference:</strong> If consultants withdrew from the engagement due to Josh's conduct, document their withdrawal in writing (email, text) before or concurrent with termination delivery.</li>
+    </ul>
+  </div>
+
+</div>
+<button class="print-btn" onclick="window.print()">Print / Save PDF</button>
+</body>
+</html>

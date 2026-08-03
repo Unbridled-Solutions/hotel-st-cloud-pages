@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4-Week Moving Average — Proof of Calculation</title>
+<style>
+  :root {
+    --bg:     #0f1923;
+    --card:   #162433;
+    --border: #263d52;
+    --text:   #e8e0d4;
+    --muted:  #8a9aaa;
+    --gold:   #c9aa7c;
+    --blue:   #5a8ba7;
+    --green:  #4cca80;
+    --orange: #f77316;
+    --teal:   #3de8c8;
+    --red:    #e05c5c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, 'Segoe UI', sans-serif; padding: 24px 16px 60px; }
+
+  .page-title { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }
+  h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 8px; }
+  .as-of { display: inline-block; font-size: 11px; background: rgba(247,115,22,0.12); border: 1px solid rgba(247,115,22,0.3); color: var(--orange); padding: 3px 10px; border-radius: 4px; margin-bottom: 28px; }
+
+  .formula-box {
+    background: var(--card); border: 1px solid var(--border);
+    border-left: 3px solid var(--gold); border-radius: 10px;
+    padding: 18px 22px; margin-bottom: 32px; max-width: 780px;
+  }
+  .formula-box h3 { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
+  .formula-box p { font-size: 14px; color: var(--text); line-height: 1.7; }
+  .formula-box code { background: rgba(255,255,255,0.07); padding: 1px 6px; border-radius: 4px; font-family: monospace; font-size: 13px; color: var(--teal); }
+
+  .section-eyebrow { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; margin-top: 36px; }
+  .section-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .section-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+
+  .tbl-wrap { overflow-x: auto; margin-bottom: 28px; border-radius: 10px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; min-width: 700px; }
+  thead th {
+    background: #1a2e3b; padding: 10px 12px;
+    font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--border); text-align: center;
+  }
+  thead th:first-child { text-align: left; }
+  tbody tr { border-bottom: 1px solid rgba(38,61,82,0.5); }
+  tbody tr:last-child { border-bottom: none; }
+  td { padding: 9px 12px; font-size: 13px; text-align: center; vertical-align: middle; }
+  td:first-child { text-align: left; font-size: 12px; }
+
+  tr.row-wk4 td { background: rgba(90,139,167,0.05); }
+  tr.row-wk3 td { background: rgba(90,139,167,0.04); }
+  tr.row-wk2 td { background: rgba(90,139,167,0.04); }
+  tr.row-wk1 td { background: rgba(90,139,167,0.03); }
+  tr.row-p7w1 td { background: rgba(247,115,22,0.07); }
+  tr.row-avg  td { background: rgba(76,202,128,0.09); border-top: 2px solid rgba(76,202,128,0.4); font-weight: 700; }
+
+  .week-label { font-weight: 600; }
+  .chip {
+    display: inline-block; font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 3px; margin-left: 6px;
+    background: rgba(201,170,124,0.12); color: var(--gold); border: 1px solid rgba(201,170,124,0.25);
+  }
+  .chip-p7 { background: rgba(247,115,22,0.12); color: var(--orange); border-color: rgba(247,115,22,0.3); }
+  .chip-drop { background: rgba(138,154,170,0.1); color: var(--muted); border-color: rgba(138,154,170,0.2); text-decoration: line-through; }
+
+  .val-blue   { color: var(--blue); }
+  .val-green  { color: var(--green); }
+  .val-orange { color: var(--orange); }
+  .val-gold   { color: var(--gold); }
+  .val-muted  { color: var(--muted); font-size: 11px; }
+  .val-drop   { color: var(--muted); font-size: 11px; text-decoration: line-through; }
+
+  .calc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 32px; }
+  .calc-card { background: var(--card); border: 1px solid var(--border); border-radius: 9px; padding: 14px 16px; }
+  .calc-card .day-name { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .calc-card .addend { font-size: 12px; line-height: 1.9; }
+  .calc-card .addend.new  { color: var(--orange); font-weight: 600; }
+  .calc-card .addend.kept { color: var(--blue); }
+  .calc-card .addend.sat-sun { color: var(--muted); font-style: italic; }
+  .calc-card hr { border: none; border-top: 1px solid var(--border); margin: 8px 0; }
+  .calc-card .result { font-size: 16px; font-weight: 800; color: var(--green); }
+  .calc-card .result-sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 28px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  .note-box {
+    background: rgba(247,115,22,0.06); border: 1px solid rgba(247,115,22,0.2);
+    border-radius: 10px; padding: 16px 20px; margin-bottom: 28px; max-width: 780px;
+  }
+  .note-box h3 { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--orange); margin-bottom: 8px; }
+  .note-box p { font-size: 13px; color: var(--text); line-height: 1.7; }
+
+  .divider-line { border: none; border-top: 1px solid var(--border); margin: 36px 0; }
+
+  @media (max-width: 600px) { .calc-grid { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="page-title">Labor Planner · Proof of Calculation</div>
+<h1>4-Week Moving Average</h1>
+<p class="subtitle">P7 Wk 1 (Jun 15–21) fully submitted — all 7 days in. Restaurant revenue only (event rev excluded).</p>
+<span class="as-of">⚡ P7 Wk 1 complete · Jun 22, 2026 · Restaurant revenue only</span>
+
+<div class="formula-box">
+  <h3>The Formula</h3>
+  <p>
+    For each <strong>day of the week</strong>, the planner looks at the <strong>4 most recent weeks</strong> with actual revenue entered for that day.
+    It averages them: <code>(Wk A + Wk B + Wk C + Wk D) ÷ 4</code>.
+    Each day is independent — Monday averages only Mondays, Saturday only Saturdays.
+    <strong>Restaurant revenue only</strong> — event revenue is excluded from all calculations.
+    May 18 drops off all 7 days now that P7 Wk 1 is fully submitted.
+  </p>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#f77316"></div>P7 Wk 1 — NEW (replaces oldest on all days)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#5a8ba7"></div>P6 actuals — carried forward</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#4cca80"></div>Computed average</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#8a9aaa"></div>Dropped off (5th oldest)</div>
+</div>
+
+
+<!-- ════════════════════ FREMONT PROVISIONS ════════════════════ -->
+<div class="section-eyebrow">Restaurant 1</div>
+<div class="section-title">Fremont Provisions · Sports Bar &amp; Kitchen</div>
+<div class="section-sub">P7 Wk 2 (Jun 22) will show these averages in the planner header row</div>
+
+<div class="note-box">
+  <h3>What changed from before</h3>
+  <p>P7 Wk 1 Sat [$6,534] and Sun [$5,703] now submitted. Event revenue excluded from all weeks. May 18 drops off all 7 days. FP Saturday average is <strong>$4,663</strong> (restaurant-only — the $6,906 event is excluded). Mon and Tue also correct without the $500/day recurring event line.</p>
+</div>
+
+<div class="tbl-wrap">
+<table>
+  <thead>
+    <tr>
+      <th style="text-align:left">Week</th>
+      <th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th><th>Sun</th>
+      <th style="background:#1e3040">Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    <!-- P7 Wk 1 — all 7 days submitted, restaurant only -->
+    <tr class="row-p7w1">
+      <td><span class="week-label">Jun 15–21</span><span class="chip chip-p7">P7 Wk 1 ← NEW</span></td>
+      <td class="val-orange">$2,699</td>
+      <td class="val-orange">$2,559</td>
+      <td class="val-orange">$3,129</td>
+      <td class="val-orange">$2,572</td>
+      <td class="val-orange">$3,716</td>
+      <td class="val-orange">$6,534</td>
+      <td class="val-orange">$5,703</td>
+      <td class="val-gold">$26,912</td>
+    </tr>
+    <!-- P6 Wk 4 -->
+    <tr class="row-wk1">
+      <td><span class="week-label">Jun 8–14</span><span class="chip">P6 Wk 4</span></td>
+      <td class="val-blue">$2,015</td>
+      <td class="val-blue">$3,520</td>
+      <td class="val-blue">$2,692</td>
+      <td class="val-blue">$1,683</td>
+      <td class="val-blue">$3,818</td>
+      <td class="val-blue">$4,143</td>
+      <td class="val-blue">$2,427</td>
+      <td class="val-gold">$20,298</td>
+    </tr>
+    <!-- P6 Wk 3 -->
+    <tr class="row-wk2">
+      <td><span class="week-label">Jun 1–7</span><span class="chip">P6 Wk 3</span></td>
+      <td class="val-blue">$2,435</td>
+      <td class="val-blue">$2,305</td>
+      <td class="val-blue">$2,206</td>
+      <td class="val-blue">$1,691</td>
+      <td class="val-blue">$2,975</td>
+      <td class="val-blue">$4,405</td>
+      <td class="val-blue">$2,987</td>
+      <td class="val-gold">$19,004</td>
+    </tr>
+    <!-- P6 Wk 2 -->
+    <tr class="row-wk3">
+      <td><span class="week-label">May 25–31</span><span class="chip">P6 Wk 2</span></td>
+      <td class="val-blue">$1,925</td>
+      <td class="val-blue">$2,148</td>
+      <td class="val-blue">$1,564</td>
+      <td class="val-blue">$2,044</td>
+      <td class="val-blue">$1,983</td>
+      <td class="val-blue">$3,570</td>
+      <td class="val-blue">$2,994</td>
+      <td class="val-gold">$16,228</td>
+    </tr>
+    <!-- P6 Wk 1 — drops off ALL days now -->
+    <tr class="row-wk4">
+      <td><span class="week-label">May 18–24</span><span class="chip">P6 Wk 1</span></td>
+      <td class="val-drop">$2,460</td>
+      <td class="val-drop">$2,961</td>
+      <td class="val-drop">$2,220</td>
+      <td class="val-drop">$2,368</td>
+      <td class="val-drop">$2,972</td>
+      <td class="val-drop">$2,665</td>
+      <td class="val-drop">$3,278</td>
+      <td class="val-gold">$18,924</td>
+    </tr>
+    <!-- AVERAGE ROW -->
+    <tr class="row-avg">
+      <td style="color:var(--green);font-size:12px">
+        📊 4-Wk Average<br>
+        <span style="font-size:10px;color:var(--muted);font-weight:400">P7 Wk 2 header (Jun 22)</span>
+      </td>
+      <td class="val-green">$2,268</td>
+      <td class="val-green">$2,633</td>
+      <td class="val-green">$2,398</td>
+      <td class="val-green">$1,997</td>
+      <td class="val-green">$3,123</td>
+      <td class="val-green">$4,663</td>
+      <td class="val-green">$3,528</td>
+      <td style="color:var(--green)">$20,610</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<!-- FP CALC CARDS -->
+<p style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Step-by-step math · Fremont Provisions</p>
+<div class="calc-grid">
+  <div class="calc-card">
+    <div class="day-name">Monday</div>
+    <div class="addend new">Jun 15: $2,698.75 ← new</div>
+    <div class="addend kept">Jun 8: $2,015.00</div>
+    <div class="addend kept">Jun 1: $2,435.13</div>
+    <div class="addend kept">May 25: $1,925.00</div>
+    <hr>
+    <div class="result">$2,268</div>
+    <div class="result-sub">$9,073.88 ÷ 4 = $2,268.47</div>
+  </div>
+  <div class="calc-card">
+    <div class="day-name">Tuesday</div>
+    <div class="addend new">Jun 15: $2,558.75 ← new</div>
+    <div class="addend kept">Jun 8: $3,520.00</div>
+    <div class="addend kept">Jun 1: $2,305.10</div>
+    <div class="addend kept">May 25: $2,147.91</div>
+    <hr>
+    <div class="result">$2,633</div>
+    <div class="result-sub">$10,531.76 ÷ 4 = $2,632.94</div>
+  </div>
+  <div class="calc-card">
+    <div class="day-name">Wednesday</div>
+    <div class="addend new">Jun 15: $3,129.01 ← new</div>
+    <div class="addend kept">Jun 8: $2,691.95</div>
+    <div class="addend kept">Jun 1: $2,205.75</div>
+    <div class="addend kept">May 25: $1,563.99</div>
+    <hr>
+    <div class="result">$2,398</div>
+    <div class="result-sub">$9,590.70 ÷ 4 = $2,397.68</div>
+  </div>
+  <div class="calc-card">
+    <div class="day-name">Thursday</div>
+    <div class="addend new">Jun 15: $2,571.75 ← new</div>
+    <div class="addend kept">Jun 8: $1,682.51</div>
+    <div class="addend kept">Jun 1: $1,691.00</div>
+    <div class="addend kept">May 25: $2,043.75</div>
+    <hr>
+    <div class="result">$1,997</div>
+    <div class="result-sub">$7,989.01 ÷ 4 = $1,997.25</div>
+  </div>
+  <div class="calc-card">
+    <div class="day-name">Friday</div>
+    <div class="addend new">Jun 15: $3,716.09 ← new</div>
+    <div class="addend kept">Jun 8: $3,818.25</div>
+    <div class="addend kept">Jun 1: $2,974.99</div>
+    <div class="addend kept">May 25: $1,982.75</div>
+    <hr>
+    <div class="result">$3,123</div>
+    <div class="result-sub">$12,492.08 ÷ 4 = $3,123.02</div>
+  </div>
+  <div class="calc-card">
+    <div class="day-name">Saturday</div>
+    <div class="addend new">Jun 15: $6,534.25 ← new</div>
+    <div class="addend kept">Jun 8: $4,142.84</div>
+    <div class="addend kept">Jun 1: $4,404.99</div>
+    <div class="addend kept">May 25: $3,569.85</div>
+    <hr>
+    <div class="result">$4,663</div>
+    <div class="result-sub">$18,652.93 ÷ 4 = $4,663.23</div>
+  </div>
+  <div class="calc-card">
+    <div class="day-name">Sunday</div>
+    <div class="addend new">Jun 15: $5,703.00 ← new</div>
+    <div class="addend kept">Jun 8: $2,427.43</div>
+    <div class="addend kept">Jun 1: $2,987.25</div>
+    <div class="addend kept">May 25: $2,994.25</div>
+    <hr>
+    <div class="result">$3,528</div>
+    <div class="result-sub">$14,111.93 ÷ 4 = $3,527.98 <span style="color:var(--green);font-size:10px">↑ was $2,922</span></div>
+  </div>
+</div>
+
+<div class="divider-line"></div>
+
+<!-- ════════════════════ FREMONT PUBLIC HOUSE ════════════════════ -->
+<div class="section-eyebrow">Restaurant 2</div>
+<div class="section-title">Fremont Public House · 1887 · War Room</div>
+<div class="section-sub">P7 Wk 2 (Jun 22) will show these averages in the planner header row</div>
+
+<div class="note-box">
+  <h3>What changed from before</h3>
+  <p>P7 Wk 1 Sat [$7,493] and Sun [$6,392] now submitted. Event revenue excluded from all weeks — FPH had no event rev in history, so Mon–Fri are unchanged. FPH Sunday goes $4,219 → <strong>$4,919</strong> (↑$700). FPH Saturday edges down $7,597 → <strong>$7,403</strong> — Jun 15 Sat ($7,493) replaced the higher May 18 Sat ($8,266).</p>
+</div>
+
+<div class="tbl-wrap">
+<table>
+  <thead>
+    <tr>
+      <th style="text-align:left">Week</th>
+      <th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th><th>Sun</th>
+      <th style="background:#1e3040">Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="row-p7w1">
+      <td><span class="week-label">Jun 15–21</span><span class="chip chip-p7">P7 Wk 1 ← NEW</span></td>
+      <td class="val-orange">$2,625</td>
+      <td class="val-orange">$2,924</td>
+      <td class="val-orange">$4,087</td>
+      <td class="val-orange">$5,077</td>
+      <td class="val-orange">$7,514</td>
+      <td class="val-orange">$7,493</td>
+      <td class="val-orange">$6,392</td>
+      <td class="val-gold">$36,112</td>
+    </tr>
+    <tr class="row-wk1">
+      <td><span class="week-label">Jun 8–14</span><span class="chip">P6 Wk 4</span></td>
+      <td class="val-blue">$4,008</td>
+      <td class="val-blue">$5,486</td>
+      <td class="val-blue">$4,195</td>
+      <td class="val-blue">$4,925</td>
+      <td class="val-blue">$5,371</td>
+      <td class="val-blue">$9,127</td>
+      <td class="val-blue">$5,260</td>
+      <td class="val-gold">$38,372</td>
+    </tr>
+    <tr class="row-wk2">
+      <td><span class="week-label">Jun 1–7</span><span class="chip">P6 Wk 3</span></td>
+      <td class="val-blue">$3,495</td>
+      <td class="val-blue">$2,305</td>
+      <td class="val-blue">$3,638</td>
+      <td class="val-blue">$2,774</td>
+      <td class="val-blue">$8,519</td>
+      <td class="val-blue">$7,388</td>
+      <td class="val-blue">$2,987</td>
+      <td class="val-gold">$31,106</td>
+    </tr>
+    <tr class="row-wk3">
+      <td><span class="week-label">May 25–31</span><span class="chip">P6 Wk 2</span></td>
+      <td class="val-blue">$3,630</td>
+      <td class="val-blue">$2,701</td>
+      <td class="val-blue">$3,281</td>
+      <td class="val-blue">$3,641</td>
+      <td class="val-blue">$5,992</td>
+      <td class="val-blue">$5,606</td>
+      <td class="val-blue">$5,035</td>
+      <td class="val-gold">$29,885</td>
+    </tr>
+    <!-- P6 Wk 1 — drops off ALL days now -->
+    <tr class="row-wk4">
+      <td><span class="week-label">May 18–24</span><span class="chip">P6 Wk 1</span></td>
+      <td class="val-drop">$629</td>
+      <td class="val-drop">$1,450</td>
+      <td class="val-drop">$3,298</td>
+      <td class="val-drop">$4,018</td>
+      <td class="val-drop">$5,516</td>
+      <td class="val-drop">$8,266</td>
+      <td class="val-drop">$3,593</td>
+      <td class="val-gold">$26,771</td>
+    </tr>
+    <tr class="row-avg">
+      <td style="color:var(--green);font-size:12px">
+        📊 4-Wk Average<br>
+        <span style="font-size:10px;color:var(--muted);font-weight:400">P7 Wk 2 header (Jun 22)</span>
+      </td>
+      <td class="val-green">$3,440</td>
+      <td class="val-green">$3,354</td>
+      <td class="val-green">$3,800</td>
+      <td class="val-green">$4,104</td>
+      <td class="val-green">$6,849</td>
+      <td class="val-green">$7,403</td>
+      <td class="val-green">$4,919</td>
+      <td style="color:var(--green)">$33,869</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<!-- FPH CALC CARDS -->
+<p style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Step-by-step math · Fremont Public House</p>
+<div class="calc-grid">
+  <div class="calc-card">
+    <div class="day-name">Monday</div>
+    <div class="addend new">Jun 15: $2,625.38 ← new</div>
+    <div class="addend kept">Jun 8: $4,007.81</div>
+    <div class="addend kept">Jun 1: $3,495.45</div>
+    <div class="addend kept">May 25: $3,629.50</div>
+    <hr>
+    <div class="result">$3,440</div>
+    <div class="result-sub">$13,758.14 ÷ 4 = $3,439.54</div>
+  </div>
+  <div class="calc-card">
+    <div class="day-name">Tuesday</div>
+    <div class="addend new">Jun 15: $2,923.60 ← new</div>
+    <div class="addend kept">Jun 8: $5,485.95</div>
+    <div class="addend kept">Jun 1: $2,305.10</div>
+    <div class="addend kept">May 25: $2,700.95</div>
+    <hr>
+    <div class="result">$3,354</div>
+    <div class="result-sub">$13,415.60 ÷ 4 = $3,353.90</div>
+  </div>
+  <div class="calc-card">
+    <div class="day-name">Wednesday</div>
+    <div class="addend new">Jun 15: $4,087.47 ← new</div>
+    <div class="addend kept">Jun 8: $4,194.85</div>
+    <div class="addend kept">Jun 1: $3,637.75</div>
+    <div class="addend kept">May 25: $3,281.00</div>
+    <hr>
+    <div class="result">$3,800</div>
+    <div class="result-sub">$15,201.07 ÷ 4 = $3,800.27</div>
+  </div>
+  <div class="calc-card">
+    <div class="day-name">Thursday</div>
+    <div class="addend new">Jun 15: $5,076.60 ← new</div>
+    <div class="addend kept">Jun 8: $4,925.20</div>
+    <div class="addend kept">Jun 1: $2,774.10</div>
+    <div class="addend kept">May 25: $3,640.95</div>
+    <hr>
+    <div class="result">$4,104</div>
+    <div class="result-sub">$16,416.85 ÷ 4 = $4,104.21</div>
+  </div>
+  <div class="calc-card">
+    <div class="day-name">Friday</div>
+    <div class="addend new">Jun 15: $7,513.70 ← new</div>
+    <div class="addend kept">Jun 8: $5,371.00</div>
+    <div class="addend kept">Jun 1: $8,518.58</div>
+    <div class="addend kept">May 25: $5,992.47</div>
+    <hr>
+    <div class="result">$6,849</div>
+    <div class="result-sub">$27,395.75 ÷ 4 = $6,848.94</div>
+  </div>
+  <div class="calc-card">
+    <div class="day-name">Saturday</div>
+    <div class="addend new">Jun 15: $7,493.10 ← new</div>
+    <div class="addend kept">Jun 8: $9,126.74</div>
+    <div class="addend kept">Jun 1: $7,388.08</div>
+    <div class="addend kept">May 25: $5,605.50</div>
+    <hr>
+    <div class="result">$7,403</div>
+    <div class="result-sub">$29,613.42 ÷ 4 = $7,403.36 <span style="color:var(--red);font-size:10px">↓ was $7,597</span></div>
+  </div>
+  <div class="calc-card">
+    <div class="day-name">Sunday</div>
+    <div class="addend new">Jun 15: $6,392.10 ← new</div>
+    <div class="addend kept">Jun 8: $5,260.05</div>
+    <div class="addend kept">Jun 1: $2,987.25</div>
+    <div class="addend kept">May 25: $5,034.67</div>
+    <hr>
+    <div class="result">$4,919</div>
+    <div class="result-sub">$19,674.07 ÷ 4 = $4,918.52 <span style="color:var(--green);font-size:10px">↑ was $4,219</span></div>
+  </div>
+</div>
+
+<p style="font-size:11px;color:var(--muted);text-align:center;margin-top:40px">
+  Generated by MC · offers.hotelstcloud.com/assets/mavg-proof.html · Strikethrough values = dropped from average (5th oldest week)
+</p>
+
+</body>
+</html>

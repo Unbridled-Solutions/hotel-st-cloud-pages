@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lakeridge · Lot 31 — Build Timeline</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --card: #1a1d24;
+    --card2: #20242e;
+    --border: #2a2f3e;
+    --text: #d8d0c4;
+    --muted: #7a8a9a;
+    --blue: #5a8ba7;
+    --gold: #c8a96e;
+    --amber: #c87a2a;
+    --red: #c8502a;
+    --teal: #3a9a8a;
+    --sage: #7aaa8a;
+    --brown: #8B6340;
+    --stone: #8a7a65;
+    --gray: #4b4f54;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  /* ─── HEADER ─── */
+  .page-header {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: clamp(20px, 4vw, 40px) clamp(16px, 5vw, 60px);
+  }
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--blue);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .page-title {
+    font-size: clamp(22px, 4vw, 36px);
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.2;
+  }
+  .page-subtitle {
+    color: var(--muted);
+    font-size: 14px;
+    margin-top: 6px;
+  }
+  .header-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-top: 16px;
+  }
+  .meta-pill {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 13px;
+    color: var(--text);
+  }
+  .meta-pill strong { color: var(--gold); }
+
+  /* ─── STAT STRIP ─── */
+  .stat-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border-bottom: 2px solid var(--blue);
+  }
+  .stat-cell {
+    background: var(--card);
+    padding: 18px 20px;
+    text-align: center;
+  }
+  .stat-val {
+    font-size: clamp(22px, 3vw, 30px);
+    font-weight: 700;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .stat-lbl {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* ─── CONTENT ─── */
+  .content {
+    padding: clamp(16px, 4vw, 40px) clamp(12px, 5vw, 60px);
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  /* ─── SECTION HEADERS ─── */
+  .section-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 16px;
+    margin-top: 36px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ─── GANTT ─── */
+  .gantt-note {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--blue);
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+
+  .gantt-wrap { overflow-x: auto; }
+
+  .gantt {
+    min-width: 820px;
+  }
+
+  /* Month header */
+  .gantt-header {
+    display: flex;
+    align-items: stretch;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 2px;
+  }
+  .gantt-label-col {
+    flex: 0 0 220px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+  }
+  .gantt-months {
+    flex: 1;
+    display: flex;
+  }
+  .month-label {
+    flex: 1;
+    text-align: center;
+    font-size: 10px;
+    color: var(--muted);
+    padding: 4px 2px;
+    border-left: 1px solid var(--border);
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .month-label.season-spring { color: #7aaa8a; }
+  .month-label.season-summer { color: var(--gold); }
+  .month-label.season-fall   { color: var(--amber); }
+  .month-label.season-winter { color: #7aaacc; }
+
+  /* Season bands */
+  .gantt-season-band {
+    display: flex;
+    align-items: stretch;
+    height: 6px;
+    margin-bottom: 8px;
+  }
+  .season-seg {
+    flex: 1;
+    border-left: 1px solid var(--bg);
+  }
+
+  /* Gantt rows */
+  .gantt-row {
+    display: flex;
+    align-items: center;
+    min-height: 36px;
+    border-bottom: 1px solid var(--border);
+  }
+  .gantt-row:hover { background: rgba(90,139,167,0.05); }
+
+  .row-label {
+    flex: 0 0 220px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .row-label .phase-num {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 18px;
+    margin-right: 6px;
+    flex-shrink: 0;
+  }
+  .row-label.lead-time { color: var(--amber); font-style: italic; }
+  .row-label.lead-time::before { content: '⏱ '; font-style: normal; }
+
+  .row-bars {
+    flex: 1;
+    position: relative;
+    height: 36px;
+  }
+
+  /* Grid lines in bar area */
+  .row-bars::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent calc(100%/18 - 1px),
+      var(--border) calc(100%/18 - 1px),
+      var(--border) calc(100%/18)
+    );
+    pointer-events: none;
+    opacity: 0.4;
+  }
+
+  .bar {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 22px;
+    border-radius: 4px;
+    opacity: 0.88;
+    display: flex;
+    align-items: center;
+    padding: 0 6px;
+    font-size: 10px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.85);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Phase color classes */
+  .c-plan   { background: var(--blue); }
+  .c-order  { background: var(--red); }
+  .c-lead   { background: var(--amber); background: linear-gradient(90deg, var(--amber) 0%, var(--red) 100%); }
+  .c-site   { background: var(--brown); }
+  .c-found  { background: #6b4c2a; }
+  .c-shell  { background: var(--gold); color: #1a1200; }
+  .c-roof   { background: var(--gray); }
+  .c-stone  { background: var(--stone); }
+  .c-mep    { background: var(--teal); }
+  .c-deck   { background: #3a7a6a; }
+  .c-int    { background: #6aaa9e; color: #0a1a18; }
+  .c-elev   { background: var(--amber); }
+  .c-out    { background: var(--sage); color: #0a1a10; }
+  .c-close  { background: #6a7a6a; }
+  .c-insp   { background: var(--blue); background: linear-gradient(90deg, var(--blue), #3a6a8a); }
+
+  /* ─── CRITICAL PATH CALLOUT ─── */
+  .critical-path {
+    background: rgba(200, 80, 42, 0.08);
+    border: 1px solid rgba(200, 80, 42, 0.3);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .cp-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+  .cp-body strong { color: var(--red); display: block; margin-bottom: 4px; font-size: 13px; }
+  .cp-body p { color: var(--muted); font-size: 12px; line-height: 1.5; }
+
+  /* ─── PHASE CARDS ─── */
+  .phase-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+  }
+
+  .phase-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .phase-card:hover { border-color: var(--blue); }
+
+  .card-header {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .card-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .card-title {
+    font-weight: 700;
+    font-size: 13px;
+    flex: 1;
+  }
+  .card-months {
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .card-body { padding: 12px 16px; }
+  .card-body ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .card-body li {
+    font-size: 12px;
+    color: var(--muted);
+    padding-left: 14px;
+    position: relative;
+    line-height: 1.4;
+  }
+  .card-body li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--blue);
+    font-size: 10px;
+  }
+
+  .card-watch {
+    background: rgba(200, 122, 42, 0.08);
+    border-top: 1px solid var(--border);
+    padding: 8px 16px;
+    font-size: 11px;
+    color: var(--amber);
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+  }
+
+  /* ─── WATCH ITEMS ─── */
+  .watch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+  .watch-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--amber);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .watch-item.danger { border-left-color: var(--red); }
+  .watch-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--gold);
+    margin-bottom: 6px;
+  }
+  .watch-item.danger .watch-title { color: var(--red); }
+  .watch-desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* ─── FOOTER NAV ─── */
+  .footer-nav {
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    padding: 20px clamp(16px, 5vw, 60px);
+    margin-top: 40px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+  }
+  .nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--blue);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 20px;
+    border: 1px solid var(--blue);
+    border-radius: 8px;
+    transition: all 0.2s;
+  }
+  .nav-link:hover { background: var(--blue); color: #fff; }
+  .nav-link.primary {
+    background: var(--blue);
+    color: #fff;
+  }
+  .nav-link.primary:hover { background: #4a7b97; }
+
+  .footer-note {
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 600px) {
+    .gantt-label-col { flex: 0 0 150px; font-size: 10px; }
+    .row-label { flex: 0 0 150px; }
+    .phase-cards { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="page-header">
+  <div class="eyebrow">Grand Lake, Colorado · Lakeridge Subdivision · Lot 31</div>
+  <div class="page-title">Projected Build Timeline</div>
+  <div class="page-subtitle">18-Month Construction Schedule — Lakefront Log Home · 3,750 SF · 3 Finished Levels</div>
+  <div class="header-meta">
+    <div class="meta-pill">🏔 <strong>Elevation:</strong> ~8,400 ft</div>
+    <div class="meta-pill">📐 <strong>Lot Grade:</strong> ~45% · 105′ fall to lake</div>
+    <div class="meta-pill">🪵 <strong>Exterior:</strong> Full-round log · stone base · black standing-seam</div>
+    <div class="meta-pill">💰 <strong>See companion:</strong> <a href="lakeridge-lot31-budget.html" style="color:var(--gold);">Budget Estimate →</a></div>
+  </div>
+</div>
+
+<!-- STAT STRIP -->
+<div class="stat-strip">
+  <div class="stat-cell"><div class="stat-val">18</div><div class="stat-lbl">Months</div></div>
+  <div class="stat-cell"><div class="stat-val">16</div><div class="stat-lbl">Phases</div></div>
+  <div class="stat-cell"><div class="stat-val">3</div><div class="stat-lbl">Finished Levels</div></div>
+  <div class="stat-cell"><div class="stat-val">3,750</div><div class="stat-lbl">Conditioned SF</div></div>
+  <div class="stat-cell"><div class="stat-val">700</div><div class="stat-lbl">SF Bunk Shell</div></div>
+  <div class="stat-cell"><div class="stat-val">56 ft</div><div class="stat-lbl">Covered Deck</div></div>
+</div>
+
+<div class="content">
+
+  <!-- CRITICAL PATH -->
+  <div class="section-title" style="margin-top:24px;">Critical Path</div>
+  <div class="critical-path">
+    <div class="cp-icon">🔴</div>
+    <div class="cp-body">
+      <strong>Order Your Log Package and Glass Wall System on Day 1</strong>
+      <p>Full-round log packages from mountain suppliers carry 12–16 week lead times. Custom glass wall systems (22-ft × 2-story) run 16–20 weeks from fabrication order. These two items are your critical path — they must be ordered at the same time as permit submittal, or your shell crew sits idle and the whole schedule slips 3–4 months. Don't wait for the permit to approve before ordering. Work with your GC to place conditional orders.</p>
+    </div>
+  </div>
+
+  <!-- GANTT CHART -->
+  <div class="section-title">18-Month Schedule</div>
+  <div class="gantt-note">The phase bars below show schedule position. Scroll the chart on narrow screens. Phase cards below the chart contain task details.</div>
+
+  <div class="gantt-wrap">
+    <div class="gantt">
+
+      <!-- Season band -->
+      <div style="display:flex; margin-left:220px; height:8px; margin-bottom:4px; border-radius:4px; overflow:hidden;">
+        <div style="flex:0 0 calc(100%*3/18); background:#2a4a6a; opacity:0.6;"></div>
+        <div style="flex:0 0 calc(100%*4/18); background:#2a5a3a; opacity:0.6;"></div>
+        <div style="flex:0 0 calc(100%*3/18); background:#6a4a1a; opacity:0.6;"></div>
+        <div style="flex:0 0 calc(100%*2/18); background:#2a3a5a; opacity:0.6;"></div>
+        <div style="flex:0 0 calc(100%*4/18); background:#2a5a3a; opacity:0.6;"></div>
+        <div style="flex:0 0 calc(100%*2/18); background:#6a4a1a; opacity:0.6;"></div>
+      </div>
+
+      <!-- Month header -->
+      <div class="gantt-header">
+        <div class="gantt-label-col">Phase</div>
+        <div class="gantt-months">
+          <div class="month-label season-winter">M1<br>Jan</div>
+          <div class="month-label season-winter">M2<br>Feb</div>
+          <div class="month-label season-winter">M3<br>Mar</div>
+          <div class="month-label season-spring">M4<br>Apr</div>
+          <div class="month-label season-spring">M5<br>May</div>
+          <div class="month-label season-spring">M6<br>Jun</div>
+          <div class="month-label season-summer">M7<br>Jul</div>
+          <div class="month-label season-summer">M8<br>Aug</div>
+          <div class="month-label season-summer">M9<br>Sep</div>
+          <div class="month-label season-fall">M10<br>Oct</div>
+          <div class="month-label season-fall">M11<br>Nov</div>
+          <div class="month-label season-fall">M12<br>Dec</div>
+          <div class="month-label season-winter">M13<br>Jan</div>
+          <div class="month-label season-winter">M14<br>Feb</div>
+          <div class="month-label season-winter">M15<br>Mar</div>
+          <div class="month-label season-spring">M16<br>Apr</div>
+          <div class="month-label season-spring">M17<br>May</div>
+          <div class="month-label season-spring">M18<br>Jun</div>
+        </div>
+      </div>
+
+      <!-- ROWS: left%, width% = (start-1)/18*100, duration/18*100 -->
+
+      <!-- 1. Pre-Construction M1-M2 -->
+      <div class="gantt-row">
+        <div class="row-label">1 · Pre-Construction</div>
+        <div class="row-bars">
+          <div class="bar c-plan" style="left:0%; width:11.1%;">Pre-Con</div>
+        </div>
+      </div>
+
+      <!-- 2. Design Dev & Permitting M2-M5 -->
+      <div class="gantt-row">
+        <div class="row-label">2 · Design Dev &amp; Permitting</div>
+        <div class="row-bars">
+          <div class="bar c-plan" style="left:5.6%; width:22.2%;">Permits + Engineering</div>
+        </div>
+      </div>
+
+      <!-- 3. Log Package Order (lead time) M2-M7 -->
+      <div class="gantt-row">
+        <div class="row-label lead-time">3 · Log Package Lead Time</div>
+        <div class="row-bars">
+          <div class="bar c-order" style="left:5.6%; width:27.8%;">ORDER → DELIVERY 📦</div>
+        </div>
+      </div>
+
+      <!-- 4. Glass Wall Order (lead time) M2-M7 -->
+      <div class="gantt-row">
+        <div class="row-label lead-time">4 · Glass Wall System Lead Time</div>
+        <div class="row-bars">
+          <div class="bar c-lead" style="left:5.6%; width:27.8%;">ORDER → FABRICATION 📦</div>
+        </div>
+      </div>
+
+      <!-- 5. Site Prep & Excavation M4-M6 -->
+      <div class="gantt-row">
+        <div class="row-label">5 · Site Prep &amp; Excavation</div>
+        <div class="row-bars">
+          <div class="bar c-site" style="left:16.7%; width:16.7%;">Excavation</div>
+        </div>
+      </div>
+
+      <!-- 6. Foundation M6-M8 -->
+      <div class="gantt-row">
+        <div class="row-label">6 · Foundation (3 Levels)</div>
+        <div class="row-bars">
+          <div class="bar c-found" style="left:27.8%; width:16.7%;">Foundation</div>
+        </div>
+      </div>
+
+      <!-- 7. Log Shell M7-M11 -->
+      <div class="gantt-row">
+        <div class="row-label">7 · Log Shell Erection</div>
+        <div class="row-bars">
+          <div class="bar c-shell" style="left:33.3%; width:27.8%;">Log Shell — 3 Levels</div>
+        </div>
+      </div>
+
+      <!-- 8. Roofing M9-M11 -->
+      <div class="gantt-row">
+        <div class="row-label">8 · Roofing</div>
+        <div class="row-bars">
+          <div class="bar c-roof" style="left:44.4%; width:16.7%;">Standing Seam Metal</div>
+        </div>
+      </div>
+
+      <!-- 9. Exterior Stone M10-M12 -->
+      <div class="gantt-row">
+        <div class="row-label">9 · Exterior Stone &amp; Cladding</div>
+        <div class="row-bars">
+          <div class="bar c-stone" style="left:50%; width:16.7%;">Stone Base + Chimney</div>
+        </div>
+      </div>
+
+      <!-- 10. MEP Rough M10-M13 -->
+      <div class="gantt-row">
+        <div class="row-label">10 · Mechanical Rough-In (MEP)</div>
+        <div class="row-bars">
+          <div class="bar c-mep" style="left:50%; width:22.2%;">Hydronic · Plumbing · Electrical</div>
+        </div>
+      </div>
+
+      <!-- 11. Deck Structure M11-M13 -->
+      <div class="gantt-row">
+        <div class="row-label">11 · 56-ft Deck Structure</div>
+        <div class="row-bars">
+          <div class="bar c-deck" style="left:55.6%; width:16.7%;">Deck Framing + Roof</div>
+        </div>
+      </div>
+
+      <!-- 12. Interior Finishes M11-M16 -->
+      <div class="gantt-row">
+        <div class="row-label">12 · Interior Finishes</div>
+        <div class="row-bars">
+          <div class="bar c-int" style="left:55.6%; width:33.3%;">Kitchen · Baths · Flooring · Trim</div>
+        </div>
+      </div>
+
+      <!-- 13. Elevator & Dumbwaiter M13-M15 -->
+      <div class="gantt-row">
+        <div class="row-label">13 · Elevator &amp; Dumbwaiter</div>
+        <div class="row-bars">
+          <div class="bar c-elev" style="left:66.7%; width:16.7%;">Install + Commission</div>
+        </div>
+      </div>
+
+      <!-- 14. Outdoor Systems M14-M16 -->
+      <div class="gantt-row">
+        <div class="row-label">14 · Outdoor Systems</div>
+        <div class="row-bars">
+          <div class="bar c-out" style="left:72.2%; width:16.7%;">Terrace · Hot Tub · Fire Pit · OKitch</div>
+        </div>
+      </div>
+
+      <!-- 15. Site Closeout M16-M17 -->
+      <div class="gantt-row">
+        <div class="row-label">15 · Site Closeout</div>
+        <div class="row-bars">
+          <div class="bar c-close" style="left:83.3%; width:11.1%;">Landscape · Driveway</div>
+        </div>
+      </div>
+
+      <!-- 16. Inspections & STR M17-M18 -->
+      <div class="gantt-row">
+        <div class="row-label">16 · Inspections &amp; STR Licensing</div>
+        <div class="row-bars">
+          <div class="bar c-insp" style="left:88.9%; width:11.1%;">C of O · STR</div>
+        </div>
+      </div>
+
+      <!-- Season legend -->
+      <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:16px; font-size:11px; color:var(--muted);">
+        <span style="display:flex;align-items:center;gap:6px;"><span style="display:inline-block;width:12px;height:12px;background:#2a4a6a;border-radius:2px;"></span> Winter (concrete risk)</span>
+        <span style="display:flex;align-items:center;gap:6px;"><span style="display:inline-block;width:12px;height:12px;background:#2a5a3a;border-radius:2px;"></span> Spring/Summer (ideal pour + roofing window)</span>
+        <span style="display:flex;align-items:center;gap:6px;"><span style="display:inline-block;width:12px;height:12px;background:#6a4a1a;border-radius:2px;"></span> Fall (close-in before snow)</span>
+        <span style="display:flex;align-items:center;gap:6px;"><span style="display:inline-block;width:14px;height:14px;background:var(--red);border-radius:2px;"></span> Critical order / lead time</span>
+      </div>
+    </div><!-- end .gantt -->
+  </div><!-- end .gantt-wrap -->
+
+
+  <!-- PHASE CARDS -->
+  <div class="section-title">Phase Details — Tap a card for task-level breakdown</div>
+  <div class="phase-cards">
+
+    <!-- Phase 1 -->
+    <div class="phase-card">
+      <div class="card-header">
+        <div class="card-dot" style="background:var(--blue);"></div>
+        <div class="card-title">1 · Pre-Construction &amp; Team Assembly</div>
+        <div class="card-months">M1–M2</div>
+      </div>
+      <div class="card-body">
+        <ul>
+          <li>Engage architect; finalize schematic → design development</li>
+          <li>Hire structural engineer (snow load + hillside + glass wall)</li>
+          <li>Commission geotechnical investigation report (required by Grand County)</li>
+          <li>Hire GC — get bids, check mountain references</li>
+          <li>Resolve 2½-story county confirmation with Grand County</li>
+          <li>Finalize lot-line easement with Lot 32 neighbor</li>
+          <li>Begin STR compliance research (Town of Grand Lake + county dual licenses)</li>
+        </ul>
+      </div>
+      <div class="card-watch">⚠️ Lock trades 6–12 months before you need them. Mountain crews book out fast.</div>
+    </div>
+
+    <!-- Phase 2 -->
+    <div class="phase-card">
+      <div class="card-header">
+        <div class="card-dot" style="background:var(--blue);"></div>
+        <div class="card-title">2 · Design Development &amp; Permitting</div>
+        <div class="card-months">M2–M5</div>
+      </div>
+      <div class="card-body">
+        <ul>
+          <li>Submit building permit application to Grand County (target before M3)</li>
+          <li>Plan review: allow 4–8 weeks minimum; call 970-725-3255 for current wait list</li>
+          <li>Structural stamp required — 100+ PSF snow load, hillside retaining, 22-ft glass wall</li>
+          <li>Complete ~170 sf trim pass to stay under 4,100 sf cap</li>
+          <li>Fire impact fee: ~$1.26–$1.52/sf for Grand Fire Protection District</li>
+          <li>HOA water tap: $5,000 fee + $780/yr (already confirmed)</li>
+          <li>Engineered septic permit (Grand County perc rarely passes — assume engineered system)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Phase 3 & 4 combined -->
+    <div class="phase-card" style="border-left:3px solid var(--red);">
+      <div class="card-header">
+        <div class="card-dot" style="background:var(--red);"></div>
+        <div class="card-title">3+4 · Critical Lead-Time Orders</div>
+        <div class="card-months">M2–M7</div>
+      </div>
+      <div class="card-body">
+        <ul>
+          <li><strong style="color:var(--red);">Log Package:</strong> Full-round log package — 12–16 week lead time from mountain suppliers. Place conditional order at permit submittal, NOT after approval.</li>
+          <li><strong style="color:var(--amber);">Glass Wall System:</strong> 22-ft × 2-story custom curtain wall — 16–20+ weeks fabrication lead. Structural engineering drawings required to place order.</li>
+          <li>56-ft deck window/slider systems: order same window package</li>
+          <li>Residential elevator: 3-stop shaft rough-in must be designed into foundation; elevator cab delivery 12–16 weeks</li>
+        </ul>
+      </div>
+      <div class="card-watch">🔴 These are your schedule killers. Delay here = 3-4 month project slip.</div>
+    </div>
+
+    <!-- Phase 5 -->
+    <div class="phase-card">
+      <div class="card-header">
+        <div class="card-dot" style="background:var(--brown);"></div>
+        <div class="card-title">5 · Site Prep &amp; Excavation</div>
+        <div class="card-months">M4–M6</div>
+      </div>
+      <div class="card-body">
+        <ul>
+          <li>Access road buildout for equipment (45% grade = specialized equipment)</li>
+          <li>Tree clearing and defensible space establishment per Grand County fire rules</li>
+          <li>3-level stepped excavation into hillside (major cut — 105 ft vertical fall)</li>
+          <li>Geotechnical monitoring during excavation (required for cut slopes)</li>
+          <li>Cut slope ratio: 3:1 per Grand County hillside requirements</li>
+          <li>Retaining wall engineered design and installation</li>
+          <li>Utility trenching: electrical, gas, septic, HOA water tie-in</li>
+          <li>Septic system installation (engineered — plan for $35K–$50K)</li>
+        </ul>
+      </div>
+      <div class="card-watch">⚠️ 45% grade = highest excavation cost tier. Get 3 local bids; first quotes will vary wildly.</div>
+    </div>
+
+    <!-- Phase 6 -->
+    <div class="phase-card">
+      <div class="card-header">
+        <div class="card-dot" style="background:#6b4c2a;"></div>
+        <div class="card-title">6 · Foundation (3 Levels)</div>
+        <div class="card-months">M6–M8</div>
+      </div>
+      <div class="card-body">
+        <ul>
+          <li>48-inch frost depth required in Grand County — full perimeter</li>
+          <li>Stepped 3-level foundation tied into hillside grade</li>
+          <li>Elevator shaft foundation designed and poured monolithically</li>
+          <li>Dumbwaiter chase framing coordinated with MEP rough</li>
+          <li>Moisture barrier and perimeter drainage system</li>
+          <li>Target all pours May–September to avoid freeze risk</li>
+        </ul>
+      </div>
+      <div class="card-watch">⚠️ Foundation exposure: Grand County may limit to max 36" above grade on downhill face — confirm with architect.</div>
+    </div>
+
+    <!-- Phase 7 -->
+    <div class="phase-card">
+      <div class="card-header">
+        <div class="card-dot" style="background:var(--gold);"></div>
+        <div class="card-title">7 · Log Shell Erection</div>
+        <div class="card-months">M7–M11</div>
+      </div>
+      <div class="card-body">
+        <ul>
+          <li>Crane mobilization (steep access — specialty lift equipment)</li>
+          <li>Full-round log wall installation, Level 3 (entry/garage) first</li>
+          <li>Level 2 (main living) — great room vaulted structure, 23-ft vault framing</li>
+          <li>Level 1 (lower walkout) construction</li>
+          <li>Bunk level rough shell framing above garage (unfinished)</li>
+          <li>All door/window bucks installed with settling space (logs settle 3–6" Year 1)</li>
+          <li>All mechanical penetrations sleeved for settling</li>
+          <li>Stair connections designed for log settling</li>
+          <li>Log chinking + 2-coat fire-rated stain (required by Grand County)</li>
+        </ul>
+      </div>
+      <div class="card-watch">⚠️ Log settling: every door, window, stair, and MEP penetration must have 3–6" settling gap built in. Missing this = Year 1 cracking and binding.</div>
+    </div>
+
+    <!-- Phase 8 -->
+    <div class="phase-card">
+      <div class="card-header">
+        <div class="card-dot" style="background:var(--gray);"></div>
+        <div class="card-title">8 · Roofing</div>
+        <div class="card-months">M9–M11</div>
+      </div>
+      <div class="card-body">
+        <ul>
+          <li>Ice + water shield — mandatory Grand County (ice dams are real at 8,400 ft)</li>
+          <li>Black standing-seam metal roofing — multi-level complex geometry</li>
+          <li>Roof penetrations: elevator shaft, dumbwaiter, HRV, fireplace chimney</li>
+          <li>56-ft deck roof structure integrated with main roofline</li>
+          <li>Snow guards on all eave lines (load management)</li>
+          <li>Close-in before first hard snow (target complete by M11/November)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Phase 9 -->
+    <div class="phase-card">
+      <div class="card-header">
+        <div class="card-dot" style="background:var(--stone);"></div>
+        <div class="card-title">9 · Exterior Stone &amp; Cladding</div>
+        <div class="card-months">M10–M12</div>
+      </div>
+      <div class="card-body">
+        <ul>
+          <li>Stone base coursing — multi-level facade</li>
+          <li>Stacked-stone great room chimney exterior (wood-burning, 23-ft vault)</li>
+          <li>Stone terrace walls (lower walkout level)</li>
+          <li>Exterior window + door installation (energy-rated for 8,400 ft altitude)</li>
+          <li>22-ft glass wall installation — Level 2 lakeside facade (crane required)</li>
+          <li>12-ft kitchen/dining slider to deck installed</li>
+          <li>Garage doors: 3-car bay + tandem sled garage</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Phase 10 -->
+    <div class="phase-card">
+      <div class="card-header">
+        <div class="card-dot" style="background:var(--teal);"></div>
+        <div class="card-title">10 · Mechanical Rough-In (MEP)</div>
+        <div class="card-months">M10–M13</div>
+      </div>
+      <div class="card-body">
+        <ul>
+          <li>Hydronic radiant heat — all 3 levels (preferred for log; forced air dries logs)</li>
+          <li>Boiler + radiant manifolds + tubing (slab + plates depending on level)</li>
+          <li>Plumbing rough — 2 primary baths, 2 guest baths, powder, scullery, laundry ×2</li>
+          <li>Electrical rough — main + sub panels, smart home rough, EV charging in garage</li>
+          <li>HRV ventilation system (airtight mountain construction requires fresh air exchange)</li>
+          <li>Gas line: indoor fireplace combustion air + outdoor fireplace stubs + fire pit + outdoor kitchen</li>
+          <li>Hot tub rough — electrical + plumbing to lower terrace</li>
+          <li>Elevator rough-in: shaft rails, electrical, hydraulic or cable system</li>
+          <li>Dumbwaiter rough: rails + electrical</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Phase 11 -->
+    <div class="phase-card">
+      <div class="card-header">
+        <div class="card-dot" style="background:#3a7a6a;"></div>
+        <div class="card-title">11 · 56-ft Covered Deck Structure</div>
+        <div class="card-months">M11–M13</div>
+      </div>
+      <div class="card-body">
+        <ul>
+          <li>Primary deck framing — 56-ft run on lakeside face, Level 2</li>
+          <li>Deck roof structure + standing seam matching main roof</li>
+          <li>Structural connections engineered for snow load (100+ PSF) and cantilever</li>
+          <li>Gas stub-outs: outdoor fireplace, outdoor kitchen, heater connections</li>
+          <li>Electrical rough: lighting, outlet strips, heater circuits</li>
+          <li>Railing rough (final installation in Phase 14)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Phase 12 -->
+    <div class="phase-card">
+      <div class="card-header">
+        <div class="card-dot" style="background:#6aaa9e;"></div>
+        <div class="card-title">12 · Interior Finishes</div>
+        <div class="card-months">M11–M16</div>
+      </div>
+      <div class="card-body">
+        <ul>
+          <li>Insulation + drywall (non-log partition walls, mechanical spaces)</li>
+          <li>Timber stair: 11-ft straight run, glass-wall-side — timber treads + custom railings</li>
+          <li>Hardwood flooring (great room, main living, primary suites)</li>
+          <li>Tile (baths, scullery, mud entry)</li>
+          <li>Kitchen + scullery: custom cabinetry, 10-ft island, appliances</li>
+          <li>Countertops: stone throughout (kitchen, scullery, all baths)</li>
+          <li>Primary Suite 1: spa bath, soaking tub, walk-in, private deck door</li>
+          <li>Primary Suite 2: spa bath, slider to lower terrace/hot tub</li>
+          <li>Two queen guest rooms + shared double-vanity bath</li>
+          <li>Media lounge + game nook fit-out</li>
+          <li>Library gallery built-ins + powder room</li>
+          <li>Ski lockers + workout room glass wall</li>
+          <li>Interior doors, trim, hardware (rustic/mountain spec)</li>
+          <li>Stacked-stone fireplace interior (22-ft tall chimney chase)</li>
+          <li>Paint + interior stain throughout</li>
+          <li>Light fixtures (cabin-style, layered lighting plan)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Phase 13 -->
+    <div class="phase-card">
+      <div class="card-header">
+        <div class="card-dot" style="background:var(--amber);"></div>
+        <div class="card-title">13 · Elevator &amp; Dumbwaiter</div>
+        <div class="card-months">M13–M15</div>
+      </div>
+      <div class="card-body">
+        <ul>
+          <li>Elevator cab delivery + installation (3-stop: Levels 1, 2, 3)</li>
+          <li>Elevator commissioning + inspection (required before CO)</li>
+          <li>Dumbwaiter cab installation + commissioning</li>
+          <li>Finish trim around shaft openings at all 3 levels</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Phase 14 -->
+    <div class="phase-card">
+      <div class="card-header">
+        <div class="card-dot" style="background:var(--sage);"></div>
+        <div class="card-title">14 · Outdoor Living Systems</div>
+        <div class="card-months">M14–M16</div>
+      </div>
+      <div class="card-body">
+        <ul>
+          <li>Deck finish: decking material, railing system, built-in lighting</li>
+          <li>Outdoor kitchen installation: grill, refrigeration, sink, stone surround</li>
+          <li>Deck gas fireplace trim + surround</li>
+          <li>Shoulder-season deck heater installation (gas or electric)</li>
+          <li>Lower stone terrace: finish, furniture footings</li>
+          <li>Hot tub installation, fill, startup + deck integration</li>
+          <li>Gas fire pit + bar finish</li>
+          <li>Outdoor lighting — lakeside architectural lighting</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Phase 15 -->
+    <div class="phase-card">
+      <div class="card-header">
+        <div class="card-dot" style="background:#6a7a6a;"></div>
+        <div class="card-title">15 · Site Closeout</div>
+        <div class="card-months">M16–M17</div>
+      </div>
+      <div class="card-body">
+        <ul>
+          <li>Final grading — drainage swales away from foundation (downhill lot critical)</li>
+          <li>Driveway final surface (steep — consider heated sections or max-grip surface)</li>
+          <li>Revegetation + erosion control (Grand County requirement post-construction)</li>
+          <li>Defensible space landscaping per Grand County wildfire rules</li>
+          <li>Tree preservation compliance documentation</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Phase 16 -->
+    <div class="phase-card">
+      <div class="card-header">
+        <div class="card-dot" style="background:var(--blue);"></div>
+        <div class="card-title">16 · Inspections, C of O &amp; STR Setup</div>
+        <div class="card-months">M17–M18</div>
+      </div>
+      <div class="card-body">
+        <ul>
+          <li>Final framing, MEP, elevator, and life-safety inspections</li>
+          <li>STR life-safety compliance: smoke detectors, CO detectors, egress windows (all levels)</li>
+          <li>Certificate of Occupancy from Grand County</li>
+          <li>Town of Grand Lake Nightly Rental License application</li>
+          <li>Grand County Short-Term Rental Permit application</li>
+          <li>Colorado Sales Tax License (required for each STR property)</li>
+          <li>Professional photography + listing setup</li>
+          <li>Furnishing + staging (not in construction budget)</li>
+        </ul>
+      </div>
+      <div class="card-watch">⚠️ Dual licensing: apply to BOTH Town of Grand Lake and Grand County. Confirm which jurisdiction Lakeridge Lot 31 falls under — it may need both.</div>
+    </div>
+
+  </div><!-- end .phase-cards -->
+
+
+  <!-- WATCH ITEMS -->
+  <div class="section-title">Grand Lake · Location-Specific Watch Items</div>
+  <div class="watch-grid">
+
+    <div class="watch-item danger">
+      <div class="watch-title">🔴 Lead Times Are Your Biggest Risk</div>
+      <div class="watch-desc">Log packages run 12–16 weeks. Custom glass wall systems run 16–20 weeks. Order both at permit submittal — not after approval. A 2-month delay here costs 3–4 months on the back end.</div>
+    </div>
+
+    <div class="watch-item danger">
+      <div class="watch-title">🔴 45% Grade — Budget for the Unexpected</div>
+      <div class="watch-desc">Three-level stepped excavation in granite hillside terrain. Costs are hard to estimate without a geotech report. Your first excavation bid and your third can differ by 40%. Get all three before committing.</div>
+    </div>
+
+    <div class="watch-item">
+      <div class="watch-title">⚠️ 2½-Story Confirmation</div>
+      <div class="watch-desc">Still listed as an open item. Resolve with Grand County before design development locks. This affects floor plate design, window wall proportions, and permit-ability of the bunk level.</div>
+    </div>
+
+    <div class="watch-item">
+      <div class="watch-title">⚠️ Log Settling — Plan for Year 1 Revisit</div>
+      <div class="watch-desc">Full-round green logs settle 3–6 inches in Year 1. Every door, window, stair connection, and mechanical penetration needs a settling gap designed in. Budget a Year 1 callback visit with your GC to address settling adjustments.</div>
+    </div>
+
+    <div class="watch-item">
+      <div class="watch-title">⚠️ Concrete Windows: May–September Only</div>
+      <div class="watch-desc">Grand County's hard freeze comes early and stays late. All concrete pours must land in the May–September window. Miss it, and foundation work pushes to the following spring — adding 5–6 months to the schedule.</div>
+    </div>
+
+    <div class="watch-item">
+      <div class="watch-title">⚠️ Snow Load — Structural Stamp Non-Negotiable</div>
+      <div class="watch-desc">Grand County enforces 100+ PSF roof design load at this elevation. A licensed structural engineer's stamp is required. Budget $20K–$45K for structural engineering scope that includes the glass wall, deck cantilever, and hillside retaining.</div>
+    </div>
+
+    <div class="watch-item">
+      <div class="watch-title">⚠️ Engineered Septic — Budget It In</div>
+      <div class="watch-desc">Grand County soils at this elevation rarely pass conventional perc tests. Assume an engineered system: $35K–$50K + ~$850 permit fee. Get the septic design permitted on a parallel track to building permits.</div>
+    </div>
+
+    <div class="watch-item">
+      <div class="watch-title">⚠️ STR Dual Licensing</div>
+      <div class="watch-desc">Grand Lake STRs require a Nightly Rental License from the Town AND potentially a Short-Term Rental Permit from Grand County, plus a Colorado Sales Tax License. Confirm jurisdiction for Lakeridge Lot 31. Start both applications as soon as the C of O issues — rental income revenue starts at licensing, not at CO.</div>
+    </div>
+
+  </div><!-- end .watch-grid -->
+
+</div><!-- end .content -->
+
+<!-- FOOTER NAV -->
+<div class="footer-nav">
+  <div style="font-size:13px; color:var(--muted);">
+    Lakeridge · Lot 31 · Grand Lake, Colorado
+  </div>
+  <div style="display:flex; gap:12px; flex-wrap:wrap;">
+    <a class="nav-link" href="https://lakeridge-lot31.netlify.app/" target="_blank">← Project Brief</a>
+    <a class="nav-link primary" href="lakeridge-lot31-budget.html">Budget Estimate →</a>
+  </div>
+</div>
+
+<div style="padding:12px; text-align:center; font-size:11px; color:var(--muted);">
+  Timeline is a planning estimate based on typical Grand County build sequences. Weather, permit review times, and material availability can shift phases. Confirm all timelines with your GC and architect before locking commitments.
+</div>
+
+</body>
+</html>

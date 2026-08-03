@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hotel St. Cloud — Housekeeping Cost Model v0726c</title>
+<style>
+  :root {
+    --bg: #0b0f14;
+    --card: #131920;
+    --border: #1e2a35;
+    --accent: #5a8ba7;
+    --accent2: #e8a135;
+    --text: #e8edf2;
+    --muted: #6b7f8e;
+    --green: #4caf8a;
+    --red: #e05c5c;
+    --row-alt: #0f1820;
+    --peak: #e8a135;
+    --offpeak: #5a8ba7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; min-height: 100vh; }
+
+  .header { background: var(--card); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+  .header-left h1 { font-size: 16px; font-weight: 700; }
+  .header-left .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .version { font-size: 11px; color: var(--muted); background: #1a2530; padding: 3px 8px; border-radius: 4px; }
+
+  .layout { display: grid; grid-template-columns: 320px 1fr; min-height: calc(100vh - 57px); }
+
+  .sidebar { background: var(--card); border-right: 1px solid var(--border); padding: 20px 16px; overflow-y: auto; }
+  .sb-section { margin-bottom: 22px; }
+  .sb-section h2 { font-size: 10px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .season-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .season-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .season-dot.peak { background: var(--peak); }
+  .season-dot.offpeak { background: var(--offpeak); }
+  .season-header h2 { margin-bottom: 0; }
+
+  .ig { margin-bottom: 10px; }
+  .ig label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+  .ig input { width: 100%; background: #0e1820; border: 1px solid var(--border); color: var(--text); padding: 6px 9px; border-radius: 5px; font-size: 13px; outline: none; transition: border-color .15s; }
+  .ig input:focus { border-color: var(--accent); }
+  .ig.peak-field input { border-left: 2px solid var(--peak); }
+  .ig.offpeak-field input { border-left: 2px solid var(--offpeak); }
+  .ig.highlight input { border-left: 2px solid var(--green); }
+
+  .insight-box { background: #0d1f17; border: 1px solid #1a3d2a; border-radius: 6px; padding: 10px 12px; font-size: 11px; color: #6bbf98; line-height: 1.6; margin-bottom: 10px; }
+
+  .main { padding: 20px 24px; overflow-y: auto; }
+
+  .annual-banner { background: linear-gradient(135deg, #131f2a, #0f1c14); border: 1px solid var(--green); border-radius: 10px; padding: 18px 22px; margin-bottom: 20px; display: flex; gap: 0; flex-wrap: wrap; }
+  .banner-item { padding: 0 20px; border-right: 1px solid var(--border); }
+  .banner-item:first-child { padding-left: 0; }
+  .banner-item:last-child { border-right: none; }
+  .banner-label { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 4px; }
+  .banner-val { font-size: 24px; font-weight: 700; line-height: 1.1; }
+  .banner-val.green { color: var(--green); }
+  .banner-val.amber { color: var(--accent2); }
+  .banner-val.blue  { color: var(--accent); }
+  .banner-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+  .alos-callout { background: #1a1a0d; border: 1px solid #3d3510; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
+  .alos-stat { }
+  .alos-stat .val { font-size: 20px; font-weight: 700; color: var(--accent2); }
+  .alos-stat .lbl { font-size: 11px; color: var(--muted); }
+  .alos-divider { width: 1px; background: var(--border); align-self: stretch; }
+  .alos-explain { font-size: 12px; color: var(--muted); line-height: 1.7; flex: 1; min-width: 200px; }
+  .alos-explain strong { color: var(--text); }
+
+  .season-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .season-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .season-card-header { padding: 12px 16px 10px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+  .season-card-header .dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+  .season-card-header h3 { font-size: 13px; font-weight: 700; }
+  .season-card-header .months-badge { margin-left: auto; font-size: 10px; color: var(--muted); }
+  .season-card-body { padding: 14px 16px; }
+
+  .clean-type-row { display: flex; gap: 8px; margin-bottom: 12px; }
+  .clean-type { flex: 1; background: #0e1820; border-radius: 6px; padding: 10px 12px; text-align: center; }
+  .clean-type .ct-val { font-size: 20px; font-weight: 700; margin-bottom: 2px; }
+  .clean-type .ct-lbl { font-size: 10px; color: var(--muted); }
+  .clean-type.turnover .ct-val { color: var(--red); }
+  .clean-type.stayover .ct-val { color: var(--green); }
+
+  .staffing-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; padding: 3px 9px; border-radius: 20px; font-weight: 600; }
+  .chip.inhouse   { background: #1a2f3d; color: var(--accent); border: 1px solid #1e3d52; }
+  .chip.outsource { background: #2d2010; color: var(--accent2); border: 1px solid #3d2e10; }
+  .chip.lobby     { background: #1a2a1a; color: var(--green); border: 1px solid #1e3d1e; }
+
+  .sc-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #151f28; font-size: 12px; }
+  .sc-row:last-child { border-bottom: none; }
+  .sc-row .sc-label { color: var(--muted); }
+  .sc-row .sc-val { font-weight: 600; }
+
+  .section-title { font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin: 20px 0 10px; }
+
+  table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 20px; }
+  th { background: #0f1820; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+  td { padding: 8px 12px; border-bottom: 1px solid #151f28; font-size: 12px; }
+  tr:last-child td { border-bottom: none; }
+  tr.peak-row td { background: #17130a; }
+  tr.offpeak-row td { background: #0d151e; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.bold { font-weight: 700; }
+  td.green { color: var(--green); }
+  td.amber { color: var(--accent2); }
+  td.blue  { color: var(--accent); }
+  td.red   { color: var(--red); }
+  td.muted { color: var(--muted); font-size: 11px; }
+  tfoot td { background: #0a141c !important; font-weight: 700; border-top: 2px solid var(--border); }
+
+  .rec-box { background: #0c1d13; border: 1px solid var(--green); border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; }
+  .rec-box h3 { color: var(--green); font-size: 14px; margin-bottom: 10px; }
+  .rec-box ul { padding-left: 18px; font-size: 13px; line-height: 1.9; color: var(--text); }
+  .rec-box ul li span.g { color: var(--green); font-weight: 600; }
+  .rec-box ul li span.a { color: var(--accent2); font-weight: 600; }
+  .rec-box ul li span.r { color: var(--red); font-weight: 600; }
+
+  .footnote { font-size: 11px; color: var(--muted); line-height: 1.6; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 6px; }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .season-grid { grid-template-columns: 1fr; }
+    .annual-banner { gap: 12px; }
+    .banner-item { border-right: none; padding: 4px 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="h1" style="font-size:16px;font-weight:700">Hotel St. Cloud — Housekeeping Cost Model</div>
+    <div class="sub">36 rooms · ~250 sq ft · duvet bedding · Seasonal Hybrid + ALOS-adjusted</div>
+  </div>
+  <div class="version">v0726c</div>
+</div>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <div class="sb-section">
+      <h2>Property</h2>
+      <div class="ig"><label>Total Rooms</label><input type="number" id="totalRooms" value="36" min="1" oninput="recalc()"></div>
+      <div class="ig highlight"><label>Avg Length of Stay (nights)</label><input type="number" id="alos" value="2" min="1" step="0.5" oninput="recalc()"></div>
+      <div class="ig"><label>Turnover Clean (mins, duvet)</label><input type="number" id="turnoverMins" value="50" min="10" oninput="recalc()"></div>
+      <div class="ig"><label>Stayover Clean (mins)</label><input type="number" id="stayoverMins" value="22" min="5" oninput="recalc()"></div>
+      <div id="capacity-insight" class="insight-box"></div>
+    </div>
+
+    <div class="sb-section">
+      <div class="season-header"><div class="season-dot peak"></div><h2>Peak Season (Apr–Oct)</h2></div>
+      <div class="ig peak-field"><label>Occupancy %</label><input type="number" id="peakOcc" value="60" min="1" max="100" oninput="recalc()"></div>
+      <div class="ig peak-field"><label>Months per Year</label><input type="number" id="peakMonths" value="7" min="1" max="11" oninput="recalc()"></div>
+    </div>
+
+    <div class="sb-section">
+      <div class="season-header"><div class="season-dot offpeak"></div><h2>Off-Peak Season (Nov–Mar)</h2></div>
+      <div class="ig offpeak-field"><label>Occupancy %</label><input type="number" id="offOcc" value="40" min="1" max="100" oninput="recalc()"></div>
+      <div class="ig offpeak-field"><label>Months per Year</label><input type="number" id="offMonths" value="5" min="1" max="11" oninput="recalc()"></div>
+    </div>
+
+    <div class="sb-section">
+      <h2>In-House Wages</h2>
+      <div class="ig"><label>Lead Housekeeper ($/hr, FT 40 hrs)</label><input type="number" id="leadWage" value="19.00" step="0.25" oninput="recalc()"></div>
+      <div class="ig"><label>Lobby / Public Area Attendant ($/hr, PT 20 hrs)</label><input type="number" id="lobbyWage" value="16.00" step="0.25" oninput="recalc()"></div>
+      <div class="ig"><label>Employer Burden %</label><input type="number" id="burden" value="18" min="0" max="50" oninput="recalc()"></div>
+      <div class="ig"><label>Quality Bonus ($/person/2 weeks)</label><input type="number" id="bonus" value="75" step="25" oninput="recalc()"></div>
+    </div>
+
+    <div class="sb-section">
+      <h2>Outsourced Rates (Peak)</h2>
+      <div class="ig"><label>Turnover / Checkout Clean ($/room)</label><input type="number" id="rateCheckout" value="22" step="0.50" oninput="recalc()"></div>
+      <div class="ig"><label>Stayover Clean ($/room)</label><input type="number" id="rateStayover" value="12" step="0.50" oninput="recalc()"></div>
+    </div>
+
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- Annual Banner -->
+    <div class="annual-banner">
+      <div class="banner-item">
+        <div class="banner-label">Annual Total</div>
+        <div class="banner-val green" id="b-annual">—</div>
+        <div class="banner-sub">Hybrid model</div>
+      </div>
+      <div class="banner-item">
+        <div class="banner-label">Peak Monthly</div>
+        <div class="banner-val amber" id="b-peak-mo">—</div>
+        <div class="banner-sub" id="b-peak-sub">—</div>
+      </div>
+      <div class="banner-item">
+        <div class="banner-label">Off-Peak Monthly</div>
+        <div class="banner-val blue" id="b-off-mo">—</div>
+        <div class="banner-sub" id="b-off-sub">—</div>
+      </div>
+      <div class="banner-item">
+        <div class="banner-label">Avg / Room Cleaned</div>
+        <div class="banner-val" style="color:var(--text)" id="b-per-room">—</div>
+        <div class="banner-sub">blended annual</div>
+      </div>
+      <div class="banner-item">
+        <div class="banner-label">Total Room-Cleans / Year</div>
+        <div class="banner-val" style="color:var(--text)" id="b-total-cleans">—</div>
+        <div class="banner-sub">turnover + stayover</div>
+      </div>
+    </div>
+
+    <!-- ALOS Callout -->
+    <div class="alos-callout" id="alos-callout"></div>
+
+    <!-- Season Cards -->
+    <div class="season-grid">
+      <div class="season-card">
+        <div class="season-card-header">
+          <div class="dot peak"></div>
+          <h3>Peak Season</h3>
+          <div class="months-badge" id="peak-badge">Apr–Oct · 7 months</div>
+        </div>
+        <div class="season-card-body">
+          <div class="clean-type-row" id="peak-clean-types"></div>
+          <div class="staffing-chips" id="peak-chips"></div>
+          <div id="peak-rows"></div>
+        </div>
+      </div>
+      <div class="season-card">
+        <div class="season-card-header">
+          <div class="dot offpeak"></div>
+          <h3>Off-Peak Season</h3>
+          <div class="months-badge" id="off-badge">Nov–Mar · 5 months</div>
+        </div>
+        <div class="season-card-body">
+          <div class="clean-type-row" id="off-clean-types"></div>
+          <div class="staffing-chips" id="off-chips"></div>
+          <div id="off-rows"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rec box -->
+    <div class="rec-box">
+      <h3>★ Recommended Plan — Seasonal Hybrid + ALOS-Adjusted</h3>
+      <ul id="rec-bullets"></ul>
+    </div>
+
+    <!-- Breakdown table -->
+    <div class="section-title">Monthly Cost Breakdown</div>
+    <table>
+      <thead>
+        <tr><th>Cost Line</th><th class="num">Peak Monthly</th><th class="num">Off-Peak Monthly</th><th class="num">Annual</th></tr>
+      </thead>
+      <tbody id="breakdown-tbody"></tbody>
+      <tfoot id="breakdown-tfoot"></tfoot>
+    </table>
+
+    <!-- Monthly table -->
+    <div class="section-title">Month-by-Month Estimate</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Month</th>
+          <th>Season</th>
+          <th class="num">Occ %</th>
+          <th class="num">Occ Rooms/Day</th>
+          <th class="num">Turnovers/Day</th>
+          <th class="num">Stayovers/Day</th>
+          <th class="num">HK Hrs Needed</th>
+          <th class="num">Staffing Model</th>
+          <th class="num">Est. Monthly Cost</th>
+        </tr>
+      </thead>
+      <tbody id="monthly-tbody"></tbody>
+    </table>
+
+    <div class="footnote" id="footnote-text"></div>
+
+  </div>
+</div>
+
+<script>
+const PEAK_IDX = [3,4,5,6,7,8,9]; // Apr–Oct (0-indexed)
+
+function fmt(n)  { return '$' + Math.round(n).toLocaleString('en-US'); }
+function fmtD(n) { return '$' + n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+function scRow(label, val) {
+  return `<div class="sc-row"><span class="sc-label">${label}</span><span class="sc-val">${val}</span></div>`;
+}
+function cleanTypeBlock(count, label, cls, sublabel) {
+  return `<div class="clean-type ${cls}"><div class="ct-val">${Math.round(count)}</div><div class="ct-lbl">${label}</div><div class="ct-lbl" style="margin-top:2px;opacity:.7">${sublabel}</div></div>`;
+}
+
+function recalc() {
+  const totalRooms    = parseFloat(document.getElementById('totalRooms').value)    || 36;
+  const alos          = parseFloat(document.getElementById('alos').value)          || 2;
+  const turnoverMins  = parseFloat(document.getElementById('turnoverMins').value)  || 50;
+  const stayoverMins  = parseFloat(document.getElementById('stayoverMins').value)  || 22;
+  const peakOcc       = parseFloat(document.getElementById('peakOcc').value)       || 60;
+  const peakMonths    = parseFloat(document.getElementById('peakMonths').value)    || 7;
+  const offOcc        = parseFloat(document.getElementById('offOcc').value)        || 40;
+  const offMonths     = parseFloat(document.getElementById('offMonths').value)     || 5;
+  const leadWage      = parseFloat(document.getElementById('leadWage').value)      || 19.00;
+  const lobbyWage     = parseFloat(document.getElementById('lobbyWage').value)     || 16.00;
+  const burdenPct     = parseFloat(document.getElementById('burden').value)        || 18;
+  const bonus         = parseFloat(document.getElementById('bonus').value)         || 75;
+  const rateCheckout  = parseFloat(document.getElementById('rateCheckout').value)  || 22;
+  const rateStayover  = parseFloat(document.getElementById('rateStayover').value)  || 12;
+
+  const burdenMult   = 1 + burdenPct / 100;
+  const daysPerMonth = 30.4;
+  const bonusMonthly = (bonus / 2) * (52 / 12);
+
+  // ALOS math: what fraction of occupied rooms turn over each day?
+  // If avg stay = 2 nights, each room turns over every 2 days → 1/ALOS turnover rate
+  const turnoverRate = 1 / alos;           // fraction of occ rooms checking out daily
+  const stayoverRate = 1 - turnoverRate;   // fraction staying another night
+
+  // Effective minutes per occupied room per day (blended)
+  const blendedMinsPerRoom = (turnoverRate * turnoverMins) + (stayoverRate * stayoverMins);
+
+  // How many occupied rooms can one housekeeper handle in an 8-hour shift?
+  const shiftMins = 480; // 8 hours
+  const roomsPerShift = shiftMins / blendedMinsPerRoom;
+
+  // Capacity insight
+  document.getElementById('capacity-insight').innerHTML =
+    `With ${alos}-night ALOS: <strong>${Math.round(turnoverRate*100)}%</strong> of rooms turn over daily, <strong>${Math.round(stayoverRate*100)}%</strong> are stayovers.<br>
+    Blended clean time: <strong>${blendedMinsPerRoom.toFixed(0)} min/room</strong> → <strong>${roomsPerShift.toFixed(1)} rooms/shift</strong> per housekeeper.`;
+
+  // Fixed in-house (year-round)
+  const leadMonthly  = (40 * 4.33 * leadWage) * burdenMult + bonusMonthly;
+  const lobbyMonthly = (20 * 4.33 * lobbyWage) * burdenMult + bonusMonthly;
+  const fixedMonthly = leadMonthly + lobbyMonthly;
+  const suppliesBase = 200;
+
+  function seasonCalc(occ) {
+    const occRooms      = totalRooms * (occ / 100);
+    const turnoversDay  = occRooms * turnoverRate;
+    const stayoversDay  = occRooms * stayoverRate;
+    const totalCleanDay = occRooms; // one clean per room per day either way
+    const hkHrsNeeded   = (turnoversDay * turnoverMins + stayoversDay * stayoverMins) / 60;
+    const hkShiftsNeeded = hkHrsNeeded / 8;
+
+    const turnoversMonth = turnoversDay * daysPerMonth;
+    const stayoversMonth = stayoversDay * daysPerMonth;
+    const totalCleansMonth = totalCleanDay * daysPerMonth;
+
+    return { occRooms, turnoversDay, stayoversDay, totalCleanDay, hkHrsNeeded, hkShiftsNeeded,
+             turnoversMonth, stayoversMonth, totalCleansMonth };
+  }
+
+  const peak = seasonCalc(peakOcc);
+  const off  = seasonCalc(offOcc);
+
+  // Peak: outsourced room turns + stayovers
+  const peakOutsource = (peak.turnoversMonth * rateCheckout) + (peak.stayoversMonth * rateStayover);
+  const peakSupplies  = peak.totalCleansMonth * 0.40 + suppliesBase;
+  const peakTotal     = fixedMonthly + peakOutsource + peakSupplies;
+
+  // Off-peak: Lead handles cleaning in-house (no outsourcing)
+  const offSupplies   = off.totalCleansMonth * 1.50 + suppliesBase;
+  const offTotal      = fixedMonthly + offSupplies;
+
+  const annualTotal   = peakTotal * peakMonths + offTotal * offMonths;
+  const totalCleansYr = peak.totalCleansMonth * peakMonths + off.totalCleansMonth * offMonths;
+  const avgPerRoom    = annualTotal / totalCleansYr;
+
+  // Banner
+  document.getElementById('b-annual').textContent      = fmt(annualTotal);
+  document.getElementById('b-peak-mo').textContent     = fmt(peakTotal);
+  document.getElementById('b-off-mo').textContent      = fmt(offTotal);
+  document.getElementById('b-per-room').textContent    = fmtD(avgPerRoom);
+  document.getElementById('b-total-cleans').textContent = Math.round(totalCleansYr).toLocaleString();
+  document.getElementById('b-peak-sub').textContent    = `${Math.round(peak.occRooms)} occ rooms · ${Math.round(peak.turnoversDay)} turns/day`;
+  document.getElementById('b-off-sub').textContent     = `${Math.round(off.occRooms)} occ rooms · ${Math.round(off.turnoversDay)} turns/day`;
+
+  // ALOS callout
+  document.getElementById('alos-callout').innerHTML = `
+    <div class="alos-stat"><div class="val">${alos} nights</div><div class="lbl">Avg stay</div></div>
+    <div class="alos-divider"></div>
+    <div class="alos-stat"><div class="val">${Math.round(turnoverRate*100)}%</div><div class="lbl">Rooms turning daily</div></div>
+    <div class="alos-divider"></div>
+    <div class="alos-stat"><div class="val">${Math.round(peak.turnoversDay * 7)}</div><div class="lbl">Full turns/week (peak)</div></div>
+    <div class="alos-divider"></div>
+    <div class="alos-stat"><div class="val">${blendedMinsPerRoom.toFixed(0)} min</div><div class="lbl">Blended clean time</div></div>
+    <div class="alos-divider"></div>
+    <div class="alos-explain">
+      <strong>Impact:</strong> With a ${alos}-night stay, ${Math.round(turnoverRate*100)}% of occupied rooms need a full duvet turnover clean every day — not just a tidy. 
+      Your outsourced rate needs to split between <strong>turnover ($${rateCheckout})</strong> and <strong>stayover ($${rateStayover})</strong> to avoid overpaying on lighter cleans.
+    </div>
+  `;
+
+  // Season cards
+  document.getElementById('peak-badge').textContent = `Apr–Oct · ${peakMonths} months`;
+  document.getElementById('off-badge').textContent  = `Nov–Mar · ${offMonths} months`;
+
+  document.getElementById('peak-clean-types').innerHTML =
+    cleanTypeBlock(peak.turnoversDay, 'Turnovers/day', 'turnover', `${turnoverMins} min ea`) +
+    cleanTypeBlock(peak.stayoversDay, 'Stayovers/day', 'stayover', `${stayoverMins} min ea`);
+  document.getElementById('peak-chips').innerHTML =
+    `<div class="chip inhouse">Lead HK</div><div class="chip lobby">Lobby Attendant</div><div class="chip outsource">Outsourced Crew</div>`;
+  document.getElementById('peak-rows').innerHTML =
+    scRow('Occupancy', peakOcc + '%') +
+    scRow('Occupied rooms/day', Math.round(peak.occRooms)) +
+    scRow('HK hours needed/day', peak.hkHrsNeeded.toFixed(1) + ' hrs') +
+    scRow('Outsourced shifts needed', peak.hkShiftsNeeded.toFixed(1)) +
+    scRow('Lead + Lobby (fixed)', fmt(fixedMonthly)) +
+    scRow('Outsourced turns', fmt(peak.turnoversMonth * rateCheckout) + ` (${Math.round(peak.turnoversMonth)} × $${rateCheckout})`) +
+    scRow('Outsourced stayovers', fmt(peak.stayoversMonth * rateStayover) + ` (${Math.round(peak.stayoversMonth)} × $${rateStayover})`) +
+    scRow('Supplies', fmt(peakSupplies)) +
+    scRow('Peak Monthly Total', `<strong style="color:var(--peak)">${fmt(peakTotal)}</strong>`);
+
+  document.getElementById('off-clean-types').innerHTML =
+    cleanTypeBlock(off.turnoversDay, 'Turnovers/day', 'turnover', `${turnoverMins} min ea`) +
+    cleanTypeBlock(off.stayoversDay, 'Stayovers/day', 'stayover', `${stayoverMins} min ea`);
+  document.getElementById('off-chips').innerHTML =
+    `<div class="chip inhouse">Lead HK (handles cleaning)</div><div class="chip lobby">Lobby Attendant</div>`;
+  document.getElementById('off-rows').innerHTML =
+    scRow('Occupancy', offOcc + '%') +
+    scRow('Occupied rooms/day', Math.round(off.occRooms)) +
+    scRow('HK hours needed/day', off.hkHrsNeeded.toFixed(1) + ' hrs') +
+    scRow('Lead capacity (8-hr shift)', roomsPerShift.toFixed(0) + ' rooms') +
+    scRow('Lead handles solo?', off.hkHrsNeeded <= 8 ? '✓ Yes — within shift capacity' : '⚠ May need part-time assist') +
+    scRow('No outsourced crew', '$0') +
+    scRow('In-house supplies', fmt(offSupplies)) +
+    scRow('Off-Peak Monthly Total', `<strong style="color:var(--offpeak)">${fmt(offTotal)}</strong>`);
+
+  // Rec bullets
+  document.getElementById('rec-bullets').innerHTML = `
+    <li><span class="g">Year-round core:</span> Lead Housekeeper FT ($${leadWage}/hr) + Lobby Attendant PT ($${lobbyWage}/hr). These two are your in-house backbone regardless of season.</li>
+    <li><span class="a">Peak outsourcing split:</span> Two separate rates — $${rateCheckout}/room for full turnover cleans (${Math.round(peak.turnoversDay)}/day), $${rateStayover}/room for stayovers (${Math.round(peak.stayoversDay)}/day). Don't pay turnover rates for a stayover tidy.</li>
+    <li><span class="g">Off-peak self-sufficient:</span> At ${offOcc}% with a ${alos}-night ALOS, Lead handles ${Math.round(off.occRooms)} rooms/day (${off.hkHrsNeeded.toFixed(1)} hrs needed). ${off.hkHrsNeeded <= 8 ? 'Fits in one shift — no outsourcing needed.' : 'Slightly over one shift — consider a part-time assist a few days/week.'}</li>
+    <li><span class="r">Duvet note:</span> ${turnoverMins}-min turnover time is the key labor driver. If you can switch to insert-style duvets with zipper covers (vs. European-style tucked), you can shave 8–12 min per turn — that's meaningful at scale.</li>
+    <li><span class="g">Annual total: ${fmt(annualTotal)}</span> across ${Math.round(totalCleansYr).toLocaleString()} room-cleans. Average cost per clean: ${fmtD(avgPerRoom)}.</li>
+  `;
+
+  // Breakdown table
+  const brows = [
+    ['Lead HK (FT, in-house, year-round)',       leadMonthly,              leadMonthly,              leadMonthly * (peakMonths + offMonths)],
+    ['Lobby Attendant (PT, in-house, year-round)', lobbyMonthly,           lobbyMonthly,             lobbyMonthly * (peakMonths + offMonths)],
+    ['Outsourced turnover cleans',                peak.turnoversMonth * rateCheckout, 0,             peak.turnoversMonth * rateCheckout * peakMonths],
+    ['Outsourced stayover cleans',                peak.stayoversMonth * rateStayover, 0,             peak.stayoversMonth * rateStayover * peakMonths],
+    ['Supplies & consumables',                    peakSupplies,            offSupplies,              peakSupplies * peakMonths + offSupplies * offMonths],
+  ];
+  const btbody = document.getElementById('breakdown-tbody');
+  btbody.innerHTML = '';
+  brows.forEach(([label, pk, op, ann]) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${label}</td><td class="num">${fmt(pk)}</td><td class="num">${op > 0 ? fmt(op) : '<span style="color:var(--muted)">—</span>'}</td><td class="num bold">${fmt(ann)}</td>`;
+    btbody.appendChild(tr);
+  });
+  document.getElementById('breakdown-tfoot').innerHTML = `<tr>
+    <td class="bold">Total</td>
+    <td class="num bold amber">${fmt(peakTotal)}</td>
+    <td class="num bold blue">${fmt(offTotal)}</td>
+    <td class="num bold green">${fmt(annualTotal)}</td>
+  </tr>`;
+
+  // Monthly table
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const mtbody = document.getElementById('monthly-tbody');
+  mtbody.innerHTML = '';
+  monthNames.forEach((mname, idx) => {
+    const isPeak  = PEAK_IDX.includes(idx);
+    const occ     = isPeak ? peakOcc : offOcc;
+    const s       = seasonCalc(occ);
+    const outsource = isPeak ? (s.turnoversMonth * rateCheckout + s.stayoversMonth * rateStayover) : 0;
+    const supplies  = isPeak ? s.totalCleansMonth * 0.40 + suppliesBase : s.totalCleansMonth * 1.50 + suppliesBase;
+    const monthly   = fixedMonthly + outsource + supplies;
+    const staffModel = isPeak ? 'Lead + Outsourced Crew' : (s.hkHrsNeeded <= 8 ? 'Lead solo' : 'Lead + PT assist');
+
+    const tr = document.createElement('tr');
+    tr.className = isPeak ? 'peak-row' : 'offpeak-row';
+    tr.innerHTML = `
+      <td class="bold">${mname}</td>
+      <td class="${isPeak ? 'amber' : 'blue'}">${isPeak ? '☀ Peak' : '❄ Off-Peak'}</td>
+      <td class="num">${occ}%</td>
+      <td class="num">${Math.round(s.occRooms)}</td>
+      <td class="num red">${Math.round(s.turnoversDay)}</td>
+      <td class="num green">${Math.round(s.stayoversDay)}</td>
+      <td class="num">${s.hkHrsNeeded.toFixed(1)}</td>
+      <td class="${isPeak ? 'amber' : 'blue'} muted">${staffModel}</td>
+      <td class="num bold">${fmt(monthly)}</td>
+    `;
+    mtbody.appendChild(tr);
+  });
+
+  document.getElementById('footnote-text').innerHTML =
+    `<strong>Model notes:</strong> ALOS = ${alos} nights → ${Math.round(turnoverRate*100)}% daily turnover rate. Turnover clean includes full strip/remake with duvet (${turnoverMins} min). Stayover = freshen/restock/make bed, no full strip (${stayoverMins} min). Blended time: ${blendedMinsPerRoom.toFixed(0)} min/room. Lead housekeeper capacity: ${roomsPerShift.toFixed(0)} rooms/8-hr shift at blended times. Employer burden ${burdenPct}% includes FICA 7.65%, workers comp, unemployment, basic benefits. Outsourced rates benchmarked from HSS / The Service Companies 2025. Per-room supply cost: $0.40 outsourced season, $1.50 in-house season.`;
+}
+
+recalc();
+</script>
+</body>
+</html>

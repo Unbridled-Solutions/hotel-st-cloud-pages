@@ -645,7 +645,9 @@ const ROOMS = [
       { id: 'ext-24', desc: 'Chinking — chink around all exterior windows on the full building.', location: 'Exterior · All Windows, Full Building Perimeter', owner: 'Derek', status: 'not-started' },
       { id: 'ext-25', desc: 'Finishes — touch up all exposed / visible screw holes on exterior trim. Paint to match.', location: 'Exterior · All Trim, Full Perimeter', owner: 'Billy', status: 'not-started' },
       { id: 'ext-26', desc: 'Chinking — chink gap between stone foundation and logs wherever no flashing exists along full exterior.', location: 'Exterior · Foundation-to-Log Gap, Full Perimeter', owner: 'Derek', status: 'not-started' },
-      { id: 'ext-27', desc: 'Chinking — exterior far left garage: power outlet wall penetration needs chinking around it.', location: 'Exterior · Far Left Garage, Power Outlet Penetration', owner: 'Derek', status: 'not-started' }
+      { id: 'ext-27', desc: 'Chinking — exterior far left garage: power outlet wall penetration needs chinking around it.', location: 'Exterior · Far Left Garage, Power Outlet Penetration', owner: 'Derek', status: 'not-started' },
+      { id: 'ext-28', desc: 'Finishes — install and finish ceiling below deck slider door where slider meets the deck.', location: 'Exterior · Deck, Below Slider Door', owner: '', status: 'not-started' },
+      { id: 'ext-29', desc: 'Chinking / Metal Flashing — chink and/or install metal flashing where logs meet the deck along full deck-to-log transition.', location: 'Exterior · Deck, Log-to-Deck Transition, Full Length', owner: '', status: 'not-started' }
     ]
   },
   {
@@ -1158,13 +1160,13 @@ function requestDelete(taskId) {
 }
 
 function executeDelete(taskId) {
-  // Remove from DOM
+  // Remove from DOM & in-memory state
   const row = document.getElementById('row-' + taskId);
   if (row) row.remove();
-  // Remove from localStorage
-  localStorage.removeItem('el-task-' + taskId);
+  delete _elState['el-task-' + taskId];
+  elCloudPush();
   updateCounts();
-  markDirty();
+  dirty = false;
 }
 
 // Allow Enter key to confirm PIN
@@ -1218,84 +1220,60 @@ function toggleRoom(roomId) {
 }
 
 // ════════════════════════════════════════════
-//  CLOUD SYNC (KV) + SAVE / LOAD
+//  CLOUD-FIRST STATE — no localStorage
+//  _elState is the single source of truth.
+//  Pull from KV on load. Push to KV on save.
+//  Sync button pulls KV → re-render (never pushes).
 // ════════════════════════════════════════════
 const EL_CLOUD_URL = '/api/planner/bundle?ns=el-tracker';
-let dirty = false;
+let _elState = {};   // { 'el-task-ID': {status, owner, saved_at}, 'el-log': [...] }
 let _elReady = false;
-
+let dirty = false;
 function markDirty() { dirty = true; }
 
+// Push _elState → KV (read-then-merge so unrelated KV keys are never wiped)
 async function elCloudPush() {
   try {
-    // Read-then-merge: never overwrite keys we don't have locally
-    const kvRes = await fetch(EL_CLOUD_URL);
+    const kvRes = await fetch(EL_CLOUD_URL + '&_=' + Date.now());
     const kvData = kvRes.ok ? ((await kvRes.json()).data || {}) : {};
     const bundle = { ...kvData };
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k && (k.startsWith('el-task-') || k === 'el-log')) {
-        try { bundle[k] = JSON.parse(localStorage.getItem(k)); } catch(e) { bundle[k] = localStorage.getItem(k); }
-      }
-    }
-    await fetch(EL_CLOUD_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bundle) });
-  } catch(e) { /* offline — localStorage is the fallback */ }
+    Object.entries(_elState).forEach(([k, v]) => { bundle[k] = v; });
+    await fetch(EL_CLOUD_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(bundle)
+    });
+  } catch(e) { /* offline — changes held in _elState until next push */ }
 }
 
+// Pull KV → _elState (replaces in-memory state entirely — cloud is truth)
 async function elCloudPull() {
   try {
-    const res = await fetch(EL_CLOUD_URL);
+    const res = await fetch(EL_CLOUD_URL + '&_=' + Date.now());
     if (!res.ok) return;
     const { data } = await res.json();
     if (!data || Object.keys(data).length === 0) return;
     Object.entries(data).forEach(([k, v]) => {
       if (k.startsWith('el-task-') || k === 'el-log') {
-        try {
-          const incoming = typeof v === 'string' ? v : JSON.stringify(v);
-          const existing = localStorage.getItem(k);
-          if (k.startsWith('el-task-') && existing) {
-            // Keep whichever has a more advanced status (local wins if not not-started)
-            const localStatus = JSON.parse(existing).status || 'not-started';
-            const cloudStatus = (typeof v === 'object' ? v : JSON.parse(v)).status || 'not-started';
-            const rank = {'not-started':0,'in-progress':1,'completed':2,'approved':3};
-            if ((rank[localStatus]||0) >= (rank[cloudStatus]||0)) return; // local is same or better
-          }
-          if (k === 'el-log' && existing) {
-            // Merge logs — combine cloud + local, dedupe by time+task, keep newest 200
-            try {
-              const cloudLog = typeof v === 'object' ? v : JSON.parse(v);
-              const localLog = JSON.parse(existing);
-              const seen = new Set();
-              const merged = [...localLog, ...cloudLog].filter(e => {
-                const key = e.time + e.task;
-                if (seen.has(key)) return false;
-                seen.add(key); return true;
-              }).slice(0, 200);
-              localStorage.setItem(k, JSON.stringify(merged));
-              return;
-            } catch(e) {}
-          }
-          localStorage.setItem(k, incoming);
-        } catch(e) {}
+        _elState[k] = typeof v === 'object' ? v : JSON.parse(v);
       }
     });
   } catch(e) { /* offline */ }
 }
 
+// Sync button — pull only, never push. Cloud wins. Re-render.
 async function elForceSync() {
-  showToast('Saving then syncing…');
-  // ALWAYS push local state to cloud FIRST before wiping anything
-  await elCloudPush();
-  showToast('✓ Saved to cloud — pulling latest…');
-  // Now pull (merge, not wipe — cloud pull overwrites only task-by-task, never deletes)
+  showToast('Pulling from cloud…');
+  _elState = {};
   await elCloudPull();
   buildTracker();
   loadLog();
-  showToast('✓ Synced');
+  showToast('✓ Synced from cloud');
 }
 
 function saveAll() {
   const changes = [];
+  const now = Date.now();
   ROOMS.forEach(room => {
     room.tasks.forEach(task => {
       const row = document.getElementById('row-' + task.id);
@@ -1306,25 +1284,20 @@ function saveAll() {
       const prev = loadTask(task.id);
       const prevStatus = prev ? prev.status : (task.status || 'not-started');
       const prevOwner  = prev ? prev.owner  : (task.owner  || '');
-
       if (status !== prevStatus || owner !== prevOwner) {
         changes.push({ task, status, owner, prevStatus });
       }
-      localStorage.setItem('el-task-' + task.id, JSON.stringify({ status, owner }));
+      _elState['el-task-' + task.id] = { status, owner, saved_at: now };
     });
   });
-
-  if (changes.length > 0) {
-    addLogEntries(changes);
-  }
-  elCloudPush(); // sync to cloud immediately after every save
+  if (changes.length > 0) { addLogEntries(changes); }
+  elCloudPush();
   showToast('Progress saved ✓');
   dirty = false;
 }
 
 function loadTask(taskId) {
-  const raw = localStorage.getItem('el-task-' + taskId);
-  return raw ? JSON.parse(raw) : null;
+  return _elState['el-task-' + taskId] || null;
 }
 
 function addLogEntries(changes) {
@@ -1350,8 +1323,8 @@ function addLogEntries(changes) {
     logCard.insertBefore(entry, logCard.firstChild);
   });
 
-  // Persist log
-  const stored = JSON.parse(localStorage.getItem('el-log') || '[]');
+  // Persist log to _elState (cloud-first — no localStorage)
+  const stored = Array.isArray(_elState['el-log']) ? [..._elState['el-log']] : [];
   changes.forEach(c => {
     stored.unshift({
       time,
@@ -1361,9 +1334,7 @@ function addLogEntries(changes) {
       owner: c.owner
     });
   });
-  // Keep last 200 entries
-  localStorage.setItem('el-log', JSON.stringify(stored.slice(0, 200)));
-  if (_elReady) elCloudPush();
+  _elState['el-log'] = stored.slice(0, 200);
 }
 
 function formatStatus(s) {
@@ -1374,7 +1345,7 @@ function formatStatus(s) {
 }
 
 function loadLog() {
-  const stored = JSON.parse(localStorage.getItem('el-log') || '[]');
+  const stored = Array.isArray(_elState['el-log']) ? _elState['el-log'] : [];
   if (stored.length === 0) return;
   const logCard = document.getElementById('logCard');
   const empty   = document.getElementById('logEmpty');

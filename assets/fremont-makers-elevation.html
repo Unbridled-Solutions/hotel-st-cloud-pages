@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fremont Makers — Kitchen Elevation</title>
+<style>
+  :root {
+    --bg: #f8f7f4;
+    --surface: #ffffff;
+    --border: #d0ccc4;
+    --text: #1a1a1a;
+    --muted: #888;
+    --accent: #c47f1a;
+    --fm-dark: #1a1a1a;
+    --line: #333;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── SCREEN HEADER ── */
+  .screen-header {
+    background: var(--fm-dark);
+    color: #fff;
+    padding: 14px 28px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap;
+  }
+  .screen-header h1 { font-size: 16px; font-weight: 700; color: #c9aa7c; letter-spacing: .04em; }
+  .screen-header p { font-size: 11px; color: #aaa; }
+  .header-right { display: flex; gap: 10px; align-items: center; }
+  .btn {
+    padding: 7px 16px; border-radius: 5px; cursor: pointer;
+    font-size: 12px; font-weight: 700; border: none; transition: opacity .15s;
+  }
+  .btn:hover { opacity: .85; }
+  .btn-print { background: #c9aa7c; color: #1a1a1a; }
+  .btn-outline { background: transparent; border: 1px solid #555; color: #ccc; }
+
+  /* ── AGENT BADGE ── */
+  .agent-badge {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(201,170,124,.15); border: 1px solid rgba(201,170,124,.3);
+    border-radius: 20px; padding: 3px 10px;
+    font-size: 10px; color: #c9aa7c; font-weight: 700; letter-spacing: .06em;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .main { display: flex; gap: 0; min-height: calc(100vh - 52px); }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 260px; flex-shrink: 0;
+    background: #fff; border-right: 1px solid var(--border);
+    padding: 18px 16px; overflow-y: auto;
+  }
+  .sidebar-section { margin-bottom: 20px; }
+  .sidebar-title {
+    font-size: 10px; font-weight: 800; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 10px; padding-bottom: 5px;
+    border-bottom: 1px solid var(--border);
+  }
+  .field { display: flex; flex-direction: column; gap: 3px; margin-bottom: 8px; }
+  .field label { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+  .field input, .field select, .field textarea {
+    background: #f4f4f2; border: 1px solid var(--border);
+    border-radius: 4px; padding: 5px 8px;
+    font-size: 12px; color: var(--text);
+  }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--accent); }
+  .field textarea { resize: vertical; min-height: 60px; font-size: 11px; }
+
+  /* ── CABINET ROW ── */
+  .cab-row {
+    background: #f8f7f4; border: 1px solid var(--border);
+    border-radius: 5px; padding: 7px 8px; margin-bottom: 5px;
+    font-size: 11px;
+  }
+  .cab-row-header { font-weight: 700; color: var(--text); margin-bottom: 2px; }
+  .cab-row-detail { color: var(--muted); }
+  .cab-row.upper { border-left: 3px solid #5a8ba7; }
+  .cab-row.base  { border-left: 3px solid var(--accent); }
+  .cab-row.appl  { border-left: 3px solid #4caf7d; }
+
+  /* ── SUGGESTIONS ── */
+  .suggestion {
+    background: #fffbf0; border: 1px solid #f0d080;
+    border-radius: 5px; padding: 8px; margin-bottom: 6px;
+    font-size: 11px; color: #7a5a10; line-height: 1.5;
+  }
+  .suggestion::before { content: '💡 '; }
+
+  /* ── DRAWING AREA ── */
+  .drawing-area {
+    flex: 1; padding: 24px;
+    display: flex; flex-direction: column; align-items: center;
+    overflow: auto;
+  }
+  .wall-label {
+    font-size: 11px; font-weight: 700; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 8px; align-self: flex-start;
+  }
+
+  /* ── SVG ELEVATION ── */
+  .elevation-wrap {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    overflow: visible;
+    max-width: 100%;
+  }
+  svg { display: block; }
+
+  /* ── PRINT ── */
+  @media print {
+    .screen-header, .sidebar, .wall-label, .drawing-area > *:not(.elevation-wrap) { display: none !important; }
+    body { background: #fff; }
+    .main { display: block; }
+    .drawing-area { padding: 0; display: block; }
+    .elevation-wrap { border: none; box-shadow: none; }
+    svg { max-width: 100%; height: auto; }
+    @page { margin: 0.5in; size: landscape; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SCREEN HEADER -->
+<div class="screen-header">
+  <div>
+    <h1>Fremont Makers — Kitchen Elevation</h1>
+    <p>Powered by DRAFT · Elevation Designer</p>
+  </div>
+  <div class="header-right">
+    <div class="agent-badge">⚔️ DRAFT</div>
+    <button class="btn btn-outline" onclick="window.location.href='fremont-makers-quote.html'">← Quote Builder</button>
+    <button class="btn btn-print" onclick="window.print()">🖨️ Print / Export PDF</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- SIDEBAR: JOB INFO + CABINET LIST -->
+  <div class="sidebar">
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Job Info</div>
+      <div class="cab-row" style="border-left:3px solid #c9aa7c">
+        <div class="cab-row-header">FM-2607-001</div>
+        <div class="cab-row-detail">Standalone Test Project</div>
+        <div class="cab-row-detail" style="margin-top:2px">Galley Kitchen · July 16, 2026</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Wall Specs</div>
+      <div class="cab-row" style="border-left:3px solid #888">
+        <div class="cab-row-header">Wall A — North</div>
+        <div class="cab-row-detail">Width: 144" (12'-0")</div>
+        <div class="cab-row-detail">Ceiling: 120" (10'-0")</div>
+        <div class="cab-row-detail">Countertop: Granite, 1.5" thick</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Upper Cabinets</div>
+      <div class="cab-row upper">
+        <div class="cab-row-header">U1 — Upper Wall</div>
+        <div class="cab-row-detail">36"W × 42"H · Pos: 0–36"</div>
+      </div>
+      <div class="cab-row upper">
+        <div class="cab-row-header">U2 — Upper Wall</div>
+        <div class="cab-row-detail">36"W × 42"H · Pos: 36–72"</div>
+      </div>
+      <div class="cab-row upper">
+        <div class="cab-row-header">U3 — Upper Wall</div>
+        <div class="cab-row-detail">36"W × 42"H · Pos: 72–108"</div>
+      </div>
+      <div class="cab-row upper">
+        <div class="cab-row-header">U4 — Upper Wall</div>
+        <div class="cab-row-detail">36"W × 42"H · Pos: 108–144"</div>
+      </div>
+      <div class="cab-row" style="border-left:3px solid #5a8ba7;background:#f0f5fa">
+        <div class="cab-row-header">Crown Moulding</div>
+        <div class="cab-row-detail">Full width · 4" profile</div>
+        <div class="cab-row-detail">Runs cabinet top to soffit</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Base Cabinets &amp; Appliances</div>
+      <div class="cab-row base">
+        <div class="cab-row-header">B1 — 3-Drawer Bank</div>
+        <div class="cab-row-detail">36"W × 34.5"H · Pos: 0–36"</div>
+        <div class="cab-row-detail">Silverware / utensil storage</div>
+      </div>
+      <div class="cab-row base">
+        <div class="cab-row-header">B2 — Trash Pull-Out</div>
+        <div class="cab-row-detail">12"W × 34.5"H · Pos: 36–48"</div>
+      </div>
+      <div class="cab-row base">
+        <div class="cab-row-header">B3 — Sink Base</div>
+        <div class="cab-row-detail">36"W × 34.5"H · Pos: 48–84"</div>
+        <div class="cab-row-detail">Undermount sink opening</div>
+      </div>
+      <div class="cab-row appl">
+        <div class="cab-row-header">A1 — Dishwasher</div>
+        <div class="cab-row-detail">24"W × 34"H · Pos: 84–108"</div>
+        <div class="cab-row-detail">Panel-ready finish</div>
+      </div>
+      <div class="cab-row base">
+        <div class="cab-row-header">B4 — 3-Drawer Bank</div>
+        <div class="cab-row-detail">36"W × 34.5"H · Pos: 108–144"</div>
+        <div class="cab-row-detail">Silverware / utensil storage</div>
+      </div>
+      <div class="cab-row" style="border-left:3px solid #888;background:#f8f8f8;margin-top:4px">
+        <div class="cab-row-detail" style="font-weight:600">Total lower run: 144" ✓</div>
+        <div class="cab-row-detail">36 + 12 + 24 + 36 + 36 = 144"</div>
+      </div>
+    </div>
+
+      <div class="sidebar-section">
+      <div class="sidebar-title">MC Suggestions</div>
+      <div class="suggestion">3-drawer banks on both ends are a great call for an office galley — silverware, utensils, and office snacks right where you need them, no bending to dig through base cabinets.</div>
+      <div class="suggestion">With 10ft ceilings, 42" uppers leave 24" to ceiling. The 4" crown moulding bridges most of that gap — consider a full-height soffit above crown to fully close off the space for a cleaner look.</div>
+      <div class="suggestion">Trash pull-out at 12" fits a standard single-bin pull-out unit. Placing it next to the drawer bank (and before the DW) keeps the trash close to the prep side without being right next to the sink.</div>
+      <div class="suggestion">Granite countertop on a 12ft run will require two slabs with one seam. Best seam placement: 72" from left (between DW and sink base) — falls at a natural cabinet joint and stays functional.</div>
+      <div class="suggestion">The sink at center and DW to its right is the ideal ergonomic workflow: scrape trash → rinse at sink → load the dishwasher — all in one natural left-to-right motion. Smart.</div>
+    </div>
+
+  </div>
+
+  <!-- DRAWING AREA -->
+  <div class="drawing-area">
+    <div class="wall-label">Wall A — North Elevation &nbsp;|&nbsp; Scale: 1" = 6px &nbsp;|&nbsp; Job FM-DEMO-001</div>
+
+    <div class="elevation-wrap">
+      <!-- SVG ELEVATION
+           Scale: 6px per inch
+           Wall: 144" × 120" → 864px × 720px
+           Padding: 90px left, 40px right, 60px top, 130px bottom
+           Total SVG: 994px × 910px
+           
+           Y coordinates (SVG top=0, floor at bottom):
+             ceiling_y = 60
+             floor_y   = 60 + 720 = 780
+             
+           Base cabinets:
+             countertop_top_y = floor_y - 36*6 = 780 - 216 = 564
+             cabinet_top_y    = 564 + 9 = 573   (countertop = 1.5*6=9px)
+             floor_y = 780
+             toe_kick_y = 780 - 4.5*6 = 780 - 27 = 753
+             
+           Upper cabinets (mount at 54" from floor):
+             upper_bottom_y = floor_y - 54*6 = 780 - 324 = 456
+             upper_top_y    = 456 - 42*6 = 456 - 252 = 204
+             crown_top_y    = 204 - 4*6 = 204 - 24 = 180
+             
+           X coordinates (left_pad = 90):
+             wall_left  = 90
+             wall_right = 90 + 864 = 954
+      -->
+      <svg width="994" height="910" viewBox="0 0 994 910"
+           xmlns="http://www.w3.org/2000/svg"
+           style="background:#fff">
+
+        <!-- ═══════════════════════════════════════
+             DEFINE REUSABLE PATTERNS
+        ═══════════════════════════════════════ -->
+        <defs>
+          <!-- Hatch for granite countertop -->
+          <pattern id="granite" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <line x1="0" y1="0" x2="0" y2="6" stroke="#ccc" stroke-width=".5"/>
+          </pattern>
+        </defs>
+
+        <!-- ═══════════════════════════════════════
+             WALL BACKGROUND + OUTLINE
+        ═══════════════════════════════════════ -->
+        <!-- Wall area (light fill) -->
+        <rect x="90" y="60" width="864" height="720" fill="#fafaf8" stroke="none"/>
+
+        <!-- Wall ceiling line -->
+        <line x1="90" y1="60" x2="954" y2="60" stroke="#333" stroke-width="2.5"/>
+        <!-- Wall floor line -->
+        <line x1="90" y1="780" x2="954" y2="780" stroke="#333" stroke-width="3"/>
+        <!-- Wall left edge -->
+        <line x1="90" y1="60" x2="90" y2="780" stroke="#333" stroke-width="2.5"/>
+        <!-- Wall right edge -->
+        <line x1="954" y1="60" x2="954" y2="780" stroke="#333" stroke-width="2.5"/>
+
+        <!-- ════════════════════════════════════════
+             BASE CABINETS — NEW ORDER (L→R):
+             B1: 36" Drawer Bank  x=90–306
+             B2: 12" Trash P/O    x=306–378
+             B3: 24" DW           x=378–522
+             B4: 36" Sink Base    x=522–738
+             B5: 36" Drawer Bank  x=738–954
+        ════════════════════════════════════════ -->
+
+        <!-- B1: 3-DRAWER BANK 36" — x=90–306 -->
+        <rect x="90" y="573" width="216" height="207" fill="#e8e4dc" stroke="#333" stroke-width="1.2"/>
+        <!-- Toe kick -->
+        <rect x="90" y="753" width="216" height="27" fill="#d0ccc4" stroke="#333" stroke-width=".8"/>
+        <!-- Drawer 1 (top) -->
+        <rect x="93" y="576" width="210" height="58" fill="#ede9e2" stroke="#555" stroke-width=".8"/>
+        <rect x="190" y="591" width="36" height="14" rx="2" fill="#999" stroke="none"/>
+        <!-- Drawer 2 (middle) -->
+        <rect x="93" y="637" width="210" height="58" fill="#ede9e2" stroke="#555" stroke-width=".8"/>
+        <rect x="190" y="652" width="36" height="14" rx="2" fill="#999" stroke="none"/>
+        <!-- Drawer 3 (bottom) -->
+        <rect x="93" y="698" width="210" height="52" fill="#ede9e2" stroke="#555" stroke-width=".8"/>
+        <rect x="190" y="711" width="36" height="14" rx="2" fill="#999" stroke="none"/>
+        <!-- Drawer label -->
+        <text x="198" y="630" text-anchor="middle" font-family="monospace" font-size="8" fill="#666">3-DRAWER</text>
+
+        <!-- B2: TRASH PULL-OUT 12" — x=306–378 -->
+        <rect x="306" y="573" width="72" height="207" fill="#e8e4dc" stroke="#333" stroke-width="1.2"/>
+        <!-- Toe kick -->
+        <rect x="306" y="753" width="72" height="27" fill="#d0ccc4" stroke="#333" stroke-width=".8"/>
+        <!-- Single door with X -->
+        <rect x="309" y="576" width="66" height="174" fill="#ede9e2" stroke="#555" stroke-width=".8"/>
+        <line x1="309" y1="576" x2="375" y2="750" stroke="#aaa" stroke-width=".8"/>
+        <line x1="375" y1="576" x2="309" y2="750" stroke="#aaa" stroke-width=".8"/>
+        <!-- Pull handle -->
+        <circle cx="342" cy="663" r="4" fill="none" stroke="#888" stroke-width="1.2"/>
+        <text x="342" y="685" text-anchor="middle" font-family="monospace" font-size="7" fill="#666">TRASH</text>
+
+        <!-- B3: SINK BASE 36" — x=378–594 -->
+        <rect x="378" y="573" width="216" height="207" fill="#e8e4dc" stroke="#333" stroke-width="1.2"/>
+        <!-- Toe kick -->
+        <rect x="378" y="753" width="216" height="27" fill="#d0ccc4" stroke="#333" stroke-width=".8"/>
+        <!-- Two doors -->
+        <rect x="381" y="576" width="103" height="174" fill="#ede9e2" stroke="#555" stroke-width=".8"/>
+        <rect x="487" y="576" width="104" height="174" fill="#ede9e2" stroke="#555" stroke-width=".8"/>
+        <line x1="381" y1="576" x2="484" y2="750" stroke="#aaa" stroke-width=".8"/>
+        <line x1="484" y1="576" x2="381" y2="750" stroke="#aaa" stroke-width=".8"/>
+        <line x1="487" y1="576" x2="591" y2="750" stroke="#aaa" stroke-width=".8"/>
+        <line x1="591" y1="576" x2="487" y2="750" stroke="#aaa" stroke-width=".8"/>
+        <rect x="473" y="655" width="6" height="18" rx="2" fill="#888" stroke="none"/>
+        <rect x="489" y="655" width="6" height="18" rx="2" fill="#888" stroke="none"/>
+        <!-- Undermount sink oval -->
+        <ellipse cx="486" cy="568" rx="62" ry="7" fill="none" stroke="#666" stroke-width="1.2" stroke-dasharray="4,3"/>
+        <text x="486" y="630" text-anchor="middle" font-family="monospace" font-size="9" fill="#555">SINK BASE</text>
+
+        <!-- B4: DISHWASHER 24" — x=594–738 -->
+        <rect x="594" y="573" width="144" height="207" fill="#e0e8f0" stroke="#333" stroke-width="1.2"/>
+        <!-- Toe kick -->
+        <rect x="594" y="753" width="144" height="27" fill="#ccd4dc" stroke="#333" stroke-width=".8"/>
+        <!-- DW door panel -->
+        <rect x="597" y="576" width="138" height="174" fill="#e4ecf4" stroke="#5577aa" stroke-width=".8"/>
+        <!-- DW control panel strip -->
+        <rect x="597" y="576" width="138" height="16" fill="#b8c8dc" stroke="#5577aa" stroke-width=".8"/>
+        <!-- DW handle bar -->
+        <rect x="614" y="594" width="104" height="6" rx="3" fill="#8899bb" stroke="none"/>
+        <text x="666" y="680" text-anchor="middle" font-family="monospace" font-size="10" fill="#5577aa" font-weight="700">DW</text>
+
+        <!-- B5: 3-DRAWER BANK 36" — x=738–954 -->
+        <rect x="738" y="573" width="216" height="207" fill="#e8e4dc" stroke="#333" stroke-width="1.2"/>
+        <!-- Toe kick -->
+        <rect x="738" y="753" width="216" height="27" fill="#d0ccc4" stroke="#333" stroke-width=".8"/>
+        <!-- Drawer 1 (top) -->
+        <rect x="741" y="576" width="210" height="58" fill="#ede9e2" stroke="#555" stroke-width=".8"/>
+        <rect x="838" y="591" width="36" height="14" rx="2" fill="#999" stroke="none"/>
+        <!-- Drawer 2 (middle) -->
+        <rect x="741" y="637" width="210" height="58" fill="#ede9e2" stroke="#555" stroke-width=".8"/>
+        <rect x="838" y="652" width="36" height="14" rx="2" fill="#999" stroke="none"/>
+        <!-- Drawer 3 (bottom) -->
+        <rect x="741" y="698" width="210" height="52" fill="#ede9e2" stroke="#555" stroke-width=".8"/>
+        <rect x="838" y="711" width="36" height="14" rx="2" fill="#999" stroke="none"/>
+        <!-- Drawer label -->
+        <text x="846" y="630" text-anchor="middle" font-family="monospace" font-size="8" fill="#666">3-DRAWER</text>
+
+        <!-- ═══════════════════════════════════════
+             GRANITE COUNTERTOP (full run)
+             y=564 to y=573, width=864
+        ═══════════════════════════════════════ -->
+        <rect x="90" y="564" width="864" height="9" fill="url(#granite)" stroke="#555" stroke-width="1.2"/>
+        <!-- Countertop front edge shadow line -->
+        <line x1="90" y1="573" x2="954" y2="573" stroke="#444" stroke-width="1.5"/>
+        <!-- Countertop overhang cap lines -->
+        <line x1="90" y1="564" x2="954" y2="564" stroke="#333" stroke-width="1.2"/>
+        <!-- Countertop label -->
+        <text x="522" y="561" text-anchor="middle" font-family="monospace" font-size="9" fill="#666">GRANITE COUNTERTOP — 1.5" THK · FULL 12'-0" RUN</text>
+
+        <!-- ═══════════════════════════════════════
+             UPPER CABINETS
+             upper_bottom_y = 456
+             upper_top_y    = 204
+             crown_top_y    = 180
+        ═══════════════════════════════════════ -->
+
+        <!-- U1 — 0"–36" → x=90–306 -->
+        <rect x="90" y="204" width="216" height="252" fill="#e0dcd4" stroke="#333" stroke-width="1.2"/>
+        <!-- Two doors -->
+        <rect x="93" y="207" width="103" height="246" fill="#e8e4dc" stroke="#555" stroke-width=".8"/>
+        <rect x="199" y="207" width="104" height="246" fill="#e8e4dc" stroke="#555" stroke-width=".8"/>
+        <line x1="93" y1="207" x2="196" y2="453" stroke="#bbb" stroke-width=".8"/>
+        <line x1="196" y1="207" x2="93" y2="453" stroke="#bbb" stroke-width=".8"/>
+        <line x1="199" y1="207" x2="303" y2="453" stroke="#bbb" stroke-width=".8"/>
+        <line x1="303" y1="207" x2="199" y2="453" stroke="#bbb" stroke-width=".8"/>
+        <!-- Handles -->
+        <rect x="186" y="322" width="6" height="18" rx="2" fill="#999" stroke="none"/>
+        <rect x="202" y="322" width="6" height="18" rx="2" fill="#999" stroke="none"/>
+
+        <!-- U2 — 36"–72" → x=306–522 -->
+        <rect x="306" y="204" width="216" height="252" fill="#e0dcd4" stroke="#333" stroke-width="1.2"/>
+        <rect x="309" y="207" width="103" height="246" fill="#e8e4dc" stroke="#555" stroke-width=".8"/>
+        <rect x="415" y="207" width="104" height="246" fill="#e8e4dc" stroke="#555" stroke-width=".8"/>
+        <line x1="309" y1="207" x2="412" y2="453" stroke="#bbb" stroke-width=".8"/>
+        <line x1="412" y1="207" x2="309" y2="453" stroke="#bbb" stroke-width=".8"/>
+        <line x1="415" y1="207" x2="519" y2="453" stroke="#bbb" stroke-width=".8"/>
+        <line x1="519" y1="207" x2="415" y2="453" stroke="#bbb" stroke-width=".8"/>
+        <rect x="402" y="322" width="6" height="18" rx="2" fill="#999" stroke="none"/>
+        <rect x="418" y="322" width="6" height="18" rx="2" fill="#999" stroke="none"/>
+
+        <!-- U3 — 72"–108" → x=522–738 -->
+        <rect x="522" y="204" width="216" height="252" fill="#e0dcd4" stroke="#333" stroke-width="1.2"/>
+        <rect x="525" y="207" width="103" height="246" fill="#e8e4dc" stroke="#555" stroke-width=".8"/>
+        <rect x="631" y="207" width="104" height="246" fill="#e8e4dc" stroke="#555" stroke-width=".8"/>
+        <line x1="525" y1="207" x2="628" y2="453" stroke="#bbb" stroke-width=".8"/>
+        <line x1="628" y1="207" x2="525" y2="453" stroke="#bbb" stroke-width=".8"/>
+        <line x1="631" y1="207" x2="735" y2="453" stroke="#bbb" stroke-width=".8"/>
+        <line x1="735" y1="207" x2="631" y2="453" stroke="#bbb" stroke-width=".8"/>
+        <rect x="618" y="322" width="6" height="18" rx="2" fill="#999" stroke="none"/>
+        <rect x="634" y="322" width="6" height="18" rx="2" fill="#999" stroke="none"/>
+
+        <!-- U4 — 108"–144" → x=738–954 -->
+        <rect x="738" y="204" width="216" height="252" fill="#e0dcd4" stroke="#333" stroke-width="1.2"/>
+        <rect x="741" y="207" width="103" height="246" fill="#e8e4dc" stroke="#555" stroke-width=".8"/>
+        <rect x="847" y="207" width="104" height="246" fill="#e8e4dc" stroke="#555" stroke-width=".8"/>
+        <line x1="741" y1="207" x2="844" y2="453" stroke="#bbb" stroke-width=".8"/>
+        <line x1="844" y1="207" x2="741" y2="453" stroke="#bbb" stroke-width=".8"/>
+        <line x1="847" y1="207" x2="951" y2="453" stroke="#bbb" stroke-width=".8"/>
+        <line x1="951" y1="207" x2="847" y2="453" stroke="#bbb" stroke-width=".8"/>
+        <rect x="834" y="322" width="6" height="18" rx="2" fill="#999" stroke="none"/>
+        <rect x="850" y="322" width="6" height="18" rx="2" fill="#999" stroke="none"/>
+
+        <!-- CROWN MOULDING — full run across all 4 uppers -->
+        <!-- Crown shape: simple stepped profile -->
+        <rect x="90" y="180" width="864" height="24" fill="#d4cfC8" stroke="#333" stroke-width="1.2"/>
+        <!-- Crown profile detail line -->
+        <line x1="90" y1="192" x2="954" y2="192" stroke="#aaa" stroke-width=".8" stroke-dasharray="3,2"/>
+        <!-- Crown top cap -->
+        <rect x="88" y="178" width="868" height="4" fill="#bbb9b4" stroke="#555" stroke-width=".8"/>
+        <!-- Crown label -->
+        <text x="522" y="174" text-anchor="middle" font-family="monospace" font-size="9" fill="#555" font-style="italic">CROWN MOULDING — 4" PROFILE · FULL RUN</text>
+
+        <!-- Gap between upper and crown to ceiling -->
+        <!-- Soffit / wall shown above crown to ceiling line -->
+        <text x="522" y="124" text-anchor="middle" font-family="monospace" font-size="9" fill="#aaa">← WALL ABOVE CROWN — 18" TO 10'-0" CEILING →</text>
+
+        <!-- ═══════════════════════════════════════
+             DIMENSION LINES
+        ═══════════════════════════════════════ -->
+
+        <!-- LOWER DIMENSION LINE (below floor) -->
+        <!-- Main wall span line -->
+        <line x1="90" y1="810" x2="954" y2="810" stroke="#333" stroke-width=".8"/>
+        <line x1="90" y1="804" x2="90" y2="816" stroke="#333" stroke-width=".8"/>
+        <line x1="954" y1="804" x2="954" y2="816" stroke="#333" stroke-width=".8"/>
+        <text x="522" y="827" text-anchor="middle" font-family="monospace" font-size="11" fill="#333" font-weight="700">12'-0"  (144")</text>
+
+        <!-- Individual base cabinet dimension ticks -->
+        <!-- B1 Drawer: 0–36" (x=90–306) -->
+        <line x1="90" y1="793" x2="306" y2="793" stroke="#666" stroke-width=".7"/>
+        <line x1="90" y1="789" x2="90" y2="797" stroke="#666" stroke-width=".7"/>
+        <line x1="306" y1="789" x2="306" y2="797" stroke="#666" stroke-width=".7"/>
+        <text x="198" y="787" text-anchor="middle" font-family="monospace" font-size="9" fill="#666">36"</text>
+
+        <!-- B2 Trash: 36–48" (x=306–378) -->
+        <line x1="306" y1="793" x2="378" y2="793" stroke="#666" stroke-width=".7"/>
+        <line x1="378" y1="789" x2="378" y2="797" stroke="#666" stroke-width=".7"/>
+        <text x="342" y="787" text-anchor="middle" font-family="monospace" font-size="9" fill="#666">12"</text>
+
+        <!-- B3 Sink: 48–84" (x=378–594) -->
+        <line x1="378" y1="793" x2="594" y2="793" stroke="#666" stroke-width=".7"/>
+        <line x1="594" y1="789" x2="594" y2="797" stroke="#666" stroke-width=".7"/>
+        <text x="486" y="787" text-anchor="middle" font-family="monospace" font-size="9" fill="#666">36"</text>
+
+        <!-- B4 DW: 84–108" (x=594–738) -->
+        <line x1="594" y1="793" x2="738" y2="793" stroke="#666" stroke-width=".7"/>
+        <line x1="738" y1="789" x2="738" y2="797" stroke="#666" stroke-width=".7"/>
+        <text x="666" y="787" text-anchor="middle" font-family="monospace" font-size="9" fill="#5577aa">24"</text>
+
+        <!-- B5 Drawer: 108–144" (x=738–954) -->
+        <line x1="738" y1="793" x2="954" y2="793" stroke="#666" stroke-width=".7"/>
+        <text x="846" y="787" text-anchor="middle" font-family="monospace" font-size="9" fill="#666">36"</text>
+
+        <!-- UPPER DIMENSION LINE (above drawing) -->
+        <!-- Main upper span -->
+        <line x1="90" y1="36" x2="954" y2="36" stroke="#333" stroke-width=".8"/>
+        <line x1="90" y1="30" x2="90" y2="42" stroke="#333" stroke-width=".8"/>
+        <line x1="954" y1="30" x2="954" y2="42" stroke="#333" stroke-width=".8"/>
+        <text x="522" y="24" text-anchor="middle" font-family="monospace" font-size="11" fill="#333" font-weight="700">4 × 36"W = 144" TOTAL</text>
+
+        <!-- Individual upper ticks -->
+        <line x1="306" y1="30" x2="306" y2="42" stroke="#888" stroke-width=".7"/>
+        <line x1="522" y1="30" x2="522" y2="42" stroke="#888" stroke-width=".7"/>
+        <line x1="738" y1="30" x2="738" y2="42" stroke="#888" stroke-width=".7"/>
+
+        <!-- LEFT DIMENSION LINE (height callouts) -->
+        <!-- Ceiling height -->
+        <line x1="54" y1="60" x2="54" y2="780" stroke="#555" stroke-width=".8"/>
+        <line x1="48" y1="60" x2="60" y2="60" stroke="#555" stroke-width=".8"/>
+        <line x1="48" y1="780" x2="60" y2="780" stroke="#555" stroke-width=".8"/>
+        <text x="18" y="430" text-anchor="middle" font-family="monospace" font-size="10" fill="#333" font-weight="700" transform="rotate(-90,18,430)">CEILING HT: 10'-0" (120")</text>
+
+        <!-- Upper cabinet mount height from floor -->
+        <line x1="70" y1="456" x2="90" y2="456" stroke="#5577aa" stroke-width=".8" stroke-dasharray="3,2"/>
+        <text x="68" y="460" text-anchor="end" font-family="monospace" font-size="8" fill="#5577aa">54" AFF</text>
+
+        <!-- Top of upper / bottom of crown -->
+        <line x1="70" y1="204" x2="90" y2="204" stroke="#5577aa" stroke-width=".8" stroke-dasharray="3,2"/>
+        <text x="68" y="208" text-anchor="end" font-family="monospace" font-size="8" fill="#5577aa">96" AFF</text>
+
+        <!-- Countertop height -->
+        <line x1="70" y1="564" x2="90" y2="564" stroke="#c47f1a" stroke-width=".8" stroke-dasharray="3,2"/>
+        <text x="68" y="568" text-anchor="end" font-family="monospace" font-size="8" fill="#c47f1a">36" AFF</text>
+
+        <!-- Cabinet labels (BELOW each unit) -->
+        <text x="198" y="842" text-anchor="middle" font-family="monospace" font-size="8" fill="#888">3-DRAWER</text>
+        <text x="342" y="842" text-anchor="middle" font-family="monospace" font-size="8" fill="#888">TRASH</text>
+        <text x="486" y="842" text-anchor="middle" font-family="monospace" font-size="8" fill="#888">SINK BASE</text>
+        <text x="666" y="842" text-anchor="middle" font-family="monospace" font-size="8" fill="#5577aa">DISHWASHER</text>
+        <text x="846" y="842" text-anchor="middle" font-family="monospace" font-size="8" fill="#888">3-DRAWER</text>
+
+        <!-- ═══════════════════════════════════════
+             TITLE BLOCK
+        ═══════════════════════════════════════ -->
+        <!-- Title block border -->
+        <rect x="90" y="856" width="864" height="48" fill="#1a1a1a" stroke="#333" stroke-width="1"/>
+        <!-- Title dividers -->
+        <line x1="260" y1="856" x2="260" y2="904" stroke="#444" stroke-width=".8"/>
+        <line x1="500" y1="856" x2="500" y2="904" stroke="#444" stroke-width=".8"/>
+        <line x1="700" y1="856" x2="700" y2="904" stroke="#444" stroke-width=".8"/>
+        <line x1="820" y1="856" x2="820" y2="904" stroke="#444" stroke-width=".8"/>
+
+        <!-- Col 1: Project -->
+        <text x="100" y="869" font-family="monospace" font-size="8" fill="#aaa" letter-spacing=".06em">PROJECT</text>
+        <text x="100" y="884" font-family="monospace" font-size="11" fill="#ffffff" font-weight="700">Standalone Test Project</text>
+        <text x="100" y="898" font-family="monospace" font-size="9" fill="#c9aa7c">Galley Kitchen</text>
+
+        <!-- Col 2: Wall / Drawing -->
+        <text x="270" y="869" font-family="monospace" font-size="8" fill="#aaa" letter-spacing=".06em">DRAWING</text>
+        <text x="270" y="884" font-family="monospace" font-size="11" fill="#ffffff" font-weight="700">Wall A — North Elevation</text>
+        <text x="270" y="898" font-family="monospace" font-size="9" fill="#888">Scale: 1" = 6px · Sheet 1 of 1</text>
+
+        <!-- Col 3: Job Code -->
+        <text x="510" y="869" font-family="monospace" font-size="8" fill="#aaa" letter-spacing=".06em">JOB CODE</text>
+        <text x="510" y="884" font-family="monospace" font-size="13" fill="#c9aa7c" font-weight="700">FM-2607-001</text>
+        <text x="510" y="898" font-family="monospace" font-size="9" fill="#888">July 16, 2026</text>
+
+        <!-- Col 4: Prepared by -->
+        <text x="710" y="869" font-family="monospace" font-size="8" fill="#aaa" letter-spacing=".06em">PREPARED BY</text>
+        <text x="710" y="884" font-family="monospace" font-size="11" fill="#ffffff" font-weight="700">Fremont Makers</text>
+        <text x="710" y="898" font-family="monospace" font-size="9" fill="#888">Powered by DRAFT</text>
+
+        <!-- Col 5: Confidential stamp -->
+        <text x="830" y="869" font-family="monospace" font-size="8" fill="#aaa" letter-spacing=".06em">STATUS</text>
+        <text x="830" y="884" font-family="monospace" font-size="9" fill="#c9aa7c" font-weight="700">BID DOCUMENT</text>
+        <text x="830" y="898" font-family="monospace" font-size="8" fill="#888">Fremont.ai</text>
+
+        <!-- ═══════════════════════════════════════
+             CABINET LABEL CALLOUTS (on drawing)
+        ═══════════════════════════════════════ -->
+        <!-- Trash label -->
+        <text x="135" y="660" text-anchor="middle" font-family="monospace" font-size="8" fill="#666" transform="rotate(-90,135,660)">TRASH P/O</text>
+        <!-- Sink label -->
+        <text x="432" y="630" text-anchor="middle" font-family="monospace" font-size="9" fill="#555">SINK BASE</text>
+
+        <!-- Upper cabinet "42H" labels -->
+        <text x="198" y="332" text-anchor="middle" font-family="monospace" font-size="9" fill="#777">42"H</text>
+        <text x="414" y="332" text-anchor="middle" font-family="monospace" font-size="9" fill="#777">42"H</text>
+        <text x="630" y="332" text-anchor="middle" font-family="monospace" font-size="9" fill="#777">42"H</text>
+        <text x="846" y="332" text-anchor="middle" font-family="monospace" font-size="9" fill="#777">42"H</text>
+
+        <!-- "UPPER W-36" labels under each upper -->
+        <text x="198" y="468" text-anchor="middle" font-family="monospace" font-size="9" fill="#5577aa">W36 UPPER</text>
+        <text x="414" y="468" text-anchor="middle" font-family="monospace" font-size="9" fill="#5577aa">W36 UPPER</text>
+        <text x="630" y="468" text-anchor="middle" font-family="monospace" font-size="9" fill="#5577aa">W36 UPPER</text>
+        <text x="846" y="468" text-anchor="middle" font-family="monospace" font-size="9" fill="#5577aa">W36 UPPER</text>
+
+        <!-- AFF note -->
+        <text x="970" y="460" font-family="monospace" font-size="8" fill="#888">AFF =</text>
+        <text x="970" y="472" font-family="monospace" font-size="8" fill="#888">Above</text>
+        <text x="970" y="484" font-family="monospace" font-size="8" fill="#888">Finish</text>
+        <text x="970" y="496" font-family="monospace" font-size="8" fill="#888">Floor</text>
+
+      </svg>
+    </div><!-- / elevation-wrap -->
+
+  </div><!-- / drawing-area -->
+</div><!-- / main -->
+
+</body>
+</html>

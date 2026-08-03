@@ -9,6 +9,8 @@ const SOCC_TABLE    = "SOCC%20Barista%20Applications";
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Content-Type": "application/json",
+  "Cache-Control": "no-store, no-cache, must-revalidate",
+  "Pragma": "no-cache",
 };
 
 function optionsResponse() {
@@ -171,15 +173,21 @@ export default {
     }
 
     // ── All other requests → static assets ──────────────────────────────────
-    const response = await env.ASSETS.fetch(request);
+    // Bypass Cloudflare edge cache for HTML files — pass cf-cache-skip
+    const assetRequest = new Request(request, {
+      headers: new Headers({ ...Object.fromEntries(request.headers), 'Cache-Control': 'no-cache' }),
+    });
+    const response = await env.ASSETS.fetch(assetRequest);
 
-    // Force browsers to always revalidate HTML — no stale cache ever
     const contentType = response.headers.get('content-type') || '';
     if (contentType.includes('text/html')) {
       const newHeaders = new Headers(response.headers);
       newHeaders.set('Cache-Control', 'no-cache, no-store, must-revalidate');
       newHeaders.set('Pragma', 'no-cache');
       newHeaders.set('Expires', '0');
+      newHeaders.set('Surrogate-Control', 'no-store');
+      newHeaders.delete('ETag');
+      newHeaders.delete('Last-Modified');
       return new Response(response.body, {
         status: response.status,
         statusText: response.statusText,

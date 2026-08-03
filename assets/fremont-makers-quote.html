@@ -563,6 +563,13 @@
           <span class="totals-value" style="color:#e05c5c;" id="t-bulk-discount">−$0.00</span>
         </div>
         <div class="totals-row">
+          <span class="totals-label" style="display:flex;align-items:center;gap:8px">
+            Tax (product only)
+            <input type="number" class="tax-input" id="tax-pct" value="8.7" step="0.1" min="0" oninput="recalc(); saveLocal();" />%
+          </span>
+          <span class="totals-value" id="t-tax">$0.00</span>
+        </div>
+        <div class="totals-row">
           <span class="totals-label">Labor Subtotal</span>
           <span class="totals-value" id="t-labor">$0.00</span>
         </div>
@@ -573,13 +580,6 @@
             </select>
           </span>
           <span class="totals-value" id="t-gna">$0.00</span>
-        </div>
-        <div class="totals-row">
-          <span class="totals-label" style="display:flex;align-items:center;gap:8px">
-            Tax
-            <input type="number" class="tax-input" id="tax-pct" value="8.7" step="0.1" min="0" oninput="recalc(); saveLocal();" />%
-          </span>
-          <span class="totals-value" id="t-tax">$0.00</span>
         </div>
         <div class="totals-row grand">
           <span class="totals-label">Total Quote</span>
@@ -1836,11 +1836,11 @@ function recalc() {
   const bulkDiscPct    = parseFloat(document.getElementById('bulk-discount-pct')?.value) || 0;
   const bulkDiscount   = cabCost * bulkDiscPct / 100;   // discount off net cost (manufacturer price), not sell price
   const cabAfterDisc   = cabTotal - bulkDiscount;
-  const sub     = cabAfterDisc + laborTotal;
+  // Tax applies to product (cabinets) only — labor and G&A are not taxed
+  const tax     = cabAfterDisc * taxPct / 100;
+  const sub     = cabAfterDisc + laborTotal;            // used as G&A base
   const gna     = sub * gnaPct / 100;
-  const taxBase = sub + gna;
-  const tax     = taxBase * taxPct / 100;
-  const grand   = taxBase + tax;
+  const grand   = cabAfterDisc + tax + laborTotal + gna;
 
   document.getElementById('t-cabinets').textContent      = fmt(cabTotal);
   // Column footer totals

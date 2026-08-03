@@ -121,6 +121,8 @@
     .boh{background:#e8f2f9;color:#2d6a8a}
     .foh{background:#e8f5ee;color:#1d6640}
     .mgr{background:#fef6e8;color:#8a5a10}
+    .hskg{background:#fef3e2;color:#c47b1a}
+    .fd{background:#f0edf8;color:#7b6fa0}
     .prep-tag{background:var(--purple-bg);color:var(--purple)}
     .service-tag{background:var(--teal-bg);color:var(--teal)}
 
@@ -432,6 +434,9 @@ const SVC_SHIFTS   = ['Off','Service 3:30-10pm','Service 4-11pm','Service 5-11pm
 const FOH_PREP_SHIFTS = ['Off','Open 7am-3pm','Open 8am-3pm','Setup 1-3:30pm'];
 const FOH_SVC_SHIFTS  = ['Off','Service 3:30-10pm','Service 4-11pm','Service 5-11pm','Bar 3:30-midnight','Bar 5-midnight'];
 const BAR_SHIFTS      = ['Off','Bar 10am-9pm','Bar 10am-6pm','Bar 12pm-9pm','Bar 4-midnight','Bar 3:30-midnight'];
+const HSKG_SHIFTS     = ['Off','AM 8am-4pm','AM 9am-5pm','PM 12pm-8pm','Open / Cover'];
+const FD_SHIFTS       = ['Off','AM 7am-3pm','Day 9am-5pm','PM 3pm-11pm','Open / Cover'];
+const MGR_SHIFTS      = ['Off','Open / Cover','AM 8am-4pm','PM 12pm-8pm'];
 
 // isPrep: true = prep labor, false = service labor
 // tierActive: [tier1, tier2, tier3]
@@ -470,6 +475,15 @@ const STAFF = [
   {id:'foh-zoey',    name:'Zoey Kelley',      role:'FOH',isPrep:false,rate:12.14, sal:false, tierActive:[false,false,true], defaultHrs:[0,0,6],   defaultShift:['Service 4-11pm','Service 4-11pm','Service 4-11pm'],         shiftList:FOH_SVC_SHIFTS},
   {id:'foh-jen-p',   name:'Jen Pierce',       role:'FOH',isPrep:false,rate:12.14, sal:false, tierActive:[false,false,true], defaultHrs:[0,0,6],   defaultShift:['Bar 5-midnight','Bar 5-midnight','Bar 3:30-midnight'],       shiftList:FOH_SVC_SHIFTS},
   {id:'foh-chloe',   name:'Chloe Coulter',    role:'FOH',isPrep:false,rate:12.14, sal:false, tierActive:[false,false,true], defaultHrs:[0,0,6],   defaultShift:['Service 4-11pm','Service 4-11pm','Service 4-11pm'],         shiftList:FOH_SVC_SHIFTS},
+  // ── HOUSEKEEPING ──
+  {id:'hskg-1',      name:'Housekeeper 1',    role:'HSKG',isPrep:true, rate:0,    sal:false, ext:false, tierActive:[true,true,true],   defaultHrs:[8,8,8],   defaultShift:['AM 8am-4pm','AM 8am-4pm','AM 8am-4pm'],   shiftList:HSKG_SHIFTS},
+  {id:'hskg-2',      name:'Housekeeper 2',    role:'HSKG',isPrep:true, rate:0,    sal:false, ext:false, tierActive:[true,true,true],   defaultHrs:[8,8,8],   defaultShift:['AM 8am-4pm','AM 8am-4pm','AM 8am-4pm'],   shiftList:HSKG_SHIFTS},
+  {id:'hskg-3',      name:'Housekeeper 3',    role:'HSKG',isPrep:true, rate:0,    sal:false, ext:false, tierActive:[false,true,true],  defaultHrs:[0,8,8],   defaultShift:['AM 9am-5pm','AM 9am-5pm','AM 9am-5pm'],   shiftList:HSKG_SHIFTS},
+  // ── FRONT DESK ──
+  {id:'fd-1',        name:'Front Desk 1',     role:'FD',  isPrep:true, rate:0,    sal:false, ext:false, tierActive:[true,true,true],   defaultHrs:[8,8,8],   defaultShift:['AM 7am-3pm','AM 7am-3pm','AM 7am-3pm'],   shiftList:FD_SHIFTS},
+  {id:'fd-2',        name:'Front Desk 2',     role:'FD',  isPrep:true, rate:0,    sal:false, ext:false, tierActive:[true,true,true],   defaultHrs:[8,8,8],   defaultShift:['PM 3pm-11pm','PM 3pm-11pm','PM 3pm-11pm'],shiftList:FD_SHIFTS},
+  // ── HOTEL MANAGER ──
+  {id:'hmgr-1',      name:'Hotel Manager',    role:'MGR', isPrep:true, rate:0,    sal:false, ext:true,  tierActive:[true,true,true],   defaultHrs:[0,0,0],   defaultShift:['Open / Cover','Open / Cover','Open / Cover'], shiftList:MGR_SHIFTS, note:'Paid by external company'},
 ];
 
 function getTier(rev){ return rev<3200?1:rev<5000?2:3; }
@@ -535,7 +549,7 @@ function updateSchedule(){
   tbody.innerHTML='';
 
   let totalCost=0,prepCost=0,svcCost=0,prepHrs=0,svcHrs=0,prepHC=0,svcHC=0,totalHC=0;
-  let bohPrepHdr=false,bohSvcHdr=false,fohPrepHdr=false,fohBarHdr=false,fohSvcHdr=false;
+  let bohPrepHdr=false,bohSvcHdr=false,fohPrepHdr=false,fohBarHdr=false,fohSvcHdr=false,hskgHdr=false,fdHdr=false,mgrHdr=false;
   const tierIdx=tier-1;
 
   STAFF.forEach(s=>{
@@ -546,6 +560,9 @@ function updateSchedule(){
     if(s.role==='FOH'&&s.isPrep&&!fohPrepHdr){fohPrepHdr=true;addGroupRow(tbody,'sg-main','Front of House');}
     if(s.role==='FOH'&&!s.isPrep&&s.id==='foh-bartender'&&!fohBarHdr){fohBarHdr=true;addGroupRow(tbody,'sg-service','  ↳ Front Bar (10am–9pm)');}
     if(s.role==='FOH'&&!s.isPrep&&s.id!=='foh-bartender'&&!fohSvcHdr){fohSvcHdr=true;addGroupRow(tbody,'sg-service','  ↳ Service Team (3:30 PM+)');}
+    if(s.role==='HSKG'&&!hskgHdr){hskgHdr=true;addGroupRow(tbody,'sg-main','Housekeeping');}
+    if(s.role==='FD'&&!fdHdr){fdHdr=true;addGroupRow(tbody,'sg-main','Front Desk');}
+    if(s.role==='MGR'&&!mgrHdr){mgrHdr=true;addGroupRow(tbody,'sg-main','Management');}
 
     const key=`${selectedDay}-${s.id}`;
     if(!state[key]){
@@ -556,28 +573,28 @@ function updateSchedule(){
       };
     }
     const st=state[key];
-    const cost=s.sal?0:(st.active?st.hrs*s.rate:0);
-    if(st.active&&!s.sal){
+    const cost=(s.sal||s.ext)?0:(st.active?st.hrs*s.rate:0);
+    if(st.active&&!s.sal&&!s.ext){
       totalCost+=cost; totalHC++;
       if(s.isPrep){prepCost+=cost;prepHrs+=st.hrs;prepHC++;}
       else{svcCost+=cost;svcHrs+=st.hrs;svcHC++;}
-    } else if(st.active&&s.sal){ totalHC++; }
+    } else if(st.active&&(s.sal||s.ext)){ totalHC++; }
 
     const tr=document.createElement('tr');
     tr.style.opacity=st.active?'1':'.4';
-    const roleCls=s.sal?'mgr':(s.role==='BOH'?'boh':'foh');
+    const roleCls=s.sal?'mgr':(s.role==='BOH'?'boh':(s.role==='HSKG'?'hskg':(s.role==='FD'?'fd':(s.role==='MGR'?'mgr':'foh'))));
     const typeTag=s.isPrep?'<span class="role-badge prep-tag">Prep</span>':'<span class="role-badge service-tag">Service</span>';
-    const rateDisp=s.sal?'<em style="font-size:.8rem;color:var(--light-gray)">salary</em>':('$'+s.rate.toFixed(2));
-    const costDisp=s.sal?'<em style="font-size:.8rem;color:var(--light-gray)">incl.</em>':(st.active?fmt$(cost):'—');
+    const rateDisp=s.sal?'<em style="font-size:.8rem;color:var(--light-gray)">salary</em>':(s.ext?'<em style="font-size:.8rem;color:var(--light-gray)">ext.</em>':('$'+s.rate.toFixed(2)));
+    const costDisp=s.sal?'<em style="font-size:.8rem;color:var(--light-gray)">incl.</em>':(s.ext?'<em style="font-size:.8rem;color:var(--light-gray)">ext.</em>':(st.active?fmt$(cost):'—'));
     const shiftOpts=s.shiftList.map(sh=>`<option value="${sh}"${sh===st.shift?' selected':''}>${sh}</option>`).join('');
 
     tr.innerHTML=`
       <td><span class="editable-name" style="font-size:.85rem;font-weight:700;cursor:text;border-bottom:1px dashed rgba(255,255,255,.2);padding-bottom:1px" title="Click to edit name" onclick="editName(this,'${s.id}')">${s.name}</span>${s.note?`<br><span style="font-size:.7rem;color:var(--light-gray)">${s.note}</span>`:''}</td>
       <td><span class="role-badge ${roleCls}">${s.role}</span></td>
       <td>${typeTag}</td>
-      <td style="font-size:.85rem">${s.sal?'<em style="font-size:.8rem;color:var(--light-gray)">salary</em>':`<span class="editable-rate" style="cursor:text;border-bottom:1px dashed rgba(255,255,255,.2);padding-bottom:1px" title="Click to edit rate" onclick="editRate(this,'${s.id}')">$${s.rate.toFixed(2)}</span>`}</td>
-      <td>${s.sal?'<span style="font-size:.8rem;color:var(--light-gray)">Flex</span>':`<select class="shift-select" onchange="setShift('${key}',this.value)">${shiftOpts}</select>`}</td>
-      <td>${s.sal?'—':`<input type="number" class="hrs-input" value="${st.hrs}" min="0" max="14" step=".5" onchange="setHrs('${key}',this.value)">`}</td>
+      <td style="font-size:.85rem">${s.sal?'<em style="font-size:.8rem;color:var(--light-gray)">salary</em>':(s.ext?'<em style="font-size:.8rem;color:var(--light-gray)">ext.</em>':`<span class="editable-rate" style="cursor:text;border-bottom:1px dashed rgba(255,255,255,.2);padding-bottom:1px" title="Click to edit rate" onclick="editRate(this,'${s.id}')">$${s.rate.toFixed(2)}</span>`)}</td>
+      <td>${(s.sal||s.ext)?'<span style="font-size:.8rem;color:var(--light-gray)">Flex</span>':`<select class="shift-select" onchange="setShift('${key}',this.value)">${shiftOpts}</select>`}</td>
+      <td>${(s.sal||s.ext)?'—':`<input type="number" class="hrs-input" value="${st.hrs}" min="0" max="14" step=".5" onchange="setHrs('${key}',this.value)">`}</td>
       <td class="cost-cell">${costDisp}</td>
       <td><input type="checkbox" ${st.active?'checked':''} onchange="toggleStaff('${key}',this.checked)" style="width:17px;height:17px;cursor:pointer;accent-color:var(--blue)"></td>`;
     tbody.appendChild(tr);
@@ -769,14 +786,17 @@ function renderRoster(){
   if(!grid)return;
   const boh=STAFF.filter(s=>s.role==='BOH');
   const foh=STAFF.filter(s=>s.role==='FOH');
-  grid.innerHTML=buildRosterCard('Back of House','BOH',boh)+buildRosterCard('Front of House','FOH',foh);
+  const hskg=STAFF.filter(s=>s.role==='HSKG');
+  const fd=STAFF.filter(s=>s.role==='FD');
+  const mgr=STAFF.filter(s=>s.role==='MGR');
+  grid.innerHTML=buildRosterCard('Back of House','BOH',boh)+buildRosterCard('Front of House','FOH',foh)+buildRosterCard('Housekeeping','HSKG',hskg)+buildRosterCard('Front Desk','FD',fd)+buildRosterCard('Management','MGR',mgr);
 }
 
 function buildRosterCard(label,role,members){
   const rows=members.map(s=>`
     <tr data-id="${s.id}">
       <td class="r-name" onclick="rEditName(this,'${s.id}')" title="Click to edit" style="cursor:text">${s.name}</td>
-      <td class="rate-val r-rate" onclick="rEditRate(this,'${s.id}')" title="Click to edit" style="cursor:text">${s.sal?'Salaried':'$'+s.rate.toFixed(2)}</td>
+      <td class="rate-val r-rate" onclick="rEditRate(this,'${s.id}')" title="Click to edit" style="cursor:text">${s.sal?'Salaried':(s.ext?'External':'$'+s.rate.toFixed(2))}</td>
       <td class="r-note" onclick="rEditNote(this,'${s.id}')" title="Click to edit" style="cursor:text;color:var(--light-gray);font-size:.8rem">${s.note||'—'}</td>
       <td style="text-align:right;padding-right:.5rem"><button onclick="removeStaff('${s.id}')" title="Remove" style="background:none;border:none;color:var(--light-gray);font-size:1rem;cursor:pointer;line-height:1;padding:0 4px" onmouseover="this.style.color='#e05a5a'" onmouseout="this.style.color='var(--light-gray)'">×</button></td>
     </tr>`).join('');

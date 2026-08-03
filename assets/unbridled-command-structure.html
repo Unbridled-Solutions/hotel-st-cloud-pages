@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Unbridled AI Command Structure</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Space+Mono:wght@700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0b0f1a;
+      --surface: #131825;
+      --surface2: #1a2032;
+      --border: #252e44;
+      --text: #e8eaf0;
+      --muted: #6b7599;
+      --gold: #c9aa7c;
+      --gold-dim: #7a5f38;
+      --teal: #3de8c8;
+      --live-bg: rgba(61,232,200,.12);
+      --planned-bg: rgba(255,255,255,.04);
+      /* dept accents */
+      --col-mc:       #c9aa7c;
+      --col-events:   #e8823d;
+      --col-hosp:     #5a8ba7;
+      --col-re:       #9a7ec8;
+      --col-emergent: #4caf7d;
+      --col-shared:   #c9aa7c;
+      --col-fremont:  #5cb85c;
+      --col-pipeline: #e8a135;
+      --col-blue:     #5a9fd4;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      padding: 32px 20px 56px;
+    }
+
+    /* ── PAGE HEADER ── */
+    .page-header { text-align: center; margin-bottom: 8px; }
+    .page-header h1 {
+      font-size: clamp(18px, 3.5vw, 26px);
+      font-weight: 900; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--gold);
+    }
+    .page-meta { font-size: 11px; color: var(--muted); margin-top: 4px; letter-spacing: .04em; }
+    .agent-count {
+      display: inline-block;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 20px; padding: 3px 12px;
+      font-size: 11px; color: var(--muted);
+      margin-top: 6px;
+    }
+    .agent-count span { color: var(--teal); font-weight: 700; }
+
+    /* ── MC TOP CARD ── */
+    .mc-wrap {
+      display: flex; flex-direction: column; align-items: center;
+      margin: 20px auto 0; padding-bottom: 24px;
+      position: relative; max-width: 360px;
+    }
+    .mc-wrap::after {
+      content: ''; position: absolute;
+      bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 2px; height: 24px; background: var(--border);
+    }
+    .mc-card {
+      width: 100%; background: var(--surface);
+      border: 2px solid var(--gold);
+      border-radius: 14px; padding: 18px 24px;
+      text-align: center;
+      box-shadow: 0 0 32px rgba(201,170,124,.15);
+    }
+    .mc-name {
+      font-family: 'Space Mono', monospace;
+      font-size: 28px; color: var(--gold); font-weight: 700;
+      letter-spacing: .06em;
+    }
+    .mc-role { font-size: 12px; color: var(--text); margin: 4px 0 2px; font-weight: 600; }
+    .mc-desc { font-size: 11px; color: var(--muted); }
+    .badge-live {
+      display: inline-block; margin-top: 8px;
+      background: var(--teal); color: #0a1a14;
+      font-size: 9px; font-weight: 800; letter-spacing: .1em;
+      padding: 3px 10px; border-radius: 20px; text-transform: uppercase;
+    }
+    .badge-planned {
+      display: inline-block; margin-top: 8px;
+      background: transparent; color: var(--muted);
+      font-size: 9px; font-weight: 700; letter-spacing: .08em;
+      padding: 2px 9px; border-radius: 20px; text-transform: uppercase;
+      border: 1px dashed var(--border);
+    }
+
+    /* ── PIPELINE + COLUMNS WRAPPER ── */
+    .layout-wrap {
+      max-width: 1300px; margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 220px 1fr;
+      gap: 14px;
+      position: relative;
+    }
+    .layout-wrap::before {
+      content: ''; position: absolute;
+      top: 0; left: calc(50% - 110px);
+      transform: translateX(-50%);
+      width: calc(100% - 14px);
+      height: 2px; background: var(--border);
+    }
+
+    /* ── DEPT COLUMN ── */
+    .dept-col {
+      display: flex; flex-direction: column; gap: 8px;
+      padding-top: 32px; position: relative;
+    }
+    .dept-col::before {
+      content: ''; position: absolute;
+      top: 0; left: 50%; transform: translateX(-50%);
+      width: 2px; height: 32px; background: var(--border);
+    }
+
+    /* ── DEPT HEADER ── */
+    .dept-header {
+      border-radius: 8px; padding: 10px 14px;
+      text-align: center; border: 1px solid;
+      margin-bottom: 2px;
+    }
+    .dept-icon { font-size: 18px; margin-bottom: 3px; }
+    .dept-name { font-size: 11px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+    .dept-sub  { font-size: 9px; opacity: .7; margin-top: 1px; text-transform: uppercase; letter-spacing: .05em; }
+
+    /* ── AGENT CARD ── */
+    .agent-card {
+      border-radius: 7px; padding: 9px 11px;
+      border-left: 3px solid;
+      transition: transform .15s;
+    }
+    .agent-card:hover { transform: translateX(3px); }
+    .agent-card.live    { background: var(--live-bg); }
+    .agent-card.planned { background: var(--planned-bg); opacity: .75; }
+    .agent-name {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px; font-weight: 700; letter-spacing: .04em;
+    }
+    .agent-role { font-size: 10px; font-weight: 700; color: var(--text); margin: 2px 0 1px; }
+    .agent-desc { font-size: 10px; color: var(--muted); line-height: 1.45; }
+
+    /* ── PIPELINE CENTER COLUMN ── */
+    .pipeline-col {
+      display: flex; flex-direction: column; gap: 4px;
+      padding-top: 32px; position: relative;
+    }
+    .pipeline-col::before {
+      content: ''; position: absolute;
+      top: 0; left: 50%; transform: translateX(-50%);
+      width: 2px; height: 32px; background: var(--border);
+    }
+    .pipeline-header {
+      text-align: center; padding: 10px 10px 8px;
+      background: var(--surface); border: 1px solid var(--col-pipeline);
+      border-radius: 8px; margin-bottom: 4px;
+    }
+    .pipeline-header .dept-icon { font-size: 18px; color: var(--col-pipeline); }
+    .pipeline-header .dept-name { font-size: 10px; font-weight: 800; color: var(--col-pipeline); letter-spacing: .07em; }
+    .pipeline-step {
+      display: flex; align-items: flex-start; gap: 7px;
+      background: var(--surface); border-radius: 6px;
+      padding: 7px 9px; border: 1px solid var(--border);
+    }
+    .step-num {
+      width: 18px; height: 18px; flex-shrink: 0;
+      border-radius: 50%; background: var(--col-pipeline);
+      color: #0f0f0f; font-size: 9px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .step-title { font-size: 10px; font-weight: 700; color: var(--text); }
+    .step-desc  { font-size: 9px; color: var(--muted); }
+    .step-arrow { text-align: center; color: var(--col-pipeline); font-size: 11px; line-height: 1; }
+    .pipeline-note {
+      background: rgba(232,161,53,.08); border: 1px solid rgba(232,161,53,.25);
+      border-radius: 6px; padding: 7px 9px;
+      font-size: 9px; color: var(--col-pipeline); text-align: center; line-height: 1.5;
+    }
+
+    /* ── MULTI-DEPT COLUMN (left side has 3 depts stacked) ── */
+    .multi-dept { display: flex; flex-direction: column; gap: 14px; }
+
+    /* ── DEPT COLOR THEMING ── */
+    .theme-events   { --dc: var(--col-events);   }
+    .theme-hosp     { --dc: var(--col-hosp);     }
+    .theme-re       { --dc: var(--col-re);        }
+    .theme-emergent { --dc: var(--col-emergent);  }
+    .theme-shared   { --dc: var(--col-shared);    }
+    .theme-fremont  { --dc: var(--col-fremont);   }
+    .theme-blue     { --dc: var(--col-blue);      }
+
+    .dept-header { border-color: var(--dc, var(--border)); }
+    .dept-name   { color: var(--dc, var(--text)); }
+    .agent-card  { border-left-color: var(--dc, var(--border)); }
+    .agent-name  { color: var(--dc, var(--text)); }
+
+    /* ── BOTTOM GRID ── */
+    .bottom-wrap {
+      max-width: 1300px; margin: 16px auto 0;
+      display: grid; grid-template-columns: 1.2fr 1fr 1fr;
+      gap: 14px;
+    }
+    .bottom-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px 18px;
+    }
+    .bottom-title {
+      font-size: 10px; font-weight: 800; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: 12px; text-align: center;
+    }
+    .model-row {
+      display: flex; gap: 8px; align-items: flex-start;
+      padding: 6px 0; border-bottom: 1px solid var(--border);
+    }
+    .model-row:last-child { border-bottom: none; }
+    .model-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+    .model-tier-name { font-size: 10px; font-weight: 700; color: var(--text); }
+    .model-names     { font-size: 9px; color: var(--muted); margin-top: 1px; }
+    .model-use       { font-size: 9px; color: var(--muted); font-style: italic; }
+    .infra-row {
+      display: flex; gap: 8px; align-items: center;
+      padding: 6px 0; border-bottom: 1px solid var(--border);
+      font-size: 10px;
+    }
+    .infra-row:last-child { border-bottom: none; }
+    .infra-icon { font-size: 16px; flex-shrink: 0; }
+    .infra-name { font-weight: 700; color: var(--text); min-width: 80px; }
+    .infra-role { color: var(--muted); }
+    .protocol-rule {
+      display: flex; gap: 8px; align-items: flex-start;
+      padding: 5px 0; border-bottom: 1px solid var(--border);
+      font-size: 10px; color: var(--muted);
+    }
+    .protocol-rule:last-child { border-bottom: none; }
+    .rule-icon { color: var(--col-pipeline); flex-shrink: 0; }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      max-width: 1300px; margin: 14px auto 0;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 20px;
+      display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
+    }
+    .stat-pill {
+      padding: 5px 14px; border-radius: 20px;
+      font-size: 10px; font-weight: 700; letter-spacing: .04em;
+      border: 1px solid;
+    }
+
+    @media (max-width: 900px) {
+      .layout-wrap { grid-template-columns: 1fr; }
+      .layout-wrap::before { display: none; }
+      .dept-col::before, .pipeline-col::before { display: none; }
+      .bottom-wrap { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <h1>Unbridled AI Command Structure</h1>
+  <div class="page-meta">Living document — updated by MC whenever a new agent ships</div>
+  <div class="agent-count"><span id="live-count">14</span> live · <span id="planned-count">13</span> planned · <span>27</span> total agents · Last updated July 2026</div>
+</div>
+
+<!-- MC TOP -->
+<div class="mc-wrap">
+  <div class="mc-card">
+    <div class="mc-name">MC</div>
+    <div class="mc-role">Master of Ceremonies · The Orchestrator</div>
+    <div class="mc-desc">Reviews all outputs, ensures quality, routes tasks, deploys resources. Stan's digital Chief of Staff.</div>
+    <span class="badge-live">Live</span>
+  </div>
+</div>
+
+<!-- MAIN THREE-COLUMN LAYOUT -->
+<div class="layout-wrap">
+
+  <!-- LEFT: BLUE TEAM + LIVE EVENTS stacked -->
+  <div class="dept-col">
+    <div class="multi-dept">
+
+      <!-- BLUE TEAM: Core Execution (BeUnbridled Pipeline) -->
+      <div class="theme-blue">
+        <div class="dept-header">
+          <div class="dept-icon">🛡️</div>
+          <div class="dept-name">Blue Team</div>
+          <div class="dept-sub">Core Execution</div>
+        </div>
+        <div class="agent-card live">
+          <div class="agent-name">CORTANA</div>
+          <div class="agent-role">Strategy Intelligence</div>
+          <div class="agent-desc">Market research, competitive intel, Go/No-Go framing, opportunity analysis</div>
+          <span class="badge-live">Live</span>
+        </div>
+        <div class="agent-card live" style="margin-top:6px">
+          <div class="agent-name">HALSEY</div>
+          <div class="agent-role">Design Director</div>
+          <div class="agent-desc">UX/UI direction. No build before design. Visual systems, brand coherence</div>
+          <span class="badge-live">Live</span>
+        </div>
+        <div class="agent-card live" style="margin-top:6px">
+          <div class="agent-name">AVERY</div>
+          <div class="agent-role">Content &amp; Copy</div>
+          <div class="agent-desc">Consistent brand voice, proposals, scripts, award narratives, web copy</div>
+          <span class="badge-live">Live</span>
+        </div>
+        <div class="agent-card live" style="margin-top:6px">
+          <div class="agent-name">FRED-104</div>
+          <div class="agent-role">Infrastructure &amp; Build</div>
+          <div class="agent-desc">Code, deploys, tech stacks. Always builds from Halsey's design</div>
+          <span class="badge-live">Live</span>
+        </div>
+      </div>
+
+      <!-- LIVE EVENTS -->
+      <div class="theme-events" style="margin-top:6px">
+        <div class="dept-header">
+          <div class="dept-icon">🎪</div>
+          <div class="dept-name">Unbridled Solutions</div>
+          <div class="dept-sub">Live Events</div>
+        </div>
+        <div class="agent-card planned">
+          <div class="agent-name">ATLAS</div>
+          <div class="agent-role">Events Strategist</div>
+          <div class="agent-desc">RFP intake, program design, venue sourcing</div>
+          <span class="badge-planned">Planned</span>
+        </div>
+        <div class="agent-card planned" style="margin-top:6px">
+          <div class="agent-name">QUILL</div>
+          <div class="agent-role">Events Copywriter</div>
+          <div class="agent-desc">Proposals, scripts, run-of-show, award narratives</div>
+          <span class="badge-planned">Planned</span>
+        </div>
+        <div class="agent-card planned" style="margin-top:6px">
+          <div class="agent-name">WAYPOINT</div>
+          <div class="agent-role">Travel Coordinator</div>
+          <div class="agent-desc">Itineraries, rooming lists, manifest management</div>
+          <span class="badge-planned">Planned</span>
+        </div>
+        <div class="agent-card planned" style="margin-top:6px">
+          <div class="agent-name">REEL</div>
+          <div class="agent-role">Media Producer</div>
+          <div class="agent-desc">Shot lists, video briefs, post-production coordination</div>
+          <span class="badge-planned">Planned</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- CENTER: INTAKE PIPELINE -->
+  <div class="pipeline-col">
+    <div class="pipeline-header">
+      <div class="dept-icon">🔄</div>
+      <div class="dept-name">Unbridled Intake</div>
+      <div style="font-size:9px;color:var(--muted);margin-top:2px">Processing Pipeline</div>
+    </div>
+
+    <div class="pipeline-step">
+      <div class="step-num">1</div>
+      <div>
+        <div class="step-title">INTAKE</div>
+        <div class="step-desc">Captures ideas &amp; requests</div>
+      </div>
+    </div>
+    <div class="step-arrow">↓</div>
+    <div class="pipeline-step">
+      <div class="step-num">2</div>
+      <div>
+        <div class="step-title">QUALIFIER</div>
+        <div class="step-desc">Go/No-Go feasibility</div>
+      </div>
+    </div>
+    <div class="step-arrow">↓</div>
+    <div class="pipeline-step">
+      <div class="step-num">3</div>
+      <div>
+        <div class="step-title">ROI</div>
+        <div class="step-desc">Business cases, pricing</div>
+      </div>
+    </div>
+    <div class="step-arrow">↓</div>
+    <div class="pipeline-step">
+      <div class="step-num">4</div>
+      <div>
+        <div class="step-title">ARCHITECT</div>
+        <div class="step-desc">Solution design, routing</div>
+      </div>
+    </div>
+    <div class="step-arrow">↓</div>
+    <div class="pipeline-step">
+      <div class="step-num">5</div>
+      <div>
+        <div class="step-title">WIRING</div>
+        <div class="step-desc">Integrations, checkpoints</div>
+      </div>
+    </div>
+    <div class="step-arrow">↓</div>
+    <div class="pipeline-step">
+      <div class="step-num">6</div>
+      <div>
+        <div class="step-title">QA</div>
+        <div class="step-desc">Brand review, quality gate</div>
+      </div>
+    </div>
+    <div class="step-arrow">↓</div>
+    <div class="pipeline-step">
+      <div class="step-num">7</div>
+      <div>
+        <div class="step-title">DEPLOY</div>
+        <div class="step-desc">Live, confirmed, delivered</div>
+      </div>
+    </div>
+
+    <div class="pipeline-note" style="margin-top:8px">
+      ⚡ ALL ideas route through Intake.<br/>Design before build. Always.
+    </div>
+  </div>
+
+  <!-- RIGHT: HOSPITALITY + SHARED SERVICES + FREMONT + RE + EMERGENT stacked -->
+  <div class="dept-col">
+    <div class="multi-dept">
+
+      <!-- HOSPITALITY -->
+      <div class="theme-hosp">
+        <div class="dept-header">
+          <div class="dept-icon">🏨</div>
+          <div class="dept-name">Unbridled Hospitality</div>
+          <div class="dept-sub">Hotel St. Cloud · FP · FPH</div>
+        </div>
+        <div class="agent-card live">
+          <div class="agent-name">BEACON</div>
+          <div class="agent-role">Ads Strategist</div>
+          <div class="agent-desc">Campaign strategy, keyword research, account architecture</div>
+          <span class="badge-live">Live</span>
+        </div>
+        <div class="agent-card live" style="margin-top:6px">
+          <div class="agent-name">INK</div>
+          <div class="agent-role">Ads Copywriter</div>
+          <div class="agent-desc">Headlines, RSAs, extensions, landing page copy</div>
+          <span class="badge-live">Live</span>
+        </div>
+        <div class="agent-card live" style="margin-top:6px">
+          <div class="agent-name">LEDGER</div>
+          <div class="agent-role">Ads Analyst</div>
+          <div class="agent-desc">Performance reporting, budget optimization, variance</div>
+          <span class="badge-live">Live</span>
+        </div>
+        <div class="agent-card live" style="margin-top:6px">
+          <div class="agent-name">RUNWAY</div>
+          <div class="agent-role">Landing Page Builder</div>
+          <div class="agent-desc">Campaign pages, Cloudflare deploy pipeline</div>
+          <span class="badge-live">Live</span>
+        </div>
+        <div class="agent-card planned" style="margin-top:6px">
+          <div class="agent-name">HAVEN</div>
+          <div class="agent-role">Hospitality Copywriter</div>
+          <div class="agent-desc">Menus, guest comms, experience copy</div>
+          <span class="badge-planned">Planned</span>
+        </div>
+        <div class="agent-card planned" style="margin-top:6px">
+          <div class="agent-name">PULSE</div>
+          <div class="agent-role">Reservations Intelligence</div>
+          <div class="agent-desc">Cloudbeds data, rate recommendations, occupancy trends</div>
+          <span class="badge-planned">Planned</span>
+        </div>
+      </div>
+
+      <!-- SHARED SERVICES -->
+      <div class="theme-shared" style="margin-top:6px">
+        <div class="dept-header">
+          <div class="dept-icon">⚙️</div>
+          <div class="dept-name">Shared Services</div>
+          <div class="dept-sub">Ecosystem-Wide</div>
+        </div>
+        <div class="agent-card live">
+          <div class="agent-name">CIPHER</div>
+          <div class="agent-role">Brand Reviewer</div>
+          <div class="agent-desc">Cross-cutting quality gate — all deliverables, all brands</div>
+          <span class="badge-live">Live</span>
+        </div>
+        <div class="agent-card live" style="margin-top:6px">
+          <div class="agent-name">ARBITER</div>
+          <div class="agent-role">Legal Drafter</div>
+          <div class="agent-desc">LLC agreements, NDAs, contractor classification — zero retention</div>
+          <span class="badge-live">Live</span>
+        </div>
+        <div class="agent-card live" style="margin-top:6px">
+          <div class="agent-name">SENTINEL</div>
+          <div class="agent-role">Legal Reviewer</div>
+          <div class="agent-desc">Risk spotting, contract review, escalation flagging</div>
+          <span class="badge-live">Live</span>
+        </div>
+        <div class="agent-card live" style="margin-top:6px">
+          <div class="agent-name">BALANCE</div>
+          <div class="agent-role">CPA &amp; Financial Intel</div>
+          <div class="agent-desc">Job costing, P&amp;L, chart of accounts, tax readiness, Airtable reconciliation</div>
+          <span class="badge-live">Live</span>
+        </div>
+        <div class="agent-card live" style="margin-top:6px">
+          <div class="agent-name">EMBER</div>
+          <div class="agent-role">HR &amp; People Ops</div>
+          <div class="agent-desc">Hiring, onboarding, comp bands, CO labor law, performance reviews</div>
+          <span class="badge-live">Live</span>
+        </div>
+        <div class="agent-card planned" style="margin-top:6px">
+          <div class="agent-name">GRID</div>
+          <div class="agent-role">IT Ops Agent</div>
+          <div class="agent-desc">Server health, cron monitoring, incident triage</div>
+          <span class="badge-planned">Planned</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- / layout-wrap -->
+
+<!-- SECOND ROW: REAL ESTATE + EMERGENT + FREMONT side by side -->
+<div style="max-width:1300px;margin:14px auto 0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;">
+
+  <!-- REAL ESTATE -->
+  <div class="theme-re" style="background:var(--surface);border:1px solid var(--dc,var(--border));border-radius:10px;padding:14px 16px;">
+    <div class="dept-header" style="border:none;padding:0 0 10px;margin:0 0 8px;border-bottom:1px solid var(--border);">
+      <div class="dept-icon">🏗️</div>
+      <div class="dept-name">Unbridled Holdings</div>
+      <div class="dept-sub">Real Estate</div>
+    </div>
+    <div class="agent-card planned">
+      <div class="agent-name">TERRAIN</div>
+      <div class="agent-role">Property Analyst</div>
+      <div class="agent-desc">Market comps, portfolio health reports, Eagles Landing tracking</div>
+      <span class="badge-planned">Planned</span>
+    </div>
+    <div class="agent-card planned" style="margin-top:6px">
+      <div class="agent-name">COVENANT</div>
+      <div class="agent-role">Lease &amp; Contract Drafter</div>
+      <div class="agent-desc">Leases, vendor agreements — zero retention model</div>
+      <span class="badge-planned">Planned</span>
+    </div>
+    <div class="agent-card planned" style="margin-top:6px">
+      <div class="agent-name">PARCEL</div>
+      <div class="agent-role">Property Copywriter</div>
+      <div class="agent-desc">Listings, tenant comms, property marketing</div>
+      <span class="badge-planned">Planned</span>
+    </div>
+  </div>
+
+  <!-- EMERGENT BRANDS -->
+  <div class="theme-emergent" style="background:var(--surface);border:1px solid var(--dc,var(--border));border-radius:10px;padding:14px 16px;">
+    <div class="dept-header" style="border:none;padding:0 0 10px;margin:0 0 8px;border-bottom:1px solid var(--border);">
+      <div class="dept-icon">🚀</div>
+      <div class="dept-name">Emergent Brands</div>
+      <div class="dept-sub">Growth Portfolio</div>
+    </div>
+    <div class="agent-card planned">
+      <div class="agent-name">IGNITE</div>
+      <div class="agent-role">Brand Launcher</div>
+      <div class="agent-desc">Brand guidelines, web presence, first campaign (peptides, new ventures)</div>
+      <span class="badge-planned">Planned</span>
+    </div>
+    <div class="agent-card live" style="margin-top:6px">
+      <div class="agent-name">SCOUT</div>
+      <div class="agent-role">Competitive Intel</div>
+      <div class="agent-desc">Tracks competitors, delivers intel briefings and market reports</div>
+      <span class="badge-live">Live</span>
+    </div>
+    <div class="agent-card planned" style="margin-top:6px">
+      <div class="agent-name">CURRENT</div>
+      <div class="agent-role">Growth Copywriter</div>
+      <div class="agent-desc">Web copy, launch materials, multi-brand content</div>
+      <span class="badge-planned">Planned</span>
+    </div>
+  </div>
+
+  <!-- FREMONT MAKERS -->
+  <div class="theme-fremont" style="background:var(--surface);border:1px solid var(--dc,var(--border));border-radius:10px;padding:14px 16px;">
+    <div class="dept-header" style="border:none;padding:0 0 10px;margin:0 0 8px;border-bottom:1px solid var(--border);">
+      <div class="dept-icon">🪵</div>
+      <div class="dept-name">Fremont Makers</div>
+      <div class="dept-sub">Cabinet Operations</div>
+    </div>
+    <div class="agent-card live">
+      <div class="agent-name">FORGE</div>
+      <div class="agent-role">Quote Engine</div>
+      <div class="agent-desc">Cabinet pricing, markup calc, serial tracking, vendor invoice reconciliation</div>
+      <span class="badge-live">Live</span>
+    </div>
+    <div class="agent-card live" style="margin-top:6px">
+      <div class="agent-name">TALLY</div>
+      <div class="agent-role">Project Accountant</div>
+      <div class="agent-desc">Job P&amp;L, invoice cross-check, margin tracking, final reconciliation</div>
+      <span class="badge-live">Live</span>
+    </div>
+    <div class="agent-card live" style="margin-top:6px">
+      <div class="agent-name">DRAFT</div>
+      <div class="agent-role">Elevation Designer</div>
+      <div class="agent-desc">Room measurements → customer-ready SVG cabinet elevation drawings for builder bids</div>
+      <span class="badge-live">Live</span>
+    </div>
+    <div class="agent-card planned" style="margin-top:6px">
+      <div class="agent-name">DEPOT</div>
+      <div class="agent-role">Inventory &amp; Scheduling</div>
+      <div class="agent-desc">Order tracking, assembly scheduling, delivery coordination</div>
+      <span class="badge-planned">Next up</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- BOTTOM: MODEL TIERS + INFRA + PROTOCOL -->
+<div class="bottom-wrap">
+
+  <!-- MODEL TIERS -->
+  <div class="bottom-card">
+    <div class="bottom-title">🤖 Model Selection Framework</div>
+    <div class="model-row">
+      <div class="model-icon">🔴</div>
+      <div>
+        <div class="model-tier-name">Heavy Tier</div>
+        <div class="model-names">Claude Sonnet 4.6 · GPT-5</div>
+        <div class="model-use">Complex strategy, architecture, legal review</div>
+      </div>
+    </div>
+    <div class="model-row">
+      <div class="model-icon">🟡</div>
+      <div>
+        <div class="model-tier-name">Standard Tier</div>
+        <div class="model-names">Gemini 2.5 Flash · Claude Haiku</div>
+        <div class="model-use">Default ops, summaries, session search, delegation</div>
+      </div>
+    </div>
+    <div class="model-row">
+      <div class="model-icon">⚡</div>
+      <div>
+        <div class="model-tier-name">Fast Tier</div>
+        <div class="model-names">Gemini 2.5 Flash · GPT-4.1-mini</div>
+        <div class="model-use">Quick tasks, skills hub, templates, titles</div>
+      </div>
+    </div>
+    <div class="model-row">
+      <div class="model-icon">💻</div>
+      <div>
+        <div class="model-tier-name">Code Tier</div>
+        <div class="model-names">Claude Code · Codex CLI · OpenCode</div>
+        <div class="model-use">Dev, multi-file builds, PR workflows</div>
+      </div>
+    </div>
+    <div class="model-row">
+      <div class="model-icon">🔒</div>
+      <div>
+        <div class="model-tier-name">Zero-Retention Tier</div>
+        <div class="model-names">Venice.ai · Grok 4 (no data stored)</div>
+        <div class="model-use">Legal drafts, NDAs, sensitive IP — required for all legal work</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INFRA -->
+  <div class="bottom-card">
+    <div class="bottom-title">🏗️ Technology Infrastructure</div>
+    <div class="infra-row">
+      <div class="infra-icon">🌐</div>
+      <div class="infra-name">Cloudflare</div>
+      <div class="infra-role">Pages + Workers + KV — deploy &amp; edge</div>
+    </div>
+    <div class="infra-row">
+      <div class="infra-icon">🤖</div>
+      <div class="infra-name">OpenRouter</div>
+      <div class="infra-role">Primary model gateway — all LLM routing</div>
+    </div>
+    <div class="infra-row">
+      <div class="infra-icon">🔒</div>
+      <div class="infra-name">Venice.ai</div>
+      <div class="infra-role">Zero-retention inference — legal &amp; sensitive</div>
+    </div>
+    <div class="infra-row">
+      <div class="infra-icon">📊</div>
+      <div class="infra-name">Airtable</div>
+      <div class="infra-role">Ops data, CRM, hospitality integrations</div>
+    </div>
+    <div class="infra-row">
+      <div class="infra-icon">🖥️</div>
+      <div class="infra-name">Hetzner CCX</div>
+      <div class="infra-role">VPS fleet — MC + all agent servers</div>
+    </div>
+    <div class="infra-row">
+      <div class="infra-icon">📱</div>
+      <div class="infra-name">Telegram</div>
+      <div class="infra-role">Primary UI — voice memos, commands, briefings</div>
+    </div>
+  </div>
+
+  <!-- OPERATIONAL PROTOCOL -->
+  <div class="bottom-card">
+    <div class="bottom-title">⚡ Operational Protocol</div>
+    <div class="protocol-rule">
+      <span class="rule-icon">1 ·</span>
+      Design must precede build. Halsey signs off before Fred-104 touches code.
+    </div>
+    <div class="protocol-rule">
+      <span class="rule-icon">2 ·</span>
+      ALL ideas route through Unbridled Intake before reaching Blue Team.
+    </div>
+    <div class="protocol-rule">
+      <span class="rule-icon">3 ·</span>
+      Legal work uses Venice zero-retention only — no exceptions.
+    </div>
+    <div class="protocol-rule">
+      <span class="rule-icon">4 ·</span>
+      MC reviews all final outputs before delivery to Stan or clients.
+    </div>
+    <div class="protocol-rule">
+      <span class="rule-icon">5 ·</span>
+      Planned agents are activated when the business unit needs them — not before.
+    </div>
+    <div class="protocol-rule">
+      <span class="rule-icon">6 ·</span>
+      This chart is updated every time a new agent ships or a role changes.
+    </div>
+  </div>
+
+</div>
+
+<!-- BUSINESS UNITS FOOTER -->
+<div style="max-width:1300px;margin:14px auto 0;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 20px;">
+  <div style="font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;text-align:center;">🏢 Business Units Served</div>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">
+    <span style="background:rgba(232,130,61,.1);border:1px solid rgba(232,130,61,.3);border-radius:20px;padding:4px 12px;font-size:10px;font-weight:600;color:#e8823d;">Unbridled Solutions · Live Events</span>
+    <span style="background:rgba(90,139,167,.1);border:1px solid rgba(90,139,167,.3);border-radius:20px;padding:4px 12px;font-size:10px;font-weight:600;color:#5a8ba7;">Unbridled Hospitality Group</span>
+    <span style="background:rgba(154,126,200,.1);border:1px solid rgba(154,126,200,.3);border-radius:20px;padding:4px 12px;font-size:10px;font-weight:600;color:#9a7ec8;">Unbridled Holdings · Real Estate</span>
+    <span style="background:rgba(201,170,124,.1);border:1px solid rgba(201,170,124,.3);border-radius:20px;padding:4px 12px;font-size:10px;font-weight:600;color:var(--gold);">Unbridled Wealth · Family Office</span>
+    <span style="background:rgba(76,175,125,.1);border:1px solid rgba(76,175,125,.3);border-radius:20px;padding:4px 12px;font-size:10px;font-weight:600;color:#4caf7d;">BeUnbridled.ai · AI Chief of Staff</span>
+    <span style="background:rgba(92,184,92,.1);border:1px solid rgba(92,184,92,.3);border-radius:20px;padding:4px 12px;font-size:10px;font-weight:600;color:#5cb85c;">Fremont Makers · Cabinets</span>
+    <span style="background:rgba(76,175,125,.1);border:1px solid rgba(76,175,125,.3);border-radius:20px;padding:4px 12px;font-size:10px;font-weight:600;color:#4caf7d;">Emergent Brands · Growth Portfolio</span>
+    <span style="background:rgba(232,80,80,.1);border:1px solid rgba(232,80,80,.3);border-radius:20px;padding:4px 12px;font-size:10px;font-weight:600;color:#e85050;">UnbridledACTS · 501c3</span>
+  </div>
+</div>
+
+</body>
+</html>
