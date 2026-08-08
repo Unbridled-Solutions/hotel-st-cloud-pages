@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maintenance Request — Unbridled Properties</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3250;
+    --text: #e8eaf0;
+    --muted: #8b90a8;
+    --accent: #4a9eff;
+    --accent-hover: #6ab4ff;
+    --danger: #ff4d4d;
+    --warning: #ffb347;
+    --success: #3de8c8;
+    --yellow: #ffd166;
+    --radius: 10px;
+    --font: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .header-logo {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+  .header-logo span { color: var(--accent); }
+  .header-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .container {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 32px 20px 60px;
+  }
+
+  /* ── 911 EMERGENCY SECTION ── */
+  .emergency-block {
+    background: #1c0a0a;
+    border: 2px solid var(--danger);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+    margin-bottom: 28px;
+  }
+  .emergency-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--danger);
+    margin-bottom: 14px;
+  }
+  .emergency-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .emergency-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .e-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .e-text strong { color: var(--text); display: block; }
+  .e-text span { color: var(--muted); font-size: 13px; }
+
+  /* ── AFTER-HOURS CONTACTS ── */
+  .after-hours-block {
+    background: #0f1420;
+    border: 1px solid #2e3a5c;
+    border-radius: var(--radius);
+    padding: 20px 22px;
+    margin-bottom: 28px;
+  }
+  .ah-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--warning);
+    margin-bottom: 14px;
+  }
+  .ah-intro {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 14px;
+    line-height: 1.7;
+  }
+  .ah-intro strong { color: var(--text); }
+  .contacts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  @media (max-width: 480px) {
+    .contacts-grid { grid-template-columns: 1fr; }
+  }
+  .contact-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .contact-type {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .contact-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .contact-phone {
+    font-size: 14px;
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .contact-phone:hover { color: var(--accent-hover); }
+  .contact-note {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+  .contact-urgent {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--danger);
+    background: rgba(255,77,77,0.1);
+    border-radius: 4px;
+    padding: 2px 6px;
+    display: inline-block;
+    margin-top: 3px;
+  }
+
+  /* ── FORM INSTRUCTIONS ── */
+  .form-intro {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 22px;
+    margin-bottom: 28px;
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+  .form-intro strong { color: var(--text); }
+  .form-intro .response-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(74,158,255,0.12);
+    border: 1px solid rgba(74,158,255,0.25);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 13px;
+    color: var(--accent);
+    font-weight: 500;
+    margin-top: 8px;
+  }
+
+  /* ── FORM ── */
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 26px;
+  }
+  .form-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .form-subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+
+  .form-row {
+    margin-bottom: 20px;
+  }
+  .form-row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  @media (max-width: 480px) {
+    .form-row-2 { grid-template-columns: 1fr; }
+  }
+
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 7px;
+  }
+  label .req { color: var(--danger); margin-left: 2px; }
+  label .hint {
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--muted);
+    font-size: 12px;
+    margin-left: 6px;
+    opacity: 0.7;
+  }
+
+  input, select, textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 15px;
+    padding: 11px 14px;
+    transition: border-color 0.15s;
+    outline: none;
+    appearance: none;
+  }
+  input::placeholder, textarea::placeholder { color: var(--muted); opacity: 0.6; }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(74,158,255,0.12);
+  }
+  select {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238b90a8' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+  select option { background: #1a1d27; }
+  textarea { resize: vertical; min-height: 100px; }
+
+  /* File upload */
+  .upload-area {
+    background: var(--surface2);
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    position: relative;
+  }
+  .upload-area:hover, .upload-area.dragover {
+    border-color: var(--accent);
+  }
+  .upload-area input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    background: none;
+    border: none;
+    box-shadow: none;
+  }
+  .upload-area input[type="file"]:focus { box-shadow: none; }
+  .upload-icon { font-size: 28px; margin-bottom: 8px; }
+  .upload-text {
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .upload-text strong { color: var(--accent); }
+  .upload-hint {
+    font-size: 12px;
+    color: var(--muted);
+    opacity: 0.6;
+    margin-top: 4px;
+  }
+  .upload-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .upload-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .upload-chip .remove-file {
+    cursor: pointer;
+    color: var(--danger);
+    font-size: 14px;
+    line-height: 1;
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: var(--font);
+  }
+
+  /* Priority selector */
+  .priority-group {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .priority-option {
+    flex: 1;
+    min-width: 110px;
+  }
+  .priority-option input[type="radio"] { display: none; }
+  .priority-option label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 10px;
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    text-align: center;
+  }
+  .priority-option label .p-icon { font-size: 20px; }
+  .priority-option input:checked + label {
+    border-color: var(--accent);
+    background: rgba(74,158,255,0.08);
+    color: var(--text);
+  }
+  .priority-option.urgent input:checked + label {
+    border-color: var(--danger);
+    background: rgba(255,77,77,0.08);
+  }
+  .priority-option.soon input:checked + label {
+    border-color: var(--warning);
+    background: rgba(255,179,71,0.08);
+  }
+  .priority-option.flexible input:checked + label {
+    border-color: var(--success);
+    background: rgba(61,232,200,0.08);
+  }
+  .priority-option label:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  /* Divider */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 24px 0;
+  }
+
+  /* Submit */
+  .submit-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--font);
+    font-size: 16px;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    letter-spacing: 0.01em;
+    margin-top: 8px;
+  }
+  .submit-btn:hover { background: var(--accent-hover); }
+  .submit-btn:active { transform: scale(0.99); }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .submit-note {
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 12px;
+    line-height: 1.6;
+  }
+
+  /* Success state */
+  .success-screen {
+    display: none;
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .success-icon { font-size: 56px; margin-bottom: 16px; }
+  .success-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--success);
+    margin-bottom: 10px;
+  }
+  .success-body {
+    font-size: 15px;
+    color: var(--muted);
+    max-width: 400px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  /* Error */
+  .form-error {
+    background: rgba(255,77,77,0.1);
+    border: 1px solid rgba(255,77,77,0.3);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: var(--danger);
+    font-size: 14px;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  /* Section label */
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 16px;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-logo">Unbridled <span>Properties</span></div>
+    <div class="header-sub">Tenant Maintenance Request</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- 911 EMERGENCY BLOCK -->
+  <div class="emergency-block">
+    <div class="emergency-title">
+      🚨 Call 911 First — No Exceptions
+    </div>
+    <ul class="emergency-list">
+      <li>
+        <span class="e-icon">🔥</span>
+        <div class="e-text">
+          <strong>Fire, smoke, or burning smell</strong>
+          <span>Evacuate immediately → Call 911 → then notify us</span>
+        </div>
+      </li>
+      <li>
+        <span class="e-icon">💨</span>
+        <div class="e-text">
+          <strong>Gas smell anywhere in the building</strong>
+          <span>Do NOT flip switches → Evacuate → Call 911 → Atmos Energy: 888-286-6700</span>
+        </div>
+      </li>
+      <li>
+        <span class="e-icon">⚡</span>
+        <div class="e-text">
+          <strong>Electrical sparks, burning wires, or shock hazard</strong>
+          <span>Do NOT touch the panel → Call 911 → notify us</span>
+        </div>
+      </li>
+      <li>
+        <span class="e-icon">🏗️</span>
+        <div class="e-text">
+          <strong>Person trapped in elevator</strong>
+          <span>Speak calmly through door → Call 911 → MEI: 719-344-2814</span>
+        </div>
+      </li>
+      <li>
+        <span class="e-icon">🤕</span>
+        <div class="e-text">
+          <strong>Someone is injured</strong>
+          <span>Call 911 — always.</span>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- AFTER-HOURS / PREFERRED VENDORS -->
+  <div class="after-hours-block">
+    <div class="ah-title">
+      🌙 After Hours or Need Help Now? Call Our Preferred Vendors
+    </div>
+    <p class="ah-intro">
+      If something needs attention right away, <strong>call the right trade directly</strong> — don't wait on us. Once you've made that call, we'd still appreciate a heads-up via the form below so we can stay in the loop, follow up on your behalf, and make sure nothing falls through the cracks.
+    </p>
+    <div class="contacts-grid">
+      <div class="contact-card">
+        <div class="contact-type">Plumbing (Primary)</div>
+        <div class="contact-name">Flowright</div>
+        <a href="tel:7195642101" class="contact-phone">📞 719-564-2101 (press 1)</a>
+      </div>
+      <div class="contact-card">
+        <div class="contact-type">Plumbing (Backup)</div>
+        <div class="contact-name">River Valley Plumbing</div>
+        <a href="tel:7197843876" class="contact-phone">📞 719-784-3876</a>
+        <div class="contact-note">Familiar with all buildings</div>
+      </div>
+      <div class="contact-card">
+        <div class="contact-type">HVAC</div>
+        <div class="contact-name">Vision Mechanical</div>
+        <a href="tel:7195470218" class="contact-phone">📞 719-547-0218</a>
+        <div class="contact-note">Urgent: <a href="tel:7196961892" class="contact-phone">719-696-1892</a></div>
+        <span class="contact-urgent">Urgent line available</span>
+      </div>
+      <div class="contact-card">
+        <div class="contact-type">Electrical (Primary)</div>
+        <div class="contact-name">Flowright</div>
+        <a href="tel:7195642101" class="contact-phone">📞 719-564-2101 (press 1)</a>
+        <div class="contact-note">Emergencies: call 911 first</div>
+      </div>
+      <div class="contact-card">
+        <div class="contact-type">Electrical (Backup)</div>
+        <div class="contact-name">River Valley Plumbing</div>
+        <a href="tel:7197843876" class="contact-phone">📞 719-784-3876</a>
+      </div>
+      <div class="contact-card">
+        <div class="contact-type">Elevator</div>
+        <div class="contact-name">MEI Dispatch</div>
+        <a href="tel:7206398767" class="contact-phone">📞 720-639-8767</a>
+        <div class="contact-note">Person trapped: call 911 first</div>
+      </div>
+      <div class="contact-card">
+        <div class="contact-type">Gas Leak</div>
+        <div class="contact-name">Atmos Energy</div>
+        <a href="tel:8882866700" class="contact-phone">📞 888-286-6700</a>
+        <div class="contact-note">After evacuating + calling 911</div>
+        <span class="contact-urgent">911 first</span>
+      </div>
+      <div class="contact-card">
+        <div class="contact-type">Power Outage</div>
+        <div class="contact-name">Black Hills Energy</div>
+        <a href="tel:8888905554" class="contact-phone">📞 888-890-5554</a>
+        <div class="contact-note">Check outages: <a href="https://blackhillsenergy.com" target="_blank" class="contact-phone">blackhillsenergy.com</a></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORM INSTRUCTIONS -->
+  <div class="form-intro">
+    <strong>For all non-emergency issues</strong> — use the form below. Once submitted, our team will follow up within <span class="response-badge">⏱ 24–48 hours</span> with next steps.
+  </div>
+
+  <!-- FORM CARD -->
+  <div class="form-card">
+    <div class="form-title">Submit a Maintenance Request</div>
+    <div class="form-subtitle">Takes about 2 minutes. All fields marked * are required.</div>
+
+    <div class="form-error" id="formError"></div>
+
+    <form id="maintenanceForm">
+
+      <!-- SECTION: YOUR LOCATION -->
+      <div class="section-label">Your Location</div>
+
+      <div class="form-row">
+        <label for="building">Building <span class="req">*</span></label>
+        <select id="building" name="building" required>
+          <option value="" disabled selected>Select your building…</option>
+          <option value="Apex — 425-431 Main St">Apex — 425-431 Main St</option>
+          <option value="Harrison — 609-617 Main St">Harrison — 609-617 Main St</option>
+          <option value="414 Main — 414 Main St">414 Main — 414 Main St</option>
+          <option value="Hotel St. Cloud — 631 Main St">Hotel St. Cloud — 631 Main St</option>
+          <option value="Standard Oil — 701 Main St">Standard Oil — 701 Main St</option>
+          <option value="Annex — 507 Main St">Annex — 507 Main St</option>
+          <option value="Scholastica — 707 7th St">Scholastica — 707 7th St</option>
+          <option value="Office Building — 110 7th St">Office Building — 110 7th St</option>
+          <option value="Fremont Makers — 719 Main St">Fremont Makers — 719 Main St</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <div class="form-row-2">
+        <div>
+          <label for="suite">Suite / Unit # / Address <span class="hint">(if applicable)</span></label>
+          <input type="text" id="suite" name="suite" placeholder="e.g. Suite 4, 427 Main, Unit B">
+        </div>
+        <div>
+          <label for="location_detail">Specific Area <span class="hint">(optional)</span></label>
+          <input type="text" id="location_detail" name="location_detail" placeholder="e.g. back hallway, bathroom">
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <!-- SECTION: YOUR INFO -->
+      <div class="section-label">Your Info</div>
+
+      <div class="form-row-2">
+        <div>
+          <label for="name">Your Name <span class="req">*</span></label>
+          <input type="text" id="name" name="name" placeholder="First & last name" required>
+        </div>
+        <div>
+          <label for="tenant_org">Business / Org Name <span class="hint">(optional)</span></label>
+          <input type="text" id="tenant_org" name="tenant_org" placeholder="e.g. White Sage Massage">
+        </div>
+      </div>
+
+      <div class="form-row-2">
+        <div>
+          <label for="email">Email <span class="req">*</span></label>
+          <input type="email" id="email" name="email" placeholder="your@email.com" required>
+        </div>
+        <div>
+          <label for="phone">Phone <span class="hint">(optional)</span></label>
+          <input type="tel" id="phone" name="phone" placeholder="719-555-0100">
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <!-- SECTION: THE ISSUE -->
+      <div class="section-label">The Issue</div>
+
+      <div class="form-row">
+        <label for="category">Category <span class="req">*</span></label>
+        <select id="category" name="category" required>
+          <option value="" disabled selected>What type of issue is this?</option>
+          <option value="Plumbing — leak, drain, toilet">Plumbing — leak, drain, toilet</option>
+          <option value="HVAC — heating, cooling, airflow">HVAC — heating, cooling, airflow</option>
+          <option value="Electrical — outlet, breaker, lights">Electrical — outlet, breaker, lights</option>
+          <option value="Doors & Locks — entry, key, access">Doors &amp; Locks — entry, key, access</option>
+          <option value="Common Areas — hallway, restroom, lobby">Common Areas — hallway, restroom, lobby</option>
+          <option value="Elevator">Elevator</option>
+          <option value="Parking / Exterior">Parking / Exterior</option>
+          <option value="Pest / Cleanliness">Pest / Cleanliness</option>
+          <option value="Internet / Building Infrastructure">Internet / Building Infrastructure</option>
+          <option value="Other / General">Other / General</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label for="description">Describe the Issue <span class="req">*</span></label>
+        <textarea id="description" name="description" placeholder="What's happening? When did it start? Has it happened before?" required></textarea>
+      </div>
+
+      <div class="form-row">
+        <label for="photos">Photos or Videos <span class="hint">(optional — max 40MB total)</span></label>
+        <div class="upload-area" id="uploadArea">
+          <input type="file" id="photos" name="photos" accept="image/*,video/*" multiple>
+          <div class="upload-icon">📎</div>
+          <div class="upload-text"><strong>Tap to attach</strong> or drag files here</div>
+          <div class="upload-hint">Photos or short videos — JPG, PNG, MP4, MOV, etc.</div>
+        </div>
+        <div class="upload-preview" id="uploadPreview"></div>
+      </div>
+
+      <div class="form-row">
+        <label>Urgency <span class="req">*</span></label>
+        <div class="priority-group">
+          <div class="priority-option urgent">
+            <input type="radio" name="urgency" id="p_urgent" value="Urgent — safety or major disruption" required>
+            <label for="p_urgent">
+              <span class="p-icon">🔴</span>
+              Urgent
+              <span style="font-size:11px;color:var(--muted)">Safety / can't work</span>
+            </label>
+          </div>
+          <div class="priority-option soon">
+            <input type="radio" name="urgency" id="p_soon" value="Soon — affecting operations">
+            <label for="p_soon">
+              <span class="p-icon">🟡</span>
+              Soon
+              <span style="font-size:11px;color:var(--muted)">Affecting operations</span>
+            </label>
+          </div>
+          <div class="priority-option flexible">
+            <input type="radio" name="urgency" id="p_flexible" value="Flexible — when you get a chance">
+            <label for="p_flexible">
+              <span class="p-icon">🟢</span>
+              Flexible
+              <span style="font-size:11px;color:var(--muted)">When you get a chance</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label for="best_time">Best Time for Access <span class="hint">(optional)</span></label>
+        <input type="text" id="best_time" name="best_time" placeholder="e.g. Weekday mornings, anytime, after 3pm">
+      </div>
+
+      <button type="submit" class="submit-btn" id="submitBtn">
+        Submit Request →
+      </button>
+
+      <p class="submit-note">
+        Our team will follow up within 24–48 hours with next steps.
+      </p>
+
+    </form>
+
+    <!-- SUCCESS STATE -->
+    <div class="success-screen" id="successScreen">
+      <div class="success-icon">✅</div>
+      <div class="success-title">Request Submitted!</div>
+      <div class="success-body">
+        We've received your maintenance request and will follow up within <strong style="color:var(--text)">24–48 hours</strong> with next steps.<br><br>
+        If things get worse in the meantime, use the vendor contact list at the top of this page.
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+
+<script>
+// ── File upload UI ────────────────────────────────────────────────────────────
+const photoInput  = document.getElementById('photos');
+const preview     = document.getElementById('uploadPreview');
+const uploadArea  = document.getElementById('uploadArea');
+let selectedFiles = [];
+
+photoInput.addEventListener('change', function() {
+  mergeFiles(Array.from(this.files));
+});
+uploadArea.addEventListener('dragover',  (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+uploadArea.addEventListener('dragleave', ()  => uploadArea.classList.remove('dragover'));
+uploadArea.addEventListener('drop', (e) => {
+  e.preventDefault();
+  uploadArea.classList.remove('dragover');
+  mergeFiles(Array.from(e.dataTransfer.files));
+});
+
+function mergeFiles(incoming) {
+  // Dedupe by name+size
+  incoming.forEach(f => {
+    if (!selectedFiles.find(x => x.name === f.name && x.size === f.size)) {
+      selectedFiles.push(f);
+    }
+  });
+  renderPreview();
+}
+
+function renderPreview() {
+  preview.innerHTML = '';
+  selectedFiles.forEach((file, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'upload-chip';
+    chip.innerHTML = `<span>📄 ${file.name} <span style="color:var(--muted);font-size:11px;">(${(file.size/1024/1024).toFixed(1)}MB)</span></span><button class="remove-file" data-i="${i}" type="button">×</button>`;
+    preview.appendChild(chip);
+  });
+  preview.querySelectorAll('.remove-file').forEach(btn => {
+    btn.addEventListener('click', function() {
+      selectedFiles.splice(parseInt(this.dataset.i), 1);
+      renderPreview();
+    });
+  });
+}
+
+// ── KV save (non-blocking) ────────────────────────────────────────────────────
+async function saveToTracker(data) {
+  try {
+    await fetch('/api/kv?ns=maint&key=' + encodeURIComponent('req:' + data.id), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+  } catch (e) { /* non-fatal */ }
+}
+
+// ── Form submission ───────────────────────────────────────────────────────────
+document.getElementById('maintenanceForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+
+  const btn      = document.getElementById('submitBtn');
+  const errorDiv = document.getElementById('formError');
+  errorDiv.style.display = 'none';
+  btn.disabled   = true;
+  btn.textContent = selectedFiles.length ? 'Uploading…' : 'Sending…';
+
+  // Validate file size (40MB total Resend limit)
+  const totalMB = selectedFiles.reduce((s, f) => s + f.size, 0) / 1024 / 1024;
+  if (totalMB > 38) {
+    errorDiv.textContent = `Total file size is ${totalMB.toFixed(1)}MB — please keep attachments under 38MB total or remove some files.`;
+    errorDiv.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Submit Request →';
+    return;
+  }
+
+  const urgencyRaw = document.querySelector('input[name="urgency"]:checked')?.value || '';
+  const id          = 'mr-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
+  const submittedAt = new Date().toISOString();
+
+  const data = {
+    id,
+    status:          'new',
+    submitted_at:    submittedAt,
+    building:        document.getElementById('building').value,
+    suite:           document.getElementById('suite').value,
+    location_detail: document.getElementById('location_detail').value,
+    name:            document.getElementById('name').value,
+    tenant_org:      document.getElementById('tenant_org').value,
+    email:           document.getElementById('email').value,
+    phone:           document.getElementById('phone').value,
+    category:        document.getElementById('category').value,
+    description:     document.getElementById('description').value,
+    urgency:         urgencyRaw,
+    best_time:       document.getElementById('best_time').value,
+    attachments:     selectedFiles.map(f => f.name),
+    notes:           ''
+  };
+
+  // Save to tracker first (no files — just metadata)
+  await saveToTracker(data);
+
+  // Build multipart FormData — fields + actual file bytes
+  const fd = new FormData();
+  fd.append('data', JSON.stringify(data));
+  selectedFiles.forEach(f => fd.append('files', f, f.name));
+
+  let emailError = null;
+  try {
+    btn.textContent = 'Sending…';
+    const resp   = await fetch('/api/send-maintenance', { method: 'POST', body: fd });
+    const result = await resp.json();
+    if (!result.success) emailError = result.error;
+  } catch (err) {
+    emailError = err.message;
+  }
+
+  // Always show success — request is in the tracker regardless of email
+  document.getElementById('maintenanceForm').style.display = 'none';
+  const successScreen = document.getElementById('successScreen');
+  successScreen.style.display = 'block';
+  if (emailError) {
+    successScreen.querySelector('.success-body').innerHTML +=
+      '<br><br><small style="color:var(--warning)">Note: confirmation email may be delayed — your request is saved and our team will see it.</small>';
+  }
+});
+</script>
+
+</body>
+</html>

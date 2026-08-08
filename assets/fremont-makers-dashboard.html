@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fremont Makers — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Pinyon+Script&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #111111;
+      --surface:  #1a1a1a;
+      --border:   #2a2a2a;
+      --border-hover: #444;
+      --text:     #f0ece4;
+      --muted:    #888;
+      --gold:     #c9a84c;
+      --gold-soft: rgba(201,168,76,0.12);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 0 0 80px;
+    }
+
+    /* ── HEADER ── */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 36px 40px 32px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .logo-mark {
+      width: 44px; height: 52px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .fm-letter {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-weight: 700; font-size: 22px; color: var(--text); line-height: 1;
+    }
+    .fm-rule {
+      width: 36px; height: 1.5px; background: var(--text); margin: 4px 0;
+    }
+
+    .logo-text h1 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 22px; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: var(--text);
+    }
+    .logo-text .tagline {
+      font-family: 'Pinyon Script', cursive;
+      font-size: 16px; color: var(--muted);
+      margin-top: 1px;
+    }
+    .logo-text .page-label {
+      font-size: 11px; font-weight: 500; letter-spacing: .14em;
+      text-transform: uppercase; color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* ── MAIN ── */
+    main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 52px 24px 0;
+    }
+
+    .section-label {
+      font-size: 11px; font-weight: 600; letter-spacing: .18em;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    /* ── CARD GRID ── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+      margin-bottom: 52px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 28px 26px;
+      text-decoration: none;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: border-color .18s, background .18s, transform .12s;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--gold-soft);
+      opacity: 0;
+      transition: opacity .18s;
+    }
+    .card:hover { border-color: var(--gold); transform: translateY(-2px); }
+    .card:hover::before { opacity: 1; }
+
+    .card-icon {
+      font-size: 28px;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .card-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 17px; font-weight: 700;
+      color: var(--text);
+    }
+    .card-desc {
+      font-size: 13px; color: var(--muted); line-height: 1.55;
+    }
+    .card-arrow {
+      margin-top: auto;
+      font-size: 12px; font-weight: 600; letter-spacing: .08em;
+      color: var(--gold);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .card-arrow::after { content: '→'; }
+
+    /* ── BRAND ASSETS SECTION ── */
+    .brand-section {
+      margin-bottom: 52px;
+    }
+
+    .brand-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+
+    .brand-tile {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px 20px 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      text-decoration: none;
+      transition: border-color .18s, transform .12s;
+    }
+    .brand-tile:hover { border-color: var(--gold); transform: translateY(-2px); }
+
+    .brand-tile-preview {
+      height: 72px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .brand-tile-preview img {
+      max-height: 64px; max-width: 160px;
+      object-fit: contain;
+      filter: brightness(1);
+    }
+    /* For dark-bg logos, show on a white swatch */
+    .brand-tile-preview.on-white {
+      background: #fff;
+      border-radius: 6px;
+      padding: 10px 16px;
+      width: 100%;
+    }
+    .brand-tile-preview.on-white img {
+      filter: none;
+    }
+
+    .brand-tile-info {
+      text-align: center;
+    }
+    .brand-tile-name {
+      font-size: 13px; font-weight: 600; color: var(--text);
+    }
+    .brand-tile-meta {
+      font-size: 11px; color: var(--muted); margin-top: 3px;
+    }
+    .brand-tile-dl {
+      font-size: 11px; font-weight: 600; letter-spacing: .08em;
+      color: var(--gold);
+      display: flex; align-items: center; gap: 5px;
+    }
+    .brand-tile-dl::before { content: '↓'; }
+
+    /* Color swatches */
+    .swatch-row {
+      display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px;
+    }
+    .swatch {
+      width: 44px; height: 44px; border-radius: 6px;
+      border: 1px solid var(--border);
+      position: relative;
+      cursor: default;
+    }
+    .swatch-label {
+      font-size: 10px; color: var(--muted); text-align: center; margin-top: 4px;
+    }
+    .swatch-group { display: flex; flex-direction: column; align-items: center; }
+
+    /* ── COMING SOON CARD ── */
+    .card.coming-soon {
+      opacity: .45;
+      cursor: default;
+      pointer-events: none;
+    }
+    .card.coming-soon .card-arrow { color: var(--muted); }
+    .badge {
+      position: absolute;
+      top: 12px; right: 14px;
+      font-size: 10px; font-weight: 600; letter-spacing: .1em;
+      text-transform: uppercase;
+      background: var(--border);
+      color: var(--muted);
+      padding: 3px 8px; border-radius: 20px;
+    }
+
+    /* ── DIVIDER ── */
+    hr {
+      border: none; border-top: 1px solid var(--border);
+      margin: 0 0 48px;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      font-size: 12px; color: var(--muted);
+      padding-top: 20px;
+    }
+    footer span {
+      font-family: 'Pinyon Script', cursive;
+      font-size: 16px; vertical-align: -2px;
+    }
+
+    @media (max-width: 540px) {
+      header { padding: 24px 20px 20px; }
+      main { padding: 36px 16px 0; }
+      .card-grid, .brand-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo-mark">
+      <span class="fm-letter">F</span>
+      <div class="fm-rule"></div>
+      <span class="fm-letter">M</span>
+    </div>
+    <div class="logo-text">
+      <h1>Fremont Makers</h1>
+      <div class="tagline">making freedom</div>
+      <div class="page-label">Team Dashboard</div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ── TOOLS ── -->
+    <div class="section-label">Tools &amp; Forms</div>
+    <div class="card-grid">
+
+      <a class="card" href="https://offers.hotelstcloud.com/assets/fremont-makers-quote" target="_blank">
+        <div class="card-icon">🧾</div>
+        <div class="card-title">Quote Builder</div>
+        <div class="card-desc">Build cabinet quotes, calculate labor and materials, generate client-ready invoices.</div>
+        <div class="card-arrow">Open tool</div>
+      </a>
+
+      <a class="card" href="https://offers.hotelstcloud.com/assets/maintenance-request" target="_blank">
+        <div class="card-icon">🔧</div>
+        <div class="card-title">Maintenance Request</div>
+        <div class="card-desc">Tenant maintenance intake form for all Unbridled Properties buildings. Routes to Kristy.</div>
+        <div class="card-arrow">Open form</div>
+      </a>
+
+      <a class="card" href="https://offers.hotelstcloud.com/assets/maintenance-tracker" target="_blank">
+        <div class="card-icon">📋</div>
+        <div class="card-title">Maintenance Tracker</div>
+        <div class="card-desc">Live list of all submitted requests. Sort by building or tenant, update status, add internal notes.</div>
+        <div class="card-arrow">Open tracker</div>
+      </a>
+
+      <div class="card coming-soon">
+        <div class="badge">Coming soon</div>
+        <div class="card-icon">📊</div>
+        <div class="card-title">Company P&amp;L</div>
+        <div class="card-desc">Rolling monthly profit &amp; loss tracker for Fremont Makers operations.</div>
+        <div class="card-arrow">Coming soon</div>
+      </div>
+
+      <div class="card coming-soon">
+        <div class="badge">Coming soon</div>
+        <div class="card-icon">👥</div>
+        <div class="card-title">Team &amp; HR</div>
+        <div class="card-desc">Staff directory, onboarding docs, and HR resources for the FM team.</div>
+        <div class="card-arrow">Coming soon</div>
+      </div>
+
+    </div>
+
+    <hr />
+
+    <!-- ── BRAND ASSETS ── -->
+    <div class="brand-section">
+      <div class="section-label">Brand Assets</div>
+      <div class="brand-grid">
+
+        <a class="brand-tile" href="https://offers.hotelstcloud.com/assets/fremontmakers-logo.png" download="fremont-makers-logo.png" target="_blank">
+          <div class="brand-tile-preview on-white">
+            <img src="fremontmakers-logo.png" alt="Fremont Makers Logo" />
+          </div>
+          <div class="brand-tile-info">
+            <div class="brand-tile-name">Logo (Primary)</div>
+            <div class="brand-tile-meta">PNG · Light backgrounds</div>
+          </div>
+          <div class="brand-tile-dl">Download</div>
+        </a>
+
+        <a class="brand-tile" href="https://offers.hotelstcloud.com/assets/fremontmakers-wordmark.png" download="fremont-makers-wordmark.png" target="_blank">
+          <div class="brand-tile-preview on-white">
+            <img src="fremontmakers-wordmark.png" alt="Fremont Makers Wordmark" />
+          </div>
+          <div class="brand-tile-info">
+            <div class="brand-tile-name">Wordmark</div>
+            <div class="brand-tile-meta">PNG · Light backgrounds</div>
+          </div>
+          <div class="brand-tile-dl">Download</div>
+        </a>
+
+        <div class="brand-tile" style="cursor:default;">
+          <div class="brand-tile-preview" style="flex-direction:column; gap:8px; width:100%;">
+            <div class="swatch-row" style="justify-content:center;">
+              <div class="swatch-group">
+                <div class="swatch" style="background:#1a1a1a;"></div>
+                <div class="swatch-label">#1a1a1a</div>
+              </div>
+              <div class="swatch-group">
+                <div class="swatch" style="background:#f0ece4; border-color:#ccc;"></div>
+                <div class="swatch-label">#f0ece4</div>
+              </div>
+              <div class="swatch-group">
+                <div class="swatch" style="background:#888;"></div>
+                <div class="swatch-label">#888888</div>
+              </div>
+            </div>
+          </div>
+          <div class="brand-tile-info">
+            <div class="brand-tile-name">Brand Colors</div>
+            <div class="brand-tile-meta">Black · Cream · Stone</div>
+          </div>
+        </div>
+
+        <div class="brand-tile" style="cursor:default; justify-content:center;">
+          <div style="text-align:center; display:flex; flex-direction:column; gap:10px;">
+            <div style="font-family:'Playfair Display',Georgia,serif; font-size:22px; font-weight:700; letter-spacing:.1em; color:var(--text);">FREMONT MAKERS</div>
+            <div style="font-family:'Pinyon Script',cursive; font-size:22px; color:var(--muted);">making freedom</div>
+            <div style="font-family:'Inter',sans-serif; font-size:13px; color:var(--muted); letter-spacing:.04em;">Body / UI</div>
+          </div>
+          <div class="brand-tile-info">
+            <div class="brand-tile-name">Typography</div>
+            <div class="brand-tile-meta">Playfair Display · Pinyon Script · Inter</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <hr />
+
+    <footer>
+      <p>Fremont Makers &nbsp;·&nbsp; <span>making freedom</span> &nbsp;·&nbsp; Unbridled Companies</p>
+    </footer>
+
+  </main>
+</body>
+</html>

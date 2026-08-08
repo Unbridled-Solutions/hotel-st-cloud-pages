@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Maintenance Requests — Unbridled Properties</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0f1117;
+      --surface:  #1a1d27;
+      --surface2: #22263a;
+      --border:   #2e3250;
+      --text:     #e8eaf0;
+      --muted:    #8b90a8;
+      --accent:   #4a9eff;
+      --danger:   #ff4d4d;
+      --warning:  #ffb347;
+      --success:  #3de8c8;
+      --yellow:   #ffd166;
+      --font:     'Inter', system-ui, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 18px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .header-logo { font-size: 18px; font-weight: 700; color: var(--text); }
+    .header-logo span { color: var(--accent); }
+    .header-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .header-right { display: flex; gap: 10px; align-items: center; }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      display: flex;
+      gap: 1px;
+      background: var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .stat-pill {
+      flex: 1;
+      background: var(--surface);
+      padding: 14px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: background .15s;
+      min-width: 100px;
+    }
+    .stat-pill:hover { background: var(--surface2); }
+    .stat-pill.active { background: var(--surface2); border-bottom: 2px solid var(--accent); }
+    .stat-count {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 500;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+    .stat-pill[data-filter="new"] .stat-count { color: var(--accent); }
+    .stat-pill[data-filter="in_progress"] .stat-count { color: var(--warning); }
+    .stat-pill[data-filter="waiting_vendor"] .stat-count { color: #c084fc; }
+    .stat-pill[data-filter="resolved"] .stat-count { color: var(--success); }
+    .stat-pill[data-filter="closed"] .stat-count { color: var(--muted); }
+
+    /* ── TOOLBAR ── */
+    .toolbar {
+      padding: 16px 24px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--border);
+    }
+    .toolbar-search {
+      flex: 1;
+      min-width: 200px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      padding: 8px 12px;
+      outline: none;
+    }
+    .toolbar-search:focus { border-color: var(--accent); }
+    .toolbar-search::placeholder { color: var(--muted); }
+
+    select.filter-select {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 13px;
+      padding: 8px 32px 8px 12px;
+      outline: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238b90a8' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      cursor: pointer;
+    }
+    select.filter-select option { background: #1a1d27; }
+    select.filter-select:focus { border-color: var(--accent); }
+
+    /* ── TABLE ── */
+    .table-wrap {
+      overflow-x: auto;
+      padding: 0 24px 40px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+    }
+    thead th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+    }
+    thead th:hover { color: var(--text); }
+    thead th .sort-arrow { margin-left: 4px; opacity: .4; }
+    thead th.sorted .sort-arrow { opacity: 1; color: var(--accent); }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background .12s;
+      cursor: pointer;
+    }
+    tbody tr:hover { background: var(--surface); }
+    tbody td {
+      padding: 13px 14px;
+      vertical-align: middle;
+      font-size: 13px;
+    }
+
+    .td-date { color: var(--muted); white-space: nowrap; font-size: 12px; }
+    .td-building { font-weight: 600; color: var(--text); }
+    .td-tenant { color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .td-category { color: var(--muted); }
+    .td-desc {
+      max-width: 260px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--muted);
+    }
+
+    /* Urgency badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 20px;
+      padding: 3px 10px;
+      white-space: nowrap;
+    }
+    .badge-urgent   { background: rgba(255,77,77,.15);    color: #ff6b6b; }
+    .badge-soon     { background: rgba(255,179,71,.15);   color: #ffb347; }
+    .badge-flexible { background: rgba(61,232,200,.15);   color: #3de8c8; }
+
+    /* Status badges */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 6px;
+      padding: 4px 10px;
+      white-space: nowrap;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: opacity .15s;
+    }
+    .status-badge:hover { opacity: .8; }
+    .status-new          { background: rgba(74,158,255,.15);  color: var(--accent);   border-color: rgba(74,158,255,.2); }
+    .status-in_progress  { background: rgba(255,179,71,.15);  color: var(--warning);  border-color: rgba(255,179,71,.2); }
+    .status-waiting      { background: rgba(255,209,102,.15); color: var(--yellow);   border-color: rgba(255,209,102,.2); }
+    .status-waiting_vendor { background: rgba(192,132,252,.15); color: #c084fc;       border-color: rgba(192,132,252,.2); }
+    .status-resolved     { background: rgba(61,232,200,.15);  color: var(--success);  border-color: rgba(61,232,200,.2); }
+    .status-closed       { background: rgba(139,144,168,.12); color: var(--muted);    border-color: rgba(139,144,168,.2); }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+    .empty-state .es-icon { font-size: 40px; margin-bottom: 14px; }
+    .empty-state .es-title { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+
+    /* ── DETAIL DRAWER ── */
+    .drawer-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.6);
+      z-index: 100;
+    }
+    .drawer-backdrop.open { display: block; }
+    .drawer {
+      position: fixed;
+      top: 0; right: -480px;
+      width: 460px;
+      max-width: 100vw;
+      height: 100vh;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      z-index: 101;
+      overflow-y: auto;
+      transition: right .25s ease;
+      padding: 28px 28px 40px;
+    }
+    .drawer.open { right: 0; }
+    .drawer-close {
+      position: absolute;
+      top: 20px; right: 20px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 18px;
+      width: 32px; height: 32px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: color .15s;
+    }
+    .drawer-close:hover { color: var(--text); }
+    .drawer-tag {
+      font-size: 11px; font-weight: 600; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: 16px;
+    }
+    .drawer-title {
+      font-size: 18px; font-weight: 700; color: var(--text);
+      margin-bottom: 4px;
+    }
+    .drawer-sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+
+    .drawer-section { margin-bottom: 22px; }
+    .drawer-section-label {
+      font-size: 11px; font-weight: 600; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--accent);
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+    .drawer-row {
+      display: flex; justify-content: space-between;
+      gap: 12px; margin-bottom: 8px; align-items: flex-start;
+    }
+    .drawer-row-label { font-size: 12px; color: var(--muted); white-space: nowrap; }
+    .drawer-row-value { font-size: 13px; color: var(--text); text-align: right; }
+    .drawer-desc {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+
+    .status-select-group {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;
+    }
+    .status-opt {
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12px; font-weight: 600;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all .15s;
+      opacity: .6;
+    }
+    .status-opt:hover { opacity: .85; }
+    .status-opt.active { opacity: 1; }
+    .status-opt[data-s="new"]            { background: rgba(74,158,255,.15);  color: var(--accent);  border-color: var(--accent); }
+    .status-opt[data-s="in_progress"]    { background: rgba(255,179,71,.15);  color: var(--warning); border-color: var(--warning); }
+    .status-opt[data-s="waiting"]        { background: rgba(255,209,102,.15); color: var(--yellow);  border-color: var(--yellow); }
+    .status-opt[data-s="waiting_vendor"] { background: rgba(192,132,252,.15); color: #c084fc;        border-color: #c084fc; }
+    .status-opt[data-s="resolved"]       { background: rgba(61,232,200,.15);  color: var(--success); border-color: var(--success); }
+    .status-opt[data-s="closed"]         { background: rgba(139,144,168,.12); color: var(--muted);   border-color: var(--muted); }
+
+    .drawer-notes-area {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 13px;
+      padding: 12px 14px;
+      resize: vertical;
+      min-height: 80px;
+      outline: none;
+      margin-top: 8px;
+    }
+    .drawer-notes-area:focus { border-color: var(--accent); }
+    .save-btn {
+      width: 100%;
+      padding: 11px;
+      background: var(--accent);
+      color: #fff;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 14px;
+      transition: background .15s;
+    }
+    .save-btn:hover { background: #6ab4ff; }
+    .save-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    .saved-msg {
+      text-align: center;
+      font-size: 12px;
+      color: var(--success);
+      margin-top: 8px;
+      height: 18px;
+    }
+
+    /* ── SPINNER ── */
+    .spinner {
+      text-align: center;
+      padding: 60px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* ── BTN ── */
+    .btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      transition: background .15s, border-color .15s;
+      text-decoration: none;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn:hover { background: var(--border); }
+    .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #6ab4ff; border-color: #6ab4ff; }
+
+    @media (max-width: 640px) {
+      .header { padding: 14px 16px; }
+      .toolbar { padding: 12px 16px; }
+      .table-wrap { padding: 0 16px 40px; }
+      .stats-bar { overflow-x: auto; }
+      .stat-pill { min-width: 80px; padding: 12px 14px; }
+      .drawer { width: 100vw; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div>
+      <div class="header-logo">Unbridled <span>Properties</span></div>
+      <div class="header-sub">Maintenance Request Tracker</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <a href="https://offers.hotelstcloud.com/assets/fremont-makers-dashboard" class="btn">← FM Dashboard</a>
+  </div>
+</div>
+
+<!-- STATS BAR -->
+<div class="stats-bar" id="statsBar">
+  <div class="stat-pill active" data-filter="all">
+    <div class="stat-count" id="cnt-all">—</div>
+    <div class="stat-label">All</div>
+  </div>
+  <div class="stat-pill" data-filter="new">
+    <div class="stat-count" id="cnt-new">—</div>
+    <div class="stat-label">New</div>
+  </div>
+  <div class="stat-pill" data-filter="in_progress">
+    <div class="stat-count" id="cnt-in_progress">—</div>
+    <div class="stat-label">In Progress</div>
+  </div>
+  <div class="stat-pill" data-filter="waiting">
+    <div class="stat-count" id="cnt-waiting">—</div>
+    <div class="stat-label">Waiting on Tenant</div>
+  </div>
+  <div class="stat-pill" data-filter="waiting_vendor">
+    <div class="stat-count" id="cnt-waiting_vendor">—</div>
+    <div class="stat-label">Waiting on Vendor</div>
+  </div>
+  <div class="stat-pill" data-filter="resolved">
+    <div class="stat-count" id="cnt-resolved">—</div>
+    <div class="stat-label">Resolved</div>
+  </div>
+  <div class="stat-pill" data-filter="closed">
+    <div class="stat-count" id="cnt-closed">—</div>
+    <div class="stat-label">Closed</div>
+  </div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <input class="toolbar-search" type="text" id="searchInput" placeholder="Search by name, building, description…" />
+  <select class="filter-select" id="buildingFilter">
+    <option value="">All Buildings</option>
+    <option>Apex — 425-431 Main St</option>
+    <option>Harrison — 609-617 Main St</option>
+    <option>414 Main — 414 Main St</option>
+    <option>Hotel St. Cloud — 631 Main St</option>
+    <option>Standard Oil — 701 Main St</option>
+    <option>Annex — 507 Main St</option>
+    <option>Scholastica — 707 7th St</option>
+    <option>Office Building — 110 7th St</option>
+    <option>Fremont Makers — 719 Main St</option>
+    <option>Other</option>
+  </select>
+  <select class="filter-select" id="urgencyFilter">
+    <option value="">All Urgencies</option>
+    <option value="Urgent">🔴 Urgent</option>
+    <option value="Soon">🟡 Soon</option>
+    <option value="Flexible">🟢 Flexible</option>
+  </select>
+</div>
+
+<!-- TABLE -->
+<div class="table-wrap">
+  <div id="tableContainer">
+    <div class="spinner">Loading requests…</div>
+  </div>
+</div>
+
+<!-- DETAIL DRAWER -->
+<div class="drawer-backdrop" id="drawerBackdrop"></div>
+<div class="drawer" id="drawer">
+  <button class="drawer-close" id="drawerClose">✕</button>
+  <div id="drawerContent"></div>
+</div>
+
+<script>
+const KV_BASE = '/api/kv';
+const NS = 'maint';
+
+// ── KV helpers ──────────────────────────────────────────────
+async function kvGet(key) {
+  const r = await fetch(`${KV_BASE}?ns=${NS}&key=${encodeURIComponent(key)}`);
+  if (!r.ok) return null;
+  try { return await r.json(); } catch { return null; }
+}
+async function kvPut(key, val) {
+  await fetch(`${KV_BASE}?ns=${NS}&key=${encodeURIComponent(key)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(val)
+  });
+}
+async function kvList(prefix) {
+  const r = await fetch(`${KV_BASE}/list?ns=${NS}&prefix=${encodeURIComponent(prefix)}`);
+  if (!r.ok) return [];
+  const d = await r.json();
+  return d.keys || [];
+}
+
+// ── State ───────────────────────────────────────────────────
+let allRequests = [];
+let activeFilter = 'all';
+let sortCol = 'submitted_at';
+let sortDir = -1;
+let activeId = null;
+
+// ── Load all requests ────────────────────────────────────────
+async function loadRequests() {
+  const keys = await kvList('req:');
+  const items = await Promise.all(keys.map(k => kvGet(k)));
+  allRequests = items.filter(Boolean).sort((a, b) =>
+    (b.submitted_at || '').localeCompare(a.submitted_at || '')
+  );
+  render();
+}
+
+// ── Render ───────────────────────────────────────────────────
+function render() {
+  updateStats();
+  const filtered = getFiltered();
+  const sorted = getSorted(filtered);
+  renderTable(sorted);
+}
+
+function getFiltered() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const bldg = document.getElementById('buildingFilter').value;
+  const urg = document.getElementById('urgencyFilter').value;
+  return allRequests.filter(r => {
+    if (activeFilter !== 'all' && r.status !== activeFilter) return false;
+    if (bldg && r.building !== bldg) return false;
+    if (urg && !r.urgency?.includes(urg)) return false;
+    if (q) {
+      const hay = [r.name, r.building, r.suite, r.tenant_org, r.category, r.description, r.notes]
+        .filter(Boolean).join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+function getSorted(rows) {
+  return [...rows].sort((a, b) => {
+    const av = a[sortCol] || '';
+    const bv = b[sortCol] || '';
+    return av < bv ? sortDir : av > bv ? -sortDir : 0;
+  });
+}
+
+function updateStats() {
+  const counts = { all: allRequests.length, new: 0, in_progress: 0, waiting: 0, waiting_vendor: 0, resolved: 0, closed: 0 };
+  allRequests.forEach(r => { if (counts[r.status] !== undefined) counts[r.status]++; });
+  Object.entries(counts).forEach(([k, v]) => {
+    const el = document.getElementById(`cnt-${k}`);
+    if (el) el.textContent = v;
+  });
+}
+
+function urgencyClass(u) {
+  if (!u) return '';
+  if (u.includes('Urgent')) return 'badge-urgent';
+  if (u.includes('Soon')) return 'badge-soon';
+  return 'badge-flexible';
+}
+function urgencyLabel(u) {
+  if (!u) return '—';
+  if (u.includes('Urgent')) return '🔴 Urgent';
+  if (u.includes('Soon')) return '🟡 Soon';
+  return '🟢 Flexible';
+}
+function statusLabel(s) {
+  const map = { new: 'New', in_progress: 'In Progress', waiting: 'Waiting on Tenant', waiting_vendor: 'Waiting on Vendor', resolved: 'Resolved', closed: 'Closed' };
+  return map[s] || s;
+}
+function formatDate(ts) {
+  if (!ts) return '—';
+  try {
+    return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  } catch { return ts; }
+}
+
+function renderTable(rows) {
+  const container = document.getElementById('tableContainer');
+  if (!rows.length) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="es-icon">📋</div>
+      <div class="es-title">No requests found</div>
+      <div>Try adjusting your filters, or no submissions have come in yet.</div>
+    </div>`;
+    return;
+  }
+
+  const cols = [
+    { key: 'submitted_at', label: 'Date' },
+      { key: 'building', label: 'Building' },
+      { key: 'category', label: 'Category' },
+      { key: 'urgency', label: 'Urgency' },
+      { key: 'status', label: 'Status' },
+      { key: 'updated_at', label: 'Last Updated' },
+      { key: 'description', label: 'Description' },
+  ];
+
+  const thead = cols.map(c => {
+    const cls = sortCol === c.key ? 'sorted' : '';
+    const arrow = sortCol === c.key ? (sortDir === 1 ? '↑' : '↓') : '↕';
+    return `<th class="${cls}" data-col="${c.key}">${c.label} <span class="sort-arrow">${arrow}</span></th>`;
+  }).join('');
+
+  const tbody = rows.map(r => `
+    <tr data-id="${r.id}">
+      <td class="td-date">${formatDate(r.submitted_at)}</td>
+      <td>
+        <div class="td-building">${r.building || '—'}</div>
+        <div class="td-tenant">${[r.suite, r.tenant_org || r.name].filter(Boolean).join(' · ')}</div>
+      </td>
+      <td class="td-category">${r.category?.split('—')[0].trim() || '—'}</td>
+      <td><span class="badge ${urgencyClass(r.urgency)}">${urgencyLabel(r.urgency)}</span></td>
+      <td><span class="status-badge status-${r.status}">${statusLabel(r.status)}</span></td>
+      <td class="td-date">${r.updated_at ? formatDate(r.updated_at) : '—'}</td>
+      <td class="td-desc">${r.description || '—'}</td>
+    </tr>`).join('');
+
+  container.innerHTML = `<table>
+    <thead><tr>${thead}</tr></thead>
+    <tbody>${tbody}</tbody>
+  </table>`;
+
+  // Sort click
+  container.querySelectorAll('thead th').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.col;
+      if (sortCol === col) sortDir *= -1;
+      else { sortCol = col; sortDir = -1; }
+      render();
+    });
+  });
+
+  // Row click → drawer
+  container.querySelectorAll('tbody tr').forEach(tr => {
+    tr.addEventListener('click', () => openDrawer(tr.dataset.id));
+  });
+}
+
+// ── Drawer ───────────────────────────────────────────────────
+function openDrawer(id) {
+  const r = allRequests.find(x => x.id === id);
+  if (!r) return;
+  activeId = id;
+
+  const statusOpts = ['new','in_progress','waiting','waiting_vendor','resolved','closed'].map(s => `
+    <div class="status-opt ${r.status===s?'active':''}" data-s="${s}">${statusLabel(s)}</div>
+  `).join('');
+
+  document.getElementById('drawerContent').innerHTML = `
+    <div class="drawer-tag">Maintenance Request · ${formatDate(r.submitted_at)}</div>
+    <div class="drawer-title">${r.building || 'Unknown Building'}</div>
+    <div class="drawer-sub">${[r.suite, r.location_detail].filter(Boolean).join(' · ') || 'No location detail'}</div>
+
+    <div class="drawer-section">
+      <div class="drawer-section-label">Submitted By</div>
+      <div class="drawer-row"><span class="drawer-row-label">Name</span><span class="drawer-row-value">${r.name || '—'}</span></div>
+      <div class="drawer-row"><span class="drawer-row-label">Business</span><span class="drawer-row-value">${r.tenant_org || '—'}</span></div>
+      <div class="drawer-row"><span class="drawer-row-label">Email</span><span class="drawer-row-value">${r.email ? `<a href="mailto:${r.email}" style="color:var(--accent)">${r.email}</a>` : '—'}</span></div>
+      <div class="drawer-row"><span class="drawer-row-label">Phone</span><span class="drawer-row-value">${r.phone ? `<a href="tel:${r.phone}" style="color:var(--accent)">${r.phone}</a>` : '—'}</span></div>
+    </div>
+
+    <div class="drawer-section">
+      <div class="drawer-section-label">The Issue</div>
+      <div class="drawer-row"><span class="drawer-row-label">Category</span><span class="drawer-row-value">${r.category || '—'}</span></div>
+      <div class="drawer-row"><span class="drawer-row-label">Urgency</span><span class="drawer-row-value"><span class="badge ${urgencyClass(r.urgency)}">${urgencyLabel(r.urgency)}</span></span></div>
+      <div class="drawer-row"><span class="drawer-row-label">Best Access Time</span><span class="drawer-row-value">${r.best_time || '—'}</span></div>
+      <div style="margin-top:10px"><div class="drawer-desc">${r.description || '—'}</div></div>
+      ${r.attachments?.length ? `
+      <div style="margin-top:14px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;">Attachments</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          ${r.attachments.map(name => {
+            const isImage = /\.(jpe?g|png|gif|webp|heic|heif)$/i.test(name);
+            const isVideo = /\.(mp4|mov|avi|webm)$/i.test(name);
+            const icon = isImage ? '🖼️' : isVideo ? '🎥' : '📄';
+            return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;">
+              <span>${icon}</span><span>${name}</span>
+              <span style="font-size:10px;color:#555;font-style:italic;">— see email</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>` : ''}
+    </div>
+
+    <div class="drawer-section">
+      <div class="drawer-section-label">Status</div>
+      <div class="status-select-group">${statusOpts}</div>
+    </div>
+
+    <div class="drawer-section">
+      <div class="drawer-section-label">Internal Notes</div>
+      ${r.updated_at ? `<div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Last updated ${formatDate(r.updated_at)}</div>` : ''}
+      <textarea class="drawer-notes-area" id="drawerNotes" placeholder="Add notes for the team — vendor called, parts ordered, follow-up needed…">${r.notes || ''}</textarea>
+      <button class="save-btn" id="saveBtn">Save Changes</button>
+      <div class="saved-msg" id="savedMsg"></div>
+    </div>
+
+    <div class="drawer-section" style="margin-top:4px;">
+      <button id="deleteBtn" style="width:100%;padding:10px;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;border:1px solid rgba(255,77,77,.3);background:rgba(255,77,77,.07);color:var(--danger);transition:background .15s;">🗑 Delete this request</button>
+    </div>
+  `;
+
+  // Status opt click
+  document.querySelectorAll('.status-opt').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.status-opt').forEach(x => x.classList.remove('active'));
+      el.classList.add('active');
+    });
+  });
+
+  // Save
+  document.getElementById('saveBtn').addEventListener('click', () => saveDrawer(id));
+
+  // Delete
+  document.getElementById('deleteBtn').addEventListener('click', () => deleteRequest(id));
+
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawerBackdrop').classList.add('open');
+}
+
+async function saveDrawer(id) {
+  const btn = document.getElementById('saveBtn');
+  const msg = document.getElementById('savedMsg');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  const newStatus = document.querySelector('.status-opt.active')?.dataset.s || 'new';
+  const newNotes = document.getElementById('drawerNotes').value;
+
+  const r = allRequests.find(x => x.id === id);
+  r.status = newStatus;
+  r.notes = newNotes;
+  r.updated_at = new Date().toISOString();
+
+  await kvPut(`req:${id}`, r);
+  render();
+
+  btn.disabled = false;
+  btn.textContent = 'Save Changes';
+  msg.textContent = '✓ Saved';
+  setTimeout(() => { msg.textContent = ''; }, 2500);
+}
+
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawerBackdrop').classList.remove('open');
+  activeId = null;
+}
+
+async function deleteRequest(id) {
+  const btn = document.getElementById('deleteBtn');
+  if (btn.dataset.confirm !== 'yes') {
+    btn.textContent = '⚠️ Tap again to confirm delete';
+    btn.dataset.confirm = 'yes';
+    setTimeout(() => {
+      if (btn) { btn.textContent = '🗑 Delete this request'; btn.dataset.confirm = ''; }
+    }, 3000);
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Deleting…';
+  await fetch(`/api/kv?ns=maint&key=${encodeURIComponent('req:' + id)}`, { method: 'DELETE' });
+  allRequests = allRequests.filter(r => r.id !== id);
+  closeDrawer();
+  render();
+}
+
+document.getElementById('drawerClose').addEventListener('click', closeDrawer);
+document.getElementById('drawerBackdrop').addEventListener('click', closeDrawer);
+
+// ── Filter/search listeners ──────────────────────────────────
+document.getElementById('searchInput').addEventListener('input', render);
+document.getElementById('buildingFilter').addEventListener('change', render);
+document.getElementById('urgencyFilter').addEventListener('change', render);
+
+document.querySelectorAll('.stat-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.stat-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    activeFilter = pill.dataset.filter;
+    render();
+  });
+});
+
+// ── Boot ─────────────────────────────────────────────────────
+loadRequests();
+</script>
+</body>
+</html>
