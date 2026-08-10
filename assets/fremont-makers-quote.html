@@ -996,28 +996,27 @@
     </div>
     <!-- Import New panel -->
     <div id="sq-panel-import" style="display:none;">
-      <p style="color:var(--muted);font-size:13px;margin-bottom:12px;">Upload a supplier CSV/Excel file or paste the quote text below. Each line should have: <strong style="color:var(--text);">Description, Qty, Unit Cost</strong> (comma or tab separated).</p>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:12px;">Upload a supplier quote PDF or document. MC will extract the cabinet line items automatically.</p>
       <!-- File upload drop zone -->
       <div id="sq-import-dropzone" onclick="document.getElementById('sq-import-file').click()"
-        style="border:2px dashed var(--border);border-radius:8px;padding:20px;text-align:center;cursor:pointer;margin-bottom:12px;transition:border-color 0.2s;"
+        style="border:2px dashed var(--border);border-radius:8px;padding:32px 20px;text-align:center;cursor:pointer;margin-bottom:12px;transition:border-color 0.2s;"
         ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
         ondragleave="this.style.borderColor='var(--border)'"
         ondrop="sqHandleFileDrop(event)">
-        <div style="font-size:24px;margin-bottom:6px;">📄</div>
-        <div style="font-size:13px;color:var(--muted);">Drop a CSV file here or <span style="color:var(--accent);text-decoration:underline;">click to browse</span></div>
-        <input type="file" id="sq-import-file" accept=".csv,.txt,.xls,.xlsx" style="display:none" onchange="sqHandleFileSelect(event)" />
+        <div style="font-size:32px;margin-bottom:8px;">📄</div>
+        <div style="font-size:14px;color:var(--text);font-weight:700;margin-bottom:4px;">Drop your supplier quote here</div>
+        <div style="font-size:12px;color:var(--muted);">PDF, Word (.docx), CSV, or text — or <span style="color:var(--accent);text-decoration:underline;">click to browse</span></div>
+        <input type="file" id="sq-import-file" accept=".pdf,.doc,.docx,.csv,.txt,.xls,.xlsx" style="display:none" onchange="sqHandleFileSelect(event)" />
       </div>
-      <!-- Paste area -->
-      <textarea id="sq-import-paste" placeholder="Or paste quote text here...&#10;e.g.&#10;Grey Shaker B36, 2, 527.91&#10;Grey Shaker W3024, 1, 256.65"
-        style="width:100%;height:120px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:10px;color:var(--text);font-size:13px;font-family:monospace;resize:vertical;box-sizing:border-box;"></textarea>
+      <div id="sq-import-status" style="display:none;font-size:13px;color:var(--muted);text-align:center;padding:8px;"></div>
       <!-- Preview -->
       <div id="sq-import-preview" style="display:none;margin-top:12px;">
-        <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">PREVIEW — <span id="sq-import-count"></span> lines parsed</div>
-        <div id="sq-import-preview-list" style="max-height:150px;overflow-y:auto;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px;font-size:12px;font-family:monospace;color:var(--text);"></div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">PARSED — <span id="sq-import-count"></span> cabinet lines found</div>
+        <div id="sq-import-preview-list" style="max-height:200px;overflow-y:auto;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:10px;font-size:12px;font-family:monospace;color:var(--text);line-height:1.8;"></div>
+        <p style="font-size:11px;color:var(--muted);margin-top:8px;">Markup will be set to 35% — adjust after loading.</p>
       </div>
       <div style="display:flex;gap:8px;margin-top:14px;">
-        <button class="modal-btn" onclick="sqParseAndPreview()" style="border-color:var(--accent);color:var(--accent);">🔍 Parse Preview</button>
-        <button class="modal-btn" id="sq-import-confirm-btn" onclick="sqConfirmImport()" style="display:none;border-color:#4ade80;color:#4ade80;">✅ Load into Quote</button>
+        <button class="modal-btn" id="sq-import-confirm-btn" onclick="sqConfirmImport()" style="display:none;border-color:#4ade80;color:#4ade80;font-weight:700;">✅ Load into Quote</button>
       </div>
     </div>
     <div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end;">
@@ -1355,28 +1354,72 @@ function sqParseAndPreview() {
 
 function sqHandleFileSelect(event) {
   const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const paste = document.getElementById('sq-import-paste');
-    if (paste) paste.value = e.target.result;
-    sqParseAndPreview();
-  };
-  reader.readAsText(file);
+  if (file) sqProcessFile(file);
 }
 
 function sqHandleFileDrop(event) {
   event.preventDefault();
   document.getElementById('sq-import-dropzone').style.borderColor = 'var(--border)';
   const file = event.dataTransfer.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const paste = document.getElementById('sq-import-paste');
-    if (paste) paste.value = e.target.result;
-    sqParseAndPreview();
-  };
-  reader.readAsText(file);
+  if (file) sqProcessFile(file);
+}
+
+async function sqProcessFile(file) {
+  const status = document.getElementById('sq-import-status');
+  const preview = document.getElementById('sq-import-preview');
+  const confirmBtn = document.getElementById('sq-import-confirm-btn');
+  if (preview) preview.style.display = 'none';
+  if (confirmBtn) confirmBtn.style.display = 'none';
+  if (status) { status.style.display = ''; status.textContent = '⏳ Reading file…'; }
+
+  const ext = file.name.split('.').pop().toLowerCase();
+
+  // PDF or Word — send to MC parse endpoint
+  if (ext === 'pdf' || ext === 'doc' || ext === 'docx') {
+    try {
+      if (status) status.textContent = '⏳ Parsing document… this may take a moment.';
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('ns', 'fm-quotes');
+      const res = await fetch('/api/planner/parse-supplier-quote', { method: 'POST', body: formData });
+      if (!res.ok) throw new Error('Server parse failed: ' + res.status);
+      const { lines } = await res.json();
+      _sqParsedLines = lines || [];
+    } catch(e) {
+      // Fallback: read as text and parse locally
+      if (status) status.textContent = '⚠️ Server parse unavailable — trying text extraction…';
+      const text = await file.text().catch(() => '');
+      _sqParsedLines = sqParseText(text);
+    }
+  } else {
+    // CSV / TXT — parse locally
+    const text = await file.text();
+    _sqParsedLines = sqParseText(text);
+  }
+
+  if (status) status.style.display = 'none';
+  sqShowPreview();
+}
+
+function sqShowPreview() {
+  const preview = document.getElementById('sq-import-preview');
+  const countEl = document.getElementById('sq-import-count');
+  const listEl = document.getElementById('sq-import-preview-list');
+  const confirmBtn = document.getElementById('sq-import-confirm-btn');
+
+  if (_sqParsedLines.length === 0) {
+    if (preview) preview.style.display = '';
+    if (countEl) countEl.textContent = '0 lines found';
+    if (listEl) listEl.innerHTML = '<span style="color:#f87171;">Could not parse any cabinet lines. Try a CSV or copy-paste the line items as text.</span>';
+    if (confirmBtn) confirmBtn.style.display = 'none';
+    return;
+  }
+  if (preview) preview.style.display = '';
+  if (countEl) countEl.textContent = _sqParsedLines.length;
+  if (listEl) listEl.innerHTML = _sqParsedLines.map(l =>
+    `${String(l.qty).padStart(2)}x  ${l.desc.padEnd(30, ' ')}  $${parseFloat(l.cost).toFixed(2)}`
+  ).join('<br>');
+  if (confirmBtn) confirmBtn.style.display = '';
 }
 
 function sqConfirmImport() {
