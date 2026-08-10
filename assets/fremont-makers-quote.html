@@ -1351,6 +1351,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const overlay = document.getElementById('fm-loading-overlay');
   if (overlay) overlay.style.display = 'flex';
 
+  const hideOverlay = () => { if (overlay) overlay.style.display = 'none'; };
+
   // Populate G&A dropdown 0–30% every 1%
   const gnaEl = document.getElementById('gna-pct');
   if (gnaEl && gnaEl.options.length === 0) {
@@ -1362,26 +1364,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Pull latest data from cloud — _kvData now populated before any render
-  await fmCloudPull();
-
-  migrateOldQuote();
-  loadQuotesIndex();
-
-  if (activeQuoteId) {
-    loadQuote(activeQuoteId);
-  } else if (quotesIndex.length > 0) {
-    loadQuote(quotesIndex[0].id);
-  } else {
-    newQuote(false);
+  // Pull latest data from cloud with a 6s timeout — always continue even if it fails
+  try {
+    await Promise.race([
+      fmCloudPull(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000))
+    ]);
+  } catch(e) {
+    console.warn('Cloud pull failed or timed out, falling back to localStorage:', e.message);
   }
-  switchTab('dashboard');
-  recalc();
-  renderDashboard();
-  _fmReady = true;
 
-  // Hide loading overlay
-  if (overlay) overlay.style.display = 'none';
+  try {
+    migrateOldQuote();
+    loadQuotesIndex();
+
+    if (activeQuoteId) {
+      loadQuote(activeQuoteId);
+    } else if (quotesIndex.length > 0) {
+      loadQuote(quotesIndex[0].id);
+    } else {
+      newQuote(false);
+    }
+    switchTab('dashboard');
+    recalc();
+    renderDashboard();
+  } catch(e) {
+    console.error('Init error:', e);
+  }
+
+  _fmReady = true;
+  hideOverlay();
 });
 
 function today() {
