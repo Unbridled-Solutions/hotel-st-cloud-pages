@@ -393,7 +393,7 @@
 <!-- STATUS BAR -->
 <div class="status-bar">
   <div style="display:flex; gap:8px; align-items:center;">
-    <button class="status-btn" style="border-color:var(--accent);color:var(--accent);font-size:0.8rem;" onclick="newQuote()">+ New Quote</button>
+    <button class="status-btn" style="border-color:var(--accent);color:var(--accent);font-size:0.8rem;" onclick="newQuoteAndImport()">+ New Quote</button>
     <button class="status-btn" id="btn-save" style="font-size:0.8rem;" onclick="saveQuoteManual()">💾 Save</button>
     <button class="status-btn" style="font-size:0.8rem;" onclick="switchTab('dashboard')">📁 All Quotes</button>
     <button class="status-btn" style="font-size:0.8rem;border-color:#a78bfa;color:#a78bfa;" onclick="showImportModal()">📥 Import Supplier Quote</button>
@@ -451,7 +451,7 @@
         <datalist id="dashboard-search-list"></datalist>
         <div style="display:flex;gap:8px;flex-shrink:0;">
           <button class="add-line-btn" style="margin-top:0; border-style:solid; border-color:#3de8c8; color:#3de8c8;" onclick="seedAllModelQuotes()">🏗️ Generate All Model Quotes</button>
-          <button class="add-line-btn" style="margin-top:0; border-style: solid;" onclick="newQuote()">+ New Quote</button>
+          <button class="add-line-btn" style="margin-top:0; border-style: solid;" onclick="newQuoteAndImport()">+ New Quote</button>
           <button class="add-line-btn" style="margin-top:0; border-style:solid; border-color:#3de8c8; color:#3de8c8; font-weight:700;" onclick="fmForceSync()" id="dash-sync-btn">☁️ Sync from Cloud</button>
         </div>
       </div>
@@ -1531,10 +1531,24 @@ function sqShowPreview() {
 }
 
 function sqCreateNewQuote() {
-  newQuote(false);
+  newQuote(true);
   const label = document.getElementById('sq-active-quote-label');
-  if (label) label.textContent = 'Active: new quote ready — now upload the PDF';
-  // Reset any prior parse
+  if (label) label.textContent = '✅ New quote ready — now upload the PDF below';
+  _sqParsedLines = [];
+  const preview = document.getElementById('sq-import-preview');
+  if (preview) preview.style.display = 'none';
+  const confirmBtn = document.getElementById('sq-import-confirm-btn');
+  if (confirmBtn) confirmBtn.style.display = 'none';
+}
+
+function newQuoteAndImport() {
+  newQuote(true);
+  // Open the import modal straight to Import New tab
+  const modal = document.getElementById('import-modal');
+  if (modal) modal.style.display = 'flex';
+  switchSQTab('import');
+  const label = document.getElementById('sq-active-quote-label');
+  if (label) label.textContent = '✅ New quote ready — upload your supplier PDF below';
   _sqParsedLines = [];
   const preview = document.getElementById('sq-import-preview');
   if (preview) preview.style.display = 'none';
@@ -1904,7 +1918,7 @@ function loadQuote(id) {
   (q.labor || []).forEach(l => addLaborRow(l.name, l.rate, l.hours));
   
   if (q.cabinets.length === 0) {
-    for (let i = 0; i < 2; i++) addCabinetRow();
+    // Don't auto-add blank rows — leave clean for import
   }
   if (q.labor.length === 0) {
     addLaborRow('Assembly', 40);
