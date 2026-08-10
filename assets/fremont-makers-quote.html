@@ -1230,10 +1230,9 @@ function switchSQTab(tab) {
 function renderImportLibrary() {
   const list = document.getElementById('import-supplier-list');
   if (!list) return;
-  // Find all supplier quotes in quoteData that have cabinets
   const suppliers = Object.values(quoteData).filter(q => q.cabinets && q.cabinets.length > 0 && q.id !== activeQuoteId);
   if (suppliers.length === 0) {
-    list.innerHTML = '<p style="color:var(--muted);font-size:13px;">No supplier quotes available. Quotes with cabinet line items will appear here.</p>';
+    list.innerHTML = '<p style="color:var(--muted);font-size:13px;">No supplier quotes available.</p>';
     return;
   }
   list.innerHTML = suppliers.map(q => `
@@ -1242,9 +1241,22 @@ function renderImportLibrary() {
         <div style="font-weight:700;font-size:13px;color:var(--text);">${q.customer || '—'} — ${q.project || '—'}</div>
         <div style="font-size:11px;color:var(--muted);margin-top:2px;">${q.jobCode || ''} · ${q.cabinets.length} cabinet lines · ${q.date || ''}</div>
       </div>
-      <button class="modal-btn" onclick="loadSupplierQuote('${q.id}')" style="font-size:12px;padding:4px 12px;">Load</button>
+      <div style="display:flex;gap:6px;">
+        <button class="modal-btn" onclick="loadSupplierQuote('${q.id}')" style="font-size:12px;padding:4px 12px;">Load</button>
+        <button class="del-btn" onclick="deleteQuoteFromLibrary('${q.id}')" title="Delete quote" style="font-size:12px;padding:4px 8px;">✕</button>
+      </div>
     </div>
   `).join('');
+}
+
+function deleteQuoteFromLibrary(id) {
+  if (!confirm('Delete this quote? This cannot be undone.')) return;
+  delete quoteData[id];
+  quotesIndex = quotesIndex.filter(q => q.id !== id);
+  try { localStorage.removeItem('fm-quote-' + id); } catch(e) {}
+  saveLocal();
+  renderImportLibrary();
+  renderDashboard();
 }
 
 function renderImportArchive() {
@@ -1268,15 +1280,14 @@ function renderImportArchive() {
 function loadSupplierQuote(sourceId) {
   const source = quoteData[sourceId];
   if (!source || !activeQuoteId) return;
-  // Archive it
   if (!sqArchive.find(q => q.id === sourceId)) {
     sqArchive.push(source);
     try { localStorage.setItem('fm-sq-archive', JSON.stringify(sqArchive)); } catch(e) {}
   }
-  // Merge cabinets into active quote
   const target = quoteData[activeQuoteId];
   if (target) {
-    target.cabinets = [...(target.cabinets || []), ...(source.cabinets || []).map(c => ({...c, id: 'r' + Math.random().toString(36).substr(2,10)}))];
+    // REPLACE cabinets — not merge — to prevent duplicates on re-load
+    target.cabinets = (source.cabinets || []).map(c => ({...c, id: 'r' + Math.random().toString(36).substr(2,10)}));
     saveQuoteData(activeQuoteId);
     loadQuote(activeQuoteId);
     recalc();
@@ -1289,7 +1300,8 @@ function loadArchivedSupplierQuote(index) {
   if (!source || !activeQuoteId) return;
   const target = quoteData[activeQuoteId];
   if (target) {
-    target.cabinets = [...(target.cabinets || []), ...(source.cabinets || []).map(c => ({...c, id: 'r' + Math.random().toString(36).substr(2,10)}))];
+    // REPLACE cabinets — not merge
+    target.cabinets = (source.cabinets || []).map(c => ({...c, id: 'r' + Math.random().toString(36).substr(2,10)}));
     saveQuoteData(activeQuoteId);
     loadQuote(activeQuoteId);
     recalc();
@@ -1504,7 +1516,8 @@ function sqConfirmImport() {
     serial: l.serial,
     id: 'r' + Math.random().toString(36).substr(2, 10)
   }));
-  target.cabinets = [...(target.cabinets || []), ...newCabinets];
+  // REPLACE cabinets — not merge — to prevent duplicates
+  target.cabinets = newCabinets;
   saveQuoteData(activeQuoteId);
   loadQuote(activeQuoteId);
   recalc();
