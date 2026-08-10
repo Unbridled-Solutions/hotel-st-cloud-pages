@@ -1161,6 +1161,111 @@ async function fmCloudPush() {
 }
 // ── END CLOUD SYNC ─────────────────────────────────────────────────
 
+// ── IMPORT SUPPLIER QUOTE MODAL ────────────────────────────────────
+function showImportModal() {
+  const modal = document.getElementById('import-modal');
+  if (modal) {
+    modal.style.display = 'flex';
+    switchSQTab('library');
+    renderImportLibrary();
+    renderImportArchive();
+  }
+}
+
+function closeImportModal() {
+  const modal = document.getElementById('import-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function switchSQTab(tab) {
+  const library = document.getElementById('sq-panel-library');
+  const archive = document.getElementById('sq-panel-archive');
+  const tabLib = document.getElementById('sq-tab-library');
+  const tabArc = document.getElementById('sq-tab-archive');
+  if (tab === 'library') {
+    if (library) library.style.display = '';
+    if (archive) archive.style.display = 'none';
+    if (tabLib) { tabLib.style.borderBottomColor = 'var(--accent)'; tabLib.style.color = 'var(--accent)'; }
+    if (tabArc) { tabArc.style.borderBottomColor = 'transparent'; tabArc.style.color = 'var(--muted)'; }
+  } else {
+    if (library) library.style.display = 'none';
+    if (archive) archive.style.display = '';
+    if (tabLib) { tabLib.style.borderBottomColor = 'transparent'; tabLib.style.color = 'var(--muted)'; }
+    if (tabArc) { tabArc.style.borderBottomColor = 'var(--accent)'; tabArc.style.color = 'var(--accent)'; }
+  }
+}
+
+function renderImportLibrary() {
+  const list = document.getElementById('import-supplier-list');
+  if (!list) return;
+  // Find all supplier quotes in quoteData that have cabinets
+  const suppliers = Object.values(quoteData).filter(q => q.cabinets && q.cabinets.length > 0 && q.id !== activeQuoteId);
+  if (suppliers.length === 0) {
+    list.innerHTML = '<p style="color:var(--muted);font-size:13px;">No supplier quotes available. Quotes with cabinet line items will appear here.</p>';
+    return;
+  }
+  list.innerHTML = suppliers.map(q => `
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-weight:700;font-size:13px;color:var(--text);">${q.customer || '—'} — ${q.project || '—'}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">${q.jobCode || ''} · ${q.cabinets.length} cabinet lines · ${q.date || ''}</div>
+      </div>
+      <button class="modal-btn" onclick="loadSupplierQuote('${q.id}')" style="font-size:12px;padding:4px 12px;">Load</button>
+    </div>
+  `).join('');
+}
+
+function renderImportArchive() {
+  const list = document.getElementById('import-archive-list');
+  if (!list) return;
+  if (!sqArchive || sqArchive.length === 0) {
+    list.innerHTML = '<p style="color:var(--muted);font-size:13px;">No archived supplier quotes yet.</p>';
+    return;
+  }
+  list.innerHTML = sqArchive.map((q, i) => `
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-weight:700;font-size:13px;color:var(--text);">${q.customer || '—'} — ${q.project || '—'}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">${q.jobCode || ''} · ${(q.cabinets||[]).length} cabinet lines</div>
+      </div>
+      <button class="modal-btn" onclick="loadArchivedSupplierQuote(${i})" style="font-size:12px;padding:4px 12px;">Re-load</button>
+    </div>
+  `).join('');
+}
+
+function loadSupplierQuote(sourceId) {
+  const source = quoteData[sourceId];
+  if (!source || !activeQuoteId) return;
+  // Archive it
+  if (!sqArchive.find(q => q.id === sourceId)) {
+    sqArchive.push(source);
+    try { localStorage.setItem('fm-sq-archive', JSON.stringify(sqArchive)); } catch(e) {}
+  }
+  // Merge cabinets into active quote
+  const target = quoteData[activeQuoteId];
+  if (target) {
+    target.cabinets = [...(target.cabinets || []), ...(source.cabinets || []).map(c => ({...c, id: 'r' + Math.random().toString(36).substr(2,10)}))];
+    saveQuoteData(activeQuoteId);
+    loadQuote(activeQuoteId);
+    recalc();
+  }
+  closeImportModal();
+}
+
+function loadArchivedSupplierQuote(index) {
+  const source = sqArchive[index];
+  if (!source || !activeQuoteId) return;
+  const target = quoteData[activeQuoteId];
+  if (target) {
+    target.cabinets = [...(target.cabinets || []), ...(source.cabinets || []).map(c => ({...c, id: 'r' + Math.random().toString(36).substr(2,10)}))];
+    saveQuoteData(activeQuoteId);
+    loadQuote(activeQuoteId);
+    recalc();
+  }
+  closeImportModal();
+}
+// ── END IMPORT SUPPLIER QUOTE MODAL ────────────────────────────────
+
 async function fmForceSync() {
   // Update all sync buttons (status bar + dashboard)
   const syncBtns = document.querySelectorAll('[onclick="fmForceSync()"]');
