@@ -1279,34 +1279,44 @@ function renderImportArchive() {
 
 function loadSupplierQuote(sourceId) {
   const source = quoteData[sourceId];
-  if (!source || !activeQuoteId) return;
+  if (!source) return;
   if (!sqArchive.find(q => q.id === sourceId)) {
     sqArchive.push(source);
     try { localStorage.setItem('fm-sq-archive', JSON.stringify(sqArchive)); } catch(e) {}
   }
+  // Create a BRAND NEW quote from the supplier quote — never overwrite active
+  newQuote(false);
   const target = quoteData[activeQuoteId];
   if (target) {
-    // REPLACE cabinets — not merge — to prevent duplicates on re-load
+    target.customer = source.customer || '';
+    target.project = source.project || '';
+    target.address = source.address || '';
     target.cabinets = (source.cabinets || []).map(c => ({...c, id: 'r' + Math.random().toString(36).substr(2,10)}));
     saveQuoteData(activeQuoteId);
     loadQuote(activeQuoteId);
     recalc();
   }
   closeImportModal();
+  switchTab('quote');
 }
 
 function loadArchivedSupplierQuote(index) {
   const source = sqArchive[index];
-  if (!source || !activeQuoteId) return;
+  if (!source) return;
+  // Create a BRAND NEW quote from the archive — never overwrite active
+  newQuote(false);
   const target = quoteData[activeQuoteId];
   if (target) {
-    // REPLACE cabinets — not merge
+    target.customer = source.customer || '';
+    target.project = source.project || '';
+    target.address = source.address || '';
     target.cabinets = (source.cabinets || []).map(c => ({...c, id: 'r' + Math.random().toString(36).substr(2,10)}));
     saveQuoteData(activeQuoteId);
     loadQuote(activeQuoteId);
     recalc();
   }
   closeImportModal();
+  switchTab('quote');
 }
 
 // ── IMPORT NEW — parse & load ──────────────────────────────────────
@@ -1505,9 +1515,6 @@ function sqShowPreview() {
 
 function sqConfirmImport() {
   if (!_sqParsedLines || _sqParsedLines.length === 0) return;
-  if (!activeQuoteId) { alert('No active quote. Open a quote first.'); return; }
-  const target = quoteData[activeQuoteId];
-  if (!target) return;
   const newCabinets = _sqParsedLines.map(l => ({
     desc: l.desc,
     qty: l.qty,
@@ -1516,12 +1523,17 @@ function sqConfirmImport() {
     serial: l.serial,
     id: 'r' + Math.random().toString(36).substr(2, 10)
   }));
-  // REPLACE cabinets — not merge — to prevent duplicates
-  target.cabinets = newCabinets;
-  saveQuoteData(activeQuoteId);
-  loadQuote(activeQuoteId);
-  recalc();
+  // Create a BRAND NEW quote with the imported lines
+  newQuote(false);
+  const target = quoteData[activeQuoteId];
+  if (target) {
+    target.cabinets = newCabinets;
+    saveQuoteData(activeQuoteId);
+    loadQuote(activeQuoteId);
+    recalc();
+  }
   closeImportModal();
+  switchTab('quote');
   _sqParsedLines = [];
 }
 // ── END IMPORT SUPPLIER QUOTE MODAL ────────────────────────────────
