@@ -997,7 +997,16 @@
     <!-- Import New panel -->
     <div id="sq-panel-import" style="display:none;">
       <p style="color:var(--muted);font-size:13px;margin-bottom:12px;">Upload a supplier quote PDF or document. MC will extract the cabinet line items automatically.</p>
-      <!-- File upload drop zone -->
+      <!-- Step 1: New Quote -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-weight:700;font-size:13px;color:var(--text);">Step 1 — Create a new quote</div>
+          <div id="sq-active-quote-label" style="font-size:11px;color:var(--muted);margin-top:2px;">Active: none</div>
+        </div>
+        <button class="modal-btn" onclick="sqCreateNewQuote()" style="border-color:#4ade80;color:#4ade80;font-weight:700;">+ New Quote</button>
+      </div>
+      <!-- Step 2: Upload -->
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Step 2 — Upload supplier PDF</div>
       <div id="sq-import-dropzone" onclick="document.getElementById('sq-import-file').click()"
         style="border:2px dashed var(--border);border-radius:8px;padding:32px 20px;text-align:center;cursor:pointer;margin-bottom:12px;transition:border-color 0.2s;"
         ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
@@ -1224,6 +1233,14 @@ function switchSQTab(tab) {
     if (preview) preview.style.display = 'none';
     const confirmBtn = document.getElementById('sq-import-confirm-btn');
     if (confirmBtn) confirmBtn.style.display = 'none';
+    // Show current active quote name
+    const label = document.getElementById('sq-active-quote-label');
+    if (label) {
+      const aq = activeQuoteId && quoteData[activeQuoteId];
+      label.textContent = aq && (aq.customer || aq.project)
+        ? `Active: ${aq.customer || ''} ${aq.project || ''} — tap "+ New Quote" to start fresh`
+        : 'Tap "+ New Quote" to create a blank quote first';
+    }
   }
 }
 
@@ -1513,9 +1530,24 @@ function sqShowPreview() {
   if (confirmBtn) confirmBtn.style.display = '';
 }
 
+function sqCreateNewQuote() {
+  newQuote(false);
+  const label = document.getElementById('sq-active-quote-label');
+  if (label) label.textContent = 'Active: new quote ready — now upload the PDF';
+  // Reset any prior parse
+  _sqParsedLines = [];
+  const preview = document.getElementById('sq-import-preview');
+  if (preview) preview.style.display = 'none';
+  const confirmBtn = document.getElementById('sq-import-confirm-btn');
+  if (confirmBtn) confirmBtn.style.display = 'none';
+}
+
 function sqConfirmImport() {
   if (!_sqParsedLines || _sqParsedLines.length === 0) return;
-  const newCabinets = _sqParsedLines.map(l => ({
+  if (!activeQuoteId) { alert('Tap "+ New Quote" first to create a quote to load into.'); return; }
+  const target = quoteData[activeQuoteId];
+  if (!target) return;
+  target.cabinets = _sqParsedLines.map(l => ({
     desc: l.desc,
     qty: l.qty,
     cost: l.cost.toString(),
@@ -1523,15 +1555,9 @@ function sqConfirmImport() {
     serial: l.serial,
     id: 'r' + Math.random().toString(36).substr(2, 10)
   }));
-  // Create a BRAND NEW quote with the imported lines
-  newQuote(false);
-  const target = quoteData[activeQuoteId];
-  if (target) {
-    target.cabinets = newCabinets;
-    saveQuoteData(activeQuoteId);
-    loadQuote(activeQuoteId);
-    recalc();
-  }
+  saveQuoteData(activeQuoteId);
+  loadQuote(activeQuoteId);
+  recalc();
   closeImportModal();
   switchTab('quote');
   _sqParsedLines = [];
