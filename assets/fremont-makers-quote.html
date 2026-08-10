@@ -711,8 +711,8 @@
       <div class="section-header">
         <span class="section-title">🧾 Vendor Invoice Upload & Cross-Check</span>
       </div>
-      <div class="drag-drop-zone" id="vendor-invoice-upload-zone" style="border: 2px dashed var(--border); padding: 20px; text-align: center; color: var(--muted); margin-bottom: 15px; border-radius: 8px;">
-        Upload Vendor Invoice (CSV or paste data)
+      <div class="drag-drop-zone" id="vendor-invoice-upload-zone" style="border: 2px dashed var(--border); padding: 20px; text-align: center; color: var(--muted); margin-bottom: 15px; border-radius: 8px; cursor: pointer;">
+        📄 Drop or click to upload vendor invoice (PDF, CSV, or text)
       </div>
       <textarea id="vendor-invoice-data" class="tbl-input" rows="10" placeholder="Paste vendor invoice line items here (Description, Qty, Unit Cost, Serial)" style="margin-bottom: 15px;"></textarea>
       <button class="add-line-btn" onclick="parseAndCompareVendorInvoice()" style="margin-bottom: 25px;">Parse & Compare</button>
@@ -2652,6 +2652,45 @@ document.addEventListener('DOMContentLoaded', () => {
   const dropZone = document.getElementById('vendor-invoice-upload-zone');
   const vendorInvoiceData = document.getElementById('vendor-invoice-data');
 
+  async function readVendorFile(file) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (ext === 'pdf') {
+      dropZone.textContent = '⏳ Extracting text from PDF…';
+      try {
+        if (!window.pdfjsLib) {
+          await new Promise((resolve, reject) => {
+            const s = document.createElement('script');
+            s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+            s.onload = resolve; s.onerror = reject;
+            document.head.appendChild(s);
+          });
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+            'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const pages = [];
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          pages.push(content.items.map(item => item.str).join(' '));
+        }
+        vendorInvoiceData.value = pages.join('\n');
+        dropZone.textContent = '✅ PDF loaded — click Parse & Compare';
+      } catch(e) {
+        dropZone.textContent = '❌ Could not read PDF: ' + e.message;
+      }
+    } else {
+      // CSV / TXT
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        vendorInvoiceData.value = event.target.result;
+        dropZone.textContent = '✅ File loaded — click Parse & Compare';
+      };
+      reader.readAsText(file);
+    }
+  }
+
   if (dropZone) {
     dropZone.addEventListener('dragover', (e) => {
       e.preventDefault();
@@ -2667,32 +2706,17 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       dropZone.style.borderColor = 'var(--border)';
       const files = e.dataTransfer.files;
-      if (files.length > 0) {
-        const file = files[0];
-        if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
-          const reader = new FileReader();
-          reader.onload = (event) => {
-            vendorInvoiceData.value = event.target.result;
-          };
-          reader.readAsText(file);
-        } else {
-          alert('Please upload a CSV file.');
-        }
-      }
+      if (files.length > 0) readVendorFile(files[0]);
     });
 
     dropZone.addEventListener('click', () => {
         const input = document.createElement('input');
         input.type = 'file';
-        input.accept = '.csv';
+        input.accept = '.csv,.pdf,.txt';
         input.onchange = (e) => {
           const file = e.target.files[0];
           if (file) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-              vendorInvoiceData.value = event.target.result;
-            };
-            reader.readAsText(file);
+            readVendorFile(file);
           }
         };
         input.click();
