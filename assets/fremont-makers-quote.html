@@ -392,13 +392,22 @@
 
 <!-- STATUS BAR -->
 <div class="status-bar">
-  <div style="display:flex; gap:8px; align-items:center;">
+  <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
     <button class="status-btn" style="border-color:var(--accent);color:var(--accent);font-size:0.8rem;" onclick="newQuoteAndImport()">+ New Quote</button>
     <button class="status-btn" id="btn-save" style="font-size:0.8rem;" onclick="saveQuoteManual()">💾 Save</button>
     <button class="status-btn" style="font-size:0.8rem;" onclick="switchTab('dashboard')">📁 All Quotes</button>
     <button class="status-btn" style="font-size:0.8rem;border-color:#a78bfa;color:#a78bfa;" onclick="showImportModal()">📥 Import Supplier Quote</button>
     <button class="status-btn" style="font-size:0.8rem;border-color:#3de8c8;color:#3de8c8;font-weight:700;" onclick="fmForceSync()" title="Clear local cache and reload all quotes from cloud">☁️ Sync from Cloud</button>
     <input type="file" id="restore-file-input" accept=".json" style="display:none" onchange="importBackupFile(event)" />
+    <!-- Bulk markup setter -->
+    <div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:10px;">
+      <span style="font-size:11px;color:var(--muted);white-space:nowrap;">All markup:</span>
+      <input type="number" id="bulk-markup-input" min="0" max="100" step="1" placeholder="35"
+        style="width:52px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:12px;padding:3px 6px;text-align:center;"
+        onkeydown="if(event.key==='Enter') applyBulkMarkup()" />
+      <span style="font-size:11px;color:var(--muted);">%</span>
+      <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
+    </div>
     <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0719</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
@@ -1541,6 +1550,43 @@ function sqShowPreview() {
     `${String(l.qty).padStart(2)}x  ${l.desc.padEnd(30, ' ')}  $${parseFloat(l.cost).toFixed(2)}`
   ).join('<br>');
   if (confirmBtn) confirmBtn.style.display = '';
+}
+
+function applyBulkMarkup() {
+  const input = document.getElementById('bulk-markup-input');
+  const pct = parseFloat(input ? input.value : '');
+  if (isNaN(pct) || pct < 0 || pct > 100) {
+    alert('Enter a markup % between 0 and 100.');
+    return;
+  }
+  // Update all markup selects in the cabinet table
+  const markupSelects = document.querySelectorAll('#cabinet-tbody .markup-select');
+  markupSelects.forEach(el => {
+    // Find closest option or set value directly
+    el.value = pct;
+    // If exact option doesn't exist, add it temporarily
+    if (el.value != pct) {
+      const opt = document.createElement('option');
+      opt.value = pct; opt.textContent = pct + '%';
+      el.appendChild(opt);
+      el.value = pct;
+    }
+  });
+  // Update in-memory quoteData and recalc
+  if (activeQuoteId && quoteData[activeQuoteId]) {
+    quoteData[activeQuoteId].cabinets.forEach(c => { c.markup = pct.toString(); });
+  }
+  recalc();
+  saveLocal();
+  // Flash feedback
+  const btn = document.querySelector('[onclick="applyBulkMarkup()"]');
+  if (btn) {
+    const orig = btn.textContent;
+    btn.textContent = '✅ Done';
+    btn.style.color = '#4ade80';
+    btn.style.borderColor = '#4ade80';
+    setTimeout(() => { btn.textContent = orig; btn.style.color = ''; btn.style.borderColor = ''; }, 1500);
+  }
 }
 
 function sqCreateNewQuote() {
