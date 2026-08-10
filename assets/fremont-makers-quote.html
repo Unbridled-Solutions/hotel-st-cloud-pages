@@ -1373,31 +1373,56 @@ async function sqProcessFile(file) {
   if (status) { status.style.display = ''; status.textContent = '⏳ Reading file…'; }
 
   const ext = file.name.split('.').pop().toLowerCase();
+  let text = '';
 
-  // PDF or Word — send to MC parse endpoint
-  if (ext === 'pdf' || ext === 'doc' || ext === 'docx') {
-    try {
-      if (status) status.textContent = '⏳ Parsing document… this may take a moment.';
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('ns', 'fm-quotes');
-      const res = await fetch('/api/planner/parse-supplier-quote', { method: 'POST', body: formData });
-      if (!res.ok) throw new Error('Server parse failed: ' + res.status);
-      const { lines } = await res.json();
-      _sqParsedLines = lines || [];
-    } catch(e) {
-      // Fallback: read as text and parse locally
-      if (status) status.textContent = '⚠️ Server parse unavailable — trying text extraction…';
-      const text = await file.text().catch(() => '');
-      _sqParsedLines = sqParseText(text);
+  try {
+    if (ext === 'pdf') {
+      if (status) status.textContent = '⏳ Extracting text from PDF…';
+      // Load PDF.js from CDN if not already loaded
+      if (!window.pdfjsLib) {
+        await new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+          s.onload = resolve; s.onerror = reject;
+          document.head.appendChild(s);
+        });
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+          'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      }
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const pages = [];
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        pages.push(content.items.map(item => item.str).join(' '));
+      }
+      text = pages.join('\n');
+    } else if (ext === 'docx') {
+      if (status) status.textContent = '⏳ Extracting text from Word doc…';
+      // mammoth.js for docx
+      if (!window.mammoth) {
+        await new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = 'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js';
+          s.onload = resolve; s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      }
+      const arrayBuffer = await file.arrayBuffer();
+      const result = await window.mammoth.extractRawText({ arrayBuffer });
+      text = result.value;
+    } else {
+      // CSV / TXT — read as plain text
+      text = await file.text();
     }
-  } else {
-    // CSV / TXT — parse locally
-    const text = await file.text();
-    _sqParsedLines = sqParseText(text);
+  } catch(e) {
+    if (status) { status.textContent = '❌ Could not read file: ' + e.message; }
+    return;
   }
 
   if (status) status.style.display = 'none';
+  _sqParsedLines = sqParseText(text);
   sqShowPreview();
 }
 
