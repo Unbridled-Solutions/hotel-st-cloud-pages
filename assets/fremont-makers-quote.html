@@ -1292,18 +1292,21 @@ function renderDashboard() {
     });
 
   sortedQuotes.forEach(quote => {
-    // Ensure total is up-to-date, if not, try to load the full quote and recalc to get the total
-    let quoteTotal = quote.total;
-    if (quoteTotal === 0 && quoteData[quote.id]) {
-        // Temporarily load quote to recalculate its total if it's 0 in the index
-        const tempActiveId = activeQuoteId; // Save current active ID
-        activeQuoteId = quote.id;
-        // saveActiveQuoteId(); // No need to save to local storage during temporary load
-        loadQuote(quote.id); // This will call recalc() and update quote.total in index
-        quoteTotal = quoteData[quote.id].total || 0; // Get the newly calculated total
-        quote.total = quoteTotal; // Update the index with the calculated total
-        activeQuoteId = tempActiveId; // Restore active ID
-        if (activeQuoteId) loadQuote(activeQuoteId); // Re-load original active quote
+    // Get total from index — don't call loadQuote inside render (causes recursion)
+    let quoteTotal = quote.total || 0;
+    if (quoteTotal === 0 && quoteData[quote.id] && quoteData[quote.id].cabinets) {
+      // Calculate total directly from cabinet data without calling loadQuote
+      const qd = quoteData[quote.id];
+      const cabCost = (qd.cabinets || []).reduce((s, c) => s + (parseFloat(c.qty)||0) * (parseFloat(c.cost)||0) * (1 + (parseFloat(c.markup)||0)/100), 0);
+      const laborCost = (qd.labor || []).reduce((s, l) => s + (parseFloat(l.rate)||0) * (parseFloat(l.hours)||0), 0);
+      const subtotal = cabCost + laborCost;
+      const gnaPct = parseFloat(qd.gnaPct) || 0;
+      const taxPct = parseFloat(qd.taxPct) || 0;
+      const bulkDisc = parseFloat(qd.bulkDiscPct) || 0;
+      const afterDisc = subtotal * (1 - bulkDisc/100);
+      const afterGna = afterDisc * (1 + gnaPct/100);
+      quoteTotal = afterGna * (1 + taxPct/100);
+      quote.total = quoteTotal;
     }
 
     // Tally totals for the dashboard display
@@ -1666,9 +1669,14 @@ function loadQuotesIndex() {
 
     quotesIndex = rawIndex ? (typeof rawIndex === 'string' ? JSON.parse(rawIndex) : rawIndex) : [];
 
+    // Set active quote — skip blank/empty quotes, find first real one
     const storedActiveId = (_kvData['fm-active-quote']) || loadActiveQuoteId();
-    if (storedActiveId && quotesIndex.some(q => q.id === storedActiveId)) {
+    const firstRealQuote = quotesIndex.find(q => q.customer || q.project || (quoteData[q.id] && quoteData[q.id].cabinets && quoteData[q.id].cabinets.length > 0));
+    if (storedActiveId && quotesIndex.some(q => q.id === storedActiveId) && (quoteData[storedActiveId]?.customer || quoteData[storedActiveId]?.cabinets?.length > 0)) {
       activeQuoteId = storedActiveId;
+    } else if (firstRealQuote) {
+      activeQuoteId = firstRealQuote.id;
+      saveActiveQuoteId();
     } else if (quotesIndex.length > 0) {
       activeQuoteId = quotesIndex[0].id;
       saveActiveQuoteId();
