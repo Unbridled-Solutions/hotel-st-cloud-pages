@@ -358,6 +358,13 @@
 </head>
 <body>
 
+<!-- Loading overlay — shown while KV cloud fetch completes -->
+<div id="fm-loading-overlay" style="display:flex;position:fixed;inset:0;background:#12161b;z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:16px;">
+  <div style="width:48px;height:48px;border:4px solid #2a3140;border-top-color:#3de8c8;border-radius:50%;animation:fm-spin 0.8s linear infinite;"></div>
+  <div style="font-family:Arial,sans-serif;font-size:14px;color:#8a9098;letter-spacing:1px;">Loading quotes from cloud…</div>
+</div>
+<style>@keyframes fm-spin { to { transform: rotate(360deg); } }</style>
+
 <!-- HEADER -->
 <div class="header">
   <div class="logo">
@@ -1022,6 +1029,7 @@ let _fmReady = false;
 let sqArchive = [];
 let _bsUnlocked = false;
 let _cpnlUnlocked = false;
+let _kvData = {}; // in-memory KV snapshot — cloud-first source of truth
 
 // Debounced push — coalesces rapid saves into one network call
 let _fmPushTimer = null;
@@ -1059,67 +1067,68 @@ async function fmCloudPull() {
     const res = await fetch(FM_CLOUD_URL);
     if (!res.ok) return;
     const { data } = await res.json();
-    if (!data || typeof data !== 'object' || Object.keys(data).length === 0) return; // empty cloud → never wipe local
+    if (!data || typeof data !== 'object' || Object.keys(data).length === 0) return;
+
+    // ── Store in-memory snapshot (cloud-first source of truth) ──
+    _kvData = data;
+
+    // ── Write-through to localStorage (best-effort, not required) ──
     Object.entries(data).forEach(([k, v]) => {
       try {
         const incoming = typeof v === 'string' ? v : JSON.stringify(v);
         const existing = localStorage.getItem(k);
-        // For the quotes index: merge — keep whichever has more/newer quotes
         if (k === 'fm-quotes-index') {
           try {
             const cloudArr = typeof v === 'object' ? v : JSON.parse(v);
-            if (!existing) {
-              localStorage.setItem(k, incoming);
-              return;
-            }
+            if (!existing) { localStorage.setItem(k, incoming); return; }
             const localArr = JSON.parse(existing);
             const localIds = new Set(localArr.map(q => q.id));
-            // Add any cloud quotes not in local
             const merged = [...localArr];
             cloudArr.forEach(cq => { if (!localIds.has(cq.id)) merged.push(cq); });
             localStorage.setItem(k, JSON.stringify(merged));
           } catch(e) { localStorage.setItem(k, incoming); }
           return;
         }
-        // For individual quotes: cloud wins UNLESS local has a strictly newer saved_at.
-        // Cabinet-count comparison was the bug — same count + stale local = overwrote KV.
-        // Zero saved_at on either side → cloud wins (treat missing timestamp as oldest).
         if (k.startsWith('fm-quote-')) {
           try {
             if (existing) {
               const localQ = JSON.parse(existing);
               const cloudQ = typeof v === 'object' ? v : JSON.parse(v);
-              const localTs = localQ.saved_at || 0;
-              const cloudTs = cloudQ.saved_at || 0;
-              if (localTs > cloudTs) return; // local is strictly newer — keep it
-              // ties (both 0 or same): cloud wins
+              if ((localQ.saved_at || 0) > (cloudQ.saved_at || 0)) return;
             }
           } catch(e) {}
           localStorage.setItem(k, incoming);
           return;
         }
-        // For company P&L: skip if incoming is all zeros
         if (k === 'fm-company-pnl') {
           try {
             const obj = typeof v === 'object' ? v : JSON.parse(v);
-            const hasValues = Object.values(obj).some(val => parseFloat(val) !== 0);
-            if (!hasValues) return;
+            if (!Object.values(obj).some(val => parseFloat(val) !== 0)) return;
           } catch(e) {}
         }
         localStorage.setItem(k, incoming);
       } catch(e) {}
     });
-  } catch(e) { /* offline — use in-memory state */ }
-  // Populate in-memory sqArchive from what was just pulled into localStorage
+  } catch(e) { /* offline — will fall back to localStorage */ }
+
+  // Populate sqArchive — prefer _kvData, fall back to localStorage
   try {
-    const raw = localStorage.getItem('fm-sq-archive');
-    if (raw) sqArchive = JSON.parse(raw);
+    const raw = _kvData['fm-sq-archive'] || localStorage.getItem('fm-sq-archive');
+    sqArchive = raw ? (typeof raw === 'string' ? JSON.parse(raw) : raw) : [];
   } catch(e) { sqArchive = []; }
-  // Populate monthly cpnl data from localStorage (already synced above)
+
+  // Populate monthly cpnl — prefer _kvData
   try {
+    Object.keys(_kvData).forEach(k => {
+      if (k.startsWith('fm-cpnl-')) {
+        const ym = k.replace('fm-cpnl-', '');
+        try { _cpnlMonthData[ym] = typeof _kvData[k] === 'object' ? _kvData[k] : JSON.parse(_kvData[k]); } catch(e) {}
+      }
+    });
+    // Fallback: also scan localStorage for any months not in KV
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
-      if (k && k.startsWith('fm-cpnl-')) {
+      if (k && k.startsWith('fm-cpnl-') && !_kvData[k]) {
         const ym = k.replace('fm-cpnl-', '');
         try { _cpnlMonthData[ym] = JSON.parse(localStorage.getItem(k)); } catch(e) {}
       }
@@ -1338,6 +1347,10 @@ function loadQuoteAndSwitchTab(id) {
 
 // ── INIT ───────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
+  // Show loading overlay while we fetch from cloud
+  const overlay = document.getElementById('fm-loading-overlay');
+  if (overlay) overlay.style.display = 'flex';
+
   // Populate G&A dropdown 0–30% every 1%
   const gnaEl = document.getElementById('gna-pct');
   if (gnaEl && gnaEl.options.length === 0) {
@@ -1349,24 +1362,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Pull latest data from cloud before loading — so any device sees the most current quotes
+  // Pull latest data from cloud — _kvData now populated before any render
   await fmCloudPull();
 
-  migrateOldQuote(); // Attempt migration first
+  migrateOldQuote();
   loadQuotesIndex();
-  
+
   if (activeQuoteId) {
-    loadQuote(activeQuoteId); // Pre-load active quote data
+    loadQuote(activeQuoteId);
   } else if (quotesIndex.length > 0) {
-    loadQuote(quotesIndex[0].id); // Pre-load first quote data
+    loadQuote(quotesIndex[0].id);
   } else {
-    newQuote(false); // Create a new blank quote if none exist
+    newQuote(false);
   }
-  switchTab('dashboard'); // Always land on All Quotes
-  
+  switchTab('dashboard');
   recalc();
   renderDashboard();
-  _fmReady = true; // all init done — pushes now safe
+  _fmReady = true;
+
+  // Hide loading overlay
+  if (overlay) overlay.style.display = 'none';
 });
 
 function today() {
@@ -1631,30 +1646,37 @@ function saveQuotesIndex() {
 
 function loadQuotesIndex() {
   try {
-    const rawIndex = localStorage.getItem('fm-quotes-index');
-    if (rawIndex) {
-      quotesIndex = JSON.parse(rawIndex);
-    } else {
-      quotesIndex = [];
-    }
-    const storedActiveId = loadActiveQuoteId();
+    // ── Cloud-first: read from in-memory KV snapshot ──
+    // Falls back to localStorage if KV pull hasn't run yet (offline, first paint)
+    const rawIndex = (_kvData['fm-quotes-index'])
+      ? (typeof _kvData['fm-quotes-index'] === 'string' ? _kvData['fm-quotes-index'] : JSON.stringify(_kvData['fm-quotes-index']))
+      : localStorage.getItem('fm-quotes-index');
+
+    quotesIndex = rawIndex ? (typeof rawIndex === 'string' ? JSON.parse(rawIndex) : rawIndex) : [];
+
+    const storedActiveId = (_kvData['fm-active-quote']) || loadActiveQuoteId();
     if (storedActiveId && quotesIndex.some(q => q.id === storedActiveId)) {
       activeQuoteId = storedActiveId;
     } else if (quotesIndex.length > 0) {
-      activeQuoteId = quotesIndex[0].id; // Fallback to first quote
+      activeQuoteId = quotesIndex[0].id;
       saveActiveQuoteId();
     } else {
       activeQuoteId = null;
     }
 
-    // Load all full quote data into memory from individual localStorage keys
+    // Load all full quote data into memory — prefer _kvData, fall back to localStorage
     quotesIndex.forEach(q => {
-      const rawQuote = localStorage.getItem(`fm-quote-${q.id}`);
-      if (rawQuote) {
-        quoteData[q.id] = JSON.parse(rawQuote);
+      const kvKey = `fm-quote-${q.id}`;
+      const kvEntry = _kvData[kvKey];
+      if (kvEntry) {
+        quoteData[q.id] = typeof kvEntry === 'object' ? kvEntry : JSON.parse(kvEntry);
       } else {
-        // If index entry exists but full data doesn't, create a placeholder
-        quoteData[q.id] = { id: q.id, jobCode: q.jobCode, customer: q.customer, project: q.project, date: q.date, status: q.status, cabinets: [], labor: [], gnaPct: '10', taxPct: '8.7', reconciliationData: null };
+        const rawQuote = localStorage.getItem(kvKey);
+        if (rawQuote) {
+          quoteData[q.id] = JSON.parse(rawQuote);
+        } else {
+          quoteData[q.id] = { id: q.id, jobCode: q.jobCode, customer: q.customer, project: q.project, date: q.date, status: q.status, cabinets: [], labor: [], gnaPct: '10', taxPct: '8.7', reconciliationData: null };
+        }
       }
     });
 
@@ -2891,9 +2913,11 @@ function bsSave() {
 
 function bsLoad() {
   try {
-    const raw = localStorage.getItem('fm-balance-sheet');
+    const raw = (_kvData['fm-balance-sheet'])
+      ? (typeof _kvData['fm-balance-sheet'] === 'string' ? _kvData['fm-balance-sheet'] : JSON.stringify(_kvData['fm-balance-sheet']))
+      : localStorage.getItem('fm-balance-sheet');
     if (!raw) { bsRecalc(); return; }
-    const data = JSON.parse(raw);
+    const data = typeof raw === 'string' ? JSON.parse(raw) : raw;
     if (data.date) {
       document.getElementById('bs-date-input').value = data.date;
       document.getElementById('bs-as-of-date').textContent = data.date;
