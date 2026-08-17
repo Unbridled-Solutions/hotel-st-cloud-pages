@@ -200,9 +200,28 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
-      max-width: 640px;
+      max-width: 720px;
       margin: 8px 0 24px;
     }
+    .ad-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      max-width: 720px;
+      margin: 0 0 20px;
+    }
+    .ad-link {
+      display: block;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      text-decoration: none;
+      color: inherit;
+    }
+    .ad-link:hover { border-color: var(--gold); }
+    .ad-link b { display: block; color: var(--gold); font-size: 13px; margin-bottom: 3px; }
+    .ad-link span { font-size: 13px; color: var(--muted); }
     .chip {
       background: var(--card);
       border: 1px solid var(--border);
@@ -249,14 +268,15 @@
       {
         kicker: "Team briefing",
         title: "What we actually <em>built</em>",
-        lede: "Not a demo deck. Four live tools we use. I will tell you what each one does, then we will open it.",
+        lede: "Not a demo deck. Live tools we use. I will tell you what each one does, then we will open it.",
         service: null,
-        say: "Eight minutes. Org, labor, ads, wedding. Then we stop.",
+        say: "Org, labor, ads. Then either the wedding or the quote builder, depending on the room.",
         chips: [
           { n: 1, name: "The system", note: "Who does what" },
           { n: 2, name: "The daily op", note: "Labor against revenue" },
-          { n: 3, name: "The growth engine", note: "Ads and results" },
-          { n: 4, name: "The human one", note: "A wedding two people share" }
+          { n: 3, name: "The growth engine", note: "Ads and the copy" },
+          { n: 4, name: "The human one", note: "A wedding two people share" },
+          { n: 5, name: "Game day", note: "Fremont Makers quotes" }
         ]
       },
       {
@@ -282,12 +302,18 @@
       {
         kicker: "03  ·  The growth engine",
         title: "Ads, live, with <em>the results</em>",
-        lede: "This is the working marketing tool. Campaigns, spend, and what came back. Not a slide about ads. The ads themselves.",
-        service: "Live Hotel St. Cloud campaign dashboard: spend, clicks, conversions, what is working. The May–June summary sits behind it if someone wants the cleaner two-month read.",
-        say: "Open the live dashboard first. Only flip to the summary if they ask how the last two months landed.",
+        lede: "This is the working marketing tool. Campaigns, spend, and what came back. Then the four ads we actually wrote.",
+        service: "Live dashboard first. Then open any campaign to show the headlines and descriptions as they run.",
+        say: "Dashboard for results. The four buttons below are the copy.",
         links: [
           { href: "https://offers.hotelstcloud.com/assets/live-dashboard", label: "Open the live ads dashboard" },
           { href: "https://offers.hotelstcloud.com/assets/portfolio-summary-may-jun-2026", label: "May–June summary", ghost: true }
+        ],
+        ads: [
+          { href: "https://offers.hotelstcloud.com/assets/bars-bathrooms-ad-preview", label: "Local Proximity / Road trip", note: "Pull over. You've earned this." },
+          { href: "https://offers.hotelstcloud.com/assets/basecamp-ad-preview", label: "Royal Gorge Basecamp", note: "You came for the gorge." },
+          { href: "https://offers.hotelstcloud.com/assets/fp-sports-ad-preview", label: "FP Sports Bar", note: "Trail's done. Game's on." },
+          { href: "https://offers.hotelstcloud.com/assets/standard-oil-ad-preview", label: "Standard Oil Coffee", note: "Fuel changed. Standard hasn't." }
         ]
       },
       {
@@ -298,6 +324,16 @@
         say: "Say this: Doing Good by Doing Well is not a poster. Sometimes it is a wedding.",
         links: [
           { href: "https://offers.hotelstcloud.com/assets/reili-wedding", label: "Open the wedding planner" }
+        ]
+      },
+      {
+        kicker: "05  ·  Game day",
+        title: "Fremont Makers <em>quote builder</em>",
+        lede: "If the wedding is the wrong room, this is the call. A real shop tool. Price a cabinet job in front of them.",
+        service: "Cloud quote builder for Fremont Makers. Labor, tax, markup, vendor invoices. The thing the shop actually uses, not a mockup.",
+        say: "Say this: this is how a cabinet shop quotes without a spreadsheet fight.",
+        links: [
+          { href: "https://offers.hotelstcloud.com/assets/fremont-makers-quote", label: "Open the quote builder" }
         ]
       },
       {
@@ -333,6 +369,11 @@
         html += `<div class="service"><div class="lbl">What it does</div><p>${s.service}</p></div>`;
       }
       if (s.say) html += `<p class="say">${s.say}</p>`;
+      if (s.ads) {
+        html += `<div class="ad-grid">` + s.ads.map(a =>
+          `<a class="ad-link" href="${a.href}" target="_blank" rel="noopener"><b>${a.label}</b><span>${a.note}</span></a>`
+        ).join("") + `</div>`;
+      }
       if (s.links) {
         html += `<div class="actions">` + s.links.map(l =>
           `<a class="btn${l.ghost ? " ghost small" : ""}" href="${l.href}" target="_blank" rel="noopener">${l.label} ↗</a>`
@@ -373,7 +414,7 @@
       if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); go(i - 1); }
       if (e.key === "Home") go(0);
       if (e.key === "End") go(slides.length - 1);
-      if (e.key >= "1" && e.key <= "6") go(Number(e.key) - 1);
+      if (e.key >= "1" && e.key <= "7") go(Number(e.key) - 1);
     });
     go(0);
   </script>
