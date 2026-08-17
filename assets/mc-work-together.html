@@ -87,6 +87,21 @@
       position: relative;
       overflow: hidden;
     }
+    .viewer {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: var(--bg);
+      z-index: 20;
+      flex-direction: column;
+    }
+    .viewer.on { display: flex; }
+    .viewer iframe {
+      flex: 1;
+      width: 100%;
+      border: 0;
+      background: var(--bg);
+    }
     .slide {
       position: absolute;
       inset: 0;
@@ -246,12 +261,16 @@
       </div>
       <div class="dots" id="dots"></div>
       <div class="right-tools">
-        <div class="hint">Arrow keys · click a number · live links open a new tab</div>
+        <div class="hint">Arrow keys · live tools stay here · Home always works</div>
         <button type="button" class="home-btn" id="homeTop">Home</button>
       </div>
     </header>
 
-    <main id="main"></main>
+    <main id="main">
+      <div class="viewer" id="viewer">
+        <iframe id="viewFrame" title="Live tool"></iframe>
+      </div>
+    </main>
 
     <footer class="nav">
       <button type="button" id="prev">← Back</button>
@@ -371,12 +390,12 @@
       if (s.say) html += `<p class="say">${s.say}</p>`;
       if (s.ads) {
         html += `<div class="ad-grid">` + s.ads.map(a =>
-          `<a class="ad-link" href="${a.href}" target="_blank" rel="noopener"><b>${a.label}</b><span>${a.note}</span></a>`
+          `<a class="ad-link" href="${a.href}" data-open="${a.href}"><b>${a.label}</b><span>${a.note}</span></a>`
         ).join("") + `</div>`;
       }
       if (s.links) {
         html += `<div class="actions">` + s.links.map(l =>
-          `<a class="btn${l.ghost ? " ghost small" : ""}" href="${l.href}" target="_blank" rel="noopener">${l.label} ↗</a>`
+          `<a class="btn${l.ghost ? " ghost small" : ""}" href="${l.href}" data-open="${l.href}">${l.label} ↗</a>`
         ).join("") + `</div>`;
       }
       el.innerHTML = html;
@@ -390,7 +409,31 @@
       dots.appendChild(d);
     });
 
+    const viewer = document.getElementById("viewer");
+    const viewFrame = document.getElementById("viewFrame");
+    let viewing = false;
+
+    function closeView() {
+      viewing = false;
+      viewer.classList.remove("on");
+      viewFrame.src = "about:blank";
+    }
+
+    function openView(url) {
+      viewing = true;
+      viewFrame.src = url;
+      viewer.classList.add("on");
+      document.getElementById("home").disabled = false;
+      document.getElementById("homeTop").disabled = false;
+    }
+
+    function home() {
+      closeView();
+      go(0);
+    }
+
     function go(n) {
+      closeView();
       i = Math.max(0, Math.min(slides.length - 1, n));
       document.querySelectorAll(".slide").forEach((el, k) => el.classList.toggle("on", k === i));
       document.querySelectorAll(".dot").forEach((el, k) => el.classList.toggle("on", k === i));
@@ -401,18 +444,26 @@
       document.getElementById("homeTop").disabled = i === 0;
     }
 
-    prev.addEventListener("click", () => go(i - 1));
-    next.addEventListener("click", () => go(i + 1));
-    document.getElementById("home").addEventListener("click", () => go(0));
-    document.getElementById("homeTop").addEventListener("click", () => go(0));
+    prev.addEventListener("click", () => { if (viewing) closeView(); else go(i - 1); });
+    next.addEventListener("click", () => { if (viewing) closeView(); else go(i + 1); });
+    document.getElementById("home").addEventListener("click", home);
+    document.getElementById("homeTop").addEventListener("click", home);
     main.addEventListener("click", (e) => {
+      const open = e.target.closest("[data-open]");
+      if (open) {
+        e.preventDefault();
+        openView(open.getAttribute("data-open"));
+        return;
+      }
       const chip = e.target.closest("[data-go]");
       if (chip) go(Number(chip.dataset.go));
     });
     document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && viewing) { e.preventDefault(); closeView(); return; }
+      if (e.key === "Home") { e.preventDefault(); home(); return; }
+      if (viewing) return;
       if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") { e.preventDefault(); go(i + 1); }
       if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); go(i - 1); }
-      if (e.key === "Home") go(0);
       if (e.key === "End") go(slides.length - 1);
       if (e.key >= "1" && e.key <= "7") go(Number(e.key) - 1);
     });
