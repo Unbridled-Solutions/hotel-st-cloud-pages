@@ -304,6 +304,18 @@ export default {
       return new Response(JSON.stringify({ keys }), { status: 200, headers: CORS });
     }
 
+    // ── GET /private-docs/*  — executed leases / policies (not in public git) ─
+    if (url.pathname.startsWith("/private-docs/")) {
+      const assetRequest = new Request(request, {
+        headers: new Headers({ ...Object.fromEntries(request.headers), "Cache-Control": "no-cache" }),
+      });
+      const response = await env.ASSETS.fetch(assetRequest);
+      const headers = new Headers(response.headers);
+      headers.set("Cache-Control", "private, no-store");
+      headers.set("X-Robots-Tag", "noindex, nofollow");
+      return new Response(response.body, { status: response.status, headers });
+    }
+
     // ── All other requests → static assets ──────────────────────────────────
     // Bypass Cloudflare edge cache for HTML files — pass cf-cache-skip
     const assetRequest = new Request(request, {
