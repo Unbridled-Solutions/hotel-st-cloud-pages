@@ -69,6 +69,19 @@
       color: var(--muted);
       letter-spacing: 0.04em;
     }
+    .home-btn {
+      background: var(--gold);
+      color: #0f1923;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+    }
+    .home-btn:disabled { opacity: 0.35; cursor: default; }
+    .right-tools { display: flex; align-items: center; gap: 12px; }
     main {
       flex: 1;
       position: relative;
@@ -213,7 +226,10 @@
         <span>Unbridled · Our work together</span>
       </div>
       <div class="dots" id="dots"></div>
-      <div class="hint">Arrow keys · click a number · live links open a new tab</div>
+      <div class="right-tools">
+        <div class="hint">Arrow keys · click a number · live links open a new tab</div>
+        <button type="button" class="home-btn" id="homeTop">Home</button>
+      </div>
     </header>
 
     <main id="main"></main>
@@ -221,7 +237,10 @@
     <footer class="nav">
       <button type="button" id="prev">← Back</button>
       <div class="count" id="count"></div>
-      <button type="button" id="next">Next →</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button type="button" id="home">Home</button>
+        <button type="button" id="next">Next →</button>
+      </div>
     </footer>
   </div>
 
@@ -337,10 +356,14 @@
       count.textContent = (i + 1) + " / " + slides.length;
       prev.disabled = i === 0;
       next.disabled = i === slides.length - 1;
+      document.getElementById("home").disabled = i === 0;
+      document.getElementById("homeTop").disabled = i === 0;
     }
 
     prev.addEventListener("click", () => go(i - 1));
     next.addEventListener("click", () => go(i + 1));
+    document.getElementById("home").addEventListener("click", () => go(0));
+    document.getElementById("homeTop").addEventListener("click", () => go(0));
     main.addEventListener("click", (e) => {
       const chip = e.target.closest("[data-go]");
       if (chip) go(Number(chip.dataset.go));
