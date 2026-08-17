@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Our Work Together · Unbridled</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f1923;
+      --navy: #1a2e3b;
+      --navy2: #162636;
+      --card: #162433;
+      --section: #0d1620;
+      --blue: #5a8ba7;
+      --gold: #c9aa7c;
+      --text: #e8e0d4;
+      --muted: #8a9aaa;
+      --border: rgba(90,139,167,0.22);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, system-ui, sans-serif;
+      overflow: hidden;
+    }
+    .deck {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    header.bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 22px;
+      background: var(--navy);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand img { width: 28px; height: auto; opacity: 0.85; }
+    .brand span {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--blue);
+    }
+    .dots { display: flex; gap: 8px; align-items: center; }
+    .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      border: 1px solid var(--gold);
+      background: transparent;
+      cursor: pointer;
+    }
+    .dot.on { background: var(--gold); }
+    .hint {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+    main {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: clamp(28px, 6vh, 56px) clamp(28px, 6vw, 80px);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .slide.on { display: flex; }
+    .kicker {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-size: clamp(32px, 5.4vw, 56px);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      margin-bottom: 18px;
+    }
+    h1 em { font-style: normal; color: var(--gold); }
+    .lede {
+      font-size: clamp(17px, 2.1vw, 22px);
+      line-height: 1.45;
+      color: var(--text);
+      max-width: 38em;
+      margin-bottom: 22px;
+    }
+    .service {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--gold);
+      border-radius: 0 10px 10px 0;
+      padding: 16px 20px;
+      max-width: 40em;
+      margin-bottom: 28px;
+    }
+    .service .lbl {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 6px;
+    }
+    .service p {
+      font-size: 16px;
+      line-height: 1.5;
+      color: var(--text);
+    }
+    .say {
+      font-size: 15px;
+      color: var(--muted);
+      max-width: 40em;
+      line-height: 1.5;
+      margin-bottom: 28px;
+    }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--gold);
+      color: #0f1923;
+      font-weight: 800;
+      font-size: 15px;
+      text-decoration: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+    }
+    .btn.ghost {
+      background: transparent;
+      color: var(--gold);
+      border: 1px solid rgba(201,170,124,0.45);
+    }
+    .btn.small { font-size: 13px; padding: 9px 14px; font-weight: 700; }
+    footer.nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 22px 16px;
+      border-top: 1px solid var(--border);
+      background: var(--section);
+      flex-shrink: 0;
+    }
+    footer.nav button {
+      background: var(--navy);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    footer.nav button:disabled { opacity: 0.35; cursor: default; }
+    .count {
+      font-family: "Space Mono", monospace;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .four {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      max-width: 640px;
+      margin: 8px 0 24px;
+    }
+    .chip {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      cursor: pointer;
+    }
+    .chip b { display: block; color: var(--gold); font-size: 13px; margin-bottom: 3px; }
+    .chip span { font-size: 13px; color: var(--muted); }
+    @media (max-width: 700px) {
+      .four { grid-template-columns: 1fr; }
+      .hint { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="deck">
+    <header class="bar">
+      <div class="brand">
+        <img src="logos/unbridled-elk-icon-white.png" alt="" />
+        <span>Unbridled · Our work together</span>
+      </div>
+      <div class="dots" id="dots"></div>
+      <div class="hint">Arrow keys · click a number · live links open a new tab</div>
+    </header>
+
+    <main id="main"></main>
+
+    <footer class="nav">
+      <button type="button" id="prev">← Back</button>
+      <div class="count" id="count"></div>
+      <button type="button" id="next">Next →</button>
+    </footer>
+  </div>
+
+  <script>
+    const slides = [
+      {
+        kicker: "Team briefing",
+        title: "What we actually <em>built</em>",
+        lede: "Not a demo deck. Four live tools we use. I will tell you what each one does, then we will open it.",
+        service: null,
+        say: "Eight minutes. Org, labor, ads, wedding. Then we stop.",
+        chips: [
+          { n: 1, name: "The system", note: "Who does what" },
+          { n: 2, name: "The daily op", note: "Labor against revenue" },
+          { n: 3, name: "The growth engine", note: "Ads and results" },
+          { n: 4, name: "The human one", note: "A wedding two people share" }
+        ]
+      },
+      {
+        kicker: "01  ·  The system",
+        title: "The <em>AI organization</em>",
+        lede: "This is the machine. One orchestrator. Named specialists by business unit. Dedicated agents where people need a direct line.",
+        service: "Shows the room who is live, who is planned, and how work moves: people to MC, through intake, to a specialist, then out the door. Design before build. MC reviews anything that ships.",
+        say: "Say this: we did not hire a chatbot. We staffed an organization.",
+        links: [
+          { href: "https://offers.hotelstcloud.com/assets/unbridled-ai-org", label: "Open the org chart" }
+        ]
+      },
+      {
+        kicker: "02  ·  The daily operation",
+        title: "Hotel St. Cloud <em>labor planner</em>",
+        lede: "This is the unglamorous work. Forecast the week. Staff against it. Then put actuals next to the plan so nobody is guessing.",
+        service: "Weekly labor against revenue for Hotel St. Cloud. Forecast, target labor percent, actuals, variance, and a four-week moving average. The thing a GM opens on Monday.",
+        say: "Say this: if we can run a hotel week in the open, we can run the rest of the companies the same way.",
+        links: [
+          { href: "https://offers.hotelstcloud.com/assets/hsc-labor-planner", label: "Open the labor planner" }
+        ]
+      },
+      {
+        kicker: "03  ·  The growth engine",
+        title: "Ads, live, with <em>the results</em>",
+        lede: "This is the working marketing tool. Campaigns, spend, and what came back. Not a slide about ads. The ads themselves.",
+        service: "Live Hotel St. Cloud campaign dashboard: spend, clicks, conversions, what is working. The May–June summary sits behind it if someone wants the cleaner two-month read.",
+        say: "Open the live dashboard first. Only flip to the summary if they ask how the last two months landed.",
+        links: [
+          { href: "https://offers.hotelstcloud.com/assets/live-dashboard", label: "Open the live ads dashboard" },
+          { href: "https://offers.hotelstcloud.com/assets/portfolio-summary-may-jun-2026", label: "May–June summary", ghost: true }
+        ]
+      },
+      {
+        kicker: "04  ·  The human one",
+        title: "Reili and Chris, <em>shared</em>",
+        lede: "The first three say we can run a company. This one says we can build something two people actually use together.",
+        service: "Shared wedding planner for Reili Bullis and Chris Taplin. Cloud-synced. Stan and Reili can both work it. Budget, decisions, the list. No version fight.",
+        say: "Say this: Doing Good by Doing Well is not a poster. Sometimes it is a wedding.",
+        links: [
+          { href: "https://offers.hotelstcloud.com/assets/reili-wedding", label: "Open the wedding planner" }
+        ]
+      },
+      {
+        kicker: "If they ask what else",
+        title: "Stop here. <em>Then</em> the catalog.",
+        lede: "Do not put the catalog in the four. If someone wants the rest of the pile, this is the door.",
+        service: "Master Deliverables is the living list of what we have shipped. Open it only if the room asks.",
+        say: "Thank them. Offer the catalog. Sit down.",
+        links: [
+          { href: "https://offers.hotelstcloud.com/assets/master-deliverables", label: "Open master deliverables", ghost: true }
+        ]
+      }
+    ];
+
+    let i = 0;
+    const main = document.getElementById("main");
+    const dots = document.getElementById("dots");
+    const count = document.getElementById("count");
+    const prev = document.getElementById("prev");
+    const next = document.getElementById("next");
+
+    slides.forEach((s, n) => {
+      const el = document.createElement("section");
+      el.className = "slide" + (n === 0 ? " on" : "");
+      el.dataset.i = n;
+      let html = `<div class="kicker">${s.kicker}</div><h1>${s.title}</h1><p class="lede">${s.lede}</p>`;
+      if (s.chips) {
+        html += `<div class="four">` + s.chips.map(c =>
+          `<div class="chip" data-go="${c.n}"><b>0${c.n}  ${c.name}</b><span>${c.note}</span></div>`
+        ).join("") + `</div>`;
+      }
+      if (s.service) {
+        html += `<div class="service"><div class="lbl">What it does</div><p>${s.service}</p></div>`;
+      }
+      if (s.say) html += `<p class="say">${s.say}</p>`;
+      if (s.links) {
+        html += `<div class="actions">` + s.links.map(l =>
+          `<a class="btn${l.ghost ? " ghost small" : ""}" href="${l.href}" target="_blank" rel="noopener">${l.label} ↗</a>`
+        ).join("") + `</div>`;
+      }
+      el.innerHTML = html;
+      main.appendChild(el);
+
+      const d = document.createElement("button");
+      d.className = "dot" + (n === 0 ? " on" : "");
+      d.type = "button";
+      d.title = "Slide " + (n + 1);
+      d.addEventListener("click", () => go(n));
+      dots.appendChild(d);
+    });
+
+    function go(n) {
+      i = Math.max(0, Math.min(slides.length - 1, n));
+      document.querySelectorAll(".slide").forEach((el, k) => el.classList.toggle("on", k === i));
+      document.querySelectorAll(".dot").forEach((el, k) => el.classList.toggle("on", k === i));
+      count.textContent = (i + 1) + " / " + slides.length;
+      prev.disabled = i === 0;
+      next.disabled = i === slides.length - 1;
+    }
+
+    prev.addEventListener("click", () => go(i - 1));
+    next.addEventListener("click", () => go(i + 1));
+    main.addEventListener("click", (e) => {
+      const chip = e.target.closest("[data-go]");
+      if (chip) go(Number(chip.dataset.go));
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") { e.preventDefault(); go(i + 1); }
+      if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); go(i - 1); }
+      if (e.key === "Home") go(0);
+      if (e.key === "End") go(slides.length - 1);
+      if (e.key >= "1" && e.key <= "6") go(Number(e.key) - 1);
+    });
+    go(0);
+  </script>
+</body>
+</html>
