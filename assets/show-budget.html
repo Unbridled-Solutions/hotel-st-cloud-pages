@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Show Budget OS · LPL Focus 2026</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f1923;
+      --navy: #1a2e3b;
+      --navy2: #162636;
+      --card: #162433;
+      --section: #0d1620;
+      --blue: #5a8ba7;
+      --gold: #c9aa7c;
+      --text: #e8e0d4;
+      --muted: #8a9aaa;
+      --border: rgba(90,139,167,0.22);
+      --red: #e05050;
+      --green: #4caf7d;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; line-height: 1.45; }
+    header.top {
+      position: sticky; top: 0; z-index: 40;
+      background: var(--navy); border-bottom: 1px solid var(--border);
+      padding: 14px 18px 12px;
+    }
+    .brand { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+    .brand h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.03em; }
+    .brand h1 span { color: var(--gold); }
+    .brand p { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    button, .btn {
+      border: 0; border-radius: 8px; padding: 8px 12px; font-weight: 700; font-size: 12px;
+      cursor: pointer; font-family: inherit;
+    }
+    .save { background: var(--gold); color: #0f1923; }
+    .load { background: var(--blue); color: #0f1923; }
+    .ghost { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+    .mic { background: #0d1a27; color: var(--gold); border: 1px solid rgba(201,170,124,0.4); }
+    .mic.hot { background: var(--gold); color: #0f1923; }
+    .status { font-size: 11px; color: var(--muted); }
+    .status.ok { color: var(--green); }
+    .status.warn { color: #e0a050; }
+    main { max-width: 1180px; margin: 0 auto; padding: 16px 16px 80px; }
+    .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+    .kpi { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+    .kpi b { display: block; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--blue); margin-bottom: 4px; }
+    .kpi strong { font-family: "Space Mono", monospace; font-size: 20px; letter-spacing: -0.03em; }
+    .kpi .sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .neg { color: var(--green); }
+    .pos { color: var(--red); }
+    .panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+    .panel h2 { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--blue); margin-bottom: 10px; }
+    .cal { display: grid; grid-template-columns: repeat(11, 1fr); gap: 6px; }
+    .day {
+      background: var(--section); border: 1px solid var(--border); border-radius: 8px; padding: 8px 6px;
+      text-align: center;
+    }
+    .day .d { font-size: 10px; color: var(--muted); text-transform: uppercase; }
+    .day .n { font-size: 13px; font-weight: 800; }
+    .day input {
+      width: 100%; margin-top: 4px; background: transparent; color: var(--text);
+      border: 0; border-bottom: 1px solid rgba(201,170,124,0.3); text-align: center;
+      font-family: "Space Mono", monospace; font-size: 14px;
+    }
+    .day input:focus { outline: 0; border-bottom-color: var(--gold); }
+    .hint { font-size: 12px; color: var(--muted); margin-top: 8px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: var(--section); color: var(--blue); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; text-align: left; padding: 8px 8px; }
+    td { padding: 7px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr.sec td { background: linear-gradient(135deg, #0d1a27, #162636); color: var(--blue); font-weight: 800; letter-spacing: 0.04em; }
+    tr.tot td { color: var(--gold); font-weight: 800; }
+    .num { text-align: right; font-family: "Space Mono", monospace; font-size: 12px; }
+    input.cell {
+      width: 108px; background: transparent; color: var(--text); text-align: right;
+      border: 0; border-bottom: 1px solid rgba(201,170,124,0.25);
+      font-family: "Space Mono", monospace; font-size: 12px; padding: 2px 4px;
+    }
+    input.cell:focus { outline: 0; border-bottom-color: var(--gold); background: rgba(201,170,124,0.05); }
+    input.cell[disabled] { opacity: 0.55; border-bottom-color: transparent; }
+    .voicebox {
+      display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+    }
+    .voicebox input[type=text] {
+      flex: 1; min-width: 220px; background: transparent; color: var(--text);
+      border: 0; border-bottom: 1px solid rgba(201,170,124,0.35); padding: 8px 4px; font-size: 14px;
+    }
+    .voicebox input:focus { outline: 0; border-bottom-color: var(--gold); }
+    .card-propose {
+      display: none; margin-top: 10px; background: #0d1a27; border: 1px solid rgba(201,170,124,0.4);
+      border-radius: 10px; padding: 12px 14px;
+    }
+    .card-propose.on { display: block; }
+    .log { max-height: 180px; overflow: auto; font-size: 12px; color: var(--muted); }
+    .log div { padding: 4px 0; border-bottom: 1px solid var(--border); }
+    .rooms { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip { background: var(--section); border: 1px solid var(--border); border-radius: 999px; padding: 4px 8px; font-size: 11px; color: var(--muted); }
+    @media (max-width: 900px) {
+      .kpis, .cal { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <div>
+        <h1>Show Budget OS · <span>LPL Focus 2026</span></h1>
+        <p>San Diego Convention Center · Aug 9–12 · Contract locked · Working live</p>
+      </div>
+      <div class="actions">
+        <span class="status" id="status">Loading cloud…</span>
+        <button class="load" onclick="loadCloud()">Reload cloud</button>
+        <button class="save" onclick="saveCloud()">Save to cloud</button>
+        <button class="ghost" onclick="cloneYear()">Clone 2027</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="kpis">
+      <div class="kpi"><b>Contract</b><strong id="kContract">...</strong><div class="sub">Locked after sign</div></div>
+      <div class="kpi"><b>Working</b><strong id="kWorking">...</strong><div class="sub">Pre-show 8.3.26 base</div></div>
+      <div class="kpi"><b>Variance</b><strong id="kVar">...</strong><div class="sub" id="kVarSub">Working minus contract</div></div>
+      <div class="kpi"><b>Deposits in</b><strong id="kDep">...</strong><div class="sub" id="kRemain">Remaining vs working</div></div>
+    </div>
+
+    <div class="panel">
+      <h2>Talk to propose</h2>
+      <div class="voicebox">
+        <button class="mic" id="mic" onmousedown="startTalk()" onmouseup="stopTalk()" ontouchstart="startTalk()" ontouchend="stopTalk()">Hold to talk</button>
+        <input id="cmd" type="text" placeholder='Type or say: set Thursday rooms to 14' onkeydown="if(event.key==='Enter')parseCommand(this.value)" />
+        <button class="ghost" onclick="parseCommand(document.getElementById('cmd').value)">Propose</button>
+      </div>
+      <div class="card-propose" id="propose">
+        <div id="proposeText"></div>
+        <div class="actions" style="margin-top:10px">
+          <button class="save" onclick="commitPatch()">Yes, write it</button>
+          <button class="ghost" onclick="clearPatch()">No</button>
+        </div>
+      </div>
+      <p class="hint">Voice and type only propose. Nothing money-related writes until you tap yes. Contract lines stay locked.</p>
+    </div>
+
+    <div class="panel">
+      <h2>Room calendar · breakouts</h2>
+      <div class="cal" id="cal"></div>
+      <p class="hint" id="roomHint"></p>
+      <div class="rooms" id="roomChips"></div>
+    </div>
+
+    <div class="panel" style="overflow-x:auto">
+      <h2>Ledger</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Line</th>
+            <th class="num">Contract</th>
+            <th class="num">Working</th>
+            <th class="num">Actual</th>
+            <th class="num">Var</th>
+          </tr>
+        </thead>
+        <tbody id="ledger"></tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h2>Deposits</h2>
+      <table>
+        <thead><tr><th>Draw</th><th>Invoiced</th><th>Received</th><th class="num">Amount</th></tr></thead>
+        <tbody id="deps"></tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h2>Change log</h2>
+      <div class="log" id="log"></div>
+    </div>
+  </main>
+<script>
+(function () {
+  const NS = 'lpl-focus-2026';
+  const API = '/api/planner/bundle?ns=' + encodeURIComponent(NS);
+  const ROOM_NAMES = [
+    '1B','2','3','4','5AB','6B','6C','6D','6E','6F','7AB','8','9','10','11AB',
+    '30CDE','31ABC','32A','32B','33AB','33C',
+    '23ABC','24ABC','25ABC','26AB','27AB','29C','30B'
+  ];
+  const BASE_ROOMS = 28;
+  const BASE_BREAKOUT = 462869.33;
+
+  const DEFAULT = {
+    v: 1,
+    show: {
+      client: 'LPL Financial',
+      name: 'Focus 2026',
+      venue: 'San Diego Convention Center',
+      dates: 'August 9-12, 2026',
+      attendees: 7000,
+      staff: 10,
+      contractLocked: true
+    },
+    rooms: { baseline: BASE_ROOMS, breakoutCost: BASE_BREAKOUT },
+    days: [
+      { id: '0802', date: '2026-08-02', label: 'Sun 2', kind: 'Load-in', rooms: 0 },
+      { id: '0803', date: '2026-08-03', label: 'Mon 3', kind: 'Load-in', rooms: 0 },
+      { id: '0804', date: '2026-08-04', label: 'Tue 4', kind: 'Load-in', rooms: 0 },
+      { id: '0805', date: '2026-08-05', label: 'Wed 5', kind: 'Load-in', rooms: 0 },
+      { id: '0806', date: '2026-08-06', label: 'Thu 6', kind: 'Load-in', rooms: 0 },
+      { id: '0807', date: '2026-08-07', label: 'Fri 7', kind: 'Rehearse', rooms: 0 },
+      { id: '0808', date: '2026-08-08', label: 'Sat 8', kind: 'Rehearse', rooms: 0 },
+      { id: '0809', date: '2026-08-09', label: 'Sun 9', kind: 'Show', rooms: 28 },
+      { id: '0810', date: '2026-08-10', label: 'Mon 10', kind: 'Show', rooms: 28 },
+      { id: '0811', date: '2026-08-11', label: 'Tue 11', kind: 'Show', rooms: 28 },
+      { id: '0812', date: '2026-08-12', label: 'Wed 12', kind: 'Load-out', rooms: 0 }
+    ],
+    lines: [
+      { id: 'c1', lane: 'creative', name: 'Event strategy & experience arc', contract: 20000, working: 20000, actual: 0 },
+      { id: 'c2', lane: 'creative', name: 'Logo & visual identity', contract: 7250, working: 7250, actual: 0 },
+      { id: 'c3', lane: 'creative', name: 'Collateral design', contract: 6750, working: 7250, actual: 0 },
+      { id: 'c4', lane: 'creative', name: 'Content development', contract: 59000, working: 15000, actual: 0 },
+      { id: 'c5', lane: 'creative', name: 'Presentation development', contract: 56000, working: 84500, actual: 0 },
+      { id: 'c6', lane: 'creative', name: 'Motion graphics', contract: 91750, working: 138000, actual: 0 },
+      { id: 'c7', lane: 'creative', name: 'Video creative direction', contract: 75250, working: 65600, actual: 0 },
+      { id: 'c8', lane: 'creative', name: 'Video media', contract: 365000, working: 157000, actual: 0 },
+      { id: 'c9', lane: 'creative', name: 'Creative travel & expenses', contract: 110725, working: 107010, actual: 0 },
+      { id: 'c10', lane: 'creative', name: 'Creative contingency', contract: 34050, working: 4946, actual: 0 },
+      { id: 'c11', lane: 'creative', name: 'Creative management fee', contract: 86895, working: 86670, actual: 0 },
+      { id: 'c12', lane: 'creative', name: '3-year contract increase 5%', contract: 93548.68, working: 0, actual: 0 },
+      { id: 'p1', lane: 'production', name: 'General session equipment', contract: 680277.5, working: 1109007.01, actual: 0 },
+      { id: 'p2', lane: 'production', name: 'Breakout equipment', contract: 999200, working: 462869.33, actual: 0, scaleRooms: true },
+      { id: 'p3', lane: 'production', name: 'Miscellaneous', contract: 148000, working: 335732.57, actual: 0 },
+      { id: 'p4', lane: 'production', name: 'Labor', contract: 836802.5, working: 1952029.72, actual: 0 },
+      { id: 'p5', lane: 'production', name: 'On-site services', contract: 975000, working: 324035, actual: 0 },
+      { id: 'p6', lane: 'production', name: 'Production travel & expenses', contract: 69950, working: 159565.92, actual: 0 },
+      { id: 'p7', lane: 'production', name: 'Focus Live equipment, labor, expenses', contract: 190555, working: 0, actual: 0 },
+      { id: 'p8', lane: 'production', name: 'Contingency', contract: 0, working: 60000, actual: 0 },
+      { id: 'p9', lane: 'production', name: 'Negotiated discounts', contract: 0, working: -135384.23, actual: 0 },
+      { id: 'p10', lane: 'production', name: 'Productions management fee 20%', contract: 506131, working: 815392.97, actual: 0 },
+      { id: 'p11', lane: 'production', name: 'Billed to master', contract: 0, working: -324035, actual: 0 },
+      { id: 'p12', lane: 'production', name: '3-year contract increase 5%', contract: 451606.39, working: 0, actual: 0 }
+    ],
+    deposits: [
+      { name: 'Initial deposit', invoice: '2025-09-30', received: '2025-11-14', amount: 2931870.53 },
+      { name: '2nd deposit', invoice: '2025-11-26', received: '2026-01-09', amount: 1759122.32 },
+      { name: '3rd deposit', invoice: '2026-03-17', received: '2026-06-01', amount: 1172748.21 }
+    ],
+    log: [],
+    saved_at: 0
+  };
+
+  let state = JSON.parse(JSON.stringify(DEFAULT));
+  let loadedAt = 0;
+  let pending = null;
+  let rec = null;
+
+  function money(n) {
+    const v = Number(n) || 0;
+    const sign = v < 0 ? '-' : '';
+    return sign + '$' + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  }
+  function sum(arr, key) { return arr.reduce((a, x) => a + (Number(x[key]) || 0), 0); }
+  function byLane(lane) { return state.lines.filter(l => l.lane === lane); }
+  function roomDays() {
+    return state.days.filter(d => d.kind === 'Show').reduce((a, d) => a + (Number(d.rooms) || 0), 0);
+  }
+  function peakRooms() {
+    return Math.max(0, ...state.days.map(d => Number(d.rooms) || 0));
+  }
+
+  function applyRoomScale() {
+    const line = state.lines.find(l => l.scaleRooms);
+    if (!line) return;
+    const peak = peakRooms();
+    line.working = Math.round(BASE_BREAKOUT * (peak / BASE_ROOMS) * 100) / 100;
+  }
+
+  function addLog(msg) {
+    state.log.unshift({ t: Date.now(), msg: msg });
+    state.log = state.log.slice(0, 40);
+  }
+
+  function render() {
+    const c = sum(state.lines, 'contract');
+    const w = sum(state.lines, 'working');
+    const dep = sum(state.deposits, 'amount');
+    const v = w - c;
+    document.getElementById('kContract').textContent = money(c);
+    document.getElementById('kWorking').textContent = money(w);
+    const kv = document.getElementById('kVar');
+    kv.textContent = (v >= 0 ? '+' : '') + money(v);
+    kv.className = v <= 0 ? 'neg' : 'pos';
+    document.getElementById('kVarSub').textContent = v <= 0 ? 'Under contract' : 'Over contract';
+    document.getElementById('kDep').textContent = money(dep);
+    document.getElementById('kRemain').textContent = 'Remaining vs working ' + money(w - dep);
+
+    const cal = document.getElementById('cal');
+    cal.innerHTML = state.days.map(d => (
+      '<div class="day"><div class="d">' + d.label + '</div><div class="n">' + d.kind + '</div>' +
+      '<input type="number" min="0" max="80" value="' + (d.rooms || 0) + '" oninput="window._setRooms(\'' + d.id + '\', this.value)" />' +
+      '</div>'
+    )).join('');
+    const peak = peakRooms();
+    document.getElementById('roomHint').textContent =
+      'Peak breakout rooms ' + peak + ' of ' + BASE_ROOMS + ' quoted. Breakout equipment working scales with peak. Show days currently ' + roomDays() + ' room-days.';
+    document.getElementById('roomChips').innerHTML = ROOM_NAMES.map(n => '<span class="chip">' + n + '</span>').join('');
+
+    const tb = document.getElementById('ledger');
+    const rows = [];
+    function block(title, lane) {
+      rows.push('<tr class="sec"><td colspan="5">' + title + '</td></tr>');
+      byLane(lane).forEach(l => {
+        const vr = l.working - l.contract;
+        const cls = vr <= 0 ? 'neg' : 'pos';
+        rows.push(
+          '<tr><td>' + l.name + (l.scaleRooms ? ' <span class="chip">scales with rooms</span>' : '') + '</td>' +
+          '<td class="num">' + money(l.contract) + '</td>' +
+          '<td class="num"><input class="cell" type="number" step="0.01" value="' + l.working + '" onchange="window._setWorking(\'' + l.id + '\', this.value)" /></td>' +
+          '<td class="num"><input class="cell" type="number" step="0.01" value="' + l.actual + '" onchange="window._setActual(\'' + l.id + '\', this.value)" /></td>' +
+          '<td class="num ' + cls + '">' + (vr >= 0 ? '+' : '') + money(vr) + '</td></tr>'
+        );
+      });
+      const sc = sum(byLane(lane), 'contract');
+      const sw = sum(byLane(lane), 'working');
+      rows.push('<tr class="tot"><td>Subtotal ' + title + '</td><td class="num">' + money(sc) + '</td><td class="num">' + money(sw) + '</td><td></td><td class="num">' + money(sw - sc) + '</td></tr>');
+    }
+    block('Creative & Content', 'creative');
+    block('Production / Audio-Visual', 'production');
+    rows.push('<tr class="tot"><td>Grand total</td><td class="num">' + money(c) + '</td><td class="num">' + money(w) + '</td><td class="num">' + money(sum(state.lines, 'actual')) + '</td><td class="num">' + money(v) + '</td></tr>');
+    tb.innerHTML = rows.join('');
+
+    document.getElementById('deps').innerHTML = state.deposits.map(d =>
+      '<tr><td>' + d.name + '</td><td>' + d.invoice + '</td><td>' + d.received + '</td><td class="num">' + money(d.amount) + '</td></tr>'
+    ).join('') + '<tr class="tot"><td colspan="3">Total deposits</td><td class="num">' + money(dep) + '</td></tr>';
+
+    document.getElementById('log').innerHTML = (state.log || []).map(x =>
+      '<div>' + new Date(x.t).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' · ' + x.msg + '</div>'
+    ).join('') || '<div>No changes yet.</div>';
+  }
+
+  window._setRooms = function (id, val) {
+    const d = state.days.find(x => x.id === id);
+    if (!d) return;
+    const n = Math.max(0, parseInt(val, 10) || 0);
+    d.rooms = n;
+    applyRoomScale();
+    addLog('Set ' + d.label + ' rooms to ' + n + '. Breakout equipment now ' + money(state.lines.find(l => l.scaleRooms).working) + '.');
+    render();
+  };
+  window._setWorking = function (id, val) {
+    const l = state.lines.find(x => x.id === id);
+    if (!l) return;
+    l.working = parseFloat(val) || 0;
+    addLog('Working on ' + l.name + ' set to ' + money(l.working));
+    render();
+  };
+  window._setActual = function (id, val) {
+    const l = state.lines.find(x => x.id === id);
+    if (!l) return;
+    l.actual = parseFloat(val) || 0;
+    addLog('Actual on ' + l.name + ' set to ' + money(l.actual));
+    render();
+  };
+
+  function parseCommand(raw) {
+    const text = (raw || '').trim();
+    if (!text) return;
+    const lower = text.toLowerCase();
+    let patch = null;
+    const dayMap = {
+      sunday: '0809', sun: '0809',
+      monday: '0810', mon: '0810',
+      tuesday: '0811', tue: '0811',
+      wednesday: '0812', wed: '0812',
+      thursday: '0806', thu: '0806',
+      friday: '0807', fri: '0807',
+      saturday: '0808', sat: '0808'
+    };
+    const num = (lower.match(/(\d+)/) || [])[1];
+    if (/clone|2027/.test(lower)) {
+      patch = { type: 'clone', label: 'Clone this show into Focus 2027. Zeros actuals. Keeps working as the new contract candidate. Does not save until you confirm.' };
+    } else if (/room/.test(lower) && num) {
+      let dayId = null;
+      Object.keys(dayMap).forEach(k => { if (lower.indexOf(k) !== -1) dayId = dayMap[k]; });
+      if (dayId) {
+        const d = state.days.find(x => x.id === dayId);
+        patch = { type: 'rooms', dayId: dayId, rooms: parseInt(num, 10), label: 'Set ' + d.label + ' (' + d.kind + ') from ' + d.rooms + ' to ' + num + ' rooms. Breakout equipment will rescale from peak.' };
+      } else {
+        patch = { type: 'allshow', rooms: parseInt(num, 10), label: 'Set every show day to ' + num + ' rooms. Breakout equipment will rescale from peak.' };
+      }
+    }
+    if (!patch) {
+      patch = { type: 'none', label: 'I heard: "' + text + '". I can set rooms by day, set all show days, or clone 2027. Try: set Monday rooms to 14' };
+    }
+    pending = patch;
+    document.getElementById('proposeText').textContent = patch.label;
+    document.getElementById('propose').classList.add('on');
+    document.getElementById('cmd').value = text;
+  }
+
+  function commitPatch() {
+    if (!pending || pending.type === 'none') { clearPatch(); return; }
+    if (pending.type === 'rooms') {
+      window._setRooms(pending.dayId, pending.rooms);
+    } else if (pending.type === 'allshow') {
+      state.days.forEach(d => { if (d.kind === 'Show') d.rooms = pending.rooms; });
+      applyRoomScale();
+      addLog('All show days set to ' + pending.rooms + ' rooms.');
+      render();
+    } else if (pending.type === 'clone') {
+      addLog('Clone 2027 staged in this browser only. Save to cloud still writes LPL Focus 2026. 2027 namespace comes next.');
+      alert('2027 clone is queued as a separate show key. This week-1 ledger stays Focus 2026. Say if you want lpl-focus-2027 spun up now.');
+    }
+    clearPatch();
+  }
+  function clearPatch() {
+    pending = null;
+    document.getElementById('propose').classList.remove('on');
+  }
+  window.parseCommand = parseCommand;
+  window.commitPatch = commitPatch;
+  window.clearPatch = clearPatch;
+
+  function startTalk() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const btn = document.getElementById('mic');
+    if (!SR) {
+      document.getElementById('cmd').focus();
+      document.getElementById('status').textContent = 'Voice needs Chrome or Safari. Type the command.';
+      return;
+    }
+    rec = new SR();
+    rec.lang = 'en-US';
+    rec.interimResults = false;
+    rec.onresult = function (e) {
+      const said = e.results[0][0].transcript;
+      parseCommand(said);
+    };
+    rec.onend = function () { btn.classList.remove('hot'); btn.textContent = 'Hold to talk'; };
+    rec.start();
+    btn.classList.add('hot');
+    btn.textContent = 'Listening…';
+  }
+  function stopTalk() {
+    try { if (rec) rec.stop(); } catch (e) {}
+  }
+  window.startTalk = startTalk;
+  window.stopTalk = stopTalk;
+
+  async function loadCloud() {
+    const el = document.getElementById('status');
+    el.textContent = 'Loading cloud…';
+    el.className = 'status';
+    try {
+      const res = await fetch(API);
+      const json = await res.json();
+      const data = (json.data && Object.keys(json.data).length > 0) ? json.data : null;
+      if (data && data.v && Array.isArray(data.lines)) {
+        state = data;
+        loadedAt = data.saved_at || Date.now();
+        el.textContent = 'Cloud loaded';
+        el.className = 'status ok';
+      } else {
+        state = JSON.parse(JSON.stringify(DEFAULT));
+        loadedAt = 0;
+        el.textContent = 'Empty cloud. Seed is on screen. Save to write it.';
+        el.className = 'status warn';
+      }
+    } catch (err) {
+      state = JSON.parse(JSON.stringify(DEFAULT));
+      el.textContent = 'Cloud unread. Working from seed.';
+      el.className = 'status warn';
+    }
+    render();
+  }
+
+  async function saveCloud() {
+    const el = document.getElementById('status');
+    try {
+      const check = await fetch(API);
+      const json = await check.json();
+      const cloud = json.data || {};
+      if (cloud.saved_at && loadedAt && cloud.saved_at > loadedAt) {
+        el.textContent = 'Cloud is newer. Reload before saving.';
+        el.className = 'status warn';
+        return;
+      }
+      state.saved_at = Date.now();
+      const res = await fetch(API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(state)
+      });
+      if (!res.ok) throw new Error('save failed');
+      loadedAt = state.saved_at;
+      el.textContent = 'Saved ' + new Date(state.saved_at).toLocaleTimeString();
+      el.className = 'status ok';
+    } catch (err) {
+      el.textContent = 'Save failed';
+      el.className = 'status warn';
+    }
+  }
+
+  function cloneYear() {
+    parseCommand('clone 2027');
+  }
+  window.loadCloud = loadCloud;
+  window.saveCloud = saveCloud;
+  window.cloneYear = cloneYear;
+
+  loadCloud();
+})();
+</script>
+</body>
+</html>
