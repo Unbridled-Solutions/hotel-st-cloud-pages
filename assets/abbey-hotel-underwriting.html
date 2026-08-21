@@ -201,8 +201,8 @@
         </div>
         <div>
           <label>Federal QRE $</label>
-          <input type="number" id="qre" value="13500000" min="0" step="100000" />
-          <div class="hint">Default $13.5M. Not the full $30M until CPA maps it.</div>
+          <input type="number" id="qre" value="22000000" min="0" step="100000" />
+          <div class="hint">20% of $22M = $4.4M federal credit. Claimed over 5 years.</div>
         </div>
       </div>
     </div>
@@ -272,7 +272,7 @@
 
     <footer>
       Internal planning model. Not a lender package and not tax advice. Federal historic credit is a five-year income offset. State credit cash assumes the 93-cent sale you described. Property tax is a Fremont County planning estimate, not an assessor quote.
-      Base locked 21 Aug 2026: 70 keys, 60% occupancy, $250 ADR, $300k/month F&B, 65% prime, $3.0M state HTC at 93 cents.
+      Base locked 21 Aug 2026: 70 keys, 60% occupancy, $250 ADR, $300k/month F&B, 65% prime, $3.0M state HTC at 93 cents, federal 20% of $22M QRE.
     </footer>
   </main>
   <script>
@@ -317,6 +317,7 @@
       const stateHtc = num('stateHtc');
       const statePx = num('statePx') / 100;
       const qre = num('qre');
+      const fedCredit = qre * 0.20;
 
       const avail = keys * 365;
       const occN = avail * occ;
@@ -334,17 +335,19 @@
       const cf = noi - ds;
       const ioMo = loan * rate / 12;
       const stateCash = stateHtc * statePx;
-      const fedCredit = qre * 0.20;
       const fedYr = fedCredit / 5;
+      const statuteCap = build * 0.20;
       const equity = Math.max(build - loan, 0);
       const sponsorAfterState = equity - stateCash;
+      const sponsorAfterBoth = equity - stateCash - (fedCredit * statePx);
       const revpar = adr * occ;
       const debtOnlyAdr = occN > 0 ? ds / occN : 0;
 
       return {
-        keys, occ, adr, fnbMo, prime, build, loan, rate, amort, stateHtc, statePx, qre,
+        keys, occ, adr, fnbMo, prime, build, loan, rate, amort, stateHtc, statePx, qre, fedCredit,
         avail, occN, rooms, fnb, tot, cogs, gp, ptax, mgmt, noi, dsMo, ds, dscr, cf, ioMo,
-        stateCash, fedCredit, fedYr, equity, sponsorAfterState, revpar, debtOnlyAdr
+        stateCash, fedYr, statuteCap, equity, sponsorAfterState, sponsorAfterBoth,
+        revpar, debtOnlyAdr
       };
     }
 
@@ -371,7 +374,7 @@
         (m.rate * 100).toFixed(2) + '% / ' + m.amort + ' years needs <strong>' + money(m.ds) + '</strong> a year. ' +
         'DSCR is <strong>' + m.dscr.toFixed(2) + 'x</strong>. Cash after debt is <strong>' + money(m.cf) + '</strong>. ' +
         'State credits at 93 cents put <strong>' + money(m.stateCash) + '</strong> in at close. They do not service the bank. ' +
-        'Federal is a five-year income offset of <strong>' + money(m.fedYr) + '</strong> per year on the QRE you entered.';
+        'Federal is 20% of <strong>' + money(m.qre) + '</strong> QRE = <strong>' + money(m.fedCredit) + '</strong>, claimed over five years at <strong>' + money(m.fedYr) + '</strong> per year as an income offset, not cash.';
 
       const pills = [
         ['NOI', money(m.noi), ''],
@@ -381,7 +384,8 @@
         ['F&B revenue', money(m.fnb), ''],
         ['Total revenue', money(m.tot), 'gold'],
         ['RevPAR', money(m.revpar), ''],
-        ['State cash @ 93¢', money(m.stateCash), 'gold']
+        ['State cash @ 93¢', money(m.stateCash), 'gold'],
+        ['Federal offset / yr', money(m.fedYr), 'gold']
       ];
       document.getElementById('hero').innerHTML = pills.map(function (p) {
         return '<div class="stat"><div class="stat-k">' + p[0] + '</div><div class="stat-v ' + p[2] + '">' + p[1] + '</div></div>';
@@ -419,10 +423,12 @@
         '<thead><tr><th></th><th class="num">Amount</th></tr></thead><tbody>' +
         row(['State historic credit', money(m.stateHtc)]) +
         row(['Cash at ' + Math.round(m.statePx * 100) + ' cents', money(m.stateCash)], 'total') +
-        row(['Federal QRE entered', money(m.qre)]) +
+        row(['Federal QRE', money(m.qre)]) +
         row(['Federal credit 20%', money(m.fedCredit)]) +
+        row(['20% of this build if all $30M qualified', money(m.statuteCap)]) +
         row(['Federal offset / year, 5 years', money(m.fedYr)]) +
         row(['Ops cash + federal offset (if you have taxable income)', money(m.cf + m.fedYr)], cls(m.cf + m.fedYr)) +
+        row(['If federal also sold at same cents', money(m.fedCredit * m.statePx)]) +
         '</tbody>';
 
       document.getElementById('monthly').innerHTML =
@@ -475,7 +481,8 @@
         row(['Cash equity before credits', money(m.equity)]) +
         row(['State HTC cash', money(m.stateCash)]) +
         row(['Sponsor cash after state', money(m.sponsorAfterState)], 'total') +
-        row(['Federal if sold at same cents (not assumed)', money(m.fedCredit * m.statePx)]) +
+        row(['Federal if sold at same cents', money(m.fedCredit * m.statePx)]) +
+        row(['Sponsor cash after both credits sold', money(m.sponsorAfterBoth)], cls(m.sponsorAfterBoth)) +
         '</tbody>';
     }
 
