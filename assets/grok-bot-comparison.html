@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="A note from Stan Bullis to Justin Farr, Tim Woodring, and Jonathan Wield.">
+  <title>Quick Comparison Between Grok Bot and Unbridled.ai | Unbridled</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy:       #1a2637;
+      --navy-mid:   #1f2d44;
+      --blue:       #5a8ba7;
+      --blue-light: #78b0d1;
+      --white:      #ffffff;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--navy);
+      color: var(--white);
+      font-size: 18px;
+      line-height: 1.75;
+      min-height: 100vh;
+    }
+    header {
+      background: var(--navy);
+      border-bottom: 1px solid rgba(90,139,167,0.2);
+      padding: clamp(1.25rem, 3vw, 2rem) clamp(1.25rem, 5vw, 3rem);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    header img {
+      width: clamp(36px, 6vw, 48px);
+      height: auto;
+      opacity: 0.9;
+    }
+    header .brand {
+      font-size: clamp(0.8rem, 1.5vw, 0.9rem);
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--blue-light);
+    }
+    .hero {
+      background: linear-gradient(160deg, #1a2637 0%, #0f1c2e 100%);
+      padding: clamp(3rem, 8vw, 6rem) clamp(1.25rem, 6vw, 4rem) clamp(2.5rem, 6vw, 4rem);
+      text-align: center;
+      border-bottom: 1px solid rgba(90,139,167,0.15);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(90,139,167,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-eyebrow {
+      font-size: clamp(0.7rem, 1.5vw, 0.8rem);
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--blue-light);
+      margin-bottom: 1rem;
+    }
+    .hero h1 {
+      font-size: clamp(1.7rem, 4.4vw, 2.75rem);
+      font-weight: 300;
+      line-height: 1.2;
+      color: var(--white);
+      margin-bottom: 0.5rem;
+    }
+    .hero h1 em {
+      font-style: normal;
+      font-weight: 600;
+      color: var(--blue-light);
+    }
+    .hero-sub {
+      font-size: clamp(0.9rem, 1.8vw, 1rem);
+      color: rgba(255,255,255,0.45);
+      margin-top: 1rem;
+      font-weight: 300;
+    }
+    .letter-wrap {
+      max-width: 780px;
+      width: 100%;
+      margin: 0 auto;
+      padding: clamp(2.5rem, 6vw, 5rem) clamp(1.25rem, 5vw, 2.5rem);
+    }
+    .salutation {
+      font-size: clamp(1.05rem, 2vw, 1.2rem);
+      font-weight: 600;
+      color: var(--blue-light);
+      margin-bottom: 2rem;
+    }
+    .letter-wrap p {
+      font-size: clamp(1rem, 1.8vw, 1.1rem);
+      line-height: 1.85;
+      color: rgba(255,255,255,0.88);
+      margin-bottom: 1.5rem;
+    }
+    .letter-wrap p strong {
+      color: var(--white);
+      font-weight: 600;
+    }
+    .section-break {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin: clamp(2rem, 5vw, 3.5rem) 0;
+    }
+    .section-break::before,
+    .section-break::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(90,139,167,0.25);
+    }
+    .section-break span {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--blue);
+      white-space: nowrap;
+    }
+    .callout {
+      background: rgba(90,139,167,0.1);
+      border-left: 4px solid var(--blue);
+      border-radius: 0 6px 6px 0;
+      padding: clamp(1.25rem, 3vw, 1.75rem) clamp(1.25rem, 3vw, 2rem);
+      margin: 2rem 0;
+    }
+    .callout p {
+      font-size: clamp(1rem, 1.8vw, 1.08rem) !important;
+      line-height: 1.8 !important;
+      color: rgba(255,255,255,0.92) !important;
+      margin-bottom: 0 !important;
+    }
+    .questions {
+      display: grid;
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+    .segment-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(90,139,167,0.2);
+      border-top: 3px solid var(--blue);
+      border-radius: 6px;
+      padding: clamp(1.25rem, 3vw, 1.75rem);
+    }
+    .segment-card h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--blue-light);
+      margin-bottom: 0.6rem;
+    }
+    .segment-card p {
+      font-size: clamp(0.88rem, 1.5vw, 0.95rem) !important;
+      color: rgba(255,255,255,0.7) !important;
+      line-height: 1.6 !important;
+      margin-bottom: 0 !important;
+    }
+    .closing {
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .closing p {
+      margin-bottom: 0.4rem !important;
+      color: rgba(255,255,255,0.75) !important;
+    }
+    .closing .sig-name {
+      font-size: clamp(1.1rem, 2.5vw, 1.4rem) !important;
+      font-weight: 600 !important;
+      color: var(--white) !important;
+      margin-top: 0.5rem !important;
+    }
+    .closing .sig-title {
+      font-size: 0.88rem !important;
+      color: var(--blue-light) !important;
+      font-weight: 500 !important;
+      letter-spacing: 0.04em !important;
+    }
+    footer {
+      background: #0f1c2e;
+      border-top: 1px solid rgba(90,139,167,0.15);
+      padding: clamp(1.5rem, 4vw, 2.5rem) clamp(1.25rem, 5vw, 3rem);
+      text-align: center;
+    }
+    footer img {
+      width: clamp(28px, 5vw, 36px);
+      height: auto;
+      opacity: 0.4;
+      margin-bottom: 0.75rem;
+    }
+    footer p {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.3);
+      letter-spacing: 0.08em;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <img src="logos/unbridled-elk-icon-white.png" alt="Unbridled">
+    <span class="brand">Unbridled Companies</span>
+  </header>
+
+  <div class="hero">
+    <p class="hero-eyebrow">A Quick Note</p>
+    <h1>Quick Comparison Between <em>Grok Bot</em> and Unbridled.ai</h1>
+    <p class="hero-sub">From Stan Bullis &nbsp;·&nbsp; August 23, 2026<br>To Justin Farr, Tim Woodring, and Jonathan Wield</p>
+  </div>
+
+  <div class="letter-wrap">
+
+    <p class="salutation">Good one, fellas.</p>
+
+    <p>I spent the morning downloading Grok Bot and onboarding it, just as a comparison between MC and Grok Bot. Overall, Justin, you should be proud of yourself. You built almost an identical platform to what Elon just launched.</p>
+
+    <div class="callout">
+      <p>The design was so similar that Cindy asked if it was already available in public, thinking Elon stole Justin's idea. Pretty funny. You should give yourself a lot of credit for thinking this through.</p>
+    </div>
+
+    <div class="section-break"><span>What I Noticed</span></div>
+
+    <p>On the interface: MC is much more fun to work with. More personality. The work sounds more like us, and it lands a little more on target.</p>
+
+    <p>The hurdle with MC is the little bugs. Accuracy. History. It still takes some manipulation.</p>
+
+    <p>The upload into Grok Bot was really, really simple for people who know what they're doing. You request the team members you want. It goes out and finds them. Then it gives you a display board of your team. I keep asking MC for the team. This makes it look like you already have one. I found that neat.</p>
+
+    <p>Grok Bot also runs things more chronologically. You can visually see it handing work to CPAs and legal people, and it gives you advice along the way. You can actually see who's working on what, and that there are people working on things. That's a neat feature.</p>
+
+    <p>It is not as fun. Very institutional. Not much personality. Clearly just jamming through work.</p>
+
+    <div class="section-break"><span>Fremont Makers</span></div>
+
+    <p>I've been downloading some work I did with MC and putting it into Grok Bot to see what it will do with it. The Fremont Makers quote builder was interesting to watch. I haven't seen the final result yet, but it gave a lot of feedback along the way about what was wrong and what was right. It acted a little like a business consultant.</p>
+
+    <p>One example: you didn't mark up your labor, so there's no burden rate on it. That's a loss leader. Or, your tax calculation is incorrect. Or, do you need more functionality in the tax calculator?</p>
+
+    <p>It built my teams really easily. I just told it what I wanted and it went and found them.</p>
+
+    <p>Jonathan, I think it would be really interesting to have you build a quote builder.</p>
+
+    <p>Last quick note: I haven't seen any of its design work. If the design work is not good, that's kind of an I'm out. What I produce needs to be attractive and functional, both.</p>
+
+    <div class="section-break"><span>Questions for Justin</span></div>
+
+    <div class="questions">
+      <div class="segment-card">
+        <h3>One. The delay</h3>
+        <p>Is the delay in MC now a function of us having Grok 4.6 on the back end?</p>
+      </div>
+      <div class="segment-card">
+        <h3>Two. Two chiefs of staff</h3>
+        <p>I'm imagining a world where I have two chiefs of staff. One that is Grok Bot. One that is MC. I may divide them with specific tasks. I may take what one builds and push it through the other, and see if there's a performance improvement. Toggle them back and forth.</p>
+      </div>
+      <div class="segment-card">
+        <h3>Three. Pin MC to Claude</h3>
+        <p>I wonder if we should pin MC back to whatever our highest Anthropic Claude version is, so we've got one powered primarily through Claude and one powered primarily through Grok. Two systems working against each other. The benefit of the competition between Anthropic and Grok.</p>
+      </div>
+      <div class="segment-card">
+        <h3>Four. An agent of the agents</h3>
+        <p>Is there such a thing as building an agent of the agents? An ultra chief of staff you could give orders to, that would leverage the results of both Grok Bot and MC.</p>
+      </div>
+    </div>
+
+    <p>Just fun musings. I thought you would want to know I'm playing around.</p>
+
+    <p>Bless you guys.</p>
+
+    <div class="closing">
+      <p>Stan</p>
+      <p class="sig-name">Stan Bullis</p>
+      <p class="sig-title">Founder, Unbridled Companies</p>
+    </div>
+
+  </div>
+
+  <footer>
+    <img src="logos/unbridled-elk-icon-white.png" alt="Unbridled">
+    <p>Unbridled Companies &nbsp;·&nbsp; Doing Good by Doing Well</p>
+  </footer>
+
+</body>
+</html>
