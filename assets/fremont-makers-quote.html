@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Quote Builder v0824d</title>
-<!-- FM-BUILD-v20260824d-invoice-match -->
+<title>Fremont Makers — Quote Builder v0824e</title>
+<!-- FM-BUILD-v20260824e-gna-before-tax -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Pinyon+Script&display=swap" rel="stylesheet" />
@@ -408,7 +408,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0824d</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0824e</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
     <span class="status-label">Status:</span>
@@ -579,13 +579,6 @@
           <span class="totals-value" style="color:#e05c5c;" id="t-bulk-discount">−$0.00</span>
         </div>
         <div class="totals-row">
-          <span class="totals-label" style="display:flex;align-items:center;gap:8px">
-            Tax (product only)
-            <input type="number" class="tax-input" id="tax-pct" value="8.7" step="0.1" min="0" oninput="recalc(); saveLocal();" />%
-          </span>
-          <span class="totals-value" id="t-tax">$0.00</span>
-        </div>
-        <div class="totals-row">
           <span class="totals-label">Labor Subtotal</span>
           <span class="totals-value" id="t-labor">$0.00</span>
         </div>
@@ -596,6 +589,13 @@
             </select>
           </span>
           <span class="totals-value" id="t-gna">$0.00</span>
+        </div>
+        <div class="totals-row">
+          <span class="totals-label" style="display:flex;align-items:center;gap:8px">
+            Tax (product only)
+            <input type="number" class="tax-input" id="tax-pct" value="8.7" step="0.1" min="0" oninput="recalc(); saveLocal();" />%
+          </span>
+          <span class="totals-value" id="t-tax">$0.00</span>
         </div>
         <div class="totals-row grand">
           <span class="totals-label">Total Quote</span>
@@ -2093,15 +2093,16 @@ function renderDashboard() {
     if (quoteTotal === 0 && quoteData[quote.id] && quoteData[quote.id].cabinets) {
       // Calculate total directly from cabinet data without calling loadQuote
       const qd = quoteData[quote.id];
-      const cabCost = (qd.cabinets || []).reduce((s, c) => s + (parseFloat(c.qty)||0) * (parseFloat(c.cost)||0) * (1 + (parseFloat(c.markup)||0)/100), 0);
+      const cabSell = (qd.cabinets || []).reduce((s, c) => s + (parseFloat(c.qty)||0) * (parseFloat(c.cost)||0) * (1 + (parseFloat(c.markup)||0)/100), 0);
+      const cabNet  = (qd.cabinets || []).reduce((s, c) => s + (parseFloat(c.qty)||0) * (parseFloat(c.cost)||0), 0);
       const laborCost = (qd.labor || []).reduce((s, l) => s + (parseFloat(l.rate)||0) * (parseFloat(l.hours)||0), 0);
-      const subtotal = cabCost + laborCost;
       const gnaPct = parseFloat(qd.gnaPct) || 0;
       const taxPct = parseFloat(qd.taxPct) || 0;
       const bulkDisc = parseFloat(qd.bulkDiscPct) || 0;
-      const afterDisc = subtotal * (1 - bulkDisc/100);
-      const afterGna = afterDisc * (1 + gnaPct/100);
-      quoteTotal = afterGna * (1 + taxPct/100);
+      const cabAfterDisc = cabSell - cabNet * bulkDisc/100;
+      const tax = cabAfterDisc * taxPct / 100;                 // product only — never on G&A
+      const gna = (cabAfterDisc + laborCost) * gnaPct / 100;   // G&A before tax
+      quoteTotal = cabAfterDisc + laborCost + gna + tax;
       quote.total = quoteTotal;
     }
 
@@ -2674,11 +2675,11 @@ function recalc() {
   const bulkDiscPct    = parseFloat(document.getElementById('bulk-discount-pct')?.value) || 0;
   const bulkDiscount   = cabCost * bulkDiscPct / 100;   // discount off net cost (manufacturer price), not sell price
   const cabAfterDisc   = cabTotal - bulkDiscount;
-  // Tax applies to product (cabinets) only — labor and G&A are not taxed
+  // G&A first (cabinets after discount + labor). Tax on product only — never on G&A.
   const tax     = cabAfterDisc * taxPct / 100;
-  const sub     = cabAfterDisc + laborTotal;            // used as G&A base
+  const sub     = cabAfterDisc + laborTotal;
   const gna     = sub * gnaPct / 100;
-  const grand   = cabAfterDisc + tax + laborTotal + gna;
+  const grand   = cabAfterDisc + laborTotal + gna + tax;
 
   document.getElementById('t-cabinets').textContent      = fmt(cabTotal);
   // Column footer totals
