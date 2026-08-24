@@ -1385,61 +1385,116 @@ function sqParseLine(line) {
 function sqParseText(text) {
   // ── Wholesale Cabinets PDF format detector ──────────────────────
   if (text.includes('Wholesale Cabinets') || text.includes('wholesalecabinets') || text.includes('RTA Cabinets')) {
-    return parseWholesaleCabinetsPDF(text);
+    const wc = parseWholesaleCabinetsPDF(text);
+    if (wc.length) return wc;
+    // Colored / mixed-line PDFs used to return 0 — fall through to generic lines
   }
   const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 3 && !l.match(/^[#\/]/));
   return lines.map(sqParseLine).filter(Boolean);
 }
 
+const WC_COLOR_NAMES = {
+  GS:  'Grey Shaker',
+  S8:  'White Shaker',
+  BNS: 'Navy Blue Shaker',
+  SBW: 'Bayview White Shaker',
+  SBN: 'Bayview Navy Shaker',
+  FBS: 'French Blue Shaker',
+  ESS: 'Elegant Sand Shaker',
+  NGS: 'Newbury Green Shaker',
+  NUS: 'Newbury Unfinished Shaker',
+  DHS: 'Dark Hickory Shaker',
+  SWO: 'Slim White Oak',
+  SDG: 'Slim Dark Green',
+  VGW: 'Verona Gloss White',
+  BWS: 'Bayview Wood Shaker',
+  SGS: 'Slate Grey Shaker'
+};
+
+function wcLooksLikeSerial(t) {
+  if (!t) return false;
+  if (!/^[A-Z][A-Z0-9]{1,20}-[A-Z0-9]{1,8}$/i.test(t)) return false;
+  if (/^(PAGE|TEL|FAX|PO|CO|US|SKU|ITEM|QTY)-/i.test(t)) return false;
+  return true;
+}
+
+function wcParsePriceToken(t) {
+  if (!t) return null;
+  const cleaned = String(t).replace(/[$,]/g, '');
+  if (/^\d+\.\d{2}$/.test(cleaned)) return parseFloat(cleaned);
+  if (/^\$\d+(\.\d{2})?$/.test(String(t).replace(/,/g, ''))) {
+    return parseFloat(String(t).replace(/[$,]/g, ''));
+  }
+  return null;
+}
+
+function wcColorLabel(serial, following) {
+  const suf = (serial.split('-').pop() || '').toUpperCase();
+  if (WC_COLOR_NAMES[suf]) return WC_COLOR_NAMES[suf];
+  const words = [];
+  for (const raw of following) {
+    if (wcLooksLikeSerial(raw)) break;
+    if (wcParsePriceToken(raw) != null) break;
+    if (/^\d{1,3}$/.test(raw) && parseInt(raw, 10) <= 50) break;
+    if (/^(RTA|Cabinets?|Qty|Quantity|Price|Each|Subtotal|Total)$/i.test(raw)) break;
+    if (/^[A-Za-z][A-Za-z0-9\/\-]*$/.test(raw)) words.push(raw);
+    if (words.length >= 4) break;
+  }
+  return words.length ? words.join(' ') : (suf || 'Cabinet');
+}
+
 function parseWholesaleCabinetsPDF(text) {
   // PDF.js extracts Wholesale Cabinets quotes as a flat token stream.
-  // Each line item repeats the serial twice: SERIAL-GS SERIAL-GS Grey Shaker RTA Cabinets QTY $ORIG $DISC $SUBTOTAL ...
-  // Fix: when we find a serial, skip the immediate duplicate before scanning for qty/price.
-  const tokens = text.replace(/\$\s+/g, '$').split(/\s+/);
+  // Line shape: SERIAL-XX SERIAL-XX Color Name RTA Cabinets QTY $ORIG $DISC $SUBTOTAL
+  // Color suffix is NOT always -GS (White -S8, Navy -BNS, Bayview White -SBW, …).
+  // Same SKU in two colors must stay two lines. Immediate serial repeat is the PDF echo, not a second item.
+  const raw = String(text || '').replace(/\$\s+/g, '$').split(/\s+/).filter(Boolean);
+  const tokens = [];
+  for (let r = 0; r < raw.length; r++) {
+    if (raw[r] === '$' && raw[r + 1] && /^[\d,]+\.?\d*$/.test(raw[r + 1])) {
+      tokens.push('$' + raw[r + 1]);
+      r++;
+    } else {
+      tokens.push(raw[r]);
+    }
+  }
+
   const results = [];
-  const seenSerials = new Set(); // dedupe — one entry per serial
-  const serialPattern = /^[A-Z0-9]{2,12}-GS$/i;
-  const pricePattern = /^\$[\d,]+\.\d{2}$/;
-  const qtyPattern = /^\d{1,3}$/;
+  const seenSerials = new Set();
 
   let i = 0;
   while (i < tokens.length) {
     const t = tokens[i];
-    if (serialPattern.test(t)) {
-      const serial = t.toUpperCase();
+    if (!wcLooksLikeSerial(t)) { i++; continue; }
 
-      // Skip duplicate serial immediately following (the repeated code in description)
-      let scanStart = i + 1;
-      if (scanStart < tokens.length && tokens[scanStart].toUpperCase() === serial) {
-        scanStart++; // skip the duplicate
-      }
-
-      // Only process each serial once
-      if (!seenSerials.has(serial)) {
-        seenSerials.add(serial);
-        let qty = null, prices = [];
-        for (let j = scanStart; j < Math.min(scanStart + 20, tokens.length); j++) {
-          if (qtyPattern.test(tokens[j]) && qty === null && parseInt(tokens[j]) <= 50) {
-            qty = parseInt(tokens[j]);
-          }
-          if (pricePattern.test(tokens[j])) {
-            prices.push(parseFloat(tokens[j].replace(/[\$,]/g, '')));
-          }
-          // Stop at next serial
-          if (j > scanStart && serialPattern.test(tokens[j])) break;
-        }
-        const validPrices = prices.filter(p => p > 0);
-        if (validPrices.length >= 2) {
-          // First = original (strikethrough), second = discounted unit cost
-          const unitCost = validPrices[1];
-          const desc = 'Grey Shaker ' + serial.replace(/-GS$/i, '');
-          results.push({ desc, qty: qty || 1, cost: unitCost, serial });
-        }
-      }
-      i = scanStart; // jump past the duplicate serial
-    } else {
-      i++;
+    const serial = t.toUpperCase();
+    let scanStart = i + 1;
+    if (scanStart < tokens.length && tokens[scanStart].toUpperCase() === serial) {
+      scanStart++;
     }
+
+    if (!seenSerials.has(serial)) {
+      seenSerials.add(serial);
+      let qty = null, prices = [];
+      const following = [];
+      for (let j = scanStart; j < Math.min(scanStart + 24, tokens.length); j++) {
+        if (j > scanStart && wcLooksLikeSerial(tokens[j])) break;
+        following.push(tokens[j]);
+        if (/^\d{1,3}$/.test(tokens[j]) && qty === null && parseInt(tokens[j], 10) <= 50) {
+          qty = parseInt(tokens[j], 10);
+        }
+        const price = wcParsePriceToken(tokens[j]);
+        if (price != null && price > 0) prices.push(price);
+      }
+      // Two $ values = list + discounted unit. One $ value = already the unit cost.
+      const unitCost = prices.length >= 2 ? prices[1] : (prices[0] || 0);
+      if (unitCost > 0) {
+        const color = wcColorLabel(serial, following);
+        const sku = serial.replace(/-[A-Z0-9]{1,8}$/i, '');
+        results.push({ desc: color + ' ' + sku, qty: qty || 1, cost: unitCost, serial });
+      }
+    }
+    i = scanStart;
   }
   return results;
 }
