@@ -1303,6 +1303,20 @@ function renderImportArchive() {
   `).join('');
 }
 
+function quoteHasHistory(q) {
+  if (!q) return false;
+  const hasCabinets = Array.isArray(q.cabinets) && q.cabinets.length > 0;
+  const hasCustomer = !!(q.customer && String(q.customer).trim());
+  const hasProject = !!(q.project && String(q.project).trim());
+  return hasCabinets || hasCustomer || hasProject;
+}
+
+// Import always lands on a FRESH quote. Never overwrite an existing one.
+function openFreshQuoteForImport() {
+  newQuote(true);
+  return quoteData[activeQuoteId] || null;
+}
+
 function loadSupplierQuote(sourceId) {
   const source = quoteData[sourceId];
   if (!source) return;
@@ -1310,9 +1324,8 @@ function loadSupplierQuote(sourceId) {
     sqArchive.push(source);
     try { localStorage.setItem('fm-sq-archive', JSON.stringify(sqArchive)); } catch(e) {}
   }
-  // Create a BRAND NEW quote from the supplier quote — never overwrite active
-  newQuote(false);
-  const target = quoteData[activeQuoteId];
+  // Brand-new quote — never write cabinets onto the quote that was already open
+  const target = openFreshQuoteForImport();
   if (target) {
     target.customer = source.customer || '';
     target.project = source.project || '';
@@ -1329,9 +1342,7 @@ function loadSupplierQuote(sourceId) {
 function loadArchivedSupplierQuote(index) {
   const source = sqArchive[index];
   if (!source) return;
-  // Create a BRAND NEW quote from the archive — never overwrite active
-  newQuote(false);
-  const target = quoteData[activeQuoteId];
+  const target = openFreshQuoteForImport();
   if (target) {
     target.customer = source.customer || '';
     target.project = source.project || '';
@@ -1617,8 +1628,12 @@ function newQuoteAndImport() {
 
 function sqConfirmImport() {
   if (!_sqParsedLines || _sqParsedLines.length === 0) return;
-  if (!activeQuoteId) { alert('Tap "+ New Quote" first to create a quote to load into.'); return; }
-  const target = quoteData[activeQuoteId];
+  // Use the blank quote from "+ New Quote" if that's what's open.
+  // If the open quote already has history, spin up a fresh one — never wipe it.
+  let target = activeQuoteId ? quoteData[activeQuoteId] : null;
+  if (!target || quoteHasHistory(target)) {
+    target = openFreshQuoteForImport();
+  }
   if (!target) return;
   target.cabinets = _sqParsedLines.map(l => ({
     desc: l.desc,
