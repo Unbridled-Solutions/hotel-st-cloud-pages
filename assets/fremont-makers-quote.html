@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Quote Builder v0824c</title>
-<!-- FM-BUILD-v20260824c-hickory-rows -->
+<title>Fremont Makers — Quote Builder v0824d</title>
+<!-- FM-BUILD-v20260824d-invoice-match -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Pinyon+Script&display=swap" rel="stylesheet" />
@@ -408,7 +408,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0824c</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0824d</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
     <span class="status-label">Status:</span>
@@ -1423,11 +1423,18 @@ const WC_SUFFIXES = Object.keys(WC_COLOR_NAMES);
 function wcLooksLikeSerial(t) {
   if (!t) return false;
   const s = String(t).toUpperCase();
-  if (/^(PAGE|TEL|FAX|PO|CO|US|SKU|ITEM|QTY|SAMPLE|DOOR)-/i.test(s)) return false;
+  if (/^(PAGE|TEL|FAX|PO|CO|US|SKU|ITEM|QTY|SAMPLE|DOOR|TAX|TOTAL|SUBTOTAL|LINE)-/i.test(s)) return false;
   if (/^BASICKITCHEN-/i.test(s)) return false;
-  // Allow 3DB36-VDH / 2DB21-GS — drawer-base SKUs start with a digit.
-  // Suffix must contain a letter so dates like 08-24 are not SKUs.
   if (!/^[A-Z0-9]{2,22}-[A-Z0-9]*[A-Z][A-Z0-9]{0,7}$/i.test(s)) return false;
+  return wcIsRealSku(s);
+}
+
+function wcIsRealSku(serial) {
+  const sku = String(serial || '').toUpperCase().split('-')[0];
+  if (sku.length < 2) return false;
+  if (!/[A-Z]/.test(sku)) return false;
+  if (/^\d+$/.test(sku)) return false;
+  if (/^(PAGE|QTY|TAX|TOTAL|SUBTOTAL|ITEM|LINE|SALES)$/.test(sku)) return false;
   return true;
 }
 
@@ -1486,67 +1493,77 @@ async function wcExtractPdfText(pdf) {
   return pages.join('\n');
 }
 
-function wcHarvestNamedColorLines(text, already) {
-  const taken = new Set((already || []).map(it => String(Number(it.cost).toFixed(2)) + '|' + it.qty));
-  const extra = [];
-  const colorPat = 'Dark\\s+Hickory\\s+Shaker|Grey\\s+Shaker|White\\s+Shaker|Navy\\s+Blue\\s+Shaker|Bayview\\s+White\\s+Shaker|Bayview\\s+Navy\\s+Shaker|French\\s+Blue\\s+Shaker|Elegant\\s+Sand\\s+Shaker|Newbury\\s+Green\\s+Shaker|Slim\\s+White\\s+Oak|Slim\\s+Dark\\s+Green|Verona\\s+Gloss\\s+White|Bayview\\s+Wood\\s+Shaker|Slate\\s+Grey\\s+Shaker';
-  const blob = String(text || '');
-  // Split both on newlines and on each color-name hit so a flattened page-2 stream still yields rows.
-  const chunks = [];
-  blob.split(/\n+/).forEach(line => {
-    const re = new RegExp('(' + colorPat + ')', 'ig');
-    const parts = line.split(re);
-    let buf = '';
-    parts.forEach(p => {
-      if (new RegExp('^(' + colorPat + ')$', 'i').test(p)) {
-        if (buf.trim()) chunks.push(buf);
-        buf = p;
-      } else {
-        buf += (buf ? ' ' : '') + p;
-      }
-    });
-    if (buf.trim()) chunks.push(buf);
-  });
+function wcHarvestMissingBillLines(text, already, bill) {
+  const items = already || [];
+  const scanned = wcMoney(items.reduce((s, it) => s + (it.ext || 0), 0));
+  const target = bill && bill.subtotal;
+  if (!target) return [];
+  const gap = wcMoney(target - scanned);
+  if (Math.abs(gap) < 0.03) return [];
 
-  chunks.forEach(line => {
-    if (!new RegExp(colorPat, 'i').test(line)) return;
-    const colorMatch = line.match(new RegExp(colorPat, 'i'));
-    const color = colorMatch ? colorMatch[0].replace(/\s+/g, ' ') : 'Cabinet';
-    const prices = [];
-    const priceRe = /\$?\s*([\d,]+\.\d{2})/g;
-    let pm;
-    while ((pm = priceRe.exec(line))) {
-      const n = parseFloat(pm[1].replace(/,/g, ''));
-      if (n > 0 && n < 20000) prices.push(n);
-    }
-    if (!prices.length) return;
-    let qty = 1;
-    const qtyM = line.match(/(?:^|\s)(\d{1,2})(?=\s+\$)/);
-    if (qtyM) qty = parseInt(qtyM[1], 10);
-    const unit = wcPickUnitCost(qty, prices);
-    if (!(unit > 0)) return;
-    let serial = '';
-    const serialM = line.match(/\b([A-Z0-9]{2,22}-[A-Z0-9]*[A-Z][A-Z0-9]{0,7})\b/i);
-    if (serialM) serial = serialM[1].toUpperCase();
-    if (!serial) {
-      const skuM = line.match(/\b([A-Z]{0,3}\d{1,4}[A-Z]{0,3}\d{0,3})\b/i);
-      const useSuf = /dark\s+hickory/i.test(color)
-        ? 'VDH'
-        : (WC_SUFFIXES.find(s => WC_COLOR_NAMES[s].toLowerCase() === color.toLowerCase()) || 'VDH');
-      serial = ((skuM && skuM[1]) || ('LINE' + extra.length)).toUpperCase() + '-' + useSuf;
-    }
-    const key = String(unit.toFixed(2)) + '|' + qty;
-    if (taken.has(key)) return;
-    taken.add(key);
-    extra.push({
-      desc: color + ' ' + serial.replace(/-[A-Z0-9]{1,8}$/i, ''),
-      qty,
-      cost: unit,
-      serial,
-      ext: wcMoney(unit * qty)
+  const takenAmt = new Set(items.map(it => Number(it.cost).toFixed(2)));
+  const blob = String(text || '');
+  const extras = [];
+
+  function skuNear(idx) {
+    const window = blob.slice(Math.max(0, idx - 160), idx + 8);
+    let m = window.match(/\b([A-Z]{1,4}\d{1,4}[A-Z]{0,4})\s+VDH\b/i)
+         || window.match(/\b([A-Z]{1,4}\d{1,4}[A-Z]{0,4})-VDH\b/i)
+         || window.match(/\b([A-Z0-9]{3,12})-VDH\b/i);
+    if (m && wcIsRealSku(m[1] + '-VDH')) return m[1].toUpperCase();
+    return 'HICK' + extras.length;
+  }
+
+  function pushAmt(amt, idx) {
+    const sku = skuNear(idx);
+    extras.push({
+      desc: 'Dark Hickory Shaker ' + sku,
+      qty: 1,
+      cost: amt,
+      serial: sku + '-VDH',
+      ext: wcMoney(amt)
     });
+    takenAmt.add(amt.toFixed(2));
+  }
+
+  const found = [];
+  const priceRe = /\$?\s*([\d,]+\.\d{2})/g;
+  let m;
+  while ((m = priceRe.exec(blob))) {
+    const amt = parseFloat(m[1].replace(/,/g, ''));
+    if (!(amt > 5 && amt < 2000)) continue;
+    if (takenAmt.has(amt.toFixed(2))) continue;
+    if (bill.subtotal && Math.abs(amt - bill.subtotal) < 0.02) continue;
+    if (bill.tax && Math.abs(amt - bill.tax) < 0.02) continue;
+    if (bill.total && Math.abs(amt - bill.total) < 0.02) continue;
+    if (found.some(f => Math.abs(f.amt - amt) < 0.02)) continue;
+    found.push({ amt, idx: m.index });
+  }
+
+  const exact = found.filter(f => Math.abs(f.amt - gap) < 0.03);
+  if (exact.length) { pushAmt(exact[0].amt, exact[0].idx); return extras; }
+
+  for (let i = 0; i < found.length; i++) {
+    for (let j = i + 1; j < found.length; j++) {
+      if (Math.abs(wcMoney(found[i].amt + found[j].amt) - gap) < 0.03) {
+        pushAmt(found[i].amt, found[i].idx);
+        pushAmt(found[j].amt, found[j].idx);
+        return extras;
+      }
+    }
+  }
+  return extras;
+}
+
+function wcCleanItems(items) {
+  return (items || []).filter(it => {
+    if (!wcIsRealSku(it.serial)) return false;
+    if (/^(TAX|SALES|SUBTOTAL|TOTAL|GRAND|SHIPPING|FREIGHT)$/i.test(String(it.desc || '').split(' ').pop() || '')) return false;
+    if (/tax|subtotal|grand total|shipping/i.test(it.desc || '') && !/shaker/i.test(it.desc || '')) return false;
+    const cost = Number(it.cost) || 0;
+    if (cost >= 2000) return false; // footer totals never become a cabinet
+    return true;
   });
-  return extra;
 }
 
 function wcTokenize(text) {
@@ -1693,11 +1710,12 @@ function parseWholesaleCabinetsQuote(text) {
     i = scanStart;
   }
 
-  // Page-2 / table PDFs can leave named color rows (Dark Hickory Shaker) without a glued serial.
-  wcHarvestNamedColorLines(text, items).forEach(it => items.push(it));
-
+  let cleaned = wcCleanItems(items);
   const bill = wcExtractBillTotals(text, tokens);
-  bill.scannedSubtotal = wcMoney(items.reduce((s, it) => s + it.ext, 0));
+  wcHarvestMissingBillLines(text, cleaned, bill).forEach(it => cleaned.push(it));
+  cleaned = wcCleanItems(cleaned);
+
+  bill.scannedSubtotal = wcMoney(cleaned.reduce((s, it) => s + it.ext, 0));
   bill.scannedTax = (bill.taxPct != null)
     ? wcMoney(bill.scannedSubtotal * bill.taxPct / 100)
     : (bill.tax != null ? bill.tax : null);
@@ -1708,7 +1726,7 @@ function parseWholesaleCabinetsQuote(text) {
   bill.matchTax = bill.tax == null || bill.scannedTax == null || Math.abs(bill.scannedTax - bill.tax) < 0.03;
   bill.matchTotal = bill.total == null || bill.scannedTotal == null || Math.abs(bill.scannedTotal - bill.total) < 0.03;
   bill.ok = bill.matchSubtotal && bill.matchTax && bill.matchTotal;
-  return { items, bill };
+  return { items: cleaned, bill };
 }
 
 // Reconcile tab still calls the old name.
@@ -1837,7 +1855,10 @@ function sqShowPreview() {
     return `${String(l.qty).padStart(2)}x  ${l.desc}  @ $${parseFloat(l.cost).toFixed(2)}  =  $${Number(ext).toFixed(2)}`;
   }).join('<br>');
   sqRenderCrossCheck();
-  if (confirmBtn) confirmBtn.style.display = '';
+  if (confirmBtn) {
+    const allow = !_sqBillCheck || _sqBillCheck.ok || _sqBillCheck.subtotal == null;
+    confirmBtn.style.display = allow ? '' : 'none';
+  }
 }
 
 function applyBulkMarkup() {
@@ -1907,6 +1928,10 @@ function newQuoteAndImport() {
 
 function sqConfirmImport() {
   if (!_sqParsedLines || _sqParsedLines.length === 0) return;
+  if (_sqBillCheck && _sqBillCheck.subtotal != null && !_sqBillCheck.ok) {
+    alert('Scan does not match the Wholesale Cabinets bill. Fix the import before loading.');
+    return;
+  }
   // Use the blank quote from "+ New Quote" if that's what's open.
   // If the open quote already has history, spin up a fresh one — never wipe it.
   let target = activeQuoteId ? quoteData[activeQuoteId] : null;
