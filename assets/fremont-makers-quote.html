@@ -1031,7 +1031,8 @@
       <div id="sq-import-preview" style="display:none;margin-top:12px;">
         <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">PARSED — <span id="sq-import-count"></span> cabinet lines found</div>
         <div id="sq-import-preview-list" style="max-height:200px;overflow-y:auto;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:10px;font-size:12px;font-family:monospace;color:var(--text);line-height:1.8;"></div>
-        <p style="font-size:11px;color:var(--muted);margin-top:8px;">Markup will be set to 35% — adjust after loading.</p>
+        <div id="sq-import-crosscheck" style="display:none;margin-top:10px;padding:10px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);font-size:12px;font-family:monospace;line-height:1.7;"></div>
+        <p style="font-size:11px;color:var(--muted);margin-top:8px;">Cabinet costs must match the Wholesale Cabinets bill (subtotal, tax, total). Markup 35% is applied after that, on our quote.</p>
       </div>
       <div style="display:flex;gap:8px;margin-top:14px;">
         <button class="modal-btn" id="sq-import-confirm-btn" onclick="sqConfirmImport()" style="display:none;border-color:#4ade80;color:#4ade80;font-weight:700;">✅ Load into Quote</button>
@@ -1358,6 +1359,7 @@ function loadArchivedSupplierQuote(index) {
 
 // ── IMPORT NEW — parse & load ──────────────────────────────────────
 let _sqParsedLines = [];
+let _sqBillCheck = null;
 
 function sqParseLine(line) {
   // Try comma, then tab separation
@@ -1383,10 +1385,14 @@ function sqParseLine(line) {
 }
 
 function sqParseText(text) {
+  _sqBillCheck = null;
   // ── Wholesale Cabinets PDF format detector ──────────────────────
   if (text.includes('Wholesale Cabinets') || text.includes('wholesalecabinets') || text.includes('RTA Cabinets')) {
-    const wc = parseWholesaleCabinetsPDF(text);
-    if (wc.length) return wc;
+    const parsed = parseWholesaleCabinetsQuote(text);
+    if (parsed.items.length) {
+      _sqBillCheck = parsed.bill;
+      return parsed.items;
+    }
     // Colored / mixed-line PDFs used to return 0 — fall through to generic lines
   }
   const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 3 && !l.match(/^[#\/]/));
@@ -1443,11 +1449,9 @@ function wcColorLabel(serial, following) {
   return words.length ? words.join(' ') : (suf || 'Cabinet');
 }
 
-function parseWholesaleCabinetsPDF(text) {
-  // PDF.js extracts Wholesale Cabinets quotes as a flat token stream.
-  // Line shape: SERIAL-XX SERIAL-XX Color Name RTA Cabinets QTY $ORIG $DISC $SUBTOTAL
-  // Color suffix is NOT always -GS (White -S8, Navy -BNS, Bayview White -SBW, …).
-  // Same SKU in two colors must stay two lines. Immediate serial repeat is the PDF echo, not a second item.
+function wcMoney(n) { return Math.round((Number(n) || 0) * 100) / 100; }
+
+function wcTokenize(text) {
   const raw = String(text || '').replace(/\$\s+/g, '$').split(/\s+/).filter(Boolean);
   const tokens = [];
   for (let r = 0; r < raw.length; r++) {
@@ -1458,8 +1462,79 @@ function parseWholesaleCabinetsPDF(text) {
       tokens.push(raw[r]);
     }
   }
+  return tokens;
+}
 
-  const results = [];
+// Pick the discounted unit cost so qty × unit = printed line total.
+// WC line: QTY  $LIST  $UNIT  $LINE  ($TAX  $LINETOTAL)
+function wcPickUnitCost(qty, prices) {
+  const q = qty || 1;
+  if (!prices.length) return 0;
+  if (prices.length === 1) return prices[0];
+
+  // Prefer a pair where prices[i] * qty == prices[j] (unit + line ext)
+  for (let i = 0; i < prices.length; i++) {
+    for (let j = i + 1; j < prices.length; j++) {
+      if (Math.abs(wcMoney(prices[i] * q) - prices[j]) < 0.02) return prices[i];
+      if (q > 1 && Math.abs(wcMoney(prices[j] * q) - prices[i]) < 0.02) return prices[j];
+    }
+  }
+  // Classic 3-price scan: list, discounted unit, line ext. Never take the last $ if it is qty×middle.
+  if (prices.length >= 3) {
+    const mid = prices[1];
+    const last = prices[prices.length - 1];
+    if (Math.abs(wcMoney(mid * q) - last) < 0.02) return mid;
+    if (Math.abs(wcMoney(prices[0] * q) - last) < 0.02) return prices[0];
+    return mid;
+  }
+  // Two prices, qty 1: smaller is the sale unit (list + discounted).
+  return Math.min(prices[0], prices[1]);
+}
+
+function wcExtractBillTotals(text, tokens) {
+  const bill = { subtotal: null, tax: null, total: null, taxPct: null };
+  const blob = String(text || '');
+
+  const grabLast = (re) => {
+    const r = new RegExp(re.source, re.flags.includes('g') ? re.flags : re.flags + 'g');
+    let m, last = null;
+    while ((m = r.exec(blob))) last = m;
+    return last ? parseFloat(last[1].replace(/,/g, '')) : null;
+  };
+  bill.subtotal = grabLast(/(?:Sub\s*Total|Subtotal|Merchandise|Cabinet\s*Subtotal)\s*[:\s]*\$?\s*([\d,]+\.\d{2})/i);
+  bill.tax      = grabLast(/(?:Sales\s*Tax)\s*[:\s]*\$?\s*([\d,]+\.\d{2})/i)
+               || grabLast(/(?:^|\n)\s*Tax\s*[:\s]*\$?\s*([\d,]+\.\d{2})/i);
+  bill.total    = grabLast(/(?:Grand\s*Total|Quote\s*Total|Order\s*Total|Invoice\s*Total)\s*[:\s]*\$?\s*([\d,]+\.\d{2})/i)
+               || grabLast(/(?:^|\n)\s*Total\s*[:\s]*\$?\s*([\d,]+\.\d{2})/i);
+
+  // Fallback: last three large dollar amounts after the last serial are often Subtotal / Tax / Total
+  if (bill.subtotal == null || bill.total == null) {
+    let lastSerial = -1;
+    tokens.forEach((t, i) => { if (wcLooksLikeSerial(t)) lastSerial = i; });
+    const tail = [];
+    for (let i = lastSerial + 1; i < tokens.length; i++) {
+      const p = wcParsePriceToken(tokens[i]);
+      if (p != null && p > 0) tail.push(p);
+    }
+    if (tail.length >= 3 && bill.subtotal == null) {
+      const a = tail[tail.length - 3], b = tail[tail.length - 2], c = tail[tail.length - 1];
+      if (Math.abs(wcMoney(a + b) - c) < 0.05) {
+        bill.subtotal = a; bill.tax = b; bill.total = c;
+      } else if (c >= a) {
+        bill.subtotal = a; bill.total = c;
+        if (bill.tax == null) bill.tax = b;
+      }
+    }
+  }
+  if (bill.subtotal && bill.tax != null && bill.subtotal > 0) {
+    bill.taxPct = wcMoney((bill.tax / bill.subtotal) * 100);
+  }
+  return bill;
+}
+
+function parseWholesaleCabinetsQuote(text) {
+  const tokens = wcTokenize(text);
+  const items = [];
   const seenSerials = new Set();
 
   let i = 0;
@@ -1486,17 +1561,49 @@ function parseWholesaleCabinetsPDF(text) {
         const price = wcParsePriceToken(tokens[j]);
         if (price != null && price > 0) prices.push(price);
       }
-      // Two $ values = list + discounted unit. One $ value = already the unit cost.
-      const unitCost = prices.length >= 2 ? prices[1] : (prices[0] || 0);
+      qty = qty || 1;
+      const unitCost = wcPickUnitCost(qty, prices);
       if (unitCost > 0) {
         const color = wcColorLabel(serial, following);
         const sku = serial.replace(/-[A-Z0-9]{1,8}$/i, '');
-        results.push({ desc: color + ' ' + sku, qty: qty || 1, cost: unitCost, serial });
+        items.push({
+          desc: color + ' ' + sku,
+          qty,
+          cost: unitCost,
+          serial,
+          ext: wcMoney(unitCost * qty)
+        });
       }
     }
     i = scanStart;
   }
-  return results;
+
+  const bill = wcExtractBillTotals(text, tokens);
+  bill.scannedSubtotal = wcMoney(items.reduce((s, it) => s + it.ext, 0));
+  bill.scannedTax = (bill.taxPct != null)
+    ? wcMoney(bill.scannedSubtotal * bill.taxPct / 100)
+    : (bill.tax != null ? bill.tax : null);
+  bill.scannedTotal = (bill.scannedTax != null)
+    ? wcMoney(bill.scannedSubtotal + bill.scannedTax)
+    : bill.scannedSubtotal;
+  bill.matchSubtotal = bill.subtotal == null || Math.abs(bill.scannedSubtotal - bill.subtotal) < 0.03;
+  bill.matchTax = bill.tax == null || bill.scannedTax == null || Math.abs(bill.scannedTax - bill.tax) < 0.03;
+  bill.matchTotal = bill.total == null || bill.scannedTotal == null || Math.abs(bill.scannedTotal - bill.total) < 0.03;
+  bill.ok = bill.matchSubtotal && bill.matchTax && bill.matchTotal;
+  return { items, bill };
+}
+
+// Reconcile tab still calls the old name.
+function parseWholesaleCabinetsPDF(text) {
+  return parseWholesaleCabinetsQuote(text).items;
+}
+
+function sqBillRow(label, scanned, printed, ok) {
+  const s = scanned == null ? '—' : '$' + Number(scanned).toFixed(2);
+  const p = printed == null ? 'not on bill' : '$' + Number(printed).toFixed(2);
+  const mark = printed == null ? '·' : (ok ? '✓' : '✗');
+  const color = printed == null ? 'var(--muted)' : (ok ? '#4ade80' : '#f87171');
+  return `<div style="display:flex;justify-content:space-between;gap:10px;color:${color}"><span>${mark} ${label}</span><span>scan ${s}  ·  bill ${p}</span></div>`;
 }
 
 function sqParseAndPreview() {
@@ -1504,23 +1611,7 @@ function sqParseAndPreview() {
   const text = paste ? paste.value.trim() : '';
   if (!text) { alert('Paste some quote text first.'); return; }
   _sqParsedLines = sqParseText(text);
-  const preview = document.getElementById('sq-import-preview');
-  const countEl = document.getElementById('sq-import-count');
-  const listEl = document.getElementById('sq-import-preview-list');
-  const confirmBtn = document.getElementById('sq-import-confirm-btn');
-  if (_sqParsedLines.length === 0) {
-    if (preview) preview.style.display = '';
-    if (countEl) countEl.textContent = '0 — check format';
-    if (listEl) listEl.innerHTML = '<span style="color:#f87171;">No lines parsed. Make sure each line has: Description, Qty, Cost</span>';
-    if (confirmBtn) confirmBtn.style.display = 'none';
-    return;
-  }
-  if (preview) preview.style.display = '';
-  if (countEl) countEl.textContent = _sqParsedLines.length;
-  if (listEl) listEl.innerHTML = _sqParsedLines.map(l =>
-    `${l.qty}x  ${l.desc}  —  $${parseFloat(l.cost).toFixed(2)}`
-  ).join('<br>');
-  if (confirmBtn) confirmBtn.style.display = '';
+  sqShowPreview();
 }
 
 function sqHandleFileSelect(event) {
@@ -1597,6 +1688,22 @@ async function sqProcessFile(file) {
   sqShowPreview();
 }
 
+function sqRenderCrossCheck() {
+  const box = document.getElementById('sq-import-crosscheck');
+  if (!box) return;
+  const bill = _sqBillCheck;
+  if (!bill) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  box.style.display = '';
+  box.style.borderColor = bill.ok ? 'rgba(74,222,128,0.45)' : 'rgba(248,113,113,0.55)';
+  const head = bill.ok
+    ? '<div style="color:#4ade80;font-weight:700;margin-bottom:4px;">CROSS-CHECK — scan matches the Wholesale Cabinets bill</div>'
+    : '<div style="color:#f87171;font-weight:700;margin-bottom:4px;">CROSS-CHECK — scan does not match the bill. Do not load until this is green.</div>';
+  box.innerHTML = head
+    + sqBillRow('Subtotal', bill.scannedSubtotal, bill.subtotal, bill.matchSubtotal)
+    + sqBillRow('Tax', bill.scannedTax, bill.tax, bill.matchTax)
+    + sqBillRow('Total', bill.scannedTotal, bill.total, bill.matchTotal);
+}
+
 function sqShowPreview() {
   const preview = document.getElementById('sq-import-preview');
   const countEl = document.getElementById('sq-import-count');
@@ -1608,13 +1715,16 @@ function sqShowPreview() {
     if (countEl) countEl.textContent = '0 lines found';
     if (listEl) listEl.innerHTML = '<span style="color:#f87171;">Could not parse any cabinet lines. Try a CSV or copy-paste the line items as text.</span>';
     if (confirmBtn) confirmBtn.style.display = 'none';
+    sqRenderCrossCheck();
     return;
   }
   if (preview) preview.style.display = '';
   if (countEl) countEl.textContent = _sqParsedLines.length;
-  if (listEl) listEl.innerHTML = _sqParsedLines.map(l =>
-    `${String(l.qty).padStart(2)}x  ${l.desc.padEnd(30, ' ')}  $${parseFloat(l.cost).toFixed(2)}`
-  ).join('<br>');
+  if (listEl) listEl.innerHTML = _sqParsedLines.map(l => {
+    const ext = (l.ext != null) ? l.ext : (parseFloat(l.qty) || 1) * (parseFloat(l.cost) || 0);
+    return `${String(l.qty).padStart(2)}x  ${l.desc}  @ $${parseFloat(l.cost).toFixed(2)}  =  $${Number(ext).toFixed(2)}`;
+  }).join('<br>');
+  sqRenderCrossCheck();
   if (confirmBtn) confirmBtn.style.display = '';
 }
 
@@ -1660,6 +1770,7 @@ function sqCreateNewQuote() {
   const label = document.getElementById('sq-active-quote-label');
   if (label) label.textContent = '✅ New quote ready — now upload the PDF below';
   _sqParsedLines = [];
+  _sqBillCheck = null;
   const preview = document.getElementById('sq-import-preview');
   if (preview) preview.style.display = 'none';
   const confirmBtn = document.getElementById('sq-import-confirm-btn');
@@ -1675,6 +1786,7 @@ function newQuoteAndImport() {
   const label = document.getElementById('sq-active-quote-label');
   if (label) label.textContent = '✅ New quote ready — upload your supplier PDF below';
   _sqParsedLines = [];
+  _sqBillCheck = null;
   const preview = document.getElementById('sq-import-preview');
   if (preview) preview.style.display = 'none';
   const confirmBtn = document.getElementById('sq-import-confirm-btn');
@@ -1704,6 +1816,7 @@ function sqConfirmImport() {
   closeImportModal();
   switchTab('quote');
   _sqParsedLines = [];
+  _sqBillCheck = null;
 }
 // ── END IMPORT SUPPLIER QUOTE MODAL ────────────────────────────────
 
