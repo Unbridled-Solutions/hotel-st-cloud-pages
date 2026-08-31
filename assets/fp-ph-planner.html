@@ -327,12 +327,12 @@ footer span { color: var(--gold); font-weight: 600; }
           <th>Date Range</th>
           <th>Forecast Rev</th>
           <th>Actual Rev</th>
+          <th>Rev Variance</th>
           <th style="color:#9b6ec8">Event Rev</th>
           <th>Budget Labor</th>
           <th>Labor %</th>
           <th>Actual Labor</th>
           <th>Actual Labor %</th>
-          <th>Variance</th>
           <th>Status</th>
           <th></th>
         </tr>
@@ -1464,18 +1464,22 @@ function renderHistory() {
   [...hist].sort((a,b) => b.weekStart.localeCompare(a.weekStart)).forEach((h, idx) => {
     const actLaborPct = (h.actual && h.actRev) ? +(h.actual / h.actRev * 100).toFixed(1) : h.actPct;
     const evtTotal = h.evtRev != null ? h.evtRev : (h.evtRevByDay ? h.evtRevByDay.reduce((a,b)=>a+(b||0),0) : null);
+    // Display-only: forecast vs actual revenue in dollars. Never rewrite history.
+    const revVar = (h.actRev != null && h.rev != null)
+      ? (h.actRev - h.rev)
+      : (h.revVariance != null ? h.revVariance : null);
     rows.push(`
     <tr style="${h.approved ? 'background:rgba(76,202,128,0.06);' : ''}">
       <td><span class="hist-period">${h.period || '—'}</span><br><span class="hist-week">${h.isoWk || ''}</span></td>
       <td style="text-align:left;color:var(--text)">${h.weekDisplay || h.weekStart}</td>
       <td style="color:var(--gold)">${fmt(h.rev)}</td>
       <td style="color:#5a8ba7">${fmt(h.actRev)}</td>
+      <td ${varClass(revVar)}>${fmtVar(revVar)}</td>
       <td style="color:#9b6ec8">${evtTotal ? fmt(evtTotal) : '—'}</td>
       <td style="color:var(--green)">${fmt(h.budget)}</td>
       <td ${pctClass(h.pct)}>${fmtPct(h.pct)}</td>
       <td style="color:var(--orange)">${fmt(h.actual)}</td>
       <td ${pctClass(actLaborPct)}>${fmtPct(actLaborPct)}</td>
-      <td ${varClass(h.variance)}>${fmtVar(h.variance)}</td>
       <td>${h.approved ? '<span style="font-size:10px;font-weight:700;letter-spacing:1px;color:#4cca80;background:rgba(76,202,128,0.15);padding:2px 7px;border-radius:3px;border:1px solid rgba(76,202,128,0.4)">✓ APPROVED</span>' : '<span style="font-size:10px;color:var(--muted)">Pending</span>'}</td>
       <td><button onclick="toggleEvtEdit('fph-evt-edit-${idx}')" style="font-size:10px;padding:2px 8px;background:rgba(155,110,200,0.15);color:#9b6ec8;border:1px solid rgba(155,110,200,0.4);border-radius:3px;cursor:pointer;">✏️ Evt Rev</button></td>
     </tr>
