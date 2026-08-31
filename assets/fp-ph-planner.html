@@ -180,12 +180,16 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
 .hist-table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
 .hist-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 700px; }
 .hist-table thead th { background: var(--navy); color: var(--muted); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; padding: 8px 12px; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; }
-.hist-table thead th:first-child { text-align: left; }
+.hist-table thead th:first-child,
+.hist-table thead th:nth-child(2) { text-align: left; }
 .hist-table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
 .hist-table tbody tr:last-child { border-bottom: none; }
 .hist-table tbody tr:hover { background: rgba(255,255,255,0.02); }
 .hist-table td { padding: 8px 12px; text-align: right; vertical-align: middle; }
-.hist-table td:first-child { text-align: left; }
+.hist-table td:first-child,
+.hist-table td:nth-child(2) { text-align: left; }
+.hist-split { width: 8px; min-width: 8px; max-width: 8px; padding: 0 !important; background: rgba(90,139,167,0.38); border-left: 1px solid rgba(90,139,167,0.7); border-right: 1px solid rgba(90,139,167,0.7); }
+.hist-table thead th.hist-split { background: rgba(90,139,167,0.5); }
 .hist-period { font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--blue); }
 .hist-week { font-size: 10px; color: var(--muted); }
 .hist-empty { text-align: center; padding: 32px; color: var(--muted); font-size: 13px; }
@@ -324,11 +328,12 @@ footer span { color: var(--gold); font-weight: 600; }
       <thead>
         <tr>
           <th style="text-align:left">Period · Week</th>
-          <th>Date Range</th>
+          <th style="text-align:left">Date Range</th>
           <th>Forecast Rev</th>
           <th>Actual Rev</th>
           <th>Rev Variance</th>
           <th style="color:#9b6ec8">Event Rev</th>
+          <th class="hist-split" aria-hidden="true"></th>
           <th>Budget Labor</th>
           <th>Labor %</th>
           <th>Actual Labor</th>
@@ -338,7 +343,7 @@ footer span { color: var(--gold); font-weight: 600; }
           <th></th>
         </tr>
       </thead>
-      <tbody id="histBody"><tr><td colspan="13" class="hist-empty">No weeks submitted yet. Complete a schedule and click Submit for Approval to start tracking.</td></tr></tbody>
+      <tbody id="histBody"><tr><td colspan="14" class="hist-empty">No weeks submitted yet. Complete a schedule and click Submit for Approval to start tracking.</td></tr></tbody>
     </table>
   </div>
 </div>
@@ -1451,7 +1456,7 @@ function renderHistory() {
     : JSON.parse(localStorage.getItem('fp-ph-history') || '[]');
   const tbody = document.getElementById('histBody');
   if (!hist.length) {
-    tbody.innerHTML = `<tr><td colspan="13" class="hist-empty">No weeks submitted yet.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="14" class="hist-empty">No weeks submitted yet.</td></tr>`;
     return;
   }
   const fmt = v => v != null ? `$${Math.round(v).toLocaleString()}` : '—';
@@ -1481,6 +1486,7 @@ function renderHistory() {
       <td style="color:#5a8ba7">${fmt(h.actRev)}</td>
       <td ${varClass(revVar)}>${fmtVar(revVar)}</td>
       <td style="color:#9b6ec8">${evtTotal ? fmt(evtTotal) : '—'}</td>
+      <td class="hist-split"></td>
       <td style="color:var(--green)">${fmt(h.budget)}</td>
       <td ${pctClass(h.pct)}>${fmtPct(h.pct)}</td>
       <td style="color:var(--orange)">${fmt(h.actual)}</td>
@@ -1490,7 +1496,7 @@ function renderHistory() {
       <td><button onclick="toggleEvtEdit('fph-evt-edit-${idx}')" style="font-size:10px;padding:2px 8px;background:rgba(155,110,200,0.15);color:#9b6ec8;border:1px solid rgba(155,110,200,0.4);border-radius:3px;cursor:pointer;">✏️ Evt Rev</button></td>
     </tr>
     <tr id="fph-evt-edit-${idx}" style="display:none;background:rgba(155,110,200,0.06);">
-      <td colspan="13" style="padding:10px 14px;">
+      <td colspan="14" style="padding:10px 14px;">
         <div style="font-size:11px;color:#9b6ec8;margin-bottom:6px;font-weight:600;">✏️ Edit Event Revenue — ${h.weekDisplay || h.weekStart}</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
           ${days.map((d,di) => `<label style="font-size:10px;color:var(--muted);display:flex;flex-direction:column;gap:2px;">${d}<input id="fph-evt-${idx}-${di}" type="number" placeholder="0" value="${(h.evtRevByDay && h.evtRevByDay[di]) || ''}" style="width:70px;background:#0d1620;border:1px solid rgba(155,110,200,0.4);color:#9b6ec8;padding:3px 5px;border-radius:3px;font-size:12px;"></label>`).join('')}
