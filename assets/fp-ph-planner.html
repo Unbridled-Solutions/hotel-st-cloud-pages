@@ -333,11 +333,12 @@ footer span { color: var(--gold); font-weight: 600; }
           <th>Labor %</th>
           <th>Actual Labor</th>
           <th>Actual Labor %</th>
+          <th>Labor Variance</th>
           <th>Status</th>
           <th></th>
         </tr>
       </thead>
-      <tbody id="histBody"><tr><td colspan="12" class="hist-empty">No weeks submitted yet. Complete a schedule and click Submit for Approval to start tracking.</td></tr></tbody>
+      <tbody id="histBody"><tr><td colspan="13" class="hist-empty">No weeks submitted yet. Complete a schedule and click Submit for Approval to start tracking.</td></tr></tbody>
     </table>
   </div>
 </div>
@@ -1450,7 +1451,7 @@ function renderHistory() {
     : JSON.parse(localStorage.getItem('fp-ph-history') || '[]');
   const tbody = document.getElementById('histBody');
   if (!hist.length) {
-    tbody.innerHTML = `<tr><td colspan="12" class="hist-empty">No weeks submitted yet.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="13" class="hist-empty">No weeks submitted yet.</td></tr>`;
     return;
   }
   const fmt = v => v != null ? `$${Math.round(v).toLocaleString()}` : '—';
@@ -1458,6 +1459,7 @@ function renderHistory() {
   const fmtVar = v => v != null ? `${v >= 0 ? '+' : ''}$${Math.round(Math.abs(v)).toLocaleString()}` : '—';
   const pctClass = v => !v ? '' : v < 28 ? 'style="color:var(--gold)"' : v <= 33 ? 'style="color:var(--green)"' : 'style="color:var(--red)"';
   const varClass = v => !v ? '' : v > 0 ? 'style="color:var(--green)"' : 'style="color:var(--red)"';
+  const labVarClass = v => (v == null) ? '' : v > 0 ? 'style="color:var(--red)"' : v < 0 ? 'style="color:var(--green)"' : '';
   const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
   const rows = [];
@@ -1468,6 +1470,9 @@ function renderHistory() {
     const revVar = (h.actRev != null && h.rev != null)
       ? (h.actRev - h.rev)
       : (h.revVariance != null ? h.revVariance : null);
+    const labVar = (h.actual != null && h.budget != null)
+      ? (h.actual - h.budget)
+      : (h.variance != null ? h.variance : null);
     rows.push(`
     <tr style="${h.approved ? 'background:rgba(76,202,128,0.06);' : ''}">
       <td><span class="hist-period">${h.period || '—'}</span><br><span class="hist-week">${h.isoWk || ''}</span></td>
@@ -1480,11 +1485,12 @@ function renderHistory() {
       <td ${pctClass(h.pct)}>${fmtPct(h.pct)}</td>
       <td style="color:var(--orange)">${fmt(h.actual)}</td>
       <td ${pctClass(actLaborPct)}>${fmtPct(actLaborPct)}</td>
+      <td ${labVarClass(labVar)}>${fmtVar(labVar)}</td>
       <td>${h.approved ? '<span style="font-size:10px;font-weight:700;letter-spacing:1px;color:#4cca80;background:rgba(76,202,128,0.15);padding:2px 7px;border-radius:3px;border:1px solid rgba(76,202,128,0.4)">✓ APPROVED</span>' : '<span style="font-size:10px;color:var(--muted)">Pending</span>'}</td>
       <td><button onclick="toggleEvtEdit('fph-evt-edit-${idx}')" style="font-size:10px;padding:2px 8px;background:rgba(155,110,200,0.15);color:#9b6ec8;border:1px solid rgba(155,110,200,0.4);border-radius:3px;cursor:pointer;">✏️ Evt Rev</button></td>
     </tr>
     <tr id="fph-evt-edit-${idx}" style="display:none;background:rgba(155,110,200,0.06);">
-      <td colspan="12" style="padding:10px 14px;">
+      <td colspan="13" style="padding:10px 14px;">
         <div style="font-size:11px;color:#9b6ec8;margin-bottom:6px;font-weight:600;">✏️ Edit Event Revenue — ${h.weekDisplay || h.weekStart}</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
           ${days.map((d,di) => `<label style="font-size:10px;color:var(--muted);display:flex;flex-direction:column;gap:2px;">${d}<input id="fph-evt-${idx}-${di}" type="number" placeholder="0" value="${(h.evtRevByDay && h.evtRevByDay[di]) || ''}" style="width:70px;background:#0d1620;border:1px solid rgba(155,110,200,0.4);color:#9b6ec8;padding:3px 5px;border-radius:3px;font-size:12px;"></label>`).join('')}

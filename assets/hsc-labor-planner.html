@@ -338,9 +338,10 @@ footer span { color: var(--gold); font-weight: 600; }
           <th>Labor %</th>
           <th>Actual Labor</th>
           <th>Actual Labor %</th>
+          <th>Labor Variance</th>
         </tr>
       </thead>
-      <tbody id="histBody"><tr><td colspan="9" class="hist-empty">No weeks submitted yet. Complete a schedule and click Submit for Approval to start tracking.</td></tr></tbody>
+      <tbody id="histBody"><tr><td colspan="11" class="hist-empty">No weeks submitted yet. Complete a schedule and click Submit for Approval to start tracking.</td></tr></tbody>
     </table>
   </div>
 </div>
@@ -1314,7 +1315,7 @@ function renderHistory() {
   const hist = JSON.parse(localStorage.getItem('hsc-history') || '[]');
   const tbody = document.getElementById('histBody');
   if (!hist.length) {
-    tbody.innerHTML = `<tr><td colspan="9" class="hist-empty">No weeks submitted yet.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="11" class="hist-empty">No weeks submitted yet.</td></tr>`;
     return;
   }
   const fmt = v => v != null ? `$${Math.round(v).toLocaleString()}` : '—';
@@ -1322,6 +1323,7 @@ function renderHistory() {
   const fmtVar = v => v != null ? `${v >= 0 ? '+' : ''}$${Math.round(Math.abs(v)).toLocaleString()}` : '—';
   const pctClass = v => !v ? '' : v < 28 ? 'style="color:var(--gold)"' : v <= 33 ? 'style="color:var(--green)"' : 'style="color:var(--red)"';
   const varClass = v => !v ? '' : v > 0 ? 'style="color:var(--green)"' : 'style="color:var(--red)"';
+  const labVarClass = v => (v == null) ? '' : v > 0 ? 'style="color:var(--red)"' : v < 0 ? 'style="color:var(--green)"' : '';
 
   tbody.innerHTML = [...hist].sort((a,b) => b.weekStart.localeCompare(a.weekStart)).map(h => {
     // Compute actual labor % from saved actRev if available
@@ -1330,6 +1332,9 @@ function renderHistory() {
     const revVar = (h.actRev != null && h.rev != null)
       ? (h.actRev - h.rev)
       : (h.revVariance != null ? h.revVariance : null);
+    const labVar = (h.actual != null && h.budget != null)
+      ? (h.actual - h.budget)
+      : (h.variance != null ? h.variance : null);
     return `
     <tr style="${h.approved ? 'background:rgba(76,202,128,0.06);' : ''}">
       <td><span class="hist-period">${h.period || '—'}</span><br><span class="hist-week">${h.isoWk || ''}</span></td>
@@ -1341,6 +1346,7 @@ function renderHistory() {
       <td ${pctClass(h.pct)}>${fmtPct(h.pct)}</td>
       <td style="color:var(--orange)">${fmt(h.actual)}</td>
       <td ${pctClass(actLaborPct)}>${fmtPct(actLaborPct)}</td>
+      <td ${labVarClass(labVar)}>${fmtVar(labVar)}</td>
       <td>${h.approved ? '<span style="font-size:10px;font-weight:700;letter-spacing:1px;color:#4cca80;background:rgba(76,202,128,0.15);padding:2px 7px;border-radius:3px;border:1px solid rgba(76,202,128,0.4)">✓ APPROVED</span>' : '<span style="font-size:10px;color:var(--muted)">Pending</span>'}</td>
     </tr>`;
   }).join('');
