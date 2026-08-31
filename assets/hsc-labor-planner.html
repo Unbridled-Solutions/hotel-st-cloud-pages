@@ -337,7 +337,7 @@ footer span { color: var(--gold); font-weight: 600; }
           <th>Labor %</th>
           <th>Actual Labor</th>
           <th>Actual Labor %</th>
-          <th>Variance</th>
+          <th>Rev Variance</th>
         </tr>
       </thead>
       <tbody id="histBody"><tr><td colspan="9" class="hist-empty">No weeks submitted yet. Complete a schedule and click Submit for Approval to start tracking.</td></tr></tbody>
@@ -1326,6 +1326,10 @@ function renderHistory() {
   tbody.innerHTML = [...hist].sort((a,b) => b.weekStart.localeCompare(a.weekStart)).map(h => {
     // Compute actual labor % from saved actRev if available
     const actLaborPct = (h.actual && h.actRev) ? +(h.actual / h.actRev * 100).toFixed(1) : h.actPct;
+    // Display-only: forecast vs actual revenue in dollars. Never rewrite history.
+    const revVar = (h.actRev != null && h.rev != null)
+      ? (h.actRev - h.rev)
+      : (h.revVariance != null ? h.revVariance : null);
     return `
     <tr style="${h.approved ? 'background:rgba(76,202,128,0.06);' : ''}">
       <td><span class="hist-period">${h.period || '—'}</span><br><span class="hist-week">${h.isoWk || ''}</span></td>
@@ -1336,7 +1340,7 @@ function renderHistory() {
       <td ${pctClass(h.pct)}>${fmtPct(h.pct)}</td>
       <td style="color:var(--orange)">${fmt(h.actual)}</td>
       <td ${pctClass(actLaborPct)}>${fmtPct(actLaborPct)}</td>
-      <td ${varClass(h.variance)}>${fmtVar(h.variance)}</td>
+      <td ${varClass(revVar)}>${fmtVar(revVar)}</td>
       <td>${h.approved ? '<span style="font-size:10px;font-weight:700;letter-spacing:1px;color:#4cca80;background:rgba(76,202,128,0.15);padding:2px 7px;border-radius:3px;border:1px solid rgba(76,202,128,0.4)">✓ APPROVED</span>' : '<span style="font-size:10px;color:var(--muted)">Pending</span>'}</td>
     </tr>`;
   }).join('');
