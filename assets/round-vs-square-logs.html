@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Round vs Square Logs | 13,000 LF Cost Comparison</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f1923;
+      --navy: #1a2e3b;
+      --navy2: #162636;
+      --card: #162433;
+      --section: #0d1620;
+      --blue: #5a8ba7;
+      --gold: #c9aa7c;
+      --text: #e8e0d4;
+      --muted: #8a9aaa;
+      --border: rgba(90,139,167,0.22);
+      --red: #e05050;
+      --green: #6dbf8a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Inter, system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      font-size: 16px;
+    }
+    header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    header img { width: 36px; height: auto; opacity: 0.9; }
+    header .brand {
+      font-size: 0.75rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--blue);
+      font-weight: 600;
+    }
+    .hero {
+      padding: clamp(2rem, 5vw, 3.5rem) clamp(1.25rem, 4vw, 2.5rem) 1.5rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .eyebrow {
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 700;
+      margin-bottom: 0.6rem;
+    }
+    h1 {
+      font-size: clamp(1.7rem, 4vw, 2.4rem);
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 0.75rem;
+    }
+    h1 em { font-style: normal; color: var(--blue); }
+    .lede { color: var(--muted); max-width: 720px; }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 0 clamp(1.25rem, 4vw, 2.5rem) 4rem; }
+    .disclaimer {
+      background: rgba(201,170,124,0.1);
+      border-left: 4px solid var(--gold);
+      padding: 0.9rem 1.1rem;
+      font-size: 0.86rem;
+      color: var(--muted);
+      margin: 1.5rem 0 2rem;
+    }
+    .disclaimer strong { color: var(--gold); }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 1.5rem 0 2rem;
+    }
+    .stat {
+      background: var(--navy);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.1rem 1.15rem;
+    }
+    .stat .k { font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--blue); font-weight: 700; }
+    .stat .v { font-size: clamp(1.15rem, 2.5vw, 1.55rem); font-weight: 700; margin: 0.3rem 0 0.15rem; }
+    .stat .s { font-size: 0.78rem; color: var(--muted); }
+    .stat.win .v { color: var(--green); }
+    .stat.cost .v { color: var(--gold); }
+    .stat.hot .v { color: var(--red); }
+    h2 {
+      font-size: 1.15rem;
+      margin: 2.2rem 0 0.85rem;
+    }
+    h3 { font-size: 0.95rem; color: var(--gold); margin: 1.25rem 0 0.5rem; }
+    p { margin: 0 0 0.85rem; }
+    ul { margin: 0 0 1rem 1.15rem; }
+    li { margin: 0 0 0.4rem; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 0 0 1.25rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.7rem 0.8rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    th {
+      background: var(--section);
+      color: var(--blue);
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    tr.mid td { color: var(--gold); font-weight: 600; }
+    .callout {
+      background: rgba(90,139,167,0.1);
+      border-left: 4px solid var(--blue);
+      padding: 0.9rem 1.1rem;
+      margin: 1rem 0 1.4rem;
+      font-size: 0.92rem;
+    }
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 1rem 0 1.5rem;
+    }
+    .card {
+      background: var(--navy);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.1rem 1.2rem;
+    }
+    .card h3 { margin-top: 0; }
+    .controls {
+      background: var(--navy);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.15rem 1.25rem;
+      margin: 1rem 0 1.5rem;
+    }
+    .ctrl-row {
+      display: grid;
+      grid-template-columns: 180px 1fr 90px;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    .ctrl-row label { font-size: 0.82rem; color: var(--muted); }
+    input[type=range] { width: 100%; accent-color: var(--gold); }
+    .val {
+      font-variant-numeric: tabular-nums;
+      color: var(--gold);
+      font-weight: 600;
+      text-align: right;
+    }
+    .live {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 0.75rem;
+    }
+    .live .box {
+      background: var(--section);
+      border-radius: 6px;
+      padding: 0.85rem 0.9rem;
+    }
+    .live .box .k { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--blue); }
+    .live .box .v { font-size: 1.25rem; font-weight: 700; margin-top: 0.25rem; }
+    .live .box .d { font-size: 0.78rem; color: var(--muted); }
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.78rem;
+      padding: 0 1.5rem 3rem;
+    }
+    @media (max-width: 760px) {
+      .stats, .grid2, .live { grid-template-columns: 1fr; }
+      .ctrl-row { grid-template-columns: 1fr; }
+      table { font-size: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="logos/unbridled-elk-icon-white.png" alt="" />
+    <div class="brand">Unbridled · Eagles Landing comparison</div>
+  </header>
+
+  <div class="hero">
+    <div class="eyebrow">Cost comparison · September 2026</div>
+    <h1>Round logs vs <em>square logs</em>. Same 13,000 linear feet.</h1>
+    <p class="lede">Eagles Landing used 16 to 24 inch full-round logs. The next build is aiming at a 14 inch square. A third case: drop that square to 12 inches. Three cost drivers: bigger parent log, mill waste, mill labor. Geometry first, then dollars.</p>
+  </div>
+
+  <div class="wrap">
+    <div class="disclaimer">
+      <strong>Scope.</strong> This is wall-log material plus mill-to-square labor for 13,000 linear feet. Not a turnkey house. Not foundation, roof, windows, chinking, or GC. Research ranges, not a mill quote. Get three bids before you lock a package.
+    </div>
+
+    <div class="stats">
+      <div class="stat win">
+        <div class="k">A · Round (EL baseline)</div>
+        <div class="v">$1.15M – $1.45M</div>
+        <div class="s">16–24" mix · 13,000 LF · mid $1.27M</div>
+      </div>
+      <div class="stat cost">
+        <div class="k">B · 14" square (from 22")</div>
+        <div class="v">$1.65M – $1.95M</div>
+        <div class="s">mid $1.87M · about +$610k vs round</div>
+      </div>
+      <div class="stat">
+        <div class="k">C · 12" square (from 19")</div>
+        <div class="v">$1.05M – $1.30M</div>
+        <div class="s">mid $1.25M · roughly even with round</div>
+      </div>
+    </div>
+
+    <div class="callout">
+      The 26 inch parent log is the expensive assumption, not the 36% waste. A 14 inch square only needs a 19.8 inch round by geometry. Mill reality is 21–22 inches. Jumping to 26 inches almost doubles the wood you buy versus the round mix, and it is the rarest stick in the woods.
+    </div>
+
+    <h2>1. What Sunday’s 36% actually is</h2>
+    <p>To cut the biggest possible square from a round log, the diameter has to be the diagonal of that square. That is side × √2. Waste is always 36% of the parent log at that exact size. It is 1 − 2/π. It does not change with log size if you take the biggest square the log will give you.</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Finished square</th>
+          <th class="num">Min round (geometry)</th>
+          <th class="num">Waste at min</th>
+          <th class="num">Shop log (no wane)</th>
+          <th class="num">Waste at shop size</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>12 × 12</td>
+          <td class="num">17.0"</td>
+          <td class="num">36%</td>
+          <td class="num">18–19"</td>
+          <td class="num">43–49%</td>
+        </tr>
+        <tr class="mid">
+          <td>14 × 14</td>
+          <td class="num">19.8"</td>
+          <td class="num">36%</td>
+          <td class="num">21–22"</td>
+          <td class="num">43–48%</td>
+        </tr>
+        <tr>
+          <td>14 × 14 from a 26" log</td>
+          <td class="num">26.0"</td>
+          <td class="num">63%</td>
+          <td class="num">overkill</td>
+          <td class="num">you throw away most of the tree</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Bark, taper, sweep, and saw kerf eat the corners. Do not buy 19.8 for a clean 14. Do not buy 26 unless you want a 16–18 inch square, or you are using the extra wood for slabs, beams, and decking.</p>
+
+    <h2>2. The three cost drivers, ranked</h2>
+    <div class="grid2">
+      <div class="card">
+        <h3>1. Parent log size (the real money)</h3>
+        <p>Log price scales with cross-section, then a scarcity premium on 22"+ sticks. A 22" log has about 1.9× the wood of a 16". A 26" log has about 2.6×. Handcrafted 24–26" lodgepole or spruce is special-order in Colorado. That premium is bigger than mill labor.</p>
+      </div>
+      <div class="card">
+        <h3>2. Waste (36% is the floor, not the shop number)</h3>
+        <p>Inscribed 14 from 19.8: 36% waste. Shop 14 from 22: about 48% of the parent is slab. From 26: 63%. Slabs are not worthless (siding, decking, firewood) but they are not wall logs. Credit them cheap, not 1:1.</p>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:1.5rem;">
+      <h3>3. Mill labor to make it square</h3>
+      <p>Custom bandsaw work in 2026 runs about $0.35–$1.00 per board foot, or $75–$155/hour. Four faces on a house log, plus kerf. Hand-hewn faces add about $0.75–$1.75/LF. For a 14" house log, mill-to-square is roughly <strong>$5–$14 per linear foot</strong>. That is real money on 13,000 LF ($65k–$180k), but it is still smaller than buying a 26" parent instead of a 22".</p>
+      <p style="margin-bottom:0;color:var(--muted);font-size:0.9rem;">Stacking labor is mixed. Square logs bear flat and can go up faster. Corners (dovetail vs saddle) and settling detailing still have to be paid. Do not count on a big field-labor save to fund the bigger tree.</p>
+    </div>
+
+    <h2>3. Same 13,000 LF. What the package costs.</h2>
+    <p>Pricing is scaled from published 12" kiln-dried peeled pine (~$25–$27/LF ready to build, Classic Log Homes 2024, inflated), then area-scaled and given a handcrafted large-diameter premium. Eagles Landing is not a 6×8 D-log mill package. It is big full-round. That is why these numbers sit well above Twin Creeks / Appalachian milled-log catalogs ($6–$16/LF for 6–8" profiles).</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Package</th>
+          <th>Parent / mix</th>
+          <th class="num">Wood you buy</th>
+          <th class="num">Mid $/LF</th>
+          <th class="num">Low · 13k LF</th>
+          <th class="num">Mid · 13k LF</th>
+          <th class="num">High · 13k LF</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>A. Full round (EL)</td>
+          <td>16–24" mix, avg ~19–20"</td>
+          <td class="num">~26,600 bf</td>
+          <td class="num">$97</td>
+          <td class="num">$0.75M</td>
+          <td class="num">$1.27M</td>
+          <td class="num">$1.45M+</td>
+        </tr>
+        <tr class="mid">
+          <td>B. 14" square, right-sized</td>
+          <td>22" parent + mill</td>
+          <td class="num">~34,300 bf parent</td>
+          <td class="num">$144</td>
+          <td class="num">$1.65M</td>
+          <td class="num">$1.87M</td>
+          <td class="num">$1.95M</td>
+        </tr>
+        <tr>
+          <td>B*. 14" square, 26" parent</td>
+          <td>26" + mill (your guess)</td>
+          <td class="num">~47,900 bf parent</td>
+          <td class="num">$246</td>
+          <td class="num">$3.13M</td>
+          <td class="num">$3.17M</td>
+          <td class="num">$3.25M</td>
+        </tr>
+        <tr>
+          <td>C. 12" square</td>
+          <td>19" parent + mill</td>
+          <td class="num">~25,600 bf parent</td>
+          <td class="num">$96</td>
+          <td class="num">$1.05M</td>
+          <td class="num">$1.25M</td>
+          <td class="num">$1.30M</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Delta vs the Eagles Landing round mix (mid)</h3>
+    <table>
+      <thead>
+        <tr><th>Choice</th><th class="num">Extra / (save)</th><th>What you are paying for</th></tr>
+      </thead>
+      <tbody>
+        <tr class="mid"><td>14" square from 22"</td><td class="num">+$610,000</td><td>Bigger parent (~22% more wood) + mill faces + large-log premium</td></tr>
+        <tr><td>14" square from 26"</td><td class="num">+$1.9 million</td><td>Wrong parent size. 63% of the tree is not wall. Avoid this unless you have a use for the slabs at near-wall value.</td></tr>
+        <tr><td>12" square from 19"</td><td class="num">about even (−$20k)</td><td>Smaller parent offsets mill waste. Wall is thinner. R-value and look change.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>4. Play with the numbers</h2>
+    <p>Default: 13,000 LF, 22" parent for 14", 19" parent for 12", mill $8/LF on 14 and $6.50/LF on 12. Move the sliders. Round mix stays the EL baseline.</p>
+
+    <div class="controls">
+      <div class="ctrl-row">
+        <label>Linear feet of wall logs</label>
+        <input type="range" id="lf" min="8000" max="20000" step="250" value="13000" />
+        <div class="val" id="lfv">13,000</div>
+      </div>
+      <div class="ctrl-row">
+        <label>14" square parent diameter</label>
+        <input type="range" id="d14" min="20" max="26" step="0.5" value="22" />
+        <div class="val" id="d14v">22"</div>
+      </div>
+      <div class="ctrl-row">
+        <label>12" square parent diameter</label>
+        <input type="range" id="d12" min="17" max="22" step="0.5" value="19" />
+        <div class="val" id="d12v">19"</div>
+      </div>
+      <div class="ctrl-row">
+        <label>Mill-to-square, 14" ($/LF)</label>
+        <input type="range" id="m14" min="4" max="16" step="0.5" value="8" />
+        <div class="val" id="m14v">$8.00</div>
+      </div>
+      <div class="ctrl-row">
+        <label>Mill-to-square, 12" ($/LF)</label>
+        <input type="range" id="m12" min="3" max="12" step="0.5" value="6.5" />
+        <div class="val" id="m12v">$6.50</div>
+      </div>
+      <div class="live">
+        <div class="box">
+          <div class="k">A. Round mix</div>
+          <div class="v" id="ra">$1.27M</div>
+          <div class="d">baseline</div>
+        </div>
+        <div class="box">
+          <div class="k">B. 14" square</div>
+          <div class="v" id="rb">$1.87M</div>
+          <div class="d" id="rdb">+$610k</div>
+        </div>
+        <div class="box">
+          <div class="k">C. 12" square</div>
+          <div class="v" id="rc">$1.25M</div>
+          <div class="d" id="rdc">even</div>
+        </div>
+      </div>
+    </div>
+
+    <h2>5. Recommendation</h2>
+    <div class="callout">
+      If the next house is 13,000 LF of wall and you want a 14 inch square look, spec a <strong>21–22 inch parent</strong>, not 26. Budget about <strong>$1.7–$1.9 million</strong> for that log package plus mill, versus about <strong>$1.15–$1.45 million</strong> to repeat the 16–24 inch round mix. Call it a <strong>$500k–$700k premium</strong> for the square 14.
+    </div>
+    <p>Drop to a 12 inch square and the package lands near the round mix, around $1.25 million. You give up mass, shadow line, and a lot of the “this is a real log house” feel that Eagles Landing has. Wildfire code in Grand County wants solid wood ≥ 8 inches, so 12 still clears. It just will not read like 16–24 round.</p>
+    <p>Do not buy 26 inch logs to make 14 inch squares unless the mill will credit the slabs at something close to timber value, or you need 26s for a different reason (ridge, posts, great-room). Otherwise you are paying for trees you then throw on the slab pile.</p>
+
+    <h2>6. What this is not</h2>
+    <ul>
+      <li>Not a TJ’s bid. Ask the mill for 13,000 LF of 21–22" peeled, then 14×14 four-square, kiln or air-dry, species, and slab credit.</li>
+      <li>Not installed wall. Scribe, crane, settling, chink, stain sit on top of these numbers.</li>
+      <li>If “13,000” was house square footage, not log linear feet, this whole model is the wrong denominator. Confirm that once.</li>
+      <li>If the square house must match Eagles Landing wall height, a 14" square needs more courses than a 20" average round. That would raise LF, and the premium, further. This page holds LF constant because that is how you stated both houses.</li>
+    </ul>
+
+    <p style="color:var(--muted);font-size:0.88rem;">Sources used: Sunday geometry (14 × √2 = 19.8", waste 1 − 2/π = 36%). Classic Log Homes 12" KD peeled ~$25–$27/LF (Sept 2024 list, inflated). Twin Creeks / Appalachian / Wood Mill of Maine published milled 6–8" profiles $5–$16/LF (different product). Discount Log Home Supplies hand-hewn $0.75–$1.75/LF. Wood-Mizer 2026 custom mill $0.35–$1.00/bf or $75–$155/hr. Fireside Sawmill large-log hourly. Colorado Forest Products / TJ’s prior 12" pine research. Large-diameter scarcity is a judgment on 24–26" handcrafted house logs, not a catalog line.</p>
+  </div>
+
+  <footer>Doing Good by Doing Well · Internal planning · not a contract · September 1, 2026</footer>
+
+  <script>
+    function money(n) {
+      const m = n / 1e6;
+      if (m >= 1) return '$' + m.toFixed(2) + 'M';
+      return '$' + Math.round(n / 1000) + 'k';
+    }
+    function delta(n) {
+      const sign = n >= 0 ? '+' : '';
+      return sign + money(n);
+    }
+    function areaScale(d) { return (d / 12) * (d / 12); }
+    function prem(d) {
+      if (d <= 16) return 1;
+      if (d <= 18) return 1 + (d - 16) / 2 * 0.05;
+      if (d <= 20) return 1.05 + (d - 18) / 2 * 0.10;
+      if (d <= 22) return 1.15 + (d - 20) / 2 * 0.10;
+      if (d <= 24) return 1.25 + (d - 22) / 2 * 0.10;
+      return 1.35 + (d - 24) / 2 * 0.20;
+    }
+    function roundLf(d) {
+      return 27 * areaScale(d) * prem(d) * 1.20;
+    }
+    function recalc() {
+      const lf = +document.getElementById('lf').value;
+      const d14 = +document.getElementById('d14').value;
+      const d12 = +document.getElementById('d12').value;
+      const mill14 = +document.getElementById('m14').value;
+      const mill12 = +document.getElementById('m12').value;
+      document.getElementById('lfv').textContent = lf.toLocaleString();
+      document.getElementById('d14v').textContent = d14 + '"';
+      document.getElementById('d12v').textContent = d12 + '"';
+      document.getElementById('m14v').textContent = '$' + mill14.toFixed(2);
+      document.getElementById('m12v').textContent = '$' + mill12.toFixed(2);
+      const mix = [16,18,20,22,24];
+      const w = {16:0.25,18:0.25,20:0.25,22:0.15,24:0.10};
+      const roundUnit = Object.keys(w).reduce((s, d) => s + roundLf(+d) * w[d], 0);
+      const a = roundUnit * lf;
+      const b = (roundLf(d14) + mill14) * lf;
+      const c = (roundLf(d12) + mill12) * lf;
+      document.getElementById('ra').textContent = money(a);
+      document.getElementById('rb').textContent = money(b);
+      document.getElementById('rc').textContent = money(c);
+      document.getElementById('rdb').textContent = delta(b - a) + ' vs round';
+      document.getElementById('rdc').textContent = delta(c - a) + ' vs round';
+    }
+    ['lf','d14','d12','m14','m12'].forEach(id => {
+      document.getElementById(id).addEventListener('input', recalc);
+    });
+    recalc();
+  </script>
+</body>
+</html>
