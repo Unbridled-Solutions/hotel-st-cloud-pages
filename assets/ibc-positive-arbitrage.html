@@ -105,6 +105,25 @@
       font-size: 13px;
       line-height: 1.55;
     }
+    .benefits {
+      background: var(--card);
+      border: 1px solid var(--gold);
+      border-radius: 12px;
+      padding: 1.25rem 1.35rem;
+      margin-bottom: 1.25rem;
+    }
+    .benefits h2 {
+      font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--gold); margin-bottom: .7rem;
+    }
+    .benefits .punch {
+      font-size: clamp(16px, 2.4vw, 22px);
+      font-weight: 700; color: var(--white); line-height: 1.4; margin-bottom: .85rem;
+    }
+    .benefits .punch em { color: var(--gold); font-style: normal; }
+    .benefits ul { padding-left: 1.15rem; }
+    .benefits li { margin-bottom: .4rem; font-size: 14px; color: var(--text); }
+    .benefits li strong { color: var(--gold); }
     .note {
       font-size: 11px; color: var(--muted); line-height: 1.5; margin-top: .75rem;
     }
@@ -148,6 +167,7 @@
   </div>
   <div class="wrap">
     <div class="lede-box" id="story"></div>
+    <div class="benefits" id="benefits"></div>
     <div class="stats-strip" id="stats"></div>
 
     <div class="two-col">
@@ -198,6 +218,23 @@ function pmt(principal, rate, n) {
   if (!rate) return principal / n;
   const g = Math.pow(1 + rate, n);
   return principal * rate * g / (g - 1);
+}
+function irr(cfs) {
+  let r = 0.05;
+  for (let i = 0; i < 80; i++) {
+    let npv = 0, d = 0;
+    for (let t = 0; t < cfs.length; t++) {
+      const n = t + 1;
+      const den = Math.pow(1 + r, n);
+      npv += cfs[t] / den;
+      d += -n * cfs[t] / (den * (1 + r));
+    }
+    if (Math.abs(d) < 1e-18) break;
+    const next = r - npv / d;
+    if (Math.abs(next - r) < 1e-12) { r = next; break; }
+    r = next;
+  }
+  return r;
 }
 function val(id) { return Number(document.getElementById(id).value); }
 function setTxt(id, t) { document.getElementById(id).textContent = t; }
@@ -306,19 +343,42 @@ function run() {
   const arbFactor = afterTaxInterest > 0 ? creditSum / afterTaxInterest : 0;
   const spread = credit - costPct;
 
+  const premFlows = rows.map(r => -r.thisPrem);
+  const irrExFlows = premFlows.slice();
+  irrExFlows[irrExFlows.length - 1] += target.cv;
+  const irrInFlows = premFlows.slice();
+  irrInFlows[irrInFlows.length - 1] += target.db;
+  const irrEx = irr(irrExFlows);
+  const irrIn = irr(irrInFlows);
+
   document.getElementById('story').innerHTML =
     'Same rate on both sides. Cash value still compounds on every premium dollar. You also take ' +
     money(borrow) + ' a year for ' + originateUntil + ' years — ' + money(borrowedSum) +
     ' of capital — and repay it as ordinary 10-year notes. Interest is deductible at ' +
     Math.round(tax * 100) + '%. After 20 years the notes are done. What remains is the pile, the death benefit, and a cheap after-tax cost of money.';
 
+  document.getElementById('benefits').innerHTML =
+    '<h2>Summary benefits</h2>' +
+    '<p class="punch">You put in <em>' + money(premSum) + '</em>. You borrowed <em>' + money(borrowedSum) +
+    '</em>, used it, and paid every note off. Year 20 you still have <em>' + money(target.cv) +
+    '</em> of cash value and a <em>' + money(target.db) + '</em> death benefit.</p>' +
+    '<ul>' +
+    '<li>Premiums in: <strong>' + money(premSum) + '</strong> ($' + (prem/1000) + 'k × ' + puaYears + ' years, then $' + (base/1000) + 'k base).</li>' +
+    '<li>Capital activated (borrowed and repaid): <strong>' + money(borrowedSum) + '</strong>. Loan balance year 20: <strong>' + money(target.loanBal) + '</strong>.</li>' +
+    '<li>Cash value remaining: <strong>' + money(target.cv) + '</strong>.</li>' +
+    '<li>Death benefit standing: <strong>' + money(target.db) + '</strong>.</li>' +
+    '<li>Annual rate of return on your money, <strong>exclusive of death benefit</strong> (premiums → cash value): <strong>' + pct(irrEx, 2) + '</strong>.</li>' +
+    '<li>Annual rate of return on your money, <strong>inclusive of death benefit</strong> (premiums → death benefit if you die at year 20): <strong>' + pct(irrIn, 2) + '</strong>.</li>' +
+    '<li>Net cost of the borrowed dollars after the 30% interest deduction: <strong>' + pct(costPct, 2) + '</strong>.</li>' +
+    '</ul>';
+
   document.getElementById('stats').innerHTML = [
     ['Net number, yr 20', money(netNumber), 'gold'],
     ['Net financial gain', money(netGain), 'green'],
-    ['Net cost of money', pct(costPct, 2), 'blue'],
-    ['After-tax interest', money(afterTaxInterest), ''],
+    ['Return excl. DB', pct(irrEx, 2), 'blue'],
+    ['Return incl. DB', pct(irrIn, 2), 'green'],
     ['Death benefit yr 20', money(target.db), ''],
-    ['Arbitrage factor', arbFactor.toFixed(1) + '×', 'green']
+    ['Net cost of money', pct(costPct, 2), '']
   ].map(([l, v, c]) =>
     `<div class="stat-card"><div class="stat-val ${c}">${v}</div><div class="stat-lbl">${l}</div></div>`
   ).join('');
