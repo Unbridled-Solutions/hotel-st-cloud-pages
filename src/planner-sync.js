@@ -365,14 +365,14 @@ export async function handlePlannerSync(request, env, ctx) {
   }
   const prevRaw = await env.PLANNER_DATA.get(STATUS_KEY);
   const prev = prevRaw ? JSON.parse(prevRaw) : {};
-  if (prev.state === 'running' && prev.started && (Date.now() - Date.parse(prev.started) < 8 * 60 * 1000)) {
+  if (prev.state === 'running' && prev.started && (Date.now() - Date.parse(prev.started) < 2 * 60 * 1000)) {
     return json({ success: true, state: 'running', message: prev.message || 'Already pulling', started: prev.started });
   }
   const today = denverYmd();
   const yesterday = addYmd(today, -1);
   // Button pull must finish inside the Worker request (~30–60s). Full 14-day Toast + reservation crawl stays on the 7am job.
-  const lookbackFrom = addYmd(yesterday, -2);
-  const cbTo = addYmd(today, 6);
+  const lookbackFrom = addYmd(yesterday, -1);
+  const cbTo = addYmd(today, 1);
   const status = {
     state: 'running',
     started: new Date().toISOString(),
@@ -483,20 +483,14 @@ async function runSync(env, status) {
   }
   await kvPut(env, 'socc', socc);
 
-  status.message = 'Cloudbeds occupancy…';
+  status.message = 'Saving hotel labor…';
   await setStatus(env, status);
-  const occ = {};
-  for (const d of cbDays) {
-    try { occ[d] = await cloudbedsOcc(env, d); } catch (e) { status.errors.push('occ ' + d + ' ' + e.message); }
-  }
-  // Room $ reservation crawl is too heavy for a button click. 7am job still writes bookedrevs.
-
   const hsc = await kvGet(env, 'hsc');
-  status.changed.hscOcc = applySeries(hsc, 'hsc-wk-', 'occrooms', Object.fromEntries(cbDays.map((d) => [d, fmtOcc(occ[d])])));
+  status.changed.hscOcc = 0;
   status.changed.hscBooked = 0;
   status.changed.hscHrly = applySeries(hsc, 'hsc-wk-', 'hrlyacts', moneyMap(labor.hsc));
   let actFill = 0;
-  for (const d of cbDays) {
+  for (const d of laborDays) {
     const key = 'hsc-wk-' + mondayOf(d);
     const w = hsc[key];
     if (!w) continue;
