@@ -26,6 +26,10 @@ h1 { font-size: 20px; font-weight: 700; }
 .period-chip { background: rgba(90,139,167,0.15); border: 1px solid rgba(90,139,167,0.4); color: var(--blue); border-radius: 5px; font-size: 11px; font-weight: 700; padding: 3px 10px; }
 .tax-chip { background: rgba(201,170,124,0.1); border: 1px solid rgba(201,170,124,0.3); color: var(--gold); border-radius: 5px; font-size: 11px; font-weight: 700; padding: 3px 10px; }
 .range { font-size: 13px; color: var(--gold); font-weight: 600; }
+.grain { display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.grain button { background: var(--card); border: none; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; padding: 6px 14px; cursor: pointer; }
+.grain button.active { background: var(--gold); color: #0f1923; }
+.period-sel { background: var(--card); border: 1px solid var(--border); color: var(--text); border-radius: 5px; font-size: 12px; font-weight: 600; padding: 5px 8px; }
 .tabs { display: flex; gap: 0; padding: 0 22px; background: #0d1620; border-bottom: 1px solid var(--border); overflow-x: auto; }
 .tab { background: transparent; border: none; color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; padding: 12px 16px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
 .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
@@ -71,10 +75,16 @@ tr.blank td { color: var(--muted); font-style: italic; }
   </div>
 </div>
 <div class="week-nav">
+  <label>View</label>
+  <div class="grain" id="grain">
+    <button type="button" id="grainDaily" onclick="setGrain('daily')">Daily</button>
+    <button type="button" id="grainWeekly" onclick="setGrain('weekly')">Weekly</button>
+  </div>
   <label>Period</label>
   <button class="week-nav-btn" onclick="shiftPeriod(-1)">‹</button>
-  <span class="period-chip" id="periodChip">Period</span>
+  <select class="period-sel" id="periodSel" onchange="onPeriodSelect()"></select>
   <button class="week-nav-btn" onclick="shiftPeriod(1)">›</button>
+  <span class="period-chip" id="periodChip">Period</span>
   <span class="range" id="rangeLbl"></span>
   <span class="tax-chip" id="taxChip"></span>
 </div>
@@ -94,6 +104,8 @@ const OUTLETS = [
 
 let bundles = {};
 let viewPeriod = null;
+let viewYear = 2026;
+let viewGrain = 'daily';
 let activeTab = 'summary';
 const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
@@ -178,6 +190,41 @@ function rollWeek(outlet, monday, bundle) {
   return { key, restRev, evt, totalRev, hrly, mgmt, tax, labor, laborPct, has };
 }
 
+function dayVal(arr, di) {
+  if (!Array.isArray(arr) || arr[di] == null || arr[di] === '') return 0;
+  const n = parseFloat(arr[di]);
+  return n || 0;
+}
+
+function rollDay(outlet, monday, di, bundle) {
+  const key = ymd(monday);
+  const w = weekFromBundle(bundle, outlet.prefix, key);
+  const rest = w ? dayVal(w.actrevs, di) : 0;
+  const evt = (outlet.events && w) ? dayVal(w.evtrevs, di) : 0;
+  let hotel = 0;
+  if (outlet.hotel && w) hotel = dayVal(w.actrevs, di) || dayVal(w.bookedrevs, di);
+  const restRev = outlet.hotel ? hotel : rest;
+  const totalRev = restRev + evt;
+  const hrly = w ? dayVal(w.hrlyacts, di) : 0;
+  const mgmt = w ? dayVal(w.mgmtacts, di) : 0;
+  const tax = (hrly + mgmt) * taxRate(viewPeriod);
+  const labor = hrly + mgmt + tax;
+  const laborPct = totalRev > 0 ? labor / totalRev : null;
+  const has = !!(w && (restRev || evt || hrly || mgmt));
+  return { key, restRev, evt, totalRev, hrly, mgmt, tax, labor, laborPct, has };
+}
+
+function daysInPeriod(year, period) {
+  const weeks = weeksInPeriod(year, period);
+  const days = [];
+  weeks.forEach(m => {
+    for (let di = 0; di < 7; di++) {
+      days.push({ monday: m, di, date: addDays(m, di) });
+    }
+  });
+  return days;
+}
+
 function rollPeriod(outlet, year, period, bundle) {
   const weeks = weeksInPeriod(year, period).map(m => rollWeek(outlet, m, bundle));
   const tot = weeks.reduce((a, w) => {
@@ -190,11 +237,34 @@ function rollPeriod(outlet, year, period, bundle) {
   return { weeks, tot };
 }
 
-let viewYear = 2026;
-
 function currentPeriodInfo() {
   const today = new Date();
   return { year: yearOfISO(today), period: periodOf(mondayOf(today)) };
+}
+
+function fillPeriodSelect() {
+  const sel = document.getElementById('periodSel');
+  if (!sel) return;
+  const years = [viewYear - 1, viewYear, viewYear + 1].filter((y, i, a) => a.indexOf(y) === i);
+  const opts = [];
+  years.forEach(y => {
+    for (let p = 1; p <= 13; p++) {
+      opts.push(`<option value="${y}-${p}" ${y===viewYear && p===viewPeriod ? 'selected' : ''}>P${p} · ${y}</option>`);
+    }
+  });
+  sel.innerHTML = opts.join('');
+}
+
+function onPeriodSelect() {
+  const v = document.getElementById('periodSel').value.split('-');
+  viewYear = parseInt(v[0], 10);
+  viewPeriod = parseInt(v[1], 10);
+  render();
+}
+
+function setGrain(g) {
+  viewGrain = g;
+  render();
 }
 
 function shiftPeriod(delta) {
@@ -226,9 +296,9 @@ function rowHTML(label, w, isTotal) {
   </tr>`;
 }
 
-function tableHead(revLabel) {
+function tableHead(revLabel, firstLabel) {
   return `<thead><tr>
-    <th class="left">Week</th>
+    <th class="left">${firstLabel || 'Week'}</th>
     <th>${revLabel}</th>
     <th>Event Rev</th>
     <th>Total Rev</th>
@@ -240,31 +310,42 @@ function tableHead(revLabel) {
   </tr></thead>`;
 }
 
+function fmtDay(d) {
+  return `${DAYS[d.getDay() === 0 ? 6 : d.getDay()-1]} ${d.getMonth()+1}/${d.getDate()}`;
+}
+
 function renderOutlet(o) {
   const weeks = weeksInPeriod(viewYear, viewPeriod);
   const bundle = bundles[o.ns] || {};
   const rolled = rollPeriod(o, viewYear, viewPeriod, bundle);
   const revLabel = o.hotel ? 'Hotel Rev' : 'Restaurant Rev';
-  document.getElementById('note').innerHTML = `Live from the weekly sheet. Tax is ${Math.round(taxRate(viewPeriod)*100)}% of hourly + management. <a class="outlet-link" href="${o.url}" target="_blank">Open weekly planner</a>`;
+  const grainNote = viewGrain === 'daily' ? 'Each row is one day.' : 'Each row is one week.';
+  document.getElementById('note').innerHTML = `${grainNote} Live from the weekly sheet. Tax is ${Math.round(taxRate(viewPeriod)*100)}% of hourly + management. <a class="outlet-link" href="${o.url}" target="_blank">Open weekly planner</a>`;
   document.getElementById('hero').innerHTML = `
     <div class="hero-card"><div class="hero-lbl">Total revenue</div><div class="hero-val">${money(rolled.tot.totalRev)}</div><div class="hero-sub">${o.hotel ? 'Rooms' : 'Restaurant'} + events</div></div>
     <div class="hero-card"><div class="hero-lbl">Total labor</div><div class="hero-val">${money(rolled.tot.labor)}</div><div class="hero-sub">Hourly + mgmt + tax</div></div>
     <div class="hero-card"><div class="hero-lbl">Labor %</div><div class="hero-val">${pct(rolled.tot.laborPct)}</div><div class="hero-sub">Labor / total revenue</div></div>
     <div class="hero-card"><div class="hero-lbl">Management</div><div class="hero-val">${money(rolled.tot.mgmt)}</div><div class="hero-sub">Standing daily rates included</div></div>`;
-  let body = tableHead(revLabel) + '<tbody>';
-  rolled.weeks.forEach((w, i) => {
-    const m = weeks[i];
-    const sun = addDays(m, 6);
-    const label = `Wk ${i+1} · ${m.getMonth()+1}/${m.getDate()}–${sun.getMonth()+1}/${sun.getDate()}`;
-    body += rowHTML(label, w, false);
-  });
+  let body = tableHead(revLabel, viewGrain === 'daily' ? 'Day' : 'Week') + '<tbody>';
+  if (viewGrain === 'daily') {
+    daysInPeriod(viewYear, viewPeriod).forEach(day => {
+      const w = rollDay(o, day.monday, day.di, bundle);
+      body += rowHTML(fmtDay(day.date), w, false);
+    });
+  } else {
+    rolled.weeks.forEach((w, i) => {
+      const m = weeks[i];
+      const sun = addDays(m, 6);
+      const label = `Wk ${i+1} · ${m.getMonth()+1}/${m.getDate()}–${sun.getMonth()+1}/${sun.getDate()}`;
+      body += rowHTML(label, w, false);
+    });
+  }
   body += rowHTML('Period total', rolled.tot, true);
   body += '</tbody>';
   document.getElementById('grid').innerHTML = body;
 }
 
 function renderSummary() {
-  document.getElementById('note').textContent = 'Running tally for the period. Fremont Provisions, 1887, Hotel, then Standard Oil. Event revenue is in the total. Hotel has no event column.';
   const rolls = OUTLETS.map(o => ({ o, r: rollPeriod(o, viewYear, viewPeriod, bundles[o.ns] || {}) }));
   const grand = rolls.reduce((a, x) => {
     a.totalRev += x.r.tot.totalRev; a.labor += x.r.tot.labor; a.hrly += x.r.tot.hrly; a.mgmt += x.r.tot.mgmt; a.tax += x.r.tot.tax;
@@ -276,7 +357,27 @@ function renderSummary() {
     <div class="hero-card"><div class="hero-lbl">All outlets · labor</div><div class="hero-val">${money(grand.labor)}</div></div>
     <div class="hero-card"><div class="hero-lbl">Blended labor %</div><div class="hero-val">${pct(grand.laborPct)}</div></div>
     <div class="hero-card"><div class="hero-lbl">Tax in labor</div><div class="hero-val">${money(grand.tax)}</div><div class="hero-sub">${Math.round(taxRate(viewPeriod)*100)}% this period</div></div>`;
-  let html = tableHead('Restaurant / Hotel') + '<tbody>';
+  if (viewGrain === 'daily') {
+    document.getElementById('note').textContent = 'Daily company total for the period. Same columns as Stan P9 recap, without food or supplies.';
+    let html = tableHead('Restaurant / Hotel', 'Day') + '<tbody>';
+    daysInPeriod(viewYear, viewPeriod).forEach(day => {
+      const acc = { restRev:0, evt:0, totalRev:0, hrly:0, mgmt:0, tax:0, labor:0, has:false };
+      OUTLETS.forEach(o => {
+        const w = rollDay(o, day.monday, day.di, bundles[o.ns] || {});
+        acc.restRev += w.restRev; acc.evt += w.evt; acc.totalRev += w.totalRev;
+        acc.hrly += w.hrly; acc.mgmt += w.mgmt; acc.tax += w.tax; acc.labor += w.labor;
+        if (w.has) acc.has = true;
+      });
+      acc.laborPct = acc.totalRev > 0 ? acc.labor / acc.totalRev : null;
+      html += rowHTML(fmtDay(day.date), acc, false);
+    });
+    html += rowHTML('Period total', { ...grand, restRev: rolls.reduce((s,x)=>s+x.r.tot.restRev,0), evt: rolls.reduce((s,x)=>s+x.r.tot.evt,0), has:true }, true);
+    html += '</tbody>';
+    document.getElementById('grid').innerHTML = html;
+    return;
+  }
+  document.getElementById('note').textContent = 'Weekly running tally for the period. Fremont Provisions, 1887, Hotel, then Standard Oil. Event revenue is in the total.';
+  let html = tableHead('Restaurant / Hotel', 'Outlet') + '<tbody>';
   rolls.forEach(x => {
     html += rowHTML(x.o.name, x.r.tot, false);
   });
@@ -287,6 +388,9 @@ function renderSummary() {
 
 function render() {
   setTabs();
+  fillPeriodSelect();
+  document.getElementById('grainDaily').classList.toggle('active', viewGrain === 'daily');
+  document.getElementById('grainWeekly').classList.toggle('active', viewGrain === 'weekly');
   const weeks = weeksInPeriod(viewYear, viewPeriod);
   const first = weeks[0], last = addDays(weeks[weeks.length-1], 6);
   document.getElementById('periodChip').textContent = `Period ${viewPeriod} · ${viewYear}`;
