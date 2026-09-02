@@ -1248,8 +1248,14 @@ function loadWeek(key) {
   if (_hrlyacts && _hrlyacts.some(v => v)) {
     _hrlyacts.forEach((v, di) => { const el = document.getElementById(`tot-hrly-${di}`); if (el && v) el.value = v; });
   }
-  if (_mgmtacts && _mgmtacts.some(v => v)) {
-    _mgmtacts.forEach((v, di) => { const el = document.getElementById(`tot-mgmt-${di}`); if (el && v) el.value = v; });
+  if (_mgmtacts && _mgmtacts.some(v => v !== '' && v != null)) {
+    _mgmtacts.forEach((v, di) => { const el = document.getElementById(`tot-mgmt-${di}`); if (el && v !== '' && v != null) el.value = v; });
+  } else {
+    // Standing daily management until Lindsay changes it (Sep 2026)
+    for (let di = 0; di < 7; di++) {
+      const el = document.getElementById(`tot-mgmt-${di}`);
+      if (el) el.value = '0';
+    }
   }
   if (_evtrevs) _evtrevs.forEach((v, di) => { const el = document.getElementById(`tot-evtrev-${di}`);  if (el && v) el.value = v; });
 
