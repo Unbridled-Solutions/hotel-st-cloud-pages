@@ -44,15 +44,15 @@ td { padding: 8px 10px; text-align: right; border-bottom: 1px solid rgba(90,139,
 td.left { text-align: left; color: var(--white, #f5f5f5); font-weight: 600; }
 tr.total td { background: #0d1620; color: var(--gold); font-weight: 700; border-top: 1px solid var(--gold); }
 tr.blank td { color: var(--muted); font-style: italic; }
-tr.week-tot td { background: #2a3844; color: var(--text); font-weight: 700; border-top: 1px solid rgba(90,139,167,0.45); border-bottom: 1px solid rgba(90,139,167,0.45); }
-tr.week-tot td.sticky { background: #2a3844; color: var(--text); border-right: 3px solid #c9aa7c; }
+tr.week-tot td { background: #4a5560; color: #e8e0d4; font-weight: 700; border-top: 1px solid rgba(138,154,170,0.45); border-bottom: 1px solid rgba(138,154,170,0.45); }
+tr.week-tot td.sticky { background: #4a5560; color: #e8e0d4; border-right: 3px solid #c9aa7c; }
 tr.week-tot .pct-hi { color: var(--red); }
 tr.week-tot .pct-ok { color: var(--green); }
 th.grp { text-align: center; color: var(--gold); letter-spacing: 1.6px; border-left: 3px solid #c9aa7c; font-size: 11px; }
 th.sub { font-size: 9px; letter-spacing: 0.8px; }
 th.split, td.split { border-left: 3px solid #c9aa7c; }
 td.sticky, th.sticky { position: sticky; left: 0; z-index: 3; background: #0d1620; min-width: 128px; border-right: 3px solid #c9aa7c; }
-.sheet { min-width: 1680px; font-size: 12px; }
+.sheet { min-width: 1860px; font-size: 12px; }
 .sheet th, .sheet td { padding: 6px 7px; white-space: nowrap; }
 .food-in { width: 78px; background: transparent; border: none; border-bottom: 1px solid rgba(201,170,124,0.35); color: inherit; font-size: 12px; font-weight: 700; text-align: right; outline: none; }
 .food-in:focus { border-bottom-color: var(--gold); }
@@ -123,9 +123,13 @@ let viewGrain = 'daily';
 const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const FOOD_NS = 'uhg-food';
 
-function getFood(mondayYmd) {
-  const n = parseFloat(foodByWeek[mondayYmd]);
-  return n > 0 ? n : 0;
+function foodEntry(mondayYmd) {
+  const raw = foodByWeek[mondayYmd];
+  if (raw && typeof raw === 'object') {
+    return { fp: parseFloat(raw.fp) || 0, hsc: parseFloat(raw.hsc) || 0 };
+  }
+  const n = parseFloat(raw);
+  return { fp: n > 0 ? n : 0, hsc: 0 };
 }
 async function saveFood() {
   try {
@@ -136,22 +140,31 @@ async function saveFood() {
     });
   } catch (e) {}
 }
-function setFood(mondayYmd, val) {
+function setFood(mondayYmd, which, val) {
+  const cur = foodEntry(mondayYmd);
   const n = parseFloat(val);
-  if (!n) delete foodByWeek[mondayYmd];
-  else foodByWeek[mondayYmd] = Math.round(n * 100) / 100;
+  cur[which] = n > 0 ? Math.round(n * 100) / 100 : 0;
+  if (!cur.fp && !cur.hsc) delete foodByWeek[mondayYmd];
+  else foodByWeek[mondayYmd] = cur;
   saveFood();
   render();
 }
-function foodTrail(food, rev, lab, opts) {
-  const foodPct = rev > 0 && food ? food / rev : null;
-  const prime = rev > 0 && (lab || food) ? (lab + food) / rev : null;
-  const fp = (foodPct != null && foodPct > 0.35) ? 'pct-hi' : 'pct-ok';
-  const pp = (prime != null && prime > 0.70) ? 'pct-hi' : 'pct-ok';
-  const foodCell = opts && opts.input
-    ? `<td class="split"><input class="food-in" type="number" step="0.01" min="0" value="${food || ''}" placeholder="—" onchange="setFood('${opts.key}', this.value)"></td>`
-    : `<td class="split">${food ? money(food) : '—'}</td>`;
-  return foodCell + `<td class="${foodPct==null?'':fp}">${pct(foodPct)}</td><td class="${prime==null?'':pp}">${pct(prime)}</td>`;
+function foodInput(mondayYmd, which, n) {
+  return `<input class="food-in" type="number" step="0.01" min="0" value="${n || ''}" placeholder="—" onchange="setFood('${mondayYmd}','${which}', this.value)">`;
+}
+function foodBlock(fpFood, hscFood, fpRev, hscRev, allRev, allLab, opts) {
+  const total = (fpFood || 0) + (hscFood || 0);
+  const fpPct = fpRev > 0 && fpFood ? fpFood / fpRev : null;
+  const hscPct = hscRev > 0 && hscFood ? hscFood / hscRev : null;
+  const totPct = allRev > 0 && total ? total / allRev : null;
+  const prime = allRev > 0 && (allLab || total) ? (allLab + total) / allRev : null;
+  const cls = (p, hi) => (p != null && p > hi) ? 'pct-hi' : (p == null ? '' : 'pct-ok');
+  const fpCell = opts && opts.input ? foodInput(opts.key, 'fp', fpFood) : (fpFood ? money(fpFood) : '—');
+  const hscCell = opts && opts.input ? foodInput(opts.key, 'hsc', hscFood) : (hscFood ? money(hscFood) : '—');
+  return `<td class="split">${fpCell}</td><td class="${cls(fpPct,0.35)}">${pct(fpPct)}</td>`
+    + `<td>${hscCell}</td><td class="${cls(hscPct,0.35)}">${pct(hscPct)}</td>`
+    + `<td>${total ? money(total) : '—'}</td><td class="${cls(totPct,0.35)}">${pct(totPct)}</td>`
+    + `<td class="${cls(prime,0.70)}">${pct(prime)}</td>`;
 }
 
 function getISOWeek(date) {
@@ -408,12 +421,12 @@ function renderSummary() {
     <div class="hero-card"><div class="hero-lbl">UHG actual labor</div><div class="hero-val">${money(grandLab)}</div></div>
     <div class="hero-card"><div class="hero-lbl">Blended labor %</div><div class="hero-val">${pct(grandRev ? grandLab / grandRev : null)}</div></div>
     <div class="hero-card"><div class="hero-lbl">Tax this period</div><div class="hero-val">${Math.round(taxRate(viewPeriod)*100)}%</div><div class="hero-sub">On hourly + management</div></div>`;
-  document.getElementById('note').textContent = 'Click an outlet name to open its daily labor tracker. Days down, weekly totals, period total at the bottom. Actuals only. Food $ is weekly until MarginEdge is wired. Prime % is (labor + food) / revenue.';
+  document.getElementById('note').textContent = 'Click an outlet name to open its daily labor tracker. Food cost is two MarginEdge outlets: FP, and HSC (1887 + Hotel + Standard Oil). Total food / total revenue. Prime is (labor + total food) / revenue.';
 
   const grp = outlets.map((o, i) => {
     const span = o.events ? 6 : 5;
     return `<th class="grp${i ? ' split' : ''}" colspan="${span}"><a href="${o.url}" target="_blank" rel="noopener">${o.name}</a></th>`;
-  }).join('') + `<th class="grp split" colspan="6">Combined</th>`;
+  }).join('') + `<th class="grp split" colspan="10">Combined</th>`;
 
   const subs = outlets.map((o, i) => {
     const first = i ? ' split' : '';
@@ -421,14 +434,14 @@ function renderSummary() {
     if (o.events) h += `<th class="sub">Events</th>`;
     h += `<th class="sub">Hourly</th><th class="sub">Mgmt</th><th class="sub">Labor</th><th class="sub">%</th>`;
     return h;
-  }).join('') + `<th class="sub split">Revenue</th><th class="sub">Labor</th><th class="sub">%</th><th class="sub">Food $</th><th class="sub">Food %</th><th class="sub">Prime %</th>`;
+  }).join('') + `<th class="sub split">Revenue</th><th class="sub">Labor</th><th class="sub">%</th><th class="sub">FP Food</th><th class="sub">FP %</th><th class="sub">HSC Food</th><th class="sub">HSC %</th><th class="sub">Food $</th><th class="sub">Food %</th><th class="sub">Prime %</th>`;
 
   let html = `<table class="sheet"><thead>
     <tr><th class="left sticky"></th>${grp}</tr>
     <tr><th class="left sticky">Date</th>${subs}</tr>
   </thead><tbody>`;
 
-  const periodAcc = { cells: outlets.map(() => ({ restRev:0, evt:0, totalRev:0, hrly:0, mgmt:0, tax:0, labor:0 })), combRev:0, combLab:0, food:0 };
+  const periodAcc = { cells: outlets.map(() => ({ restRev:0, evt:0, totalRev:0, hrly:0, mgmt:0, tax:0, labor:0 })), combRev:0, combLab:0, fpFood:0, hscFood:0, fpRev:0, hscRev:0 };
 
   weeks.forEach((monday, wi) => {
     const weekAcc = outlets.map(() => ({ restRev:0, evt:0, totalRev:0, hrly:0, mgmt:0, tax:0, labor:0, has:false }));
@@ -449,7 +462,7 @@ function renderSummary() {
       });
       const cp = combRev > 0 ? combLab / combRev : null;
       const pcls = (cp != null && cp > 0.35) ? 'pct-hi' : 'pct-ok';
-      row += `<td class="split">${money(combRev)}</td><td>${money(combLab)}</td><td class="${cp==null?'':pcls}">${pct(cp)}</td><td>—</td><td>—</td><td>—</td></tr>`;
+      row += `<td class="split">${money(combRev)}</td><td>${money(combLab)}</td><td class="${cp==null?'':pcls}">${pct(cp)}</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>`;
       html += row;
       weekCombRev += combRev; weekCombLab += combLab;
     }
@@ -464,11 +477,17 @@ function renderSummary() {
     const wp = weekCombRev > 0 ? weekCombLab / weekCombRev : null;
     const wpcls = (wp != null && wp > 0.35) ? 'pct-hi' : 'pct-ok';
     const wkKey = ymd(monday);
-    const food = getFood(wkKey);
-    tot += `<td class="split">${money(weekCombRev)}</td><td>${money(weekCombLab)}</td><td class="${wp==null?'':wpcls}">${pct(wp)}</td>` + foodTrail(food, weekCombRev, weekCombLab, { input: true, key: wkKey });
+    const fe = foodEntry(wkKey);
+    const fpIdx = outlets.findIndex(o => o.id === 'fp');
+    const fpRev = fpIdx >= 0 ? weekAcc[fpIdx].totalRev : 0;
+    const hscRev = weekAcc.reduce((s, w, i) => s + (outlets[i].id === 'fp' ? 0 : w.totalRev), 0);
+    tot += `<td class="split">${money(weekCombRev)}</td><td>${money(weekCombLab)}</td><td class="${wp==null?'':wpcls}">${pct(wp)}</td>`
+      + foodBlock(fe.fp, fe.hsc, fpRev, hscRev, weekCombRev, weekCombLab, { input: true, key: wkKey });
     tot += `</tr>`;
     html += tot;
-    periodAcc.combRev += weekCombRev; periodAcc.combLab += weekCombLab; periodAcc.food += food;
+    periodAcc.combRev += weekCombRev; periodAcc.combLab += weekCombLab;
+    periodAcc.fpFood += fe.fp; periodAcc.hscFood += fe.hsc;
+    periodAcc.fpRev += fpRev; periodAcc.hscRev += hscRev;
   });
 
   let per = `<tr class="total"><td class="left sticky">Period ${viewPeriod} actual</td>`;
@@ -478,7 +497,8 @@ function renderSummary() {
   });
   const pp = periodAcc.combRev > 0 ? periodAcc.combLab / periodAcc.combRev : null;
   const ppcls = (pp != null && pp > 0.35) ? 'pct-hi' : 'pct-ok';
-  per += `<td class="split">${money(periodAcc.combRev)}</td><td>${money(periodAcc.combLab)}</td><td class="${pp==null?'':ppcls}">${pct(pp)}</td>` + foodTrail(periodAcc.food, periodAcc.combRev, periodAcc.combLab, null);
+  per += `<td class="split">${money(periodAcc.combRev)}</td><td>${money(periodAcc.combLab)}</td><td class="${pp==null?'':ppcls}">${pct(pp)}</td>`
+    + foodBlock(periodAcc.fpFood, periodAcc.hscFood, periodAcc.fpRev, periodAcc.hscRev, periodAcc.combRev, periodAcc.combLab, null);
   per += `</tr>`;
   html += per + '</tbody></table>';
   document.getElementById('grid').innerHTML = html;
