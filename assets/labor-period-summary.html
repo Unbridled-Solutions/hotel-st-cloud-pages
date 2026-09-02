@@ -43,6 +43,10 @@ th.left { text-align: left; }
 td { padding: 8px 10px; text-align: right; border-bottom: 1px solid rgba(90,139,167,0.12); color: var(--text); background: var(--card); }
 td.left { text-align: left; color: var(--white, #f5f5f5); font-weight: 600; }
 tr.total td { background: #0d1620; color: var(--gold); font-weight: 700; border-top: 1px solid var(--gold); }
+tr.forecast td { background: #1c3344; color: #b7d0de; font-weight: 700; border-top: 1px solid rgba(90,139,167,0.55); }
+tr.forecast td.sticky { background: #1c3344; color: #d5e6ef; border-right: 3px solid #c9aa7c; }
+tr.vs td { background: #15222c; color: var(--text); font-weight: 700; }
+tr.vs td.sticky { background: #15222c; border-right: 3px solid #c9aa7c; }
 tr.blank td { color: var(--muted); font-style: italic; }
 tr.week-tot td { background: #4a5560; color: #e8e0d4; font-weight: 700; border-top: 1px solid rgba(138,154,170,0.45); border-bottom: 1px solid rgba(138,154,170,0.45); }
 tr.week-tot td.sticky { background: #4a5560; color: #e8e0d4; border-right: 3px solid #c9aa7c; }
@@ -118,11 +122,61 @@ const OUTLETS = [
 
 let bundles = {};
 let foodByWeek = {};
+let forecastByPeriod = {};
 let viewPeriod = null;
 let viewYear = 2026;
 let viewGrain = 'daily';
 const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const FOOD_NS = 'uhg-food';
+const FC_NS = 'uhg-forecast';
+
+function fcKey() { return viewYear + '-P' + viewPeriod; }
+function fcEntry() {
+  const raw = forecastByPeriod[fcKey()];
+  return (raw && typeof raw === 'object') ? raw : {};
+}
+async function saveForecast() {
+  try {
+    await fetch('/api/planner/bundle?ns=' + FC_NS, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(forecastByPeriod)
+    });
+  } catch (e) {}
+}
+function setFc(oid, field, val) {
+  const key = fcKey();
+  const all = fcEntry();
+  const cur = Object.assign({}, all[oid] || {});
+  const n = parseFloat(val);
+  if (!n) delete cur[field];
+  else cur[field] = Math.round(n * 100) / 100;
+  if (!Object.keys(cur).length) delete all[oid];
+  else all[oid] = cur;
+  if (!Object.keys(all).length) delete forecastByPeriod[key];
+  else forecastByPeriod[key] = all;
+  saveForecast();
+  render();
+}
+function fcInput(oid, field, n) {
+  return `<input class="food-in" type="number" step="0.01" min="0" value="${n || ''}" placeholder="—" onchange="setFc('${oid}','${field}', this.value)">`;
+}
+function fcNum(oid, field) {
+  return parseFloat((fcEntry()[oid] || {})[field]) || 0;
+}
+function periodComplete() {
+  const weeks = weeksInPeriod(viewYear, viewPeriod);
+  if (!weeks.length) return 0;
+  const start = weeks[0];
+  const end = addDays(weeks[weeks.length - 1], 6);
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  if (today < start) return 0;
+  if (today > end) return 1;
+  const total = (end - start) / 86400000 + 1;
+  const done = (today - start) / 86400000 + 1;
+  return done / total;
+}
 
 function foodEntry(mondayYmd) {
   const raw = foodByWeek[mondayYmd];
@@ -160,8 +214,12 @@ function foodBlock(fpFood, hscFood, fpRev, hscRev, allRev, allLab, opts) {
   const totPct = allRev > 0 && total ? total / allRev : null;
   const prime = allRev > 0 && (allLab || total) ? (allLab + total) / allRev : null;
   const cls = (p, hi) => (p != null && p > hi) ? 'pct-hi' : (p == null ? '' : 'pct-ok');
-  const fpCell = opts && opts.input ? foodInput(opts.key, 'fp', fpFood) : (fpFood ? money(fpFood) : '—');
-  const hscCell = opts && opts.input ? foodInput(opts.key, 'hsc', hscFood) : (hscFood ? money(hscFood) : '—');
+  const fpCell = opts && opts.forecast
+    ? fcInput('food', 'fp', fpFood)
+    : opts && opts.input ? foodInput(opts.key, 'fp', fpFood) : (fpFood ? money(fpFood) : '—');
+  const hscCell = opts && opts.forecast
+    ? fcInput('food', 'hsc', hscFood)
+    : opts && opts.input ? foodInput(opts.key, 'hsc', hscFood) : (hscFood ? money(hscFood) : '—');
   return `<td class="split">${fpCell}</td><td class="${cls(fpPct,0.35)}">${pct(fpPct)}</td>`
     + `<td>${hscCell}</td><td class="${cls(hscPct,0.35)}">${pct(hscPct)}</td>`
     + `<td class="split">${total ? money(total) : '—'}</td><td class="${cls(totPct,0.35)}">${pct(totPct)}</td>`
@@ -411,6 +469,34 @@ function outletCells(w, o, first) {
   return html;
 }
 
+function outletForecastCells(o, first) {
+  const rest = fcNum(o.id, 'rest');
+  const evt = fcNum(o.id, 'evt');
+  const lab = fcNum(o.id, 'labor');
+  const tot = rest + (o.events ? evt : 0);
+  const lp = tot > 0 && lab ? lab / tot : null;
+  const pcls = (lp != null && lp > 0.35) ? 'pct-hi' : 'pct-ok';
+  const split = first ? '' : ' split';
+  let html = `<td class="${split}">${fcInput(o.id, 'rest', rest)}</td>`;
+  if (o.events) html += `<td>${fcInput(o.id, 'evt', evt)}</td>`;
+  html += `<td>—</td><td>—</td><td>${fcInput(o.id, 'labor', lab)}</td><td class="${lp==null?'':pcls}">${pct(lp)}</td>`;
+  return html;
+}
+function vsPct(act, fc) {
+  if (!fc) return null;
+  return act / fc;
+}
+function outletVsCells(act, o, first) {
+  const rest = vsPct(act.restRev, fcNum(o.id, 'rest'));
+  const evt = o.events ? vsPct(act.evt, fcNum(o.id, 'evt')) : null;
+  const lab = vsPct(act.labor, fcNum(o.id, 'labor'));
+  const split = first ? '' : ' split';
+  let html = `<td class="${split}">${pct(rest)}</td>`;
+  if (o.events) html += `<td>${pct(evt)}</td>`;
+  html += `<td>—</td><td>—</td><td>${pct(lab)}</td><td>—</td>`;
+  return html;
+}
+
 function renderSummary() {
   const outlets = summaryOutlets();
   const weeks = weeksInPeriod(viewYear, viewPeriod);
@@ -501,7 +587,39 @@ function renderSummary() {
   per += `<td class="split">${money(periodAcc.combRev)}</td><td>${money(periodAcc.combLab)}</td><td class="${pp==null?'':ppcls}">${pct(pp)}</td>`
     + foodBlock(periodAcc.fpFood, periodAcc.hscFood, periodAcc.fpRev, periodAcc.hscRev, periodAcc.combRev, periodAcc.combLab, null);
   per += `</tr>`;
-  html += per + '</tbody></table>';
+  html += per;
+
+  const fcFpFood = fcNum('food', 'fp');
+  const fcHscFood = fcNum('food', 'hsc');
+  let fcCombRev = 0, fcCombLab = 0, fcFpRev = 0, fcHscRev = 0;
+  let fcRow = `<tr class="forecast"><td class="left sticky">Period ${viewPeriod} forecast</td>`;
+  outlets.forEach((o, oi) => {
+    fcRow += outletForecastCells(o, oi === 0);
+    const rest = fcNum(o.id, 'rest');
+    const evt = o.events ? fcNum(o.id, 'evt') : 0;
+    const lab = fcNum(o.id, 'labor');
+    const tot = rest + evt;
+    fcCombRev += tot;
+    fcCombLab += lab;
+    if (o.id === 'fp') fcFpRev += tot;
+    else fcHscRev += tot;
+  });
+  const fcLp = fcCombRev > 0 && fcCombLab ? fcCombLab / fcCombRev : null;
+  const fcLpCls = (fcLp != null && fcLp > 0.35) ? 'pct-hi' : 'pct-ok';
+  fcRow += `<td class="split">${money(fcCombRev)}</td><td>${money(fcCombLab)}</td><td class="${fcLp==null?'':fcLpCls}">${pct(fcLp)}</td>`
+    + foodBlock(fcFpFood, fcHscFood, fcFpRev, fcHscRev, fcCombRev, fcCombLab, { forecast: true });
+  fcRow += `</tr>`;
+  html += fcRow;
+
+  const done = periodComplete();
+  let vs = `<tr class="vs"><td class="left sticky">% of forecast · ${Math.round(done*100)}% of period</td>`;
+  outlets.forEach((o, oi) => {
+    vs += outletVsCells(periodAcc.cells[oi], o, oi === 0);
+  });
+  vs += `<td class="split">${pct(vsPct(periodAcc.combRev, fcCombRev))}</td><td>${pct(vsPct(periodAcc.combLab, fcCombLab))}</td><td>—</td>`
+    + `<td class="split">${pct(vsPct(periodAcc.fpFood, fcFpFood))}</td><td>—</td><td>${pct(vsPct(periodAcc.hscFood, fcHscFood))}</td><td>—</td>`
+    + `<td class="split">${pct(vsPct(periodAcc.fpFood + periodAcc.hscFood, fcFpFood + fcHscFood))}</td><td>—</td><td class="split">—</td></tr>`;
+  html += vs + '</tbody></table>';
   document.getElementById('grid').innerHTML = html;
 }
 
@@ -534,6 +652,11 @@ async function loadAll() {
     const fj = await fr.json();
     foodByWeek = (fj.data && typeof fj.data === 'object') ? fj.data : {};
   } catch (e) { foodByWeek = foodByWeek || {}; }
+  try {
+    const cr = await fetch('/api/planner/bundle?ns=' + FC_NS);
+    const cj = await cr.json();
+    forecastByPeriod = (cj.data && typeof cj.data === 'object') ? cj.data : {};
+  } catch (e) { forecastByPeriod = forecastByPeriod || {}; }
   document.getElementById('status').textContent = 'Live from KV';
   render();
 }
