@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Period Labor Summary — Unbridled Hospitality</title>
+<style>
+:root {
+  --bg: #0f1923; --navy: #1a2e3b; --navy2: #162636; --card: #162433;
+  --gold: #c9aa7c; --blue: #5a8ba7; --text: #e8e0d4; --muted: #8a9aaa;
+  --border: rgba(90,139,167,0.22); --green: #4caf7d; --red: #e05a5a;
+  --orange: #f97316;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; min-height: 100vh; }
+.header { background: linear-gradient(135deg, var(--navy) 0%, #0f1923 100%); border-bottom: 2px solid var(--gold); padding: 16px 22px 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+.eyebrow { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 3px; }
+h1 { font-size: 20px; font-weight: 700; }
+.hdr-right { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.hdr-btn { background: var(--card); border: 1px solid var(--border); color: var(--muted); border-radius: 6px; font-size: 11px; padding: 7px 14px; cursor: pointer; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+.hdr-btn:hover { border-color: var(--gold); color: var(--gold); }
+.week-nav { background: var(--navy); border-bottom: 1px solid var(--border); padding: 9px 22px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.week-nav label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+.week-nav-btn { background: var(--card); border: 1px solid var(--border); color: var(--gold); border-radius: 5px; font-size: 18px; font-weight: 700; padding: 2px 10px; cursor: pointer; }
+.period-chip { background: rgba(90,139,167,0.15); border: 1px solid rgba(90,139,167,0.4); color: var(--blue); border-radius: 5px; font-size: 11px; font-weight: 700; padding: 3px 10px; }
+.tax-chip { background: rgba(201,170,124,0.1); border: 1px solid rgba(201,170,124,0.3); color: var(--gold); border-radius: 5px; font-size: 11px; font-weight: 700; padding: 3px 10px; }
+.range { font-size: 13px; color: var(--gold); font-weight: 600; }
+.tabs { display: flex; gap: 0; padding: 0 22px; background: #0d1620; border-bottom: 1px solid var(--border); overflow-x: auto; }
+.tab { background: transparent; border: none; color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; padding: 12px 16px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+.tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+.wrap { padding: 18px 22px 48px; max-width: 1280px; margin: 0 auto; }
+.note { font-size: 12px; color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
+.note a { color: var(--blue); }
+.grid { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 920px; }
+th { background: #0d1620; color: var(--blue); font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; text-align: right; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+th.left { text-align: left; }
+td { padding: 8px 10px; text-align: right; border-bottom: 1px solid rgba(90,139,167,0.12); color: var(--text); background: var(--card); }
+td.left { text-align: left; color: var(--white, #f5f5f5); font-weight: 600; }
+tr.total td { background: #0d1620; color: var(--gold); font-weight: 700; border-top: 1px solid var(--gold); }
+tr.blank td { color: var(--muted); font-style: italic; }
+.pct-hi { color: var(--red); font-weight: 700; }
+.pct-ok { color: var(--green); font-weight: 700; }
+.hero { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 0 0 16px; }
+.hero-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.hero-lbl { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.hero-val { font-size: 20px; font-weight: 700; color: var(--gold); }
+.hero-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.outlet-link { font-size: 11px; color: var(--blue); text-decoration: none; }
+.outlet-link:hover { color: var(--gold); }
+.status { font-size: 12px; color: var(--muted); margin-left: auto; }
+@media (max-width: 800px) { .hero { grid-template-columns: 1fr 1fr; } }
+@media print {
+  .tabs, .hdr-btn, .week-nav-btn { display: none; }
+  body { background: white; color: #111; }
+  td, th { background: white; color: #111; }
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <div class="eyebrow">Unbridled Hospitality Group</div>
+    <h1>Period Labor Summary</h1>
+  </div>
+  <div class="hdr-right">
+    <span class="status" id="status">Loading…</span>
+    <button class="hdr-btn" onclick="loadAll()">Refresh</button>
+    <button class="hdr-btn" onclick="window.print()">Print</button>
+  </div>
+</div>
+<div class="week-nav">
+  <label>Period</label>
+  <button class="week-nav-btn" onclick="shiftPeriod(-1)">‹</button>
+  <span class="period-chip" id="periodChip">Period</span>
+  <button class="week-nav-btn" onclick="shiftPeriod(1)">›</button>
+  <span class="range" id="rangeLbl"></span>
+  <span class="tax-chip" id="taxChip"></span>
+</div>
+<div class="tabs" id="tabs"></div>
+<div class="wrap">
+  <p class="note" id="note"></p>
+  <div class="hero" id="hero"></div>
+  <div class="grid"><table id="grid"></table></div>
+</div>
+<script>
+const OUTLETS = [
+  { id:'fph', name:'Fremont Public House', short:'Fremont Public House', ns:'fp-ph', prefix:'fp-ph-wk-', history:'fp-ph-history', events:true, hotel:false, url:'https://offers.hotelstcloud.com/assets/fp-ph-planner' },
+  { id:'fp',  name:'Fremont Provisions', short:'Fremont Provisions', ns:'fp', prefix:'fp-labor-wk-', history:'fp-labor-history', events:true, hotel:false, url:'https://offers.hotelstcloud.com/assets/fp-labor-planner' },
+  { id:'hsc', name:'Hotel St. Cloud', short:'Hotel', ns:'hsc', prefix:'hsc-wk-', history:'hsc-history', events:false, hotel:true, url:'https://offers.hotelstcloud.com/assets/hsc-labor-planner' },
+  { id:'socc',name:'Standard Oil Coffee Co', short:'Standard Oil', ns:'socc', prefix:'socc-wk-', history:'socc-history', events:true, hotel:false, url:'https://offers.hotelstcloud.com/assets/socc-labor-planner' },
+];
+
+let bundles = {};
+let viewPeriod = null;
+let activeTab = 'summary';
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+function getISOWeek(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const day = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+function mondayOf(d) {
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const dow = x.getDay();
+  const diff = (dow === 0) ? -6 : 1 - dow;
+  x.setDate(x.getDate() + diff);
+  return x;
+}
+function ymd(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate()+n); return x; }
+function periodOf(d) { return Math.ceil(getISOWeek(d) / 4); }
+function yearOfISO(d) {
+  const x = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = x.getUTCDay() || 7;
+  x.setUTCDate(x.getUTCDate() + 4 - day);
+  return x.getUTCFullYear();
+}
+function taxRate(period) { return period >= 8 ? 0.13 : 0.11; }
+function money(n) {
+  if (n == null || !isFinite(n) || n === 0) return '—';
+  return '$' + Math.round(n).toLocaleString();
+}
+function pct(n) {
+  if (n == null || !isFinite(n)) return '—';
+  return (n * 100).toFixed(1) + '%';
+}
+function sumArr(a) {
+  if (!Array.isArray(a)) return 0;
+  let s = 0;
+  for (const v of a) {
+    const n = parseFloat(v);
+    if (n) s += n;
+  }
+  return s;
+}
+
+function weeksInPeriod(year, period) {
+  const weeks = [];
+  let d = new Date(year, 0, 4);
+  d = mondayOf(d);
+  for (let i = 0; i < 60; i++) {
+    const isoY = yearOfISO(d);
+    const p = periodOf(d);
+    if (isoY === year && p === period) weeks.push(new Date(d));
+    if (isoY > year || (isoY === year && p > period && weeks.length)) break;
+    d = addDays(d, 7);
+  }
+  return weeks;
+}
+
+function weekFromBundle(bundle, prefix, mondayStr) {
+  if (!bundle) return null;
+  return bundle[prefix + mondayStr] || null;
+}
+
+function rollWeek(outlet, monday, bundle) {
+  const key = ymd(monday);
+  const w = weekFromBundle(bundle, outlet.prefix, key);
+  const rest = w ? sumArr(w.actrevs) : 0;
+  const evt = (outlet.events && w) ? sumArr(w.evtrevs) : 0;
+  let hotel = 0;
+  if (outlet.hotel && w) hotel = sumArr(w.actrevs) || sumArr(w.bookedrevs);
+  const restRev = outlet.hotel ? hotel : rest;
+  const totalRev = restRev + evt;
+  const hrly = w ? sumArr(w.hrlyacts) : 0;
+  const mgmt = w ? sumArr(w.mgmtacts) : 0;
+  const tax = (hrly + mgmt) * taxRate(viewPeriod);
+  const labor = hrly + mgmt + tax;
+  const laborPct = totalRev > 0 ? labor / totalRev : null;
+  const has = !!(w && (restRev || evt || hrly || mgmt));
+  return { key, restRev, evt, totalRev, hrly, mgmt, tax, labor, laborPct, has };
+}
+
+function rollPeriod(outlet, year, period, bundle) {
+  const weeks = weeksInPeriod(year, period).map(m => rollWeek(outlet, m, bundle));
+  const tot = weeks.reduce((a, w) => {
+    a.restRev += w.restRev; a.evt += w.evt; a.totalRev += w.totalRev;
+    a.hrly += w.hrly; a.mgmt += w.mgmt; a.tax += w.tax; a.labor += w.labor;
+    return a;
+  }, { restRev:0, evt:0, totalRev:0, hrly:0, mgmt:0, tax:0, labor:0 });
+  tot.laborPct = tot.totalRev > 0 ? tot.labor / tot.totalRev : null;
+  tot.has = weeks.some(w => w.has);
+  return { weeks, tot };
+}
+
+let viewYear = 2026;
+
+function currentPeriodInfo() {
+  const today = new Date();
+  return { year: yearOfISO(today), period: periodOf(mondayOf(today)) };
+}
+
+function shiftPeriod(delta) {
+  viewPeriod += delta;
+  if (viewPeriod < 1) { viewPeriod = 13; viewYear -= 1; }
+  if (viewPeriod > 13) { viewPeriod = 1; viewYear += 1; }
+  render();
+}
+
+function setTabs() {
+  const el = document.getElementById('tabs');
+  const items = [{id:'summary', label:'Summary'}].concat(OUTLETS.map(o => ({id:o.id, label:o.short})));
+  el.innerHTML = items.map(t => `<button class="tab ${t.id===activeTab?'active':''}" onclick="activeTab='${t.id}';render()">${t.label}</button>`).join('');
+}
+
+function rowHTML(label, w, isTotal) {
+  const cls = isTotal ? 'total' : (w.has ? '' : 'blank');
+  const pcls = (w.laborPct != null && w.laborPct > 0.35) ? 'pct-hi' : 'pct-ok';
+  return `<tr class="${cls}">
+    <td class="left">${label}</td>
+    <td>${money(w.restRev)}</td>
+    <td>${money(w.evt)}</td>
+    <td>${money(w.totalRev)}</td>
+    <td>${money(w.hrly)}</td>
+    <td>${money(w.mgmt)}</td>
+    <td>${money(w.tax)}</td>
+    <td>${money(w.labor)}</td>
+    <td class="${w.laborPct==null?'':pcls}">${pct(w.laborPct)}</td>
+  </tr>`;
+}
+
+function tableHead(revLabel) {
+  return `<thead><tr>
+    <th class="left">Week</th>
+    <th>${revLabel}</th>
+    <th>Event Rev</th>
+    <th>Total Rev</th>
+    <th>Hourly</th>
+    <th>Management</th>
+    <th>Tax</th>
+    <th>Total Labor</th>
+    <th>Labor %</th>
+  </tr></thead>`;
+}
+
+function renderOutlet(o) {
+  const weeks = weeksInPeriod(viewYear, viewPeriod);
+  const bundle = bundles[o.ns] || {};
+  const rolled = rollPeriod(o, viewYear, viewPeriod, bundle);
+  const revLabel = o.hotel ? 'Hotel Rev' : 'Restaurant Rev';
+  document.getElementById('note').innerHTML = `Live from the weekly sheet. Tax is ${Math.round(taxRate(viewPeriod)*100)}% of hourly + management. <a class="outlet-link" href="${o.url}" target="_blank">Open weekly planner</a>`;
+  document.getElementById('hero').innerHTML = `
+    <div class="hero-card"><div class="hero-lbl">Total revenue</div><div class="hero-val">${money(rolled.tot.totalRev)}</div><div class="hero-sub">${o.hotel ? 'Rooms' : 'Restaurant'} + events</div></div>
+    <div class="hero-card"><div class="hero-lbl">Total labor</div><div class="hero-val">${money(rolled.tot.labor)}</div><div class="hero-sub">Hourly + mgmt + tax</div></div>
+    <div class="hero-card"><div class="hero-lbl">Labor %</div><div class="hero-val">${pct(rolled.tot.laborPct)}</div><div class="hero-sub">Labor / total revenue</div></div>
+    <div class="hero-card"><div class="hero-lbl">Management</div><div class="hero-val">${money(rolled.tot.mgmt)}</div><div class="hero-sub">Standing daily rates included</div></div>`;
+  let body = tableHead(revLabel) + '<tbody>';
+  rolled.weeks.forEach((w, i) => {
+    const m = weeks[i];
+    const sun = addDays(m, 6);
+    const label = `Wk ${i+1} · ${m.getMonth()+1}/${m.getDate()}–${sun.getMonth()+1}/${sun.getDate()}`;
+    body += rowHTML(label, w, false);
+  });
+  body += rowHTML('Period total', rolled.tot, true);
+  body += '</tbody>';
+  document.getElementById('grid').innerHTML = body;
+}
+
+function renderSummary() {
+  document.getElementById('note').textContent = 'Running tally for the period. Fremont Provisions, 1887, Hotel, then Standard Oil. Event revenue is in the total. Hotel has no event column.';
+  const rolls = OUTLETS.map(o => ({ o, r: rollPeriod(o, viewYear, viewPeriod, bundles[o.ns] || {}) }));
+  const grand = rolls.reduce((a, x) => {
+    a.totalRev += x.r.tot.totalRev; a.labor += x.r.tot.labor; a.hrly += x.r.tot.hrly; a.mgmt += x.r.tot.mgmt; a.tax += x.r.tot.tax;
+    return a;
+  }, { totalRev:0, labor:0, hrly:0, mgmt:0, tax:0 });
+  grand.laborPct = grand.totalRev > 0 ? grand.labor / grand.totalRev : null;
+  document.getElementById('hero').innerHTML = `
+    <div class="hero-card"><div class="hero-lbl">All outlets · revenue</div><div class="hero-val">${money(grand.totalRev)}</div></div>
+    <div class="hero-card"><div class="hero-lbl">All outlets · labor</div><div class="hero-val">${money(grand.labor)}</div></div>
+    <div class="hero-card"><div class="hero-lbl">Blended labor %</div><div class="hero-val">${pct(grand.laborPct)}</div></div>
+    <div class="hero-card"><div class="hero-lbl">Tax in labor</div><div class="hero-val">${money(grand.tax)}</div><div class="hero-sub">${Math.round(taxRate(viewPeriod)*100)}% this period</div></div>`;
+  let html = tableHead('Restaurant / Hotel') + '<tbody>';
+  rolls.forEach(x => {
+    html += rowHTML(x.o.name, x.r.tot, false);
+  });
+  html += rowHTML('Company total', { ...grand, restRev: rolls.reduce((s,x)=>s+x.r.tot.restRev,0), evt: rolls.reduce((s,x)=>s+x.r.tot.evt,0), has:true }, true);
+  html += '</tbody>';
+  document.getElementById('grid').innerHTML = html;
+}
+
+function render() {
+  setTabs();
+  const weeks = weeksInPeriod(viewYear, viewPeriod);
+  const first = weeks[0], last = addDays(weeks[weeks.length-1], 6);
+  document.getElementById('periodChip').textContent = `Period ${viewPeriod} · ${viewYear}`;
+  document.getElementById('rangeLbl').textContent = first ? `${first.getMonth()+1}/${first.getDate()} – ${last.getMonth()+1}/${last.getDate()}` : '';
+  document.getElementById('taxChip').textContent = `Tax ${Math.round(taxRate(viewPeriod)*100)}%`;
+  if (activeTab === 'summary') renderSummary();
+  else {
+    const o = OUTLETS.find(x => x.id === activeTab);
+    if (o) renderOutlet(o);
+  }
+}
+
+async function loadAll() {
+  document.getElementById('status').textContent = 'Loading…';
+  const results = await Promise.all(OUTLETS.map(async o => {
+    try {
+      const res = await fetch('/api/planner/bundle?ns=' + o.ns);
+      const json = await res.json();
+      return [o.ns, json.data || {}];
+    } catch (e) {
+      return [o.ns, {}];
+    }
+  }));
+  bundles = Object.fromEntries(results);
+  document.getElementById('status').textContent = 'Live from KV';
+  render();
+}
+
+(function init() {
+  const cur = currentPeriodInfo();
+  viewYear = cur.year;
+  viewPeriod = cur.period;
+  loadAll();
+})();
+</script>
+</body>
+</html>
