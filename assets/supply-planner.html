@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Supply Planner — Unbridled Hospitality</title>
+<style>
+:root {
+  --bg: #0f1923; --navy: #1a2e3b; --card: #162433;
+  --gold: #c9aa7c; --blue: #5a8ba7; --text: #e8e0d4; --muted: #8a9aaa;
+  --border: rgba(90,139,167,0.22); --green: #4caf7d; --red: #e05a5a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; min-height: 100vh; }
+.header { background: linear-gradient(135deg, var(--navy) 0%, #0f1923 100%); border-bottom: 2px solid var(--gold); padding: 16px 22px 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+.eyebrow { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 3px; }
+h1 { font-size: 20px; font-weight: 700; }
+.hdr-right { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.hdr-btn { background: var(--card); border: 1px solid var(--border); color: var(--muted); border-radius: 6px; font-size: 11px; padding: 7px 14px; cursor: pointer; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; text-decoration: none; }
+.hdr-btn:hover { border-color: var(--gold); color: var(--gold); }
+.week-nav { background: var(--navy); border-bottom: 1px solid var(--border); padding: 9px 22px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.week-nav label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+.week-nav-btn { background: var(--card); border: 1px solid var(--border); color: var(--gold); border-radius: 5px; font-size: 18px; font-weight: 700; padding: 2px 10px; cursor: pointer; }
+.period-chip { background: rgba(90,139,167,0.15); border: 1px solid rgba(90,139,167,0.4); color: var(--blue); border-radius: 5px; font-size: 11px; font-weight: 700; padding: 3px 10px; }
+.period-sel { background: var(--card); border: 1px solid var(--border); color: var(--text); border-radius: 5px; font-size: 12px; font-weight: 600; padding: 5px 8px; }
+.range { font-size: 13px; color: var(--gold); font-weight: 600; }
+.status { font-size: 12px; color: var(--muted); }
+.wrap { padding: 18px 22px 48px; }
+.note { font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.5; }
+.note a { color: var(--blue); }
+.hero { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 0 0 18px; }
+.hero-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.hero-lbl { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.hero-val { font-size: 20px; font-weight: 700; color: var(--gold); }
+.hero-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 980px) { .cols { grid-template-columns: 1fr; } .hero { grid-template-columns: 1fr 1fr; } }
+.panel { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.panel-head { padding: 12px 14px; border-bottom: 1px solid var(--gold); display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.panel-head h2 { font-size: 14px; letter-spacing: 1px; text-transform: uppercase; color: var(--gold); }
+.panel-head .sub { font-size: 11px; color: var(--muted); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #0d1620; color: var(--blue); font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; text-align: right; padding: 8px 10px; }
+th.left, td.left { text-align: left; }
+td { padding: 8px 10px; text-align: right; border-bottom: 1px solid rgba(90,139,167,0.12); }
+tr.total td { background: #0d1620; color: var(--gold); font-weight: 700; border-top: 1px solid var(--gold); }
+.pct-hi { color: var(--red); font-weight: 700; }
+.pct-ok { color: var(--green); font-weight: 700; }
+.budget-in { width: 88px; background: transparent; border: none; border-bottom: 1px solid rgba(201,170,124,0.35); color: inherit; font-size: 13px; font-weight: 700; text-align: right; outline: none; }
+.dollar-in { display: inline-flex; align-items: baseline; justify-content: flex-end; gap: 1px; font-weight: 700; }
+.week-block { margin-top: 22px; }
+.week-block h3 { font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+.grid { overflow-x: auto; }
+.sheet { min-width: 720px; font-size: 12px; }
+.sheet th, .sheet td { padding: 6px 8px; white-space: nowrap; }
+th.split, td.split { border-left: 3px solid #c9aa7c; }
+th.grp { text-align: center; color: var(--gold); letter-spacing: 1.4px; }
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <div class="eyebrow">Unbridled Hospitality Group</div>
+    <h1>Supply Planner</h1>
+  </div>
+  <div class="hdr-right">
+    <span class="status" id="status">Loading…</span>
+    <a class="hdr-btn" href="https://offers.hotelstcloud.com/assets/labor-period-summary">Period summary</a>
+    <button class="hdr-btn" onclick="loadAll()">Refresh</button>
+  </div>
+</div>
+<div class="week-nav">
+  <label>Period</label>
+  <button class="week-nav-btn" onclick="shiftPeriod(-1)">‹</button>
+  <select class="period-sel" id="periodSel" onchange="onPeriodSelect()"></select>
+  <button class="week-nav-btn" onclick="shiftPeriod(1)">›</button>
+  <span class="period-chip" id="periodChip">Period</span>
+  <span class="range" id="rangeLbl"></span>
+</div>
+<div class="wrap">
+  <p class="note">MarginEdge expenses that count as supplies: Kitchen, Restaurant, Paper, Supplies/Hotel, Cleaning / Janitorial, Linen / Laundry, Office, Printing. Same list for Fremont Provisions and 1887 (1887 unit includes hotel + Standard Oil). Standing period budget is $9,000 — $2,000 FP / $7,000 1887 — until you change it. Not included: dues, repairs, contract cleaning, smallwares.</p>
+  <div class="hero" id="hero"></div>
+  <div class="cols" id="panels"></div>
+  <div class="week-block">
+    <h3>Weekly spend</h3>
+    <div class="grid"><table class="sheet" id="weeks"></table></div>
+  </div>
+</div>
+<script>
+const CATS = [
+  'Kitchen Supplies',
+  'Restaurant Supplies',
+  'Paper Supplies',
+  'Supplies/Hotel',
+  'Cleaning / Janitorial Supplies',
+  'Linen / Laundry',
+  'Office Supplies',
+  'Printing',
+];
+const SIDES = [
+  { id: 'fp', name: 'Fremont Provisions', defaultBudget: 2000 },
+  { id: 'hsc', name: '1887 / Hotel / Standard Oil', defaultBudget: 7000 },
+];
+const NS = 'uhg-supplies';
+const DEFAULT_BUDGET = { fp: 2000, hsc: 7000 };
+
+let store = { weeks: {}, budget: {} };
+let viewPeriod = null;
+let viewYear = 2026;
+let saveLock = Promise.resolve();
+
+function enqueue(fn) { saveLock = saveLock.then(fn, fn); return saveLock; }
+function getISOWeek(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const day = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate()+n); return x; }
+function mondayOf(d) { const x = new Date(d); const day = x.getDay() || 7; if (day !== 1) x.setDate(x.getDate() - (day - 1)); x.setHours(0,0,0,0); return x; }
+function periodOf(d) { return Math.ceil(getISOWeek(d) / 4); }
+function yearOfISO(d) {
+  const x = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = x.getUTCDay() || 7;
+  x.setUTCDate(x.getUTCDate() + 4 - day);
+  return x.getUTCFullYear();
+}
+function ymd(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function weeksInPeriod(year, period) {
+  const out = [];
+  let d = mondayOf(new Date(year, 0, 4));
+  for (let i = 0; i < 60; i++) {
+    if (yearOfISO(d) === year && periodOf(d) === period) out.push(new Date(d));
+    d = addDays(d, 7);
+    if (yearOfISO(d) > year && out.length) break;
+  }
+  return out;
+}
+function currentPeriodInfo() {
+  const today = new Date();
+  return { year: yearOfISO(today), period: periodOf(mondayOf(today)) };
+}
+function money(n) {
+  if (n == null || n === '' || !isFinite(n)) return '—';
+  const rounded = Math.round(n);
+  if (rounded === 0) return '$0';
+  return '$' + rounded.toLocaleString();
+}
+function pct(n) {
+  if (n == null || !isFinite(n)) return '—';
+  return (n * 100).toFixed(1) + '%';
+}
+function pcls(spent, budget) {
+  if (!budget) return '';
+  return spent / budget > 1 ? 'pct-hi' : 'pct-ok';
+}
+function fcKey() { return viewYear + '-P' + viewPeriod; }
+function budgetOf(side) {
+  const raw = (store.budget || {})[fcKey()] || {};
+  const n = parseFloat(raw[side]);
+  if (isFinite(n)) return n;
+  return DEFAULT_BUDGET[side];
+}
+function weekCats(mondayYmd, side) {
+  const w = (store.weeks || {})[mondayYmd] || {};
+  const src = w[side] || {};
+  const out = {};
+  CATS.forEach(c => { out[c] = parseFloat(src[c]) || 0; });
+  return out;
+}
+function periodSpend(side) {
+  const weeks = weeksInPeriod(viewYear, viewPeriod);
+  const tot = {};
+  CATS.forEach(c => tot[c] = 0);
+  weeks.forEach(m => {
+    const cats = weekCats(ymd(m), side);
+    CATS.forEach(c => tot[c] += cats[c]);
+  });
+  tot._sum = CATS.reduce((s, c) => s + tot[c], 0);
+  return tot;
+}
+
+async function kvGet(ns) {
+  const res = await fetch('/api/planner/bundle?ns=' + ns);
+  const json = await res.json();
+  return (json.data && typeof json.data === 'object') ? json.data : {};
+}
+async function kvPut(ns, body) {
+  await fetch('/api/planner/bundle?ns=' + ns, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+}
+async function saveStore() {
+  return enqueue(async () => {
+    const remote = await kvGet(NS);
+    const merged = {
+      weeks: Object.assign({}, remote.weeks || {}, store.weeks || {}),
+      budget: Object.assign({}, remote.budget || {}, store.budget || {})
+    };
+    await kvPut(NS, merged);
+    store = merged;
+  });
+}
+function setBudget(side, val) {
+  const key = fcKey();
+  const all = Object.assign({}, store.budget || {});
+  const cur = Object.assign({}, all[key] || {});
+  const n = parseFloat(val);
+  if (!isFinite(n)) delete cur[side];
+  else cur[side] = Math.round(n * 100) / 100;
+  if (!Object.keys(cur).length) delete all[key];
+  else all[key] = cur;
+  store.budget = all;
+  saveStore();
+  render();
+}
+
+function fillPeriodSelect() {
+  const sel = document.getElementById('periodSel');
+  const cur = currentPeriodInfo();
+  let html = '';
+  for (let y = cur.year - 1; y <= cur.year + 1; y++) {
+    for (let p = 1; p <= 13; p++) {
+      html += `<option value="${y}-${p}" ${y===viewYear && p===viewPeriod ? 'selected' : ''}>P${p} · ${y}</option>`;
+    }
+  }
+  sel.innerHTML = html;
+}
+function onPeriodSelect() {
+  const [y, p] = document.getElementById('periodSel').value.split('-').map(Number);
+  viewYear = y; viewPeriod = p; render();
+}
+function shiftPeriod(delta) {
+  viewPeriod += delta;
+  if (viewPeriod < 1) { viewPeriod = 13; viewYear -= 1; }
+  if (viewPeriod > 13) { viewPeriod = 1; viewYear += 1; }
+  render();
+}
+
+function panelHTML(side) {
+  const spent = periodSpend(side.id);
+  const budget = budgetOf(side.id);
+  const remain = budget - spent._sum;
+  const used = budget ? spent._sum / budget : null;
+  let rows = CATS.map(c => `<tr>
+    <td class="left">${c}</td>
+    <td>${money(spent[c])}</td>
+  </tr>`).join('');
+  rows += `<tr class="total"><td class="left">Period total</td><td>${money(spent._sum)}</td></tr>`;
+  return `<div class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>${side.name}</h2>
+        <div class="sub">Spent ${money(spent._sum)} of <span class="dollar-in">$<input class="budget-in" type="number" step="1" min="0" value="${budget}" onchange="setBudget('${side.id}', this.value)"></span> · <span class="${pcls(spent._sum, budget)}">${pct(used)} used</span> · ${remain < 0 ? money(remain) + ' over' : money(remain) + ' left'}</div>
+      </div>
+    </div>
+    <table>
+      <thead><tr><th class="left">Category</th><th>Spent</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+}
+
+function renderWeeks() {
+  const weeks = weeksInPeriod(viewYear, viewPeriod);
+  let grp = `<th class="left">Week</th>` + SIDES.map((s,i) => `<th class="grp${i?' split':''}" colspan="${CATS.length + 1}">${s.name}</th>`).join('');
+  let sub = `<th class="left">Date</th>` + SIDES.map((s,i) => CATS.map((c, ci) => `<th class="sub${i&&ci===0?' split':''}">${c.replace(' Supplies','').replace(' / Janitorial','')}</th>`).join('') + `<th>Total</th>`).join('');
+  let body = '';
+  const acc = { fp: 0, hsc: 0 };
+  weeks.forEach((m, wi) => {
+    const sun = addDays(m, 6);
+    let row = `<tr><td class="left">Wk ${wi+1} · ${m.getMonth()+1}/${m.getDate()}–${sun.getMonth()+1}/${sun.getDate()}</td>`;
+    SIDES.forEach((s, i) => {
+      const cats = weekCats(ymd(m), s.id);
+      const tot = CATS.reduce((n,c) => n + cats[c], 0);
+      acc[s.id] += tot;
+      CATS.forEach((c, ci) => { row += `<td class="${i&&ci===0?'split':''}">${money(cats[c])}</td>`; });
+      row += `<td>${money(tot)}</td>`;
+    });
+    body += row + '</tr>';
+  });
+  let tot = `<tr class="total"><td class="left">Period ${viewPeriod}</td>`;
+  SIDES.forEach((s, i) => {
+    const spent = periodSpend(s.id);
+    CATS.forEach((c, ci) => { tot += `<td class="${i&&ci===0?'split':''}">${money(spent[c])}</td>`; });
+    tot += `<td>${money(spent._sum)}</td>`;
+  });
+  tot += '</tr>';
+  document.getElementById('weeks').innerHTML = `<thead><tr>${grp}</tr><tr>${sub}</tr></thead><tbody>${body}${tot}</tbody>`;
+}
+
+function render() {
+  fillPeriodSelect();
+  const weeks = weeksInPeriod(viewYear, viewPeriod);
+  const first = weeks[0], last = weeks.length ? addDays(weeks[weeks.length-1], 6) : null;
+  document.getElementById('periodChip').textContent = `Period ${viewPeriod} · ${viewYear}`;
+  document.getElementById('rangeLbl').textContent = first ? `${first.getMonth()+1}/${first.getDate()} – ${last.getMonth()+1}/${last.getDate()}` : '';
+  const fp = periodSpend('fp');
+  const hsc = periodSpend('hsc');
+  const fpB = budgetOf('fp');
+  const hscB = budgetOf('hsc');
+  const all = fp._sum + hsc._sum;
+  const allB = fpB + hscB;
+  document.getElementById('hero').innerHTML = `
+    <div class="hero-card"><div class="hero-lbl">Period supply spend</div><div class="hero-val">${money(all)}</div><div class="hero-sub">Both outlets, mapped categories</div></div>
+    <div class="hero-card"><div class="hero-lbl">Period budget</div><div class="hero-val">${money(allB)}</div><div class="hero-sub">FP ${money(fpB)} · 1887 ${money(hscB)}</div></div>
+    <div class="hero-card"><div class="hero-lbl">Remaining</div><div class="hero-val">${money(allB - all)}</div><div class="hero-sub">${pct(allB ? all / allB : null)} used</div></div>
+    <div class="hero-card"><div class="hero-lbl">FP vs 1887 spent</div><div class="hero-val">${money(fp._sum)} / ${money(hsc._sum)}</div><div class="hero-sub">Actuals from MarginEdge</div></div>`;
+  document.getElementById('panels').innerHTML = SIDES.map(panelHTML).join('');
+  renderWeeks();
+}
+
+async function loadAll() {
+  document.getElementById('status').textContent = 'Loading…';
+  try {
+    const remote = await kvGet(NS);
+    store = {
+      weeks: (remote.weeks && typeof remote.weeks === 'object') ? remote.weeks : {},
+      budget: (remote.budget && typeof remote.budget === 'object') ? remote.budget : {}
+    };
+    document.getElementById('status').textContent = 'Live from MarginEdge';
+  } catch (e) {
+    document.getElementById('status').textContent = 'Could not load';
+  }
+  render();
+}
+
+(function init() {
+  const cur = currentPeriodInfo();
+  viewYear = cur.year;
+  viewPeriod = cur.period;
+  loadAll();
+})();
+</script>
+</body>
+</html>
