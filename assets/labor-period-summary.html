@@ -163,10 +163,25 @@ function setFc(oid, field, val) {
   render();
 }
 function fcInput(oid, field, n) {
-  return `<input class="food-in" type="number" step="0.01" min="0" value="${n || ''}" placeholder="—" onchange="setFc('${oid}','${field}', this.value)">`;
+  const shown = (n || n === 0) ? n : '';
+  return `<input class="food-in" type="number" step="0.01" min="0" value="${shown}" placeholder="—" onchange="setFc('${oid}','${field}', this.value)">`;
 }
 function fcNum(oid, field) {
-  return parseFloat((fcEntry()[oid] || {})[field]) || 0;
+  const v = (fcEntry()[oid] || {})[field];
+  const n = parseFloat(v);
+  return isFinite(n) ? n : 0;
+}
+function fcParts(o) {
+  const rest = fcNum(o.id, 'rest');
+  const evt = o.events ? fcNum(o.id, 'evt') : 0;
+  const hrly = fcNum(o.id, 'hrly');
+  const mgmt = fcNum(o.id, 'mgmt');
+  let labor = hrly + mgmt;
+  labor += labor * taxRate(viewPeriod);
+  if (!hrly && !mgmt) labor = fcNum(o.id, 'labor');
+  const tot = rest + evt;
+  const laborPct = tot > 0 && labor ? labor / tot : null;
+  return { rest, evt, hrly, mgmt, labor, tot, laborPct, occ: fcNum(o.id, 'occ') };
 }
 function periodComplete() {
   const weeks = weeksInPeriod(viewYear, viewPeriod);
@@ -481,16 +496,12 @@ function outletCells(w, o, first) {
 }
 
 function outletForecastCells(o, first) {
-  const rest = fcNum(o.id, 'rest');
-  const evt = fcNum(o.id, 'evt');
-  const lab = fcNum(o.id, 'labor');
-  const tot = rest + (o.events ? evt : 0);
-  const lp = tot > 0 && lab ? lab / tot : null;
-  const pcls = (lp != null && lp > 0.35) ? 'pct-hi' : 'pct-ok';
+  const p = fcParts(o);
+  const pcls = (p.laborPct != null && p.laborPct > 0.35) ? 'pct-hi' : 'pct-ok';
   const split = first ? '' : ' split';
-  let html = `<td class="${split}">${fcInput(o.id, 'rest', rest)}</td>`;
-  if (o.events) html += `<td>${fcInput(o.id, 'evt', evt)}</td>`;
-  html += `<td>—</td><td>—</td><td>${fcInput(o.id, 'labor', lab)}</td><td class="${lp==null?'':pcls}">${pct(lp)}</td>`;
+  let html = `<td class="${split}">${fcInput(o.id, 'rest', p.rest)}</td>`;
+  if (o.events) html += `<td>${fcInput(o.id, 'evt', p.evt)}</td>`;
+  html += `<td>${fcInput(o.id, 'hrly', p.hrly)}</td><td>${fcInput(o.id, 'mgmt', p.mgmt)}</td><td>${money(p.labor)}</td><td class="${p.laborPct==null?'':pcls}">${pct(p.laborPct)}</td>`;
   return html;
 }
 function vsPct(act, fc) {
@@ -498,13 +509,16 @@ function vsPct(act, fc) {
   return act / fc;
 }
 function outletVsCells(act, o, first) {
-  const rest = vsPct(act.restRev, fcNum(o.id, 'rest'));
-  const evt = o.events ? vsPct(act.evt, fcNum(o.id, 'evt')) : null;
-  const lab = vsPct(act.labor, fcNum(o.id, 'labor'));
+  const p = fcParts(o);
+  const rest = vsPct(act.restRev, p.rest);
+  const evt = o.events ? vsPct(act.evt, p.evt) : null;
+  const hrly = vsPct(act.hrly, p.hrly);
+  const mgmt = vsPct(act.mgmt, p.mgmt);
+  const lab = vsPct(act.labor, p.labor);
   const split = first ? '' : ' split';
   let html = `<td class="${split}">${pct(rest)}</td>`;
   if (o.events) html += `<td>${pct(evt)}</td>`;
-  html += `<td>—</td><td>—</td><td>${pct(lab)}</td><td>—</td>`;
+  html += `<td>${pct(hrly)}</td><td>${pct(mgmt)}</td><td>${pct(lab)}</td><td>—</td>`;
   return html;
 }
 
@@ -519,7 +533,7 @@ function renderSummary() {
     <div class="hero-card"><div class="hero-lbl">UHG actual labor</div><div class="hero-val">${money(grandLab)}</div></div>
     <div class="hero-card"><div class="hero-lbl">Blended labor %</div><div class="hero-val">${pct(grandRev ? grandLab / grandRev : null)}</div></div>
     <div class="hero-card"><div class="hero-lbl">Tax this period</div><div class="hero-val">${Math.round(taxRate(viewPeriod)*100)}%</div><div class="hero-sub">On hourly + management</div></div>`;
-  document.getElementById('note').textContent = 'Click an outlet name to open its daily labor tracker. Food cost is two MarginEdge outlets: FP, and HSC (1887 + Hotel + Standard Oil). Supplies sit after Prime. Type weekly supplies until MarginEdge is live. Period forecast holds the supply budget.';
+  document.getElementById('note').textContent = 'Click an outlet name to open its daily tracker. P9 budget is Stan’s period numbers: hourly + management as given, then 13% payroll tax on that total. Hotel occupancy budget 75%. Food is MarginEdge. Supplies later.';
 
   const grp = outlets.map((o, i) => {
     const span = o.events ? 6 : 5;
@@ -605,17 +619,14 @@ function renderSummary() {
   const fcHscFood = fcNum('food', 'hsc');
   const fcSupplies = fcNum('supplies', 'amt');
   let fcCombRev = 0, fcCombLab = 0, fcFpRev = 0, fcHscRev = 0;
-  let fcRow = `<tr class="forecast"><td class="left sticky">Period ${viewPeriod} forecast</td>`;
+  let fcRow = `<tr class="forecast"><td class="left sticky">Period ${viewPeriod} budget</td>`;
   outlets.forEach((o, oi) => {
     fcRow += outletForecastCells(o, oi === 0);
-    const rest = fcNum(o.id, 'rest');
-    const evt = o.events ? fcNum(o.id, 'evt') : 0;
-    const lab = fcNum(o.id, 'labor');
-    const tot = rest + evt;
-    fcCombRev += tot;
-    fcCombLab += lab;
-    if (o.id === 'fp') fcFpRev += tot;
-    else fcHscRev += tot;
+    const p = fcParts(o);
+    fcCombRev += p.tot;
+    fcCombLab += p.labor;
+    if (o.id === 'fp') fcFpRev += p.tot;
+    else fcHscRev += p.tot;
   });
   const fcLp = fcCombRev > 0 && fcCombLab ? fcCombLab / fcCombRev : null;
   const fcLpCls = (fcLp != null && fcLp > 0.35) ? 'pct-hi' : 'pct-ok';
