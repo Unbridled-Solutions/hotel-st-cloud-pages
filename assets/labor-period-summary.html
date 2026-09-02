@@ -44,13 +44,18 @@ td { padding: 8px 10px; text-align: right; border-bottom: 1px solid rgba(90,139,
 td.left { text-align: left; color: var(--white, #f5f5f5); font-weight: 600; }
 tr.total td { background: #0d1620; color: var(--gold); font-weight: 700; border-top: 1px solid var(--gold); }
 tr.blank td { color: var(--muted); font-style: italic; }
-tr.week-tot td { background: #12202c; color: var(--gold); font-weight: 700; border-top: 1px solid rgba(201,170,124,0.35); }
-th.grp { text-align: center; color: var(--gold); letter-spacing: 1.6px; border-left: 2px solid rgba(201,170,124,0.45); font-size: 11px; }
+tr.week-tot td { background: linear-gradient(90deg, #3e5344 0%, #cbb58a 55%, #e6d4a8 100%); color: #142018; font-weight: 800; border-top: 2px solid #c9aa7c; border-bottom: 2px solid #c9aa7c; }
+tr.week-tot td.sticky { background: linear-gradient(90deg, #3e5344, #6d7a52); color: #f5efe0; border-right: 3px solid #c9aa7c; }
+tr.week-tot .pct-hi { color: #8b1e1e; }
+tr.week-tot .pct-ok { color: #1b5c38; }
+th.grp { text-align: center; color: var(--gold); letter-spacing: 1.6px; border-left: 3px solid #c9aa7c; font-size: 11px; }
 th.sub { font-size: 9px; letter-spacing: 0.8px; }
-th.split, td.split { border-left: 2px solid rgba(201,170,124,0.35); }
-td.sticky, th.sticky { position: sticky; left: 0; z-index: 3; background: #0d1620; min-width: 118px; }
-.sheet { min-width: 1480px; font-size: 12px; }
+th.split, td.split { border-left: 3px solid #c9aa7c; }
+td.sticky, th.sticky { position: sticky; left: 0; z-index: 3; background: #0d1620; min-width: 128px; border-right: 3px solid #c9aa7c; }
+.sheet { min-width: 1680px; font-size: 12px; }
 .sheet th, .sheet td { padding: 6px 7px; white-space: nowrap; }
+.food-in { width: 78px; background: transparent; border: none; border-bottom: 1px solid rgba(20,32,24,0.45); color: inherit; font-size: 12px; font-weight: 800; text-align: right; outline: none; }
+.food-in:focus { border-bottom-color: #0f1923; }
 .pct-hi { color: var(--red); font-weight: 700; }
 .pct-ok { color: var(--green); font-weight: 700; }
 .hero { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 0 0 16px; }
@@ -110,11 +115,44 @@ const OUTLETS = [
 ];
 
 let bundles = {};
+let foodByWeek = {};
 let viewPeriod = null;
 let viewYear = 2026;
 let viewGrain = 'daily';
 let activeTab = 'summary';
 const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const FOOD_NS = 'uhg-food';
+
+function getFood(mondayYmd) {
+  const n = parseFloat(foodByWeek[mondayYmd]);
+  return n > 0 ? n : 0;
+}
+async function saveFood() {
+  try {
+    await fetch('/api/planner/bundle?ns=' + FOOD_NS, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(foodByWeek)
+    });
+  } catch (e) {}
+}
+function setFood(mondayYmd, val) {
+  const n = parseFloat(val);
+  if (!n) delete foodByWeek[mondayYmd];
+  else foodByWeek[mondayYmd] = Math.round(n * 100) / 100;
+  saveFood();
+  render();
+}
+function foodTrail(food, rev, lab, opts) {
+  const foodPct = rev > 0 && food ? food / rev : null;
+  const prime = rev > 0 && (lab || food) ? (lab + food) / rev : null;
+  const fp = (foodPct != null && foodPct > 0.35) ? 'pct-hi' : 'pct-ok';
+  const pp = (prime != null && prime > 0.70) ? 'pct-hi' : 'pct-ok';
+  const foodCell = opts && opts.input
+    ? `<td class="split"><input class="food-in" type="number" step="0.01" min="0" value="${food || ''}" placeholder="—" onchange="setFood('${opts.key}', this.value)"></td>`
+    : `<td class="split">${food ? money(food) : '—'}</td>`;
+  return foodCell + `<td class="${foodPct==null?'':fp}">${pct(foodPct)}</td><td class="${prime==null?'':pp}">${pct(prime)}</td>`;
+}
 
 function getISOWeek(date) {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
@@ -376,12 +414,12 @@ function renderSummary() {
     <div class="hero-card"><div class="hero-lbl">UHG actual labor</div><div class="hero-val">${money(grandLab)}</div></div>
     <div class="hero-card"><div class="hero-lbl">Blended labor %</div><div class="hero-val">${pct(grandRev ? grandLab / grandRev : null)}</div></div>
     <div class="hero-card"><div class="hero-lbl">Tax this period</div><div class="hero-val">${Math.round(taxRate(viewPeriod)*100)}%</div><div class="hero-sub">On hourly + management</div></div>`;
-  document.getElementById('note').textContent = 'UHG worksheet layout. Outlet across the top, days down, weekly totals, period total at the bottom. Actuals only. No budget. Events is event revenue.';
+  document.getElementById('note').textContent = 'UHG worksheet layout. Outlet across the top, days down, weekly totals, period total at the bottom. Actuals only. Food $ is weekly total until MarginEdge is wired. Prime % is (labor + food) / revenue.';
 
   const grp = outlets.map((o, i) => {
     const span = o.events ? 6 : 5;
     return `<th class="grp${i ? ' split' : ''}" colspan="${span}">${o.name}</th>`;
-  }).join('') + `<th class="grp split" colspan="3">Combined</th>`;
+  }).join('') + `<th class="grp split" colspan="6">Combined</th>`;
 
   const subs = outlets.map((o, i) => {
     const first = i ? ' split' : '';
@@ -389,14 +427,14 @@ function renderSummary() {
     if (o.events) h += `<th class="sub">Events</th>`;
     h += `<th class="sub">Hourly</th><th class="sub">Mgmt</th><th class="sub">Labor</th><th class="sub">%</th>`;
     return h;
-  }).join('') + `<th class="sub split">Revenue</th><th class="sub">Labor</th><th class="sub">%</th>`;
+  }).join('') + `<th class="sub split">Revenue</th><th class="sub">Labor</th><th class="sub">%</th><th class="sub">Food $</th><th class="sub">Food %</th><th class="sub">Prime %</th>`;
 
   let html = `<table class="sheet"><thead>
     <tr><th class="left sticky"></th>${grp}</tr>
     <tr><th class="left sticky">Date</th>${subs}</tr>
   </thead><tbody>`;
 
-  const periodAcc = { cells: outlets.map(() => ({ restRev:0, evt:0, totalRev:0, hrly:0, mgmt:0, tax:0, labor:0 })), combRev:0, combLab:0 };
+  const periodAcc = { cells: outlets.map(() => ({ restRev:0, evt:0, totalRev:0, hrly:0, mgmt:0, tax:0, labor:0 })), combRev:0, combLab:0, food:0 };
 
   weeks.forEach((monday, wi) => {
     const weekAcc = outlets.map(() => ({ restRev:0, evt:0, totalRev:0, hrly:0, mgmt:0, tax:0, labor:0, has:false }));
@@ -417,7 +455,7 @@ function renderSummary() {
       });
       const cp = combRev > 0 ? combLab / combRev : null;
       const pcls = (cp != null && cp > 0.35) ? 'pct-hi' : 'pct-ok';
-      row += `<td class="split">${money(combRev)}</td><td>${money(combLab)}</td><td class="${cp==null?'':pcls}">${pct(cp)}</td></tr>`;
+      row += `<td class="split">${money(combRev)}</td><td>${money(combLab)}</td><td class="${cp==null?'':pcls}">${pct(cp)}</td><td>—</td><td>—</td><td>—</td></tr>`;
       html += row;
       weekCombRev += combRev; weekCombLab += combLab;
     }
@@ -431,9 +469,12 @@ function renderSummary() {
     });
     const wp = weekCombRev > 0 ? weekCombLab / weekCombRev : null;
     const wpcls = (wp != null && wp > 0.35) ? 'pct-hi' : 'pct-ok';
-    tot += `<td class="split">${money(weekCombRev)}</td><td>${money(weekCombLab)}</td><td class="${wp==null?'':wpcls}">${pct(wp)}</td></tr>`;
+    const wkKey = ymd(monday);
+    const food = getFood(wkKey);
+    tot += `<td class="split">${money(weekCombRev)}</td><td>${money(weekCombLab)}</td><td class="${wp==null?'':wpcls}">${pct(wp)}</td>` + foodTrail(food, weekCombRev, weekCombLab, { input: true, key: wkKey });
+    tot += `</tr>`;
     html += tot;
-    periodAcc.combRev += weekCombRev; periodAcc.combLab += weekCombLab;
+    periodAcc.combRev += weekCombRev; periodAcc.combLab += weekCombLab; periodAcc.food += food;
   });
 
   let per = `<tr class="total"><td class="left sticky">Period ${viewPeriod} actual</td>`;
@@ -443,7 +484,8 @@ function renderSummary() {
   });
   const pp = periodAcc.combRev > 0 ? periodAcc.combLab / periodAcc.combRev : null;
   const ppcls = (pp != null && pp > 0.35) ? 'pct-hi' : 'pct-ok';
-  per += `<td class="split">${money(periodAcc.combRev)}</td><td>${money(periodAcc.combLab)}</td><td class="${pp==null?'':ppcls}">${pct(pp)}</td></tr>`;
+  per += `<td class="split">${money(periodAcc.combRev)}</td><td>${money(periodAcc.combLab)}</td><td class="${pp==null?'':ppcls}">${pct(pp)}</td>` + foodTrail(periodAcc.food, periodAcc.combRev, periodAcc.combLab, null);
+  per += `</tr>`;
   html += per + '</tbody></table>';
   document.getElementById('grid').innerHTML = html;
 }
@@ -477,6 +519,11 @@ async function loadAll() {
     }
   }));
   bundles = Object.fromEntries(results);
+  try {
+    const fr = await fetch('/api/planner/bundle?ns=' + FOOD_NS);
+    const fj = await fr.json();
+    foodByWeek = (fj.data && typeof fj.data === 'object') ? fj.data : {};
+  } catch (e) { foodByWeek = foodByWeek || {}; }
   document.getElementById('status').textContent = 'Live from KV';
   render();
 }
