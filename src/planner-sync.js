@@ -365,7 +365,7 @@ export async function handlePlannerSync(request, env, ctx) {
   }
   const prevRaw = await env.PLANNER_DATA.get(STATUS_KEY);
   const prev = prevRaw ? JSON.parse(prevRaw) : {};
-  if (prev.state === 'running' && prev.started && (Date.now() - Date.parse(prev.started) < 90 * 1000)) {
+  if (prev.state === 'running' && prev.started && (Date.now() - Date.parse(prev.started) < 8 * 60 * 1000)) {
     return json({ success: true, state: 'running', message: prev.message || 'Already pulling', started: prev.started });
   }
   const today = denverYmd();
@@ -386,26 +386,22 @@ export async function handlePlannerSync(request, env, ctx) {
     mode: 'live-refresh',
   };
   await setStatus(env, status);
-  try {
-    await runSync(env, status);
-  } catch (err) {
+  const run = runSync(env, status).catch(async (err) => {
     status.state = 'error';
     status.finished = new Date().toISOString();
     status.message = String(err.message || err);
     status.errors.push(status.message);
-    await setStatus(env, status);
-    return json({ success: false, state: 'error', message: status.message, errors: status.errors }, 500);
-  }
+    try { await setStatus(env, status); } catch (e) {}
+  });
+  if (ctx && typeof ctx.waitUntil === 'function') ctx.waitUntil(run);
+  else await run;
   return json({
     success: true,
-    state: status.state,
+    state: 'running',
     message: status.message,
     started: status.started,
-    finished: status.finished,
     yesterday,
     lookbackFrom,
-    changed: status.changed,
-    errors: status.errors,
   });
 }
 
@@ -414,8 +410,9 @@ async function runSync(env, status) {
   const yesterday = status.yesterday;
   const from = status.lookbackFrom;
   const laborDays = rangeYmd(from, yesterday);
+  const salesDays = rangeYmd(from, today);
   const cbDays = rangeYmd(from, status.cloudbedsTo);
-  const mondays = [...new Set(laborDays.map(mondayOf))];
+  const mondays = [...new Set(salesDays.map(mondayOf))];
 
   status.message = 'Toast login…';
   await setStatus(env, status);
@@ -430,7 +427,7 @@ async function runSync(env, status) {
   const sales = { fp: {}, fph: {}, socc: {} };
   const labor = { fp: {}, fph: {}, hsc: {}, socc: {} };
 
-  for (const day of laborDays) {
+  for (const day of salesDays) {
     status.message = 'Toast ' + day;
     await setStatus(env, status);
     for (const name of ['fp', 'fph', 'socc']) {
@@ -441,10 +438,12 @@ async function runSync(env, status) {
       if (nOrd === 0 && refund === 0) sales[name][day] = '';
       else sales[name][day] = fmtMoney(adj);
     }
-    labor.fp[day] = (await dayLabor(token, GUIDS.fp, jobs.fp, day, 'all')).pay;
-    labor.fph[day] = (await dayLabor(token, GUIDS.fph, jobs.fph, day, 'fph')).pay;
-    labor.hsc[day] = (await dayLabor(token, GUIDS.fph, jobs.fph, day, 'hsc')).pay;
-    labor.socc[day] = (await dayLabor(token, GUIDS.socc, jobs.socc, day, 'all')).pay;
+    if (day <= yesterday) {
+      labor.fp[day] = (await dayLabor(token, GUIDS.fp, jobs.fp, day, 'all')).pay;
+      labor.fph[day] = (await dayLabor(token, GUIDS.fph, jobs.fph, day, 'fph')).pay;
+      labor.hsc[day] = (await dayLabor(token, GUIDS.fph, jobs.fph, day, 'hsc')).pay;
+      labor.socc[day] = (await dayLabor(token, GUIDS.socc, jobs.socc, day, 'all')).pay;
+    }
   }
 
   const moneyMap = (obj) => {
