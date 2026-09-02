@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Manager Vault · Hotel St. Cloud</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #1f2b3f;
+  --navy: #1f2b3f;
+  --navy-light: #2a3b54;
+  --card: #253348;
+  --cream: #e4e2d9;
+  --cream-muted: #c8c5ba;
+  --gold: #ba8032;
+  --gold-light: #d4a054;
+  --text: #e4e2d9;
+  --muted: #8a9aaa;
+  --red: #c04040;
+  --border: #334d6e;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 300;
+  line-height: 1.55;
+  min-height: 100vh;
+}
+a { color: var(--gold-light); }
+a:hover { color: var(--gold); }
+
+.header {
+  background: var(--navy);
+  border-bottom: 2px solid var(--gold);
+  padding: 28px 20px 22px;
+  text-align: center;
+}
+.header .eyebrow {
+  font-size: 11px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--cream-muted);
+  margin-bottom: 6px;
+}
+.header h1 {
+  font-weight: 600;
+  font-size: 24px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--cream);
+}
+.header p { margin-top: 8px; color: var(--muted); font-size: 14px; }
+
+.sticky {
+  position: sticky; top: 0; z-index: 40;
+  background: #182433;
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px 10px;
+}
+.search-wrap { max-width: 980px; margin: 0 auto; }
+.search-wrap input {
+  width: 100%;
+  background: var(--navy-light);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--cream);
+  font-family: inherit;
+  font-size: 15px;
+  padding: 11px 14px;
+  outline: none;
+}
+.search-wrap input:focus { border-color: var(--gold); }
+.nav {
+  max-width: 980px;
+  margin: 10px auto 0;
+  display: flex; flex-wrap: wrap; gap: 6px;
+}
+.nav a {
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--cream-muted);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 10px;
+  background: var(--navy-light);
+}
+.nav a:hover { color: var(--cream); border-color: var(--gold); }
+
+.wrap { max-width: 980px; margin: 0 auto; padding: 22px 16px 80px; }
+.warn {
+  background: rgba(192,64,64,.12);
+  border: 1px solid rgba(192,64,64,.4);
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: #f0c0c0;
+  font-size: 14px;
+  margin-bottom: 22px;
+}
+.section { margin-bottom: 28px; }
+.section h2 {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 8px 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px 14px;
+  margin-bottom: 12px;
+}
+.card h3 { font-size: 17px; font-weight: 600; color: var(--cream); margin-bottom: 8px; }
+.card p, .card li { font-size: 15px; color: var(--cream-muted); }
+.card ol, .card ul { padding-left: 20px; margin: 6px 0; }
+.card li { margin: 4px 0; }
+.card strong { color: var(--cream); font-weight: 600; }
+.secret {
+  font-family: ui-monospace, Menlo, monospace;
+  background: #1a2536;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px 8px;
+  color: var(--gold-light);
+  font-size: 14px;
+}
+.links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.links a {
+  text-decoration: none;
+  background: var(--navy-light);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.hidden { display: none !important; }
+.empty { text-align: center; color: var(--muted); padding: 40px 10px; display: none; }
+.empty.show { display: block; }
+
+.pin-overlay {
+  position: fixed; inset: 0; z-index: 80;
+  background: rgba(10,14,22,.92);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.pin-overlay.unlocked { display: none; }
+.pin-modal {
+  background: var(--card);
+  border: 1px solid var(--gold);
+  border-radius: 14px;
+  padding: 28px 26px 24px;
+  width: min(380px, 100%);
+  text-align: center;
+}
+.pin-modal .eyebrow {
+  font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold);
+  margin-bottom: 8px;
+}
+.pin-modal h3 { font-size: 20px; margin-bottom: 16px; color: var(--cream); }
+.pin-modal input {
+  width: 100%;
+  text-align: center;
+  letter-spacing: .4em;
+  font-size: 22px;
+  padding: 12px;
+  background: var(--navy-light);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--cream);
+  font-family: inherit;
+  outline: none;
+}
+.pin-modal input:focus { border-color: var(--gold); }
+.pin-error { color: var(--red); font-size: 13px; min-height: 18px; margin: 10px 0; }
+.pin-modal button {
+  width: 100%;
+  padding: 12px;
+  background: var(--gold);
+  color: #1f2b3f;
+  border: none;
+  border-radius: 8px;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+}
+.app { display: none; }
+.app.show { display: block; }
+</style>
+</head>
+<body>
+
+<div class="pin-overlay" id="pinOverlay">
+  <div class="pin-modal">
+    <div class="eyebrow">Managers only</div>
+    <h3>Enter vault PIN</h3>
+    <input id="pinInput" type="password" inputmode="numeric" maxlength="8" placeholder="····" autocomplete="off">
+    <div class="pin-error" id="pinError"></div>
+    <button type="button" id="pinBtn">Unlock</button>
+  </div>
+</div>
+
+<div class="app" id="app">
+<header class="header">
+  <div class="eyebrow">Hotel St. Cloud · Managers</div>
+  <h1>Manager Vault</h1>
+  <p>Codes, logins, and tools. Not for the front-desk floor book.</p>
+</header>
+
+<div class="sticky">
+  <div class="search-wrap">
+    <input id="q" type="search" placeholder="Search — Sonos, door codes, Whistle, TV…" autocomplete="off">
+  </div>
+  <nav class="nav">
+    <a href="#codes">Codes</a>
+    <a href="#sonos">Sonos</a>
+    <a href="#whistle">Whistle</a>
+    <a href="#systems">Systems</a>
+    <a href="#tools">Manager tools</a>
+    <a href="#tv">Lobby TV</a>
+  </nav>
+</div>
+
+<main class="wrap">
+  <p class="warn">PIN only keeps this off a casual open. Anyone with the URL and PIN can read it. Do not text this link to the whole team. Door codes live in the Google Sheet — update them there, not here.</p>
+  <div class="empty" id="empty">Nothing matched.</div>
+
+  <section class="section" id="codes">
+    <h2>Codes & access</h2>
+    <article class="card" data-s>
+      <h3>Back door / team codes</h3>
+      <p>Live list of team member door codes. Don’t copy them into Slack or this page.</p>
+      <div class="links">
+        <a href="https://docs.google.com/spreadsheets/d/1oNFXY6RRaIk0-MA_Xar_XB2y-QcyKzxj7U0l8j0hhVA/edit" target="_blank" rel="noopener">Back Door Codes sheet</a>
+      </div>
+    </article>
+    <article class="card" data-s>
+      <h3>Guest-room TVs</h3>
+      <ul>
+        <li>Update screen with guest remote: <strong>Up, 357, Down</strong></li>
+        <li>TV settings with Samsung remote: <strong>Mute, Up, Down, Center</strong></li>
+      </ul>
+    </article>
+    <article class="card" data-s>
+      <h3>Room safe</h3>
+      <p>Guest leftover code on inspect: <strong>## then six zeros</strong>.</p>
+      <p>Won’t open: key the door, pull two batteries, reseat. Still stuck: replace all four — that usually resets it.</p>
+    </article>
+  </section>
+
+  <section class="section" id="sonos">
+    <h2>Sonos</h2>
+    <article class="card" data-s>
+      <h3>Schedule login</h3>
+      <p>Link: <a href="https://login.sonos.com/" target="_blank" rel="noopener">login.sonos.com</a></p>
+      <p>Username: <span class="secret">hello@unbridledhospitality.com</span></p>
+      <p>Password: <span class="secret">Restoration1887!</span></p>
+      <ul>
+        <li><strong>Overview</strong> — approve playlists when you want a change.</li>
+        <li><strong>Schedules</strong> — edit each block. No buffer needed (morning can end at 10am and lunch start at 10am).</li>
+      </ul>
+      <p>Floor staff: iPad + Matrix zones only. They do not get this login.</p>
+    </article>
+  </section>
+
+  <section class="section" id="whistle">
+    <h2>Whistle automations</h2>
+    <article class="card" data-s>
+      <h3>New automated message (no duplicates)</h3>
+      <ol>
+        <li>Whistle → Automations → New Automated Message</li>
+        <li>Internal title (guests don’t see it) · recipient type · one-time or recurring schedule</li>
+        <li>Turn on <strong>Enable Multi-Reservation Messaging</strong></li>
+        <li>Turn on <strong>Enable Missed Messages</strong> (time 0 so same-day bookings still get it)</li>
+        <li>Turn on <strong>Send a Message per Room</strong>, then <strong>Send Message Based on Room Status and Arrival/Departure Dates</strong></li>
+        <li>Add automation → type → channel → write the message</li>
+        <li>Save bottom-right, then scroll up and save top-right. Leave without the top save and the whole automation deletes.</li>
+        <li>Check Upcoming Messages for the send date so you can edit or kill it.</li>
+      </ol>
+    </article>
+  </section>
+
+  <section class="section" id="systems">
+    <h2>Systems</h2>
+    <article class="card" data-s>
+      <h3>Login pages</h3>
+      <p>Accounts are individual. This is the map, not a shared password dump.</p>
+      <div class="links">
+        <a href="https://signin.cloudbeds.com" target="_blank" rel="noopener">Cloudbeds</a>
+        <a href="https://learning.cloudbeds.com/learn/signin" target="_blank" rel="noopener">Cloudbeds University</a>
+        <a href="https://app.flexkeeping.com/app/auth/login" target="_blank" rel="noopener">Flexkeeping</a>
+        <a href="http://10.100.10.6/login" target="_blank" rel="noopener">Ambiance (on-property)</a>
+        <a href="https://login.getsling.com/" target="_blank" rel="noopener">Sling</a>
+        <a href="https://auth.toasttab.com" target="_blank" rel="noopener">Toast</a>
+        <a href="https://payroll.toasttab.com/sign-in" target="_blank" rel="noopener">Toast Payroll</a>
+        <a href="https://www.ispyconnect.com/app/#Recordings" target="_blank" rel="noopener">iSpy cameras</a>
+        <a href="https://eventpro360.com/gems/Login.aspx" target="_blank" rel="noopener">EventPro360</a>
+        <a href="https://employers.indeed.com/" target="_blank" rel="noopener">Indeed Employers</a>
+      </div>
+      <p style="margin-top:10px;">Ambiance is an internal IP — only works on hotel network. Cloudbeds property ID: <span class="secret">23229145280711</span></p>
+    </article>
+    <article class="card" data-s>
+      <h3>Support</h3>
+      <ul>
+        <li>IT: support@solve4.com</li>
+        <li>Dormakaba locks: 800-523-8483 · acct C105082-000 or 631 Main</li>
+        <li>Samsung hospitality: 866-894-0542</li>
+        <li>Cloudbeds ticket: myfrontdesk help form</li>
+      </ul>
+      <div class="links">
+        <a href="https://myfrontdesk.cloudbeds.com/hc/en-us/requests/new?ticket_form_id=21066523870491" target="_blank" rel="noopener">Open a Cloudbeds ticket</a>
+      </div>
+    </article>
+  </section>
+
+  <section class="section" id="tools">
+    <h2>Manager tools</h2>
+    <article class="card" data-s>
+      <h3>Sheets, forms, SharePoint</h3>
+      <div class="links">
+        <a href="https://forms.cloud.microsoft/pages/responsepage.aspx?id=Z5oc9K6nUEGs3HOI_CCwDGmw0opITs1IjmARc_4sKp9UNkNBMzlSMlNHSjdaSkY4SFZWV1dZUEVDTC4u&route=shorturl" target="_blank" rel="noopener">Purchase request</a>
+        <a href="https://docs.google.com/spreadsheets/d/1u0G8yMTWK6aZasw4r4j9j5-jQ9MGypdrnnUlP7r6rMc/edit" target="_blank" rel="noopener">Vendors & inventory / FD ordering</a>
+        <a href="https://docs.google.com/spreadsheets/d/1tnV_bHQNOxPrsniLvQ5PdOrqluwHeiSOTBQgXiZtMqo/edit" target="_blank" rel="noopener">Guest add-on orders</a>
+        <a href="https://docs.google.com/spreadsheets/d/1rmgiuZy4g3lnPU6V4aIsc_aczjqcKcGW4mlCLdXMalI/edit" target="_blank" rel="noopener">HSC Groups MASTER</a>
+        <a href="https://docs.google.com/spreadsheets/d/1M-6InmABvGE3wkKZQfOgbM34J8Z0kHBTxOu1MZ5C_AU/edit" target="_blank" rel="noopener">Room log working sheet</a>
+        <a href="https://docs.google.com/spreadsheets/d/1Ha34QxojjpG8A3T9MX_7wB-Iv23LVEVCoM3P0htGJck/edit" target="_blank" rel="noopener">Housekeeping MASTER</a>
+        <a href="https://unbridledhospitality.sharepoint.com/sites/EmployeeDocumentation/Shared%20Documents/Forms/AllItems.aspx" target="_blank" rel="noopener">UHG SharePoint</a>
+        <a href="https://offers.hotelstcloud.com/assets/front-desk-manual" target="_blank" rel="noopener">Staff front desk manual</a>
+        <a href="https://offers.hotelstcloud.com/assets/facilities-guide" target="_blank" rel="noopener">Facilities Guide</a>
+      </div>
+    </article>
+    <article class="card" data-s>
+      <h3>Front desk ordering</h3>
+      <ol>
+        <li>Open Vendors & inventory → Printable Order Walkthrough</li>
+        <li>Print, walk the closet, mark what’s on hand</li>
+        <li>Update FD Ordering List</li>
+        <li>Submit purchase requests so the desk doesn’t run out</li>
+      </ol>
+    </article>
+  </section>
+
+  <section class="section" id="tv">
+    <h2>Lobby TV</h2>
+    <article class="card" data-s>
+      <h3>SmartThings / Frame (buffalo picture)</h3>
+      <ul>
+        <li>Buffalo still = Art Mode. Not streaming.</li>
+        <li>Sports / normal: Power on the remote, then switch apps or live TV.</li>
+        <li>Lost remote: SmartThings app has a full remote. Brightness of the art photo is in the app.</li>
+        <li>New photo: app → HSC Lobby TV → close remote → Art → Add Image. Only Samsung Frame-compatible art displays without a digital border.</li>
+      </ul>
+    </article>
+  </section>
+</main>
+</div>
+
+<script>
+const PIN = '6310';
+const overlay = document.getElementById('pinOverlay');
+const app = document.getElementById('app');
+const input = document.getElementById('pinInput');
+const err = document.getElementById('pinError');
+
+function unlock() {
+  overlay.classList.add('unlocked');
+  app.classList.add('show');
+  try { sessionStorage.setItem('hsc-mgr-vault', '1'); } catch (e) {}
+}
+function tryPin() {
+  if ((input.value || '').trim() === PIN) {
+    err.textContent = '';
+    unlock();
+  } else {
+    err.textContent = 'Incorrect PIN.';
+    input.value = '';
+    input.focus();
+  }
+}
+try {
+  if (sessionStorage.getItem('hsc-mgr-vault') === '1') unlock();
+} catch (e) {}
+document.getElementById('pinBtn').addEventListener('click', tryPin);
+input.addEventListener('keydown', e => { if (e.key === 'Enter') tryPin(); });
+if (!app.classList.contains('show')) setTimeout(() => input.focus(), 80);
+
+const q = document.getElementById('q');
+const empty = document.getElementById('empty');
+const cards = [...document.querySelectorAll('[data-s]')];
+q.addEventListener('input', () => {
+  const t = q.value.trim().toLowerCase();
+  let n = 0;
+  cards.forEach(c => {
+    const hit = !t || c.innerText.toLowerCase().includes(t);
+    c.classList.toggle('hidden', !hit);
+    if (hit) n++;
+  });
+  document.querySelectorAll('.section').forEach(s => {
+    const any = [...s.querySelectorAll('[data-s]')].some(c => !c.classList.contains('hidden'));
+    s.classList.toggle('hidden', t && !any);
+  });
+  empty.classList.toggle('show', t && n === 0);
+});
+</script>
+</body>
+</html>
