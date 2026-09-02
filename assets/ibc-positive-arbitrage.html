@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>IBC Positive Arbitrage · Unbridled Wealth</title>
+  <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f1923;
+      --navy: #1a2e3b;
+      --card: #162433;
+      --border: #1e3347;
+      --gold: #c9aa7c;
+      --blue: #5a8ba7;
+      --green: #4caf7d;
+      --red: #e05a5a;
+      --text: #e8e0d4;
+      --muted: #6a8a9a;
+      --white: #f5f5f5;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Josefin Sans', sans-serif;
+      font-weight: 300;
+      font-size: 15px;
+      min-height: 100vh;
+    }
+    .topbar {
+      background: #0a1219;
+      border-bottom: 1px solid var(--border);
+      padding: .65rem clamp(1rem,4vw,2rem);
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
+    }
+    .topbar-brand { font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--white); }
+    .topbar-brand span { color: var(--blue); }
+    .topbar-meta { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+    .hero {
+      background: linear-gradient(180deg, #0a1219 0%, var(--bg) 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 2rem clamp(1rem,4vw,2rem) 1.5rem;
+      position: relative;
+    }
+    .hero::after {
+      content: '';
+      position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+    .hero-eyebrow { font-size: 9px; letter-spacing: 4px; text-transform: uppercase; color: var(--blue); margin-bottom: .4rem; }
+    .hero-title { font-size: clamp(20px,4vw,32px); font-weight: 700; color: var(--white); letter-spacing: -.5px; margin-bottom: .35rem; }
+    .hero-title em { color: var(--gold); font-style: normal; }
+    .hero-sub { font-size: 13px; color: var(--muted); max-width: 54em; line-height: 1.55; }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 1.5rem clamp(1rem,4vw,1.5rem) 4rem; }
+    .stats-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: .75rem; margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1rem .85rem; text-align: center;
+    }
+    .stat-val { font-size: clamp(16px,2.2vw,22px); font-weight: 700; color: var(--gold); line-height: 1.15; margin-bottom: .3rem; }
+    .stat-val.green { color: var(--green); }
+    .stat-val.blue { color: var(--blue); }
+    .stat-lbl { font-size: 9px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--muted); }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
+    @media (max-width: 800px) { .two-col { grid-template-columns: 1fr; } }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem 1.25rem; }
+    .card h2 {
+      font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--gold); margin-bottom: .85rem; padding-bottom: .45rem; border-bottom: 1px solid var(--border);
+    }
+    .card h2 span { color: var(--blue); font-weight: 400; }
+    .slider-table { width: 100%; border-collapse: collapse; }
+    .slider-table tr { border-bottom: 1px solid rgba(30,51,71,.5); }
+    .slider-table tr:last-child { border-bottom: none; }
+    .slider-table td { padding: .5rem .2rem; vertical-align: middle; }
+    .sl-label { font-size: 12px; color: var(--text); width: 42%; }
+    .sl-control { width: 38%; }
+    .sl-val { font-size: 12px; font-weight: 700; color: var(--white); text-align: right; white-space: nowrap; width: 90px; }
+    input[type="range"] {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 4px; background: var(--border); border-radius: 2px; outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 14px; height: 14px;
+      border-radius: 50%; background: var(--gold); cursor: pointer; border: 2px solid var(--bg);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 14px; height: 14px;
+      border-radius: 50%; background: var(--gold); cursor: pointer; border: 2px solid var(--bg);
+    }
+    .check-row { display: flex; align-items: center; gap: .55rem; margin-top: .7rem; font-size: 12px; color: var(--muted); }
+    .check-row input { accent-color: var(--gold); }
+    .lede-box {
+      background: rgba(90,139,167,0.1);
+      border-left: 4px solid var(--blue);
+      border-radius: 0 8px 8px 0;
+      padding: .9rem 1rem;
+      margin-bottom: 1.25rem;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    .note {
+      font-size: 11px; color: var(--muted); line-height: 1.5; margin-top: .75rem;
+    }
+    .year-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .year-table th {
+      font-size: 9px; letter-spacing: 1.2px; text-transform: uppercase;
+      color: var(--blue); text-align: right; padding: .4rem .35rem;
+      border-bottom: 1px solid var(--border); background: #0d1620; position: sticky; top: 0;
+    }
+    .year-table th:first-child, .year-table td:first-child { text-align: left; }
+    .year-table td {
+      padding: .38rem .35rem; text-align: right; border-bottom: 1px solid rgba(30,51,71,.35);
+      font-variant-numeric: tabular-nums;
+    }
+    .year-table tr.y20 td { color: var(--gold); font-weight: 700; border-top: 2px solid var(--gold); }
+    .scroll { overflow-x: auto; margin-top: .5rem; max-height: 520px; overflow-y: auto; }
+    .compare {
+      display: grid; grid-template-columns: 1fr auto 1fr; gap: .75rem; align-items: stretch;
+      margin-bottom: 1.25rem;
+    }
+    @media (max-width: 800px) { .compare { grid-template-columns: 1fr; } }
+    .vs {
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); font-weight: 700;
+    }
+    .foot {
+      margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border);
+      font-size: 11px; color: var(--muted); line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-brand">Unbridled <span>Wealth</span></div>
+    <div class="topbar-meta">Teaching illustration · not a carrier illustration</div>
+  </div>
+  <div class="hero">
+    <div class="hero-eyebrow">Infinite banking · positive arbitrage</div>
+    <h1 class="hero-title">Uninterrupted compound. <em>Same 5% on both sides.</em></h1>
+    <p class="hero-sub">Left ledger: $100,000 premium for 10 years ($20k base / $80k PUA), then base only. Cash value credits 5% on the full pile even while you borrow. Right ledger: $50,000 a year for 10 years, each loan a 10-year principal-and-interest note at that same 5%. Interest is a business expense at 30%. Year 20, loans are gone. What is left, what it cost, and the spread.</p>
+  </div>
+  <div class="wrap">
+    <div class="lede-box" id="story"></div>
+    <div class="stats-strip" id="stats"></div>
+
+    <div class="two-col">
+      <div class="card">
+        <h2>Left ledger · <span>policy</span></h2>
+        <table class="slider-table">
+          <tr><td class="sl-label">Annual premium, yrs 1–10</td><td class="sl-control"><input type="range" id="prem" min="25000" max="250000" step="5000" value="100000"></td><td class="sl-val" id="premV"></td></tr>
+          <tr><td class="sl-label">Base share of premium</td><td class="sl-control"><input type="range" id="basePct" min="10" max="40" step="1" value="20"></td><td class="sl-val" id="basePctV"></td></tr>
+          <tr><td class="sl-label">PUA years, then base only</td><td class="sl-control"><input type="range" id="puaYears" min="5" max="15" step="1" value="10"></td><td class="sl-val" id="puaYearsV"></td></tr>
+          <tr><td class="sl-label">Crediting rate</td><td class="sl-control"><input type="range" id="credit" min="3" max="7" step="0.25" value="5"></td><td class="sl-val" id="creditV"></td></tr>
+          <tr><td class="sl-label">Starting death benefit</td><td class="sl-control"><input type="range" id="db0" min="500000" max="4000000" step="50000" value="1500000"></td><td class="sl-val" id="db0V"></td></tr>
+          <tr><td class="sl-label">PUA death-benefit factor</td><td class="sl-control"><input type="range" id="dbFactor" min="0.5" max="3" step="0.1" value="1.5"></td><td class="sl-val" id="dbFactorV"></td></tr>
+          <tr><td class="sl-label">Years to show</td><td class="sl-control"><input type="range" id="years" min="15" max="40" step="1" value="20"></td><td class="sl-val" id="yearsV"></td></tr>
+        </table>
+        <p class="note">40-year-old healthy male, preferred. Teaching model: premium is added, then the whole cash value credits at the slider rate. Not a carrier illustration. Death benefit starts at your number; each PUA dollar buys more paid-up coverage at the factor.</p>
+      </div>
+      <div class="card">
+        <h2>Right ledger · <span>use of money</span></h2>
+        <table class="slider-table">
+          <tr><td class="sl-label">Borrow each of first 10 years</td><td class="sl-control"><input type="range" id="borrow" min="10000" max="100000" step="5000" value="50000"></td><td class="sl-val" id="borrowV"></td></tr>
+          <tr><td class="sl-label">Loan term (years)</td><td class="sl-control"><input type="range" id="term" min="5" max="15" step="1" value="10"></td><td class="sl-val" id="termV"></td></tr>
+          <tr><td class="sl-label">Borrowing rate</td><td class="sl-control"><input type="range" id="loanRate" min="3" max="7" step="0.25" value="5"></td><td class="sl-val" id="loanRateV"></td></tr>
+          <tr><td class="sl-label">Ordinary income tax</td><td class="sl-control"><input type="range" id="tax" min="0" max="45" step="1" value="30"></td><td class="sl-val" id="taxV"></td></tr>
+        </table>
+        <label class="check-row"><input type="checkbox" id="lockRate" checked> Borrowing rate tracks crediting rate (positive arbitrage at the same number)</label>
+        <p class="note">Ten separate notes. Each is principal and interest over the term, originating years 1–10. Last note pays off in year 19. Year 20 the right ledger is clear. Interest only is the business deduction. Principal is not.</p>
+      </div>
+    </div>
+
+    <div class="compare" id="compare"></div>
+    <div class="card">
+      <h2>Year by year</h2>
+      <div class="scroll"><table class="year-table" id="grid"></table></div>
+    </div>
+    <p class="foot">Uninterrupted compound is the point: cash value never leaves. You borrow from the insurer against it. This page credits 5% on the full cash value and charges 5% on declining loan principal — then cuts the interest cost by the 30% tax shield. Real policies have loads, surrender charges, dividend variability, direct vs non-direct recognition, and MEC limits. Use this to feel the shape. A signed illustration still comes from the carrier.</p>
+  </div>
+<script>
+function money(n) {
+  const x = Math.round(n);
+  const sign = x < 0 ? '-' : '';
+  return sign + '$' + Math.abs(x).toLocaleString('en-US');
+}
+function pct(n, d) {
+  return (n * 100).toFixed(d == null ? 1 : d) + '%';
+}
+function pmt(principal, rate, n) {
+  if (!n) return 0;
+  if (!rate) return principal / n;
+  const g = Math.pow(1 + rate, n);
+  return principal * rate * g / (g - 1);
+}
+function val(id) { return Number(document.getElementById(id).value); }
+function setTxt(id, t) { document.getElementById(id).textContent = t; }
+
+function run() {
+  const prem = val('prem');
+  const basePct = val('basePct') / 100;
+  const puaYears = val('puaYears');
+  const credit = val('credit') / 100;
+  const db0 = val('db0');
+  const dbFactor = val('dbFactor');
+  const years = val('years');
+  const borrow = val('borrow');
+  const term = val('term');
+  const lock = document.getElementById('lockRate').checked;
+  if (lock) {
+    document.getElementById('loanRate').value = document.getElementById('credit').value;
+    document.getElementById('loanRate').disabled = true;
+  } else {
+    document.getElementById('loanRate').disabled = false;
+  }
+  const loanRate = val('loanRate') / 100;
+  const tax = val('tax') / 100;
+  const base = prem * basePct;
+  const pua = prem - base;
+  const payment = pmt(borrow, loanRate, term);
+  const originateUntil = puaYears;
+
+  setTxt('premV', money(prem));
+  setTxt('basePctV', Math.round(basePct * 100) + '%  ' + money(base) + ' / ' + money(pua));
+  setTxt('puaYearsV', puaYears + ' yrs');
+  setTxt('creditV', val('credit').toFixed(2) + '%');
+  setTxt('db0V', money(db0));
+  setTxt('dbFactorV', dbFactor.toFixed(1) + '×');
+  setTxt('yearsV', years + ' yrs');
+  setTxt('borrowV', money(borrow));
+  setTxt('termV', term + ' yrs');
+  setTxt('loanRateV', val('loanRate').toFixed(2) + '%');
+  setTxt('taxV', Math.round(tax * 100) + '%');
+
+  const loans = [];
+  const rows = [];
+  let cv = 0;
+  let puaSum = 0;
+  let premSum = 0;
+  let creditSum = 0;
+  let intSum = 0;
+  let pmtSum = 0;
+  let taxSum = 0;
+  let borrowedSum = 0;
+
+  for (let y = 1; y <= years; y++) {
+    const thisPrem = y <= puaYears ? prem : base;
+    const thisPua = y <= puaYears ? pua : 0;
+    const thisBase = y <= puaYears ? base : base;
+    premSum += thisPrem;
+    puaSum += thisPua;
+    const before = cv + thisPrem;
+    const credited = before * credit;
+    cv = before + credited;
+    creditSum += credited;
+    const db = db0 + puaSum * dbFactor;
+
+    let originated = 0;
+    if (y <= originateUntil) {
+      loans.push({ bal: borrow, life: term });
+      originated = borrow;
+      borrowedSum += borrow;
+    }
+
+    let interest = 0;
+    let prin = 0;
+    let service = 0;
+    for (const L of loans) {
+      if (L.life <= 0 || L.bal <= 0.5) { L.bal = 0; L.life = 0; continue; }
+      const i = L.bal * loanRate;
+      const pay = Math.min(payment, L.bal + i);
+      const p = Math.min(L.bal, pay - i);
+      L.bal = Math.max(0, L.bal + i - pay);
+      L.life -= 1;
+      interest += i;
+      prin += p;
+      service += pay;
+    }
+    intSum += interest;
+    pmtSum += service;
+    const shield = interest * tax;
+    taxSum += shield;
+    const afterTaxPmt = service - shield;
+    const loanBal = loans.reduce((s, L) => s + L.bal, 0);
+
+    rows.push({
+      y, thisPrem, thisBase, thisPua, cv, db, originated, service, interest, prin,
+      shield, afterTaxPmt, loanBal, credited
+    });
+  }
+
+  const last = rows[rows.length - 1];
+  const target = rows.find(r => r.y === 20) || last;
+  const afterTaxInterest = intSum - taxSum;
+  const netNumber = target.cv;
+  const netGain = target.cv - premSum + taxSum;
+  const costPct = loanRate * (1 - tax);
+  const costOnCapital = borrowedSum ? afterTaxInterest / borrowedSum : 0;
+  const pretaxCostPct = borrowedSum ? intSum / borrowedSum : 0;
+  const arbFactor = afterTaxInterest > 0 ? creditSum / afterTaxInterest : 0;
+  const spread = credit - costPct;
+
+  document.getElementById('story').innerHTML =
+    'Same rate on both sides. Cash value still compounds on every premium dollar. You also take ' +
+    money(borrow) + ' a year for ' + originateUntil + ' years — ' + money(borrowedSum) +
+    ' of capital — and repay it as ordinary 10-year notes. Interest is deductible at ' +
+    Math.round(tax * 100) + '%. After 20 years the notes are done. What remains is the pile, the death benefit, and a cheap after-tax cost of money.';
+
+  document.getElementById('stats').innerHTML = [
+    ['Net number, yr 20', money(netNumber), 'gold'],
+    ['Net financial gain', money(netGain), 'green'],
+    ['Net cost of money', pct(costPct, 2), 'blue'],
+    ['After-tax interest', money(afterTaxInterest), ''],
+    ['Death benefit yr 20', money(target.db), ''],
+    ['Arbitrage factor', arbFactor.toFixed(1) + '×', 'green']
+  ].map(([l, v, c]) =>
+    `<div class="stat-card"><div class="stat-val ${c}">${v}</div><div class="stat-lbl">${l}</div></div>`
+  ).join('');
+
+  document.getElementById('compare').innerHTML = `
+    <div class="card">
+      <h2>Left · uninterrupted</h2>
+      <table class="year-table">
+        <tr><td>Premiums in (20 yrs)</td><td>${money(premSum)}</td></tr>
+        <tr><td>Interest credited on full cash value</td><td>${money(creditSum)}</td></tr>
+        <tr><td>Cash value remaining</td><td>${money(target.cv)}</td></tr>
+        <tr><td>Death benefit (reciprocal)</td><td>${money(target.db)}</td></tr>
+        <tr><td>Left ledger total (CV + DB)</td><td>${money(target.cv + target.db)}</td></tr>
+      </table>
+    </div>
+    <div class="vs">vs</div>
+    <div class="card">
+      <h2>Right · borrowed & repaid</h2>
+      <table class="year-table">
+        <tr><td>Capital taken (10 × borrow)</td><td>${money(borrowedSum)}</td></tr>
+        <tr><td>P&I paid (gross)</td><td>${money(pmtSum)}</td></tr>
+        <tr><td>Interest paid</td><td>${money(intSum)}</td></tr>
+        <tr><td>Tax saved (30% of interest)</td><td>${money(taxSum)}</td></tr>
+        <tr><td>After-tax interest = cost of money</td><td>${money(afterTaxInterest)}</td></tr>
+        <tr><td>Loan balance year 20</td><td>${money(target.loanBal)}</td></tr>
+        <tr><td>Pre-tax interest / capital</td><td>${pct(pretaxCostPct, 1)}</td></tr>
+        <tr><td>After-tax cost of money (rate)</td><td>${pct(costPct, 2)}</td></tr>
+        <tr><td>After-tax interest / capital taken</td><td>${pct(costOnCapital, 1)}</td></tr>
+        <tr><td>Spread vs 5% credit (after tax)</td><td>${(spread * 100).toFixed(2)} pts</td></tr>
+      </table>
+    </div>`;
+
+  let html = `<thead><tr>
+    <th>Yr</th><th>Premium</th><th>PUA</th><th>CV credit</th><th>Cash value</th><th>Death ben.</th>
+    <th>Borrow</th><th>P&I</th><th>Interest</th><th>Tax shield</th><th>AT P&I</th><th>Loan bal</th>
+  </tr></thead><tbody>`;
+  for (const r of rows) {
+    html += `<tr class="${r.y === 20 ? 'y20' : ''}">
+      <td>${r.y}</td>
+      <td>${money(r.thisPrem)}</td>
+      <td>${money(r.thisPua)}</td>
+      <td>${money(r.credited)}</td>
+      <td>${money(r.cv)}</td>
+      <td>${money(r.db)}</td>
+      <td>${r.originated ? money(r.originated) : '—'}</td>
+      <td>${r.service ? money(r.service) : '—'}</td>
+      <td>${r.interest ? money(r.interest) : '—'}</td>
+      <td>${r.shield ? money(r.shield) : '—'}</td>
+      <td>${r.afterTaxPmt ? money(r.afterTaxPmt) : '—'}</td>
+      <td>${r.loanBal ? money(r.loanBal) : '—'}</td>
+    </tr>`;
+  }
+  html += '</tbody>';
+  document.getElementById('grid').innerHTML = html;
+}
+
+document.querySelectorAll('input').forEach(el => {
+  el.addEventListener('input', run);
+  el.addEventListener('change', run);
+});
+run();
+</script>
+</body>
+</html>
