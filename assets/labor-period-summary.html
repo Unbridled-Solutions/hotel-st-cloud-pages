@@ -44,6 +44,13 @@ td { padding: 8px 10px; text-align: right; border-bottom: 1px solid rgba(90,139,
 td.left { text-align: left; color: var(--white, #f5f5f5); font-weight: 600; }
 tr.total td { background: #0d1620; color: var(--gold); font-weight: 700; border-top: 1px solid var(--gold); }
 tr.blank td { color: var(--muted); font-style: italic; }
+tr.week-tot td { background: #12202c; color: var(--gold); font-weight: 700; border-top: 1px solid rgba(201,170,124,0.35); }
+th.grp { text-align: center; color: var(--gold); letter-spacing: 1.6px; border-left: 2px solid rgba(201,170,124,0.45); font-size: 11px; }
+th.sub { font-size: 9px; letter-spacing: 0.8px; }
+th.split, td.split { border-left: 2px solid rgba(201,170,124,0.35); }
+td.sticky, th.sticky { position: sticky; left: 0; z-index: 3; background: #0d1620; min-width: 118px; }
+.sheet { min-width: 1480px; font-size: 12px; }
+.sheet th, .sheet td { padding: 6px 7px; white-space: nowrap; }
 .pct-hi { color: var(--red); font-weight: 700; }
 .pct-ok { color: var(--green); font-weight: 700; }
 .hero { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 0 0 16px; }
@@ -345,44 +352,99 @@ function renderOutlet(o) {
   document.getElementById('grid').innerHTML = body;
 }
 
+function summaryOutlets() {
+  return ['fp','fph','hsc','socc'].map(id => OUTLETS.find(o => o.id === id));
+}
+
+function outletCells(w, o, first) {
+  const pcls = (w.laborPct != null && w.laborPct > 0.35) ? 'pct-hi' : 'pct-ok';
+  const split = first ? '' : ' split';
+  let html = `<td class="${split}">${money(w.restRev)}</td>`;
+  if (o.events) html += `<td>${money(w.evt)}</td>`;
+  html += `<td>${money(w.hrly)}</td><td>${money(w.mgmt)}</td><td>${money(w.labor)}</td><td class="${w.laborPct==null?'':pcls}">${pct(w.laborPct)}</td>`;
+  return html;
+}
+
 function renderSummary() {
-  const rolls = OUTLETS.map(o => ({ o, r: rollPeriod(o, viewYear, viewPeriod, bundles[o.ns] || {}) }));
-  const grand = rolls.reduce((a, x) => {
-    a.totalRev += x.r.tot.totalRev; a.labor += x.r.tot.labor; a.hrly += x.r.tot.hrly; a.mgmt += x.r.tot.mgmt; a.tax += x.r.tot.tax;
-    return a;
-  }, { totalRev:0, labor:0, hrly:0, mgmt:0, tax:0 });
-  grand.laborPct = grand.totalRev > 0 ? grand.labor / grand.totalRev : null;
+  const outlets = summaryOutlets();
+  const weeks = weeksInPeriod(viewYear, viewPeriod);
+  const periodRolls = outlets.map(o => rollPeriod(o, viewYear, viewPeriod, bundles[o.ns] || {}));
+  const grandRev = periodRolls.reduce((s, r) => s + r.tot.totalRev, 0);
+  const grandLab = periodRolls.reduce((s, r) => s + r.tot.labor, 0);
   document.getElementById('hero').innerHTML = `
-    <div class="hero-card"><div class="hero-lbl">All outlets · revenue</div><div class="hero-val">${money(grand.totalRev)}</div></div>
-    <div class="hero-card"><div class="hero-lbl">All outlets · labor</div><div class="hero-val">${money(grand.labor)}</div></div>
-    <div class="hero-card"><div class="hero-lbl">Blended labor %</div><div class="hero-val">${pct(grand.laborPct)}</div></div>
-    <div class="hero-card"><div class="hero-lbl">Tax in labor</div><div class="hero-val">${money(grand.tax)}</div><div class="hero-sub">${Math.round(taxRate(viewPeriod)*100)}% this period</div></div>`;
-  if (viewGrain === 'daily') {
-    document.getElementById('note').textContent = 'Daily company total for the period. Same columns as Stan P9 recap, without food or supplies.';
-    let html = tableHead('Restaurant / Hotel', 'Day') + '<tbody>';
-    daysInPeriod(viewYear, viewPeriod).forEach(day => {
-      const acc = { restRev:0, evt:0, totalRev:0, hrly:0, mgmt:0, tax:0, labor:0, has:false };
-      OUTLETS.forEach(o => {
-        const w = rollDay(o, day.monday, day.di, bundles[o.ns] || {});
+    <div class="hero-card"><div class="hero-lbl">UHG actual revenue</div><div class="hero-val">${money(grandRev)}</div></div>
+    <div class="hero-card"><div class="hero-lbl">UHG actual labor</div><div class="hero-val">${money(grandLab)}</div></div>
+    <div class="hero-card"><div class="hero-lbl">Blended labor %</div><div class="hero-val">${pct(grandRev ? grandLab / grandRev : null)}</div></div>
+    <div class="hero-card"><div class="hero-lbl">Tax this period</div><div class="hero-val">${Math.round(taxRate(viewPeriod)*100)}%</div><div class="hero-sub">On hourly + management</div></div>`;
+  document.getElementById('note').textContent = 'UHG worksheet layout. Outlet across the top, days down, weekly totals, period total at the bottom. Actuals only. No budget. Events is event revenue.';
+
+  const grp = outlets.map((o, i) => {
+    const span = o.events ? 6 : 5;
+    return `<th class="grp${i ? ' split' : ''}" colspan="${span}">${o.name}</th>`;
+  }).join('') + `<th class="grp split" colspan="3">Combined</th>`;
+
+  const subs = outlets.map((o, i) => {
+    const first = i ? ' split' : '';
+    let h = `<th class="sub${first}">Revenue</th>`;
+    if (o.events) h += `<th class="sub">Events</th>`;
+    h += `<th class="sub">Hourly</th><th class="sub">Mgmt</th><th class="sub">Labor</th><th class="sub">%</th>`;
+    return h;
+  }).join('') + `<th class="sub split">Revenue</th><th class="sub">Labor</th><th class="sub">%</th>`;
+
+  let html = `<table class="sheet"><thead>
+    <tr><th class="left sticky"></th>${grp}</tr>
+    <tr><th class="left sticky">Date</th>${subs}</tr>
+  </thead><tbody>`;
+
+  const periodAcc = { cells: outlets.map(() => ({ restRev:0, evt:0, totalRev:0, hrly:0, mgmt:0, tax:0, labor:0 })), combRev:0, combLab:0 };
+
+  weeks.forEach((monday, wi) => {
+    const weekAcc = outlets.map(() => ({ restRev:0, evt:0, totalRev:0, hrly:0, mgmt:0, tax:0, labor:0, has:false }));
+    let weekCombRev = 0, weekCombLab = 0;
+    for (let di = 0; di < 7; di++) {
+      const date = addDays(monday, di);
+      let row = `<tr><td class="left sticky">${fmtDay(date)}</td>`;
+      let combRev = 0, combLab = 0, any = false;
+      outlets.forEach((o, oi) => {
+        const w = rollDay(o, monday, di, bundles[o.ns] || {});
+        row += outletCells(w, o, oi === 0);
+        const acc = weekAcc[oi];
         acc.restRev += w.restRev; acc.evt += w.evt; acc.totalRev += w.totalRev;
         acc.hrly += w.hrly; acc.mgmt += w.mgmt; acc.tax += w.tax; acc.labor += w.labor;
         if (w.has) acc.has = true;
+        combRev += w.totalRev; combLab += w.labor;
+        if (w.has) any = true;
       });
-      acc.laborPct = acc.totalRev > 0 ? acc.labor / acc.totalRev : null;
-      html += rowHTML(fmtDay(day.date), acc, false);
+      const cp = combRev > 0 ? combLab / combRev : null;
+      const pcls = (cp != null && cp > 0.35) ? 'pct-hi' : 'pct-ok';
+      row += `<td class="split">${money(combRev)}</td><td>${money(combLab)}</td><td class="${cp==null?'':pcls}">${pct(cp)}</td></tr>`;
+      html += row;
+      weekCombRev += combRev; weekCombLab += combLab;
+    }
+    let tot = `<tr class="week-tot"><td class="left sticky">Weekly totals · Wk ${wi+1}</td>`;
+    weekAcc.forEach((w, oi) => {
+      w.laborPct = w.totalRev > 0 ? w.labor / w.totalRev : null;
+      tot += outletCells(w, outlets[oi], oi === 0);
+      const p = periodAcc.cells[oi];
+      p.restRev += w.restRev; p.evt += w.evt; p.totalRev += w.totalRev;
+      p.hrly += w.hrly; p.mgmt += w.mgmt; p.tax += w.tax; p.labor += w.labor;
     });
-    html += rowHTML('Period total', { ...grand, restRev: rolls.reduce((s,x)=>s+x.r.tot.restRev,0), evt: rolls.reduce((s,x)=>s+x.r.tot.evt,0), has:true }, true);
-    html += '</tbody>';
-    document.getElementById('grid').innerHTML = html;
-    return;
-  }
-  document.getElementById('note').textContent = 'Weekly running tally for the period. Fremont Provisions, 1887, Hotel, then Standard Oil. Event revenue is in the total.';
-  let html = tableHead('Restaurant / Hotel', 'Outlet') + '<tbody>';
-  rolls.forEach(x => {
-    html += rowHTML(x.o.name, x.r.tot, false);
+    const wp = weekCombRev > 0 ? weekCombLab / weekCombRev : null;
+    const wpcls = (wp != null && wp > 0.35) ? 'pct-hi' : 'pct-ok';
+    tot += `<td class="split">${money(weekCombRev)}</td><td>${money(weekCombLab)}</td><td class="${wp==null?'':wpcls}">${pct(wp)}</td></tr>`;
+    html += tot;
+    periodAcc.combRev += weekCombRev; periodAcc.combLab += weekCombLab;
   });
-  html += rowHTML('Company total', { ...grand, restRev: rolls.reduce((s,x)=>s+x.r.tot.restRev,0), evt: rolls.reduce((s,x)=>s+x.r.tot.evt,0), has:true }, true);
-  html += '</tbody>';
+
+  let per = `<tr class="total"><td class="left sticky">Period ${viewPeriod} actual</td>`;
+  periodAcc.cells.forEach((w, oi) => {
+    w.laborPct = w.totalRev > 0 ? w.labor / w.totalRev : null;
+    per += outletCells(w, outlets[oi], oi === 0);
+  });
+  const pp = periodAcc.combRev > 0 ? periodAcc.combLab / periodAcc.combRev : null;
+  const ppcls = (pp != null && pp > 0.35) ? 'pct-hi' : 'pct-ok';
+  per += `<td class="split">${money(periodAcc.combRev)}</td><td>${money(periodAcc.combLab)}</td><td class="${pp==null?'':ppcls}">${pct(pp)}</td></tr>`;
+  html += per + '</tbody></table>';
   document.getElementById('grid').innerHTML = html;
 }
 
