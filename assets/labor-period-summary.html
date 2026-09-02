@@ -74,7 +74,13 @@ td.sticky, th.sticky { position: sticky; left: 0; z-index: 3; background: #0d162
 th.grp a { color: var(--gold); text-decoration: none; }
 th.grp a:hover { text-decoration: underline; color: #e8d5a8; }
 .status { font-size: 12px; color: var(--muted); margin-left: auto; }
-@media (max-width: 800px) { .hero { grid-template-columns: 1fr 1fr; } }
+.log { margin-top: 28px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; max-width: 920px; }
+.log-head { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
+.log-row { font-size: 12px; color: var(--text); padding: 6px 0; border-bottom: 1px solid rgba(90,139,167,0.12); display: grid; grid-template-columns: 178px 1fr; gap: 12px; }
+.log-row:last-child { border-bottom: none; }
+.log-ts { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.log-empty { color: var(--muted); font-style: italic; font-size: 12px; }
+@media (max-width: 800px) { .hero { grid-template-columns: 1fr 1fr; } .log-row { grid-template-columns: 1fr; gap: 2px; } }
 @media print {
   .tabs, .hdr-btn, .week-nav-btn { display: none; }
   body { background: white; color: #111; }
@@ -112,6 +118,10 @@ th.grp a:hover { text-decoration: underline; color: #e8d5a8; }
   <p class="note" id="note"></p>
   <div class="hero" id="hero"></div>
   <div class="grid"><table id="grid"></table></div>
+  <div class="log">
+    <div class="log-head">Chronological log</div>
+    <div id="logBody"></div>
+  </div>
 </div>
 <script>
 const OUTLETS = [
@@ -124,12 +134,82 @@ const OUTLETS = [
 let bundles = {};
 let foodByWeek = {};
 let forecastByPeriod = {};
+let changeLog = [];
+let pendingLog = [];
+let saveLock = Promise.resolve();
 let viewPeriod = null;
 let viewYear = 2026;
 let viewGrain = 'daily';
 const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const FOOD_NS = 'uhg-food';
 const FC_NS = 'uhg-forecast';
+const LOG_NS = 'uhg-log';
+const RESERVED = { _log:1, entries:1, weeks:1, log:1 };
+
+function enqueue(fn) {
+  saveLock = saveLock.then(fn, fn);
+  return saveLock;
+}
+async function kvGet(ns) {
+  const res = await fetch('/api/planner/bundle?ns=' + ns);
+  const json = await res.json();
+  return (json.data && typeof json.data === 'object') ? json.data : {};
+}
+async function kvPut(ns, body) {
+  await fetch('/api/planner/bundle?ns=' + ns, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+}
+function stamp() { return new Date().toISOString(); }
+function fmtStamp(iso) {
+  try {
+    return new Date(iso).toLocaleString('en-US', {
+      timeZone: 'America/Denver', month: 'short', day: 'numeric', year: 'numeric',
+      hour: 'numeric', minute: '2-digit'
+    });
+  } catch (e) { return iso; }
+}
+function logChange(entry) {
+  pendingLog.push(Object.assign({ ts: stamp() }, entry));
+}
+function moneyPlain(n) {
+  if (n == null || n === '' || !isFinite(n)) return '—';
+  return Number(n).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+}
+function renderLog() {
+  const el = document.getElementById('logBody');
+  if (!el) return;
+  const rows = (changeLog || []).slice().reverse().slice(0, 250);
+  if (!rows.length) {
+    el.innerHTML = '<div class="log-empty">No typed entries yet. Every food, supply, and forecast change is stamped here. Nothing is deleted.</div>';
+    return;
+  }
+  el.innerHTML = rows.map(r => {
+    const who = r.kind === 'forecast'
+      ? `Forecast ${r.period || ''} ${r.outlet || ''} ${r.field || ''}`
+      : `Week of ${r.week || ''} ${r.field || ''}`;
+    return `<div class="log-row"><div class="log-ts">${fmtStamp(r.ts)}</div><div>${who.trim()}: ${moneyPlain(r.from)} → ${moneyPlain(r.to)}</div></div>`;
+  }).join('');
+}
+async function flushLog() {
+  if (!pendingLog.length) return;
+  const remote = await kvGet(LOG_NS);
+  const existing = Array.isArray(remote.entries) ? remote.entries.slice() : [];
+  const batch = pendingLog.slice();
+  const entries = existing.concat(batch);
+  await kvPut(LOG_NS, { entries });
+  pendingLog = pendingLog.slice(batch.length);
+  changeLog = entries;
+}
+function unwrapFood(data) {
+  if (!data || typeof data !== 'object') return {};
+  if (data.weeks && typeof data.weeks === 'object') return data.weeks;
+  const out = {};
+  Object.keys(data).forEach(k => { if (!RESERVED[k]) out[k] = data[k]; });
+  return out;
+}
 
 function fcKey() { return viewYear + '-P' + viewPeriod; }
 function fcEntry() {
@@ -137,24 +217,29 @@ function fcEntry() {
   return (raw && typeof raw === 'object') ? raw : {};
 }
 async function saveForecast() {
-  try {
-    await fetch('/api/planner/bundle?ns=' + FC_NS, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(forecastByPeriod)
-    });
-  } catch (e) {}
+  return enqueue(async () => {
+    try {
+      const remote = await kvGet(FC_NS);
+      const merged = Object.assign({}, remote, forecastByPeriod);
+      await kvPut(FC_NS, merged);
+      forecastByPeriod = merged;
+      await flushLog();
+    } catch (e) {}
+  });
 }
 function setFc(oid, field, val) {
   const key = fcKey();
   const all = fcEntry();
   const cur = Object.assign({}, all[oid] || {});
+  const from = cur[field];
   if (val === '' || val == null) delete cur[field];
   else {
     const n = parseFloat(val);
     if (!isFinite(n)) delete cur[field];
     else cur[field] = Math.round(n * 100) / 100;
   }
+  const to = cur[field];
+  if (from !== to) logChange({ kind: 'forecast', period: key, outlet: oid, field, from: from == null ? null : from, to: to == null ? null : to });
   if (!Object.keys(cur).length) delete all[oid];
   else all[oid] = cur;
   if (!Object.keys(all).length) delete forecastByPeriod[key];
@@ -206,20 +291,23 @@ function foodEntry(mondayYmd) {
   return { fp: n > 0 ? n : 0, hsc: 0, supplies: 0 };
 }
 async function saveFood() {
-  try {
-    await fetch('/api/planner/bundle?ns=' + FOOD_NS, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(foodByWeek)
-    });
-  } catch (e) {}
+  return enqueue(async () => {
+    try {
+      const remote = unwrapFood(await kvGet(FOOD_NS));
+      const merged = Object.assign({}, remote, foodByWeek);
+      await kvPut(FOOD_NS, merged);
+      foodByWeek = merged;
+      await flushLog();
+    } catch (e) {}
+  });
 }
 function setFood(mondayYmd, which, val) {
   const cur = foodEntry(mondayYmd);
+  const from = cur[which];
   const n = parseFloat(val);
   cur[which] = n > 0 ? Math.round(n * 100) / 100 : 0;
-  if (!cur.fp && !cur.hsc && !cur.supplies) delete foodByWeek[mondayYmd];
-  else foodByWeek[mondayYmd] = cur;
+  if (from !== cur[which]) logChange({ kind: 'week', week: mondayYmd, field: which, from, to: cur[which] });
+  foodByWeek[mondayYmd] = cur;
   saveFood();
   render();
 }
@@ -575,7 +663,7 @@ function renderSummary() {
       const cp = combRev > 0 ? combLab / combRev : null;
       const pcls = (cp != null && cp > 0.35) ? 'pct-hi' : 'pct-ok';
       row += `<td class="split">${money(combRev)}</td><td>${money(combLab)}</td><td class="${cp==null?'':pcls}">${pct(cp)}</td><td class="split">—</td><td>—</td><td>—</td><td>—</td><td class="split">—</td><td>—</td><td class="split">—</td><td class="supply">—</td></tr>`;
-      html += row;
+      if (viewGrain !== 'weekly') html += row;
       weekCombRev += combRev; weekCombLab += combLab;
     }
     let tot = `<tr class="week-tot"><td class="left sticky">Weekly totals · Wk ${wi+1}</td>`;
@@ -658,6 +746,7 @@ function render() {
   document.getElementById('rangeLbl').textContent = first ? `${first.getMonth()+1}/${first.getDate()} – ${last.getMonth()+1}/${last.getDate()}` : '';
   document.getElementById('taxChip').textContent = `Tax ${Math.round(taxRate(viewPeriod)*100)}%`;
   renderSummary();
+  renderLog();
 }
 
 async function loadAll() {
@@ -673,15 +762,16 @@ async function loadAll() {
   }));
   bundles = Object.fromEntries(results);
   try {
-    const fr = await fetch('/api/planner/bundle?ns=' + FOOD_NS);
-    const fj = await fr.json();
-    foodByWeek = (fj.data && typeof fj.data === 'object') ? fj.data : {};
+    const fj = await kvGet(FOOD_NS);
+    foodByWeek = unwrapFood(fj);
   } catch (e) { foodByWeek = foodByWeek || {}; }
   try {
-    const cr = await fetch('/api/planner/bundle?ns=' + FC_NS);
-    const cj = await cr.json();
-    forecastByPeriod = (cj.data && typeof cj.data === 'object') ? cj.data : {};
+    forecastByPeriod = await kvGet(FC_NS);
   } catch (e) { forecastByPeriod = forecastByPeriod || {}; }
+  try {
+    const lg = await kvGet(LOG_NS);
+    changeLog = Array.isArray(lg.entries) ? lg.entries : [];
+  } catch (e) { changeLog = changeLog || []; }
   document.getElementById('status').textContent = 'Live from KV';
   render();
 }
