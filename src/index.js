@@ -3,6 +3,8 @@
  * Handles API routes; all other requests fall through to static assets.
  */
 
+import { handlePlannerSync, handlePlannerSyncStatus } from './planner-sync.js';
+
 const AIRTABLE_BASE = "appUUjLXEUwlyx23M";
 const SOCC_TABLE    = "SOCC%20Barista%20Applications";
 
@@ -16,7 +18,7 @@ const CORS = {
 function optionsResponse() {
   return new Response(null, { headers: {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   }});
 }
@@ -158,6 +160,14 @@ export default {
       }
     }
 
+    // ── POST /api/planner/sync  — live Toast/Cloudbeds/MarginEdge lookback ──
+    if (url.pathname === '/api/planner/sync' && request.method === 'POST') {
+      return handlePlannerSync(request, env, ctx);
+    }
+    if (url.pathname === '/api/planner/sync' && request.method === 'GET') {
+      return handlePlannerSyncStatus(env);
+    }
+
     // ── POST /api/planner/bundle?ns=X ─────────────────────────────────────────
     // Saves the full KV bundle for a planner namespace
     if (url.pathname === '/api/planner/bundle' && request.method === 'POST') {
@@ -172,13 +182,83 @@ export default {
       }
     }
 
+    // ── GET /api/maintenance-file ────────────────────────────────────────────
+    // Supports:
+    //   /api/maintenance-file?key=maint/id/filename
+    //   /api/maintenance-file/maint/id/filename
+    if ((url.pathname === '/api/maintenance-file' || url.pathname.startsWith('/api/maintenance-file/')) && request.method === 'GET') {
+      let key = '';
+      if (url.pathname.startsWith('/api/maintenance-file/')) {
+        key = decodeURIComponent(url.pathname.slice('/api/maintenance-file/'.length));
+      } else {
+        const rawKey = url.searchParams.get('key') || '';
+        key = decodeURIComponent(rawKey.replace(/%2[Ff]/g, '/'));
+      }
+      if (!key.startsWith('maint/') || key.includes('..')) {
+        return new Response('Not found', { status: 404 });
+      }
+      try {
+        const obj = await env.MAINTENANCE_UPLOADS.get(key);
+        if (!obj) return new Response('Not found', { status: 404 });
+        return new Response(obj.body, {
+          headers: {
+            'Content-Type': obj.httpMetadata?.contentType || 'application/octet-stream',
+            'Cache-Control': 'private, max-age=86400',
+            'Access-Control-Allow-Origin': '*',
+          },
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: CORS });
+      }
+    }
+
     // ── POST /api/send-maintenance ───────────────────────────────────────────
-    // Sends formatted maintenance request email via Resend.
-    // Body: { data: {...}, sendCopy: bool, fileNames: ['a.jpg', ...] }
+    // multipart/form-data: field `data` (JSON string) + `files` (0+ File objects)
+    // R2 + KV are the source of truth. Email is non-fatal.
     if (url.pathname === '/api/send-maintenance' && request.method === 'POST') {
       try {
-        const { data, sendCopy, fileNames } = await request.json();
-        const d = data;
+        const formData = await request.formData();
+        const raw = formData.get('data');
+        const d = JSON.parse(typeof raw === 'string' ? raw : (raw || '{}'));
+        const fileEntries = formData.getAll('files');
+
+        const safeName = (name) => String(name || 'file').replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 120);
+        const origin = 'https://offers.hotelstcloud.com';
+        const attachmentUrls = [];
+        const fileNames = [];
+        const fileErrors = [];
+
+        for (const file of fileEntries) {
+          if (!file) continue;
+          let buf;
+          try {
+            buf = await file.arrayBuffer();
+          } catch (e) {
+            fileErrors.push('read:' + (e.message || e));
+            continue;
+          }
+          if (!buf || !buf.byteLength) continue;
+          const filename = safeName(file.name || ('photo-' + fileNames.length + '.jpg'));
+          fileNames.push(filename);
+          const r2Key = `maint/${d.id || 'unknown'}/${filename}`;
+          try {
+            await env.MAINTENANCE_UPLOADS.put(r2Key, buf, {
+              httpMetadata: { contentType: file.type || 'application/octet-stream' },
+            });
+            attachmentUrls.push(`${origin}/api/maintenance-file/${r2Key.split('/').map(encodeURIComponent).join('/')}`);
+          } catch (e) {
+            fileErrors.push('r2:' + filename + ':' + (e.message || e));
+          }
+        }
+
+        d.attachments = fileNames.length ? fileNames : (d.attachments || []);
+        d.attachment_urls = attachmentUrls;
+        d.file_errors = fileErrors;
+        if (d.id) {
+          try {
+            await env.PLANNER_DATA.put(`maint:req:${d.id}`, JSON.stringify(d));
+          } catch (_) { /* KV overlay is non-fatal */ }
+        }
 
         const urgencyColor = d.urgency?.includes('Urgent') ? '#ff4d4d'
           : d.urgency?.includes('Soon') ? '#ffb347' : '#3de8c8';
@@ -194,6 +274,15 @@ export default {
 
         const divider = (label) => `
           <tr><td colspan="2" style="padding:14px 16px 6px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#4a9eff;border-bottom:1px solid #2a2a2a;">${label}</td></tr>`;
+
+        const photoHtml = attachmentUrls.length
+          ? attachmentUrls.map((u, i) => {
+              const n = fileNames[i] || ('file-' + (i + 1));
+              const isImg = /\.(jpe?g|png|gif|webp|heic|heif)$/i.test(n);
+              if (isImg) return `<p style="margin:8px 0;"><a href="${u}"><img src="${u}" alt="${n}" style="max-width:100%;border-radius:8px;border:1px solid #2e3250;"></a><br><a href="${u}" style="color:#4a9eff;font-size:12px;">${n}</a></p>`;
+              return `<p style="margin:8px 0;"><a href="${u}" style="color:#4a9eff;">${n}</a></p>`;
+            }).join('')
+          : '';
 
         const html = `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"></head>
@@ -226,7 +315,7 @@ export default {
         <td style="padding:10px 16px;font-size:13px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em;vertical-align:top;border-bottom:1px solid #2a2a2a;">Description</td>
         <td style="padding:10px 16px;font-size:14px;color:#e8eaf0;border-bottom:1px solid #2a2a2a;white-space:pre-wrap;line-height:1.6;">${d.description || '—'}</td>
       </tr>
-      ${fileNames?.length ? row('Attachments', fileNames.join(', ') + ' <em style="color:#8b90a8;font-size:12px;">(see attached)</em>') : ''}
+      ${photoHtml ? `<tr><td colspan="2" style="padding:12px 16px;border-bottom:1px solid #2a2a2a;">${photoHtml}</td></tr>` : ''}
       ${divider('Submitted')}
       ${row('Time', new Date(d.submitted_at).toLocaleString('en-US', {timeZone:'America/Denver',dateStyle:'medium',timeStyle:'short'}) + ' MT')}
       ${row('Tracker', `<a href="https://offers.hotelstcloud.com/assets/maintenance-tracker" style="color:#4a9eff;">Open Tracker →</a>`)}
@@ -238,29 +327,50 @@ export default {
   </div>
 </body></html>`;
 
-        const to = ['hello@fremontmakers.com'];
-        if (sendCopy && d.email) to.push(d.email);
-
-        const resendResp = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${env.RESEND_API_KEY}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
+        let emailId = null;
+        let emailError = null;
+        try {
+          const payload = {
             from: 'Unbridled Properties <noreply@fremontmakers.com>',
-            to,
-            reply_to: d.email,
-            subject: `[Maintenance] ${d.urgency?.split('—')[0].trim() || 'Request'} · ${d.building}${d.suite ? ' · ' + d.suite : ''} · ${d.name}`,
-            html
-          })
-        });
+            to: ['suiteservices@unbridled.com'],
+            subject: `[Maintenance] ${String(d.urgency || 'Request').split('—')[0].trim()} · ${d.building}${d.suite ? ' · ' + d.suite : ''} · ${d.name}`,
+            html,
+          };
+          if (d.email) payload.reply_to = d.email;
 
-        const resendData = await resendResp.json();
-        if (!resendResp.ok) {
-          return new Response(JSON.stringify({ success: false, error: resendData }), { status: 500, headers: CORS });
+          const resendResp = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${env.RESEND_API_KEY}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+          });
+          const resendData = await resendResp.json();
+          if (!resendResp.ok) {
+            emailError = resendData;
+          } else {
+            emailId = resendData.id || null;
+          }
+        } catch (e) {
+          emailError = e.message || String(e);
         }
-        return new Response(JSON.stringify({ success: true, id: resendData.id }), { status: 200, headers: CORS });
+
+        d.email_id = emailId;
+        d.email_error = emailError;
+        if (d.id) {
+          try {
+            await env.PLANNER_DATA.put(`maint:req:${d.id}`, JSON.stringify(d));
+          } catch (_) {}
+        }
+
+        return new Response(JSON.stringify({
+          success: !emailError,
+          id: emailId,
+          attachment_urls: attachmentUrls,
+          file_errors: fileErrors,
+          error: emailError,
+        }), { status: 200, headers: CORS });
       } catch (err) {
         return new Response(JSON.stringify({ success: false, error: err.message }), { status: 500, headers: CORS });
       }

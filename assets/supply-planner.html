@@ -67,7 +67,7 @@ th.grp { text-align: center; color: var(--gold); letter-spacing: 1.4px; }
   <div class="hdr-right">
     <span class="status" id="status">Loading…</span>
     <a class="hdr-btn" href="https://offers.hotelstcloud.com/assets/labor-period-summary">Period summary</a>
-    <button class="hdr-btn" onclick="loadAll()">Refresh</button>
+    <button class="hdr-btn" id="refreshBtn" onclick="refreshLive()">Refresh</button>
   </div>
 </div>
 <div class="week-nav">
@@ -314,6 +314,38 @@ function render() {
     <div class="hero-card"><div class="hero-lbl">FP vs 1887 spent</div><div class="hero-val">${money(fp._sum)} / ${money(hsc._sum)}</div><div class="hero-sub">Actuals from MarginEdge</div></div>`;
   document.getElementById('panels').innerHTML = SIDES.map(panelHTML).join('');
   renderWeeks();
+}
+
+async function refreshLive() {
+  const btn = document.getElementById('refreshBtn');
+  const status = document.getElementById('status');
+  if (btn) btn.disabled = true;
+  status.textContent = 'Pulling MarginEdge…';
+  try {
+    const kick = await fetch('/api/planner/sync', { method: 'POST' });
+    const start = await kick.json();
+    if (!kick.ok || start.success === false) {
+      status.textContent = start.error || start.message || 'Sync failed';
+      if (btn) btn.disabled = false;
+      return;
+    }
+    const deadline = Date.now() + 8 * 60 * 1000;
+    while (Date.now() < deadline) {
+      await new Promise(r => setTimeout(r, 2500));
+      const st = await fetch('/api/planner/sync').then(r => r.json()).catch(() => ({}));
+      if (st.message) status.textContent = st.message;
+      if (st.state === 'ok' || st.state === 'error') {
+        await loadAll();
+        status.textContent = st.message || (st.state === 'ok' ? 'Live from MarginEdge' : 'Sync error');
+        if (btn) btn.disabled = false;
+        return;
+      }
+    }
+    status.textContent = 'Still pulling — hit Refresh again in a minute';
+  } catch (e) {
+    status.textContent = 'Sync failed';
+  }
+  if (btn) btn.disabled = false;
 }
 
 async function loadAll() {

@@ -99,7 +99,7 @@ th.grp a:hover { text-decoration: underline; color: #e8d5a8; }
   </div>
   <div class="hdr-right">
     <span class="status" id="status">Loading…</span>
-    <button class="hdr-btn" onclick="loadAll()">Refresh</button>
+    <button class="hdr-btn" id="refreshBtn" onclick="refreshLive()">Refresh</button>
     <button class="hdr-btn" onclick="window.print()">Print</button>
   </div>
 </div>
@@ -757,6 +757,38 @@ function render() {
   document.getElementById('taxChip').textContent = `Tax ${Math.round(taxRate(viewPeriod)*100)}%`;
   renderSummary();
   renderLog();
+}
+
+async function refreshLive() {
+  const btn = document.getElementById('refreshBtn');
+  const status = document.getElementById('status');
+  if (btn) btn.disabled = true;
+  status.textContent = 'Pulling Toast, Cloudbeds, MarginEdge…';
+  try {
+    const kick = await fetch('/api/planner/sync', { method: 'POST' });
+    const start = await kick.json();
+    if (!kick.ok || start.success === false) {
+      status.textContent = start.error || start.message || 'Sync failed';
+      if (btn) btn.disabled = false;
+      return;
+    }
+    const deadline = Date.now() + 8 * 60 * 1000;
+    while (Date.now() < deadline) {
+      await new Promise(r => setTimeout(r, 2500));
+      const st = await fetch('/api/planner/sync').then(r => r.json()).catch(() => ({}));
+      if (st.message) status.textContent = st.message;
+      if (st.state === 'ok' || st.state === 'error') {
+        await loadAll();
+        status.textContent = st.message || (st.state === 'ok' ? 'Live' : 'Sync error');
+        if (btn) btn.disabled = false;
+        return;
+      }
+    }
+    status.textContent = 'Still pulling — hit Refresh again in a minute';
+  } catch (e) {
+    status.textContent = 'Sync failed';
+  }
+  if (btn) btn.disabled = false;
 }
 
 async function loadAll() {
