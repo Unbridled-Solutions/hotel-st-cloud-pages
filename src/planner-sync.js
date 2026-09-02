@@ -365,13 +365,14 @@ export async function handlePlannerSync(request, env, ctx) {
   }
   const prevRaw = await env.PLANNER_DATA.get(STATUS_KEY);
   const prev = prevRaw ? JSON.parse(prevRaw) : {};
-  if (prev.state === 'running' && prev.started && (Date.now() - Date.parse(prev.started) < 8 * 60 * 1000)) {
+  if (prev.state === 'running' && prev.started && (Date.now() - Date.parse(prev.started) < 90 * 1000)) {
     return json({ success: true, state: 'running', message: prev.message || 'Already pulling', started: prev.started });
   }
   const today = denverYmd();
   const yesterday = addYmd(today, -1);
-  const lookbackFrom = addYmd(yesterday, -13);
-  const cbTo = addYmd(today, 13);
+  // Button pull must finish inside the Worker request (~30–60s). Full 14-day Toast + reservation crawl stays on the 7am job.
+  const lookbackFrom = addYmd(yesterday, -2);
+  const cbTo = addYmd(today, 6);
   const status = {
     state: 'running',
     started: new Date().toISOString(),
@@ -382,16 +383,30 @@ export async function handlePlannerSync(request, env, ctx) {
     message: 'Pulling Toast, Cloudbeds, MarginEdge…',
     errors: [],
     changed: {},
+    mode: 'live-refresh',
   };
   await setStatus(env, status);
-  ctx.waitUntil(runSync(env, status).catch(async (err) => {
+  try {
+    await runSync(env, status);
+  } catch (err) {
     status.state = 'error';
     status.finished = new Date().toISOString();
     status.message = String(err.message || err);
     status.errors.push(status.message);
     await setStatus(env, status);
-  }));
-  return json({ success: true, state: 'running', message: status.message, started: status.started, yesterday, lookbackFrom });
+    return json({ success: false, state: 'error', message: status.message, errors: status.errors }, 500);
+  }
+  return json({
+    success: true,
+    state: status.state,
+    message: status.message,
+    started: status.started,
+    finished: status.finished,
+    yesterday,
+    lookbackFrom,
+    changed: status.changed,
+    errors: status.errors,
+  });
 }
 
 async function runSync(env, status) {
@@ -469,19 +484,17 @@ async function runSync(env, status) {
   }
   await kvPut(env, 'socc', socc);
 
-  status.message = 'Cloudbeds occupancy + room $…';
+  status.message = 'Cloudbeds occupancy…';
   await setStatus(env, status);
   const occ = {};
   for (const d of cbDays) {
     try { occ[d] = await cloudbedsOcc(env, d); } catch (e) { status.errors.push('occ ' + d + ' ' + e.message); }
   }
-  let room = {};
-  try { room = await cloudbedsRoomRev(env, from, status.cloudbedsTo); }
-  catch (e) { status.errors.push('room ' + e.message); }
+  // Room $ reservation crawl is too heavy for a button click. 7am job still writes bookedrevs.
 
   const hsc = await kvGet(env, 'hsc');
   status.changed.hscOcc = applySeries(hsc, 'hsc-wk-', 'occrooms', Object.fromEntries(cbDays.map((d) => [d, fmtOcc(occ[d])])));
-  status.changed.hscBooked = applySeries(hsc, 'hsc-wk-', 'bookedrevs', Object.fromEntries(cbDays.map((d) => [d, fmtMoney(room[d])])));
+  status.changed.hscBooked = 0;
   status.changed.hscHrly = applySeries(hsc, 'hsc-wk-', 'hrlyacts', moneyMap(labor.hsc));
   let actFill = 0;
   for (const d of cbDays) {
@@ -536,7 +549,7 @@ async function runSync(env, status) {
     ts: new Date().toISOString(),
     kind: 'system',
     field: 'live-refresh',
-    note: `Refresh lookback ${from}–${yesterday}. Cloudbeds occ/room through ${status.cloudbedsTo}.`,
+    note: `Refresh lookback ${from}–${yesterday} Toast. Cloudbeds occupancy through ${status.cloudbedsTo}. Room $ still from 7am job.`,
     from: null,
     to: null,
   });
