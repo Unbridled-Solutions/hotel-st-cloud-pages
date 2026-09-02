@@ -200,7 +200,9 @@ async function flushLog() {
   const remote = await kvGet(LOG_NS);
   const existing = Array.isArray(remote.entries) ? remote.entries.slice() : [];
   const batch = pendingLog.slice();
-  const entries = existing.concat(batch);
+  const seen = new Set(existing.map(e => JSON.stringify(e)));
+  const extra = batch.filter(e => !seen.has(JSON.stringify(e)));
+  const entries = existing.concat(extra);
   await kvPut(LOG_NS, { entries });
   pendingLog = pendingLog.slice(batch.length);
   changeLog = entries;
@@ -328,13 +330,13 @@ function foodBlock(fpFood, hscFood, fpRev, hscRev, allRev, allLab, opts) {
   const cls = (p, hi) => (p != null && p > hi) ? 'pct-hi' : (p == null ? '' : 'pct-ok');
   const fpCell = opts && opts.forecast
     ? fcInput('food', 'fp', fpFood)
-    : opts && opts.input ? foodInput(opts.key, 'fp', fpFood) : (fpFood ? money(fpFood) : '—');
+    : opts && opts.input ? foodInput(opts.key, 'fp', fpFood) : money(fpFood);
   const hscCell = opts && opts.forecast
     ? fcInput('food', 'hsc', hscFood)
-    : opts && opts.input ? foodInput(opts.key, 'hsc', hscFood) : (hscFood ? money(hscFood) : '—');
+    : opts && opts.input ? foodInput(opts.key, 'hsc', hscFood) : money(hscFood);
   return `<td class="split">${fpCell}</td><td class="${cls(fpPct,0.35)}">${pct(fpPct)}</td>`
     + `<td>${hscCell}</td><td class="${cls(hscPct,0.35)}">${pct(hscPct)}</td>`
-    + `<td class="split">${total ? money(total) : '—'}</td><td class="${cls(totPct,0.35)}">${pct(totPct)}</td>`
+    + `<td class="split">${money(total)}</td><td class="${cls(totPct,0.35)}">${pct(totPct)}</td>`
     + `<td class="split ${cls(prime,0.70)}">${pct(prime)}</td>`
     + supplyCell(opts && opts.supplies, opts);
 }
@@ -342,7 +344,7 @@ function supplyCell(n, opts) {
   const v = n || 0;
   if (opts && opts.forecast) return `<td class="supply">${fcInput('supplies', 'amt', v)}</td>`;
   if (opts && opts.input) return `<td class="supply">${foodInput(opts.key, 'supplies', v)}</td>`;
-  return `<td class="supply">${v ? money(v) : '—'}</td>`;
+  return `<td class="supply">${money(v)}</td>`;
 }
 
 function getISOWeek(date) {
@@ -372,8 +374,10 @@ function yearOfISO(d) {
 }
 function taxRate(period) { return period >= 8 ? 0.13 : 0.11; }
 function money(n) {
-  if (n == null || !isFinite(n) || n === 0) return '—';
-  return '$' + Math.round(n).toLocaleString();
+  if (n == null || n === '' || !isFinite(n)) return '—';
+  const rounded = Math.round(n);
+  if (rounded === 0) return '$0';
+  return '$' + rounded.toLocaleString();
 }
 function pct(n) {
   if (n == null || !isFinite(n)) return '—';
