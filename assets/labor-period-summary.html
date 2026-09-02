@@ -65,6 +65,8 @@ td.sticky, th.sticky { position: sticky; left: 0; z-index: 3; background: #0d162
 .hero-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
 .outlet-link { font-size: 11px; color: var(--blue); text-decoration: none; }
 .outlet-link:hover { color: var(--gold); }
+th.grp a { color: var(--gold); text-decoration: none; }
+th.grp a:hover { text-decoration: underline; color: #e8d5a8; }
 .status { font-size: 12px; color: var(--muted); margin-left: auto; }
 @media (max-width: 800px) { .hero { grid-template-columns: 1fr 1fr; } }
 @media print {
@@ -100,7 +102,6 @@ td.sticky, th.sticky { position: sticky; left: 0; z-index: 3; background: #0d162
   <span class="range" id="rangeLbl"></span>
   <span class="tax-chip" id="taxChip"></span>
 </div>
-<div class="tabs" id="tabs"></div>
 <div class="wrap">
   <p class="note" id="note"></p>
   <div class="hero" id="hero"></div>
@@ -119,7 +120,6 @@ let foodByWeek = {};
 let viewPeriod = null;
 let viewYear = 2026;
 let viewGrain = 'daily';
-let activeTab = 'summary';
 const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const FOOD_NS = 'uhg-food';
 
@@ -319,12 +319,6 @@ function shiftPeriod(delta) {
   render();
 }
 
-function setTabs() {
-  const el = document.getElementById('tabs');
-  const items = [{id:'summary', label:'Summary'}].concat(OUTLETS.map(o => ({id:o.id, label:o.short})));
-  el.innerHTML = items.map(t => `<button class="tab ${t.id===activeTab?'active':''}" onclick="activeTab='${t.id}';render()">${t.label}</button>`).join('');
-}
-
 function rowHTML(label, w, isTotal) {
   const cls = isTotal ? 'total' : (w.has ? '' : 'blank');
   const pcls = (w.laborPct != null && w.laborPct > 0.35) ? 'pct-hi' : 'pct-ok';
@@ -414,11 +408,11 @@ function renderSummary() {
     <div class="hero-card"><div class="hero-lbl">UHG actual labor</div><div class="hero-val">${money(grandLab)}</div></div>
     <div class="hero-card"><div class="hero-lbl">Blended labor %</div><div class="hero-val">${pct(grandRev ? grandLab / grandRev : null)}</div></div>
     <div class="hero-card"><div class="hero-lbl">Tax this period</div><div class="hero-val">${Math.round(taxRate(viewPeriod)*100)}%</div><div class="hero-sub">On hourly + management</div></div>`;
-  document.getElementById('note').textContent = 'UHG worksheet layout. Outlet across the top, days down, weekly totals, period total at the bottom. Actuals only. Food $ is weekly total until MarginEdge is wired. Prime % is (labor + food) / revenue.';
+  document.getElementById('note').textContent = 'Click an outlet name to open its daily labor tracker. Days down, weekly totals, period total at the bottom. Actuals only. Food $ is weekly until MarginEdge is wired. Prime % is (labor + food) / revenue.';
 
   const grp = outlets.map((o, i) => {
     const span = o.events ? 6 : 5;
-    return `<th class="grp${i ? ' split' : ''}" colspan="${span}">${o.name}</th>`;
+    return `<th class="grp${i ? ' split' : ''}" colspan="${span}"><a href="${o.url}" target="_blank" rel="noopener">${o.name}</a></th>`;
   }).join('') + `<th class="grp split" colspan="6">Combined</th>`;
 
   const subs = outlets.map((o, i) => {
@@ -491,7 +485,6 @@ function renderSummary() {
 }
 
 function render() {
-  setTabs();
   fillPeriodSelect();
   document.getElementById('grainDaily').classList.toggle('active', viewGrain === 'daily');
   document.getElementById('grainWeekly').classList.toggle('active', viewGrain === 'weekly');
@@ -500,11 +493,7 @@ function render() {
   document.getElementById('periodChip').textContent = `Period ${viewPeriod} · ${viewYear}`;
   document.getElementById('rangeLbl').textContent = first ? `${first.getMonth()+1}/${first.getDate()} – ${last.getMonth()+1}/${last.getDate()}` : '';
   document.getElementById('taxChip').textContent = `Tax ${Math.round(taxRate(viewPeriod)*100)}%`;
-  if (activeTab === 'summary') renderSummary();
-  else {
-    const o = OUTLETS.find(x => x.id === activeTab);
-    if (o) renderOutlet(o);
-  }
+  renderSummary();
 }
 
 async function loadAll() {
