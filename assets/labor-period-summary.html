@@ -62,6 +62,8 @@ td.sticky, th.sticky { position: sticky; left: 0; z-index: 3; background: #0d162
 .sheet th, .sheet td { padding: 6px 7px; white-space: nowrap; }
 .food-in { width: 78px; background: transparent; border: none; border-bottom: 1px solid rgba(201,170,124,0.35); color: inherit; font-size: 12px; font-weight: 700; text-align: right; outline: none; }
 .food-in:focus { border-bottom-color: var(--gold); }
+.dollar-in { display: inline-flex; align-items: baseline; justify-content: flex-end; gap: 1px; font-weight: 700; }
+.dollar-in .sym { color: inherit; font-size: 12px; }
 .pct-hi { color: var(--red); font-weight: 700; }
 .pct-ok { color: var(--green); font-weight: 700; }
 .hero { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 0 0 16px; }
@@ -247,9 +249,12 @@ function setFc(oid, field, val) {
   saveForecast();
   render();
 }
+function dollarInput(html) {
+  return `<span class="dollar-in"><span class="sym">$</span>${html}</span>`;
+}
 function fcInput(oid, field, n) {
   const shown = (n || n === 0) ? n : '';
-  return `<input class="food-in" type="number" step="0.01" min="0" value="${shown}" placeholder="—" onchange="setFc('${oid}','${field}', this.value)">`;
+  return dollarInput(`<input class="food-in" type="number" step="0.01" min="0" value="${shown}" placeholder="—" onchange="setFc('${oid}','${field}', this.value)">`);
 }
 function fcNum(oid, field) {
   const v = (fcEntry()[oid] || {})[field];
@@ -312,7 +317,7 @@ function setFood(mondayYmd, which, val) {
   render();
 }
 function foodInput(mondayYmd, which, n) {
-  return `<input class="food-in" type="number" step="0.01" min="0" value="${n || ''}" placeholder="—" onchange="setFood('${mondayYmd}','${which}', this.value)">`;
+  return dollarInput(`<input class="food-in" type="number" step="0.01" min="0" value="${n || ''}" placeholder="—" onchange="setFood('${mondayYmd}','${which}', this.value)">`);
 }
 function foodBlock(fpFood, hscFood, fpRev, hscRev, allRev, allLab, opts) {
   const total = (fpFood || 0) + (hscFood || 0);
