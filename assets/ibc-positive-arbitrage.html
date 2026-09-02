@@ -350,6 +350,9 @@ function run() {
   irrInFlows[irrInFlows.length - 1] += target.db;
   const irrEx = irr(irrExFlows);
   const irrIn = irr(irrInFlows);
+  const spreadIn = irrIn - costPct;
+  const spreadEx = irrEx - costPct;
+  const doubled = target.cv / premSum;
 
   document.getElementById('story').innerHTML =
     'Same rate on both sides. Cash value still compounds on every premium dollar. You also take ' +
@@ -359,9 +362,9 @@ function run() {
 
   document.getElementById('benefits').innerHTML =
     '<h2>Summary benefits</h2>' +
-    '<p class="punch">You put in <em>' + money(premSum) + '</em>. You borrowed <em>' + money(borrowedSum) +
-    '</em>, used it, and paid every note off. Year 20 you still have <em>' + money(target.cv) +
-    '</em> of cash value and a <em>' + money(target.db) + '</em> death benefit.</p>' +
+    '<p class="punch">You put in <em>' + money(premSum) + '</em>. You more than doubled it to <em>' + money(target.cv) +
+    '</em> of cash value, plus a <em>' + money(target.db) + '</em> death benefit — and you did that without trapping the capital. You borrowed <em>' + money(borrowedSum) +
+    '</em>, used it somewhere else, and paid every note off.</p>' +
     '<ul>' +
     '<li>Premiums in: <strong>' + money(premSum) + '</strong> ($' + (prem/1000) + 'k × ' + puaYears + ' years, then $' + (base/1000) + 'k base).</li>' +
     '<li>Capital activated (borrowed and repaid): <strong>' + money(borrowedSum) + '</strong>. Loan balance year 20: <strong>' + money(target.loanBal) + '</strong>.</li>' +
@@ -369,7 +372,9 @@ function run() {
     '<li>Death benefit standing: <strong>' + money(target.db) + '</strong>.</li>' +
     '<li>Annual rate of return on your money, <strong>exclusive of death benefit</strong> (premiums → cash value): <strong>' + pct(irrEx, 2) + '</strong>.</li>' +
     '<li>Annual rate of return on your money, <strong>inclusive of death benefit</strong> (premiums → death benefit if you die at year 20): <strong>' + pct(irrIn, 2) + '</strong>.</li>' +
-    '<li>Net cost of the borrowed dollars after the 30% interest deduction: <strong>' + pct(costPct, 2) + '</strong>.</li>' +
+    '<li>After-tax cost to borrow that capital back out (interest paid − 30% deduction, as a rate): <strong>' + pct(costPct, 2) + '</strong>.</li>' +
+    '<li>Positive arbitrage (inclusive return minus after-tax borrow cost): <strong>' + (spreadIn * 100).toFixed(2) + ' points</strong>.</li>' +
+    '<li>The ' + money(borrowedSum) + ' you pulled out was not trapped in the policy. It went to work somewhere else. That outside growth is extra, on top of this spread.</li>' +
     '</ul>';
 
   document.getElementById('stats').innerHTML = [
@@ -377,8 +382,8 @@ function run() {
     ['Net financial gain', money(netGain), 'green'],
     ['Return excl. DB', pct(irrEx, 2), 'blue'],
     ['Return incl. DB', pct(irrIn, 2), 'green'],
-    ['Death benefit yr 20', money(target.db), ''],
-    ['Net cost of money', pct(costPct, 2), '']
+    ['After-tax borrow cost', pct(costPct, 2), ''],
+    ['Positive arbitrage', (spreadIn * 100).toFixed(2) + ' pts', 'gold']
   ].map(([l, v, c]) =>
     `<div class="stat-card"><div class="stat-val ${c}">${v}</div><div class="stat-lbl">${l}</div></div>`
   ).join('');
@@ -406,8 +411,8 @@ function run() {
         <tr><td>Loan balance year 20</td><td>${money(target.loanBal)}</td></tr>
         <tr><td>Pre-tax interest / capital</td><td>${pct(pretaxCostPct, 1)}</td></tr>
         <tr><td>After-tax cost of money (rate)</td><td>${pct(costPct, 2)}</td></tr>
-        <tr><td>After-tax interest / capital taken</td><td>${pct(costOnCapital, 1)}</td></tr>
-        <tr><td>Spread vs 5% credit (after tax)</td><td>${(spread * 100).toFixed(2)} pts</td></tr>
+        <tr><td>Inclusive return on your money</td><td>${pct(irrIn, 2)}</td></tr>
+        <tr><td>Positive arbitrage (inclusive return − after-tax cost)</td><td>${(spreadIn * 100).toFixed(2)} pts</td></tr>
       </table>
     </div>`;
 
