@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
-<title>Period Labor Summary — Unbridled Hospitality</title>
+<title>Period Labor and Supply Summary — Unbridled Hospitality</title>
 <style>
 :root {
   --bg: #0f1923; --navy: #1a2e3b; --navy2: #162636; --card: #162433;
@@ -56,8 +56,9 @@ th.grp { text-align: center; color: var(--gold); letter-spacing: 1.6px; border-l
 th.grp-plain { text-align: center; color: var(--gold); letter-spacing: 1.6px; font-size: 11px; }
 th.sub { font-size: 9px; letter-spacing: 0.8px; }
 th.split, td.split { border-left: 3px solid #c9aa7c; }
+th.supply, td.supply { border-left: 3px solid #c9aa7c; border-right: 3px solid #c9aa7c; }
 td.sticky, th.sticky { position: sticky; left: 0; z-index: 3; background: #0d1620; min-width: 128px; border-right: 3px solid #c9aa7c; }
-.sheet { min-width: 1860px; font-size: 12px; }
+.sheet { min-width: 1980px; font-size: 12px; }
 .sheet th, .sheet td { padding: 6px 7px; white-space: nowrap; }
 .food-in { width: 78px; background: transparent; border: none; border-bottom: 1px solid rgba(201,170,124,0.35); color: inherit; font-size: 12px; font-weight: 700; text-align: right; outline: none; }
 .food-in:focus { border-bottom-color: var(--gold); }
@@ -85,7 +86,7 @@ th.grp a:hover { text-decoration: underline; color: #e8d5a8; }
 <div class="header">
   <div>
     <div class="eyebrow">Unbridled Hospitality Group</div>
-    <h1>Period Labor Summary</h1>
+    <h1>Period Labor and Supply Summary</h1>
   </div>
   <div class="hdr-right">
     <span class="status" id="status">Loading…</span>
@@ -148,9 +149,12 @@ function setFc(oid, field, val) {
   const key = fcKey();
   const all = fcEntry();
   const cur = Object.assign({}, all[oid] || {});
-  const n = parseFloat(val);
-  if (!n) delete cur[field];
-  else cur[field] = Math.round(n * 100) / 100;
+  if (val === '' || val == null) delete cur[field];
+  else {
+    const n = parseFloat(val);
+    if (!isFinite(n)) delete cur[field];
+    else cur[field] = Math.round(n * 100) / 100;
+  }
   if (!Object.keys(cur).length) delete all[oid];
   else all[oid] = cur;
   if (!Object.keys(all).length) delete forecastByPeriod[key];
@@ -181,10 +185,10 @@ function periodComplete() {
 function foodEntry(mondayYmd) {
   const raw = foodByWeek[mondayYmd];
   if (raw && typeof raw === 'object') {
-    return { fp: parseFloat(raw.fp) || 0, hsc: parseFloat(raw.hsc) || 0 };
+    return { fp: parseFloat(raw.fp) || 0, hsc: parseFloat(raw.hsc) || 0, supplies: parseFloat(raw.supplies) || 0 };
   }
   const n = parseFloat(raw);
-  return { fp: n > 0 ? n : 0, hsc: 0 };
+  return { fp: n > 0 ? n : 0, hsc: 0, supplies: 0 };
 }
 async function saveFood() {
   try {
@@ -199,7 +203,7 @@ function setFood(mondayYmd, which, val) {
   const cur = foodEntry(mondayYmd);
   const n = parseFloat(val);
   cur[which] = n > 0 ? Math.round(n * 100) / 100 : 0;
-  if (!cur.fp && !cur.hsc) delete foodByWeek[mondayYmd];
+  if (!cur.fp && !cur.hsc && !cur.supplies) delete foodByWeek[mondayYmd];
   else foodByWeek[mondayYmd] = cur;
   saveFood();
   render();
@@ -223,7 +227,14 @@ function foodBlock(fpFood, hscFood, fpRev, hscRev, allRev, allLab, opts) {
   return `<td class="split">${fpCell}</td><td class="${cls(fpPct,0.35)}">${pct(fpPct)}</td>`
     + `<td>${hscCell}</td><td class="${cls(hscPct,0.35)}">${pct(hscPct)}</td>`
     + `<td class="split">${total ? money(total) : '—'}</td><td class="${cls(totPct,0.35)}">${pct(totPct)}</td>`
-    + `<td class="split ${cls(prime,0.70)}">${pct(prime)}</td>`;
+    + `<td class="split ${cls(prime,0.70)}">${pct(prime)}</td>`
+    + supplyCell(opts && opts.supplies, opts);
+}
+function supplyCell(n, opts) {
+  const v = n || 0;
+  if (opts && opts.forecast) return `<td class="supply">${fcInput('supplies', 'amt', v)}</td>`;
+  if (opts && opts.input) return `<td class="supply">${foodInput(opts.key, 'supplies', v)}</td>`;
+  return `<td class="supply">${v ? money(v) : '—'}</td>`;
 }
 
 function getISOWeek(date) {
@@ -508,12 +519,12 @@ function renderSummary() {
     <div class="hero-card"><div class="hero-lbl">UHG actual labor</div><div class="hero-val">${money(grandLab)}</div></div>
     <div class="hero-card"><div class="hero-lbl">Blended labor %</div><div class="hero-val">${pct(grandRev ? grandLab / grandRev : null)}</div></div>
     <div class="hero-card"><div class="hero-lbl">Tax this period</div><div class="hero-val">${Math.round(taxRate(viewPeriod)*100)}%</div><div class="hero-sub">On hourly + management</div></div>`;
-  document.getElementById('note').textContent = 'Click an outlet name to open its daily labor tracker. Food cost is two MarginEdge outlets: FP, and HSC (1887 + Hotel + Standard Oil). Total food / total revenue. Prime is (labor + total food) / revenue.';
+  document.getElementById('note').textContent = 'Click an outlet name to open its daily labor tracker. Food cost is two MarginEdge outlets: FP, and HSC (1887 + Hotel + Standard Oil). Supplies sit after Prime. Type weekly supplies until MarginEdge is live. Period forecast holds the supply budget.';
 
   const grp = outlets.map((o, i) => {
     const span = o.events ? 6 : 5;
     return `<th class="grp${i ? ' split' : ''}" colspan="${span}"><a href="${o.url}" target="_blank" rel="noopener">${o.name}</a></th>`;
-  }).join('') + `<th class="grp split" colspan="3">Combined</th><th class="grp" colspan="2">FP Food</th><th class="grp-plain" colspan="2">HSC Food</th><th class="grp" colspan="2">Total Food</th><th class="grp">Prime</th>`;
+  }).join('') + `<th class="grp split" colspan="3">Combined</th><th class="grp" colspan="2">FP Food</th><th class="grp-plain" colspan="2">HSC Food</th><th class="grp" colspan="2">Total Food</th><th class="grp">Prime</th><th class="grp">Supplies</th>`;
 
   const subs = outlets.map((o, i) => {
     const first = i ? ' split' : '';
@@ -521,14 +532,14 @@ function renderSummary() {
     if (o.events) h += `<th class="sub">Events</th>`;
     h += `<th class="sub">Hourly</th><th class="sub">Mgmt</th><th class="sub">Labor</th><th class="sub">%</th>`;
     return h;
-  }).join('') + `<th class="sub split">Revenue</th><th class="sub">Labor</th><th class="sub">%</th><th class="sub split">FP Food</th><th class="sub">FP %</th><th class="sub">HSC Food</th><th class="sub">HSC %</th><th class="sub split">Food $</th><th class="sub">Food %</th><th class="sub split">Prime %</th>`;
+  }).join('') + `<th class="sub split">Revenue</th><th class="sub">Labor</th><th class="sub">%</th><th class="sub split">FP Food</th><th class="sub">FP %</th><th class="sub">HSC Food</th><th class="sub">HSC %</th><th class="sub split">Food $</th><th class="sub">Food %</th><th class="sub split">Prime %</th><th class="sub supply">$</th>`;
 
   let html = `<table class="sheet"><thead>
     <tr><th class="left sticky"></th>${grp}</tr>
     <tr><th class="left sticky">Date</th>${subs}</tr>
   </thead><tbody>`;
 
-  const periodAcc = { cells: outlets.map(() => ({ restRev:0, evt:0, totalRev:0, hrly:0, mgmt:0, tax:0, labor:0 })), combRev:0, combLab:0, fpFood:0, hscFood:0, fpRev:0, hscRev:0 };
+  const periodAcc = { cells: outlets.map(() => ({ restRev:0, evt:0, totalRev:0, hrly:0, mgmt:0, tax:0, labor:0 })), combRev:0, combLab:0, fpFood:0, hscFood:0, fpRev:0, hscRev:0, supplies:0 };
 
   weeks.forEach((monday, wi) => {
     const weekAcc = outlets.map(() => ({ restRev:0, evt:0, totalRev:0, hrly:0, mgmt:0, tax:0, labor:0, has:false }));
@@ -549,7 +560,7 @@ function renderSummary() {
       });
       const cp = combRev > 0 ? combLab / combRev : null;
       const pcls = (cp != null && cp > 0.35) ? 'pct-hi' : 'pct-ok';
-      row += `<td class="split">${money(combRev)}</td><td>${money(combLab)}</td><td class="${cp==null?'':pcls}">${pct(cp)}</td><td class="split">—</td><td>—</td><td>—</td><td>—</td><td class="split">—</td><td>—</td><td class="split">—</td></tr>`;
+      row += `<td class="split">${money(combRev)}</td><td>${money(combLab)}</td><td class="${cp==null?'':pcls}">${pct(cp)}</td><td class="split">—</td><td>—</td><td>—</td><td>—</td><td class="split">—</td><td>—</td><td class="split">—</td><td class="supply">—</td></tr>`;
       html += row;
       weekCombRev += combRev; weekCombLab += combLab;
     }
@@ -569,12 +580,13 @@ function renderSummary() {
     const fpRev = fpIdx >= 0 ? weekAcc[fpIdx].totalRev : 0;
     const hscRev = weekAcc.reduce((s, w, i) => s + (outlets[i].id === 'fp' ? 0 : w.totalRev), 0);
     tot += `<td class="split">${money(weekCombRev)}</td><td>${money(weekCombLab)}</td><td class="${wp==null?'':wpcls}">${pct(wp)}</td>`
-      + foodBlock(fe.fp, fe.hsc, fpRev, hscRev, weekCombRev, weekCombLab, { input: true, key: wkKey });
+      + foodBlock(fe.fp, fe.hsc, fpRev, hscRev, weekCombRev, weekCombLab, { input: true, key: wkKey, supplies: fe.supplies });
     tot += `</tr>`;
     html += tot;
     periodAcc.combRev += weekCombRev; periodAcc.combLab += weekCombLab;
     periodAcc.fpFood += fe.fp; periodAcc.hscFood += fe.hsc;
     periodAcc.fpRev += fpRev; periodAcc.hscRev += hscRev;
+    periodAcc.supplies += fe.supplies;
   });
 
   let per = `<tr class="total"><td class="left sticky">Period ${viewPeriod} actual</td>`;
@@ -585,12 +597,13 @@ function renderSummary() {
   const pp = periodAcc.combRev > 0 ? periodAcc.combLab / periodAcc.combRev : null;
   const ppcls = (pp != null && pp > 0.35) ? 'pct-hi' : 'pct-ok';
   per += `<td class="split">${money(periodAcc.combRev)}</td><td>${money(periodAcc.combLab)}</td><td class="${pp==null?'':ppcls}">${pct(pp)}</td>`
-    + foodBlock(periodAcc.fpFood, periodAcc.hscFood, periodAcc.fpRev, periodAcc.hscRev, periodAcc.combRev, periodAcc.combLab, null);
+    + foodBlock(periodAcc.fpFood, periodAcc.hscFood, periodAcc.fpRev, periodAcc.hscRev, periodAcc.combRev, periodAcc.combLab, { supplies: periodAcc.supplies });
   per += `</tr>`;
   html += per;
 
   const fcFpFood = fcNum('food', 'fp');
   const fcHscFood = fcNum('food', 'hsc');
+  const fcSupplies = fcNum('supplies', 'amt');
   let fcCombRev = 0, fcCombLab = 0, fcFpRev = 0, fcHscRev = 0;
   let fcRow = `<tr class="forecast"><td class="left sticky">Period ${viewPeriod} forecast</td>`;
   outlets.forEach((o, oi) => {
@@ -607,7 +620,7 @@ function renderSummary() {
   const fcLp = fcCombRev > 0 && fcCombLab ? fcCombLab / fcCombRev : null;
   const fcLpCls = (fcLp != null && fcLp > 0.35) ? 'pct-hi' : 'pct-ok';
   fcRow += `<td class="split">${money(fcCombRev)}</td><td>${money(fcCombLab)}</td><td class="${fcLp==null?'':fcLpCls}">${pct(fcLp)}</td>`
-    + foodBlock(fcFpFood, fcHscFood, fcFpRev, fcHscRev, fcCombRev, fcCombLab, { forecast: true });
+    + foodBlock(fcFpFood, fcHscFood, fcFpRev, fcHscRev, fcCombRev, fcCombLab, { forecast: true, supplies: fcSupplies });
   fcRow += `</tr>`;
   html += fcRow;
 
@@ -618,7 +631,8 @@ function renderSummary() {
   });
   vs += `<td class="split">${pct(vsPct(periodAcc.combRev, fcCombRev))}</td><td>${pct(vsPct(periodAcc.combLab, fcCombLab))}</td><td>—</td>`
     + `<td class="split">${pct(vsPct(periodAcc.fpFood, fcFpFood))}</td><td>—</td><td>${pct(vsPct(periodAcc.hscFood, fcHscFood))}</td><td>—</td>`
-    + `<td class="split">${pct(vsPct(periodAcc.fpFood + periodAcc.hscFood, fcFpFood + fcHscFood))}</td><td>—</td><td class="split">—</td></tr>`;
+    + `<td class="split">${pct(vsPct(periodAcc.fpFood + periodAcc.hscFood, fcFpFood + fcHscFood))}</td><td>—</td><td class="split">—</td>`
+    + `<td class="supply">${pct(vsPct(periodAcc.supplies, fcSupplies))}</td></tr>`;
   html += vs + '</tbody></table>';
   document.getElementById('grid').innerHTML = html;
 }
