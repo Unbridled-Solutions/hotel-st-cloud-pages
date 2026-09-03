@@ -163,7 +163,7 @@
   <div class="hero">
     <div class="hero-eyebrow">Infinite banking · positive arbitrage</div>
     <h1 class="hero-title">Uninterrupted compound. <em>Same 5% on both sides.</em></h1>
-    <p class="hero-sub">Left ledger: $100,000 premium for 10 years ($20k base / $80k PUA), then $20,000 base. That is $1,000,000 + $200,000 = $1,200,000 of your money through year 20. Cash value credits 5% on the full pile even while you borrow. Right ledger: 50% of that premium, $50,000 a year for 10 years. Each loan is a 10-year principal-and-interest note at that same 5%, first payment the following year, last payment year 20. Interest is a business expense at 30%. What is left, what it cost, and the spread.</p>
+    <p class="hero-sub">The $100,000 annual premium already includes the $20,000 base. Years 1–10: $20,000 base + $80,000 PUA = $100,000. Years 11–20: PUA drops off, you keep paying the $20,000 base only. That is $1,000,000 + $200,000 = $1,200,000 of your money through year 20. Cash value credits 5% on the full pile even while you borrow. Right ledger: 50% of the $100,000, so $50,000 a year for 10 years. Each loan is a 10-year principal-and-interest note at that same 5%, first payment the following year, last payment year 20. Interest is a business expense at 30%.</p>
   </div>
   <div class="wrap">
     <div class="lede-box" id="story"></div>
@@ -174,15 +174,15 @@
       <div class="card">
         <h2>Left ledger · <span>policy</span></h2>
         <table class="slider-table">
-          <tr><td class="sl-label">Annual premium, yrs 1–10</td><td class="sl-control"><input type="range" id="prem" min="25000" max="250000" step="5000" value="100000"></td><td class="sl-val" id="premV"></td></tr>
-          <tr><td class="sl-label">Base share of premium</td><td class="sl-control"><input type="range" id="basePct" min="10" max="40" step="1" value="20"></td><td class="sl-val" id="basePctV"></td></tr>
+          <tr><td class="sl-label">Annual premium, yrs 1–10 (base + PUA)</td><td class="sl-control"><input type="range" id="prem" min="25000" max="250000" step="5000" value="100000"></td><td class="sl-val" id="premV"></td></tr>
+          <tr><td class="sl-label">Of that, base (rest is PUA)</td><td class="sl-control"><input type="range" id="basePct" min="10" max="40" step="1" value="20"></td><td class="sl-val" id="basePctV"></td></tr>
           <tr><td class="sl-label">PUA years, then base only</td><td class="sl-control"><input type="range" id="puaYears" min="5" max="15" step="1" value="10"></td><td class="sl-val" id="puaYearsV"></td></tr>
           <tr><td class="sl-label">Crediting rate</td><td class="sl-control"><input type="range" id="credit" min="3" max="7" step="0.25" value="5"></td><td class="sl-val" id="creditV"></td></tr>
           <tr><td class="sl-label">Starting death benefit</td><td class="sl-control"><input type="range" id="db0" min="500000" max="4000000" step="50000" value="1500000"></td><td class="sl-val" id="db0V"></td></tr>
           <tr><td class="sl-label">PUA death-benefit factor</td><td class="sl-control"><input type="range" id="dbFactor" min="0.5" max="3" step="0.1" value="1.5"></td><td class="sl-val" id="dbFactorV"></td></tr>
           <tr><td class="sl-label">Years to show</td><td class="sl-control"><input type="range" id="years" min="15" max="40" step="1" value="20"></td><td class="sl-val" id="yearsV"></td></tr>
         </table>
-        <p class="note">40-year-old healthy male, preferred. Teaching model: premium is added, then the whole cash value credits at the slider rate. Not a carrier illustration. Death benefit starts at your number; each PUA dollar buys more paid-up coverage at the factor.</p>
+        <p class="note">40-year-old healthy male, preferred. The $100,000 is one check: $20,000 base + $80,000 PUA. After year 10 the PUA stops and the $20,000 base continues. Teaching model: premium is added, then the whole cash value credits at the slider rate. Not a carrier illustration.</p>
       </div>
       <div class="card">
         <h2>Right ledger · <span>use of money</span></h2>
@@ -376,7 +376,7 @@ function run() {
     '</em> of cash value, plus a <em>' + money(target.db) + '</em> death benefit — and you did that without trapping the capital. You borrowed <em>' + money(borrowedSum) +
     '</em>, used it somewhere else, and paid every note off.</p>' +
     '<ul>' +
-    '<li>Premiums in through year 20: <strong>' + money(premSum) + '</strong> — 10 × ' + money(prem) + ' = ' + money(prem * puaYears) + ', then 10 × ' + money(base) + ' base = ' + money(base * (20 - puaYears)) + '.</li>' +
+    '<li>Premiums in through year 20: <strong>' + money(premSum) + '</strong>. Years 1–10 the $100,000 already includes the $20,000 base ($20k base + $80k PUA). Years 11–20 you pay the $20,000 base only. That is ' + money(prem * puaYears) + ' + ' + money(base * (20 - puaYears)) + '.</li>' +
     '<li>Capital activated: 50% of the $100k premium = <strong>' + money(borrow) + '/yr × ' + originateUntil + ' = ' + money(borrowedSum) + '</strong> (not $600,000). Loan balance after year-20 payment: <strong>' + money(target.loanBal) + '</strong>.</li>' +
     '<li>Cash value remaining: <strong>' + money(target.cv) + '</strong>.</li>' +
     '<li>Death benefit standing: <strong>' + money(target.db) + '</strong>.</li>' +
