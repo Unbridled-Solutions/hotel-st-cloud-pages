@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Keystone Model – Mary Lane · A-06 parametric</title>
+<style>
+:root {
+  --bg: #0f1923;
+  --navy: #1a2e3b;
+  --card: #162433;
+  --blue: #5a8ba7;
+  --gold: #c9aa7c;
+  --text: #e8e0d4;
+  --muted: #8a9aaa;
+  --border: rgba(90,139,167,0.22);
+  --log: #6b4a2a;
+  --logfill: #c4a574;
+  --part: #4a5a66;
+  --paper: #f4efe6;
+  --ink: #2a241c;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+.top {
+  background: linear-gradient(135deg, #1a2c3b, var(--bg));
+  border-bottom: 2px solid var(--gold);
+  padding: 16px 20px;
+  display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; justify-content: space-between;
+}
+.eyebrow { font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold); }
+h1 { font-size: 20px; font-weight: 700; }
+.sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.badge { border: 1px solid rgba(90,139,167,.4); color: var(--blue); font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 4px; }
+.wrap { display: grid; grid-template-columns: 1fr 320px; gap: 0; min-height: calc(100vh - 88px); }
+@media (max-width: 900px) { .wrap { grid-template-columns: 1fr; } }
+.board { background: #1a1510; padding: 12px; overflow: auto; }
+svg { display: block; width: 100%; height: auto; background: var(--paper); }
+.side { background: var(--navy); border-left: 1px solid var(--border); padding: 16px; overflow: auto; }
+.side h2 { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin: 16px 0 8px; }
+.side h2:first-child { margin-top: 0; }
+.room {
+  background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px 12px; margin-bottom: 8px; cursor: pointer;
+}
+.room:hover, .room.on { border-color: var(--gold); }
+.room .n { font-weight: 700; color: var(--gold); font-size: 13px; }
+.room .d { font-size: 12px; color: var(--text); margin-top: 2px; }
+.room .s { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.note { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.legend { font-size: 11px; color: var(--muted); line-height: 1.6; }
+.sw { display: inline-block; width: 14px; height: 8px; margin-right: 6px; vertical-align: middle; }
+.warn { color: var(--gold); font-size: 12px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="top">
+  <div>
+    <div class="eyebrow">TJ's Wood Products · measured model</div>
+    <h1>Keystone Model – Mary Lane</h1>
+    <div class="sub">A-06 upper · 1 unit = 1 inch · log shell from original sheet · Option 5 interiors</div>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <span class="badge">NOT MNML</span>
+    <span class="badge">PARAMETRIC</span>
+    <span class="badge">1,244 SF SHELL</span>
+  </div>
+</div>
+<div class="wrap">
+  <div class="board"><div id="svghost"></div></div>
+  <div class="side">
+    <h2>Talk to this</h2>
+    <p class="note">Say the room and the number. Example: “Jack and Jill 6 feet deep.” MC changes the JSON, this drawing updates. Original A-06 stays Option 1 on the set.</p>
+    <h2>Rooms (inside)</h2>
+    <div id="rooms"></div>
+    <h2>Legend</h2>
+    <div class="legend">
+      <div><span class="sw" style="background:#c4a574"></span>Log exterior (12" takeoff)</div>
+      <div><span class="sw" style="background:#8a9aaa"></span>Framed partition (4.5")</div>
+      <div><span class="sw" style="background:#d7c4a0"></span>Desk pocket 30" × 24"</div>
+      <div><span class="sw" style="background:#c5d4dc"></span>Jack and Jill</div>
+      <div>Front / octagon = bottom. Rear / balcony = top.</div>
+    </div>
+    <h2>Honest</h2>
+    <p class="warn">West wing E-W 16'-0" is from the sheet. Option 5 splits (12'-0" / 5'-6" / remainder) are Stan’s numbers fitted to that shell — not Pence. Master bath 9'-0" × 7'-10" and closet 9'-0" × 6'-6" are scaled, still blank. Main volume east of the wing is takeoff, not a new survey.</p>
+  </div>
+</div>
+<script>
+const M = {
+  option: 5,
+  unit: 'in',
+  log: 12,
+  part: 4.5,
+  /* origin SW exterior west wing. +x east +y north */
+  west: { x: 0, y: 0, w: 216, h: 492 },
+  rooms: [
+    { id:'br4', name:'Bedroom 4', kind:'br',
+      x:12, y:12, w:192, h:144, note:'Front / south. 16\'-0" × 12\'-0"' },
+    { id:'jj', name:'Jack and Jill', kind:'jj',
+      x:12, y:160.5, w:192, h:66, note:'16\'-0" × 5\'-6". Two doors. Shower / toilet / dual vanity.' },
+    { id:'br3', name:'Bedroom 3', kind:'br',
+      x:12, y:231, w:192, h:249, note:'Rear. 16\'-0" × 20\'-9" remainder of original closet+BR3' },
+    { id:'desk4', name:'Desk 4', kind:'desk',
+      x:174, y:18, w:30, h:24, note:'30" × 24" insert. Closet wall + second stud wall.' },
+    { id:'desk3', name:'Desk 3', kind:'desk',
+      x:174, y:237, w:30, h:24, note:'30" × 24" insert. Same pocket as BR4.' },
+    { id:'cl4', name:'Closet 4', kind:'cl',
+      x:168, y:42, w:36, h:72, note:'Hanging, east wall of BR4' },
+    { id:'cl3', name:'Closet 3', kind:'cl',
+      x:168, y:261, w:36, h:96, note:'Hanging, east wall of BR3' },
+    { id:'bath', name:'Master bath', kind:'blank',
+      x:228, y:386, w:108, h:94, note:'9\'-0" × 7\'-10". Blank — you draw fixtures.' },
+    { id:'wic', name:'Walk-in closet', kind:'blank',
+      x:228, y:303.5, w:108, h:78, note:'9\'-0" × 6\'-6". Blank.' },
+    { id:'mstr', name:'Second master', kind:'br',
+      x:348, y:300, w:240, h:180, note:'Original Bedroom 2. Double doors off loft. No tub.' },
+    { id:'balc', name:'Balcony', kind:'deck',
+      x:370, y:492, w:153, h:60, note:'12\'-9" × 5\'-0" from A-06' },
+    { id:'loft', name:'Loft / open', kind:'void',
+      x:228, y:12, w:360, h:270, note:'Open to below. No wall at top of stairs.' },
+    { id:'stair', name:'Stairs', kind:'stair',
+      x:228, y:140, w:96, h:120, note:'Stay. Original location east of sitting.' }
+  ]
+};
+
+function ft(inches) {
+  const n = Math.round(inches);
+  const f = Math.floor(n / 12), i = n % 12;
+  return i ? `${f}'-${i}"` : `${f}'-0"`;
+}
+function insideLabel(r) {
+  return `${ft(r.w)} × ${ft(r.h)}  ·  ${Math.round(r.w*r.h/144)} SF`;
+}
+
+const fills = {
+  br: '#efe6d6', jj: '#c5d4dc', desk: '#d7c4a0', cl: '#e4d5c0',
+  blank: '#f7f4ee', deck: 'none', void: 'none', stair: '#e8dcc8'
+};
+const strokes = {
+  br: '#6b4a2a', jj: '#3d5a6b', desk: '#6b4a2a', cl: '#6b4a2a',
+  blank: '#8a7a60', deck: '#5a8ba7', void: '#aaa', stair: '#3d2a14'
+};
+
+function draw() {
+  const pad = 80;
+  const W = 760, H = 680;
+  const scale = 0.95;
+  let svg = `<svg viewBox="${-pad} ${-pad-40} ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+    <rect x="${-pad}" y="${-pad-40}" width="${W}" height="${H}" fill="#f4efe6"/>
+    <text x="0" y="-90" font-family="Georgia,serif" font-size="18" fill="#3d2a14">A-06 Upper · Option 5 · measured</text>
+    <text x="0" y="-70" font-family="sans-serif" font-size="11" fill="#6b4c2a">1 square = 1 foot · gold dims are inside · log shell from original A-06</text>`;
+
+  /* log shell west wing */
+  const ww = M.west;
+  svg += `<rect x="${ww.x}" y="${-ww.h}" width="${ww.w}" height="${ww.h}" fill="none" stroke="#6b4a2a" stroke-width="12" stroke-linejoin="miter"/>`;
+
+  /* main log ghost */
+  svg += `<path d="M216,${-492} L600,${-492} L600,${-180} L520,${-80} L430,0 L216,0 Z"
+    fill="none" stroke="#6b4a2a" stroke-width="12"/>`;
+
+  /* rooms — flip y so north is up */
+  for (const r of M.rooms) {
+    const x = r.x, y = -(r.y + r.h), w = r.w, h = r.h;
+    const dash = r.kind==='void' || r.kind==='deck' ? ' stroke-dasharray="10,6"' : '';
+    const fill = fills[r.kind] || '#eee';
+    const sw = r.kind==='void' ? 1.2 : 2;
+    svg += `<rect id="r-${r.id}" x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}" stroke="${strokes[r.kind]}" stroke-width="${sw}"${dash}/>`;
+    if (r.kind !== 'desk' && r.kind !== 'cl') {
+      svg += `<text x="${x+w/2}" y="${y+h/2-6}" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#3d2a14" font-weight="700">${r.name}</text>`;
+      svg += `<text x="${x+w/2}" y="${y+h/2+10}" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#6b4c2a">${ft(r.w)} × ${ft(r.h)}</text>`;
+    }
+  }
+
+  /* desk labels */
+  svg += `<text x="189" y="${-(18+12)}" text-anchor="middle" font-size="8" fill="#3d2a14">30×24</text>`;
+  svg += `<text x="189" y="${-(237+12)}" text-anchor="middle" font-size="8" fill="#3d2a14">30×24</text>`;
+
+  /* J&J doors into BR3 / BR4 */
+  svg += `<path d="M40,${-160.5} A 28 28 0 0 0 68,${-160.5}" fill="none" stroke="#3d2a14" stroke-width="1.2"/>`;
+  svg += `<path d="M40,${-226.5} A 28 28 0 0 1 68,${-226.5}" fill="none" stroke="#3d2a14" stroke-width="1.2"/>`;
+
+  /* stair treads */
+  for (let i=0;i<10;i++) {
+    const yy = -(140 + 10 + i*10);
+    svg += `<line x1="236" y1="${yy}" x2="316" y2="${yy}" stroke="#5a3e1e" stroke-width="1"/>`;
+  }
+
+  /* 6" post */
+  svg += `<circle cx="248" cy="${-252}" r="6" fill="#6b4a2a"/>`;
+  svg += `<text x="258" y="${-248}" font-size="9" fill="#6b4a2a">6" POST</text>`;
+
+  /* dim: west wing 16'-0" */
+  svg += `<line x1="12" y1="24" x2="204" y2="24" stroke="#5a8ba7" stroke-width="1"/>`;
+  svg += `<text x="108" y="40" text-anchor="middle" font-size="12" fill="#5a8ba7">16'-0" inside</text>`;
+  svg += `<text x="-28" y="${-246}" text-anchor="middle" font-size="11" fill="#5a8ba7" transform="rotate(-90 -28 -246)">41'-0" out-to-out</text>`;
+  svg += `<text x="108" y="${-506}" text-anchor="middle" font-size="11" fill="#8a8070">REAR / BALCONY</text>`;
+  svg += `<text x="108" y="58" text-anchor="middle" font-size="11" fill="#8a8070">FRONT</text>`;
+  svg += `<text x="430" y="40" font-size="11" fill="#8a8070">octagon / fixed glass (A-06)</text>`;
+
+  svg += `</svg>`;
+  document.getElementById('svghost').innerHTML = svg;
+
+  const box = document.getElementById('rooms');
+  box.innerHTML = M.rooms.filter(r => !['desk','cl','stair'].includes(r.kind) || r.id==='stair').map(r => `
+    <div class="room" data-id="${r.id}">
+      <div class="n">${r.name}</div>
+      <div class="d">${insideLabel(r)}</div>
+      <div class="s">${r.note}</div>
+    </div>`).join('');
+}
+
+draw();
+</script>
+</body>
+</html>
