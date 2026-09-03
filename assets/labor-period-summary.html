@@ -384,6 +384,27 @@ function pct(n) {
   if (n == null || !isFinite(n)) return '—';
   return (n * 100).toFixed(1) + '%';
 }
+function occFmt(n) {
+  if (n == null || !isFinite(n)) return '—';
+  return n.toFixed(1) + '%';
+}
+function occVal(arr, di) {
+  if (!Array.isArray(arr) || arr[di] == null || arr[di] === '') return null;
+  const n = parseFloat(arr[di]);
+  return isFinite(n) ? n : null;
+}
+function occStats(arr) {
+  if (!Array.isArray(arr)) return { occ: null, occSum: 0, occN: 0 };
+  let occSum = 0, occN = 0;
+  for (const v of arr) {
+    if (v == null || v === '') continue;
+    const n = parseFloat(v);
+    if (!isFinite(n)) continue;
+    occSum += n;
+    occN += 1;
+  }
+  return { occ: occN ? occSum / occN : null, occSum, occN };
+}
 function sumArr(a) {
   if (!Array.isArray(a)) return 0;
   let s = 0;
@@ -427,8 +448,9 @@ function rollWeek(outlet, monday, bundle) {
   const tax = (hrly + mgmt) * taxRate(viewPeriod);
   const labor = hrly + mgmt + tax;
   const laborPct = totalRev > 0 ? labor / totalRev : null;
-  const has = !!(w && (restRev || evt || hrly || mgmt));
-  return { key, restRev, evt, totalRev, hrly, mgmt, tax, labor, laborPct, has };
+  const occPack = (outlet.hotel && w) ? occStats(w.occrooms) : { occ: null, occSum: 0, occN: 0 };
+  const has = !!(w && (restRev || evt || hrly || mgmt || occPack.occN));
+  return { key, restRev, evt, totalRev, hrly, mgmt, tax, labor, laborPct, occ: occPack.occ, occSum: occPack.occSum, occN: occPack.occN, has };
 }
 
 function dayVal(arr, di) {
@@ -451,8 +473,9 @@ function rollDay(outlet, monday, di, bundle) {
   const tax = (hrly + mgmt) * taxRate(viewPeriod);
   const labor = hrly + mgmt + tax;
   const laborPct = totalRev > 0 ? labor / totalRev : null;
-  const has = !!(w && (restRev || evt || hrly || mgmt));
-  return { key, restRev, evt, totalRev, hrly, mgmt, tax, labor, laborPct, has };
+  const occ = (outlet.hotel && w) ? occVal(w.occrooms, di) : null;
+  const has = !!(w && (restRev || evt || hrly || mgmt || occ != null));
+  return { key, restRev, evt, totalRev, hrly, mgmt, tax, labor, laborPct, occ, has };
 }
 
 function daysInPeriod(year, period) {
@@ -471,9 +494,11 @@ function rollPeriod(outlet, year, period, bundle) {
   const tot = weeks.reduce((a, w) => {
     a.restRev += w.restRev; a.evt += w.evt; a.totalRev += w.totalRev;
     a.hrly += w.hrly; a.mgmt += w.mgmt; a.tax += w.tax; a.labor += w.labor;
+    a.occSum += w.occSum || 0; a.occN += w.occN || 0;
     return a;
-  }, { restRev:0, evt:0, totalRev:0, hrly:0, mgmt:0, tax:0, labor:0 });
+  }, { restRev:0, evt:0, totalRev:0, hrly:0, mgmt:0, tax:0, labor:0, occSum:0, occN:0 });
   tot.laborPct = tot.totalRev > 0 ? tot.labor / tot.totalRev : null;
+  tot.occ = tot.occN ? tot.occSum / tot.occN : null;
   tot.has = weeks.some(w => w.has);
   return { weeks, tot };
 }
@@ -515,11 +540,13 @@ function shiftPeriod(delta) {
   render();
 }
 
-function rowHTML(label, w, isTotal) {
+function rowHTML(label, w, isTotal, hotel) {
   const cls = isTotal ? 'total' : (w.has ? '' : 'blank');
   const pcls = (w.laborPct != null && w.laborPct > 0.35) ? 'pct-hi' : 'pct-ok';
+  const occCell = hotel ? `<td>${occFmt(w.occ)}</td>` : '';
   return `<tr class="${cls}">
     <td class="left">${label}</td>
+    ${occCell}
     <td>${money(w.restRev)}</td>
     <td>${money(w.evt)}</td>
     <td>${money(w.totalRev)}</td>
@@ -531,9 +558,10 @@ function rowHTML(label, w, isTotal) {
   </tr>`;
 }
 
-function tableHead(revLabel, firstLabel) {
+function tableHead(revLabel, firstLabel, hotel) {
   return `<thead><tr>
     <th class="left">${firstLabel || 'Week'}</th>
+    ${hotel ? '<th>Occ %</th>' : ''}
     <th>${revLabel}</th>
     <th>Event Rev</th>
     <th>Total Rev</th>
@@ -561,21 +589,21 @@ function renderOutlet(o) {
     <div class="hero-card"><div class="hero-lbl">Total labor</div><div class="hero-val">${money(rolled.tot.labor)}</div><div class="hero-sub">Hourly + mgmt + tax</div></div>
     <div class="hero-card"><div class="hero-lbl">Labor %</div><div class="hero-val">${pct(rolled.tot.laborPct)}</div><div class="hero-sub">Labor / total revenue</div></div>
     <div class="hero-card"><div class="hero-lbl">Management</div><div class="hero-val">${money(rolled.tot.mgmt)}</div><div class="hero-sub">Standing daily rates included</div></div>`;
-  let body = tableHead(revLabel, viewGrain === 'daily' ? 'Day' : 'Week') + '<tbody>';
+  let body = tableHead(revLabel, viewGrain === 'daily' ? 'Day' : 'Week', o.hotel) + '<tbody>';
   if (viewGrain === 'daily') {
     daysInPeriod(viewYear, viewPeriod).forEach(day => {
       const w = rollDay(o, day.monday, day.di, bundle);
-      body += rowHTML(fmtDay(day.date), w, false);
+      body += rowHTML(fmtDay(day.date), w, false, o.hotel);
     });
   } else {
     rolled.weeks.forEach((w, i) => {
       const m = weeks[i];
       const sun = addDays(m, 6);
       const label = `Wk ${i+1} · ${m.getMonth()+1}/${m.getDate()}–${sun.getMonth()+1}/${sun.getDate()}`;
-      body += rowHTML(label, w, false);
+      body += rowHTML(label, w, false, o.hotel);
     });
   }
-  body += rowHTML('Period total', rolled.tot, true);
+  body += rowHTML('Period total', rolled.tot, true, o.hotel);
   body += '</tbody>';
   document.getElementById('grid').innerHTML = body;
 }
@@ -587,7 +615,9 @@ function summaryOutlets() {
 function outletCells(w, o, first) {
   const pcls = (w.laborPct != null && w.laborPct > 0.35) ? 'pct-hi' : 'pct-ok';
   const split = first ? '' : ' split';
-  let html = `<td class="${split}">${money(w.restRev)}</td>`;
+  let html = '';
+  if (o.hotel) html += `<td class="${split}">${occFmt(w.occ)}</td>`;
+  html += `<td class="${o.hotel ? '' : split}">${money(w.restRev)}</td>`;
   if (o.events) html += `<td>${money(w.evt)}</td>`;
   html += `<td>${money(w.hrly)}</td><td>${money(w.mgmt)}</td><td>${money(w.labor)}</td><td class="${w.laborPct==null?'':pcls}">${pct(w.laborPct)}</td>`;
   return html;
@@ -597,7 +627,9 @@ function outletForecastCells(o, first) {
   const p = fcParts(o);
   const pcls = (p.laborPct != null && p.laborPct > 0.35) ? 'pct-hi' : 'pct-ok';
   const split = first ? '' : ' split';
-  let html = `<td class="${split}">${fcInput(o.id, 'rest', p.rest)}</td>`;
+  let html = '';
+  if (o.hotel) html += `<td class="${split}">—</td>`;
+  html += `<td class="${o.hotel ? '' : split}">${fcInput(o.id, 'rest', p.rest)}</td>`;
   if (o.events) html += `<td>${fcInput(o.id, 'evt', p.evt)}</td>`;
   html += `<td>${fcInput(o.id, 'hrly', p.hrly)}</td><td>${fcInput(o.id, 'mgmt', p.mgmt)}</td><td>${money(p.labor)}</td><td class="${p.laborPct==null?'':pcls}">${pct(p.laborPct)}</td>`;
   return html;
@@ -614,7 +646,9 @@ function outletVsCells(act, o, first) {
   const mgmt = vsPct(act.mgmt, p.mgmt);
   const lab = vsPct(act.labor, p.labor);
   const split = first ? '' : ' split';
-  let html = `<td class="${split}">${pct(rest)}</td>`;
+  let html = '';
+  if (o.hotel) html += `<td class="${split}">—</td>`;
+  html += `<td class="${o.hotel ? '' : split}">${pct(rest)}</td>`;
   if (o.events) html += `<td>${pct(evt)}</td>`;
   html += `<td>${pct(hrly)}</td><td>${pct(mgmt)}</td><td>${pct(lab)}</td><td>—</td>`;
   return html;
@@ -634,13 +668,15 @@ function renderSummary() {
   document.getElementById('note').textContent = 'Click an outlet name for its labor tracker. Click Supplies for the supply planner. Food $ is MarginEdge COGS: Food + Beer + Wine + Liquor + N/A Bev. Prime is (labor + that food) / revenue. Supply budget is $9,000 ($2,000 FP / $7,000 1887).';
 
   const grp = outlets.map((o, i) => {
-    const span = o.events ? 6 : 5;
+    const span = o.events ? 6 : (o.hotel ? 6 : 5);
     return `<th class="grp${i ? ' split' : ''}" colspan="${span}"><a href="${o.url}" target="_blank" rel="noopener">${o.name}</a></th>`;
   }).join('') + `<th class="grp split" colspan="3">Combined</th><th class="grp" colspan="2">FP Food</th><th class="grp-plain" colspan="2">HSC Food</th><th class="grp" colspan="2">Total Food</th><th class="grp">Prime</th><th class="grp supply"><a href="https://offers.hotelstcloud.com/assets/supply-planner" target="_blank" rel="noopener">Supplies</a></th>`;
 
   const subs = outlets.map((o, i) => {
     const first = i ? ' split' : '';
-    let h = `<th class="sub${first}">Revenue</th>`;
+    let h = '';
+    if (o.hotel) h += `<th class="sub${first}">Occ %</th>`;
+    h += `<th class="sub${o.hotel ? '' : first}">Revenue</th>`;
     if (o.events) h += `<th class="sub">Events</th>`;
     h += `<th class="sub">Hourly</th><th class="sub">Mgmt</th><th class="sub">Labor</th><th class="sub">%</th>`;
     return h;
@@ -651,10 +687,10 @@ function renderSummary() {
     <tr><th class="left sticky">Date</th>${subs}</tr>
   </thead><tbody>`;
 
-  const periodAcc = { cells: outlets.map(() => ({ restRev:0, evt:0, totalRev:0, hrly:0, mgmt:0, tax:0, labor:0 })), combRev:0, combLab:0, fpFood:0, hscFood:0, fpRev:0, hscRev:0, supplies:0 };
+  const periodAcc = { cells: outlets.map(() => ({ restRev:0, evt:0, totalRev:0, hrly:0, mgmt:0, tax:0, labor:0, occSum:0, occN:0 })), combRev:0, combLab:0, fpFood:0, hscFood:0, fpRev:0, hscRev:0, supplies:0 };
 
   weeks.forEach((monday, wi) => {
-    const weekAcc = outlets.map(() => ({ restRev:0, evt:0, totalRev:0, hrly:0, mgmt:0, tax:0, labor:0, has:false }));
+    const weekAcc = outlets.map(() => ({ restRev:0, evt:0, totalRev:0, hrly:0, mgmt:0, tax:0, labor:0, occSum:0, occN:0, has:false }));
     let weekCombRev = 0, weekCombLab = 0;
     for (let di = 0; di < 7; di++) {
       const date = addDays(monday, di);
@@ -666,6 +702,7 @@ function renderSummary() {
         const acc = weekAcc[oi];
         acc.restRev += w.restRev; acc.evt += w.evt; acc.totalRev += w.totalRev;
         acc.hrly += w.hrly; acc.mgmt += w.mgmt; acc.tax += w.tax; acc.labor += w.labor;
+        if (w.occ != null) { acc.occSum += w.occ; acc.occN += 1; }
         if (w.has) acc.has = true;
         combRev += w.totalRev; combLab += w.labor;
         if (w.has) any = true;
@@ -679,10 +716,12 @@ function renderSummary() {
     let tot = `<tr class="week-tot"><td class="left sticky">Weekly totals · Wk ${wi+1}</td>`;
     weekAcc.forEach((w, oi) => {
       w.laborPct = w.totalRev > 0 ? w.labor / w.totalRev : null;
+      w.occ = w.occN ? w.occSum / w.occN : null;
       tot += outletCells(w, outlets[oi], oi === 0);
       const p = periodAcc.cells[oi];
       p.restRev += w.restRev; p.evt += w.evt; p.totalRev += w.totalRev;
       p.hrly += w.hrly; p.mgmt += w.mgmt; p.tax += w.tax; p.labor += w.labor;
+      p.occSum += w.occSum; p.occN += w.occN;
     });
     const wp = weekCombRev > 0 ? weekCombLab / weekCombRev : null;
     const wpcls = (wp != null && wp > 0.35) ? 'pct-hi' : 'pct-ok';
@@ -704,6 +743,7 @@ function renderSummary() {
   let per = `<tr class="total"><td class="left sticky">Period ${viewPeriod} actual</td>`;
   periodAcc.cells.forEach((w, oi) => {
     w.laborPct = w.totalRev > 0 ? w.labor / w.totalRev : null;
+    w.occ = w.occN ? w.occSum / w.occN : null;
     per += outletCells(w, outlets[oi], oi === 0);
   });
   const pp = periodAcc.combRev > 0 ? periodAcc.combLab / periodAcc.combRev : null;
