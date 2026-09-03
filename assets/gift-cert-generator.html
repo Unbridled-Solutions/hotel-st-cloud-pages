@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Gift Certificate Generator — Hotel St. Cloud</title>
+<style>
+:root {
+  --bg: #0f1923;
+  --navy: #1a2e3b;
+  --navy2: #162636;
+  --card: #162433;
+  --section: #0d1620;
+  --blue: #5a8ba7;
+  --gold: #c9aa7c;
+  --text: #e8e0d4;
+  --muted: #8a9aaa;
+  --border: rgba(90,139,167,0.22);
+  --red: #e05050;
+  --green: #5aab7a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+
+/* ── HEADER ── */
+.hdr { background: linear-gradient(135deg, var(--navy) 0%, #0f1923 100%); border-bottom: 2px solid var(--gold); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
+.hdr-title { display: flex; flex-direction: column; }
+.hdr-eyebrow { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: var(--gold); margin-bottom: 2px; }
+.hdr-main { font-size: 18px; font-weight: 700; color: var(--text); }
+.hdr-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.type-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.type-btn { flex: 1; min-width: 140px; background: var(--section); border: 1px solid var(--border); color: var(--muted); border-radius: 7px; padding: 10px 12px; font-size: 12px; font-weight: 700; cursor: pointer; text-align: left; }
+.type-btn small { display: block; font-weight: 500; margin-top: 3px; color: var(--muted); font-size: 10px; letter-spacing: 0; text-transform: none; }
+.type-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(201,170,124,0.12); }
+.type-btn.active small { color: #c9aa7c; }
+.mode-paid .comp-only { display: none !important; }
+.mode-comp .paid-only { display: none !important; }
+.log-status.comp { background: rgba(90,139,167,0.15); color: var(--blue); }
+.log-status.partial { background: rgba(90,139,167,0.18); color: #7ab4d0; }
+.log-status.voided { background: rgba(138,154,170,0.18); color: #8a9aaa; }
+.log-row.voided { opacity: 0.48; }
+.log-row.voided .log-code, .log-row.voided .log-amount { color: #8a9aaa; text-decoration: line-through; }
+.filter-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
+.filter-btn { background: var(--section); border: 1px solid var(--border); color: var(--muted); border-radius: 16px; padding: 4px 11px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; }
+.filter-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(201,170,124,0.12); }
+
+/* ── LAYOUT ── */
+.wrap { max-width: 1100px; margin: 0 auto; padding: 24px 20px; display: flex; gap: 28px; flex-wrap: wrap; }
+.form-col { flex: 1 1 420px; }
+.preview-col { flex: 1 1 440px; }
+
+/* ── FORM CARD ── */
+.card { background: var(--navy2); border: 1px solid var(--border); border-radius: 10px; padding: 22px 24px; margin-bottom: 20px; }
+.card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--blue); margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 5px; }
+.field input, .field textarea {
+  width: 100%; background: transparent;
+  border: none; border-bottom: 1px solid rgba(201,170,124,0.3);
+  color: var(--text); font-size: 14px; padding: 6px 4px;
+  outline: none; transition: border-color 0.15s;
+  font-family: inherit;
+}
+.field input:focus, .field textarea:focus { border-bottom-color: var(--gold); background: rgba(201,170,124,0.04); }
+.field textarea { resize: vertical; min-height: 52px; }
+.field-row { display: flex; gap: 16px; }
+.field-row .field { flex: 1; }
+
+/* Tier quick-pick */
+.tiers { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.tier-btn { background: var(--section); border: 1px solid var(--border); color: var(--muted); border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
+.tier-btn:hover { border-color: var(--gold); color: var(--gold); }
+.tier-btn.active { background: rgba(201,170,124,0.12); border-color: var(--gold); color: var(--gold); }
+
+/* Approval toggle */
+.approval-row { display: flex; align-items: center; gap: 12px; }
+.toggle-wrap { display: flex; gap: 8px; }
+.toggle-btn { background: var(--section); border: 1px solid var(--border); color: var(--muted); border-radius: 5px; padding: 5px 14px; font-size: 11px; font-weight: 700; cursor: pointer; }
+.toggle-btn.active-yes { background: rgba(90,171,122,0.15); border-color: var(--green); color: var(--green); }
+.toggle-btn.active-no { background: rgba(224,80,80,0.12); border-color: var(--red); color: var(--red); }
+
+/* Code display */
+.code-display { background: var(--section); border: 1px solid var(--border); border-radius: 6px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.code-val { font-size: 18px; font-weight: 700; color: var(--gold); letter-spacing: 2px; font-family: monospace; }
+.code-regen { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 4px; padding: 3px 10px; font-size: 10px; cursor: pointer; }
+.code-regen:hover { border-color: var(--blue); color: var(--blue); }
+
+/* Action buttons */
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn { border: none; border-radius: 7px; padding: 11px 22px; font-size: 13px; font-weight: 700; cursor: pointer; transition: opacity 0.15s; }
+.btn:hover { opacity: 0.88; }
+.btn:disabled { opacity: 0.38; cursor: not-allowed; }
+.btn-gold { background: var(--gold); color: #0f1923; }
+.btn-blue { background: var(--blue); color: #0f1923; }
+.btn-outline { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+
+/* Status bar */
+.status { font-size: 12px; color: var(--muted); margin-top: 10px; min-height: 18px; }
+.status.ok { color: var(--green); }
+.status.err { color: var(--red); }
+
+/* ── VOUCHER PREVIEW ── */
+.preview-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 10px; }
+
+#voucherWrap {
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  font-family: Georgia, 'Times New Roman', serif;
+}
+.vc-top {
+  background: #1a2e3b;
+  padding: 22px 32px 18px;
+  text-align: center;
+}
+.vc-seal {
+  height: 86px;
+  width: auto;
+  display: block;
+  margin: 0 auto 14px;
+  filter: none;
+}
+.vc-eyebrow {
+  font-family: Arial, sans-serif;
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #c9aa7c;
+  margin-bottom: 6px;
+}
+.vc-hotel {
+  font-family: Arial, sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.vc-tagline {
+  font-size: 11px;
+  color: rgba(255,255,255,0.55);
+  font-style: italic;
+}
+.vc-gold-bar { height: 3px; background: #c9aa7c; margin: 0; }
+.vc-body {
+  background: #fff;
+  padding: 26px 32px 20px;
+  text-align: center;
+}
+.vc-title {
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 2.5px;
+  color: #5a8ba7;
+  margin-bottom: 6px;
+}
+.vc-amount {
+  font-size: 52px;
+  font-weight: 700;
+  color: #1a2e3b;
+  line-height: 1.1;
+  margin-bottom: 2px;
+}
+.vc-amount-note {
+  font-size: 11px;
+  color: #888;
+  margin-bottom: 18px;
+  font-style: italic;
+}
+.vc-divider { border: none; border-top: 1px solid #e8e0d4; margin: 0 0 16px; }
+.vc-presented {
+  font-family: Arial, sans-serif;
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #aaa;
+  margin-bottom: 5px;
+}
+.vc-recipient {
+  font-size: 24px;
+  color: #1a2e3b;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+.vc-message {
+  font-size: 12.5px;
+  color: #4b5f6e;
+  font-style: italic;
+  line-height: 1.5;
+  margin-bottom: 18px;
+  min-height: 20px;
+}
+.vc-how {
+  background: #f8f5ef;
+  border-radius: 6px;
+  padding: 12px 16px;
+  text-align: left;
+  margin-bottom: 16px;
+}
+.vc-how-title {
+  font-family: Arial, sans-serif;
+  font-size: 8.5px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #c9aa7c;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.vc-how-text {
+  font-size: 11px;
+  color: #4b5f6e;
+  line-height: 1.55;
+}
+.vc-disclaimer {
+  font-family: Arial, sans-serif;
+  font-size: 9px;
+  color: #888;
+  letter-spacing: 0.2px;
+  margin-top: 10px;
+  line-height: 1.4;
+}
+.vc-footer {
+  background: #1a2e3b;
+  padding: 14px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.vc-code-label {
+  font-family: Arial, sans-serif;
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: rgba(201,170,124,0.6);
+  margin-bottom: 2px;
+}
+.vc-code {
+  font-family: monospace;
+  font-size: 14px;
+  color: #c9aa7c;
+  letter-spacing: 2px;
+  font-weight: 700;
+}
+.vc-contact {
+  text-align: right;
+  font-family: Arial, sans-serif;
+  font-size: 9px;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.5;
+}
+
+/* ── SAVED CERTS LOG ── */
+.log-card { background: var(--navy2); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; }
+.log-empty { font-size: 12px; color: var(--muted); font-style: italic; }
+.log-row { padding: 8px 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.log-row:last-child { border-bottom: none; }
+.log-main { flex: 1; }
+.log-code { font-size: 12px; font-family: monospace; color: var(--gold); font-weight: 700; }
+.log-name { font-size: 13px; color: var(--text); }
+.log-meta { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.log-amount { font-size: 14px; font-weight: 700; color: var(--gold); white-space: nowrap; }
+.log-status { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 2px 7px; border-radius: 4px; }
+.log-status.pending { background: rgba(201,170,124,0.12); color: var(--gold); }
+.log-status.redeemed { background: rgba(90,171,122,0.12); color: var(--green); }
+.log-load { background: none; border: 1px solid var(--border); color: var(--blue); border-radius: 4px; padding: 3px 9px; font-size: 10px; cursor: pointer; }
+.log-load:hover { border-color: var(--blue); }
+.log-actions { display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end; }
+.search-in { width: 100%; background: transparent; border: none; border-bottom: 1px solid rgba(201,170,124,0.3); color: var(--text); font-size: 13px; padding: 6px 4px; outline: none; margin-bottom: 12px; }
+.search-in:focus { border-bottom-color: var(--gold); }
+.approver-menu { display: none; position: absolute; top: 28px; left: 0; background: #fff; border: 1px solid #ccc; border-radius: 4px; z-index: 999; min-width: 140px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+.approver-menu.open { display: block; }
+.approver-item { padding: 8px 12px; color: #1a2e3b; font-size: 13px; cursor: pointer; }
+.approver-item:hover { background: #e8f0f8; }
+.approver-item.active { font-weight: 700; background: #ddeeff; }
+.tax-badge { position: relative; display: inline-block; }
+.tax-badge-btn { background: #0d1a27; color: #c9aa7c; border: 1px solid rgba(201,170,124,0.4); border-radius: 4px; padding: 6px 18px 6px 10px; cursor: pointer; font-weight: 700; font-size: 13px; }
+.tax-badge-btn::after { content: ' ▾'; font-size: 9px; color: #c9aa7c; }
+.no-print { }
+.modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:2000; align-items:center; justify-content:center; padding:20px; }
+.modal-bg.open { display:flex; }
+.modal { background:#162433; border:1px solid rgba(90,139,167,0.35); border-radius:10px; padding:22px 24px; max-width:420px; width:100%; }
+.modal h3 { color:#c9aa7c; font-size:13px; letter-spacing:1px; text-transform:uppercase; margin-bottom:14px; }
+.modal .field { margin-bottom:12px; }
+.check-row { display:flex; align-items:flex-start; gap:10px; font-size:13px; color:#e8e0d4; line-height:1.4; }
+.check-row input { margin-top:3px; }
+
+@media print {
+  body { background: white !important; }
+  .hdr, .form-col, .preview-label, .no-print { display: none !important; }
+  .wrap { padding: 0; max-width: none; }
+  .preview-col { flex: 1 1 100%; max-width: none; }
+  #voucherWrap { box-shadow: none; border-radius: 0; }
+  .vc-top { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .vc-footer { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .vc-gold-bar { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+</head>
+<body class="mode-paid">
+
+<div class="hdr">
+  <div class="hdr-title">
+    <span class="hdr-eyebrow">Hotel St. Cloud &bull; Staff Tool</span>
+    <span class="hdr-main">Gift Certificate Generator</span>
+    <span class="hdr-sub">Pick Paid or Complimentary first. Preview updates live. Then save and print.</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- ── FORM ── -->
+  <div class="form-col">
+
+    <div class="card">
+      <div class="card-title">What kind of certificate?</div>
+      <div class="type-row">
+        <button type="button" class="type-btn active" id="typePaid" onclick="setKind('paid')">Paid gift
+          <small>Customer is buying this. Any reservation agent.</small>
+        </button>
+        <button type="button" class="type-btn" id="typeComp" onclick="setKind('comp')">Complimentary
+          <small>Free / donation. Needs Lorin, Kim, or Lindsay.</small>
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Certificate Code</div>
+      <div class="code-display">
+        <span class="code-val" id="codeDisplay">HSCG2026-050</span>
+        <button class="code-regen" onclick="regenCode()">Regenerate</button>
+      </div>
+      <input type="hidden" id="certCode" value="HSCG2026-050">
+    </div>
+
+    <div class="card">
+      <div class="card-title">Recipient</div>
+      <div class="field">
+        <label>Recipient Name *</label>
+        <input type="text" id="recipientName" placeholder="e.g. The Johnson Family" oninput="live()">
+      </div>
+      <div class="field">
+        <label>Personal Message (optional)</label>
+        <textarea id="message" placeholder="e.g. Enjoy a well-deserved getaway!" oninput="live()"></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Amount</div>
+      <div class="tiers" id="tierBtns">
+        <button class="tier-btn" onclick="pickTier(175)">$175</button>
+        <button class="tier-btn" onclick="pickTier(250)">$250</button>
+        <button class="tier-btn" onclick="pickTier(350)">$350</button>
+        <button class="tier-btn" onclick="pickTier(0)">Custom</button>
+      </div>
+      <div class="field">
+        <label>Dollar Amount *</label>
+        <input type="number" id="amount" placeholder="250" min="1" oninput="clearTierActive(); live()">
+      </div>
+    </div>
+
+    <div class="card paid-only">
+      <div class="card-title">Buyer (paying customer)</div>
+      <div class="field-row">
+        <div class="field">
+          <label>Buyer Name *</label>
+          <input type="text" id="buyerName" placeholder="John Smith" oninput="live()">
+        </div>
+        <div class="field">
+          <label>Buyer Email *</label>
+          <input type="email" id="buyerEmail" placeholder="john@example.com" oninput="live()">
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label>Cloudbeds Pay Link Sent?</label>
+        <div class="toggle-wrap" id="linkToggle">
+          <button class="toggle-btn" id="togYes" onclick="setLinkSent(true)">Yes</button>
+          <button class="toggle-btn" id="togNo" onclick="setLinkSent(false)">No</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card comp-only">
+      <div class="card-title">Complimentary details</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Free nights need a manager. Do not print until Lorin, Kim, or Lindsay is named here.</p>
+      <div class="field">
+        <label>Organization or event (optional)</label>
+        <input type="text" id="orgName" placeholder="e.g. photo contest, Chamber dinner">
+      </div>
+      <div class="field">
+        <label>Approved by *</label>
+        <div class="tax-badge" id="approverBadge">
+          <button type="button" class="tax-badge-btn" id="approverBtn" onclick="event.stopPropagation();toggleApprover()">Select manager</button>
+          <div class="approver-menu" id="approverMenu">
+            <div class="approver-item" onclick="event.stopPropagation();pickApprover('Lorin')">Lorin</div>
+            <div class="approver-item" onclick="event.stopPropagation();pickApprover('Kim')">Kim</div>
+            <div class="approver-item" onclick="event.stopPropagation();pickApprover('Lindsay')">Lindsay</div>
+          </div>
+        </div>
+        <input type="hidden" id="approvedBy" value="">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Notes</div>
+      <div class="field">
+        <label>Internal Notes</label>
+        <input type="text" id="notes" placeholder="e.g. Gift for graduation, caller said no rush" oninput="live()">
+      </div>
+      <div class="field">
+        <label>Reservation ID (when redeemed)</label>
+        <input type="text" id="reservationId" placeholder="Cloudbeds confirmation">
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-gold" id="saveBtn" onclick="saveCert()">Save & Record</button>
+      <button class="btn btn-blue" id="printBtn" onclick="printVoucher()">Print Voucher</button>
+      <button class="btn btn-outline" onclick="resetForm()">Clear</button>
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <!-- ── PREVIEW ── -->
+  <div class="preview-col">
+    <div class="preview-label">Voucher Preview &mdash; updates as you type</div>
+
+    <div id="voucherWrap">
+      <div class="vc-top">
+        <div class="vc-eyebrow" id="vc-eyebrow">Gift Certificate</div>
+        <div class="vc-hotel">Hotel St. Cloud</div>
+        <div class="vc-tagline">631 Main Street &bull; Ca&ntilde;on City, Colorado</div>
+      </div>
+      <div class="vc-gold-bar"></div>
+      <div class="vc-body">
+        <img class="vc-seal" src="/assets/brand-logos/hotel-st-cloud-seal.png" alt="Hotel St. Cloud seal">
+        <div class="vc-title" id="vc-title">Hotel Stay Credit</div>
+        <div class="vc-amount" id="vc-amount">$250</div>
+        <div class="vc-amount-note" id="vc-amount-note">Applies to room rate and tax</div>
+        <hr class="vc-divider">
+        <div class="vc-presented">Presented to</div>
+        <div class="vc-recipient" id="vc-recipient">Your Guest</div>
+        <div class="vc-message" id="vc-message">A memorable stay awaits.</div>
+        <div class="vc-how">
+          <div class="vc-how-title">How to Redeem</div>
+          <div class="vc-how-text">Call Hotel St. Cloud to book your stay: <strong>719-602-3469</strong>. Mention your certificate code when you call. This credit applies to your room rate and any applicable taxes. No expiration. Use it whenever you're ready.</div>
+        </div>
+        <div class="vc-disclaimer comp-only" id="vc-disclaimer">Exclusions and black out dates may apply.</div>
+      </div>
+      <div class="vc-footer">
+        <div>
+          <div class="vc-code-label">Certificate Code</div>
+          <div class="vc-code" id="vc-code">HSCG2026-050</div>
+        </div>
+        <div class="vc-contact">
+          hotelstcloud.com<br>
+          719-602-3469<br>
+          reservations@hotelstcloud.com
+        </div>
+      </div>
+    </div>
+
+    <div class="no-print" style="margin-top: 24px;">
+      <div class="card-title" style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; color:var(--blue); margin-bottom:10px;">Saved Certificates</div>
+      <input class="search-in" id="searchBox" type="text" placeholder="Search by code, recipient, buyer, or email" oninput="renderLog()">
+      <div class="filter-row">
+        <button type="button" class="filter-btn active" id="fltOpen" onclick="setFilter('open')">Open</button>
+        <button type="button" class="filter-btn" id="fltRedeemed" onclick="setFilter('redeemed')">Redeemed</button>
+        <button type="button" class="filter-btn" id="fltVoided" onclick="setFilter('voided')">Voided</button>
+      </div>
+      <div class="log-card">
+        <div id="logBody"><div class="log-empty">No certificates saved yet this session.</div></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /wrap -->
+
+<div class="modal-bg no-print" id="redeemModal">
+  <div class="modal">
+    <h3>Apply certificate</h3>
+    <p style="font-size:12px;color:#8a9aaa;margin-bottom:10px" id="redeemCodeLbl"></p>
+    <p style="font-size:12px;color:#c9aa7c;margin-bottom:14px" id="redeemBalLbl"></p>
+    <div class="field">
+      <label>Amount applied this stay *</label>
+      <input type="number" id="redeemUsed" min="0" step="1" placeholder="100">
+    </div>
+    <div class="field" id="leftoverBlock" style="display:none">
+      <label>Leftover</label>
+      <div class="toggle-wrap" style="margin-bottom:10px">
+        <button type="button" class="toggle-btn" id="leftKeep" onclick="setLeftover('keep')">Keep on gift card</button>
+        <button type="button" class="toggle-btn" id="leftFb" onclick="setLeftover('fb')">Apply to F&B this stay</button>
+      </div>
+      <div id="fbAmtWrap" style="display:none">
+        <label>Amount to post as F&B credit on this folio</label>
+        <input type="number" id="redeemFb" min="0" step="1" placeholder="250">
+      </div>
+    </div>
+    <div class="field">
+      <label>Reservation ID *</label>
+      <input type="text" id="redeemResId" placeholder="Cloudbeds confirmation">
+    </div>
+    <div class="field">
+      <label>Redeemed by (agent name) *</label>
+      <input type="text" id="redeemedBy" placeholder="Your name">
+    </div>
+    <div class="field">
+      <label class="check-row">
+        <input type="checkbox" id="noteLeft">
+        <span>I left a note on the reservation with this certificate code.</span>
+      </label>
+    </div>
+    <div class="btn-row" style="margin-top:8px">
+      <button class="btn btn-gold" onclick="confirmRedeem()">Save</button>
+      <button class="btn btn-outline" onclick="closeRedeem()">Cancel</button>
+    </div>
+    <div class="status" id="redeemStatus"></div>
+  </div>
+</div>
+
+<script>
+const NS = 'hsc-gift-certs';
+const API = '/api/planner/bundle?ns=' + NS;
+let certs = {};   // keyed by code
+let linkSent = false;
+let seqOverride = null;
+let kind = 'paid'; // paid | comp
+let listFilter = 'open'; // open | redeemed | voided
+
+function setKind(k, opts) {
+  kind = (k === 'comp') ? 'comp' : 'paid';
+  document.body.classList.toggle('mode-paid', kind === 'paid');
+  document.body.classList.toggle('mode-comp', kind === 'comp');
+  document.getElementById('typePaid').classList.toggle('active', kind === 'paid');
+  document.getElementById('typeComp').classList.toggle('active', kind === 'comp');
+  if (kind === 'paid') {
+    document.getElementById('approvedBy').value = '';
+    document.getElementById('approverBtn').textContent = 'Select manager';
+    document.querySelectorAll('.approver-item').forEach(el => el.classList.remove('active'));
+  } else {
+    linkSent = false;
+    setLinkSent(false);
+  }
+  if (!(opts && opts.keepCode)) applyCode(nextSeq());
+  live();
+  updateGate();
+}
+
+/* ─── KV helpers ─── */
+async function kvGet() {
+  try {
+    const r = await fetch(API);
+    const j = await r.json();
+    return (j.data && typeof j.data === 'object') ? j.data : {};
+  } catch { return {}; }
+}
+async function kvPut(body) {
+  await fetch(API, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+}
+
+/* ─── Code generation ─── */
+function codePrefix() {
+  const year = new Date().getFullYear();
+  return (kind === 'comp' ? 'HSCC' : 'HSCG') + year + '-';
+}
+function nextSeq() {
+  const prefix = codePrefix();
+  const existing = Object.keys(certs)
+    .filter(k => k.startsWith(prefix))
+    .map(k => parseInt(k.slice(prefix.length), 10))
+    .filter(n => !isNaN(n));
+  const max = existing.length ? Math.max(...existing) : 0;
+  const next = Math.max(50, max + 1);
+  return prefix + String(next).padStart(3, '0');
+}
+function applyCode(code) {
+  document.getElementById('certCode').value = code;
+  document.getElementById('codeDisplay').textContent = code;
+}
+function regenCode() {
+  seqOverride = null;
+  applyCode(nextSeq());
+  live();
+}
+
+/* ─── Tier picker ─── */
+function pickTier(val) {
+  document.querySelectorAll('.tier-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  if (val > 0) {
+    document.getElementById('amount').value = val;
+    live();
+  } else {
+    document.getElementById('amount').value = '';
+    document.getElementById('amount').focus();
+  }
+}
+function clearTierActive() {
+  document.querySelectorAll('.tier-btn').forEach(b => b.classList.remove('active'));
+}
+
+function toggleApprover() {
+  const menu = document.getElementById('approverMenu');
+  const open = menu.classList.contains('open');
+  document.querySelectorAll('.approver-menu.open').forEach(m => m.classList.remove('open'));
+  if (!open) menu.classList.add('open');
+}
+function pickApprover(name) {
+  document.getElementById('approvedBy').value = name;
+  document.getElementById('approverBtn').textContent = name;
+  const menu = document.getElementById('approverMenu');
+  menu.classList.remove('open');
+  menu.querySelectorAll('.approver-item').forEach(el =>
+    el.classList.toggle('active', el.textContent.trim() === name));
+}
+document.addEventListener('click', () =>
+  document.querySelectorAll('.approver-menu.open').forEach(m => m.classList.remove('open')));
+
+/* ─── Link sent toggle ─── */
+function paidLinkReady() {
+  return kind !== 'paid' || linkSent === true;
+}
+function updateGate() {
+  const ready = paidLinkReady();
+  const saveBtn = document.getElementById('saveBtn');
+  const printBtn = document.getElementById('printBtn');
+  if (saveBtn) saveBtn.disabled = !ready;
+  if (printBtn) printBtn.disabled = !ready;
+}
+function setLinkSent(val) {
+  linkSent = val;
+  document.getElementById('togYes').className = 'toggle-btn' + (val ? ' active-yes' : '');
+  document.getElementById('togNo').className = 'toggle-btn' + (!val ? ' active-no' : '');
+  updateGate();
+}
+
+/* ─── Live preview ─── */
+function fmt$(n) {
+  const v = parseFloat(n);
+  if (!isFinite(v)) return '$—';
+  return '$' + Math.ceil(v).toLocaleString();
+}
+function live() {
+  const code = document.getElementById('certCode').value;
+  const recipient = document.getElementById('recipientName').value.trim() || 'Your Guest';
+  const msg = document.getElementById('message').value.trim() || 'A memorable stay awaits.';
+  const amount = document.getElementById('amount').value;
+  document.getElementById('vc-code').textContent = code;
+  document.getElementById('vc-recipient').textContent = recipient;
+  document.getElementById('vc-message').textContent = msg;
+  document.getElementById('vc-amount').textContent = fmt$(amount);
+  document.getElementById('vc-eyebrow').textContent = kind === 'comp' ? 'Complimentary Stay' : 'Gift Certificate';
+  document.getElementById('vc-title').textContent = kind === 'comp' ? 'Hotel Stay Credit' : 'Hotel Stay Credit';
+  document.getElementById('vc-amount-note').textContent = kind === 'comp'
+    ? 'Complimentary credit. Applies to room rate and tax.'
+    : 'Paid credit. Applies to room rate and tax.';
+}
+
+/* ─── Save ─── */
+async function saveCert() {
+  const code = document.getElementById('certCode').value;
+  const recipient = document.getElementById('recipientName').value.trim();
+  const buyer = document.getElementById('buyerName').value.trim();
+  const email = document.getElementById('buyerEmail').value.trim();
+  const amount = parseFloat(document.getElementById('amount').value);
+  const msg = document.getElementById('message').value.trim();
+  const approvedBy = document.getElementById('approvedBy').value.trim();
+  const notes = document.getElementById('notes').value.trim();
+  const reservationId = document.getElementById('reservationId').value.trim();
+  const orgName = (document.getElementById('orgName') || {}).value ? document.getElementById('orgName').value.trim() : '';
+
+  if (!recipient) return setStatus('Recipient name is required.', 'err');
+  if (!isFinite(amount) || amount <= 0) return setStatus('Enter a valid dollar amount.', 'err');
+  if (kind === 'paid') {
+    if (!buyer) return setStatus('Buyer name is required for a paid gift.', 'err');
+    if (!email) return setStatus('Buyer email is required for a paid gift.', 'err');
+    if (!linkSent) return setStatus('Send the Cloudbeds Pay by Link first, then flip it to Yes.', 'err');
+  } else {
+    if (!approvedBy) return setStatus('Complimentary stays need Lorin, Kim, or Lindsay.', 'err');
+  }
+
+  setStatus('Saving...', '');
+  const remote = await kvGet();
+  const prev = (remote[code] && typeof remote[code] === 'object') ? remote[code] : {};
+  const record = Object.assign({}, prev, {
+    code, recipient,
+    buyer: kind === 'paid' ? buyer : (orgName || buyer || 'Hotel St. Cloud'),
+    email: kind === 'paid' ? email : (email || ''),
+    amount, message: msg,
+    approvedBy: kind === 'comp' ? approvedBy : '',
+    orgName: kind === 'comp' ? orgName : '',
+    notes,
+    kind,
+    linkSent: kind === 'paid' ? linkSent : false,
+    reservationId: reservationId || prev.reservationId || '',
+    dateIssued: prev.dateIssued || new Date().toISOString().slice(0, 10),
+  });
+  if (!('redeemed' in record)) record.redeemed = false;
+  if (!('paymentConfirmed' in record)) record.paymentConfirmed = false;
+  if (!('reservationId' in record)) record.reservationId = '';
+  if (!('dateRedeemed' in record)) record.dateRedeemed = '';
+  if (record.remaining == null) record.remaining = amount;
+
+  remote[code] = record;
+  await kvPut(remote);
+  certs = remote;
+  renderLog();
+  setStatus('Saved. Certificate ' + code + ' recorded as ' + (kind === 'comp' ? 'complimentary' : 'paid') + '. Print this voucher, then Clear for the next one.', 'ok');
+}
+
+/* ─── Print ─── */
+function printVoucher() {
+  if (!paidLinkReady()) {
+    setStatus('Send the Cloudbeds Pay by Link first, then flip it to Yes.', 'err');
+    return;
+  }
+  window.print();
+}
+
+/* ─── Reset ─── */
+function resetForm() {
+  ['recipientName','message','amount','buyerName','buyerEmail','notes','reservationId','orgName'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('approvedBy').value = '';
+  document.getElementById('approverBtn').textContent = 'Select manager';
+  document.querySelectorAll('.approver-item').forEach(el => el.classList.remove('active'));
+  linkSent = false;
+  setLinkSent(false);
+  setKind('paid');
+  clearTierActive();
+  setStatus('', '');
+  live();
+}
+
+/* ─── Status ─── */
+function setStatus(msg, type) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'status' + (type ? ' ' + type : '');
+}
+
+/* ─── Log ─── */
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, String.fromCharCode(38) + 'amp;')
+    .replace(/</g, String.fromCharCode(38) + 'lt;')
+    .replace(/>/g, String.fromCharCode(38) + 'gt;')
+    .replace(/"/g, String.fromCharCode(38) + 'quot;');
+}
+function renderLog() {
+  const el = document.getElementById('logBody');
+  const q = (document.getElementById('searchBox')?.value || '').trim().toLowerCase();
+  const rows = Object.values(certs)
+    .filter(r => r && r.code)
+    .sort((a, b) => String(b.dateIssued||'').localeCompare(String(a.dateIssued||'')))
+    .filter(r => {
+      if (listFilter === 'voided') { if (!r.voided) return false; }
+      else if (listFilter === 'redeemed') { if (r.voided || !r.redeemed) return false; }
+      else { if (r.voided || r.redeemed) return false; }
+      if (!q) return true;
+      const hay = [r.code, r.recipient, r.buyer, r.email, r.notes, r.approvedBy, r.kind, r.orgName, r.voidReason]
+        .map(v => String(v || '').toLowerCase()).join(' ');
+      return hay.includes(q);
+    });
+  if (!rows.length) {
+    const emptyMsg = q ? 'No matches.' : (listFilter === 'voided' ? 'No voided certificates.' : (listFilter === 'redeemed' ? 'No fully redeemed certificates.' : 'No open certificates.'));
+    el.innerHTML = '<div class="log-empty">' + emptyMsg + '</div>';
+    return;
+  }
+  el.innerHTML = rows.map(r => `
+    <div class="log-row${r.voided ? ' voided' : ''}">
+      <div class="log-main">
+        <div class="log-code">${esc(r.code)}</div>
+        <div class="log-name">${esc(r.recipient)} <span class="log-status ${r.kind === 'comp' ? 'comp' : 'pending'}" style="margin-left:6px">${r.kind === 'comp' ? 'Comp' : 'Paid'}</span></div>
+        <div class="log-meta">${r.voided ? ('Voided' + (r.voidedBy ? ' by ' + esc(r.voidedBy) : '') + (r.voidedOn ? ' · ' + esc(r.voidedOn) : '') + (r.voidReason ? ' · ' + esc(r.voidReason) : '')) : (r.kind === 'comp' ? ('Donation' + (r.orgName ? ' · ' + esc(r.orgName) : '') + (r.approvedBy ? ' · Approved ' + esc(r.approvedBy) : '')) : ('From ' + esc(r.buyer) + ' · ' + esc(r.email || ''))) + ' · ' + esc(r.dateIssued || '') + (r.redeemed ? ' · Redeemed by ' + esc(r.redeemedBy || '') + (r.reservationId ? ' · Res ' + esc(r.reservationId) : '') : '')}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+        <div class="log-amount">$${esc(remainOf(r))}${remainOf(r) !== Number(r.amount) ? ' left' : ''}</div>
+        <div class="log-status ${statusClass(r)}">${statusLabel(r)}</div>
+        <div class="log-actions">
+          <button class="log-load" onclick="loadCert('${esc(r.code)}')">Load</button>
+          ${r.voided
+            ? `<button class="log-load" onclick="unvoidCert('${esc(r.code)}')">Restore</button>`
+            : (r.redeemed
+              ? `<button class="log-load" onclick="markRedeemed('${esc(r.code)}', false)">Reopen</button><button class="log-load" onclick="voidCert('${esc(r.code)}')">Void</button>`
+              : `<button class="log-load" onclick="openRedeem('${esc(r.code)}')">Apply / Redeem</button><button class="log-load" onclick="voidCert('${esc(r.code)}')">Void</button>`)}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function setFilter(f) {
+  listFilter = (f === 'redeemed' || f === 'voided') ? f : 'open';
+  document.getElementById('fltOpen').classList.toggle('active', listFilter === 'open');
+  document.getElementById('fltRedeemed').classList.toggle('active', listFilter === 'redeemed');
+  document.getElementById('fltVoided').classList.toggle('active', listFilter === 'voided');
+  renderLog();
+}
+
+async function voidCert(code) {
+  const r = certs[code];
+  if (!r) return setStatus('Could not find ' + code, 'err');
+  const who = prompt('Void ' + code + '. Your name:') || '';
+  if (!who.trim()) return setStatus('Void cancelled. Name is required.', 'err');
+  const why = prompt('Reason (test, duplicate, accident):') || 'Voided';
+  const remote = await kvGet();
+  if (!remote[code]) return setStatus('Could not find ' + code, 'err');
+  remote[code].voided = true;
+  remote[code].voidedBy = who.trim();
+  remote[code].voidedOn = new Date().toISOString().slice(0, 10);
+  remote[code].voidReason = why.trim();
+  await kvPut(remote);
+  certs = remote;
+  listFilter = 'voided';
+  setFilter('voided');
+  setStatus(code + ' voided. Still on file under Voided.', 'ok');
+}
+
+async function unvoidCert(code) {
+  const remote = await kvGet();
+  if (!remote[code]) return setStatus('Could not find ' + code, 'err');
+  remote[code].voided = false;
+  remote[code].voidedBy = '';
+  remote[code].voidedOn = '';
+  remote[code].voidReason = '';
+  await kvPut(remote);
+  certs = remote;
+  setFilter(remote[code].redeemed ? 'redeemed' : 'open');
+  setStatus(code + ' restored.', 'ok');
+}
+
+let redeemCode = null;
+let leftoverChoice = 'keep';
+
+function remainOf(r) {
+  const orig = Number(r.amount) || 0;
+  if (r.remaining != null && r.remaining !== '' && isFinite(Number(r.remaining))) return Math.max(0, Number(r.remaining));
+  return orig;
+}
+function statusLabel(r) {
+  if (r.voided) return 'Voided';
+  if (r.redeemed) return 'Redeemed';
+  const orig = Number(r.amount) || 0;
+  const left = remainOf(r);
+  if (left < orig && left > 0) return 'Open · leftover';
+  return 'Open';
+}
+function statusClass(r) {
+  if (r.voided) return 'voided';
+  if (r.redeemed) return 'redeemed';
+  const orig = Number(r.amount) || 0;
+  if (remainOf(r) < orig && remainOf(r) > 0) return 'partial';
+  return 'pending';
+}
+function setLeftover(which) {
+  leftoverChoice = which === 'fb' ? 'fb' : 'keep';
+  document.getElementById('leftKeep').className = 'toggle-btn' + (leftoverChoice === 'keep' ? ' active-yes' : '');
+  document.getElementById('leftFb').className = 'toggle-btn' + (leftoverChoice === 'fb' ? ' active-yes' : '');
+  document.getElementById('fbAmtWrap').style.display = leftoverChoice === 'fb' ? 'block' : 'none';
+}
+function openRedeem(code) {
+  const r = certs[code] || {};
+  if (r.voided) return setStatus(code + ' is voided. Restore it first.', 'err');
+  redeemCode = code;
+  const left = remainOf(r);
+  leftoverChoice = 'keep';
+  document.getElementById('redeemCodeLbl').textContent = code + ' · ' + (r.recipient || '');
+  document.getElementById('redeemBalLbl').textContent = 'Original $' + (Number(r.amount) || 0) + ' · Remaining $' + left;
+  document.getElementById('redeemUsed').value = left;
+  document.getElementById('redeemFb').value = '';
+  document.getElementById('leftoverBlock').style.display = 'none';
+  document.getElementById('fbAmtWrap').style.display = 'none';
+  setLeftover('keep');
+  document.getElementById('redeemUsed').oninput = onUsedChange;
+  onUsedChange();
+  document.getElementById('redeemResId').value = r.reservationId || document.getElementById('reservationId').value.trim() || '';
+  document.getElementById('redeemedBy').value = r.redeemedBy || '';
+  document.getElementById('noteLeft').checked = false;
+  document.getElementById('redeemStatus').textContent = '';
+  document.getElementById('redeemModal').classList.add('open');
+}
+function onUsedChange() {
+  const r = certs[redeemCode] || {};
+  const left = remainOf(r);
+  const used = parseFloat(document.getElementById('redeemUsed').value);
+  const leftover = (isFinite(used) ? left - used : left);
+  const show = leftover > 0.009;
+  document.getElementById('leftoverBlock').style.display = show ? 'block' : 'none';
+  if (show && leftoverChoice === 'fb') {
+    document.getElementById('redeemFb').value = leftover;
+  }
+}
+function closeRedeem() {
+  document.getElementById('redeemModal').classList.remove('open');
+  redeemCode = null;
+}
+async function confirmRedeem() {
+  const by = document.getElementById('redeemedBy').value.trim();
+  const resId = document.getElementById('redeemResId').value.trim();
+  const note = document.getElementById('noteLeft').checked;
+  const st = document.getElementById('redeemStatus');
+  const r = certs[redeemCode] || {};
+  const left = remainOf(r);
+  const used = parseFloat(document.getElementById('redeemUsed').value);
+  if (!isFinite(used) || used <= 0) { st.textContent = 'Enter the amount applied this stay.'; st.className = 'status err'; return; }
+  if (used > left + 0.009) { st.textContent = 'Cannot apply more than $' + left + ' remaining.'; st.className = 'status err'; return; }
+  let fb = 0;
+  const leftover = Math.round((left - used) * 100) / 100;
+  if (leftover > 0.009) {
+    if (leftoverChoice === 'fb') {
+      fb = parseFloat(document.getElementById('redeemFb').value);
+      if (!isFinite(fb) || fb < 0) { st.textContent = 'Enter the F&B credit amount.'; st.className = 'status err'; return; }
+      if (fb > leftover + 0.009) { st.textContent = 'F&B credit cannot exceed leftover $' + leftover + '.'; st.className = 'status err'; return; }
+    }
+  }
+  if (!by) { st.textContent = 'Agent name is required.'; st.className = 'status err'; return; }
+  if (!resId) { st.textContent = 'Reservation ID is required.'; st.className = 'status err'; return; }
+  if (!note) { st.textContent = 'Confirm the reservation note was left.'; st.className = 'status err'; return; }
+  const newRemain = Math.round((leftover - fb) * 100) / 100;
+  await markRedeemed(redeemCode, newRemain <= 0.009, {
+    redeemedBy: by,
+    reservationId: resId,
+    noteLeft: true,
+    used,
+    fb,
+    leftoverChoice: leftover > 0.009 ? leftoverChoice : 'none',
+    remaining: Math.max(0, newRemain),
+  });
+  closeRedeem();
+}
+async function markRedeemed(code, yes, extra) {
+  const remote = await kvGet();
+  if (!remote[code]) return setStatus('Could not find ' + code, 'err');
+  const rec = remote[code];
+  rec.redeemed = !!yes;
+  rec.dateRedeemed = yes ? new Date().toISOString().slice(0, 10) : '';
+  if (extra) {
+    rec.reservationId = extra.reservationId || rec.reservationId || '';
+    rec.redeemedBy = extra.redeemedBy || rec.redeemedBy || '';
+    rec.noteLeftOnReservation = !!extra.noteLeft;
+    if (extra.remaining != null) rec.remaining = extra.remaining;
+    const hist = Array.isArray(rec.history) ? rec.history.slice() : [];
+    if (extra.used) {
+      hist.push({
+        ts: new Date().toISOString(),
+        reservationId: extra.reservationId || '',
+        used: extra.used,
+        fb: extra.fb || 0,
+        leftover: extra.leftoverChoice || '',
+        by: extra.redeemedBy || '',
+        remaining: extra.remaining,
+      });
+      rec.history = hist;
+    }
+  }
+  if (!yes) {
+    rec.redeemedBy = '';
+    rec.noteLeftOnReservation = false;
+    rec.remaining = rec.amount;
+  }
+  remote[code] = rec;
+  await kvPut(remote);
+  certs = remote;
+  renderLog();
+  const left = remainOf(rec);
+  setStatus(yes ? code + ' fully redeemed.' : (left < Number(rec.amount) ? code + ' still open. $' + left + ' remaining.' : code + ' reopened.'), 'ok');
+}
+
+/* ─── Load saved cert back into form ─── */
+function loadCert(code) {
+  const r = certs[code];
+  if (!r) return;
+  document.getElementById('certCode').value = r.code;
+  document.getElementById('codeDisplay').textContent = r.code;
+  document.getElementById('recipientName').value = r.recipient;
+  document.getElementById('message').value = r.message || '';
+  document.getElementById('amount').value = r.amount;
+  document.getElementById('buyerName').value = r.buyer;
+  document.getElementById('buyerEmail').value = r.email;
+  document.getElementById('approvedBy').value = r.approvedBy || '';
+  document.getElementById('approverBtn').textContent = r.approvedBy || 'Select';
+  document.querySelectorAll('.approver-item').forEach(el =>
+    el.classList.toggle('active', el.textContent.trim() === (r.approvedBy || '')));
+  document.getElementById('notes').value = r.notes || '';
+  document.getElementById('reservationId').value = r.reservationId || '';
+  const org = document.getElementById('orgName');
+  if (org) org.value = r.orgName || '';
+  setKind(r.kind === 'comp' ? 'comp' : 'paid', { keepCode: true });
+  setLinkSent(r.linkSent || false);
+  clearTierActive();
+  live();
+  setStatus('Loaded ' + code, 'ok');
+}
+
+/* ─── Init ─── */
+(async function init() {
+  certs = await kvGet();
+  renderLog();
+  setKind('paid');
+})();
+</script>
+</body>
+</html>
