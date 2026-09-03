@@ -163,7 +163,7 @@
   <div class="hero">
     <div class="hero-eyebrow">Infinite banking · positive arbitrage</div>
     <h1 class="hero-title">Uninterrupted compound. <em>Same 5% on both sides.</em></h1>
-    <p class="hero-sub">Left ledger: $100,000 premium for 10 years ($20k base / $80k PUA), then base only. Cash value credits 5% on the full pile even while you borrow. Right ledger: $50,000 a year for 10 years, each loan a 10-year principal-and-interest note at that same 5%. Interest is a business expense at 30%. Year 20, loans are gone. What is left, what it cost, and the spread.</p>
+    <p class="hero-sub">Left ledger: $100,000 premium for 10 years ($20k base / $80k PUA), then $20,000 base. That is $1,000,000 + $200,000 = $1,200,000 of your money through year 20. Cash value credits 5% on the full pile even while you borrow. Right ledger: 50% of that premium, $50,000 a year for 10 years. Each loan is a 10-year principal-and-interest note at that same 5%, first payment the following year, last payment year 20. Interest is a business expense at 30%. What is left, what it cost, and the spread.</p>
   </div>
   <div class="wrap">
     <div class="lede-box" id="story"></div>
@@ -193,7 +193,8 @@
           <tr><td class="sl-label">Ordinary income tax</td><td class="sl-control"><input type="range" id="tax" min="0" max="45" step="1" value="30"></td><td class="sl-val" id="taxV"></td></tr>
         </table>
         <label class="check-row"><input type="checkbox" id="lockRate" checked> Borrowing rate tracks crediting rate (positive arbitrage at the same number)</label>
-        <p class="note">Ten separate notes. Each is principal and interest over the term, originating years 1–10. Last note pays off in year 19. Year 20 the right ledger is clear. Interest only is the business deduction. Principal is not.</p>
+        <label class="check-row"><input type="checkbox" id="lockHalf" checked> Borrow 50% of the annual premium (keeps $50k on a $100k premium)</label>
+        <p class="note">Ten separate notes. Borrow 50% of the $100,000 premium = $50,000 a year for 10 years = $500,000 activated. First principal-and-interest hits the year after each draw, so the year-10 note’s last payment is year 20. Then the right ledger is clear. Interest only is the business deduction. Principal is not.</p>
       </div>
     </div>
 
@@ -247,7 +248,6 @@ function run() {
   const db0 = val('db0');
   const dbFactor = val('dbFactor');
   const years = val('years');
-  const borrow = val('borrow');
   const term = val('term');
   const lock = document.getElementById('lockRate').checked;
   if (lock) {
@@ -256,6 +256,14 @@ function run() {
   } else {
     document.getElementById('loanRate').disabled = false;
   }
+  const half = document.getElementById('lockHalf').checked;
+  if (half) {
+    document.getElementById('borrow').value = String(Math.round(prem * 0.5 / 5000) * 5000);
+    document.getElementById('borrow').disabled = true;
+  } else {
+    document.getElementById('borrow').disabled = false;
+  }
+  const borrow = val('borrow');
   const loanRate = val('loanRate') / 100;
   const tax = val('tax') / 100;
   const base = prem * basePct;
@@ -300,7 +308,7 @@ function run() {
 
     let originated = 0;
     if (y <= originateUntil) {
-      loans.push({ bal: borrow, life: term });
+      loans.push({ bal: borrow, life: term, skip: true });
       originated = borrow;
       borrowedSum += borrow;
     }
@@ -309,6 +317,7 @@ function run() {
     let prin = 0;
     let service = 0;
     for (const L of loans) {
+      if (L.skip) { L.skip = false; continue; }
       if (L.life <= 0 || L.bal <= 0.5) { L.bal = 0; L.life = 0; continue; }
       const i = L.bal * loanRate;
       const pay = Math.min(payment, L.bal + i);
@@ -357,8 +366,9 @@ function run() {
   document.getElementById('story').innerHTML =
     'Same rate on both sides. Cash value still compounds on every premium dollar. You also take ' +
     money(borrow) + ' a year for ' + originateUntil + ' years — ' + money(borrowedSum) +
-    ' of capital — and repay it as ordinary 10-year notes. Interest is deductible at ' +
-    Math.round(tax * 100) + '%. After 20 years the notes are done. What remains is the pile, the death benefit, and a cheap after-tax cost of money.';
+    ' of capital — and repay it as ordinary 10-year notes, first payment the year after each draw. Interest is deductible at ' +
+    Math.round(tax * 100) + '%. The last payment is year 20. Then the notes are done. Premiums through year 20 are 10 × $' +
+    Math.round(prem/1000) + 'k plus 10 × $' + Math.round(base/1000) + 'k base = ' + money(premSum) + '.';
 
   document.getElementById('benefits').innerHTML =
     '<h2>Summary benefits</h2>' +
@@ -366,8 +376,8 @@ function run() {
     '</em> of cash value, plus a <em>' + money(target.db) + '</em> death benefit — and you did that without trapping the capital. You borrowed <em>' + money(borrowedSum) +
     '</em>, used it somewhere else, and paid every note off.</p>' +
     '<ul>' +
-    '<li>Premiums in: <strong>' + money(premSum) + '</strong> ($' + (prem/1000) + 'k × ' + puaYears + ' years, then $' + (base/1000) + 'k base).</li>' +
-    '<li>Capital activated (borrowed and repaid): <strong>' + money(borrowedSum) + '</strong>. Loan balance year 20: <strong>' + money(target.loanBal) + '</strong>.</li>' +
+    '<li>Premiums in through year 20: <strong>' + money(premSum) + '</strong> — 10 × ' + money(prem) + ' = ' + money(prem * puaYears) + ', then 10 × ' + money(base) + ' base = ' + money(base * (20 - puaYears)) + '.</li>' +
+    '<li>Capital activated: 50% of the $100k premium = <strong>' + money(borrow) + '/yr × ' + originateUntil + ' = ' + money(borrowedSum) + '</strong> (not $600,000). Loan balance after year-20 payment: <strong>' + money(target.loanBal) + '</strong>.</li>' +
     '<li>Cash value remaining: <strong>' + money(target.cv) + '</strong>.</li>' +
     '<li>Death benefit standing: <strong>' + money(target.db) + '</strong>.</li>' +
     '<li>Annual rate of return on your money, <strong>exclusive of death benefit</strong> (premiums → cash value): <strong>' + pct(irrEx, 2) + '</strong>.</li>' +
