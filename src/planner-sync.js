@@ -1,6 +1,6 @@
 /**
- * Live lookback sync for labor/supply sheets.
- * Yesterday + 14-day lookback. Never touches hours (state), events, or typed budgets.
+ * Live Refresh: Toast + Cloudbeds + MarginEdge for today (Denver) and yesterday.
+ * Never touches hours (state), events, or typed budgets.
  */
 
 const TZ = 'America/Denver';
@@ -262,11 +262,13 @@ async function cloudbedsOcc(env, ymd) {
   const data = body?.data || body || {};
   return data.percentageOccupied;
 }
-async function cloudbedsRoomRev(env, from, to) {
+async function cloudbedsRoomRev(env, from, to, tight = false) {
   const ids = new Set();
-  for (let page = 1; page <= 50; page++) {
+  const checkInFrom = tight ? addYmd(from, -7) : addYmd(from, -14);
+  const pageCap = tight ? 12 : 50;
+  for (let page = 1; page <= pageCap; page++) {
     const url = `${CB_HOST}/getReservations?propertyID=${PROP}&pageSize=100&pageNumber=${page}`
-      + `&checkInFrom=${addYmd(from, -14)}&checkInTo=${to}`;
+      + `&checkInFrom=${checkInFrom}&checkInTo=${to}`;
     const { body } = await fetchJson(url, {
       headers: { Authorization: 'Bearer ' + env.CLOUDBEDS_API_KEY, Accept: 'application/json' },
     });
@@ -365,14 +367,13 @@ export async function handlePlannerSync(request, env, ctx) {
   }
   const prevRaw = await env.PLANNER_DATA.get(STATUS_KEY);
   const prev = prevRaw ? JSON.parse(prevRaw) : {};
-  if (prev.state === 'running' && prev.started && (Date.now() - Date.parse(prev.started) < 2 * 60 * 1000)) {
+  if (prev.state === 'running' && prev.started && (Date.now() - Date.parse(prev.started) < 4 * 60 * 1000)) {
     return json({ success: true, state: 'running', message: prev.message || 'Already pulling', started: prev.started });
   }
   const today = denverYmd();
   const yesterday = addYmd(today, -1);
-  // Button pull must finish inside the Worker request (~30–60s). Full 14-day Toast + reservation crawl stays on the 7am job.
-  const lookbackFrom = addYmd(yesterday, -1);
-  const cbTo = addYmd(today, 1);
+  const lookbackFrom = yesterday;
+  const cbTo = today;
   const status = {
     state: 'running',
     started: new Date().toISOString(),
@@ -409,9 +410,9 @@ async function runSync(env, status) {
   const today = status.denverToday;
   const yesterday = status.yesterday;
   const from = status.lookbackFrom;
-  const laborDays = rangeYmd(from, yesterday);
+  const laborDays = rangeYmd(from, today);
   const salesDays = rangeYmd(from, today);
-  const cbDays = rangeYmd(from, status.cloudbedsTo);
+  const cbDays = rangeYmd(from, today);
   const mondays = [...new Set(salesDays.map(mondayOf))];
 
   status.message = 'Toast login…';
@@ -438,12 +439,10 @@ async function runSync(env, status) {
       if (nOrd === 0 && refund === 0) sales[name][day] = '';
       else sales[name][day] = fmtMoney(adj);
     }
-    if (day <= yesterday) {
-      labor.fp[day] = (await dayLabor(token, GUIDS.fp, jobs.fp, day, 'all')).pay;
-      labor.fph[day] = (await dayLabor(token, GUIDS.fph, jobs.fph, day, 'fph')).pay;
-      labor.hsc[day] = (await dayLabor(token, GUIDS.fph, jobs.fph, day, 'hsc')).pay;
-      labor.socc[day] = (await dayLabor(token, GUIDS.socc, jobs.socc, day, 'all')).pay;
-    }
+    labor.fp[day] = (await dayLabor(token, GUIDS.fp, jobs.fp, day, 'all')).pay;
+    labor.fph[day] = (await dayLabor(token, GUIDS.fph, jobs.fph, day, 'fph')).pay;
+    labor.hsc[day] = (await dayLabor(token, GUIDS.fph, jobs.fph, day, 'hsc')).pay;
+    labor.socc[day] = (await dayLabor(token, GUIDS.socc, jobs.socc, day, 'all')).pay;
   }
 
   const moneyMap = (obj) => {
@@ -483,11 +482,23 @@ async function runSync(env, status) {
   }
   await kvPut(env, 'socc', socc);
 
-  status.message = 'Saving hotel labor…';
+  status.message = 'Cloudbeds occupancy + room $…';
   await setStatus(env, status);
   const hsc = await kvGet(env, 'hsc');
-  status.changed.hscOcc = 0;
-  status.changed.hscBooked = 0;
+  const occ = {};
+  for (const d of cbDays) {
+    try { occ[d] = await cloudbedsOcc(env, d); }
+    catch (e) { status.errors.push('CB occ ' + d + ' ' + e.message); }
+  }
+  let roomRev = {};
+  try { roomRev = await cloudbedsRoomRev(env, from, today, true); }
+  catch (e) { status.errors.push('CB room$ ' + e.message); }
+  const occMap = {};
+  for (const [d, v] of Object.entries(occ)) occMap[d] = fmtOcc(v);
+  const bookedMap = {};
+  for (const [d, v] of Object.entries(roomRev)) bookedMap[d] = fmtMoney(v);
+  status.changed.hscOcc = applySeries(hsc, 'hsc-wk-', 'occrooms', occMap);
+  status.changed.hscBooked = applySeries(hsc, 'hsc-wk-', 'bookedrevs', bookedMap);
   status.changed.hscHrly = applySeries(hsc, 'hsc-wk-', 'hrlyacts', moneyMap(labor.hsc));
   let actFill = 0;
   for (const d of laborDays) {
@@ -498,10 +509,10 @@ async function runSync(env, status) {
     const idx = di === 0 ? 6 : di - 1;
     const acts = ensure7(w.actrevs);
     const booked = ensure7(w.bookedrevs);
-    if (!acts[idx] && booked[idx]) {
+    if (booked[idx]) {
+      if (acts[idx] !== booked[idx]) actFill += 1;
       acts[idx] = booked[idx];
       w.actrevs = acts;
-      actFill += 1;
     }
     hsc[key] = w;
   }
@@ -542,7 +553,7 @@ async function runSync(env, status) {
     ts: new Date().toISOString(),
     kind: 'system',
     field: 'live-refresh',
-    note: `Refresh lookback ${from}–${yesterday} Toast. Cloudbeds occupancy through ${status.cloudbedsTo}. Room $ still from 7am job.`,
+    note: `Refresh ${from}–${today} Toast sales+labor, Cloudbeds occ+room$, MarginEdge food+supplies.`,
     from: null,
     to: null,
   });
@@ -552,7 +563,7 @@ async function runSync(env, status) {
   status.finished = new Date().toISOString();
   status.message = status.errors.length
     ? 'Pulled with warnings: ' + status.errors.slice(0, 3).join('; ')
-    : `Live through ${yesterday} (Denver). Labor closed days only.`;
+    : `Live through ${today} Denver. Toast + Cloudbeds + MarginEdge.`;
   await setStatus(env, status);
 }
 
