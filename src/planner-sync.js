@@ -221,6 +221,15 @@ function ordersNet(orders) {
   }
   return { net: Math.round(total * 100) / 100, checks: n, orders: orders.length };
 }
+function hoursWorked(te) {
+  const rh = Number(te.regularHours || 0);
+  const oh = Number(te.overtimeHours || 0);
+  if (te.outDate) return rh + oh;
+  if (!te.inDate) return rh + oh;
+  const start = Date.parse(te.inDate);
+  if (!Number.isFinite(start)) return rh + oh;
+  return Math.max(0, (Date.now() - start) / 3600000);
+}
 async function dayLabor(token, guid, jobs, ymd, mode) {
   const tes = await toastGet(token, guid, '/labor/v1/timeEntries', {
     businessDate: ymdToToast(ymd),
@@ -238,10 +247,10 @@ async function dayLabor(token, guid, jobs, ymd, mode) {
     if (wage == null || job.wageFrequency === 'SALARY' || Number(wage) === 0) continue;
     if (mode === 'hsc' && !HSC_TITLES.has(title)) continue;
     if (mode === 'fph' && HSC_TITLES.has(title)) continue;
-    const rh = Number(te.regularHours || 0);
+    const hours = hoursWorked(te);
     const oh = Number(te.overtimeHours || 0);
     if (oh) ot += oh;
-    pay += Math.round((rh * Number(wage) + oh * Number(wage)) * 100) / 100;
+    pay += Math.round(hours * Number(wage) * 100) / 100;
     n += 1;
   }
   return { pay: Math.round(pay * 100) / 100, n, ot: Math.round(ot * 100) / 100 };
