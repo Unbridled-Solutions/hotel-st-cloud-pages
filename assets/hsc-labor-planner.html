@@ -665,19 +665,27 @@ function buildFooter() {
 }
 
 // ── INLINE EDIT ───────────────────────────────────────────────────────────────
+function persistRoster() {
+  const roster = POSITIONS.map(p => ({name:p.name, rate:p.rate, dailyRate:p.dailyRate}));
+  localStorage.setItem('hsc-roster', JSON.stringify({roster, rates_version: ROSTER_RATES_VERSION, saved_at: Date.now()}));
+}
+
 function editName(pi, el) {
   const cur = POSITIONS[pi].name;
   const input = document.createElement('input');
   input.className = 'edit-field'; input.value = cur; input.style.width = '140px';
   el.replaceWith(input); input.focus(); input.select();
   const save = () => {
-    POSITIONS[pi].name = input.value || cur;
+    POSITIONS[pi].name = input.value.trim() || cur;
     const span = document.createElement('span');
     span.className = 'editable pos-name'; span.textContent = POSITIONS[pi].name;
     span.onclick = () => editName(pi, span); input.replaceWith(span);
+    persistRoster();
+    scheduleAutoSave();
   };
+  input.oninput = () => { POSITIONS[pi].name = input.value.trim() || cur; persistRoster(); };
   input.onblur = save;
-  input.onkeydown = e => { if (e.key==='Enter') input.blur(); if (e.key==='Escape') { input.value=cur; input.blur(); } };
+  input.onkeydown = e => { if (e.key==='Enter') input.blur(); if (e.key==='Escape') { input.value=cur; POSITIONS[pi].name = cur; persistRoster(); input.blur(); } };
 }
 
 function editRate(pi, el) {
@@ -1104,11 +1112,8 @@ function saveLocal(notify = true) {
   // Also track which weeks have been saved
   const wkIndex = JSON.parse(localStorage.getItem('hsc-week-index') || '[]');
   if (!wkIndex.includes(key)) { wkIndex.unshift(key); localStorage.setItem('hsc-week-index', JSON.stringify(wkIndex.slice(0,52))); }
-  // ── Save roster (names + rates) — rates_version guards against stale saved rates ──
-  if (notify) {
-    const roster = POSITIONS.map(p => ({name:p.name, rate:p.rate, dailyRate:p.dailyRate}));
-    localStorage.setItem('hsc-roster', JSON.stringify({roster, rates_version: ROSTER_RATES_VERSION, saved_at: Date.now()}));
-  }
+  // Names/rates persist across refresh and week changes (not only on explicit Save)
+  persistRoster();
   cloudPush();
   if (notify) showBanner('💾 Draft saved for this week.');
 }
