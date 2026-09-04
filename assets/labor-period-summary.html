@@ -121,10 +121,6 @@ th.grp a:hover { text-decoration: underline; color: #e8d5a8; }
   <p class="note" id="note"></p>
   <div class="hero" id="hero"></div>
   <div class="grid"><table id="grid"></table></div>
-  <div class="log">
-    <div class="log-head">Chronological log</div>
-    <div id="logBody"></div>
-  </div>
 </div>
 <script>
 const OUTLETS = [
@@ -136,6 +132,7 @@ const OUTLETS = [
 
 let bundles = {};
 let foodByWeek = {};
+let foodByDay = {};
 let forecastByPeriod = {};
 let changeLog = [];
 let pendingLog = [];
@@ -210,10 +207,40 @@ async function flushLog() {
 }
 function unwrapFood(data) {
   if (!data || typeof data !== 'object') return {};
-  if (data.weeks && typeof data.weeks === 'object') return data.weeks;
-  const out = {};
-  Object.keys(data).forEach(k => { if (!RESERVED[k]) out[k] = data[k]; });
-  return out;
+  // Separate daily keys (YYYY-MM-DD where day != Monday) from weekly Monday keys
+  const weekly = {};
+  const daily = {};
+  if (data.weeks && typeof data.weeks === 'object') {
+    Object.assign(weekly, data.weeks);
+  } else {
+    Object.keys(data).forEach(k => {
+      if (RESERVED[k]) return;
+      // If key is a date, check if it's a Monday (day-of-week 1) or daily
+      const d = new Date(k + 'T00:00:00Z');
+      if (!isNaN(d)) {
+        if (d.getUTCDay() === 1) weekly[k] = data[k]; // Monday = weekly
+        else daily[k] = data[k];                        // other days = daily
+      } else {
+        weekly[k] = data[k]; // non-date keys stay in weekly for backward compat
+      }
+    });
+  }
+  // Also scan for explicit daily keys (YYYY-MM-DD with non-Monday day)
+  Object.keys(data).forEach(k => {
+    if (RESERVED[k] || k === 'weeks') return;
+    const d = new Date(k + 'T00:00:00Z');
+    if (!isNaN(d) && d.getUTCDay() !== 1) daily[k] = data[k];
+  });
+  foodByDay = daily;
+  return weekly;
+}
+
+function foodDayEntry(ymdKey) {
+  const raw = foodByDay[ymdKey];
+  if (raw && typeof raw === 'object') {
+    return { fp: parseFloat(raw.fp) || 0, hsc: parseFloat(raw.hsc) || 0, supplies: parseFloat(raw.supplies) || 0 };
+  }
+  return { fp: 0, hsc: 0, supplies: 0 };
 }
 
 function fcKey() { return viewYear + '-P' + viewPeriod; }
@@ -376,13 +403,12 @@ function yearOfISO(d) {
 function taxRate(period) { return period >= 8 ? 0.13 : 0.11; }
 function money(n) {
   if (n == null || n === '' || !isFinite(n)) return '—';
-  const rounded = Math.round(n);
-  if (rounded === 0) return '$0';
-  return '$' + rounded.toLocaleString();
+  const ceiled = Math.ceil(n);
+  return '$' + ceiled.toLocaleString();
 }
 function pct(n) {
   if (n == null || !isFinite(n)) return '—';
-  return (n * 100).toFixed(1) + '%';
+  return (n * 100).toFixed(2) + '%';
 }
 function occFmt(n) {
   if (n == null || !isFinite(n)) return '—';
@@ -661,9 +687,9 @@ function renderSummary() {
   const grandRev = periodRolls.reduce((s, r) => s + r.tot.totalRev, 0);
   const grandLab = periodRolls.reduce((s, r) => s + r.tot.labor, 0);
   document.getElementById('hero').innerHTML = `
-    <div class="hero-card"><div class="hero-lbl">UHG actual revenue</div><div class="hero-val">${money(grandRev)}</div></div>
-    <div class="hero-card"><div class="hero-lbl">UHG actual labor</div><div class="hero-val">${money(grandLab)}</div></div>
-    <div class="hero-card"><div class="hero-lbl">Blended labor %</div><div class="hero-val">${pct(grandRev ? grandLab / grandRev : null)}</div></div>
+    <div class="hero-card"><div class="hero-lbl">UHG actual revenue</div><div class="hero-val">${money(grandRev)}</div><div class="hero-sub">All four outlets · restaurant/rooms + events</div></div>
+    <div class="hero-card"><div class="hero-lbl">UHG actual labor</div><div class="hero-val">${money(grandLab)}</div><div class="hero-sub">Hourly + standing mgmt + tax</div></div>
+    <div class="hero-card"><div class="hero-lbl">Blended labor %</div><div class="hero-val">${pct(grandRev ? grandLab / grandRev : null)}</div><div class="hero-sub">This period only · UHG labor ÷ UHG revenue. Not an hourly wage.</div></div>
     <div class="hero-card"><div class="hero-lbl">Tax this period</div><div class="hero-val">${Math.round(taxRate(viewPeriod)*100)}%</div><div class="hero-sub">On hourly + management</div></div>`;
   document.getElementById('note').textContent = 'Click an outlet name for its labor tracker. Click Supplies for the supply planner. Food $ is MarginEdge COGS: Food + Beer + Wine + Liquor + N/A Bev. Prime is (labor + that food) / revenue. Supply budget is $9,000 ($2,000 FP / $7,000 1887).';
 
@@ -709,7 +735,18 @@ function renderSummary() {
       });
       const cp = combRev > 0 ? combLab / combRev : null;
       const pcls = (cp != null && cp > 0.35) ? 'pct-hi' : 'pct-ok';
-      row += `<td class="split">${money(combRev)}</td><td>${money(combLab)}</td><td class="${cp==null?'':pcls}">${pct(cp)}</td><td class="split">—</td><td>—</td><td>—</td><td>—</td><td class="split">—</td><td>—</td><td class="split">—</td><td class="supply">—</td></tr>`;
+      const dayYmd = ymd(date);
+      const dfe = foodDayEntry(dayYmd);
+      const dFpFood = dfe.fp;
+      const dHscFood = dfe.hsc;
+      const dSupplies = dfe.supplies;
+      const fpDayIdx = outlets.findIndex(o => o.id === 'fp');
+      const dFpRev = fpDayIdx >= 0 ? (() => { const wd = rollDay(outlets[fpDayIdx], monday, di, bundles[outlets[fpDayIdx].ns] || {}); return wd.totalRev; })() : 0;
+      const dHscRev = outlets.reduce((s, o, i) => s + (o.id === 'fp' ? 0 : rollDay(o, monday, di, bundles[o.ns] || {}).totalRev), 0);
+      const hasDayFood = dFpFood > 0 || dHscFood > 0 || dSupplies > 0;
+      row += `<td class="split">${money(combRev)}</td><td>${money(combLab)}</td><td class="${cp==null?'':pcls}">${pct(cp)}</td>`
+        + (hasDayFood ? foodBlock(dFpFood, dHscFood, dFpRev, dHscRev, combRev, combLab, { supplies: dSupplies }) : `<td class="split">—</td><td>—</td><td>—</td><td>—</td><td class="split">—</td><td>—</td><td class="split">—</td><td class="supply">—</td>`)
+        + `</tr>`;
       if (viewGrain !== 'weekly') html += row;
       weekCombRev += combRev; weekCombLab += combLab;
     }
@@ -796,7 +833,6 @@ function render() {
   document.getElementById('rangeLbl').textContent = first ? `${first.getMonth()+1}/${first.getDate()} – ${last.getMonth()+1}/${last.getDate()}` : '';
   document.getElementById('taxChip').textContent = `Tax ${Math.round(taxRate(viewPeriod)*100)}%`;
   renderSummary();
-  renderLog();
 }
 
 async function refreshLive() {
