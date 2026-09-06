@@ -50,15 +50,8 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
 
 .grid-outer { overflow-x: auto; overflow-y: auto; max-height: 80vh; padding: 16px 24px 0; }
 .sched-table { width: 100%; min-width: 1040px; border-collapse: collapse; font-size: 13px; }
-.sched-table thead tr th, .sched-table thead tr td { position: sticky; top: 0; z-index: 14; }
-.sched-table thead tr:nth-child(2) th,
-.sched-table thead tr:nth-child(2) td { top: 54px; z-index: 13; }
-.sched-table thead tr:nth-child(3) th,
-.sched-table thead tr:nth-child(3) td { top: 86px; z-index: 12; }
-.sched-table thead tr:nth-child(4) th,
-.sched-table thead tr:nth-child(4) td { top: 118px; z-index: 11; }
-.sched-table thead tr:nth-child(5) th,
-.sched-table thead tr:nth-child(5) td { top: 154px; z-index: 10; }
+.sched-table thead tr th, .sched-table thead tr td { position: static; }
+.sched-table thead tr.day-header th { position: sticky; top: 0; z-index: 20; }
 .sched-table tfoot tr td, .sched-table tfoot tr th { position: sticky; bottom: 0; z-index: 10; background: var(--bg); }
 .col-pos  { width: 168px; }
 .col-role { width: 54px; }
@@ -88,11 +81,10 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
 tr.forecast-row td, tr.forecast-row th { padding: 7px 8px; vertical-align: middle; }
 tr.forecast-row .rev-input { font-size: 14px; padding: 4px 2px; line-height: 1.3; overflow: visible; }
 .actual-split-row td {
-  height: 8px;
-  min-height: 8px;
-  max-height: 8px;
+  height: 12px;
+  min-height: 12px;
   padding: 0 !important;
-  background: rgba(90,139,167,0.38);
+  background: rgba(90,139,167,0.5);
   border-top: 1px solid rgba(90,139,167,0.7);
   border-bottom: 1px solid rgba(90,139,167,0.7);
   border-left: 1px solid rgba(90,139,167,0.7);
@@ -317,7 +309,7 @@ footer span { color: var(--gold); font-weight: 600; }
     <td class="target-cell"><input class="pct-input" type="number" id="pct-2" value="28" min="25" max="36" step="1" oninput="recalc()"><span class="pct-sign">%</span><span class="target-range" id="trg-2">—</span></td>
     <td class="target-cell"><input class="pct-input" type="number" id="pct-3" value="30" min="25" max="36" step="1" oninput="recalc()"><span class="pct-sign">%</span><span class="target-range" id="trg-3">—</span></td>
     <td class="target-cell"><input class="pct-input" type="number" id="pct-4" value="32" min="25" max="36" step="1" oninput="recalc()"><span class="pct-sign">%</span><span class="target-range" id="trg-4">—</span></td>
-    <td class="target-cell"><input class="pct-input" type="number" id="pct-5" value="35" min="25" max="36" step="1" oninput="recalc()"><span class="pct-sign">%</span><span class="target-range" id="trg-5">—</span></td>
+    <td class="target-cell"><input class="pct-input" type="number" id="pct-5" value="32" min="25" max="36" step="1" oninput="recalc()"><span class="pct-sign">%</span><span class="target-range" id="trg-5">—</span></td>
     <td class="target-cell"><input class="pct-input" type="number" id="pct-6" value="30" min="25" max="36" step="1" oninput="recalc()"><span class="pct-sign">%</span><span class="target-range" id="trg-6">—</span></td>
     <td class="week-col target-cell">
       <span style="font-size:9px;color:var(--muted);letter-spacing:0.5px;display:block">SCHEDULED</span>
@@ -1295,7 +1287,7 @@ function loadWeek(key) {
     const ar = document.getElementById(`tot-actrev-${di}`); if (ar) ar.value = '';
     const er = document.getElementById(`tot-evtrev-${di}`); if (er) er.value = '';
     const pc = document.getElementById(`pct-${di}`);
-    if (pc) pc.value = [28,28,28,30,32,35,30][di];
+    if (pc) pc.value = [28,28,28,30,32,32,30][di];
   }
   document.getElementById('submitBadge').style.display = 'none';
 
