@@ -392,13 +392,60 @@ async function mergeLyoyDays(env, token, guid, lyDays, ns) {
   return { lyoy, filled: n };
 }
 
+async function mergeHscLyoyDays(env, lyDays) {
+  const lyoy = await kvGet(env, 'hsc-lyoy');
+  const missing = lyDays.filter((d) => {
+    const rec = lyoy[d];
+    return !rec || rec.occ == null || rec.occ === '' || rec.rev == null || rec.rev === '';
+  });
+  if (!missing.length) return { lyoy, filled: 0 };
+  const from = missing.reduce((a, b) => (a < b ? a : b));
+  const to = missing.reduce((a, b) => (a > b ? a : b));
+  let roomRev = {};
+  try { roomRev = await cloudbedsRoomRev(env, from, to, true); } catch (_) { roomRev = {}; }
+  let n = 0;
+  for (const ly of missing) {
+    const rec = (lyoy[ly] && typeof lyoy[ly] === 'object') ? lyoy[ly] : {};
+    if (rec.occ == null || rec.occ === '') {
+      try { rec.occ = fmtOcc(await cloudbedsOcc(env, ly)); } catch (_) { rec.occ = rec.occ ?? ''; }
+    }
+    if (rec.rev == null || rec.rev === '') {
+      rec.rev = roomRev[ly] != null && roomRev[ly] !== '' ? fmtMoney(roomRev[ly]) : (rec.rev ?? '');
+    }
+    lyoy[ly] = rec;
+    n += 1;
+  }
+  if (n) await kvPut(env, 'hsc-lyoy', lyoy);
+  return { lyoy, filled: n };
+}
+
 export async function handlePlannerLyoy(request, env) {
   const url = new URL(request.url);
   const ns = url.searchParams.get('ns') || 'fp';
   const week = url.searchParams.get('week') || '';
+  if (ns === 'hsc') {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(week)) {
+      return json({ success: false, error: 'Missing week=YYYY-MM-DD (Monday)' }, 400);
+    }
+    const mon = mondayOf(week);
+    const thisDays = rangeYmd(mon, addYmd(mon, 6));
+    const lyDays = thisDays.map(priorYearYmd);
+    const cached = await kvGet(env, 'hsc-lyoy');
+    const missing = lyDays.filter((d) => {
+      const rec = cached[d];
+      return !rec || rec.occ == null || rec.occ === '' || rec.rev == null || rec.rev === '';
+    });
+    if (missing.length) await mergeHscLyoyDays(env, missing);
+    const lyoy = await kvGet(env, 'hsc-lyoy');
+    const days = thisDays.map((ymd, i) => {
+      const rec = lyoy[lyDays[i]] || {};
+      return { date: ymd, lyDate: lyDays[i], occ: rec.occ ?? '', rev: rec.rev ?? '' };
+    });
+    return json({ success: true, ns, week: mon, days });
+  }
   const guid = LYOY_GUID[ns];
   if (!guid) {
-    return json({ success: false, error: 'lyoy ns must be fp, fp-ph, or socc' }, 400);
+    return json({ success: false, error: 'lyoy ns must be fp, fp-ph, socc, or hsc' }, 400);
   }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(week)) {
     return json({ success: false, error: 'Missing week=YYYY-MM-DD (Monday)' }, 400);
@@ -609,6 +656,13 @@ async function runSync(env, status) {
   status.changed.hscActFill = actFill;
   fillCurrentMgmt(hsc, 'hsc-wk-', laborDays, MGMT.hsc);
   await kvPut(env, 'hsc', hsc);
+  try {
+    const lyDays = [...new Set(cbDays.map(priorYearYmd))];
+    const lyRes = await mergeHscLyoyDays(env, lyDays);
+    status.changed.hscLyoy = lyRes.filled;
+  } catch (e) {
+    status.errors.push('HSC LY Cloudbeds ' + e.message);
+  }
 
   status.message = 'MarginEdge food + supplies…';
   await setStatus(env, status);
