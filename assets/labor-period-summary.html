@@ -319,19 +319,6 @@ function fcParts(o) {
   const laborPct = tot > 0 && labor ? labor / tot : null;
   return { rest, evt, hrly, mgmt, labor, tot, laborPct, occ: fcNum(o.id, 'occ') };
 }
-function periodComplete() {
-  const weeks = weeksInPeriod(viewYear, viewPeriod);
-  if (!weeks.length) return 0;
-  const start = weeks[0];
-  const end = addDays(weeks[weeks.length - 1], 6);
-  const today = new Date();
-  today.setHours(0,0,0,0);
-  if (today < start) return 0;
-  if (today > end) return 1;
-  const total = (end - start) / 86400000 + 1;
-  const done = (today - start) / 86400000 + 1;
-  return done / total;
-}
 
 function foodEntry(mondayYmd) {
   const raw = foodByWeek[mondayYmd];
@@ -828,8 +815,7 @@ function renderSummary() {
   fcRow += `</tr>`;
   html += fcRow;
 
-  const done = periodComplete();
-  let vs = `<tr class="vs"><td class="left sticky">% of forecast · ${Math.round(done*100)}% of period</td>`;
+  let vs = `<tr class="vs"><td class="left sticky">% of forecast</td>`;
   outlets.forEach((o, oi) => {
     vs += outletVsCells(periodAcc.cells[oi], o, oi === 0);
   });
