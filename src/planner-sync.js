@@ -376,15 +376,19 @@ async function toastNetForDay(token, guid, ymd) {
   return fmtMoney(adj);
 }
 
-async function mergeLyoyDays(env, token, guid, lyDays) {
-  const lyoy = await kvGet(env, 'fp-lyoy');
+const LYOY_GUID = { fp: GUIDS.fp, 'fp-ph': GUIDS.fph, socc: GUIDS.socc };
+function lyoyNs(ns) { return ns + '-lyoy'; }
+
+async function mergeLyoyDays(env, token, guid, lyDays, ns) {
+  const cache = lyoyNs(ns);
+  const lyoy = await kvGet(env, cache);
   let n = 0;
   for (const ly of lyDays) {
     if (lyoy[ly] !== undefined && lyoy[ly] !== null) continue;
     lyoy[ly] = await toastNetForDay(token, guid, ly);
     n += 1;
   }
-  if (n) await kvPut(env, 'fp-lyoy', lyoy);
+  if (n) await kvPut(env, cache, lyoy);
   return { lyoy, filled: n };
 }
 
@@ -392,8 +396,9 @@ export async function handlePlannerLyoy(request, env) {
   const url = new URL(request.url);
   const ns = url.searchParams.get('ns') || 'fp';
   const week = url.searchParams.get('week') || '';
-  if (ns !== 'fp') {
-    return json({ success: false, error: 'lyoy is FP Sports Bar only for now' }, 400);
+  const guid = LYOY_GUID[ns];
+  if (!guid) {
+    return json({ success: false, error: 'lyoy ns must be fp, fp-ph, or socc' }, 400);
   }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(week)) {
     return json({ success: false, error: 'Missing week=YYYY-MM-DD (Monday)' }, 400);
@@ -401,13 +406,13 @@ export async function handlePlannerLyoy(request, env) {
   const mon = mondayOf(week);
   const thisDays = rangeYmd(mon, addYmd(mon, 6));
   const lyDays = thisDays.map(priorYearYmd);
-  const cached = await kvGet(env, 'fp-lyoy');
+  const cached = await kvGet(env, lyoyNs(ns));
   const missing = lyDays.filter((d) => cached[d] === undefined || cached[d] === null);
   if (missing.length) {
     const token = await toastLogin(env);
-    await mergeLyoyDays(env, token, GUIDS.fp, missing);
+    await mergeLyoyDays(env, token, guid, missing, ns);
   }
-  const lyoy = await kvGet(env, 'fp-lyoy');
+  const lyoy = await kvGet(env, lyoyNs(ns));
   const days = thisDays.map((ymd, i) => ({
     date: ymd,
     lyDate: lyDays[i],
@@ -525,7 +530,7 @@ async function runSync(env, status) {
 
   try {
     const lyDays = [...new Set(salesDays.map(priorYearYmd))];
-    const lyRes = await mergeLyoyDays(env, token, GUIDS.fp, lyDays);
+    const lyRes = await mergeLyoyDays(env, token, GUIDS.fp, lyDays, 'fp');
     status.changed.fpLyoy = lyRes.filled;
   } catch (e) {
     status.errors.push('FP LY net sales ' + e.message);
@@ -536,6 +541,13 @@ async function runSync(env, status) {
   status.changed.fphHrly = applySeries(fph, 'fp-ph-wk-', 'hrlyacts', moneyMap(labor.fph));
   fillCurrentMgmt(fph, 'fp-ph-wk-', laborDays, MGMT.fph);
   await kvPut(env, 'fp-ph', fph);
+  try {
+    const lyDays = [...new Set(salesDays.map(priorYearYmd))];
+    const lyRes = await mergeLyoyDays(env, token, GUIDS.fph, lyDays, 'fp-ph');
+    status.changed.fphLyoy = lyRes.filled;
+  } catch (e) {
+    status.errors.push('FPH LY net sales ' + e.message);
+  }
 
   const socc = await kvGet(env, 'socc');
   status.changed.soccAct = applySeries(socc, 'socc-wk-', 'actrevs', sales.socc, {
@@ -552,6 +564,13 @@ async function runSync(env, status) {
     if (!revs.some((v) => v !== '' && v != null)) w.revs = ['1000', '1000', '1000', '1000', '1000', '1000', '1000'];
   }
   await kvPut(env, 'socc', socc);
+  try {
+    const lyDays = [...new Set(salesDays.map(priorYearYmd))];
+    const lyRes = await mergeLyoyDays(env, token, GUIDS.socc, lyDays, 'socc');
+    status.changed.soccLyoy = lyRes.filled;
+  } catch (e) {
+    status.errors.push('SOCC LY net sales ' + e.message);
+  }
 
   status.message = 'Cloudbeds occupancy + room $…';
   await setStatus(env, status);
