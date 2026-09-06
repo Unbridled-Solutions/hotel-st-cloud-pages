@@ -30,6 +30,11 @@ const SUPPLY_CATS = [
 const SUPPLY_SET = new Set(SUPPLY_CATS);
 const HSC_TITLES = new Set(['HSC DAY STAFF', 'HSC NIGHT STAFF']);
 const MGMT = { fp: '412.00', fph: '206.00', hsc: '534.00', socc: '0' };
+const HSC_CHRIS_OFF = '2026-09-14';
+const HSC_MGMT_AFTER = '369.86';
+function hscMgmtRate(ymd) {
+  return ymd >= HSC_CHRIS_OFF ? HSC_MGMT_AFTER : MGMT.hsc;
+}
 const STATUS_KEY = 'bundle:uhg-sync-status';
 
 function denverYmd(d = new Date()) {
@@ -654,7 +659,7 @@ async function runSync(env, status) {
     hsc[key] = w;
   }
   status.changed.hscActFill = actFill;
-  fillCurrentMgmt(hsc, 'hsc-wk-', laborDays, MGMT.hsc);
+  fillCurrentMgmt(hsc, 'hsc-wk-', laborDays, hscMgmtRate);
   await kvPut(env, 'hsc', hsc);
   try {
     const lyDays = [...new Set(cbDays.map(priorYearYmd))];
@@ -735,8 +740,19 @@ function fillCurrentMgmt(data, prefix, laborDays, rate) {
   for (const mon of [todayMon, nextMon]) {
     const key = prefix + mon;
     if (!data[key]) continue;
-    fillStandingMgmt(data[key], rate);
+    if (typeof rate === 'function') fillStandingMgmtByDay(data[key], mon, rate);
+    else fillStandingMgmt(data[key], rate);
   }
+}
+function fillStandingMgmtByDay(week, mon, rateFn) {
+  const arr = ensure7(week.mgmtacts);
+  for (let i = 0; i < 7; i++) {
+    const ymd = addYmd(mon, i);
+    const r = rateFn(ymd);
+    const cur = arr[i];
+    if (cur === '' || cur == null || cur === MGMT.hsc) arr[i] = r;
+  }
+  week.mgmtacts = arr;
 }
 
 function json(obj, status = 200) {
