@@ -1319,12 +1319,6 @@ function loadWeek(key) {
   if (cloudObj && Array.isArray(cloudObj.revs) && cloudObj.revs.some(v => v)) _revs = cloudObj.revs;
   if (_revs && _revs.some(v => v)) {
     _revs.forEach((v, di) => { const el = document.getElementById(`rev-${di}`); if (el && v) el.value = v; });
-  } else {
-    // Standing daily forecast until Lindsay changes it (Sep 2026)
-    for (let di = 0; di < 7; di++) {
-      const el = document.getElementById(`rev-${di}`);
-      if (el) el.value = '1000';
-    }
   }
   if (_hrlyacts && _hrlyacts.some(v => v)) {
     _hrlyacts.forEach((v, di) => { const el = document.getElementById(`tot-hrly-${di}`); if (el && v) el.value = v; });
@@ -1607,7 +1601,9 @@ buildTable();
   }
 })();
 cloudPull().then(() => {
-  setCurrentWeek();
+  const params = new URLSearchParams(window.location.search);
+  const wParam = params.get('week');
+  if (!(wParam && /^\d{4}-\d{2}-\d{2}$/.test(wParam))) setCurrentWeek();
   try { loadWeek(currentWeekKey()); } catch(e) { console.error('loadWeek:', e); }
   try { recalc(); } catch(e) { console.error('recalc:', e); }
   try { renderHistory(); } catch(e) { console.error('renderHistory:', e); }

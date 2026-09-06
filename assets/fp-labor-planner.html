@@ -1614,7 +1614,9 @@ buildTable();
   }
 })();
 cloudPull().then(() => {
-  setCurrentWeek();
+  const params = new URLSearchParams(window.location.search);
+  const wParam = params.get('week');
+  if (!(wParam && /^\d{4}-\d{2}-\d{2}$/.test(wParam))) setCurrentWeek();
   try { loadWeek(currentWeekKey()); } catch(e) { console.error('loadWeek:', e); }
   try { recalc(); } catch(e) { console.error('recalc:', e); }
   try { renderHistory(); } catch(e) { console.error('renderHistory:', e); }
