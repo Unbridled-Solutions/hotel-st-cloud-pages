@@ -296,6 +296,17 @@ function fcNum(oid, field) {
   const n = parseFloat(v);
   return isFinite(n) ? n : 0;
 }
+const FOOD_BUDGET_PCT = 0.32;
+function fcFoodFromRev() {
+  const fp = OUTLETS.find(o => o.id === 'fp');
+  const fph = OUTLETS.find(o => o.id === 'fph');
+  const fpTot = fp ? fcParts(fp).tot : 0;
+  const fphTot = fph ? fcParts(fph).tot : 0;
+  return {
+    fp: Math.round(fpTot * FOOD_BUDGET_PCT * 100) / 100,
+    hsc: Math.round(fphTot * FOOD_BUDGET_PCT * 100) / 100,
+  };
+}
 function fcParts(o) {
   const rest = fcNum(o.id, 'rest');
   const evt = o.events ? fcNum(o.id, 'evt') : 0;
@@ -362,10 +373,10 @@ function foodBlock(fpFood, hscFood, fpRev, hscRev, allRev, allLab, opts) {
   const prime = allRev > 0 && (allLab || total) ? (allLab + total) / allRev : null;
   const cls = (p, hi) => (p != null && p > hi) ? 'pct-hi' : (p == null ? '' : 'pct-ok');
   const fpCell = opts && opts.forecast
-    ? fcInput('food', 'fp', fpFood)
+    ? money(fpFood)
     : opts && opts.input ? foodInput(opts.key, 'fp', fpFood) : money(fpFood);
   const hscCell = opts && opts.forecast
-    ? fcInput('food', 'hsc', hscFood)
+    ? money(hscFood)
     : opts && opts.input ? foodInput(opts.key, 'hsc', hscFood) : money(hscFood);
   return `<td class="split">${fpCell}</td><td class="${cls(fpPct,0.35)}">${pct(fpPct)}</td>`
     + `<td>${hscCell}</td><td class="${cls(hscPct,0.35)}">${pct(hscPct)}</td>`
@@ -795,8 +806,9 @@ function renderSummary() {
   per += `</tr>`;
   html += per;
 
-  const fcFpFood = fcNum('food', 'fp');
-  const fcHscFood = fcNum('food', 'hsc');
+  const foodBud = fcFoodFromRev();
+  const fcFpFood = foodBud.fp;
+  const fcHscFood = foodBud.hsc;
   const fcSupplies = fcNum('supplies', 'amt');
   let fcCombRev = 0, fcCombLab = 0, fcFpRev = 0, fcHscRev = 0;
   let fcRow = `<tr class="forecast"><td class="left sticky">Period ${viewPeriod} budget</td>`;
@@ -806,7 +818,7 @@ function renderSummary() {
     fcCombRev += p.tot;
     fcCombLab += p.labor;
     if (o.id === 'fp') fcFpRev += p.tot;
-    else fcHscRev += p.tot;
+    if (o.id === 'fph') fcHscRev += p.tot;
   });
   const fcLp = fcCombRev > 0 && fcCombLab ? fcCombLab / fcCombRev : null;
   const fcLpCls = (fcLp != null && fcLp > 0.35) ? 'pct-hi' : 'pct-ok';
