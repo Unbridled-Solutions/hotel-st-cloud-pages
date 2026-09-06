@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
 <title>Weekly Labor Planner — Unbridled Hospitality Group</title>
 <style>
 :root {
@@ -255,6 +256,17 @@ footer span { color: var(--gold); font-weight: 600; }
     <th class="col-day"><div class="day-th"><span class="day-name weekend">Sat</span><span class="day-date" id="date-5">—</span></div></th>
     <th class="col-day"><div class="day-th"><span class="day-name weekend">Sun</span><span class="day-date" id="date-6">—</span></div></th>
     <th class="col-week week-col"><div class="day-th"><span class="day-name total-col">Week</span><span class="day-date">Total</span></div></th>
+  </tr>
+  <tr class="rev-row" style="background:rgba(201,170,124,0.08)">
+    <th colspan="3" style="color:var(--gold);letter-spacing:1.5px">📅 Same Day Last Year · Toast Net Sales</th>
+    <td id="lyoy-hdr-0" style="text-align:center;font-size:13px;font-weight:700;color:var(--gold)">—</td>
+    <td id="lyoy-hdr-1" style="text-align:center;font-size:13px;font-weight:700;color:var(--gold)">—</td>
+    <td id="lyoy-hdr-2" style="text-align:center;font-size:13px;font-weight:700;color:var(--gold)">—</td>
+    <td id="lyoy-hdr-3" style="text-align:center;font-size:13px;font-weight:700;color:var(--gold)">—</td>
+    <td id="lyoy-hdr-4" style="text-align:center;font-size:13px;font-weight:700;color:var(--gold)">—</td>
+    <td id="lyoy-hdr-5" style="text-align:center;font-size:13px;font-weight:700;color:var(--gold)">—</td>
+    <td id="lyoy-hdr-6" style="text-align:center;font-size:13px;font-weight:700;color:var(--gold)">—</td>
+    <td class="week-col" style="text-align:center;font-size:13px;font-weight:700;color:var(--gold)" id="lyoy-hdr-week">—</td>
   </tr>
   <tr class="rev-row" style="background:rgba(90,139,167,0.08)">
     <th colspan="3" style="color:#5a8ba7;letter-spacing:1.5px">📊 4-Wk Avg Actual Revenue</th>
@@ -1037,12 +1049,53 @@ function renderMavg() {
   if (wkEl) {
     if (wkAvgTotal > 0) {
       wkEl.textContent = `$${wkAvgTotal.toLocaleString()}`;
-      wkEl.title = 'Sum of daily averages';
+      wkEl.title = 'Sum of daily 4-week averages (restaurant actuals, this weekday)';
     } else {
       wkEl.textContent = '—';
       wkEl.title = 'No actual revenue saved yet';
     }
   }
+}
+
+function moneyHdr(n) {
+  return '$' + Math.round(n).toLocaleString();
+}
+
+function renderLyoy(days) {
+  let total = 0;
+  let n = 0;
+  for (let di = 0; di < 7; di++) {
+    const el = document.getElementById(`lyoy-hdr-${di}`);
+    if (!el) continue;
+    const rec = (days && days[di]) || {};
+    const v = parseFloat(rec.net);
+    if (!rec.net || !Number.isFinite(v) || v <= 0) {
+      el.textContent = '—';
+      el.title = rec.lyDate ? (`No Toast Net Sales on ${rec.lyDate}`) : 'No prior-year Toast data yet';
+    } else {
+      total += v;
+      n += 1;
+      el.textContent = moneyHdr(v);
+      el.title = `Toast Net Sales ${rec.lyDate} (same calendar day last year)`;
+    }
+  }
+  const wkEl = document.getElementById('lyoy-hdr-week');
+  if (wkEl) {
+    wkEl.textContent = n ? moneyHdr(total) : '—';
+    wkEl.title = n ? 'Sum of same-day last year Toast Net Sales' : 'No prior-year Toast data yet';
+  }
+}
+
+async function fetchLyoy() {
+  const week = document.getElementById('weekStart')?.value || '';
+  if (!week) return;
+  try {
+    const res = await fetch('/api/planner/lyoy?ns=fp&week=' + encodeURIComponent(week));
+    if (!res.ok) return;
+    const json = await res.json();
+    if (!json || !json.success || !Array.isArray(json.days)) return;
+    renderLyoy(json.days);
+  } catch (e) {}
 }
 
 function updateSummary(weekBudget, weekRev, weekActual, weekActRev, weekPct) {
@@ -1107,6 +1160,7 @@ function onWeekChange() {
   updateWeekDates();
   loadWeek(currentWeekKey());
   recalc();
+  fetchLyoy();
 }
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function updateWeekDates() {
@@ -1534,6 +1588,7 @@ cloudPull().then(() => {
   try { renderHistory(); } catch(e) { console.error('renderHistory:', e); }
   try { renderMavg(); } catch(e) { console.error('renderMavg:', e); }
   applyRoster();
+  fetchLyoy();
 });
 function applyRoster() {
   try {

@@ -52,6 +52,14 @@ function mondayOf(s) {
   d.setUTCDate(d.getUTCDate() - (dow === 0 ? 6 : dow - 1));
   return d.toISOString().slice(0, 10);
 }
+function priorYearYmd(s) {
+  const [y, m, d] = s.split('-').map(Number);
+  const dt = new Date(Date.UTC(y - 1, m - 1, d));
+  if (dt.getUTCMonth() !== m - 1) {
+    return `${y - 1}-${String(m).padStart(2, '0')}-28`;
+  }
+  return dt.toISOString().slice(0, 10);
+}
 function rangeYmd(from, to) {
   const out = [];
   for (let s = from; s <= to; s = addYmd(s, 1)) out.push(s);
@@ -362,6 +370,55 @@ function applySeries(data, prefix, field, byDay, opts = {}) {
   return n;
 }
 
+async function toastNetForDay(token, guid, ymd) {
+  const orders = await dayOrders(token, guid, ymd);
+  const refund = await dayRefunds(token, guid, ymd);
+  const { net, orders: nOrd } = ordersNet(orders);
+  const adj = Math.round((net - refund) * 100) / 100;
+  if (nOrd === 0 && refund === 0) return '';
+  return fmtMoney(adj);
+}
+
+async function mergeLyoyDays(env, token, guid, lyDays) {
+  const lyoy = await kvGet(env, 'fp-lyoy');
+  let n = 0;
+  for (const ly of lyDays) {
+    if (lyoy[ly] !== undefined && lyoy[ly] !== null) continue;
+    lyoy[ly] = await toastNetForDay(token, guid, ly);
+    n += 1;
+  }
+  if (n) await kvPut(env, 'fp-lyoy', lyoy);
+  return { lyoy, filled: n };
+}
+
+export async function handlePlannerLyoy(request, env) {
+  const url = new URL(request.url);
+  const ns = url.searchParams.get('ns') || 'fp';
+  const week = url.searchParams.get('week') || '';
+  if (ns !== 'fp') {
+    return json({ success: false, error: 'lyoy is FP Sports Bar only for now' }, 400);
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(week)) {
+    return json({ success: false, error: 'Missing week=YYYY-MM-DD (Monday)' }, 400);
+  }
+  const mon = mondayOf(week);
+  const thisDays = rangeYmd(mon, addYmd(mon, 6));
+  const lyDays = thisDays.map(priorYearYmd);
+  const cached = await kvGet(env, 'fp-lyoy');
+  const missing = lyDays.filter((d) => cached[d] === undefined || cached[d] === null);
+  if (missing.length) {
+    const token = await toastLogin(env);
+    await mergeLyoyDays(env, token, GUIDS.fp, missing);
+  }
+  const lyoy = await kvGet(env, 'fp-lyoy');
+  const days = thisDays.map((ymd, i) => ({
+    date: ymd,
+    lyDate: lyDays[i],
+    net: lyoy[lyDays[i]] ?? '',
+  }));
+  return json({ success: true, ns, week: mon, days });
+}
+
 export async function handlePlannerSyncStatus(env) {
   const raw = await env.PLANNER_DATA.get(STATUS_KEY);
   const data = raw ? JSON.parse(raw) : { state: 'idle', message: 'No sync yet' };
@@ -469,6 +526,14 @@ async function runSync(env, status) {
   fillCurrentMgmt(fp, 'fp-labor-wk-', laborDays, MGMT.fp);
   await kvPut(env, 'fp', fp);
 
+  try {
+    const lyDays = [...new Set(salesDays.map(priorYearYmd))];
+    const lyRes = await mergeLyoyDays(env, token, GUIDS.fp, lyDays);
+    status.changed.fpLyoy = lyRes.filled;
+  } catch (e) {
+    status.errors.push('FP LY net sales ' + e.message);
+  }
+
   const fph = await kvGet(env, 'fp-ph');
   status.changed.fphAct = applySeries(fph, 'fp-ph-wk-', 'actrevs', sales.fph);
   status.changed.fphHrly = applySeries(fph, 'fp-ph-wk-', 'hrlyacts', moneyMap(labor.fph));
@@ -536,6 +601,7 @@ async function runSync(env, status) {
   if (!supplies.weeks) supplies.weeks = {};
   if (!supplies.budget) supplies.budget = {};
   if (!supplies.budget['2026-P9']) supplies.budget['2026-P9'] = { fp: 2000, hsc: 7000 };
+  // Weekly pass — full week P&L for each Monday in the window
   for (const mon of mondays) {
     const sun = addYmd(mon, 6);
     try {
@@ -550,7 +616,24 @@ async function runSync(env, status) {
       }
       supplies.weeks[mon] = { fp: fpP.cats, hsc: hscP.cats };
     } catch (e) {
-      status.errors.push('ME ' + mon + ' ' + e.message);
+      status.errors.push('ME week ' + mon + ' ' + e.message);
+    }
+  }
+  // Daily pass — pull yesterday + today individually for the daily row display
+  for (const day of [yesterday, today]) {
+    if (day === mondayOf(day)) continue; // Monday already covered by weekly pass
+    try {
+      const fpD = await marginWeek(env, ME_UNITS.fp, day, day);
+      const hscD = await marginWeek(env, ME_UNITS.hsc, day, day);
+      const cur = (food[day] && typeof food[day] === 'object') ? food[day] : {};
+      if (fpD.food || hscD.food || fpD.supplies || hscD.supplies) {
+        cur.fp = fpD.food;
+        cur.hsc = hscD.food;
+        cur.supplies = Math.round((fpD.supplies + hscD.supplies) * 100) / 100;
+        food[day] = cur;
+      }
+    } catch (e) {
+      status.errors.push('ME daily ' + day + ' ' + e.message);
     }
   }
   await kvPut(env, 'uhg-food', food);

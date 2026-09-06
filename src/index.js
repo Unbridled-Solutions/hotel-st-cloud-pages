@@ -3,7 +3,7 @@
  * Handles API routes; all other requests fall through to static assets.
  */
 
-import { handlePlannerSync, handlePlannerSyncStatus } from './planner-sync.js';
+import { handlePlannerSync, handlePlannerSyncStatus, handlePlannerLyoy } from './planner-sync.js';
 
 const AIRTABLE_BASE = "appUUjLXEUwlyx23M";
 const SOCC_TABLE    = "SOCC%20Barista%20Applications";
@@ -166,6 +166,9 @@ export default {
     }
     if (url.pathname === '/api/planner/sync' && request.method === 'GET') {
       return handlePlannerSyncStatus(env);
+    }
+    if (url.pathname === '/api/planner/lyoy' && request.method === 'GET') {
+      return handlePlannerLyoy(request, env);
     }
 
     // ── POST /api/planner/bundle?ns=X ─────────────────────────────────────────
