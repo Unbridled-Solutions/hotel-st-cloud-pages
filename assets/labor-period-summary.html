@@ -369,7 +369,8 @@ function foodBlock(fpFood, hscFood, fpRev, hscRev, allRev, allLab, opts) {
   const total = (fpFood || 0) + (hscFood || 0);
   const fpPct = fpRev > 0 && fpFood ? fpFood / fpRev : null;
   const hscPct = hscRev > 0 && hscFood ? hscFood / hscRev : null;
-  const totPct = allRev > 0 && total ? total / allRev : null;
+  const fnbRev = (fpRev || 0) + (hscRev || 0);
+  const totPct = fnbRev > 0 && total ? total / fnbRev : null;
   const prime = allRev > 0 && (allLab || total) ? (allLab + total) / allRev : null;
   const cls = (p, hi) => (p != null && p > hi) ? 'pct-hi' : (p == null ? '' : 'pct-ok');
   const fpCell = opts && opts.forecast
@@ -707,7 +708,7 @@ function renderSummary() {
     <div class="hero-card"><div class="hero-lbl">UHG actual labor</div><div class="hero-val">${money(grandLab)}</div><div class="hero-sub">Hourly + standing mgmt + tax</div></div>
     <div class="hero-card"><div class="hero-lbl">Blended labor %</div><div class="hero-val">${pct(grandRev ? grandLab / grandRev : null)}</div><div class="hero-sub">This period only · UHG labor ÷ UHG revenue. Not an hourly wage.</div></div>
     <div class="hero-card"><div class="hero-lbl">Tax this period</div><div class="hero-val">${Math.round(taxRate(viewPeriod)*100)}%</div><div class="hero-sub">On hourly + management</div></div>`;
-  document.getElementById('note').textContent = 'Click an outlet name for its labor tracker. Click Supplies for the supply planner. Food $ is MarginEdge COGS: Food + Beer + Wine + Liquor + N/A Bev. Prime is (labor + that food) / revenue. Supply budget is $9,000 ($2,000 FP / $7,000 1887).';
+  document.getElementById('note').textContent = 'Click an outlet name for its labor tracker. Click Supplies for the supply planner. Food $ is MarginEdge COGS: Food + Beer + Wine + Liquor + N/A Bev. FP % = FP food / FP F&B. HSC % = HSC food / (1887 + Standard Oil). Food % excludes Hotel St. Cloud room revenue. Prime is (labor + food) / all revenue.';
 
   const grp = outlets.map((o, i) => {
     const span = o.events ? 6 : (o.hotel ? 6 : 5);
@@ -758,7 +759,7 @@ function renderSummary() {
       const dSupplies = dfe.supplies;
       const fpDayIdx = outlets.findIndex(o => o.id === 'fp');
       const dFpRev = fpDayIdx >= 0 ? (() => { const wd = rollDay(outlets[fpDayIdx], monday, di, bundles[outlets[fpDayIdx].ns] || {}); return wd.totalRev; })() : 0;
-      const dHscRev = outlets.reduce((s, o, i) => s + (o.id === 'fp' ? 0 : rollDay(o, monday, di, bundles[o.ns] || {}).totalRev), 0);
+      const dHscRev = outlets.reduce((s, o) => s + ((o.id !== 'fp' && !o.hotel) ? rollDay(o, monday, di, bundles[o.ns] || {}).totalRev : 0), 0);
       const hasDayFood = dFpFood > 0 || dHscFood > 0 || dSupplies > 0;
       row += `<td class="split">${money(combRev)}</td><td>${money(combLab)}</td><td class="${cp==null?'':pcls}">${pct(cp)}</td>`
         + (hasDayFood ? foodBlock(dFpFood, dHscFood, dFpRev, dHscRev, combRev, combLab, { supplies: dSupplies }) : `<td class="split">—</td><td>—</td><td>—</td><td>—</td><td class="split">—</td><td>—</td><td class="split">—</td><td class="supply">—</td>`)
@@ -782,7 +783,7 @@ function renderSummary() {
     const fe = foodEntry(wkKey);
     const fpIdx = outlets.findIndex(o => o.id === 'fp');
     const fpRev = fpIdx >= 0 ? weekAcc[fpIdx].totalRev : 0;
-    const hscRev = weekAcc.reduce((s, w, i) => s + (outlets[i].id === 'fp' ? 0 : w.totalRev), 0);
+    const hscRev = weekAcc.reduce((s, w, i) => s + ((outlets[i].id !== 'fp' && !outlets[i].hotel) ? w.totalRev : 0), 0);
     tot += `<td class="split">${money(weekCombRev)}</td><td>${money(weekCombLab)}</td><td class="${wp==null?'':wpcls}">${pct(wp)}</td>`
       + foodBlock(fe.fp, fe.hsc, fpRev, hscRev, weekCombRev, weekCombLab, { input: true, key: wkKey, supplies: fe.supplies });
     tot += `</tr>`;
