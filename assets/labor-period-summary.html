@@ -33,7 +33,7 @@ h1 { font-size: 20px; font-weight: 700; }
 .tabs { display: flex; gap: 0; padding: 0 22px; background: #0d1620; border-bottom: 1px solid var(--border); overflow-x: auto; }
 .tab { background: transparent; border: none; color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; padding: 12px 16px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
 .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
-.wrap { padding: 12px 10px 40px; max-width: none; margin: 0 auto; }
+.wrap { padding: 12px 10px 72px; max-width: none; margin: 0 auto; }
 .note { font-size: 12px; color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
 .note a { color: var(--blue); }
 .grid { overflow-x: auto; }
@@ -45,7 +45,7 @@ td.left { text-align: left; color: var(--white, #f5f5f5); font-weight: 600; }
 tr.total td { background: #0d1620; color: var(--gold); font-weight: 700; border-top: 1px solid var(--gold); }
 tr.forecast td { background: #1c3344; color: #b7d0de; font-weight: 700; border-top: 1px solid rgba(90,139,167,0.55); }
 tr.forecast td.sticky { background: #1c3344; color: #d5e6ef; border-right: 3px solid #c9aa7c; }
-tr.vs td { background: #15222c; color: var(--text); font-weight: 700; }
+tr.vs td { background: #15222c; color: var(--text); font-weight: 700; padding-top: 10px; padding-bottom: 14px; line-height: 1.4; }
 tr.vs td.sticky { background: #15222c; border-right: 3px solid #c9aa7c; }
 tr.blank td { color: var(--muted); font-style: italic; }
 tr.week-tot td { background: #4a5560; color: #e8e0d4; font-weight: 700; border-top: 1px solid rgba(138,154,170,0.45); border-bottom: 1px solid rgba(138,154,170,0.45); }
@@ -297,6 +297,7 @@ function fcNum(oid, field) {
   return isFinite(n) ? n : 0;
 }
 const FOOD_BUDGET_PCT = 0.32;
+const LABOR_BUDGET_PCT = 0.36;
 function fcFoodFromRev() {
   const fp = OUTLETS.find(o => o.id === 'fp');
   const fph = OUTLETS.find(o => o.id === 'fph');
@@ -310,14 +311,10 @@ function fcFoodFromRev() {
 function fcParts(o) {
   const rest = fcNum(o.id, 'rest');
   const evt = o.events ? fcNum(o.id, 'evt') : 0;
-  const hrly = fcNum(o.id, 'hrly');
-  const mgmt = fcNum(o.id, 'mgmt');
-  let labor = hrly + mgmt;
-  labor += labor * taxRate(viewPeriod);
-  if (!hrly && !mgmt) labor = fcNum(o.id, 'labor');
   const tot = rest + evt;
-  const laborPct = tot > 0 && labor ? labor / tot : null;
-  return { rest, evt, hrly, mgmt, labor, tot, laborPct, occ: fcNum(o.id, 'occ') };
+  const labor = tot ? Math.round(tot * LABOR_BUDGET_PCT * 100) / 100 : 0;
+  const laborPct = tot > 0 ? LABOR_BUDGET_PCT : null;
+  return { rest, evt, hrly: 0, mgmt: 0, labor, tot, laborPct, occ: fcNum(o.id, 'occ') };
 }
 
 function foodEntry(mondayYmd) {
@@ -655,13 +652,12 @@ function outletCells(w, o, first) {
 
 function outletForecastCells(o, first) {
   const p = fcParts(o);
-  const pcls = (p.laborPct != null && p.laborPct > 0.35) ? 'pct-hi' : 'pct-ok';
   const split = first ? '' : ' split';
   let html = '';
   if (o.hotel) html += `<td class="${split}">${fcPctInput(o.id, 'occ', (fcEntry()[o.id] || {}).occ)}</td>`;
   html += `<td class="${o.hotel ? '' : split}">${fcInput(o.id, 'rest', p.rest)}</td>`;
   if (o.events) html += `<td>${fcInput(o.id, 'evt', p.evt)}</td>`;
-  html += `<td>${fcInput(o.id, 'hrly', p.hrly)}</td><td>${fcInput(o.id, 'mgmt', p.mgmt)}</td><td>${money(p.labor)}</td><td class="${p.laborPct==null?'':pcls}">${pct(p.laborPct)}</td>`;
+  html += `<td>—</td><td>—</td><td>${money(p.labor)}</td><td class="${p.laborPct==null?'':'pct-ok'}">${pct(p.laborPct)}</td>`;
   return html;
 }
 function vsPct(act, fc) {
@@ -680,7 +676,7 @@ function outletVsCells(act, o, first) {
   if (o.hotel) html += `<td class="${split}">${pct(vsPct(act.occ, p.occ))}</td>`;
   html += `<td class="${o.hotel ? '' : split}">${pct(rest)}</td>`;
   if (o.events) html += `<td>${pct(evt)}</td>`;
-  html += `<td>${pct(hrly)}</td><td>${pct(mgmt)}</td><td>${pct(lab)}</td><td>—</td>`;
+  html += `<td>—</td><td>—</td><td>${pct(lab)}</td><td>—</td>`;
   return html;
 }
 
