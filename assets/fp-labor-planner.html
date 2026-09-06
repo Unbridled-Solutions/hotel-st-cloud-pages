@@ -422,7 +422,14 @@ async function cloudPull() {
             const cloudObj   = typeof v === 'object' ? v : JSON.parse(v);
             const localTs    = localObj?.saved_at  || 0;
             const cloudTs    = cloudObj?.saved_at  || 0;
-            if (localTs >= cloudTs) return; // local is same age or newer — keep it
+            if (localTs >= cloudTs) {
+              // Published forecast lives in cloud `revs`. Safari drafts were hiding it.
+              if (k.startsWith('fp-labor-wk-') && Array.isArray(cloudObj?.revs) && cloudObj.revs.some(x => x)) {
+                localObj.revs = cloudObj.revs;
+                localStorage.setItem(k, JSON.stringify(localObj));
+              }
+              return;
+            }
           } catch(e) { /* can't parse — fall through and overwrite */ }
         }
         localStorage.setItem(k, incoming);
@@ -1330,6 +1337,7 @@ function loadWeek(key) {
 
   // NOW restore into the freshly-built DOM
   if (_pcts)    _pcts.forEach((v, di)    => { const el = document.getElementById(`pct-${di}`);          if (el && v) el.value = v; });
+  if (cloudObj && Array.isArray(cloudObj.revs) && cloudObj.revs.some(v => v)) _revs = cloudObj.revs;
   if (_revs)    _revs.forEach((v, di)    => { const el = document.getElementById(`rev-${di}`);          if (el && v) el.value = v; });
   if (_hrlyacts && _hrlyacts.some(v => v)) {
     _hrlyacts.forEach((v, di) => { const el = document.getElementById(`tot-hrly-${di}`); if (el && v) el.value = v; });
