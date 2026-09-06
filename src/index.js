@@ -23,6 +23,40 @@ function optionsResponse() {
   }});
 }
 
+function weekPrefix(ns) {
+  if (ns === 'fp') return 'fp-labor-wk-';
+  if (ns === 'fp-ph') return 'fp-ph-wk-';
+  if (ns === 'socc') return 'socc-wk-';
+  if (ns === 'hsc') return 'hsc-wk-';
+  return ns + '-wk-';
+}
+function placeholderRevs(revs) {
+  if (!Array.isArray(revs) || !revs.some(v => v !== '' && v != null)) return true;
+  const nums = revs.map(v => Number(v)).filter(n => Number.isFinite(n) && n > 0);
+  if (!nums.length) return true;
+  const first = nums[0];
+  return nums.every(n => n === first);
+}
+function mergePlannerBundle(existing, incoming, ns) {
+  const out = Object.assign({}, existing || {});
+  const prefix = weekPrefix(ns);
+  for (const [k, v] of Object.entries(incoming || {})) {
+    if (k.startsWith(prefix) && v && typeof v === 'object' && !Array.isArray(v)) {
+      const prev = (existing && existing[k] && typeof existing[k] === 'object') ? existing[k] : {};
+      const next = Object.assign({}, prev, v);
+      const inRevs = Array.isArray(v.revs) ? v.revs : null;
+      const prevRevs = Array.isArray(prev.revs) ? prev.revs : null;
+      if (inRevs && placeholderRevs(inRevs) && prevRevs && !placeholderRevs(prevRevs)) {
+        next.revs = prevRevs;
+      }
+      out[k] = next;
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
+}
+
 // Extract readable text from base64-encoded file (PDF/Word)
 function extractText(base64) {
   try {
@@ -178,7 +212,10 @@ export default {
       if (!ns) return new Response(JSON.stringify({ error: 'Missing ns param' }), { status: 400, headers: CORS });
       try {
         const body = await request.json();
-        await env.PLANNER_DATA.put(`bundle:${ns}`, JSON.stringify(body));
+        const raw = await env.PLANNER_DATA.get(`bundle:${ns}`);
+        const existing = raw ? JSON.parse(raw) : {};
+        const merged = mergePlannerBundle(existing, body, ns);
+        await env.PLANNER_DATA.put(`bundle:${ns}`, JSON.stringify(merged));
         return new Response(JSON.stringify({ success: true }), { status: 200, headers: CORS });
       } catch (err) {
         return new Response(JSON.stringify({ success: false, error: err.message }), { status: 500, headers: CORS });

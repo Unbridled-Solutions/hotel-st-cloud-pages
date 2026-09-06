@@ -397,15 +397,11 @@ let TAX_RATE = 0.11; // period-aware: ≥P8 → 0.13, else 0.11
 const CLOUD_NS = 'socc';
 const CLOUD_URL = '/api/planner/bundle?ns=' + CLOUD_NS;
 const CLOUD_PREFIXES = ['socc-wk-', 'socc-week-index', 'socc-history', 'socc-roster'];
-// Bump this string any time you change a rate in the POSITIONS array.
 const ROSTER_RATES_VERSION = '2026-09-02-socc';
-
-// Cloud data cache — populated by cloudPull, read by mavg directly
 let _cloudData = null;
-
 async function cloudPull() {
   try {
-    const res = await fetch(CLOUD_URL);
+    const res = await fetch(CLOUD_URL + '&t=' + Date.now(), { cache: 'no-store' });
     if (!res.ok) return;
     const { data } = await res.json();
     if (!data || typeof data !== 'object') return;
