@@ -53,12 +53,9 @@ function mondayOf(s) {
   return d.toISOString().slice(0, 10);
 }
 function priorYearYmd(s) {
-  const [y, m, d] = s.split('-').map(Number);
-  const dt = new Date(Date.UTC(y - 1, m - 1, d));
-  if (dt.getUTCMonth() !== m - 1) {
-    return `${y - 1}-${String(m).padStart(2, '0')}-28`;
-  }
-  return dt.toISOString().slice(0, 10);
+  // Toast "Same week last year" = same weekday, 52 weeks back (364 days).
+  // Not the same calendar date. Aug 31 2026 Mon → Sep 1 2025 Mon.
+  return addYmd(s, -364);
 }
 function rangeYmd(from, to) {
   const out = [];
