@@ -117,6 +117,13 @@ th.grp a:hover { text-decoration: underline; color: #e8d5a8; }
   <span class="range" id="rangeLbl"></span>
   <span class="tax-chip" id="taxChip"></span>
 </div>
+<div class="tabs" id="tabs">
+  <button type="button" class="tab active" data-tab="summary" onclick="setTab('summary')">Summary</button>
+  <button type="button" class="tab" data-tab="fph" onclick="setTab('fph')">Fremont Public House</button>
+  <button type="button" class="tab" data-tab="fp" onclick="setTab('fp')">Fremont Provisions</button>
+  <button type="button" class="tab" data-tab="hsc" onclick="setTab('hsc')">Hotel</button>
+  <button type="button" class="tab" data-tab="socc" onclick="setTab('socc')">Standard Oil</button>
+</div>
 <div class="wrap">
   <p class="note" id="note"></p>
   <div class="hero" id="hero"></div>
@@ -140,6 +147,7 @@ let saveLock = Promise.resolve();
 let viewPeriod = null;
 let viewYear = 2026;
 let viewGrain = 'daily';
+let viewTab = 'summary';
 const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const FOOD_NS = 'uhg-food';
 const FC_NS = 'uhg-forecast';
@@ -555,6 +563,11 @@ function onPeriodSelect() {
   render();
 }
 
+function setTab(id) {
+  viewTab = id || 'summary';
+  render();
+}
+
 function setGrain(g) {
   viewGrain = g;
   render();
@@ -832,7 +845,16 @@ function render() {
   document.getElementById('periodChip').textContent = `Period ${viewPeriod} · ${viewYear}`;
   document.getElementById('rangeLbl').textContent = first ? `${first.getMonth()+1}/${first.getDate()} – ${last.getMonth()+1}/${last.getDate()}` : '';
   document.getElementById('taxChip').textContent = `Tax ${Math.round(taxRate(viewPeriod)*100)}%`;
-  renderSummary();
+  document.querySelectorAll('#tabs .tab').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-tab') === viewTab);
+  });
+  if (viewTab === 'summary') {
+    renderSummary();
+    return;
+  }
+  const o = OUTLETS.find(x => x.id === viewTab);
+  if (o) renderOutlet(o);
+  else renderSummary();
 }
 
 async function refreshLive() {
@@ -898,6 +920,7 @@ async function loadAll() {
   const cur = currentPeriodInfo();
   viewYear = cur.year;
   viewPeriod = cur.period;
+  viewTab = 'summary';
   loadAll();
 })();
 </script>
