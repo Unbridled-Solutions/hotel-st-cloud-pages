@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>This week on MC · Unbridled</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:ital,wght@0,700;1,600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f4efe6;
+      --paper: #ffffff;
+      --navy: #1a2e3b;
+      --blue: #1a3d52;
+      --gold: #8a6a32;
+      --text: #12202b;
+      --muted: #3d4f5c;
+      --border: rgba(18,32,43,0.18);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, system-ui, sans-serif;
+      overflow: hidden;
+    }
+    .deck { height: 100%; display: flex; flex-direction: column; }
+    header.bar {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      padding: 12px 22px; background: #fff; border-bottom: 2px solid var(--border); flex-shrink: 0;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand img { width: 28px; height: auto; filter: invert(1) brightness(0.18); }
+    .brand span {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--blue);
+    }
+    .dots { display: flex; gap: 8px; align-items: center; }
+    .dot {
+      width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--gold);
+      background: transparent; cursor: pointer;
+    }
+    .dot.on { background: var(--gold); }
+    .hint { font-size: 11px; color: var(--muted); letter-spacing: 0.04em; }
+    .home-btn {
+      background: var(--gold); color: #fff; border: none; border-radius: 8px;
+      padding: 8px 14px; font-size: 13px; font-weight: 800; cursor: pointer;
+    }
+    .home-btn:disabled { opacity: 0.35; cursor: default; }
+    .right-tools { display: flex; align-items: center; gap: 12px; }
+    main { flex: 1; position: relative; overflow: hidden; }
+    .slide {
+      position: absolute; inset: 0;
+      padding: clamp(20px, 4vh, 40px) clamp(28px, 5vw, 72px);
+      display: none; flex-direction: column; justify-content: center;
+      max-width: 1180px; margin: 0 auto;
+    }
+    .slide.on { display: flex; }
+    .slide.photo {
+      max-width: none; justify-content: flex-start; padding: 16px 28px 8px;
+    }
+    .kicker {
+      font-size: 12px; font-weight: 700; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--blue); margin-bottom: 10px;
+    }
+    h1 {
+      font-family: "Source Serif 4", Georgia, serif;
+      font-size: clamp(30px, 4.6vw, 52px); font-weight: 700;
+      letter-spacing: -0.03em; line-height: 1.08; margin-bottom: 14px;
+    }
+    h1 em { font-style: italic; color: var(--navy); }
+    .lede {
+      font-size: clamp(16px, 1.9vw, 21px); line-height: 1.45;
+      color: var(--text); max-width: 40em; margin-bottom: 18px;
+    }
+    .say {
+      font-size: 15px; color: var(--muted); max-width: 42em; line-height: 1.5; margin-bottom: 22px;
+    }
+    .service {
+      background: #fff; border: 1px solid var(--border); border-left: 5px solid var(--gold);
+      border-radius: 0 10px 10px 0; padding: 14px 18px; max-width: 46em; margin-bottom: 18px;
+    }
+    .service .lbl {
+      font-size: 11px; font-weight: 800; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--gold); margin-bottom: 6px;
+    }
+    .service p { font-size: 16px; line-height: 1.5; }
+    .hero-wrap {
+      flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center;
+      background: #fff; border: 1px solid var(--border); margin: 8px 0 10px;
+    }
+    .hero-wrap img {
+      max-width: 100%; max-height: 100%; object-fit: contain; display: block;
+    }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .btn {
+      display: inline-flex; align-items: center; background: var(--gold); color: #fff;
+      font-weight: 800; font-size: 15px; text-decoration: none;
+      padding: 12px 20px; border-radius: 8px;
+    }
+    .btn.ghost { background: #fff; color: var(--text); border: 2px solid var(--navy); }
+    .btn.small { font-size: 13px; padding: 9px 14px; }
+    .four {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;
+      max-width: 920px; margin: 8px 0 22px;
+    }
+    .chip {
+      background: #fff; border: 2px solid var(--border); border-radius: 8px;
+      padding: 12px 14px; cursor: pointer; text-align: left;
+    }
+    .chip b { display: block; color: var(--gold); font-size: 13px; margin-bottom: 3px; }
+    .chip span { font-size: 13px; color: var(--muted); }
+    .stats {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+      max-width: 920px; margin: 0 0 18px;
+    }
+    .stat {
+      background: #fff; border: 1px solid var(--border); padding: 14px 12px; text-align: center;
+    }
+    .stat b { display: block; font-size: 22px; color: var(--navy); }
+    .stat i {
+      display: block; font-style: normal; font-size: 11px; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--muted); margin-top: 4px; font-weight: 700;
+    }
+    .two {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+      max-width: 920px; margin: 0 0 18px;
+    }
+    .card { background: #fff; border: 1px solid var(--border); padding: 14px 16px; }
+    .card h3 { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }
+    .card p, .card li { font-size: 15px; line-height: 1.45; }
+    .card ul { margin: 0 0 0 16px; }
+    footer.nav {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 22px 14px; border-top: 2px solid var(--border); background: #fff; flex-shrink: 0;
+    }
+    footer.nav button {
+      background: var(--navy); color: #fff; border: none; border-radius: 8px;
+      padding: 10px 16px; font-size: 14px; font-weight: 600; cursor: pointer;
+    }
+    footer.nav button:disabled { opacity: 0.35; cursor: default; }
+    .count { font-size: 12px; color: var(--muted); letter-spacing: 0.06em; }
+    @media (max-width: 800px) {
+      .four, .stats, .two { grid-template-columns: 1fr 1fr; }
+      .hint { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="deck">
+    <header class="bar">
+      <div class="brand">
+        <img src="logos/unbridled-elk-icon-white.png" alt="" />
+        <span>Unbridled · This week on MC</span>
+      </div>
+      <div class="dots" id="dots"></div>
+      <div class="right-tools">
+        <div class="hint">Arrows · F for fullscreen · links open a new tab</div>
+        <button type="button" class="home-btn" id="homeTop">Home</button>
+      </div>
+    </header>
+    <main id="main"></main>
+    <footer class="nav">
+      <button type="button" id="prev">← Back</button>
+      <div class="count" id="count"></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button type="button" id="home">Home</button>
+        <button type="button" id="next">Next →</button>
+      </div>
+    </footer>
+  </div>
+  <script>
+    const slides = [
+      {
+        kicker: "New users on MC · Week of Sep 8, 2026",
+        title: "This week on <em>MC</em>",
+        lede: "Not a chatbot demo. Three pictures, then live work we actually shipped. Open any link. That is the product.",
+        say: "MC is chief of staff. The skills are the specialists. You are still the character gate.",
+        chips: [
+          { n: 1, name: "The idea", note: "Grok Bot crew" },
+          { n: 2, name: "How it maps", note: "MC crew poster" },
+          { n: 3, name: "The team", note: "Cream org chart" },
+          { n: 4, name: "Keystone", note: "Mary Drive" },
+          { n: 5, name: "Labor", note: "Period summary" },
+          { n: 6, name: "The call", note: "Hotel and restaurants" }
+        ]
+      },
+      {
+        kicker: "01  ·  The concept",
+        title: "A crew, not one <em>overloaded bot</em>",
+        lede: "Grok Bot's picture. Lead receives the objective. Research, builder, verifier, reporter in parallel.",
+        photo: "commander-week1/multi-agent-team.jpeg",
+        say: "Say this: the skill is not prompting better. It is building the org chart."
+      },
+      {
+        kicker: "02  ·  How that relates to MC",
+        title: "Same shape. <em>We stay in the room.</em>",
+        lede: "MC is chief of staff. Hospitality, Cabin and Build, Briefs, Money and Ops. You keep the character gate.",
+        photo: "commander-week1/mc-crew-poster.jpg",
+        say: "Say this: collaboration is the difference. The deliverable is a live URL."
+      },
+      {
+        kicker: "03  ·  The team we built",
+        title: "People → MC → <em>named specialists</em>",
+        lede: "Seven units. Live vs planned. Dedicated agents where someone needs a direct line.",
+        photo: "unbridled-ai-org.png",
+        say: "Say this: we did not hire a chatbot. We staffed an organization.",
+        links: [
+          { href: "https://offers.hotelstcloud.com/assets/unbridled-ai-org", label: "Open the live org chart" }
+        ]
+      },
+      {
+        kicker: "04  ·  Keystone · Mary Drive",
+        title: "Drawings in. A live set <em>out.</em>",
+        lede: "Architectural plans and a voice memo. Watercolor, then CAD. Site on 276 GCR 480.",
+        photo: "tjs-proctor/mary-lane-a01-watercolor.png",
+        stats: [
+          { n: "~3,000 SF", l: "Main + upper first" },
+          { n: "$400 / SF", l: "Target" },
+          { n: "$1.2M", l: "Phase one or less" },
+          { n: "5 bed", l: "Three-car garage" }
+        ],
+        say: "The output is a page you can put on a screen, not a PDF zoom fight in chat.",
+        links: [
+          { href: "https://offers.hotelstcloud.com/assets/tjs-proctor/", label: "Open the plan set" },
+          { href: "https://offers.hotelstcloud.com/assets/tjs-mary-lane-plan", label: "Open the live plan", ghost: true }
+        ]
+      },
+      {
+        kicker: "05  ·  Labor and scheduling",
+        title: "One period sheet. <em>Staff to forecast.</em>",
+        lede: "Daily labor from the outlet planners. Management rates from those same sheets. Cloud wins over a stale Safari tab.",
+        stats: [
+          { n: "$412", l: "FP management / day" },
+          { n: "$206", l: "1887 management / day" },
+          { n: "$534", l: "Hotel mgmt thru 9/13" },
+          { n: "32%", l: "Labor target, all 7 days" }
+        ],
+        two: [
+          { h: "What changed", p: "Same-weekday last year from Toast on the restaurants. Hotel last year is Cloudbeds occupancy and room dollars. No four-week average on the hotel." },
+          { h: "How you use it", p: "Open the planner. Staff to forecast. The period sheet tells you if labor is tracking." }
+        ],
+        links: [
+          { href: "https://offers.hotelstcloud.com/assets/labor-period-summary", label: "Period labor summary" },
+          { href: "https://offers.hotelstcloud.com/assets/hsc-labor-planner", label: "Hotel planner", ghost: true },
+          { href: "https://offers.hotelstcloud.com/assets/fp-labor-planner", label: "FP", ghost: true },
+          { href: "https://offers.hotelstcloud.com/assets/fp-ph-planner", label: "1887", ghost: true }
+        ]
+      },
+      {
+        kicker: "06  ·  Hotel and restaurants",
+        title: "A recommendation, not a <em>dashboard dump.</em>",
+        lede: "Stan asked for trends and a call. Hotel P10 already opened at 45.5%. Do not stack last year's +21 points on that start.",
+        two: [
+          { h: "Hotel St. Cloud · P10", p: "Use about +150 room nights (~15 points): ~610 RN / ~61% / ~$132k. Typed 75% / $166k is not the estimate." },
+          { h: "Restaurants · P10", p: "Staff to the daily forecasts that sum to the budgets: FP $77k, 1887 $140k, Standard Oil $19k. Not last Friday's hero night." }
+        ],
+        say: "Hotel rooms are a different engine. Do not mix occupancy pickup into restaurant days.",
+        links: [
+          { href: "https://offers.hotelstcloud.com/assets/labor-period-summary", label: "Period summary" },
+          { href: "https://offers.hotelstcloud.com/assets/hsc-pricing-strategy", label: "Pricing strategy", ghost: true }
+        ]
+      },
+      {
+        kicker: "07  ·  Left knee",
+        title: "MRI in. A private page <em>out.</em>",
+        lede: "Same pattern on personal homework. Not a doctor. Not a plan. Named next conversation: Hodack and a sports ortho.",
+        two: [
+          { h: "What the imaging said", p: "Failed prior ACL graft. Complete radial tear lateral meniscus. Second tear medial. Grade IV cartilage already to bone. Not a first-time sprain." },
+          { h: "The call on the page", p: "Non-op is honest only if it is not giving way or locking. If he operates: fight to repair, revision ACL, skip BTB first." }
+        ],
+        links: [
+          { href: "https://offers.hotelstcloud.com/assets/stan-knee-brief", label: "Open the knee brief" }
+        ]
+      },
+      {
+        kicker: "08  ·  How you work with it",
+        title: "Send the artifact. Ask for a <em>call.</em>",
+        two: [
+          { h: "Do this", p: "Send the photo, the PDF, the voice memo, the number. Name one change. Ask what MC recommends. Open the live URL." },
+          { h: "Skip this", p: "Treating it like a search box. Asking for ten options when you wanted a decision. Letting a late night lower the bar." }
+        ],
+        say: "If we would not frame it, it does not leave the building. Doing Good by Doing Well.",
+        links: [
+          { href: "https://offers.hotelstcloud.com/assets/mc-week-examples", label: "Scroll version", ghost: true }
+        ]
+      }
+    ];
+
+    let i = 0;
+    const main = document.getElementById("main");
+    const dots = document.getElementById("dots");
+    const count = document.getElementById("count");
+    const prev = document.getElementById("prev");
+    const next = document.getElementById("next");
+
+    slides.forEach((s, n) => {
+      const el = document.createElement("section");
+      el.className = "slide" + (s.photo ? " photo" : "") + (n === 0 ? " on" : "");
+      let html = `<div class="kicker">${s.kicker}</div><h1>${s.title}</h1>`;
+      if (s.lede) html += `<p class="lede">${s.lede}</p>`;
+      if (s.chips) {
+        html += `<div class="four">` + s.chips.map(c =>
+          `<button type="button" class="chip" data-go="${c.n}"><b>0${c.n}  ${c.name}</b><span>${c.note}</span></button>`
+        ).join("") + `</div>`;
+      }
+      if (s.photo) html += `<div class="hero-wrap"><img src="${s.photo}" alt=""></div>`;
+      if (s.stats) {
+        html += `<div class="stats">` + s.stats.map(st =>
+          `<div class="stat"><b>${st.n}</b><i>${st.l}</i></div>`
+        ).join("") + `</div>`;
+      }
+      if (s.two) {
+        html += `<div class="two">` + s.two.map(c =>
+          `<div class="card"><h3>${c.h}</h3><p>${c.p}</p></div>`
+        ).join("") + `</div>`;
+      }
+      if (s.say) html += `<p class="say">${s.say}</p>`;
+      if (s.links) {
+        html += `<div class="actions">` + s.links.map(l =>
+          `<a class="btn${l.ghost ? " ghost small" : ""}" href="${l.href}" target="_blank" rel="noopener">${l.label} ↗</a>`
+        ).join("") + `</div>`;
+      }
+      el.innerHTML = html;
+      main.appendChild(el);
+      const d = document.createElement("button");
+      d.className = "dot" + (n === 0 ? " on" : "");
+      d.type = "button";
+      d.title = "Slide " + (n + 1);
+      d.addEventListener("click", () => go(n));
+      dots.appendChild(d);
+    });
+
+    function go(n) {
+      i = Math.max(0, Math.min(slides.length - 1, n));
+      document.querySelectorAll(".slide").forEach((el, k) => el.classList.toggle("on", k === i));
+      document.querySelectorAll(".dot").forEach((el, k) => el.classList.toggle("on", k === i));
+      count.textContent = (i + 1) + " / " + slides.length;
+      prev.disabled = i === 0;
+      next.disabled = i === slides.length - 1;
+      document.getElementById("home").disabled = i === 0;
+      document.getElementById("homeTop").disabled = i === 0;
+    }
+    prev.addEventListener("click", () => go(i - 1));
+    next.addEventListener("click", () => go(i + 1));
+    document.getElementById("home").addEventListener("click", () => go(0));
+    document.getElementById("homeTop").addEventListener("click", () => go(0));
+    main.addEventListener("click", (e) => {
+      const chip = e.target.closest("[data-go]");
+      if (chip) go(Number(chip.dataset.go));
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Home") { e.preventDefault(); go(0); }
+      if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") { e.preventDefault(); go(i + 1); }
+      if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); go(i - 1); }
+      if (e.key === "End") go(slides.length - 1);
+      if (e.key === "f" || e.key === "F") {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+        else document.exitFullscreen();
+      }
+      if (e.key >= "1" && e.key <= "9") go(Number(e.key) - 1);
+    });
+    go(0);
+  </script>
+</body>
+</html>
