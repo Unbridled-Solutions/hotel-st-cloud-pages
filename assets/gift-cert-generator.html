@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
 <title>Gift Certificate Generator — Hotel St. Cloud</title>
 <style>
 :root {
@@ -578,13 +580,18 @@ function setKind(k, opts) {
 /* ─── KV helpers ─── */
 async function kvGet() {
   try {
-    const r = await fetch(API);
+    const r = await fetch(API + '&t=' + Date.now(), { cache: 'no-store' });
     const j = await r.json();
     return (j.data && typeof j.data === 'object') ? j.data : {};
   } catch { return {}; }
 }
 async function kvPut(body) {
-  await fetch(API, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  await fetch(API + '&t=' + Date.now(), {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(body),
+    cache: 'no-store'
+  });
 }
 
 /* ─── Code generation ─── */
