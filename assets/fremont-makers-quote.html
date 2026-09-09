@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Quote Builder v0909f</title>
+<title>Fremont Makers — Quote Builder v0909g</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20260909f-issue-contract-ar -->
+<!-- FM-BUILD-v20260909g-status-column-dropdown -->
 <script>
 (function(){
   try {
@@ -169,6 +169,18 @@
   .status-radios input[type="radio"] {
     accent-color: var(--accent); width: 16px; height: 16px; margin: 0; cursor: pointer;
   }
+  .dash-status {
+    appearance: none; -webkit-appearance: none;
+    background: var(--surface2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 20px;
+    padding: 4px 22px 4px 10px; font-size: 11px; font-weight: 700;
+    letter-spacing: .04em; text-transform: uppercase; cursor: pointer;
+    background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+    background-position: calc(100% - 12px) 8px, calc(100% - 7px) 8px;
+    background-size: 5px 5px, 5px 5px; background-repeat: no-repeat;
+    min-width: 128px;
+  }
+  .dash-status:focus { outline: none; border-color: var(--accent); }
 
   /* ── JOB INFO ── */
   .job-info {
@@ -494,7 +506,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0909f</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0909g</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
     <span class="status-label">Status:</span>
@@ -2251,15 +2263,20 @@ function renderDashboard() {
     else if (st === 'completed') totalCompleted += quoteTotal;
     else if (st === 'lost') totalLost += quoteTotal;
 
-    const statusClass = 'pill-' + st;
-    const statusLabel = st === 'contract' ? 'CONTRACTED' : st.toUpperCase();
     tbody.innerHTML += `
       <tr>
         <td><span style="font-family: monospace; color: var(--accent); font-weight: 700;">${quote.jobCode}</span></td>
         <td>${quote.customer || '—'}</td>
         <td>${quote.project || '—'}</td>
         <td>${quote.date || '—'}</td>
-        <td><span class="status-pill ${statusClass}">${statusLabel}</span></td>
+        <td>
+          <select class="dash-status" onchange="dashSetStatus('${quote.id}', this.value)" onclick="event.stopPropagation()">
+            <option value="proposed"${st==='proposed'?' selected':''}>Proposed</option>
+            <option value="contract"${st==='contract'?' selected':''}>Contracted</option>
+            <option value="completed"${st==='completed'?' selected':''}>Completed</option>
+            <option value="lost"${st==='lost'?' selected':''}>Lost</option>
+          </select>
+        </td>
         <td style="text-align:right">${fmt(quoteTotal)}</td>
         <td>
           <button class="modal-btn" onclick="loadQuoteAndSwitchTab('${quote.id}')" style="padding: 4px 8px; font-size: 11px;">Load</button>
@@ -3112,6 +3129,21 @@ function onStatusRadio(s) {
   syncIssueBtn();
 }
 
+function dashSetStatus(id, s) {
+  if (!id) return;
+  loadQuote(id);
+  const cur = pipeStatus(quoteData[id] || {});
+  if (s === cur) return;
+  if (s === 'contract') {
+    openIssueContract();
+    renderDashboard();
+    return;
+  }
+  setStatus(s);
+  renderDashboard();
+  renderPipeline();
+}
+
 function syncIssueBtn() {
   const btn = document.getElementById('btn-issue-contract');
   if (!btn) return;
@@ -3171,6 +3203,7 @@ function closeModal() {
   document.getElementById('contract-modal').classList.remove('open');
   document.getElementById('contract-pw').value = '';
   document.getElementById('pw-error').textContent = '';
+  renderDashboard();
 }
 
 // ── TABS ───────────────────────────────────────────────────────────
