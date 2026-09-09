@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Quote Builder v0909b</title>
+<title>Fremont Makers — Quote Builder v0909c</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20260909b-cloud-pool-theme-pipeline -->
+<!-- FM-BUILD-v20260909c-status-proposed-contracted-completed-lost -->
 <script>
 (function(){
   try {
@@ -37,8 +37,9 @@
     --active-bg: #1b2744;
     --active-fg: #ffffff;
     --pill-proposed-bg: #e8e4dc;
-    --pill-approved-bg: #dce8e0;
     --pill-contract-bg: #efe6d4;
+    --pill-completed-bg: #dce8e0;
+    --pill-lost-bg: #efe0e0;
     font-family: 'Segoe UI', system-ui, sans-serif;
   }
   html[data-theme="dark"] {
@@ -60,8 +61,9 @@
     --active-bg: #c9a84c;
     --active-fg: #111111;
     --pill-proposed-bg: #1a2a3a;
-    --pill-approved-bg: #1a2d1a;
     --pill-contract-bg: #2d1a1a;
+    --pill-completed-bg: #1a2d1a;
+    --pill-lost-bg: #2d1a1a;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); min-height: 100vh; }
@@ -111,8 +113,9 @@
     background: transparent; color: var(--muted); font-size: 12px; cursor: pointer;
   }
   .theme-toggle button.on { background: var(--active-bg); color: var(--active-fg); border-color: var(--active-bg); font-weight: 700; }
-  .pipe-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  @media (max-width: 900px) { .pipe-grid { grid-template-columns: 1fr; } }
+  .pipe-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  @media (max-width: 1100px) { .pipe-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 700px) { .pipe-grid { grid-template-columns: 1fr; } }
   .pipe-col { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
   .pipe-job { border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 10px; background: var(--surface2); }
   .pipe-job-top { display: flex; justify-content: space-between; gap: 10px; }
@@ -143,8 +146,9 @@
     letter-spacing: .04em; text-transform: uppercase;
   }
   .pill-proposed { background: var(--pill-proposed-bg); color: var(--blue); border: 1px solid var(--blue); }
-  .pill-approved  { background: var(--pill-approved-bg); color: var(--green); border: 1px solid var(--green); }
-  .pill-contract  { background: var(--pill-contract-bg); color: var(--accent); border: 1px solid var(--accent); }
+  .pill-contract, .pill-contracted { background: var(--pill-contract-bg); color: var(--accent); border: 1px solid var(--accent); }
+  .pill-completed { background: var(--pill-completed-bg); color: var(--green); border: 1px solid var(--green); }
+  .pill-lost { background: var(--pill-lost-bg); color: var(--red); border: 1px solid var(--red); }
 
   .status-btns { display: flex; gap: 8px; margin-left: auto; }
   .status-btn {
@@ -154,8 +158,9 @@
   }
   .status-btn:hover { border-color: var(--accent); color: var(--accent); }
   .status-btn.btn-active { background: var(--active-bg); color: var(--active-fg); border-color: var(--active-bg); font-weight: 700; }
-  .status-btn.btn-approved.btn-active { background: var(--green); color: var(--on-green); border-color: var(--green); }
-  .status-btn.btn-contract.btn-active { background: var(--accent); }
+  .status-btn.btn-contract.btn-active { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+  .status-btn.btn-completed.btn-active { background: var(--green); color: var(--on-green); border-color: var(--green); }
+  .status-btn.btn-lost.btn-active { background: var(--red); color: #fff; border-color: var(--red); }
 
   /* ── JOB INFO ── */
   .job-info {
@@ -456,7 +461,7 @@
     <button class="tab-btn" onclick="switchTab('reconcile')" data-tab="reconcile">🔍 Reconcile</button>
     <button class="tab-btn" onclick="switchTab('companypnl')" data-tab="companypnl">📈 Company P&L</button>
     <button class="tab-btn" onclick="switchTab('balancesheet')" data-tab="balancesheet">📋 Balance Sheet</button>
-    <button class="tab-btn" onclick="switchTab('pipeline')" data-tab="pipeline">📊 Proposed vs Contracted</button>
+    <button class="tab-btn" onclick="switchTab('pipeline')" data-tab="pipeline">📊 Pipeline</button>
     <div class="theme-toggle" title="Looks only — not saved to the cloud">
       <button type="button" id="theme-paper-btn" onclick="fmSetTheme('paper')">Paper</button>
       <button type="button" id="theme-dark-btn" onclick="fmSetTheme('dark')">Dark</button>
@@ -481,15 +486,16 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0909b</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0909c</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
     <span class="status-label">Status:</span>
     <span class="status-pill pill-proposed" id="status-pill">PROPOSED</span>
     <div class="status-btns">
       <button class="status-btn btn-active" id="btn-proposed" onclick="setStatus('proposed')">Proposed</button>
-      <button class="status-btn btn-approved" id="btn-approved" onclick="setStatus('approved')">Approved</button>
-      <button class="status-btn btn-contract" id="btn-contract" onclick="requestContract()">Contract &#x1F512;</button>
+      <button class="status-btn btn-contract" id="btn-contract" onclick="requestContract()">Contracted &#x1F512;</button>
+      <button class="status-btn btn-completed" id="btn-completed" onclick="setStatus('completed')">Completed</button>
+      <button class="status-btn btn-lost" id="btn-lost" onclick="setStatus('lost')">Lost</button>
     </div>
   </div>
 </div>
@@ -539,20 +545,20 @@
 
       <div class="totals-block" style="max-width: none; margin-left: 0; margin-bottom: 20px; padding: 15px 20px; display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 15px;">
         <div>
-          <span class="status-label">Quoted:</span>
+          <span class="status-label">Proposed:</span>
           <span class="totals-value big" id="dashboard-total-quoted">$0.00</span>
-        </div>
-        <div>
-          <span class="status-label">Approved:</span>
-          <span class="totals-value big pnl-positive" id="dashboard-total-approved">$0.00</span>
         </div>
         <div>
           <span class="status-label">Contracted:</span>
           <span class="totals-value big" style="color: var(--accent);" id="dashboard-total-contracted">$0.00</span>
         </div>
         <div>
-          <span class="status-label">Total Active:</span>
-          <span class="totals-value big" id="dashboard-total-active">$0.00</span>
+          <span class="status-label">Completed:</span>
+          <span class="totals-value big pnl-positive" id="dashboard-total-completed">$0.00</span>
+        </div>
+        <div>
+          <span class="status-label">Lost:</span>
+          <span class="totals-value big" id="dashboard-total-lost">$0.00</span>
         </div>
       </div>
 
@@ -577,21 +583,29 @@
 
   <!-- ── PIPELINE VIEW ── -->
   <div id="pipeline-view" style="display:none;">
-    <p style="font-size:14px;color:var(--muted);margin-bottom:16px;line-height:1.5;">Same cloud pool as the quotes. Left is still a proposal. Right is contracted / working. 50 / 30 / 20 on contracted jobs. History is not deleted here.</p>
+    <p style="font-size:14px;color:var(--muted);margin-bottom:16px;line-height:1.5;">Same cloud pool. Status on the quote: Proposed, Contracted, Completed, Lost — in that order. Contracted still takes 5476. 50 / 30 / 20 sits on contracted jobs. History is not deleted here.</p>
     <div class="pipe-kpis">
       <div class="pipe-kpi"><div class="lbl">Proposed</div><div class="val" id="pipe-kpi-prop">$0.00</div></div>
-      <div class="pipe-kpi"><div class="lbl">Approved</div><div class="val" id="pipe-kpi-appr">$0.00</div></div>
       <div class="pipe-kpi"><div class="lbl">Contracted</div><div class="val" id="pipe-kpi-con">$0.00</div></div>
-      <div class="pipe-kpi"><div class="lbl">Open receivable</div><div class="val" id="pipe-kpi-ar">$0.00</div></div>
+      <div class="pipe-kpi"><div class="lbl">Completed</div><div class="val" id="pipe-kpi-done">$0.00</div></div>
+      <div class="pipe-kpi"><div class="lbl">Lost</div><div class="val" id="pipe-kpi-lost">$0.00</div></div>
     </div>
     <div class="pipe-grid">
       <div class="pipe-col">
-        <h3 style="font-family:'Playfair Display',Georgia,serif;margin-bottom:12px;">Still a proposal</h3>
+        <h3 style="font-family:'Playfair Display',Georgia,serif;margin-bottom:12px;">Proposed</h3>
         <div id="pipe-proposed"></div>
       </div>
       <div class="pipe-col">
-        <h3 style="font-family:'Playfair Display',Georgia,serif;margin-bottom:12px;">Working — contracted</h3>
+        <h3 style="font-family:'Playfair Display',Georgia,serif;margin-bottom:12px;">Contracted</h3>
         <div id="pipe-contract"></div>
+      </div>
+      <div class="pipe-col">
+        <h3 style="font-family:'Playfair Display',Georgia,serif;margin-bottom:12px;">Completed</h3>
+        <div id="pipe-completed"></div>
+      </div>
+      <div class="pipe-col">
+        <h3 style="font-family:'Playfair Display',Georgia,serif;margin-bottom:12px;">Lost</h3>
+        <div id="pipe-lost"></div>
       </div>
     </div>
   </div>
@@ -2145,16 +2159,16 @@ function renderDashboard() {
   tbody.innerHTML = ''; // Clear existing rows
 
   let totalQuoted = 0;
-  let totalApproved = 0;
   let totalContracted = 0;
-  let totalActive = 0;
+  let totalCompleted = 0;
+  let totalLost = 0;
 
   if (quotesIndex.length === 0) {
     tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 20px;">No quotes yet. Click "+ New Quote" to start.</td></tr>';
     document.getElementById('dashboard-total-quoted').textContent = fmt(0);
-    document.getElementById('dashboard-total-approved').textContent = fmt(0);
     document.getElementById('dashboard-total-contracted').textContent = fmt(0);
-    document.getElementById('dashboard-total-active').textContent = fmt(0);
+    document.getElementById('dashboard-total-completed').textContent = fmt(0);
+    document.getElementById('dashboard-total-lost').textContent = fmt(0);
     return;
   }
 
@@ -2197,24 +2211,21 @@ function renderDashboard() {
       quote.total = quoteTotal;
     }
 
-    // Tally totals for the dashboard display
-    totalActive += quoteTotal;
-    if (quote.status === 'proposed') {
-      totalQuoted += quoteTotal;
-    } else if (quote.status === 'approved') {
-      totalApproved += quoteTotal;
-    } else if (quote.status === 'contract') {
-      totalContracted += quoteTotal;
-    }
+    const st = pipeStatus(quote);
+    if (st === 'proposed') totalQuoted += quoteTotal;
+    else if (st === 'contract') totalContracted += quoteTotal;
+    else if (st === 'completed') totalCompleted += quoteTotal;
+    else if (st === 'lost') totalLost += quoteTotal;
 
-    const statusClass = `pill-${quote.status}`;
+    const statusClass = 'pill-' + st;
+    const statusLabel = st === 'contract' ? 'CONTRACTED' : st.toUpperCase();
     tbody.innerHTML += `
       <tr>
         <td><span style="font-family: monospace; color: var(--accent); font-weight: 700;">${quote.jobCode}</span></td>
         <td>${quote.customer || '—'}</td>
         <td>${quote.project || '—'}</td>
         <td>${quote.date || '—'}</td>
-        <td><span class="status-pill ${statusClass}">${quote.status.toUpperCase()}</span></td>
+        <td><span class="status-pill ${statusClass}">${statusLabel}</span></td>
         <td style="text-align:right">${fmt(quoteTotal)}</td>
         <td>
           <button class="modal-btn" onclick="loadQuoteAndSwitchTab('${quote.id}')" style="padding: 4px 8px; font-size: 11px;">Load</button>
@@ -2226,9 +2237,9 @@ function renderDashboard() {
   });
 
   document.getElementById('dashboard-total-quoted').textContent = fmt(totalQuoted);
-  document.getElementById('dashboard-total-approved').textContent = fmt(totalApproved);
   document.getElementById('dashboard-total-contracted').textContent = fmt(totalContracted);
-  document.getElementById('dashboard-total-active').textContent = fmt(totalActive);
+  document.getElementById('dashboard-total-completed').textContent = fmt(totalCompleted);
+  document.getElementById('dashboard-total-lost').textContent = fmt(totalLost);
 }
 
 
@@ -2247,7 +2258,15 @@ function quoteGrandFromData(qd) {
 }
 function pipeStatus(q) {
   const s = String((q && q.status) || 'proposed').toLowerCase();
-  return s === 'contracted' ? 'contract' : s;
+  if (s === 'contracted' || s === 'contract') return 'contract';
+  if (s === 'approved') return 'proposed';
+  if (s === 'completed' || s === 'complete' || s === 'done') return 'completed';
+  if (s === 'lost') return 'lost';
+  return 'proposed';
+}
+function statusLabel(st) {
+  if (st === 'contract') return 'CONTRACTED';
+  return String(st || 'proposed').toUpperCase();
 }
 function pipeAr(qd, total) {
   const ar = (qd && qd.ar && typeof qd.ar === 'object') ? qd.ar : {};
@@ -2257,31 +2276,35 @@ function pipeAr(qd, total) {
   return { depositPaid: dep, progressPaid: mid, finalPaid: fin, open: Math.max(0, total - dep - mid - fin) };
 }
 function renderPipeline() {
-  const propEl = document.getElementById('pipe-proposed');
-  const conEl = document.getElementById('pipe-contract');
-  if (!propEl || !conEl) return;
-  propEl.innerHTML = '';
-  conEl.innerHTML = '';
+  const buckets = {
+    proposed: document.getElementById('pipe-proposed'),
+    contract: document.getElementById('pipe-contract'),
+    completed: document.getElementById('pipe-completed'),
+    lost: document.getElementById('pipe-lost')
+  };
+  if (!buckets.proposed || !buckets.contract) return;
+  Object.values(buckets).forEach(el => { if (el) el.innerHTML = ''; });
   const named = quotesIndex.filter(q => q.customer || q.project);
-  const proposed = named.filter(q => pipeStatus(q) !== 'contract');
-  const contracted = named.filter(q => pipeStatus(q) === 'contract');
-  const approved = named.filter(q => pipeStatus(q) === 'approved');
+  const groups = { proposed: [], contract: [], completed: [], lost: [] };
+  named.forEach(q => {
+    const st = pipeStatus(q);
+    (groups[st] || groups.proposed).push(q);
+  });
   const tot = (arr) => arr.reduce((s, q) => {
     const qd = quoteData[q.id] || q;
     return s + (q.total || quoteGrandFromData(qd) || 0);
   }, 0);
-  document.getElementById('pipe-kpi-prop').textContent = fmt(tot(proposed.filter(q => pipeStatus(q) === 'proposed')));
-  document.getElementById('pipe-kpi-appr').textContent = fmt(tot(approved));
-  document.getElementById('pipe-kpi-con').textContent = fmt(tot(contracted));
-  const openAr = contracted.reduce((s, q) => {
-    const qd = quoteData[q.id] || q;
-    const total = q.total || quoteGrandFromData(qd) || 0;
-    return s + pipeAr(qd, total).open;
-  }, 0);
-  document.getElementById('pipe-kpi-ar').textContent = fmt(openAr);
-  if (!proposed.length) propEl.innerHTML = '<div style="color:var(--muted);font-size:14px;padding:12px 0;">No named proposals in the cloud.</div>';
-  if (!contracted.length) conEl.innerHTML = '<div style="color:var(--muted);font-size:14px;padding:12px 0;">Nothing contracted in the cloud yet. Lock a quote with 5476 — it writes to the same pool everyone sees.</div>';
-  function card(q, contractedFlag) {
+  document.getElementById('pipe-kpi-prop').textContent = fmt(tot(groups.proposed));
+  document.getElementById('pipe-kpi-con').textContent = fmt(tot(groups.contract));
+  document.getElementById('pipe-kpi-done').textContent = fmt(tot(groups.completed));
+  document.getElementById('pipe-kpi-lost').textContent = fmt(tot(groups.lost));
+  const empty = {
+    proposed: 'No named proposals in the cloud.',
+    contract: 'Nothing contracted yet. On the quote, tap Contracted and enter 5476.',
+    completed: 'No completed jobs yet.',
+    lost: 'No lost quotes.'
+  };
+  function card(q, showAr) {
     const qd = quoteData[q.id] || q;
     const total = q.total || quoteGrandFromData(qd) || 0;
     const st = pipeStatus(qd);
@@ -2290,8 +2313,8 @@ function renderPipeline() {
     const ar = pipeAr(qd, total);
     wrap.innerHTML = '<div class="pipe-job-top"><strong>' + (q.customer || '—') + '</strong><span>' + fmt(total) + '</span></div>'
       + '<div style="font-size:13px;color:var(--muted);margin-top:4px;">' + (q.project || '—') + ' · ' + (q.jobCode || '') + '</div>'
-      + '<div style="margin-top:6px;"><span class="status-pill pill-' + st + '">' + st.toUpperCase() + '</span></div>';
-    if (contractedFlag) {
+      + '<div style="margin-top:6px;"><span class="status-pill pill-' + st + '">' + statusLabel(st) + '</span></div>';
+    if (showAr) {
       wrap.innerHTML += '<div class="ar-row"><span>50% deposit</span><input type="number" step="0.01" min="0" value="' + ar.depositPaid + '" onchange="pipeSaveAr(\'' + q.id + '\',\'depositPaid\',this.value)" /></div>'
         + '<div class="ar-row"><span>30% factory</span><input type="number" step="0.01" min="0" value="' + ar.progressPaid + '" onchange="pipeSaveAr(\'' + q.id + '\',\'progressPaid\',this.value)" /></div>'
         + '<div class="ar-row"><span>20% remainder</span><input type="number" step="0.01" min="0" value="' + ar.finalPaid + '" onchange="pipeSaveAr(\'' + q.id + '\',\'finalPaid\',this.value)" /></div>'
@@ -2305,8 +2328,15 @@ function renderPipeline() {
     wrap.appendChild(openBtn);
     return wrap;
   }
-  proposed.forEach(q => propEl.appendChild(card(q, false)));
-  contracted.forEach(q => conEl.appendChild(card(q, true)));
+  ['proposed','contract','completed','lost'].forEach(st => {
+    const el = buckets[st];
+    if (!el) return;
+    if (!groups[st].length) {
+      el.innerHTML = '<div style="color:var(--muted);font-size:14px;padding:12px 0;">' + empty[st] + '</div>';
+      return;
+    }
+    groups[st].forEach(q => el.appendChild(card(q, st === 'contract')));
+  });
 }
 function pipeSaveAr(id, field, value) {
   if (!quoteData[id]) quoteData[id] = {};
@@ -2935,17 +2965,18 @@ function parseAmount(id) {
 // ── STATUS ─────────────────────────────────────────────────────────
 function setStatus(s) {
   if (!activeQuoteId) return;
+  s = pipeStatus({ status: s });
   quoteData[activeQuoteId].status = s;
   const pill = document.getElementById('status-pill');
-  pill.textContent = s.toUpperCase();
+  pill.textContent = statusLabel(s);
   pill.className   = 'status-pill pill-' + s;
 
-  ['proposed','approved','contract'].forEach(k => {
+  ['proposed','contract','completed','lost'].forEach(k => {
     const b = document.getElementById('btn-' + k);
     if (b) b.classList.toggle('btn-active', k === s);
   });
 
-  const locked = s === 'contract';
+  const locked = s === 'contract' || s === 'completed';
   document.querySelectorAll('.tbl-input, .markup-select, .gna-select, .tax-input, #customer-name, #project-name, #install-address').forEach(el => {
     if (locked) el.classList.add('locked');
     else el.classList.remove('locked');
@@ -3019,12 +3050,12 @@ function switchTab(tab) {
   if (tab === 'quote') {
     recalc();
     // Ensure the current active quote's status is reflected in the main status bar
-    document.getElementById('status-pill').textContent = quoteData[activeQuoteId]?.status.toUpperCase() || 'PROPOSED';
-    document.getElementById('status-pill').className = 'status-pill pill-' + (quoteData[activeQuoteId]?.status || 'proposed');
-    // Also update the active status buttons
-    ['proposed','approved','contract'].forEach(k => {
+    const cur = pipeStatus(quoteData[activeQuoteId] || {});
+    document.getElementById('status-pill').textContent = statusLabel(cur);
+    document.getElementById('status-pill').className = 'status-pill pill-' + cur;
+    ['proposed','contract','completed','lost'].forEach(k => {
       const b = document.getElementById('btn-' + k);
-      if (b) b.classList.toggle('btn-active', k === (quoteData[activeQuoteId]?.status || 'proposed'));
+      if (b) b.classList.toggle('btn-active', k === cur);
     });
   }
   if (tab === 'invoice') buildInvoice();
@@ -3844,7 +3875,7 @@ function renderCpnl() {
       contractedRevenue += (q.total||0);
       jobsHtml += `<tr><td>${q.jobCode||'—'}</td><td>${q.customer||'—'}</td><td>${q.project||'—'}</td><td style="text-align:right">$${(q.total||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td></tr>`;
     } else if (q.status==='proposed') { proposedPipeline+=(q.total||0); proposedCabCost+=cc; }
-    else if (q.status==='approved')   { approvedPipeline+=(q.total||0); }
+    else if (q.status==='approved' || q.status==='completed') { approvedPipeline+=(q.total||0); }
   });
   const tb2 = document.getElementById('cpnl-contracted-jobs-tbody');
   if (tb2) tb2.innerHTML = jobsHtml || '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px;">No contracted jobs yet.</td></tr>';
