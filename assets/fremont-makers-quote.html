@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Quote Builder v0909e</title>
+<title>Fremont Makers — Quote Builder v0909f</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20260909e-status-radios-keep-four -->
+<!-- FM-BUILD-v20260909f-issue-contract-ar -->
 <script>
 (function(){
   try {
@@ -494,7 +494,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0909e</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0909f</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
     <span class="status-label">Status:</span>
@@ -505,6 +505,7 @@
       <label><input type="radio" name="fm-status" id="radio-completed" value="completed" onchange="onStatusRadio('completed')"> Completed</label>
       <label><input type="radio" name="fm-status" id="radio-lost" value="lost" onchange="onStatusRadio('lost')"> Lost</label>
     </div>
+    <button type="button" class="status-btn" id="btn-issue-contract" onclick="openIssueContract()" style="border-color:var(--accent);color:var(--accent);font-weight:700;">Issue Contract</button>
     <div class="status-btns" style="display:none">
       <button class="status-btn btn-active" id="btn-proposed" onclick="setStatus('proposed')">Proposed</button>
       <button class="status-btn btn-contract" id="btn-contract" onclick="requestContract()">Contracted</button>
@@ -1164,16 +1165,36 @@
   </div>
 </div>
 
-<!-- CONTRACT PASSWORD MODAL -->
+<!-- ISSUE CONTRACT MODAL -->
 <div class="modal-overlay" id="contract-modal">
-  <div class="modal">
-    <h3>🔐 Contract Lock</h3>
-    <p>Enter the contract password to lock this quote and generate the invoice.</p>
-    <input type="password" id="contract-pw" placeholder="••••" maxlength="10" onkeydown="if(event.key==='Enter') confirmContract()" />
+  <div class="modal" style="max-width:480px;text-align:left;">
+    <h3>Issue Contract</h3>
+    <p style="margin-bottom:12px;">This is what moves a quote from Proposed to Contracted. Set the install date. Deposits work backwards over 90 days: 50% today, 30% in 45 days, 20% at install. You can edit the dates. Password 5476 locks it.</p>
+    <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Install / delivery date</label>
+    <input type="date" id="issue-install" onchange="issueFillFromInstall()" style="width:100%;margin-bottom:12px;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+      <div>
+        <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">1st deposit 50% due</label>
+        <input type="date" id="issue-d1" style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />
+      </div>
+      <div>
+        <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">2nd deposit 30% due</label>
+        <input type="date" id="issue-d2" style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />
+      </div>
+      <div>
+        <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">3rd deposit 20% due</label>
+        <input type="date" id="issue-d3" style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />
+      </div>
+      <div>
+        <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Password</label>
+        <input type="password" id="contract-pw" placeholder="••••" maxlength="10" onkeydown="if(event.key==='Enter') confirmContract()" style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Opens the sales agreement after lock. Dollars stay on this quote.</p>
     <div class="modal-error" id="pw-error"></div>
     <div class="modal-btns">
       <button class="modal-btn" onclick="closeModal()">Cancel</button>
-      <button class="modal-btn confirm" onclick="confirmContract()">Confirm</button>
+      <button class="modal-btn confirm" onclick="confirmContract()">Issue and lock</button>
     </div>
   </div>
 </div>
@@ -2282,11 +2303,7 @@ function statusLabel(st) {
   return String(st || 'proposed').toUpperCase();
 }
 function pipeAr(qd, total) {
-  const ar = (qd && qd.ar && typeof qd.ar === 'object') ? qd.ar : {};
-  const dep = Number(ar.depositPaid) || 0;
-  const mid = Number(ar.progressPaid) || 0;
-  const fin = Number(ar.finalPaid) || 0;
-  return { depositPaid: dep, progressPaid: mid, finalPaid: fin, open: Math.max(0, total - dep - mid - fin) };
+  return scheduleOf(qd, total);
 }
 function renderPipeline() {
   const buckets = {
@@ -2313,7 +2330,7 @@ function renderPipeline() {
   document.getElementById('pipe-kpi-lost').textContent = fmt(tot(groups.lost));
   const empty = {
     proposed: 'No named proposals in the cloud.',
-    contract: 'Nothing contracted yet. On the quote, tap Contracted and enter 5476.',
+    contract: 'Nothing contracted yet. Issue Contract on a proposal: install date, 90-day deposits, password 5476.',
     completed: 'No completed jobs yet.',
     lost: 'No lost quotes.'
   };
@@ -2328,17 +2345,49 @@ function renderPipeline() {
       + '<div style="font-size:13px;color:var(--muted);margin-top:4px;">' + (q.project || '—') + ' · ' + (q.jobCode || '') + '</div>'
       + '<div style="margin-top:6px;"><span class="status-pill pill-' + st + '">' + statusLabel(st) + '</span></div>';
     if (showAr) {
-      wrap.innerHTML += '<div class="ar-row"><span>50% deposit</span><input type="number" step="0.01" min="0" value="' + ar.depositPaid + '" onchange="pipeSaveAr(\'' + q.id + '\',\'depositPaid\',this.value)" /></div>'
-        + '<div class="ar-row"><span>30% factory</span><input type="number" step="0.01" min="0" value="' + ar.progressPaid + '" onchange="pipeSaveAr(\'' + q.id + '\',\'progressPaid\',this.value)" /></div>'
-        + '<div class="ar-row"><span>20% remainder</span><input type="number" step="0.01" min="0" value="' + ar.finalPaid + '" onchange="pipeSaveAr(\'' + q.id + '\',\'finalPaid\',this.value)" /></div>'
-        + '<div style="font-size:13px;margin-top:6px;color:' + (ar.open <= 0.009 ? 'var(--green)' : 'var(--red)') + ';">' + (ar.open <= 0.009 ? 'Paid in full' : 'Open ' + fmt(ar.open)) + '</div>';
+      const rows = [
+        ['d1', '1st 50%', ar.d1Due, ar.d1Paid, total * 0.50],
+        ['d2', '2nd 30%', ar.d2Due, ar.d2Paid, total * 0.30],
+        ['d3', '3rd 20%', ar.d3Due, ar.d3Paid, total * 0.20]
+      ];
+      rows.forEach(r => {
+        wrap.innerHTML += '<div class="ar-row"><label><input type="checkbox" ' + (r[3] ? 'checked' : '') + ' onchange="pipeTogglePaid(\'' + q.id + '\',\'' + r[0] + '\',this.checked)" /> ' + r[1] + '</label><span>' + (r[2] || '—') + ' · ' + fmt(r[4]) + '</span></div>';
+      });
+      wrap.innerHTML += '<div style="font-size:13px;margin-top:6px;color:' + (ar.open <= 0.009 ? 'var(--green)' : 'var(--red)') + ';">' + (ar.open <= 0.009 ? 'Paid in full' : 'Open ' + fmt(ar.open)) + '</div>';
+      if (qd.installDate) wrap.innerHTML += '<div style="font-size:12px;color:var(--muted);margin-top:4px;">Install ' + qd.installDate + '</div>';
     }
+    const bar = document.createElement('div');
+    bar.style.display = 'flex';
+    bar.style.flexWrap = 'wrap';
+    bar.style.gap = '6px';
+    bar.style.marginTop = '10px';
     const openBtn = document.createElement('button');
     openBtn.className = 'status-btn';
-    openBtn.style.marginTop = '10px';
     openBtn.textContent = 'Open quote';
     openBtn.onclick = () => loadQuoteAndSwitchTab(q.id);
-    wrap.appendChild(openBtn);
+    bar.appendChild(openBtn);
+    if (st === 'proposed') {
+      const iss = document.createElement('button');
+      iss.className = 'status-btn';
+      iss.style.borderColor = 'var(--accent)';
+      iss.style.color = 'var(--accent)';
+      iss.textContent = 'Issue Contract';
+      iss.onclick = () => { loadQuote(q.id); openIssueContract(); };
+      bar.appendChild(iss);
+    }
+    if (st === 'contract') {
+      const con = document.createElement('button');
+      con.className = 'status-btn';
+      con.textContent = 'Open contract';
+      con.onclick = () => window.open(FM_SA_URL, '_blank');
+      bar.appendChild(con);
+      const done = document.createElement('button');
+      done.className = 'status-btn';
+      done.textContent = 'Completed';
+      done.onclick = () => { loadQuote(q.id); setStatus('completed'); renderPipeline(); };
+      bar.appendChild(done);
+    }
+    wrap.appendChild(bar);
     return wrap;
   }
   ['proposed','contract','completed','lost'].forEach(st => {
@@ -2351,10 +2400,10 @@ function renderPipeline() {
     groups[st].forEach(q => el.appendChild(card(q, st === 'contract')));
   });
 }
-function pipeSaveAr(id, field, value) {
+function pipeTogglePaid(id, which, paid) {
   if (!quoteData[id]) quoteData[id] = {};
-  if (!quoteData[id].ar || typeof quoteData[id].ar !== 'object') quoteData[id].ar = { depositPaid: 0, progressPaid: 0, finalPaid: 0 };
-  quoteData[id].ar[field] = Number(value) || 0;
+  if (!quoteData[id].ar || typeof quoteData[id].ar !== 'object') quoteData[id].ar = {};
+  quoteData[id].ar[which + 'Paid'] = !!paid;
   quoteData[id].saved_at = Date.now();
   saveQuoteData(id);
   fmCloudPushDebounced();
@@ -2416,6 +2465,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   _fmReady = true;
   hideOverlay();
+  syncIssueBtn();
 });
 
 function fmSetTheme(theme) {
@@ -2685,7 +2735,9 @@ function collectData() {
     bulkDiscPct: document.getElementById('bulk-discount-pct')?.value || '0',
     cabinets,
     labor,
-    reconciliationData: currentReconciliationData || quoteData[activeQuoteId].reconciliationData // Preserve existing if not updated by form
+    reconciliationData: currentReconciliationData || quoteData[activeQuoteId].reconciliationData,
+    ar: quoteData[activeQuoteId]?.ar || null,
+    installDate: quoteData[activeQuoteId]?.installDate || ''
   };
 }
 
@@ -3002,12 +3054,50 @@ function setStatus(s) {
   });
 
   saveLocal();
+  syncIssueBtn();
 }
 
-function requestContract() {
-  document.getElementById('contract-modal').classList.add('open');
-  setTimeout(() => document.getElementById('contract-pw').focus(), 50);
+const FM_SA_URL = 'https://offers.hotelstcloud.com/assets/fremont-makers-sales-agreement';
+
+function isoAddDays(iso, days) {
+  const d = new Date(iso + 'T12:00:00');
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
 }
+function issueFillFromInstall() {
+  const install = document.getElementById('issue-install').value;
+  if (!install) return;
+  const todayIso = today();
+  let d1 = isoAddDays(install, -90);
+  let d2 = isoAddDays(install, -45);
+  let d3 = install;
+  if (d1 < todayIso) d1 = todayIso;
+  if (d2 < todayIso) d2 = todayIso;
+  document.getElementById('issue-d1').value = d1;
+  document.getElementById('issue-d2').value = d2;
+  document.getElementById('issue-d3').value = d3;
+}
+function openIssueContract() {
+  const q = quoteData[activeQuoteId] || {};
+  const install = q.installDate || '';
+  document.getElementById('issue-install').value = install;
+  if (q.ar && q.ar.d1Due) {
+    document.getElementById('issue-d1').value = q.ar.d1Due || '';
+    document.getElementById('issue-d2').value = q.ar.d2Due || '';
+    document.getElementById('issue-d3').value = q.ar.d3Due || '';
+  } else if (install) {
+    issueFillFromInstall();
+  } else {
+    document.getElementById('issue-d1').value = today();
+    document.getElementById('issue-d2').value = isoAddDays(today(), 45);
+    document.getElementById('issue-d3').value = isoAddDays(today(), 90);
+  }
+  document.getElementById('pw-error').textContent = '';
+  document.getElementById('contract-pw').value = '';
+  document.getElementById('contract-modal').classList.add('open');
+  setTimeout(() => document.getElementById('issue-install').focus(), 50);
+}
+function requestContract() { openIssueContract(); }
 
 function onStatusRadio(s) {
   const cur = pipeStatus(quoteData[activeQuoteId] || {});
@@ -3015,27 +3105,66 @@ function onStatusRadio(s) {
   if (s === 'contract') {
     const r = document.getElementById('radio-' + cur);
     if (r) r.checked = true;
-    requestContract();
+    openIssueContract();
     return;
   }
   setStatus(s);
+  syncIssueBtn();
+}
+
+function syncIssueBtn() {
+  const btn = document.getElementById('btn-issue-contract');
+  if (!btn) return;
+  const st = pipeStatus(quoteData[activeQuoteId] || {});
+  btn.style.display = st === 'proposed' ? '' : 'none';
 }
 
 function confirmContract() {
   const pw = document.getElementById('contract-pw').value;
-  if (pw === CONTRACT_PW) {
-    closeModal();
-    setStatus('contract');
-    // Prompt backup whenever a quote is locked to contract
-    setTimeout(() => {
-      if (confirm('✅ Quote locked to CONTRACT.\n\nDownload a backup now to protect your data?\n(Recommended — browser storage can be cleared.)')) {
-        exportAllQuotes();
-      }
-    }, 300);
-  } else {
-    document.getElementById('pw-error').textContent = 'Incorrect password. Try again.';
-    document.getElementById('contract-pw').value = '';
+  const install = document.getElementById('issue-install').value;
+  const d1 = document.getElementById('issue-d1').value;
+  const d2 = document.getElementById('issue-d2').value;
+  const d3 = document.getElementById('issue-d3').value;
+  const err = document.getElementById('pw-error');
+  if (!install || !d1 || !d2 || !d3) {
+    err.textContent = 'Install date and all three deposit dates are required.';
+    return;
   }
+  if (pw !== CONTRACT_PW) {
+    err.textContent = 'Incorrect password. Try again.';
+    document.getElementById('contract-pw').value = '';
+    return;
+  }
+  if (!quoteData[activeQuoteId]) quoteData[activeQuoteId] = {};
+  const prev = quoteData[activeQuoteId].ar && typeof quoteData[activeQuoteId].ar === 'object' ? quoteData[activeQuoteId].ar : {};
+  quoteData[activeQuoteId].installDate = install;
+  quoteData[activeQuoteId].ar = {
+    d1Due: d1, d2Due: d2, d3Due: d3,
+    d1Paid: !!prev.d1Paid, d2Paid: !!prev.d2Paid, d3Paid: !!prev.d3Paid,
+    depositPaid: Number(prev.depositPaid) || 0,
+    progressPaid: Number(prev.progressPaid) || 0,
+    finalPaid: Number(prev.finalPaid) || 0
+  };
+  closeModal();
+  setStatus('contract');
+  syncIssueBtn();
+  window.open(FM_SA_URL, '_blank');
+}
+
+function nextDeposit(qd, total) {
+  const ar = scheduleOf(qd, total);
+  if (!ar.d1Paid) return { n: 1, label: '1st deposit 50%', due: ar.d1Due, amt: total * 0.50 };
+  if (!ar.d2Paid) return { n: 2, label: '2nd deposit 30%', due: ar.d2Due, amt: total * 0.30 };
+  if (!ar.d3Paid) return { n: 3, label: '3rd deposit 20%', due: ar.d3Due, amt: total * 0.20 };
+  return { n: 0, label: 'Paid in full', due: '', amt: 0 };
+}
+function scheduleOf(qd, total) {
+  const ar = (qd && qd.ar && typeof qd.ar === 'object') ? qd.ar : {};
+  return {
+    d1Due: ar.d1Due || '', d2Due: ar.d2Due || '', d3Due: ar.d3Due || '',
+    d1Paid: !!ar.d1Paid, d2Paid: !!ar.d2Paid, d3Paid: !!ar.d3Paid,
+    open: Math.max(0, total - (ar.d1Paid ? total*0.5 : 0) - (ar.d2Paid ? total*0.3 : 0) - (ar.d3Paid ? total*0.2 : 0))
+  };
 }
 
 function closeModal() {
@@ -3161,6 +3290,24 @@ function buildInvoice() {
   document.getElementById('inv-tax-label').textContent  = `Tax (${taxPct}%)`;
   document.getElementById('inv-t-tax').textContent      = fmt(tax);
   document.getElementById('inv-t-grand').textContent    = fmt(grand);
+  let dueEl = document.getElementById('inv-next-due');
+  if (!dueEl) {
+    dueEl = document.createElement('div');
+    dueEl.id = 'inv-next-due';
+    dueEl.style.cssText = 'margin-top:16px;padding:12px;border:1px solid #ddd;border-radius:8px;font-size:13px;';
+    const totals = document.querySelector('.inv-totals');
+    if (totals && totals.parentNode) totals.parentNode.insertBefore(dueEl, totals.nextSibling);
+  }
+  if (pipeStatus(currentQuoteData) === 'contract') {
+    const nxt = nextDeposit(currentQuoteData, grand);
+    dueEl.style.display = '';
+    dueEl.innerHTML = nxt.n
+      ? '<strong>This invoice:</strong> ' + nxt.label + ' · due ' + (nxt.due || '—') + ' · ' + fmt(nxt.amt)
+        + '<div style="margin-top:6px;color:#555;">Install ' + (currentQuoteData.installDate || '—') + '. Print Invoice uses the open quote that is contracted, and the next unpaid deposit on its 90-day schedule.</div>'
+      : '<strong>Paid in full.</strong>';
+  } else {
+    dueEl.style.display = 'none';
+  }
 }
 
 function buildPrintQuote() {
