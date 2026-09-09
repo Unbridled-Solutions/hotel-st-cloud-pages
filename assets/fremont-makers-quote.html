@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Quote Builder v0909g</title>
+<title>Fremont Makers — Quote Builder v0909h</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20260909g-status-column-dropdown -->
+<!-- FM-BUILD-v20260909h-contract-packet-ar -->
 <script>
 (function(){
   try {
@@ -482,6 +482,7 @@
     <button class="tab-btn" onclick="switchTab('companypnl')" data-tab="companypnl">📈 Company P&L</button>
     <button class="tab-btn" onclick="switchTab('balancesheet')" data-tab="balancesheet">📋 Balance Sheet</button>
     <button class="tab-btn" onclick="switchTab('pipeline')" data-tab="pipeline">📊 Pipeline</button>
+    <button class="tab-btn" onclick="switchTab('ar')" data-tab="ar">💵 Deposits Due</button>
     <div class="theme-toggle" title="Looks only — not saved to the cloud">
       <button type="button" id="theme-paper-btn" onclick="fmSetTheme('paper')">Paper</button>
       <button type="button" id="theme-dark-btn" onclick="fmSetTheme('dark')">Dark</button>
@@ -506,7 +507,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0909g</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0909h</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
     <span class="status-label">Status:</span>
@@ -635,6 +636,24 @@
         <div id="pipe-lost"></div>
       </div>
     </div>
+  </div>
+
+  <div id="ar-view" style="display:none;">
+    <p style="font-size:14px;color:var(--muted);margin-bottom:16px;line-height:1.5;">Rolling receivable on contracted jobs. 50 / 30 / 20. Check when received. Open packet to print or send the contract plus invoice.</p>
+    <div class="pipe-kpis">
+      <div class="pipe-kpi"><div class="lbl">Open receivable</div><div class="val" id="ar-open">$0.00</div></div>
+      <div class="pipe-kpi"><div class="lbl">Due in 90 days</div><div class="val" id="ar-window">$0.00</div></div>
+    </div>
+    <table class="quote-table">
+      <thead>
+        <tr>
+          <th>Customer</th><th>Project</th><th>Install</th>
+          <th>1st 50%</th><th>2nd 30%</th><th>3rd 20%</th>
+          <th style="text-align:right">Open</th><th></th>
+        </tr>
+      </thead>
+      <tbody id="ar-tbody"></tbody>
+    </table>
   </div>
 
   <!-- ── QUOTE TAB ── -->
@@ -1202,7 +1221,7 @@
         <input type="password" id="contract-pw" placeholder="••••" maxlength="10" onkeydown="if(event.key==='Enter') confirmContract()" style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />
       </div>
     </div>
-    <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Opens the sales agreement after lock. Dollars stay on this quote.</p>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Opens the contract packet: filled terms plus invoice and deposit schedule. Print, Word, or send for signature. Dollars stay on this quote.</p>
     <div class="modal-error" id="pw-error"></div>
     <div class="modal-btns">
       <button class="modal-btn" onclick="closeModal()">Cancel</button>
@@ -2396,7 +2415,7 @@ function renderPipeline() {
       const con = document.createElement('button');
       con.className = 'status-btn';
       con.textContent = 'Open contract';
-      con.onclick = () => window.open(FM_SA_URL, '_blank');
+      con.onclick = () => openContractPacket(q.id);
       bar.appendChild(con);
       const done = document.createElement('button');
       done.className = 'status-btn';
@@ -2425,6 +2444,59 @@ function pipeTogglePaid(id, which, paid) {
   saveQuoteData(id);
   fmCloudPushDebounced();
   renderPipeline();
+}
+
+
+function packetPayload(id) {
+  const q = quoteData[id] || {};
+  const total = quoteGrandFromData(q) || 0;
+  const ar = scheduleOf(q, total);
+  return {
+    id, customer: q.customer || '', project: q.project || '', jobCode: q.jobCode || '',
+    quoteDate: q.date || '', address: q.address || '', installDate: q.installDate || '',
+    total, d1Due: ar.d1Due, d2Due: ar.d2Due, d3Due: ar.d3Due,
+    d1Amt: total * 0.50, d2Amt: total * 0.30, d3Amt: total * 0.20
+  };
+}
+function openContractPacket(id) {
+  if (!id) id = activeQuoteId;
+  const payload = packetPayload(id);
+  const url = FM_PACKET_URL + '#' + encodeURIComponent(JSON.stringify(payload));
+  window.open(url, '_blank');
+}
+function renderAr() {
+  const tb = document.getElementById('ar-tbody');
+  if (!tb) return;
+  tb.innerHTML = '';
+  let open = 0;
+  const jobs = quotesIndex.filter(q => pipeStatus(q) === 'contract');
+  if (!jobs.length) {
+    tb.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px;">No contracted jobs yet. Issue Contract on a proposal.</td></tr>';
+    document.getElementById('ar-open').textContent = fmt(0);
+    document.getElementById('ar-window').textContent = fmt(0);
+    return;
+  }
+  jobs.forEach(row => {
+    const q = quoteData[row.id] || row;
+    const total = row.total || quoteGrandFromData(q) || 0;
+    const ar = scheduleOf(q, total);
+    open += ar.open;
+    const cell = (paid, due, amt) => paid
+      ? '<span style="color:var(--green)">Received</span>'
+      : (due || '—') + '<div style="font-size:11px;color:var(--muted)">' + fmt(amt) + '</div>';
+    tb.innerHTML += '<tr>'
+      + '<td>' + (q.customer || row.customer || '—') + '</td>'
+      + '<td>' + (q.project || row.project || '—') + '</td>'
+      + '<td>' + (q.installDate || '—') + '</td>'
+      + '<td>' + cell(ar.d1Paid, ar.d1Due, total*0.5) + '</td>'
+      + '<td>' + cell(ar.d2Paid, ar.d2Due, total*0.3) + '</td>'
+      + '<td>' + cell(ar.d3Paid, ar.d3Due, total*0.2) + '</td>'
+      + '<td style="text-align:right">' + fmt(ar.open) + '</td>'
+      + '<td><button class="status-btn" onclick="openContractPacket(\'' + row.id + '\')">Open packet</button></td>'
+      + '</tr>';
+  });
+  document.getElementById('ar-open').textContent = fmt(open);
+  document.getElementById('ar-window').textContent = fmt(open);
 }
 
 function loadQuoteAndSwitchTab(id) {
@@ -3075,6 +3147,7 @@ function setStatus(s) {
 }
 
 const FM_SA_URL = 'https://offers.hotelstcloud.com/assets/fremont-makers-sales-agreement';
+const FM_PACKET_URL = 'https://offers.hotelstcloud.com/assets/fremont-makers-contract-packet';
 
 function isoAddDays(iso, days) {
   const d = new Date(iso + 'T12:00:00');
@@ -3180,7 +3253,7 @@ function confirmContract() {
   closeModal();
   setStatus('contract');
   syncIssueBtn();
-  window.open(FM_SA_URL, '_blank');
+  openContractPacket(activeQuoteId);
 }
 
 function nextDeposit(qd, total) {
@@ -3219,6 +3292,8 @@ function switchTab(tab) {
   document.getElementById('dashboard-view').style.display = tab==='dashboard' ? '' : 'none';
   const pipeEl = document.getElementById('pipeline-view');
   if (pipeEl) pipeEl.style.display = tab==='pipeline' ? '' : 'none';
+  const arEl = document.getElementById('ar-view');
+  if (arEl) arEl.style.display = tab==='ar' ? '' : 'none';
   document.getElementById('quote-view').style.display   = tab==='quote'   ? '' : 'none';
   document.getElementById('invoice-view').style.display = tab==='invoice' ? 'block' : 'none';
   document.getElementById('print-quote-view').style.display = tab==='printquote' ? '' : 'none';
@@ -3236,6 +3311,7 @@ function switchTab(tab) {
 
   if (tab === 'dashboard') renderDashboard();
   if (tab === 'pipeline') renderPipeline();
+  if (tab === 'ar') renderAr();
   if (tab === 'quote') {
     recalc();
     // Ensure the current active quote's status is reflected in the main status bar

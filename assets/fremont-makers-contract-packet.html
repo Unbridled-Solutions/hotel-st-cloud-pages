@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Fremont Makers — Contract Packet</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Pinyon+Script&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root { --bg:#111; --paper:#1a1a1a; --text:#f0ece4; --muted:#888; --gold:#c9a84c; --line:#2a2a2a; --cream:#f0ece4; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Inter, system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 16px; line-height: 1.55; }
+    .bar { background:#0d0d0d; border-bottom:1px solid var(--line); padding:14px 22px; display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center; }
+    .bar strong { letter-spacing:.14em; text-transform:uppercase; font-size:12px; color:var(--gold); }
+    .actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .actions button, .actions a {
+      background:transparent; color:var(--gold); border:1px solid var(--line); border-radius:6px;
+      padding:8px 12px; font-size:13px; cursor:pointer; text-decoration:none; font-family:inherit;
+    }
+    .wrap { max-width:800px; margin:0 auto; padding:28px 20px 80px; }
+    h1 { font-family:'Playfair Display',Georgia,serif; font-size:28px; margin-bottom:6px; }
+    .tag { font-family:'Pinyon Script',cursive; color:var(--muted); font-size:18px; margin-bottom:18px; }
+    .disclaimer { border:1px solid rgba(201,168,76,.35); background:rgba(201,168,76,.08); border-radius:10px; padding:12px 14px; font-size:13px; color:var(--muted); margin-bottom:18px; }
+    .card { background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:18px 20px; margin-bottom:14px; }
+    h2 { font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); margin-bottom:10px; }
+    label { display:block; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin:10px 0 4px; }
+    input, textarea {
+      width:100%; background:#111; border:1px solid var(--line); color:var(--text);
+      border-radius:6px; padding:8px 10px; font-size:16px; font-family:inherit;
+    }
+    .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    table { width:100%; border-collapse:collapse; font-size:15px; }
+    th { text-align:left; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); padding:8px 4px; border-bottom:1px solid var(--line); }
+    td { padding:8px 4px; border-bottom:1px solid var(--line); }
+    td.r, th.r { text-align:right; }
+    .legal p { margin-bottom:10px; font-size:15px; }
+    .sig { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:12px; }
+    .sig-line { border-bottom:1px solid var(--line); padding-top:36px; font-size:12px; color:var(--muted); }
+    @media (max-width:700px) { .grid2, .sig { grid-template-columns:1fr; } }
+    @media print {
+      .bar { display:none; }
+      body { background:#fff; color:#111; }
+      .card, input, textarea { background:#fff; color:#111; border-color:#ccc; }
+      input, textarea { border:none; border-bottom:1px solid #999; border-radius:0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bar">
+    <strong>Fremont Makers · Contract packet</strong>
+    <div class="actions">
+      <button type="button" onclick="window.print()">Print</button>
+      <button type="button" onclick="downloadWord()">Download Word</button>
+      <button type="button" onclick="sendSign()">Send for signature</button>
+      <a href="https://offers.hotelstcloud.com/assets/fremont-makers-quote">Quote Builder</a>
+    </div>
+  </div>
+  <div class="wrap" id="pkt">
+    <h1>Customer contract packet</h1>
+    <div class="tag">making freedom</div>
+    <div class="disclaimer"><strong>Draft. Attorney review required.</strong> Terms are the Sep 2 Fremont Makers sales agreement Lindsay and Stan made. Dollars and dates come from the Quote and Invoice. Not for a customer until a Colorado attorney reviews it.</div>
+
+    <div class="card">
+      <h2>1. Parties and job</h2>
+      <div class="grid2">
+        <div>
+          <label>Buyer / builder</label>
+          <input id="f-customer" />
+        </div>
+        <div>
+          <label>Project</label>
+          <input id="f-project" />
+        </div>
+        <div>
+          <label>Job code</label>
+          <input id="f-job" />
+        </div>
+        <div>
+          <label>Quote date</label>
+          <input id="f-qdate" />
+        </div>
+        <div style="grid-column:1/-1">
+          <label>Install / site address</label>
+          <input id="f-address" />
+        </div>
+        <div>
+          <label>Install / delivery date</label>
+          <input id="f-install" />
+        </div>
+        <div>
+          <label>Invoice total</label>
+          <input id="f-total" />
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>2. Invoice and deposit schedule (attached to this contract)</h2>
+      <p style="font-size:14px;color:var(--muted);margin-bottom:10px;">50 / 30 / 20 of the invoice total. First deposit due when the contract issues. Second in 45 days. Third at install. Edit dates on the quote if they need to move.</p>
+      <table>
+        <thead><tr><th>Deposit</th><th>Due</th><th class="r">Amount</th></tr></thead>
+        <tbody>
+          <tr><td>1st · 50% to place the order</td><td id="t-d1">—</td><td class="r" id="a-d1">—</td></tr>
+          <tr><td>2nd · 30%</td><td id="t-d2">—</td><td class="r" id="a-d2">—</td></tr>
+          <tr><td>3rd · 20% at install</td><td id="t-d3">—</td><td class="r" id="a-d3">—</td></tr>
+          <tr><td><strong>Invoice total</strong></td><td></td><td class="r" id="a-tot">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card legal">
+      <h2>3. Terms (Sep 2 draft)</h2>
+      <p>Seller: Fremont Makers LLC, 719 Main Street, Cañon City, CO 81212. This Agreement plus the Quote and Invoice are the deal. Dollars live on the Invoice above.</p>
+      <p>Seller sells ready-to-assemble cabinets listed on the Quote. Unless the Quote says otherwise: no design professional services, no field measuring, no install, no plumbing, no electrical, no countertops, no appliances.</p>
+      <p>Seller is a reseller. Most items ship from US warehouses. Custom or out-of-stock may take longer because some product originates overseas. Lead times are estimates.</p>
+      <p>50% is due to place the order and is non-refundable once the factory order is placed, except as required by law. 30% when the order lands in Cañon City. 20% on pickup or delivery. Nothing leaves until paid in full.</p>
+      <p>Buyer owns measurements, quantities, layouts, and specs. Manufacturer elevations ship with the Quote. Buyer verifies them. Order from a bad elevation is Buyer cost.</p>
+      <p>Colorado law. Binding arbitration in Fremont County. This is a starting point. A Colorado attorney must review it before a customer signs.</p>
+    </div>
+
+    <div class="card">
+      <h2>4. Signatures</h2>
+      <div class="sig">
+        <div>
+          <div class="sig-line">Buyer signature / date</div>
+          <div style="margin-top:8px;font-size:13px;" id="sig-buyer">Buyer</div>
+        </div>
+        <div>
+          <div class="sig-line">Fremont Makers LLC / date</div>
+          <div style="margin-top:8px;font-size:13px;">Authorized representative</div>
+        </div>
+      </div>
+    </div>
+  </div>
+<script>
+function money(n) {
+  n = Number(n) || 0;
+  return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function load() {
+  let d = {};
+  try {
+    const h = (location.hash || '').replace(/^#/, '');
+    if (h) d = JSON.parse(decodeURIComponent(h));
+  } catch (e) {}
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
+  set('f-customer', d.customer);
+  set('f-project', d.project);
+  set('f-job', d.jobCode);
+  set('f-qdate', d.quoteDate);
+  set('f-address', d.address);
+  set('f-install', d.installDate);
+  set('f-total', money(d.total));
+  document.getElementById('t-d1').textContent = d.d1Due || '—';
+  document.getElementById('t-d2').textContent = d.d2Due || '—';
+  document.getElementById('t-d3').textContent = d.d3Due || '—';
+  document.getElementById('a-d1').textContent = money(d.d1Amt);
+  document.getElementById('a-d2').textContent = money(d.d2Amt);
+  document.getElementById('a-d3').textContent = money(d.d3Amt);
+  document.getElementById('a-tot').textContent = money(d.total);
+  document.getElementById('sig-buyer').textContent = d.customer || 'Buyer';
+  window._pkt = d;
+}
+function downloadWord() {
+  const html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"></head><body>' + document.getElementById('pkt').innerHTML + '</body></html>';
+  const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+  const a = document.createElement('a');
+  const job = (document.getElementById('f-job').value || 'FM').replace(/\s+/g, '-');
+  a.href = URL.createObjectURL(blob);
+  a.download = job + '-contract-packet.doc';
+  a.click();
+}
+function sendSign() {
+  const d = window._pkt || {};
+  const sub = encodeURIComponent('Fremont Makers contract · ' + (d.jobCode || '') + ' · ' + (d.customer || ''));
+  const body = encodeURIComponent(
+    'Please review and sign the Fremont Makers contract packet.\n\n' +
+    'Buyer: ' + (d.customer || '') + '\nProject: ' + (d.project || '') + '\nJob: ' + (d.jobCode || '') + '\nInvoice total: ' + money(d.total) + '\n' +
+    '1st 50% due ' + (d.d1Due || '') + ' · ' + money(d.d1Amt) + '\n' +
+    '2nd 30% due ' + (d.d2Due || '') + ' · ' + money(d.d2Amt) + '\n' +
+    '3rd 20% due ' + (d.d3Due || '') + ' · ' + money(d.d3Amt) + '\n\n' +
+    'Open the packet, print, or download Word:\n' + location.href + '\n\nDraft. Attorney review required before a customer signs.'
+  );
+  location.href = 'mailto:?subject=' + sub + '&body=' + body;
+}
+load();
+</script>
+</body>
+</html>
