@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Quote Builder v0909d</title>
+<title>Fremont Makers — Quote Builder v0909e</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20260909d-invoice-drop-flatpack-line -->
+<!-- FM-BUILD-v20260909e-status-radios-keep-four -->
 <script>
 (function(){
   try {
@@ -161,6 +161,14 @@
   .status-btn.btn-contract.btn-active { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
   .status-btn.btn-completed.btn-active { background: var(--green); color: var(--on-green); border-color: var(--green); }
   .status-btn.btn-lost.btn-active { background: var(--red); color: #fff; border-color: var(--red); }
+  .status-radios { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  .status-radios label {
+    display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text);
+    cursor: pointer; user-select: none; white-space: nowrap;
+  }
+  .status-radios input[type="radio"] {
+    accent-color: var(--accent); width: 16px; height: 16px; margin: 0; cursor: pointer;
+  }
 
   /* ── JOB INFO ── */
   .job-info {
@@ -486,14 +494,20 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0909d</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0909e</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
     <span class="status-label">Status:</span>
     <span class="status-pill pill-proposed" id="status-pill">PROPOSED</span>
-    <div class="status-btns">
+    <div class="status-radios" role="radiogroup" aria-label="Quote status">
+      <label><input type="radio" name="fm-status" id="radio-proposed" value="proposed" onchange="onStatusRadio('proposed')"> Proposed</label>
+      <label><input type="radio" name="fm-status" id="radio-contract" value="contract" onchange="onStatusRadio('contract')"> Contracted</label>
+      <label><input type="radio" name="fm-status" id="radio-completed" value="completed" onchange="onStatusRadio('completed')"> Completed</label>
+      <label><input type="radio" name="fm-status" id="radio-lost" value="lost" onchange="onStatusRadio('lost')"> Lost</label>
+    </div>
+    <div class="status-btns" style="display:none">
       <button class="status-btn btn-active" id="btn-proposed" onclick="setStatus('proposed')">Proposed</button>
-      <button class="status-btn btn-contract" id="btn-contract" onclick="requestContract()">Contracted &#x1F512;</button>
+      <button class="status-btn btn-contract" id="btn-contract" onclick="requestContract()">Contracted</button>
       <button class="status-btn btn-completed" id="btn-completed" onclick="setStatus('completed')">Completed</button>
       <button class="status-btn btn-lost" id="btn-lost" onclick="setStatus('lost')">Lost</button>
     </div>
@@ -2973,6 +2987,8 @@ function setStatus(s) {
   ['proposed','contract','completed','lost'].forEach(k => {
     const b = document.getElementById('btn-' + k);
     if (b) b.classList.toggle('btn-active', k === s);
+    const r = document.getElementById('radio-' + k);
+    if (r) r.checked = (k === s);
   });
 
   const locked = s === 'contract' || s === 'completed';
@@ -2991,6 +3007,18 @@ function setStatus(s) {
 function requestContract() {
   document.getElementById('contract-modal').classList.add('open');
   setTimeout(() => document.getElementById('contract-pw').focus(), 50);
+}
+
+function onStatusRadio(s) {
+  const cur = pipeStatus(quoteData[activeQuoteId] || {});
+  if (s === cur) return;
+  if (s === 'contract') {
+    const r = document.getElementById('radio-' + cur);
+    if (r) r.checked = true;
+    requestContract();
+    return;
+  }
+  setStatus(s);
 }
 
 function confirmContract() {
@@ -3055,6 +3083,8 @@ function switchTab(tab) {
     ['proposed','contract','completed','lost'].forEach(k => {
       const b = document.getElementById('btn-' + k);
       if (b) b.classList.toggle('btn-active', k === cur);
+      const r = document.getElementById('radio-' + k);
+      if (r) r.checked = (k === cur);
     });
   }
   if (tab === 'invoice') buildInvoice();
