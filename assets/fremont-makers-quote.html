@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Quote Builder v0909i</title>
+<title>Fremont Makers — Quote Builder v0909j</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20260909i-two-way-qty -->
+<!-- FM-BUILD-v20260909j-ar-12mo -->
 <script>
 (function(){
   try {
@@ -123,6 +123,15 @@
   .pipe-kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
   .pipe-kpi .lbl { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
   .pipe-kpi .val { font-size: 22px; font-weight: 700; margin-top: 4px; color: var(--accent); }
+  .ar-months { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin: 0 0 18px; }
+  @media (max-width: 1100px) { .ar-months { grid-template-columns: repeat(4, 1fr); } }
+  @media (max-width: 700px) { .ar-months { grid-template-columns: repeat(3, 1fr); } }
+  .ar-month { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; min-height: 72px; }
+  .ar-month .m { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .ar-month .v { font-size: 16px; font-weight: 700; margin-top: 4px; }
+  .ar-month.has { border-color: var(--accent); }
+  .ar-month.past { border-color: var(--red); }
+  .ar-month.past .v { color: var(--red); }
   .ar-row { display: grid; grid-template-columns: 110px 1fr; gap: 8px; align-items: center; margin-top: 6px; font-size: 13px; }
   .ar-row input { width: 100%; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); border-radius: 4px; padding: 4px 6px; text-align: right; }
   .tab-btn {
@@ -507,7 +516,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0909i</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0909j</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
     <span class="status-label">Status:</span>
@@ -643,11 +652,14 @@
   </div>
 
   <div id="ar-view" style="display:none;">
-    <p style="font-size:14px;color:var(--muted);margin-bottom:16px;line-height:1.5;">Rolling receivable on contracted jobs. 50 / 30 / 20. Check when received. Open packet to print or send the contract plus invoice.</p>
+    <p style="font-size:14px;color:var(--muted);margin-bottom:16px;line-height:1.5;">Open receivable on a rolling 12-month calendar. Each unpaid deposit lands in the month it is due. Past due sits left of this month. Check received on Pipeline. Open packet to print or send.</p>
     <div class="pipe-kpis">
       <div class="pipe-kpi"><div class="lbl">Open receivable</div><div class="val" id="ar-open">$0.00</div></div>
-      <div class="pipe-kpi"><div class="lbl">Due in 90 days</div><div class="val" id="ar-window">$0.00</div></div>
+      <div class="pipe-kpi"><div class="lbl">Past due</div><div class="val" id="ar-past">$0.00</div></div>
+      <div class="pipe-kpi"><div class="lbl">This month</div><div class="val" id="ar-this">$0.00</div></div>
+      <div class="pipe-kpi"><div class="lbl">Next 11 months</div><div class="val" id="ar-window">$0.00</div></div>
     </div>
+    <div class="ar-months" id="ar-months"></div>
     <table class="quote-table">
       <thead>
         <tr>
@@ -2481,16 +2493,38 @@ function openContractPacket(id) {
   const url = FM_PACKET_URL + '#' + encodeURIComponent(JSON.stringify(payload));
   window.open(url, '_blank');
 }
+function arMonthKey(due) {
+  const m = String(due || '').match(/^(\d{4})-(\d{2})/);
+  return m ? m[1] + '-' + m[2] : '';
+}
+function arRollingMonths() {
+  const now = new Date();
+  const months = [];
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    const lbl = d.toLocaleString('en-US', { month: 'short', year: '2-digit' });
+    months.push({ key, lbl, amt: 0 });
+  }
+  return months;
+}
 function renderAr() {
   const tb = document.getElementById('ar-tbody');
+  const grid = document.getElementById('ar-months');
   if (!tb) return;
   tb.innerHTML = '';
-  let open = 0;
+  const months = arRollingMonths();
+  const firstKey = months[0].key;
+  const lastKey = months[11].key;
+  let open = 0, past = 0, later = 0;
   const jobs = quotesIndex.filter(q => pipeStatus(q) === 'contract');
   if (!jobs.length) {
     tb.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px;">No contracted jobs yet. Issue Contract on a proposal.</td></tr>';
     document.getElementById('ar-open').textContent = fmt(0);
+    document.getElementById('ar-past').textContent = fmt(0);
+    document.getElementById('ar-this').textContent = fmt(0);
     document.getElementById('ar-window').textContent = fmt(0);
+    if (grid) grid.innerHTML = months.map(m => '<div class="ar-month"><div class="m">' + m.lbl + '</div><div class="v">' + fmt(0) + '</div></div>').join('');
     return;
   }
   jobs.forEach(row => {
@@ -2498,6 +2532,20 @@ function renderAr() {
     const total = contractTotalOf(q, quoteGrandFromData(q) || 0);
     const ar = scheduleOf(q, total);
     open += ar.open;
+    const bits = [
+      [ar.d1Paid, ar.d1Due, total * 0.5],
+      [ar.d2Paid, ar.d2Due, total * 0.3],
+      [ar.d3Paid, ar.d3Due, total * 0.2]
+    ];
+    bits.forEach(b => {
+      if (b[0] || !b[2]) return;
+      const key = arMonthKey(b[1]);
+      if (!key || key < firstKey) { past += b[2]; return; }
+      const slot = months.find(m => m.key === key);
+      if (slot) slot.amt += b[2];
+      else if (key > lastKey) later += b[2];
+      else past += b[2];
+    });
     const cell = (paid, due, amt) => paid
       ? '<span style="color:var(--green)">Received</span>'
       : (due || '—') + '<div style="font-size:11px;color:var(--muted)">' + fmt(amt) + '</div>';
@@ -2512,8 +2560,20 @@ function renderAr() {
       + '<td><button class="status-btn" onclick="openContractPacket(\'' + row.id + '\')">Open packet</button></td>'
       + '</tr>';
   });
+  const next11 = months.slice(1).reduce((s, m) => s + m.amt, 0) + later;
   document.getElementById('ar-open').textContent = fmt(open);
-  document.getElementById('ar-window').textContent = fmt(open);
+  document.getElementById('ar-past').textContent = fmt(past);
+  document.getElementById('ar-this').textContent = fmt(months[0].amt);
+  document.getElementById('ar-window').textContent = fmt(next11);
+  if (grid) {
+    let html = '<div class="ar-month past"><div class="m">Past due</div><div class="v">' + fmt(past) + '</div></div>';
+    html += months.map((m, i) => {
+      const cls = m.amt > 0.009 ? ' has' : '';
+      return '<div class="ar-month' + cls + '"><div class="m">' + (i === 0 ? 'This · ' : '') + m.lbl + '</div><div class="v">' + fmt(m.amt) + '</div></div>';
+    }).join('');
+    if (later > 0.009) html += '<div class="ar-month"><div class="m">After 12 mo</div><div class="v">' + fmt(later) + '</div></div>';
+    grid.innerHTML = html;
+  }
 }
 
 function loadQuoteAndSwitchTab(id) {
