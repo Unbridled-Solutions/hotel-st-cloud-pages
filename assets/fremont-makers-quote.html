@@ -1,30 +1,67 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="paper">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Quote Builder v0909a</title>
+<title>Fremont Makers — Quote Builder v0909b</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20260909a-gate-cloud-merge -->
+<!-- FM-BUILD-v20260909b-cloud-pool-theme-pipeline -->
+<script>
+(function(){
+  try {
+    var t = localStorage.getItem('fm-quote-theme');
+    if (t === 'dark' || t === 'paper') document.documentElement.setAttribute('data-theme', t);
+  } catch (e) {}
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Pinyon+Script&display=swap" rel="stylesheet" />
 <style>
-  :root {
-    --bg: #0e1117;
-    --surface: #161b25;
-    --surface2: #1e2535;
-    --border: #2a3347;
-    --accent: #e8a135;
-    --accent2: #c47f1a;
+  :root, html[data-theme="paper"] {
+    --bg: #f3efe6;
+    --surface: #fbf6f0;
+    --surface2: #efe9df;
+    --border: #ddd6c8;
+    --accent: #c4a46b;
+    --accent2: #a8883a;
+    --green: #2f7a4a;
+    --red: #c45c5c;
+    --blue: #1b2744;
+    --text: #1b2744;
+    --muted: #8a8378;
+    --input-bg: #ffffff;
+    --locked: #efe9df;
+    --on-accent: #ffffff;
+    --on-green: #ffffff;
+    --active-bg: #1b2744;
+    --active-fg: #ffffff;
+    --pill-proposed-bg: #e8e4dc;
+    --pill-approved-bg: #dce8e0;
+    --pill-contract-bg: #efe6d4;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+  }
+  html[data-theme="dark"] {
+    --bg: #111111;
+    --surface: #1a1a1a;
+    --surface2: #222222;
+    --border: #2a2a2a;
+    --accent: #c9a84c;
+    --accent2: #a8883a;
     --green: #3de8a0;
     --red: #e85050;
     --blue: #5a8ba7;
-    --text: #e8eaf0;
-    --muted: #7a8299;
-    --input-bg: #111621;
-    --locked: #0d1220;
-    font-family: 'Segoe UI', system-ui, sans-serif;
+    --text: #f0ece4;
+    --muted: #888888;
+    --input-bg: #141414;
+    --locked: #0d0d0d;
+    --on-accent: #111111;
+    --on-green: #111111;
+    --active-bg: #c9a84c;
+    --active-fg: #111111;
+    --pill-proposed-bg: #1a2a3a;
+    --pill-approved-bg: #1a2d1a;
+    --pill-contract-bg: #2d1a1a;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); min-height: 100vh; }
@@ -67,13 +104,30 @@
   }
 
   /* ── TABS ── */
-  .tabs { display: flex; gap: 8px; }
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .theme-toggle { display: flex; gap: 4px; margin-left: 8px; }
+  .theme-toggle button {
+    padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); font-size: 12px; cursor: pointer;
+  }
+  .theme-toggle button.on { background: var(--active-bg); color: var(--active-fg); border-color: var(--active-bg); font-weight: 700; }
+  .pipe-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 900px) { .pipe-grid { grid-template-columns: 1fr; } }
+  .pipe-col { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .pipe-job { border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 10px; background: var(--surface2); }
+  .pipe-job-top { display: flex; justify-content: space-between; gap: 10px; }
+  .pipe-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 0 0 18px; }
+  .pipe-kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .pipe-kpi .lbl { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .pipe-kpi .val { font-size: 22px; font-weight: 700; margin-top: 4px; color: var(--accent); }
+  .ar-row { display: grid; grid-template-columns: 110px 1fr; gap: 8px; align-items: center; margin-top: 6px; font-size: 13px; }
+  .ar-row input { width: 100%; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); border-radius: 4px; padding: 4px 6px; text-align: right; }
   .tab-btn {
     padding: 8px 18px; border-radius: 6px; border: 1px solid var(--border);
     background: transparent; color: var(--muted); font-size: 13px; cursor: pointer;
     transition: all .15s;
   }
-  .tab-btn.active { background: var(--accent); color: #0e1117; border-color: var(--accent); font-weight: 700; }
+  .tab-btn.active { background: var(--active-bg); color: var(--active-fg); border-color: var(--active-bg); font-weight: 700; }
   .tab-btn:not(.active):hover { border-color: var(--accent); color: var(--accent); }
 
   /* ── STATUS BAR ── */
@@ -88,9 +142,9 @@
     padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;
     letter-spacing: .04em; text-transform: uppercase;
   }
-  .pill-proposed { background: #1a2a3a; color: var(--blue); border: 1px solid var(--blue); }
-  .pill-approved  { background: #1a2d1a; color: var(--green); border: 1px solid var(--green); }
-  .pill-contract  { background: #2d1a1a; color: var(--accent); border: 1px solid var(--accent); }
+  .pill-proposed { background: var(--pill-proposed-bg); color: var(--blue); border: 1px solid var(--blue); }
+  .pill-approved  { background: var(--pill-approved-bg); color: var(--green); border: 1px solid var(--green); }
+  .pill-contract  { background: var(--pill-contract-bg); color: var(--accent); border: 1px solid var(--accent); }
 
   .status-btns { display: flex; gap: 8px; margin-left: auto; }
   .status-btn {
@@ -99,8 +153,8 @@
     transition: all .15s;
   }
   .status-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .status-btn.btn-active { background: var(--accent); color: #0e1117; border-color: var(--accent); font-weight: 700; }
-  .status-btn.btn-approved.btn-active { background: var(--green); color: #0e1117; border-color: var(--green); }
+  .status-btn.btn-active { background: var(--active-bg); color: var(--active-fg); border-color: var(--active-bg); font-weight: 700; }
+  .status-btn.btn-approved.btn-active { background: var(--green); color: var(--on-green); border-color: var(--green); }
   .status-btn.btn-contract.btn-active { background: var(--accent); }
 
   /* ── JOB INFO ── */
@@ -402,7 +456,11 @@
     <button class="tab-btn" onclick="switchTab('reconcile')" data-tab="reconcile">🔍 Reconcile</button>
     <button class="tab-btn" onclick="switchTab('companypnl')" data-tab="companypnl">📈 Company P&L</button>
     <button class="tab-btn" onclick="switchTab('balancesheet')" data-tab="balancesheet">📋 Balance Sheet</button>
-    <a class="tab-btn" href="https://offers.hotelstcloud.com/assets/fremont-makers-pipeline" style="text-decoration:none;display:inline-flex;align-items:center;">📊 Pipeline</a>
+    <button class="tab-btn" onclick="switchTab('pipeline')" data-tab="pipeline">📊 Proposed vs Contracted</button>
+    <div class="theme-toggle" title="Looks only — not saved to the cloud">
+      <button type="button" id="theme-paper-btn" onclick="fmSetTheme('paper')">Paper</button>
+      <button type="button" id="theme-dark-btn" onclick="fmSetTheme('dark')">Dark</button>
+    </div>
   </div>
 </div>
 
@@ -413,7 +471,6 @@
     <button class="status-btn" id="btn-save" style="font-size:0.8rem;" onclick="saveQuoteManual()">💾 Save</button>
     <button class="status-btn" style="font-size:0.8rem;" onclick="switchTab('dashboard')">📁 All Quotes</button>
     <button class="status-btn" style="font-size:0.8rem;border-color:#a78bfa;color:#a78bfa;" onclick="showImportModal()">📥 Import Supplier Quote</button>
-    <button class="status-btn" style="font-size:0.8rem;border-color:#3de8c8;color:#3de8c8;font-weight:700;" onclick="fmForceSync()" title="Clear local cache and reload all quotes from cloud">☁️ Sync from Cloud</button>
     <input type="file" id="restore-file-input" accept=".json" style="display:none" onchange="importBackupFile(event)" />
     <!-- Bulk markup setter -->
     <div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:10px;">
@@ -424,7 +481,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0909a</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0909b</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
     <span class="status-label">Status:</span>
@@ -477,7 +534,6 @@
         <div style="display:flex;gap:8px;flex-shrink:0;">
           <button class="add-line-btn" style="margin-top:0; border-style:solid; border-color:#3de8c8; color:#3de8c8;" onclick="seedAllModelQuotes()">🏗️ Generate All Model Quotes</button>
           <button class="add-line-btn" style="margin-top:0; border-style: solid;" onclick="newQuoteAndImport()">+ New Quote</button>
-          <button class="add-line-btn" style="margin-top:0; border-style:solid; border-color:#3de8c8; color:#3de8c8; font-weight:700;" onclick="fmForceSync()" id="dash-sync-btn">☁️ Sync from Cloud</button>
         </div>
       </div>
 
@@ -516,6 +572,27 @@
           <tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 20px;">No quotes yet. Click "+ New Quote" to start.</td></tr>
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- ── PIPELINE VIEW ── -->
+  <div id="pipeline-view" style="display:none;">
+    <p style="font-size:14px;color:var(--muted);margin-bottom:16px;line-height:1.5;">Same cloud pool as the quotes. Left is still a proposal. Right is contracted / working. 50 / 30 / 20 on contracted jobs. History is not deleted here.</p>
+    <div class="pipe-kpis">
+      <div class="pipe-kpi"><div class="lbl">Proposed</div><div class="val" id="pipe-kpi-prop">$0.00</div></div>
+      <div class="pipe-kpi"><div class="lbl">Approved</div><div class="val" id="pipe-kpi-appr">$0.00</div></div>
+      <div class="pipe-kpi"><div class="lbl">Contracted</div><div class="val" id="pipe-kpi-con">$0.00</div></div>
+      <div class="pipe-kpi"><div class="lbl">Open receivable</div><div class="val" id="pipe-kpi-ar">$0.00</div></div>
+    </div>
+    <div class="pipe-grid">
+      <div class="pipe-col">
+        <h3 style="font-family:'Playfair Display',Georgia,serif;margin-bottom:12px;">Still a proposal</h3>
+        <div id="pipe-proposed"></div>
+      </div>
+      <div class="pipe-col">
+        <h3 style="font-family:'Playfair Display',Georgia,serif;margin-bottom:12px;">Working — contracted</h3>
+        <div id="pipe-contract"></div>
+      </div>
     </div>
   </div>
 
@@ -1162,68 +1239,22 @@ function fmIndexFromQuote(q, fallback) {
 
 async function fmCloudPull() {
   try {
-    const res = await fetch(FM_CLOUD_URL);
+    const res = await fetch(FM_CLOUD_URL, { cache: 'no-store' });
     if (!res.ok) return;
     const { data } = await res.json();
     if (!data || typeof data !== 'object' || Object.keys(data).length === 0) return;
 
-    // Union cloud + this browser. Never drop a quote that exists on either side.
-    // Contract / approved beats proposed. Newer saved_at beats older.
-    const localIdx = fmParseMaybe(localStorage.getItem('fm-quotes-index')) || [];
-    const cloudIdx = Array.isArray(data['fm-quotes-index'])
-      ? data['fm-quotes-index']
-      : (fmParseMaybe(data['fm-quotes-index']) || []);
-    const byId = {};
-    localIdx.concat(cloudIdx).forEach(row => {
-      if (!row || !row.id) return;
-      const kvKey = 'fm-quote-' + row.id;
-      const localQ = fmParseMaybe(localStorage.getItem(kvKey));
-      const cloudQ = fmParseMaybe(data[kvKey]);
-      const body = fmMergeQuoteBodies(localQ, cloudQ) || localQ || cloudQ || {};
-      if (!body.id) body.id = row.id;
-      byId[row.id] = fmIndexFromQuote(body, { ...row, ...byId[row.id] });
-      data[kvKey] = body;
-    });
-    // Quote bodies that exist without an index row (named orphans stay in KV, not deleted)
-    Object.keys(data).forEach(k => {
-      if (!k.startsWith('fm-quote-') || k === 'fm-quotes-index') return;
-      const id = k.replace('fm-quote-', '');
-      if (byId[id]) return;
-      const body = fmParseMaybe(data[k]) || {};
-      if (body.customer || body.project || (body.cabinets || []).length) {
-        if (!body.id) body.id = id;
-        byId[id] = fmIndexFromQuote(body, { id });
-      }
-    });
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (!k || !k.startsWith('fm-quote-') || k === 'fm-quotes-index') continue;
-      const id = k.replace('fm-quote-', '');
-      if (byId[id]) continue;
-      const body = fmParseMaybe(localStorage.getItem(k));
-      if (body && (body.customer || body.project || (body.cabinets || []).length)) {
-        if (!body.id) body.id = id;
-        byId[id] = fmIndexFromQuote(body, { id });
-        data[k] = body;
-      }
-    }
-    data['fm-quotes-index'] = Object.values(byId);
+    // Cloud pool is the only source of truth. localStorage is a write-through cache.
     _kvData = data;
     _fmPullOk = true;
 
     Object.entries(data).forEach(([k, v]) => {
       try {
         const incoming = typeof v === 'string' ? v : JSON.stringify(v);
-        if (k === 'fm-company-pnl') {
-          try {
-            const obj = typeof v === 'object' ? v : JSON.parse(v);
-            if (!Object.values(obj).some(val => parseFloat(val) !== 0)) return;
-          } catch(e) {}
-        }
         localStorage.setItem(k, incoming);
       } catch(e) {}
     });
-  } catch(e) { /* offline — will fall back to localStorage */ }
+  } catch(e) { /* offline — will fall back to localStorage cache */ }
 
   // Populate sqArchive — prefer _kvData, fall back to localStorage
   try {
@@ -1239,39 +1270,31 @@ async function fmCloudPull() {
         try { _cpnlMonthData[ym] = typeof _kvData[k] === 'object' ? _kvData[k] : JSON.parse(_kvData[k]); } catch(e) {}
       }
     });
-    // Fallback: also scan localStorage for any months not in KV
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k && k.startsWith('fm-cpnl-') && !_kvData[k]) {
-        const ym = k.replace('fm-cpnl-', '');
-        try { _cpnlMonthData[ym] = JSON.parse(localStorage.getItem(k)); } catch(e) {}
-      }
-    }
   } catch(e) {}
 }
 
 async function fmCloudPush() {
   if (!_fmReady) return; // safety — never push during init
   try {
-    // Start with current KV state so we never lose quotes this browser doesn't have locally
-    const kvRes = await fetch(FM_CLOUD_URL);
+    const kvRes = await fetch(FM_CLOUD_URL, { cache: 'no-store' });
     const kvData = kvRes.ok ? ((await kvRes.json()).data || {}) : {};
-
-    // Overlay local data on top of KV — local wins for keys it has, KV preserved for the rest
+    // Start from live cloud so we never drop quotes another person saved.
     const bundle = { ...kvData };
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (FM_CLOUD_PREFIXES.some(p => k.startsWith(p))) {
-        const raw = localStorage.getItem(k);
-        try { bundle[k] = JSON.parse(raw); } catch(e) { bundle[k] = raw; }
-      }
-    }
+    bundle['fm-quotes-index'] = quotesIndex;
+    if (activeQuoteId) bundle['fm-active-quote'] = activeQuoteId;
+    Object.keys(quoteData).forEach(id => {
+      bundle['fm-quote-' + id] = quoteData[id];
+    });
+    Object.keys(_kvData).forEach(k => {
+      if (k.startsWith('fm-cpnl-') || k === 'fm-balance-sheet' || k === 'fm-sq-archive') bundle[k] = _kvData[k];
+    });
+    if (sqArchive) bundle['fm-sq-archive'] = sqArchive;
     await fetch(FM_CLOUD_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(bundle),
     });
-  } catch(e) { /* offline — data safe in localStorage */ }
+  } catch(e) { /* offline — cache still on this device */ }
 }
 // ── END CLOUD SYNC ─────────────────────────────────────────────────
 
@@ -2084,14 +2107,14 @@ async function fmForceSync() {
 
     syncBtns.forEach(b => { b.textContent = '✅ Synced!'; b.style.color = '#4ade80'; b.style.borderColor = '#4ade80'; });
     setTimeout(() => {
-      syncBtns.forEach(b => { b.textContent = '☁️ Sync from Cloud'; b.style.color = ''; b.style.borderColor = ''; b.disabled = false; });
+      syncBtns.forEach(b => { b.textContent = 'Cloud'; b.style.color = ''; b.style.borderColor = ''; b.disabled = false; });
     }, 2500);
 
   } catch(e) {
     console.error('fmForceSync error:', e);
     syncBtns.forEach(b => { b.textContent = '❌ Sync Failed'; b.style.color = '#f87171'; b.style.borderColor = '#f87171'; });
     setTimeout(() => {
-      syncBtns.forEach(b => { b.textContent = '☁️ Sync from Cloud'; b.style.color = ''; b.style.borderColor = ''; b.disabled = false; });
+      syncBtns.forEach(b => { b.textContent = 'Cloud'; b.style.color = ''; b.style.borderColor = ''; b.disabled = false; });
     }, 3000);
     alert('Sync failed: ' + e.message + '\nTry refreshing the page manually.');
   }
@@ -2208,6 +2231,93 @@ function renderDashboard() {
   document.getElementById('dashboard-total-active').textContent = fmt(totalActive);
 }
 
+
+function quoteGrandFromData(qd) {
+  if (!qd) return 0;
+  const cabSell = (qd.cabinets || []).reduce((s, c) => s + (parseFloat(c.qty)||0) * (parseFloat(c.cost)||0) * (1 + (parseFloat(c.markup)||0)/100), 0);
+  const cabNet  = (qd.cabinets || []).reduce((s, c) => s + (parseFloat(c.qty)||0) * (parseFloat(c.cost)||0), 0);
+  const laborCost = (qd.labor || []).reduce((s, l) => s + (parseFloat(l.rate)||0) * (parseFloat(l.hours)||0), 0);
+  const gnaPct = parseFloat(qd.gnaPct) || 0;
+  const taxPct = parseFloat(qd.taxPct) || 0;
+  const bulkDisc = parseFloat(qd.bulkDiscPct) || 0;
+  const cabAfterDisc = cabSell - cabNet * bulkDisc/100;
+  const tax = cabAfterDisc * taxPct / 100;
+  const gna = (cabAfterDisc + laborCost) * gnaPct / 100;
+  return cabAfterDisc + laborCost + gna + tax;
+}
+function pipeStatus(q) {
+  const s = String((q && q.status) || 'proposed').toLowerCase();
+  return s === 'contracted' ? 'contract' : s;
+}
+function pipeAr(qd, total) {
+  const ar = (qd && qd.ar && typeof qd.ar === 'object') ? qd.ar : {};
+  const dep = Number(ar.depositPaid) || 0;
+  const mid = Number(ar.progressPaid) || 0;
+  const fin = Number(ar.finalPaid) || 0;
+  return { depositPaid: dep, progressPaid: mid, finalPaid: fin, open: Math.max(0, total - dep - mid - fin) };
+}
+function renderPipeline() {
+  const propEl = document.getElementById('pipe-proposed');
+  const conEl = document.getElementById('pipe-contract');
+  if (!propEl || !conEl) return;
+  propEl.innerHTML = '';
+  conEl.innerHTML = '';
+  const named = quotesIndex.filter(q => q.customer || q.project);
+  const proposed = named.filter(q => pipeStatus(q) !== 'contract');
+  const contracted = named.filter(q => pipeStatus(q) === 'contract');
+  const approved = named.filter(q => pipeStatus(q) === 'approved');
+  const tot = (arr) => arr.reduce((s, q) => {
+    const qd = quoteData[q.id] || q;
+    return s + (q.total || quoteGrandFromData(qd) || 0);
+  }, 0);
+  document.getElementById('pipe-kpi-prop').textContent = fmt(tot(proposed.filter(q => pipeStatus(q) === 'proposed')));
+  document.getElementById('pipe-kpi-appr').textContent = fmt(tot(approved));
+  document.getElementById('pipe-kpi-con').textContent = fmt(tot(contracted));
+  const openAr = contracted.reduce((s, q) => {
+    const qd = quoteData[q.id] || q;
+    const total = q.total || quoteGrandFromData(qd) || 0;
+    return s + pipeAr(qd, total).open;
+  }, 0);
+  document.getElementById('pipe-kpi-ar').textContent = fmt(openAr);
+  if (!proposed.length) propEl.innerHTML = '<div style="color:var(--muted);font-size:14px;padding:12px 0;">No named proposals in the cloud.</div>';
+  if (!contracted.length) conEl.innerHTML = '<div style="color:var(--muted);font-size:14px;padding:12px 0;">Nothing contracted in the cloud yet. Lock a quote with 5476 — it writes to the same pool everyone sees.</div>';
+  function card(q, contractedFlag) {
+    const qd = quoteData[q.id] || q;
+    const total = q.total || quoteGrandFromData(qd) || 0;
+    const st = pipeStatus(qd);
+    const wrap = document.createElement('div');
+    wrap.className = 'pipe-job';
+    const ar = pipeAr(qd, total);
+    wrap.innerHTML = '<div class="pipe-job-top"><strong>' + (q.customer || '—') + '</strong><span>' + fmt(total) + '</span></div>'
+      + '<div style="font-size:13px;color:var(--muted);margin-top:4px;">' + (q.project || '—') + ' · ' + (q.jobCode || '') + '</div>'
+      + '<div style="margin-top:6px;"><span class="status-pill pill-' + st + '">' + st.toUpperCase() + '</span></div>';
+    if (contractedFlag) {
+      wrap.innerHTML += '<div class="ar-row"><span>50% deposit</span><input type="number" step="0.01" min="0" value="' + ar.depositPaid + '" onchange="pipeSaveAr(\'' + q.id + '\',\'depositPaid\',this.value)" /></div>'
+        + '<div class="ar-row"><span>30% factory</span><input type="number" step="0.01" min="0" value="' + ar.progressPaid + '" onchange="pipeSaveAr(\'' + q.id + '\',\'progressPaid\',this.value)" /></div>'
+        + '<div class="ar-row"><span>20% remainder</span><input type="number" step="0.01" min="0" value="' + ar.finalPaid + '" onchange="pipeSaveAr(\'' + q.id + '\',\'finalPaid\',this.value)" /></div>'
+        + '<div style="font-size:13px;margin-top:6px;color:' + (ar.open <= 0.009 ? 'var(--green)' : 'var(--red)') + ';">' + (ar.open <= 0.009 ? 'Paid in full' : 'Open ' + fmt(ar.open)) + '</div>';
+    }
+    const openBtn = document.createElement('button');
+    openBtn.className = 'status-btn';
+    openBtn.style.marginTop = '10px';
+    openBtn.textContent = 'Open quote';
+    openBtn.onclick = () => loadQuoteAndSwitchTab(q.id);
+    wrap.appendChild(openBtn);
+    return wrap;
+  }
+  proposed.forEach(q => propEl.appendChild(card(q, false)));
+  contracted.forEach(q => conEl.appendChild(card(q, true)));
+}
+function pipeSaveAr(id, field, value) {
+  if (!quoteData[id]) quoteData[id] = {};
+  if (!quoteData[id].ar || typeof quoteData[id].ar !== 'object') quoteData[id].ar = { depositPaid: 0, progressPaid: 0, finalPaid: 0 };
+  quoteData[id].ar[field] = Number(value) || 0;
+  quoteData[id].saved_at = Date.now();
+  saveQuoteData(id);
+  fmCloudPushDebounced();
+  renderPipeline();
+}
+
 function loadQuoteAndSwitchTab(id) {
   loadQuote(id);
   switchTab('quote');
@@ -2215,6 +2325,7 @@ function loadQuoteAndSwitchTab(id) {
 
 // ── INIT ───────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
+  fmSyncThemeToggle();
   // Show loading overlay while we fetch from cloud
   const overlay = document.getElementById('fm-loading-overlay');
   if (overlay) overlay.style.display = 'flex';
@@ -2262,11 +2373,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   _fmReady = true;
   hideOverlay();
-
-  // Upload anything this browser had that the cloud was missing (Lindsay's contract, etc.).
-  // Only after a successful pull, so a timeout cannot shrink KV. Merge-push, never a partial POST.
-  if (_fmPullOk) { try { fmCloudPush(); } catch(e) {} }
 });
+
+function fmSetTheme(theme) {
+  const t = theme === 'dark' ? 'dark' : 'paper';
+  document.documentElement.setAttribute('data-theme', t);
+  try { localStorage.setItem('fm-quote-theme', t); } catch (e) {}
+  fmSyncThemeToggle();
+}
+function fmSyncThemeToggle() {
+  let t = 'paper';
+  try { t = localStorage.getItem('fm-quote-theme') || document.documentElement.getAttribute('data-theme') || 'paper'; } catch (e) {}
+  if (t !== 'dark' && t !== 'paper') t = 'paper';
+  document.documentElement.setAttribute('data-theme', t);
+  const paperBtn = document.getElementById('theme-paper-btn');
+  const darkBtn = document.getElementById('theme-dark-btn');
+  if (paperBtn) paperBtn.classList.toggle('on', t === 'paper');
+  if (darkBtn) darkBtn.classList.toggle('on', t === 'dark');
+}
 
 const FM_GATE_PW = 'FM080126';
 function fmGateOk() {
@@ -2873,6 +2997,8 @@ function switchTab(tab) {
   });
 
   document.getElementById('dashboard-view').style.display = tab==='dashboard' ? '' : 'none';
+  const pipeEl = document.getElementById('pipeline-view');
+  if (pipeEl) pipeEl.style.display = tab==='pipeline' ? '' : 'none';
   document.getElementById('quote-view').style.display   = tab==='quote'   ? '' : 'none';
   document.getElementById('invoice-view').style.display = tab==='invoice' ? 'block' : 'none';
   document.getElementById('print-quote-view').style.display = tab==='printquote' ? '' : 'none';
@@ -2889,6 +3015,7 @@ function switchTab(tab) {
   if (jobInfo)   jobInfo.style.display   = showQuoteChrome ? '' : 'none';
 
   if (tab === 'dashboard') renderDashboard();
+  if (tab === 'pipeline') renderPipeline();
   if (tab === 'quote') {
     recalc();
     // Ensure the current active quote's status is reflected in the main status bar
