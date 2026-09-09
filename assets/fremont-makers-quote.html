@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Quote Builder v0824e</title>
-<!-- FM-BUILD-v20260824e-gna-before-tax -->
+<title>Fremont Makers — Quote Builder v0909a</title>
+<meta name="robots" content="noindex, nofollow">
+<!-- FM-BUILD-v20260909a-gate-cloud-merge -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Pinyon+Script&display=swap" rel="stylesheet" />
@@ -358,6 +359,20 @@
 </head>
 <body>
 
+<!-- Front-door gate — session only, password is not stored in KV -->
+<div id="fm-gate" style="display:flex;position:fixed;inset:0;background:#0e1117;z-index:10050;align-items:center;justify-content:center;">
+  <div style="width:min(420px,92vw);background:#161b25;border:1px solid #2a3347;border-radius:12px;padding:36px 32px;text-align:center;">
+    <div style="font-family:'Playfair Display',Georgia,serif;font-size:22px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;color:#e8eaf0;">Fremont Makers</div>
+    <div style="font-family:'Pinyon Script',cursive;font-size:18px;color:#7a8299;margin-bottom:22px;">making freedom</div>
+    <div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#7a8299;margin-bottom:16px;">Team door</div>
+    <input id="fm-gate-pw" type="password" placeholder="Password" autocomplete="off"
+      style="width:100%;padding:12px 14px;background:#111621;border:1px solid #2a3347;border-radius:8px;color:#e8eaf0;font-size:16px;text-align:center;"
+      onkeydown="if(event.key==='Enter') fmGateTry()" />
+    <div id="fm-gate-err" style="min-height:18px;margin:10px 0;font-size:13px;color:#e85050;"></div>
+    <button type="button" onclick="fmGateTry()" style="width:100%;padding:12px;background:#e8a135;color:#0e1117;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;">Enter</button>
+  </div>
+</div>
+
 <!-- Loading overlay — shown while KV cloud fetch completes -->
 <div id="fm-loading-overlay" style="display:flex;position:fixed;inset:0;background:#12161b;z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:16px;">
   <div style="width:48px;height:48px;border:4px solid #2a3140;border-top-color:#3de8c8;border-radius:50%;animation:fm-spin 0.8s linear infinite;"></div>
@@ -387,6 +402,7 @@
     <button class="tab-btn" onclick="switchTab('reconcile')" data-tab="reconcile">🔍 Reconcile</button>
     <button class="tab-btn" onclick="switchTab('companypnl')" data-tab="companypnl">📈 Company P&L</button>
     <button class="tab-btn" onclick="switchTab('balancesheet')" data-tab="balancesheet">📋 Balance Sheet</button>
+    <a class="tab-btn" href="https://offers.hotelstcloud.com/assets/fremont-makers-pipeline" style="text-decoration:none;display:inline-flex;align-items:center;">📊 Pipeline</a>
   </div>
 </div>
 
@@ -408,7 +424,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0824e</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0909a</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
     <span class="status-label">Status:</span>
@@ -1076,6 +1092,7 @@ let sqArchive = [];
 let _bsUnlocked = false;
 let _cpnlUnlocked = false;
 let _kvData = {}; // in-memory KV snapshot — cloud-first source of truth
+let _fmPullOk = false; // true only after a successful cloud pull this load
 
 // Debounced push — coalesces rapid saves into one network call
 let _fmPushTimer = null;
@@ -1108,6 +1125,41 @@ async function fmCloudPullForce() {
   } catch(e) {}
 }
 
+function fmParseMaybe(v) {
+  if (v == null || v === '') return null;
+  if (typeof v === 'object') return v;
+  try { return JSON.parse(v); } catch(e) { return null; }
+}
+function fmStatusRank(s) {
+  s = String(s || 'proposed').toLowerCase();
+  if (s === 'contract' || s === 'contracted') return 3;
+  if (s === 'approved') return 2;
+  return 1;
+}
+function fmMergeQuoteBodies(a, b) {
+  if (!a) return b;
+  if (!b) return a;
+  const ra = fmStatusRank(a.status), rb = fmStatusRank(b.status);
+  if (ra !== rb) return ra > rb ? a : b;
+  const sa = a.saved_at || 0, sb = b.saved_at || 0;
+  if (sa !== sb) return sa > sb ? a : b;
+  const ca = (a.cabinets || []).length, cb = (b.cabinets || []).length;
+  return ca >= cb ? a : b;
+}
+function fmIndexFromQuote(q, fallback) {
+  const src = q || fallback || {};
+  return {
+    id: src.id || (fallback && fallback.id) || '',
+    jobCode: src.jobCode || (fallback && fallback.jobCode) || '',
+    customer: src.customer || (fallback && fallback.customer) || '',
+    project: src.project || (fallback && fallback.project) || '',
+    date: src.date || (fallback && fallback.date) || '',
+    status: src.status || (fallback && fallback.status) || 'proposed',
+    total: (fallback && fallback.total) || src.total || 0,
+    createdAt: src.createdAt || (fallback && fallback.createdAt) || 0
+  };
+}
+
 async function fmCloudPull() {
   try {
     const res = await fetch(FM_CLOUD_URL);
@@ -1115,37 +1167,53 @@ async function fmCloudPull() {
     const { data } = await res.json();
     if (!data || typeof data !== 'object' || Object.keys(data).length === 0) return;
 
-    // ── Store in-memory snapshot (cloud-first source of truth) ──
+    // Union cloud + this browser. Never drop a quote that exists on either side.
+    // Contract / approved beats proposed. Newer saved_at beats older.
+    const localIdx = fmParseMaybe(localStorage.getItem('fm-quotes-index')) || [];
+    const cloudIdx = Array.isArray(data['fm-quotes-index'])
+      ? data['fm-quotes-index']
+      : (fmParseMaybe(data['fm-quotes-index']) || []);
+    const byId = {};
+    localIdx.concat(cloudIdx).forEach(row => {
+      if (!row || !row.id) return;
+      const kvKey = 'fm-quote-' + row.id;
+      const localQ = fmParseMaybe(localStorage.getItem(kvKey));
+      const cloudQ = fmParseMaybe(data[kvKey]);
+      const body = fmMergeQuoteBodies(localQ, cloudQ) || localQ || cloudQ || {};
+      if (!body.id) body.id = row.id;
+      byId[row.id] = fmIndexFromQuote(body, { ...row, ...byId[row.id] });
+      data[kvKey] = body;
+    });
+    // Quote bodies that exist without an index row (named orphans stay in KV, not deleted)
+    Object.keys(data).forEach(k => {
+      if (!k.startsWith('fm-quote-') || k === 'fm-quotes-index') return;
+      const id = k.replace('fm-quote-', '');
+      if (byId[id]) return;
+      const body = fmParseMaybe(data[k]) || {};
+      if (body.customer || body.project || (body.cabinets || []).length) {
+        if (!body.id) body.id = id;
+        byId[id] = fmIndexFromQuote(body, { id });
+      }
+    });
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k || !k.startsWith('fm-quote-') || k === 'fm-quotes-index') continue;
+      const id = k.replace('fm-quote-', '');
+      if (byId[id]) continue;
+      const body = fmParseMaybe(localStorage.getItem(k));
+      if (body && (body.customer || body.project || (body.cabinets || []).length)) {
+        if (!body.id) body.id = id;
+        byId[id] = fmIndexFromQuote(body, { id });
+        data[k] = body;
+      }
+    }
+    data['fm-quotes-index'] = Object.values(byId);
     _kvData = data;
+    _fmPullOk = true;
 
-    // ── Write-through to localStorage (best-effort, not required) ──
     Object.entries(data).forEach(([k, v]) => {
       try {
         const incoming = typeof v === 'string' ? v : JSON.stringify(v);
-        const existing = localStorage.getItem(k);
-        if (k === 'fm-quotes-index') {
-          try {
-            const cloudArr = typeof v === 'object' ? v : JSON.parse(v);
-            if (!existing) { localStorage.setItem(k, incoming); return; }
-            const localArr = JSON.parse(existing);
-            const localIds = new Set(localArr.map(q => q.id));
-            const merged = [...localArr];
-            cloudArr.forEach(cq => { if (!localIds.has(cq.id)) merged.push(cq); });
-            localStorage.setItem(k, JSON.stringify(merged));
-          } catch(e) { localStorage.setItem(k, incoming); }
-          return;
-        }
-        if (k.startsWith('fm-quote-')) {
-          try {
-            if (existing) {
-              const localQ = JSON.parse(existing);
-              const cloudQ = typeof v === 'object' ? v : JSON.parse(v);
-              if ((localQ.saved_at || 0) > (cloudQ.saved_at || 0)) return;
-            }
-          } catch(e) {}
-          localStorage.setItem(k, incoming);
-          return;
-        }
         if (k === 'fm-company-pnl') {
           try {
             const obj = typeof v === 'object' ? v : JSON.parse(v);
@@ -2194,7 +2262,40 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   _fmReady = true;
   hideOverlay();
+
+  // Upload anything this browser had that the cloud was missing (Lindsay's contract, etc.).
+  // Only after a successful pull, so a timeout cannot shrink KV. Merge-push, never a partial POST.
+  if (_fmPullOk) { try { fmCloudPush(); } catch(e) {} }
 });
+
+const FM_GATE_PW = 'FM080126';
+function fmGateOk() {
+  try { return sessionStorage.getItem('fm-quote-gate') === '1'; } catch(e) { return false; }
+}
+function fmGateHide() {
+  const g = document.getElementById('fm-gate');
+  if (g) g.style.display = 'none';
+}
+function fmGateTry() {
+  const el = document.getElementById('fm-gate-pw');
+  const err = document.getElementById('fm-gate-err');
+  if ((el && (el.value || '').trim()) === FM_GATE_PW) {
+    try { sessionStorage.setItem('fm-quote-gate', '1'); } catch(e) {}
+    if (err) err.textContent = '';
+    fmGateHide();
+  } else {
+    if (err) err.textContent = 'Incorrect password.';
+    if (el) { el.value = ''; el.focus(); }
+  }
+}
+(function fmGateBoot() {
+  if (fmGateOk()) fmGateHide();
+  else {
+    const g = document.getElementById('fm-gate');
+    if (g) g.style.display = 'flex';
+    setTimeout(() => { const el = document.getElementById('fm-gate-pw'); if (el) el.focus(); }, 80);
+  }
+})();
 
 function today() {
   return new Date().toISOString().split('T')[0];
@@ -2458,8 +2559,6 @@ function saveQuotesIndex() {
 
 function loadQuotesIndex() {
   try {
-    // ── Cloud-first: read from in-memory KV snapshot ──
-    // Falls back to localStorage if KV pull hasn't run yet (offline, first paint)
     const rawIndex = (_kvData['fm-quotes-index'])
       ? (typeof _kvData['fm-quotes-index'] === 'string' ? _kvData['fm-quotes-index'] : JSON.stringify(_kvData['fm-quotes-index']))
       : localStorage.getItem('fm-quotes-index');
