@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Quote Builder v0909h</title>
+<title>Fremont Makers — Quote Builder v0909i</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20260909h-contract-packet-ar -->
+<!-- FM-BUILD-v20260909i-two-way-qty -->
 <script>
 (function(){
   try {
@@ -507,7 +507,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0909h</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0909i</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
     <span class="status-label">Status:</span>
@@ -549,6 +549,10 @@
   <div class="job-field">
     <label>Install Address</label>
     <input type="text" id="install-address" placeholder="123 Main St, Canon City CO" style="min-width:220px" oninput="saveLocal()" />
+  </div>
+  <div class="job-field">
+    <label>Houses (qty)</label>
+    <input type="number" id="model-qty" min="1" step="1" value="1" style="width:72px" oninput="saveLocal(); recalc();" title="1 for a single house. 50 if they buy fifty of this model." />
   </div>
 </div>
 
@@ -2273,8 +2277,9 @@ function renderDashboard() {
       const tax = cabAfterDisc * taxPct / 100;                 // product only — never on G&A
       const gna = (cabAfterDisc + laborCost) * gnaPct / 100;   // G&A before tax
       quoteTotal = cabAfterDisc + laborCost + gna + tax;
-      quote.total = quoteTotal;
+      quote.total = contractTotalOf(qd, quoteTotal);
     }
+    quoteTotal = contractTotalOf(quoteData[quote.id] || quote, quoteTotal);
 
     const st = pipeStatus(quote);
     if (st === 'proposed') totalQuoted += quoteTotal;
@@ -2326,6 +2331,14 @@ function quoteGrandFromData(qd) {
   const gna = (cabAfterDisc + laborCost) * gnaPct / 100;
   return cabAfterDisc + laborCost + gna + tax;
 }
+function modelQtyOf(qd) {
+  const n = parseInt(qd && qd.modelQty, 10);
+  return n > 0 ? n : 1;
+}
+function contractTotalOf(qd, unit) {
+  const u = (unit != null && unit === unit) ? unit : quoteGrandFromData(qd);
+  return u * modelQtyOf(qd);
+}
 function pipeStatus(q) {
   const s = String((q && q.status) || 'proposed').toLowerCase();
   if (s === 'contracted' || s === 'contract') return 'contract';
@@ -2358,7 +2371,7 @@ function renderPipeline() {
   });
   const tot = (arr) => arr.reduce((s, q) => {
     const qd = quoteData[q.id] || q;
-    return s + (q.total || quoteGrandFromData(qd) || 0);
+    return s + contractTotalOf(qd, quoteGrandFromData(qd) || 0);
   }, 0);
   document.getElementById('pipe-kpi-prop').textContent = fmt(tot(groups.proposed));
   document.getElementById('pipe-kpi-con').textContent = fmt(tot(groups.contract));
@@ -2372,7 +2385,8 @@ function renderPipeline() {
   };
   function card(q, showAr) {
     const qd = quoteData[q.id] || q;
-    const total = q.total || quoteGrandFromData(qd) || 0;
+    const unit = quoteGrandFromData(qd) || 0;
+    const total = contractTotalOf(qd, unit);
     const st = pipeStatus(qd);
     const wrap = document.createElement('div');
     wrap.className = 'pipe-job';
@@ -2449,12 +2463,15 @@ function pipeTogglePaid(id, which, paid) {
 
 function packetPayload(id) {
   const q = quoteData[id] || {};
-  const total = quoteGrandFromData(q) || 0;
+  const unit = quoteGrandFromData(q) || 0;
+  const qty = modelQtyOf(q);
+  const total = contractTotalOf(q, unit);
   const ar = scheduleOf(q, total);
   return {
     id, customer: q.customer || '', project: q.project || '', jobCode: q.jobCode || '',
     quoteDate: q.date || '', address: q.address || '', installDate: q.installDate || '',
-    total, d1Due: ar.d1Due, d2Due: ar.d2Due, d3Due: ar.d3Due,
+    modelQty: qty, unit, total,
+    d1Due: ar.d1Due, d2Due: ar.d2Due, d3Due: ar.d3Due,
     d1Amt: total * 0.50, d2Amt: total * 0.30, d3Amt: total * 0.20
   };
 }
@@ -2478,7 +2495,7 @@ function renderAr() {
   }
   jobs.forEach(row => {
     const q = quoteData[row.id] || row;
-    const total = row.total || quoteGrandFromData(q) || 0;
+    const total = contractTotalOf(q, quoteGrandFromData(q) || 0);
     const ar = scheduleOf(q, total);
     open += ar.open;
     const cell = (paid, due, amt) => paid
@@ -2697,6 +2714,8 @@ function loadQuote(id) {
   document.getElementById('project-name').value               = q.project  || '';
   document.getElementById('quote-date').value                 = q.date     || today();
   document.getElementById('install-address').value            = q.address  || '';
+  const mq = document.getElementById('model-qty');
+  if (mq) mq.value = Math.max(1, parseInt(q.modelQty, 10) || 1);
   document.getElementById('gna-pct').value                    = q.gnaPct  || '10';
   document.getElementById('tax-pct').value                    = q.taxPct  || '8.7';
   document.getElementById('bulk-discount-pct').value          = (q.bulkDiscPct !== undefined && q.bulkDiscPct !== null) ? q.bulkDiscPct : '0';
@@ -2826,7 +2845,8 @@ function collectData() {
     labor,
     reconciliationData: currentReconciliationData || quoteData[activeQuoteId].reconciliationData,
     ar: quoteData[activeQuoteId]?.ar || null,
-    installDate: quoteData[activeQuoteId]?.installDate || ''
+    installDate: quoteData[activeQuoteId]?.installDate || '',
+    modelQty: Math.max(1, parseInt(document.getElementById('model-qty')?.value, 10) || quoteData[activeQuoteId]?.modelQty || 1)
   };
 }
 
@@ -2837,7 +2857,8 @@ function saveLocal() {
   saveQuoteData(activeQuoteId);
 
   // Update index entry
-  const totalRaw = parseAmount('t-grand');
+  const unitRaw = parseAmount('t-grand');
+  const totalRaw = contractTotalOf(currentQuote, unitRaw);
   const customer = document.getElementById('customer-name')?.value || '';
   const project = document.getElementById('project-name')?.value || '';
   const date = document.getElementById('quote-date')?.value || today();
@@ -3398,7 +3419,13 @@ function buildInvoice() {
   document.getElementById('inv-t-gna').textContent      = fmt(gna);
   document.getElementById('inv-tax-label').textContent  = `Tax (${taxPct}%)`;
   document.getElementById('inv-t-tax').textContent      = fmt(tax);
-  document.getElementById('inv-t-grand').textContent    = fmt(grand);
+  const contractGrand = contractTotalOf(currentQuoteData, grand);
+  document.getElementById('inv-t-grand').textContent    = fmt(contractGrand);
+  const qtyNote = modelQtyOf(currentQuoteData);
+  if (qtyNote > 1) {
+    const proj = document.getElementById('inv-project');
+    if (proj) proj.textContent = (currentQuoteData.project ? `Model: ${currentQuoteData.project}  ·  ` : '') + qtyNote + ' houses · unit ' + fmt(grand);
+  }
   let dueEl = document.getElementById('inv-next-due');
   if (!dueEl) {
     dueEl = document.createElement('div');
@@ -3408,7 +3435,7 @@ function buildInvoice() {
     if (totals && totals.parentNode) totals.parentNode.insertBefore(dueEl, totals.nextSibling);
   }
   if (pipeStatus(currentQuoteData) === 'contract') {
-    const nxt = nextDeposit(currentQuoteData, grand);
+    const nxt = nextDeposit(currentQuoteData, contractGrand);
     dueEl.style.display = '';
     dueEl.innerHTML = nxt.n
       ? '<strong>This invoice:</strong> ' + nxt.label + ' · due ' + (nxt.due || '—') + ' · ' + fmt(nxt.amt)
