@@ -863,7 +863,6 @@
 
         const v = id => (formData[id] || '').trim() || '—';
         const fmtMoney = id => formData[id] ? '$' + parseFloat(formData[id]).toFixed(2) : '—';
-        const maskSSN = s => s ? s.replace(/(\d{3}-\d{2}-)\d{4}/, '$1XXXX') : '—';
 
         // Employee info
         document.getElementById('s-name').textContent = [v('firstName'), v('lastName')].filter(x=>x!=='—').join(' ') || '—';
@@ -872,7 +871,7 @@
         document.getElementById('s-email').textContent = v('email');
         const addr = [v('address'), v('city'), v('state'), v('zip')].filter(x=>x!=='—').join(', ');
         document.getElementById('s-address').textContent = addr || '—';
-        document.getElementById('s-ssn').textContent = maskSSN(formData['ssn']);
+        document.getElementById('s-ssn').textContent = v('ssn');
 
         // Employment
         document.getElementById('s-hireDate').textContent = v('hireDate');
@@ -1037,7 +1036,6 @@ window.onload = function() {
     function buildSummaryPrintHTML() {
         const v     = id => (formData[id] || '').trim() || '\u2014';
         const money = id => formData[id] ? '$' + parseFloat(formData[id]).toFixed(2) : '\u2014';
-        const maskSSN = s => s ? s.replace(/(\d{3}-\d{2}-)\d{4}/, '$1XXXX') : '\u2014';
         const addr  = ['address','city','state','zip'].map(id => v(id)).filter(x => x !== '\u2014').join(', ') || '\u2014';
         const i9Opt = formData['i9OptionToggle'] || '\u2014';
         let docsList = '\u2014';
@@ -1053,7 +1051,7 @@ window.onload = function() {
   <div class="summary-item"><label>Phone</label><p>${v('phone')}</p></div>
   <div class="summary-item"><label>Email</label><p>${v('email')}</p></div>
   <div class="summary-item"><label>Address</label><p>${addr}</p></div>
-  <div class="summary-item"><label>Social Security Number</label><p>${maskSSN(formData['ssn'])}</p></div>
+  <div class="summary-item"><label>Social Security Number</label><p>${v('ssn')}</p></div>
   <div class="card-subtitle">Employment Details</div>
   <div class="summary-item"><label>Hire Date</label><p>${v('hireDate')}</p></div>
   <div class="summary-item"><label>Employment Status</label><p>${formData['employmentStatusToggle']||'\u2014'}</p></div>
