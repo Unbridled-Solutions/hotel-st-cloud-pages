@@ -317,7 +317,7 @@ export async function handleEventCheckout(request, env) {
       cancel_url: origin + ev.cancelPath,
       customer_email: email,
       "payment_intent_data[receipt_email]": email,
-      billing_address_collection: "auto",
+      billing_address_collection: "required",
       phone_number_collection: { enabled: "true" },
       allow_promotion_codes: "true",
       "metadata[event]": event,
