@@ -283,7 +283,10 @@ async function cloudbedsOcc(env, ymd) {
 }
 async function cloudbedsRoomRev(env, from, to, tight = false) {
   const ids = new Set();
-  const checkInFrom = tight ? addYmd(from, -7) : addYmd(from, -14);
+  // Overlapping in-house stays must be in the check-in window. A 7-day
+  // lookback misses guests who arrived earlier and still occupy tonight,
+  // which wrote $0.00 over real room $ (Wed/Thu 2026-09-09/10).
+  const checkInFrom = tight ? addYmd(from, -21) : addYmd(from, -30);
   const pageCap = tight ? 12 : 50;
   for (let page = 1; page <= pageCap; page++) {
     const url = `${CB_HOST}/getReservations?propertyID=${PROP}&pageSize=100&pageNumber=${page}`
@@ -324,7 +327,12 @@ async function cloudbedsRoomRev(env, from, to, tight = false) {
     } catch (_) { /* keep going */ }
   }
   const out = {};
-  for (const d of rangeYmd(from, to)) out[d] = Math.round((nightly[d] || 0) * 100) / 100;
+  for (const d of rangeYmd(from, to)) {
+    const n = Math.round((nightly[d] || 0) * 100) / 100;
+    // Never persist $0.00. Empty nights stay blank so we do not clobber
+    // a prior Cloudbeds pull when the short crawl missed overlapping stays.
+    out[d] = n > 0 ? n : '';
+  }
   return out;
 }
 
@@ -638,7 +646,10 @@ async function runSync(env, status) {
   const occMap = {};
   for (const [d, v] of Object.entries(occ)) occMap[d] = fmtOcc(v);
   const bookedMap = {};
-  for (const [d, v] of Object.entries(roomRev)) bookedMap[d] = fmtMoney(v);
+  for (const [d, v] of Object.entries(roomRev)) {
+    if (v === '' || v == null || !Number(v)) continue;
+    bookedMap[d] = fmtMoney(v);
+  }
   status.changed.hscOcc = applySeries(hsc, 'hsc-wk-', 'occrooms', occMap);
   status.changed.hscBooked = applySeries(hsc, 'hsc-wk-', 'bookedrevs', bookedMap);
   status.changed.hscHrly = applySeries(hsc, 'hsc-wk-', 'hrlyacts', moneyMap(labor.hsc));
@@ -651,7 +662,7 @@ async function runSync(env, status) {
     const idx = di === 0 ? 6 : di - 1;
     const acts = ensure7(w.actrevs);
     const booked = ensure7(w.bookedrevs);
-    if (booked[idx]) {
+    if (booked[idx] && Number(booked[idx]) > 0) {
       if (acts[idx] !== booked[idx]) actFill += 1;
       acts[idx] = booked[idx];
       w.actrevs = acts;
