@@ -1,23 +1,45 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="paper">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <title>Employee Disciplinary Action - Unbridled Hospitality Group</title>
+    <script>
+      (function(){ try { var t = localStorage.getItem('uhg-hr-theme'); if (t === 'dark' || t === 'paper') document.documentElement.setAttribute('data-theme', t); } catch (e) {} })();
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
+        :root, html[data-theme="paper"] {
             --rust: #c44027;
             --navy: #2b323a;
             --charcoal: #333333;
-            --bg: #f5f5f5;
-            --card: #ffffff;
-            --border: #e0e0e0;
+            --bg: #f3efe6;
+            --card: #fbf6f0;
+            --border: #ddd6c8;
             --green: #2e7d4f;
-            --muted: #777777;
+            --muted: #8a8378;
             --font-family: 'Montserrat', sans-serif;
             --amber: #d97706;
+            --header-bg: #2b323a;
+            --header-fg: #ffffff;
+            --input-bg: #ffffff;
+            --active-bg: #2b323a;
+            --active-fg: #ffffff;
+        }
+        html[data-theme="dark"] {
+            --navy: #e8eaf0;
+            --charcoal: #f0ece4;
+            --bg: #111111;
+            --card: #1a1d27;
+            --border: #2e3250;
+            --green: #3de8a0;
+            --muted: #8b90a8;
+            --header-bg: #12141c;
+            --header-fg: #f0ece4;
+            --input-bg: #12141c;
+            --active-bg: #c9a84c;
+            --active-fg: #111111;
         }
 
         body {
@@ -29,13 +51,20 @@
         }
 
         .header {
-            background-color: var(--navy);
-            color: var(--card);
+            background-color: var(--header-bg);
+            color: var(--header-fg);
             padding: 15px 20px;
             display: flex;
             align-items: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+        .theme-toggle { display: flex; gap: 4px; margin-left: auto; }
+        .theme-toggle button {
+            padding: 6px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.25);
+            background: transparent; color: var(--header-fg); font-size: 12px; cursor: pointer;
+            font-family: var(--font-family);
+        }
+        .theme-toggle button.on { background: var(--active-bg); color: var(--active-fg); border-color: var(--active-bg); font-weight: 700; }
 
         .header img {
             height: 30px;
@@ -436,6 +465,10 @@
     <div class="header">
         <img src="../assets/uhg-logo-white.png" alt="Unbridled Hospitality Group Logo">
         <span class="header-title">Employee Disciplinary Action</span>
+        <div class="theme-toggle no-print" title="Looks only">
+          <button type="button" id="theme-paper-btn" onclick="uhgSetTheme('paper')">Paper</button>
+          <button type="button" id="theme-dark-btn" onclick="uhgSetTheme('dark')">Dark</button>
+        </div>
     </div>
 
     <div class="container">
@@ -857,6 +890,7 @@
             location.reload();
         }
     </script>
+<script src="/hr/theme-flip.js"></script>
 <script src="/hr/submit-hr.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
