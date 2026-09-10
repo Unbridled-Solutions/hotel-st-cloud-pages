@@ -97,10 +97,48 @@ async function summariseResume(text, name, env) {
   }
 }
 
+function isFmToolsHost(hostname) {
+  return hostname === "tools.fremontmakers.com";
+}
+
+async function serveAsset(env, request, pathname) {
+  const assetUrl = new URL(request.url);
+  assetUrl.pathname = pathname;
+  const assetRequest = new Request(assetUrl.toString(), {
+    method: "GET",
+    headers: new Headers({ ...Object.fromEntries(request.headers), "Cache-Control": "no-cache" }),
+  });
+  const response = await env.ASSETS.fetch(assetRequest);
+  const headers = new Headers(response.headers);
+  if ((response.headers.get("content-type") || "").includes("text/html")) {
+    headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
+    headers.set("Pragma", "no-cache");
+    headers.set("Expires", "0");
+    headers.set("X-Robots-Tag", "noindex, nofollow");
+    headers.delete("ETag");
+    headers.delete("Last-Modified");
+  }
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (request.method === "OPTIONS") return optionsResponse();
+
+    // tools.fremontmakers.com — FM dashboard + maintenance, same Worker/KV/R2 as offers.
+    if (isFmToolsHost(url.hostname) && !url.pathname.startsWith("/api")) {
+      const p = url.pathname.replace(/\/$/, "") || "/";
+      if (p === "/" || p === "/index.html" || p === "/dashboard") {
+        return serveAsset(env, request, "/assets/fremont-makers-dashboard.html");
+      }
+      if (p === "/maintenance-request" || p === "/maintenance-request.html") {
+        return serveAsset(env, request, "/assets/maintenance-request.html");
+      }
+      if (p === "/maintenance-tracker" || p === "/maintenance-tracker.html") {
+        return serveAsset(env, request, "/assets/maintenance-tracker.html");
+      }
+    }
 
     // ── DELETE /api/socc-candidates ──────────────────────────────────────────
     if (url.pathname === "/api/socc-candidates" && request.method === "DELETE") {
@@ -358,11 +396,11 @@ export default {
       ${photoHtml ? `<tr><td colspan="2" style="padding:12px 16px;border-bottom:1px solid #2a2a2a;">${photoHtml}</td></tr>` : ''}
       ${divider('Submitted')}
       ${row('Time', new Date(d.submitted_at).toLocaleString('en-US', {timeZone:'America/Denver',dateStyle:'medium',timeStyle:'short'}) + ' MT')}
-      ${row('Tracker', `<a href="https://offers.hotelstcloud.com/assets/maintenance-tracker" style="color:#4a9eff;">Open Tracker →</a>`)}
+      ${row('Tracker', `<a href="https://tools.fremontmakers.com/maintenance-tracker" style="color:#4a9eff;">Open Tracker →</a>`)}
     </table>
 
     <div style="padding:16px 24px;background:#12151f;border-top:1px solid #2e3250;font-size:12px;color:#8b90a8;text-align:center;">
-      Unbridled Properties · Cañon City, CO · <a href="https://offers.hotelstcloud.com/assets/maintenance-tracker" style="color:#4a9eff;">Maintenance Tracker</a>
+      Unbridled Properties · Cañon City, CO · <a href="https://tools.fremontmakers.com/maintenance-tracker" style="color:#4a9eff;">Maintenance Tracker</a>
     </div>
   </div>
 </body></html>`;
