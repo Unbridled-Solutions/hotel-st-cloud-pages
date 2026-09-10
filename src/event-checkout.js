@@ -138,7 +138,76 @@ function orderFromSession(session, extra = {}) {
     status: extra.status || "new",
     created: session.created ? session.created * 1000 : Date.now(),
     staffNotes: extra.staffNotes || "",
+    guestEmailId: extra.guestEmailId || "",
+    deskEmailId: extra.deskEmailId || "",
+    emailError: extra.emailError || "",
   };
+}
+
+function money(cents) {
+  return "$" + (Number(cents || 0) / 100).toFixed(2);
+}
+
+function ticketLine(order) {
+  if (order.event === "murder-mystery") {
+    return `${order.adults || 0} ticket${Number(order.adults) === 1 ? "" : "s"}`;
+  }
+  return `Adults ${order.adults || 0} · children ${order.children || 0} · family packs ${order.family || 0} · under 3: ${order.under3 || 0}`;
+}
+
+async function sendResend(env, payload) {
+  if (!env.RESEND_API_KEY) return { error: "no RESEND_API_KEY" };
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: "Bearer " + env.RESEND_API_KEY,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) return { error: data.error?.message || data.message || ("Resend " + res.status) };
+  return { id: data.id };
+}
+
+async function notifyOrder(env, order) {
+  const errors = [];
+  if (order.email && !order.guestEmailId) {
+    const guest = await sendResend(env, {
+      from: "Hotel St. Cloud <noreply@fremontmakers.com>",
+      to: [order.email],
+      reply_to: "reservations@hotelstcloud.com",
+      subject: `You're in · ${order.eventName}`,
+      html: `<p>Hi ${order.name || "there"},</p>
+<p>We have your tickets for <strong>${order.eventName}</strong>${order.eventDate ? " on " + order.eventDate : ""}.</p>
+<p>${ticketLine(order)}<br>Paid ${money(order.amount)}.</p>
+${order.wantRoom === "yes" ? "<p>You asked about a room. The desk will follow up.</p>" : ""}
+${order.notes ? "<p>Notes we have: " + order.notes + "</p>" : ""}
+<p>Hotel St. Cloud · 631 Main Street, Cañon City<br>(719) 602-3469 · reservations@hotelstcloud.com</p>`,
+    });
+    if (guest.id) order.guestEmailId = guest.id;
+    else errors.push("guest: " + (guest.error || "fail"));
+  }
+  if (!order.deskEmailId) {
+    const desk = await sendResend(env, {
+      from: "Hotel St. Cloud <noreply@fremontmakers.com>",
+      to: ["reservations@hotelstcloud.com"],
+      cc: ["lwyss@unbridled.com"],
+      subject: `[Tickets] ${order.eventName} · ${order.name}`,
+      html: `<p><strong>${order.name}</strong> (${order.email} / ${order.phone || "no phone"})</p>
+<p>${order.eventName} ${order.eventDate || ""}</p>
+<p>${ticketLine(order)}</p>
+<p>Want a room: ${order.wantRoom}</p>
+<p>Paid ${money(order.amount)}</p>
+<p>Notes: ${order.notes || "none"}</p>
+<p><a href="https://offers.hotelstcloud.com/assets/hsc-event-orders">Open orders board</a></p>`,
+    });
+    if (desk.id) order.deskEmailId = desk.id;
+    else errors.push("desk: " + (desk.error || "fail"));
+  }
+  order.emailError = errors.join("; ");
+  await saveOrder(env, order);
+  return order;
 }
 
 export async function handleEventCheckout(request, env) {
@@ -172,6 +241,7 @@ export async function handleEventCheckout(request, env) {
       success_url: origin + ev.successPath + "?session_id={CHECKOUT_SESSION_ID}",
       cancel_url: origin + ev.cancelPath,
       customer_email: email,
+      "payment_intent_data[receipt_email]": email,
       billing_address_collection: "auto",
       phone_number_collection: { enabled: "true" },
       allow_promotion_codes: "true",
@@ -214,6 +284,7 @@ export async function handleEventCheckout(request, env) {
     const existing = await env.PLANNER_DATA.get("events:order:" + session.id, { type: "json" });
     const order = orderFromSession(session, existing || {});
     await saveOrder(env, order);
+    await notifyOrder(env, order);
     return json({ ok: true, order: { eventName: order.eventName, name: order.name, email: order.email, amount: order.amount } });
   }
 
@@ -231,31 +302,7 @@ export async function handleEventCheckout(request, env) {
         const existing = await env.PLANNER_DATA.get("events:order:" + session.id, { type: "json" });
         const order = orderFromSession(session, existing || {});
         await saveOrder(env, order);
-        if (env.RESEND_API_KEY) {
-          try {
-            await fetch("https://api.resend.com/emails", {
-              method: "POST",
-              headers: {
-                Authorization: "Bearer " + env.RESEND_API_KEY,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                from: "Hotel St. Cloud <noreply@fremontmakers.com>",
-                to: ["reservations@hotelstcloud.com"],
-                subject: `[Tickets] ${order.eventName} · ${order.name}`,
-                html: `<p>${order.name} (${order.email} / ${order.phone})</p>
-<p>${order.eventName} ${order.eventDate || ""}</p>
-<p>Adults ${order.adults} · children ${order.children} · family packs ${order.family} · under 3: ${order.under3}</p>
-<p>Want a room: ${order.wantRoom}</p>
-<p>Paid $${(order.amount / 100).toFixed(2)}</p>
-<p>Notes: ${order.notes || "—"}</p>
-<p><a href="https://offers.hotelstcloud.com/assets/hsc-event-orders">Open orders board</a></p>`,
-              }),
-            });
-          } catch {
-            /* email is non-fatal */
-          }
-        }
+        await notifyOrder(env, order);
       }
     }
     return json({ received: true });
