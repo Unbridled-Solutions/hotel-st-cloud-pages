@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Event orders | Hotel St. Cloud</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root { --bg:#0f1117; --surface:#1a1d27; --border:#2e3250; --text:#e8eaf0; --muted:#8b90a8; --accent:#4a9eff; --gold:#ba8032; --ok:#3de8c8; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { background:var(--bg); color:var(--text); font-family:Inter,system-ui,sans-serif; font-size:14px; min-height:100vh; }
+    .header { background:var(--surface); border-bottom:1px solid var(--border); padding:18px 24px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; }
+    h1 { font-size:18px; }
+    h1 span { color:var(--gold); }
+    .muted { color:var(--muted); font-size:12px; }
+    .gate { max-width:420px; margin:80px auto; background:var(--surface); padding:28px; border:1px solid var(--border); }
+    .gate input, select, textarea { width:100%; background:#12141c; border:1px solid var(--border); color:var(--text); padding:10px 12px; font:inherit; }
+    .gate button, .btn { background:var(--gold); color:#12141c; border:0; padding:10px 16px; font-weight:600; cursor:pointer; }
+    .stats { display:flex; gap:1px; background:var(--border); }
+    .stat { flex:1; background:var(--surface); padding:14px; text-align:center; }
+    .stat b { display:block; font-size:22px; }
+    table { width:100%; border-collapse:collapse; }
+    th, td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--border); vertical-align:top; }
+    th { color:var(--muted); font-size:11px; letter-spacing:.08em; text-transform:uppercase; }
+    tr:hover td { background:#161924; }
+    .pill { display:inline-block; padding:2px 8px; font-size:11px; font-weight:600; background:#22263a; }
+    .pill.new { color:var(--gold); }
+    .pill.contacted { color:var(--accent); }
+    .pill.done { color:var(--ok); }
+    .err { color:#ff8a80; margin-top:8px; }
+  </style>
+</head>
+<body>
+  <div id="gate" class="gate">
+    <h1>Event <span>orders</span></h1>
+    <p class="muted" style="margin:8px 0 16px">Desk board for Murder Mystery and Christmas Lights. Not public.</p>
+    <input id="key" type="password" placeholder="Access key" />
+    <p class="err" id="gate-err"></p>
+    <button id="unlock" style="margin-top:12px">Open board</button>
+  </div>
+  <div id="app" hidden>
+    <div class="header">
+      <div>
+        <h1>Hotel St. Cloud <span>event orders</span></h1>
+        <p class="muted">Paid Stripe tickets. Action the guest from here.</p>
+      </div>
+      <button class="btn" id="reload">Refresh</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="n-all">0</b><span class="muted">Paid</span></div>
+      <div class="stat"><b id="n-new">0</b><span class="muted">New</span></div>
+      <div class="stat"><b id="n-dollars">$0</b><span class="muted">Collected</span></div>
+    </div>
+    <div style="overflow:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>When</th>
+            <th>Event</th>
+            <th>Guest</th>
+            <th>Tickets</th>
+            <th>Paid</th>
+            <th>Room?</th>
+            <th>Status</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </div>
+  <script>
+    const KEY = 'hsc-event-orders-key';
+    let access = sessionStorage.getItem(KEY) || '';
+    const gate = document.getElementById('gate');
+    const app = document.getElementById('app');
+
+    function money(cents) {
+      return '$' + (Number(cents || 0) / 100).toFixed(2);
+    }
+    function when(ms) {
+      if (!ms) return '';
+      return new Date(ms).toLocaleString('en-US', { timeZone: 'America/Denver', month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
+    }
+    async function load() {
+      const res = await fetch('/api/events/orders', { headers: { 'x-event-key': access } });
+      if (res.status === 401) throw new Error('Wrong key');
+      const data = await res.json();
+      const orders = data.orders || [];
+      document.getElementById('n-all').textContent = orders.length;
+      document.getElementById('n-new').textContent = orders.filter(o => (o.status || 'new') === 'new').length;
+      document.getElementById('n-dollars').textContent = money(orders.reduce((s, o) => s + Number(o.amount || 0), 0));
+      const tb = document.getElementById('rows');
+      tb.innerHTML = orders.map(o => `
+        <tr data-id="${o.id}">
+          <td>${when(o.created)}</td>
+          <td>${o.eventName || o.event}<div class="muted">${o.eventDate || ''}</div></td>
+          <td>${o.name}<div class="muted">${o.email}<br>${o.phone || ''}</div></td>
+          <td>A ${o.adults || 0} · C ${o.children || 0} · Fam ${o.family || 0} · U3 ${o.under3 || 0}<div class="muted">${o.notes || ''}</div></td>
+          <td>${money(o.amount)}</td>
+          <td>${o.wantRoom === 'yes' ? 'Call them' : 'No'}</td>
+          <td>
+            <select class="st">
+              <option value="new"${(o.status||'new')==='new'?' selected':''}>New</option>
+              <option value="contacted"${o.status==='contacted'?' selected':''}>Contacted</option>
+              <option value="room"${o.status==='room'?' selected':''}>Room booked</option>
+              <option value="done"${o.status==='done'?' selected':''}>Done</option>
+            </select>
+          </td>
+          <td><input class="sn" value="${(o.staffNotes||'').replace(/"/g,'&quot;')}" placeholder="Desk note" /></td>
+        </tr>`).join('') || '<tr><td colspan="8" class="muted">No paid orders yet. Run a test checkout.</td></tr>';
+      tb.querySelectorAll('tr[data-id]').forEach(tr => {
+        const save = async () => {
+          await fetch('/api/events/orders', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'x-event-key': access },
+            body: JSON.stringify({ id: tr.dataset.id, status: tr.querySelector('.st').value, staffNotes: tr.querySelector('.sn').value })
+          });
+        };
+        tr.querySelector('.st').addEventListener('change', save);
+        tr.querySelector('.sn').addEventListener('change', save);
+      });
+    }
+    async function openBoard() {
+      try {
+        await load();
+        sessionStorage.setItem(KEY, access);
+        gate.hidden = true;
+        app.hidden = false;
+      } catch (e) {
+        document.getElementById('gate-err').textContent = e.message;
+      }
+    }
+    document.getElementById('unlock').onclick = () => {
+      access = document.getElementById('key').value.trim();
+      openBoard();
+    };
+    document.getElementById('reload').onclick = load;
+    document.getElementById('key').addEventListener('keydown', (e) => { if (e.key === 'Enter') document.getElementById('unlock').click(); });
+    if (access) openBoard();
+  </script>
+</body>
+</html>

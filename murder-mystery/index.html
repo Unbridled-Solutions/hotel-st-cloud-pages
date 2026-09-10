@@ -116,6 +116,16 @@
     .book-card .btn-primary, .book-card .btn-ghost { display: block; text-align: center; margin-bottom: 10px; }
     .book-card .alt { display: block; text-align: center; font-size: 0.85rem; color: var(--gold); margin: 8px 0 16px; }
     .fine { font-size: 0.82rem; opacity: 0.75; }
+    .ticket-form label { display:block; font-size:0.72rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--gold); margin:12px 0 6px; }
+    .ticket-form input, .ticket-form textarea, .ticket-form select {
+      width:100%; background:#1a0c0c; border:1px solid rgba(196,161,90,0.35); color:var(--cream);
+      font-family:inherit; font-size:1rem; padding:10px 12px;
+    }
+    .ticket-form textarea { min-height:72px; }
+    .ticket-form .row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .ticket-form .err { color:#ffb4a8; font-size:0.88rem; min-height:1.2em; margin-top:8px; }
+    .ticket-form .check { display:flex; gap:8px; align-items:flex-start; margin:14px 0; font-size:0.92rem; letter-spacing:0; text-transform:none; color:var(--cream); }
+    .ticket-form .check input { width:auto; margin-top:4px; }
     .split { display: grid; grid-template-columns: 1fr 1fr; min-height: 420px; }
     .split-photo { background-size: cover; background-position: center; }
     .split-copy { padding: 64px 48px; display: flex; flex-direction: column; justify-content: center; background: #120909; }
@@ -151,8 +161,8 @@
       <h1 class="hero-headline">Someone in Buffalo Chip is about to punch their ticket.</h1>
       <p class="hero-sub">A brand-new Old West mystery from Red Herring Productions, dinner in the 1883 house, and your best Halloween costume. This is not last year's show. Same company out of the Springs. New skit. New cast.</p>
       <div class="hero-actions">
-        <a class="btn-primary" href="tel:7196023469" onclick="return gtag_phone_call('tel:7196023469')">Call (719) 602-3469</a>
-        <a class="btn-ghost" href="mailto:reservations@hotelstcloud.com?subject=Murder%20Mystery%20October%2030">Email for tickets</a>
+        <a class="btn-primary" href="#the-night">Buy tickets</a>
+        <a class="btn-ghost" href="tel:7196023469" onclick="return gtag_phone_call('tel:7196023469')">Call (719) 602-3469</a>
       </div>
     </div>
   </section>
@@ -180,17 +190,41 @@
             <li>Dinner at Hotel St. Cloud</li>
             <li>Old West Halloween costumes. Come as a prospector, a preacher, or trouble</li>
             <li>Family-friendly felony. Funny, not gory</li>
-            <li>Call or email to hold seats. Tickets are not on Eventbrite</li>
+            <li>Buy tickets here. Not Eventbrite. A room is extra if you want one</li>
           </ul>
         </div>
       </div>
       <aside class="book-card">
         <p class="kicker">Tickets</p>
-        <h3>Hold a table</h3>
-        <p>Call the desk or email reservations. Tell us how many, and whether you want to stay the night after the show.</p>
-        <a class="btn-primary" href="tel:7196023469" onclick="return gtag_phone_call('tel:7196023469')">Call (719) 602-3469</a>
-        <a class="btn-ghost" href="mailto:reservations@hotelstcloud.com?subject=Murder%20Mystery%20October%2030">reservations@hotelstcloud.com</a>
-        <p class="fine">A room is not required. If you want one, we will book it on the same call. Online checkout for tickets is coming; until then the desk is the cleanest path.</p>
+        <h3>Buy online</h3>
+        <p>Pay here. We get your name on the list. Test checkout for now; dinner price may still move before we go live.</p>
+        <form class="ticket-form" id="ticket-form">
+          <label for="name">Name</label>
+          <input id="name" name="name" required autocomplete="name" />
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" required autocomplete="email" />
+          <label for="phone">Phone</label>
+          <input id="phone" name="phone" type="tel" autocomplete="tel" />
+          <div class="row2">
+            <div>
+              <label for="adults">Tickets</label>
+              <input id="adults" name="adults" type="number" min="1" max="20" value="2" required />
+            </div>
+            <div>
+              <label for="wantRoom">Room after?</label>
+              <select id="wantRoom" name="wantRoom">
+                <option value="no">No, tickets only</option>
+                <option value="yes">Yes, please call me</option>
+              </select>
+            </div>
+          </div>
+          <label for="notes">Notes (costume, allergies, table)</label>
+          <textarea id="notes" name="notes"></textarea>
+          <p class="err" id="form-err"></p>
+          <button class="btn-primary" type="submit" id="pay-btn">Pay with card · $85 each</button>
+        </form>
+        <p class="fine">Stripe test mode. Use card 4242 4242 4242 4242, any future date, any CVC. A room is not in this checkout. If you want one, we will call you.</p>
+        <a class="alt" href="tel:7196023469">Or call (719) 602-3469</a>
       </aside>
     </div>
   </section>
@@ -231,7 +265,7 @@
   <section class="final-cta">
     <h2 class="section-title">Get your ticket. Someone is going to punch theirs.</h2>
     <p>Friday, October 30. Hotel St. Cloud, Cañon City. Red Herring Productions.</p>
-    <a class="btn-primary" href="tel:7196023469" onclick="return gtag_phone_call('tel:7196023469')">Call (719) 602-3469</a>
+    <a class="btn-primary" href="#the-night">Buy tickets</a>
   </section>
 
   <footer class="site-footer">
@@ -245,5 +279,36 @@
       <a href="https://www.hotelstcloud.com/offers-packages">Offers & Packages</a>
     </p>
   </footer>
+  <script>
+    document.getElementById('ticket-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const err = document.getElementById('form-err');
+      const btn = document.getElementById('pay-btn');
+      err.textContent = '';
+      btn.disabled = true;
+      const body = {
+        event: 'murder-mystery',
+        name: document.getElementById('name').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        adults: document.getElementById('adults').value,
+        wantRoom: document.getElementById('wantRoom').value,
+        notes: document.getElementById('notes').value.trim()
+      };
+      try {
+        const res = await fetch('/api/events/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (!res.ok || !data.url) throw new Error(data.error || 'Checkout failed');
+        window.location = data.url;
+      } catch (ex) {
+        err.textContent = ex.message || 'Could not start checkout.';
+        btn.disabled = false;
+      }
+    });
+  </script>
 </body>
 </html>

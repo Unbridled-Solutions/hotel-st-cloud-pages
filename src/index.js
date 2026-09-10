@@ -4,6 +4,7 @@
  */
 
 import { handlePlannerSync, handlePlannerSyncStatus, handlePlannerLyoy } from './planner-sync.js';
+import { handleEventCheckout } from './event-checkout.js';
 
 const AIRTABLE_BASE = "appUUjLXEUwlyx23M";
 const SOCC_TABLE    = "SOCC%20Barista%20Applications";
@@ -125,6 +126,11 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (request.method === "OPTIONS") return optionsResponse();
+
+    if (url.pathname.startsWith("/api/events/")) {
+      const eventRes = await handleEventCheckout(request, env);
+      if (eventRes) return eventRes;
+    }
 
     // tools.fremontmakers.com — FM dashboard + maintenance, same Worker/KV/R2 as offers.
     if (isFmToolsHost(url.hostname) && !url.pathname.startsWith("/api")) {

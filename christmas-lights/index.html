@@ -118,6 +118,15 @@
     .book-card p { margin-bottom: 16px; }
     .book-card .btn-primary, .book-card .btn-ghost { display: block; text-align: center; margin-bottom: 10px; }
     .book-card .fine { font-size: 0.82rem; opacity: 0.8; }
+    .ticket-form label { display:block; font-size:0.72rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--gold); margin:12px 0 6px; }
+    .ticket-form input, .ticket-form textarea, .ticket-form select {
+      width:100%; background:#121820; border:1px solid rgba(186,128,50,0.4); color:var(--cream);
+      font-family:inherit; font-size:1rem; padding:10px 12px;
+    }
+    .ticket-form textarea { min-height:64px; }
+    .ticket-form .row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .ticket-form .err { color:#ffb4a8; font-size:0.88rem; min-height:1.2em; margin-top:8px; }
+    .book-card .alt { display:block; text-align:center; font-size:0.85rem; color:var(--gold); margin:8px 0 0; }
     .split { display: grid; grid-template-columns: 1fr 1fr; min-height: 420px; }
     .split-photo { background-size: cover; background-position: center; }
     .split-copy { padding: 64px 48px; display: flex; flex-direction: column; justify-content: center; background: #fff; }
@@ -156,8 +165,8 @@
       <h1 class="hero-headline">The lights, then the lobby.</h1>
       <p class="hero-sub">A bus through the best Christmas houses in town, Christmas music on the ride, then back to Hotel St. Cloud for cocoa, cookies, Santa, and a mailbox for letters. If the holiday train is full or too dear, this is the night in town.</p>
       <div class="hero-actions">
-        <a class="btn-primary" href="tel:7196023469" onclick="return gtag_phone_call('tel:7196023469')">Call (719) 602-3469</a>
-        <a class="btn-ghost" href="mailto:reservations@hotelstcloud.com?subject=Christmas%20Lights%20Tour">Email for tickets</a>
+        <a class="btn-primary" href="#the-night">Buy tickets</a>
+        <a class="btn-ghost" href="tel:7196023469" onclick="return gtag_phone_call('tel:7196023469')">Call (719) 602-3469</a>
       </div>
     </div>
   </section>
@@ -197,11 +206,42 @@
       </div>
       <aside class="book-card">
         <p class="kicker">Tickets</p>
-        <h3>Hold seats</h3>
-        <p>Call or email. Tell us the Saturday, how many adults, how many kids. Capacity is the bus, not the hotel.</p>
-        <a class="btn-primary" href="tel:7196023469" onclick="return gtag_phone_call('tel:7196023469')">Call (719) 602-3469</a>
-        <a class="btn-ghost" href="mailto:reservations@hotelstcloud.com?subject=Christmas%20Lights%20Tour">reservations@hotelstcloud.com</a>
-        <p class="fine">We are lining up two or three Saturday evenings in December. Food and drink stay at the hotel until we know what the bus allows. A room is extra if you want one.</p>
+        <h3>Buy online</h3>
+        <p>Adult $39. Child $24. Family of four $115. Under 3 is free on a lap. Test checkout for now.</p>
+        <form class="ticket-form" id="ticket-form">
+          <label for="name">Name</label>
+          <input id="name" name="name" required autocomplete="name" />
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" required autocomplete="email" />
+          <label for="phone">Phone</label>
+          <input id="phone" name="phone" type="tel" autocomplete="tel" />
+          <div class="row2">
+            <div>
+              <label for="adults">Adults $39</label>
+              <input id="adults" name="adults" type="number" min="0" max="20" value="2" />
+            </div>
+            <div>
+              <label for="children">Kids 3–12 $24</label>
+              <input id="children" name="children" type="number" min="0" max="20" value="0" />
+            </div>
+          </div>
+          <div class="row2">
+            <div>
+              <label for="family">Family of four $115</label>
+              <input id="family" name="family" type="number" min="0" max="10" value="0" />
+            </div>
+            <div>
+              <label for="under3">Under 3 (free)</label>
+              <input id="under3" name="under3" type="number" min="0" max="10" value="0" />
+            </div>
+          </div>
+          <label for="notes">Notes (pickup, ages)</label>
+          <textarea id="notes" name="notes"></textarea>
+          <p class="err" id="form-err"></p>
+          <button class="btn-primary" type="submit" id="pay-btn">Pay with card</button>
+        </form>
+        <p class="fine">Stripe test mode. Card 4242 4242 4242 4242, any future date, any CVC. Dates lock later. A room is extra.</p>
+        <a class="alt" href="tel:7196023469">Or call (719) 602-3469</a>
       </aside>
     </div>
   </section>
@@ -241,8 +281,8 @@
 
   <section class="final-cta">
     <h2 class="section-title">Save a Saturday in December.</h2>
-    <p>Adult $39. Child $24. Family of four $115. Call and we will put you on the list while dates lock.</p>
-    <a class="btn-primary" href="tel:7196023469" onclick="return gtag_phone_call('tel:7196023469')">Call (719) 602-3469</a>
+    <p>Adult $39. Child $24. Family of four $115. Buy online, or call while dates lock.</p>
+    <a class="btn-primary" href="#the-night">Buy tickets</a>
   </section>
 
   <footer class="site-footer">
@@ -256,5 +296,38 @@
       <a href="https://www.hotelstcloud.com/offers-packages">Offers & Packages</a>
     </p>
   </footer>
+  <script>
+    document.getElementById('ticket-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const err = document.getElementById('form-err');
+      const btn = document.getElementById('pay-btn');
+      err.textContent = '';
+      btn.disabled = true;
+      const body = {
+        event: 'christmas-lights',
+        name: document.getElementById('name').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        adults: document.getElementById('adults').value,
+        children: document.getElementById('children').value,
+        family: document.getElementById('family').value,
+        under3: document.getElementById('under3').value,
+        notes: document.getElementById('notes').value.trim()
+      };
+      try {
+        const res = await fetch('/api/events/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (!res.ok || !data.url) throw new Error(data.error || 'Checkout failed');
+        window.location = data.url;
+      } catch (ex) {
+        err.textContent = ex.message || 'Could not start checkout.';
+        btn.disabled = false;
+      }
+    });
+  </script>
 </body>
 </html>

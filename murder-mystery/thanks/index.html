@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>You're in | Murder in Buffalo Chip</title>
+  <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600&display=swap" rel="stylesheet" />
+  <style>
+    body { margin:0; font-family:'Josefin Sans',sans-serif; background:#140a0a; color:#eadfc8; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:32px 20px; }
+    .card { max-width: 36em; text-align:center; }
+    h1 { font-family: Georgia, serif; font-weight:400; font-size: clamp(1.8rem,4vw,2.6rem); margin: 0 0 16px; }
+    p { font-weight:300; line-height:1.7; margin: 0 0 14px; }
+    a { color:#c4a15a; }
+    .muted { opacity:.7; font-size:.95rem; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <p class="muted" id="status">Checking your ticket…</p>
+    <h1 id="title">See you in Buffalo Chip.</h1>
+    <p id="body">A receipt is on its way to your email. We have your name on the list for Friday, October 30 at Hotel St. Cloud. If you asked about a room, the desk will follow up.</p>
+    <p><a href="/murder-mystery/">Back to the event</a> · <a href="https://www.hotelstcloud.com/">hotelstcloud.com</a></p>
+  </div>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const sid = params.get('session_id');
+    const status = document.getElementById('status');
+    if (!sid) { status.textContent = 'If you paid, check your email. If not, go back and try again.'; }
+    else {
+      fetch('/api/events/confirm?session_id=' + encodeURIComponent(sid))
+        .then(r => r.json())
+        .then(d => {
+          if (d.ok) status.textContent = 'Paid. You are on the list.';
+          else status.textContent = 'Payment is still processing. Check your email in a minute.';
+        })
+        .catch(() => { status.textContent = 'If Stripe emailed you a receipt, you are in.'; });
+    }
+  </script>
+</body>
+</html>

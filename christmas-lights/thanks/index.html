@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>You're in | Christmas Lights Bus Tour</title>
+  <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600&display=swap" rel="stylesheet" />
+  <style>
+    body { margin:0; font-family:'Josefin Sans',sans-serif; background:#1f2b3f; color:#e4e2d9; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:32px 20px; }
+    .card { max-width: 36em; text-align:center; }
+    h1 { font-family: Georgia, serif; font-weight:400; font-size: clamp(1.8rem,4vw,2.6rem); margin: 0 0 16px; }
+    p { font-weight:300; line-height:1.7; margin: 0 0 14px; }
+    a { color:#ba8032; }
+    .muted { opacity:.75; font-size:.95rem; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <p class="muted" id="status">Checking your ticket…</p>
+    <h1>Seats are held.</h1>
+    <p>A receipt is on its way to your email. We will confirm the Saturday and pickup once December dates lock. Cocoa, Santa, and the lobby are waiting after the lights.</p>
+    <p><a href="/christmas-lights/">Back to the tour</a> · <a href="https://www.hotelstcloud.com/">hotelstcloud.com</a></p>
+  </div>
+  <script>
+    const sid = new URLSearchParams(location.search).get('session_id');
+    const status = document.getElementById('status');
+    if (!sid) status.textContent = 'If you paid, check your email.';
+    else {
+      fetch('/api/events/confirm?session_id=' + encodeURIComponent(sid))
+        .then(r => r.json())
+        .then(d => { status.textContent = d.ok ? 'Paid. You are on the list.' : 'Payment is still processing.'; })
+        .catch(() => { status.textContent = 'If Stripe emailed a receipt, you are in.'; });
+    }
+  </script>
+</body>
+</html>
