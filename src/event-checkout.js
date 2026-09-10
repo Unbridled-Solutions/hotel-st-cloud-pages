@@ -141,7 +141,56 @@ function orderFromSession(session, extra = {}) {
     guestEmailId: extra.guestEmailId || "",
     deskEmailId: extra.deskEmailId || "",
     emailError: extra.emailError || "",
+    stripeFee: extra.stripeFee || 0,
+    net: extra.net || 0,
+    feeEstimated: extra.feeEstimated || false,
+    ticketCount: extra.ticketCount || 0,
+    feePerTicket: extra.feePerTicket || 0,
+    netPerTicket: extra.netPerTicket || 0,
   };
+}
+
+function paidTicketCount(order) {
+  if (order.event === "murder-mystery") return qty(order.adults) || 1;
+  const n = qty(order.adults) + qty(order.children) + qty(order.family) * 4;
+  return n || 1;
+}
+
+async function attachStripeFees(env, order) {
+  if (order.stripeFee && order.net && !order.feeEstimated) {
+    const n = paidTicketCount(order);
+    order.ticketCount = n;
+    order.feePerTicket = Math.round(order.stripeFee / n);
+    order.netPerTicket = Math.round(order.net / n);
+    return order;
+  }
+  try {
+    const expanded = await stripeGet(
+      env,
+      "/checkout/sessions/" + order.id + "?expand[]=payment_intent.latest_charge.balance_transaction"
+    );
+    const pi = expanded.payment_intent;
+    const charge = pi && typeof pi === "object" ? pi.latest_charge : null;
+    const bt = charge && typeof charge === "object" ? charge.balance_transaction : null;
+    if (bt && typeof bt === "object" && (bt.fee != null || bt.net != null)) {
+      order.stripeFee = Number(bt.fee || 0);
+      order.net = Number(bt.net != null ? bt.net : order.amount - order.stripeFee);
+      order.feeEstimated = false;
+    } else {
+      order.stripeFee = Math.round(Number(order.amount || 0) * 0.029 + 30);
+      order.net = Number(order.amount || 0) - order.stripeFee;
+      order.feeEstimated = true;
+    }
+  } catch {
+    order.stripeFee = Math.round(Number(order.amount || 0) * 0.029 + 30);
+    order.net = Number(order.amount || 0) - order.stripeFee;
+    order.feeEstimated = true;
+  }
+  const n = paidTicketCount(order);
+  order.ticketCount = n;
+  order.feePerTicket = Math.round((order.stripeFee || 0) / n);
+  order.netPerTicket = Math.round((order.net || 0) / n);
+  return order;
 }
 
 function money(cents) {
@@ -295,9 +344,10 @@ export async function handleEventCheckout(request, env) {
     }
     const existing = await env.PLANNER_DATA.get("events:order:" + session.id, { type: "json" });
     const order = orderFromSession(session, existing || {});
+    await attachStripeFees(env, order);
     await saveOrder(env, order);
     await notifyOrder(env, order);
-    return json({ ok: true, order: { eventName: order.eventName, name: order.name, email: order.email, amount: order.amount } });
+    return json({ ok: true, order: { eventName: order.eventName, name: order.name, email: order.email, amount: order.amount, stripeFee: order.stripeFee, net: order.net } });
   }
 
   if (path === "/api/events/webhook" && request.method === "POST") {
@@ -313,6 +363,7 @@ export async function handleEventCheckout(request, env) {
       if (session?.id) {
         const existing = await env.PLANNER_DATA.get("events:order:" + session.id, { type: "json" });
         const order = orderFromSession(session, existing || {});
+        await attachStripeFees(env, order);
         await saveOrder(env, order);
         await notifyOrder(env, order);
       }
@@ -325,8 +376,13 @@ export async function handleEventCheckout(request, env) {
     const index = (await env.PLANNER_DATA.get("events:index", { type: "json" })) || [];
     const orders = [];
     for (const id of index.slice(0, 300)) {
-      const row = await env.PLANNER_DATA.get("events:order:" + id, { type: "json" });
-      if (row) orders.push(row);
+      let row = await env.PLANNER_DATA.get("events:order:" + id, { type: "json" });
+      if (!row) continue;
+      if (!row.stripeFee || !row.net) {
+        await attachStripeFees(env, row);
+        await saveOrder(env, row);
+      }
+      orders.push(row);
     }
     return json({ orders });
   }

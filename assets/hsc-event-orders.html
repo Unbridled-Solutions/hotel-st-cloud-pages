@@ -50,7 +50,9 @@
     <div class="stats">
       <div class="stat"><b id="n-all">0</b><span class="muted">Paid</span></div>
       <div class="stat"><b id="n-new">0</b><span class="muted">New</span></div>
-      <div class="stat"><b id="n-dollars">$0</b><span class="muted">Collected</span></div>
+      <div class="stat"><b id="n-dollars">$0</b><span class="muted">Gross</span></div>
+      <div class="stat"><b id="n-fees">$0</b><span class="muted">Stripe fees</span></div>
+      <div class="stat"><b id="n-net">$0</b><span class="muted">Net take-home</span></div>
     </div>
     <div style="overflow:auto">
       <table>
@@ -60,7 +62,10 @@
             <th>Event</th>
             <th>Guest</th>
             <th>Tickets</th>
-            <th>Paid</th>
+            <th>Gross</th>
+            <th>Stripe fee</th>
+            <th>Net</th>
+            <th>Per ticket</th>
             <th>Room?</th>
             <th>Status</th>
             <th>Notes</th>
@@ -90,7 +95,12 @@
       const orders = data.orders || [];
       document.getElementById('n-all').textContent = orders.length;
       document.getElementById('n-new').textContent = orders.filter(o => (o.status || 'new') === 'new').length;
-      document.getElementById('n-dollars').textContent = money(orders.reduce((s, o) => s + Number(o.amount || 0), 0));
+      const gross = orders.reduce((s, o) => s + Number(o.amount || 0), 0);
+      const fees = orders.reduce((s, o) => s + Number(o.stripeFee || 0), 0);
+      const net = orders.reduce((s, o) => s + Number(o.net || 0), 0);
+      document.getElementById('n-dollars').textContent = money(gross);
+      document.getElementById('n-fees').textContent = money(fees);
+      document.getElementById('n-net').textContent = money(net);
       const tb = document.getElementById('rows');
       tb.innerHTML = orders.map(o => `
         <tr data-id="${o.id}">
@@ -99,6 +109,9 @@
           <td>${o.name}<div class="muted">${o.email}<br>${o.phone || ''}</div></td>
           <td>A ${o.adults || 0} · C ${o.children || 0} · Fam ${o.family || 0} · U3 ${o.under3 || 0}<div class="muted">${o.notes || ''}</div></td>
           <td>${money(o.amount)}</td>
+          <td>${money(o.stripeFee)}${o.feeEstimated ? '<div class="muted">est.</div>' : ''}</td>
+          <td><strong>${money(o.net)}</strong></td>
+          <td>${money(o.netPerTicket)} net<div class="muted">${money(o.feePerTicket)} fee</div></td>
           <td>${o.wantRoom === 'yes' ? 'Call them' : 'No'}</td>
           <td>
             <select class="st">
@@ -109,7 +122,7 @@
             </select>
           </td>
           <td><input class="sn" value="${(o.staffNotes||'').replace(/"/g,'&quot;')}" placeholder="Desk note" /></td>
-        </tr>`).join('') || '<tr><td colspan="8" class="muted">No paid orders yet. Run a test checkout.</td></tr>';
+        </tr>`).join('') || '<tr><td colspan="11" class="muted">No paid orders yet. Run a test checkout.</td></tr>';
       tb.querySelectorAll('tr[data-id]').forEach(tr => {
         const save = async () => {
           await fetch('/api/events/orders', {
