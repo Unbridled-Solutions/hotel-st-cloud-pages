@@ -132,7 +132,11 @@ function orderFromSession(session, extra = {}) {
     under3: meta.under3 || "0",
     wantRoom: meta.wantRoom || "no",
     notes: meta.notes || "",
+    entreeA: meta.entreeA || extra.entreeA || "0",
+    entreeB: meta.entreeB || extra.entreeB || "0",
     amount: session.amount_total || 0,
+    subtotal: session.amount_subtotal || extra.subtotal || 0,
+    tax: (session.total_details && session.total_details.amount_tax) || extra.tax || 0,
     currency: session.currency || "usd",
     paymentStatus: session.payment_status || "",
     status: extra.status || "new",
@@ -241,7 +245,8 @@ async function notifyOrder(env, order) {
       subject: `You're in · ${order.eventName}`,
       html: `<p>Hi ${order.name || "there"},</p>
 <p>We have your tickets for <strong>${order.eventName}</strong>${order.eventDate ? " on " + order.eventDate : ""}.</p>
-<p>${ticketLine(order)}<br>Paid ${money(order.amount)}.</p>
+<p>${ticketLine(order)}<br>Paid ${money(order.amount)}${order.tax ? " (includes " + money(order.tax) + " tax)" : ""}.</p>
+${Number(order.entreeA) || Number(order.entreeB) ? "<p>Entrees: A " + (order.entreeA || 0) + " · B " + (order.entreeB || 0) + "</p>" : ""}
 ${order.wantRoom === "yes" ? "<p>You asked about a room. The desk will follow up.</p>" : ""}
 ${order.notes ? "<p>Notes we have: " + order.notes + "</p>" : ""}
 <p>Hotel St. Cloud · 631 Main Street, Cañon City<br>(719) 602-3469 · reservations@hotelstcloud.com</p>`,
@@ -258,8 +263,9 @@ ${order.notes ? "<p>Notes we have: " + order.notes + "</p>" : ""}
       html: `<p><strong>${order.name}</strong> (${order.email} / ${order.phone || "no phone"})</p>
 <p>${order.eventName} ${order.eventDate || ""}</p>
 <p>${ticketLine(order)}</p>
+<p>Entrees: A ${order.entreeA || 0} · B ${order.entreeB || 0}</p>
 <p>Want a room: ${order.wantRoom}</p>
-<p>Paid ${money(order.amount)}</p>
+<p>Paid ${money(order.amount)}${order.tax ? " · tax " + money(order.tax) : ""}</p>
 <p>Notes: ${order.notes || "none"}</p>
 <p><a href="https://offers.hotelstcloud.com/assets/hsc-event-orders">Open orders board</a></p>`,
     });
@@ -294,6 +300,14 @@ export async function handleEventCheckout(request, env) {
     if (!name || !email) return json({ error: "Name and email are required." }, 400);
     const items = buildLineItems(event, body);
     if (!items.length) return json({ error: "Add at least one ticket." }, 400);
+    if (event === "murder-mystery") {
+      const tickets = qty(body.adults || body.qty);
+      const a = qty(body.entreeA);
+      const b = qty(body.entreeB);
+      if (a + b !== tickets) {
+        return json({ error: "Entree A and B need to add up to the number of tickets." }, 400);
+      }
+    }
 
     const ev = EVENTS[event];
     const origin = originOf(request);
@@ -318,6 +332,9 @@ export async function handleEventCheckout(request, env) {
       "metadata[under3]": String(qty(body.under3)),
       "metadata[wantRoom]": body.wantRoom === "yes" ? "yes" : "no",
       "metadata[notes]": String(body.notes || "").slice(0, 400),
+      "metadata[entreeA]": String(qty(body.entreeA)),
+      "metadata[entreeB]": String(qty(body.entreeB)),
+      "automatic_tax[enabled]": "true",
     };
     items.forEach((it, i) => {
       params[`line_items[${i}][price]`] = it.price;

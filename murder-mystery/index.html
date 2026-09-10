@@ -25,11 +25,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Murder in Buffalo Chip | Halloween at Hotel St. Cloud</title>
-  <meta name="description" content="Friday, October 30 at Hotel St. Cloud. Red Herring Productions brings a brand-new Old West mystery to Cañon City. Come in costume. Dinner, a felony, and the 1883 lobby." />
+  <meta name="description" content="Friday, October 30 at Hotel St. Cloud. Red Herring Productions brings a brand-new Old West mystery to Cañon City. Dinner, a felony, and the 1883 lobby." />
   <link rel="canonical" href="https://offers.hotelstcloud.com/murder-mystery/" />
   <meta name="robots" content="index, follow" />
   <meta property="og:title" content="Murder in Buffalo Chip | Hotel St. Cloud" />
-  <meta property="og:description" content="Halloween night, Old West costumes, and a new Red Herring mystery in Cañon City's 1883 hotel." />
+  <meta property="og:description" content="Halloween night and a new Red Herring mystery in Cañon City's 1883 hotel." />
   <meta property="og:image" content="https://offers.hotelstcloud.com/assets/murder-mystery/hero.jpg" />
   <meta property="og:url" content="https://offers.hotelstcloud.com/murder-mystery/" />
   <meta property="og:type" content="website" />
@@ -159,7 +159,7 @@
     <div class="hero-inner">
       <p class="hero-eyebrow">Halloween · Friday, October 30</p>
       <h1 class="hero-headline">Someone in Buffalo Chip is about to punch their ticket.</h1>
-      <p class="hero-sub">A brand-new Old West mystery from Red Herring Productions, dinner in the 1883 house, and your best Halloween costume. This is not last year's show. Same company out of the Springs. New skit. New cast.</p>
+      <p class="hero-sub">A brand-new Old West mystery from Red Herring Productions and dinner in the 1883 house. This is not last year's show. Same company out of the Springs. New skit. New cast. Dress to the theme if you want. It is not required.</p>
       <div class="hero-actions">
         <a class="btn-primary" href="#the-night">Buy tickets</a>
         <a class="btn-ghost" href="tel:7196023469" onclick="return gtag_phone_call('tel:7196023469')">Call (719) 602-3469</a>
@@ -172,7 +172,7 @@
       <div class="strip-item"><strong>Friday, Oct 30</strong><span>Halloween night</span></div>
       <div class="strip-item"><strong>Hotel St. Cloud</strong><span>631 Main Street</span></div>
       <div class="strip-item"><strong>Red Herring</strong><span>New show, new cast</span></div>
-      <div class="strip-item"><strong>Old West dress</strong><span>Costumes encouraged</span></div>
+      <div class="strip-item"><strong>Get in the mood</strong><span>Dress is optional</span></div>
     </div>
   </div>
 
@@ -188,7 +188,7 @@
           <ul>
             <li>A fully interactive Red Herring mystery, not a play you sit still for</li>
             <li>Dinner at Hotel St. Cloud</li>
-            <li>Old West Halloween costumes. Come as a prospector, a preacher, or trouble</li>
+            <li>Get in the mood if you want. Dress to the theme is welcome, not required</li>
             <li>Family-friendly felony. Funny, not gory</li>
             <li>Buy tickets here. Not Eventbrite. A room is extra if you want one</li>
           </ul>
@@ -218,11 +218,22 @@
               </select>
             </div>
           </div>
-          <label for="notes">Notes (costume, allergies, table)</label>
+          <div class="row2">
+            <div>
+              <label for="entreeA">Entree A</label>
+              <input id="entreeA" name="entreeA" type="number" min="0" max="20" value="2" />
+            </div>
+            <div>
+              <label for="entreeB">Entree B</label>
+              <input id="entreeB" name="entreeB" type="number" min="0" max="20" value="0" />
+            </div>
+          </div>
+          <label for="notes">Notes (allergies, table)</label>
           <textarea id="notes" name="notes"></textarea>
           <p class="err" id="form-err"></p>
           <button class="btn-primary" type="submit" id="pay-btn">Pay with card · $85 each</button>
         </form>
+        <p class="fine">Entree A and B are placeholders until the kitchen names them. Counts must add up to your tickets. Tax is added at checkout.</p>
         <p class="fine">Stripe test mode. Use card 4242 4242 4242 4242, any future date, any CVC. A room is not in this checkout. If you want one, we will call you.</p>
         <a class="alt" href="tel:7196023469">Or call (719) 602-3469</a>
       </aside>
@@ -241,12 +252,12 @@
   <section class="day">
     <div class="container">
       <p class="section-eyebrow">How to show up</p>
-      <h2 class="section-title">Costume, appetite, alibi</h2>
+      <h2 class="section-title">Appetite, alibi, optional flair</h2>
       <div class="day-grid">
         <article class="day-card">
           <p class="day-num">Wear</p>
-          <h3>Old West Halloween</h3>
-          <p>Boots, a bad badge, a church hat. You do not need a perfect costume. You need to look like you belong in Buffalo Chip.</p>
+          <h3>Get in the mood</h3>
+          <p>Dress to the theme if it sounds fun. It is welcome. It is not required. Come as you are and you still belong in Buffalo Chip.</p>
         </article>
         <article class="day-card">
           <p class="day-num">Eat</p>
@@ -292,9 +303,18 @@
         email: document.getElementById('email').value.trim(),
         phone: document.getElementById('phone').value.trim(),
         adults: document.getElementById('adults').value,
+        entreeA: document.getElementById('entreeA').value,
+        entreeB: document.getElementById('entreeB').value,
         wantRoom: document.getElementById('wantRoom').value,
         notes: document.getElementById('notes').value.trim()
       };
+      const tickets = Number(body.adults || 0);
+      const entrees = Number(body.entreeA || 0) + Number(body.entreeB || 0);
+      if (tickets !== entrees) {
+        err.textContent = 'Entree A and B need to add up to the number of tickets.';
+        btn.disabled = false;
+        return;
+      }
       try {
         const res = await fetch('/api/events/checkout', {
           method: 'POST',
