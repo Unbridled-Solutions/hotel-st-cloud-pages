@@ -267,7 +267,7 @@ ${order.notes ? "<p>Notes we have: " + order.notes + "</p>" : ""}
 <p>Want a room: ${order.wantRoom}</p>
 <p>Paid ${money(order.amount)}${order.tax ? " · tax " + money(order.tax) : ""}</p>
 <p>Notes: ${order.notes || "none"}</p>
-<p><a href="https://offers.hotelstcloud.com/assets/hsc-event-orders">Open orders board</a></p>`,
+<p><a href="https://tools.hotelstcloud.com/">Open orders board</a></p>`,
     });
     if (desk.id) order.deskEmailId = desk.id;
     else errors.push("desk: " + (desk.error || "fail"));

@@ -102,6 +102,10 @@ function isFmToolsHost(hostname) {
   return hostname === "tools.fremontmakers.com";
 }
 
+function isHscToolsHost(hostname) {
+  return hostname === "tools.hotelstcloud.com";
+}
+
 async function serveAsset(env, request, pathname) {
   const assetUrl = new URL(request.url);
   assetUrl.pathname = pathname;
@@ -130,6 +134,13 @@ export default {
     if (url.pathname.startsWith("/api/events/")) {
       const eventRes = await handleEventCheckout(request, env);
       if (eventRes) return eventRes;
+    }
+
+    if (isHscToolsHost(url.hostname) && !url.pathname.startsWith("/api")) {
+      const p = url.pathname.replace(/\/$/, "") || "/";
+      if (p === "/" || p === "/index.html" || p === "/dashboard" || p === "/event-orders" || p === "/orders") {
+        return serveAsset(env, request, "/assets/hsc-event-orders.html");
+      }
     }
 
     // tools.fremontmakers.com — FM dashboard + maintenance, same Worker/KV/R2 as offers.
