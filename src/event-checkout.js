@@ -224,15 +224,12 @@ async function sendResend(env, payload) {
 }
 
 const FROM_HOTEL = "Hotel St. Cloud <reservations@hotelstcloud.com>";
-const FROM_FALLBACK = "Hotel St. Cloud <noreply@fremontmakers.com>";
 const DESK = "reservations@hotelstcloud.com";
 
 async function sendHotelMail(env, payload) {
-  const first = await sendResend(env, Object.assign({}, payload, { from: FROM_HOTEL }));
-  if (first.id) return Object.assign(first, { from: FROM_HOTEL });
-  const second = await sendResend(env, Object.assign({}, payload, { from: FROM_FALLBACK }));
-  if (second.id) return Object.assign(second, { from: FROM_FALLBACK, fallback: first.error });
-  return { error: first.error || second.error || "send failed" };
+  const sent = await sendResend(env, Object.assign({}, payload, { from: FROM_HOTEL }));
+  if (sent.id) return Object.assign(sent, { from: FROM_HOTEL });
+  return { error: sent.error || "send failed" };
 }
 
 async function notifyOrder(env, order) {
@@ -251,10 +248,8 @@ ${order.wantRoom === "yes" ? "<p>You asked about a room. The desk will follow up
 ${order.notes ? "<p>Notes we have: " + order.notes + "</p>" : ""}
 <p>Hotel St. Cloud · 631 Main Street, Cañon City<br>(719) 602-3469 · reservations@hotelstcloud.com</p>`,
     });
-    if (guest.id) {
-      order.guestEmailId = guest.id;
-      if (guest.fallback) errors.push("from fallback: " + guest.fallback);
-    } else errors.push("guest: " + (guest.error || "fail"));
+    if (guest.id) order.guestEmailId = guest.id;
+    else errors.push("guest: " + (guest.error || "fail"));
   }
   if (!order.deskEmailId) {
     const desk = await sendHotelMail(env, {
