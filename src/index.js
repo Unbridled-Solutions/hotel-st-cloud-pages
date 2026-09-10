@@ -5,6 +5,7 @@
 
 import { handlePlannerSync, handlePlannerSyncStatus, handlePlannerLyoy } from './planner-sync.js';
 import { handleEventCheckout } from './event-checkout.js';
+import { handleHrForms } from './hr-forms.js';
 
 const AIRTABLE_BASE = "appUUjLXEUwlyx23M";
 const SOCC_TABLE    = "SOCC%20Barista%20Applications";
@@ -20,7 +21,7 @@ function optionsResponse() {
   return new Response(null, { headers: {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Headers": "Content-Type, x-hr-key, x-event-key",
   }});
 }
 
@@ -136,10 +137,18 @@ export default {
       if (eventRes) return eventRes;
     }
 
+    if (url.pathname.startsWith("/api/hr/")) {
+      const hrRes = await handleHrForms(request, env);
+      if (hrRes) return hrRes;
+    }
+
     if (isHscToolsHost(url.hostname) && !url.pathname.startsWith("/api")) {
       const p = url.pathname.replace(/\/$/, "") || "/";
       if (p === "/" || p === "/index.html" || p === "/dashboard" || p === "/event-orders" || p === "/orders") {
         return serveAsset(env, request, "/assets/hsc-event-orders.html");
+      }
+      if (p === "/hr" || p === "/hr-tracker") {
+        return serveAsset(env, request, "/assets/hsc-hr-tracker.html");
       }
     }
 

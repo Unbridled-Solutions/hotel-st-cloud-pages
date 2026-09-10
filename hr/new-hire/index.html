@@ -522,11 +522,11 @@
     <!-- ── Step 4: Summary ────────────────────────────────────────── -->
     <div class="step print-show" id="step4">
         <div class="done-banner">
-            🎉 Onboarding Complete! — Print this page or save as PDF, then upload to SharePoint with the rest of the new hire packet.
+            Onboarding complete. Submit to HR below. Print is optional, for your records.
         </div>
 
         <div class="info-box no-print">
-            <strong>Next step:</strong> Click <strong>Save as PDF / Print</strong> below → choose "Save as PDF" → upload to the SharePoint HR folder along with all signed physical documents.
+            <strong>Next step:</strong> Click <strong>Submit to HR</strong>. Jackie gets it at jcarter@unbridledhospitality.com. Keep print if you want a copy.
         </div>
 
         <div class="card">
@@ -568,9 +568,11 @@
         </div>
 
         <div class="nav-buttons no-print" style="margin-top:30px;">
-            <button class="btn btn-secondary" onclick="openPrintPage()">🖨️ Save as PDF / Print</button>
-            <button class="btn btn-primary" onclick="location.reload()">Start New Hire</button>
+            <button class="btn btn-primary" id="hr-submit-btn" type="button">Submit to HR</button>
+            <button class="btn btn-secondary" onclick="openPrintPage()">🖨️ Save a copy / Print</button>
+            <button class="btn btn-secondary" onclick="location.reload()">Start New Hire</button>
         </div>
+        <p class="no-print" id="hr-submit-status" style="margin-top:12px;font-size:0.92em;"></p>
 
         <!-- I-9 Documents — own page when printed -->
         <div class="i9-docs-page" id="i9DocsPage">
@@ -649,7 +651,13 @@
         if (currentStep < TOTAL_STEPS) {
             const next = currentStep + 1;
             showStep(next);
-            if (next === TOTAL_STEPS) populateSummary();
+            if (next === TOTAL_STEPS) {
+                populateSummary();
+                if (typeof submitHrForm === 'function') {
+                    var name = ((formData.firstName || '') + ' ' + (formData.lastName || '')).trim();
+                    submitHrForm('new-hire', formData, name);
+                }
+            }
         }
     }
 
@@ -1095,6 +1103,16 @@ window.onload = function() {
         });
         return out;
     }
+</script>
+<script src="/hr/submit-hr.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('hr-submit-btn');
+    if (btn) btn.addEventListener('click', function () {
+      var name = ((formData.firstName || '') + ' ' + (formData.lastName || '')).trim();
+      submitHrForm('new-hire', formData, name);
+    });
+  });
 </script>
 </body>
 </html>

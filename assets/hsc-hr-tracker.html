@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>HR submissions | Unbridled Hospitality</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root { --bg:#0f1117; --surface:#1a1d27; --border:#2e3250; --text:#e8eaf0; --muted:#8b90a8; --accent:#4a9eff; --gold:#ba8032; --ok:#3de8c8; --rust:#c44027; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { background:var(--bg); color:var(--text); font-family:Inter,system-ui,sans-serif; font-size:14px; min-height:100vh; }
+    .header { background:var(--surface); border-bottom:1px solid var(--border); padding:18px 24px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; }
+    h1 { font-size:18px; }
+    h1 span { color:var(--gold); }
+    .muted { color:var(--muted); font-size:12px; }
+    .gate { max-width:420px; margin:80px auto; background:var(--surface); padding:28px; border:1px solid var(--border); }
+    .gate input, select, .toolbar input, .toolbar select { width:100%; background:#12141c; border:1px solid var(--border); color:var(--text); padding:10px 12px; font:inherit; }
+    .gate button, .btn { background:var(--gold); color:#12141c; border:0; padding:10px 16px; font-weight:600; cursor:pointer; }
+    .stats { display:flex; gap:1px; background:var(--border); }
+    .stat { flex:1; background:var(--surface); padding:14px; text-align:center; min-width:90px; }
+    .stat b { display:block; font-size:22px; }
+    .tabs { display:flex; gap:0; background:var(--surface); border-bottom:1px solid var(--border); overflow-x:auto; }
+    .tab { background:transparent; color:var(--muted); border:0; border-bottom:2px solid transparent; padding:14px 20px; font:inherit; font-weight:600; cursor:pointer; white-space:nowrap; }
+    .tab.on { color:var(--text); border-bottom-color:var(--gold); }
+    .tab .count { color:var(--muted); font-weight:500; margin-left:6px; }
+    .toolbar { display:flex; gap:10px; flex-wrap:wrap; padding:14px 18px; background:var(--surface); border-bottom:1px solid var(--border); }
+    .toolbar input, .toolbar select { width:auto; min-width:160px; }
+    table { width:100%; border-collapse:collapse; }
+    th, td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--border); vertical-align:top; }
+    th { color:var(--muted); font-size:11px; letter-spacing:.08em; text-transform:uppercase; }
+    tr:hover td { background:#161924; }
+    .err { color:#ff8a80; margin-top:8px; }
+    .detail { background:#12141c; border:1px solid var(--border); padding:10px 12px; margin-top:8px; font-size:12px; color:var(--muted); max-height:180px; overflow:auto; white-space:pre-wrap; }
+    a.nav { color:var(--gold); font-size:12px; text-decoration:none; }
+  </style>
+</head>
+<body>
+  <div id="gate" class="gate">
+    <h1>HR <span>submissions</span></h1>
+    <p class="muted" style="margin:8px 0 16px">New hire, employee update, disciplinary, termination. Jackie gets the email. This is the working list. Not public.</p>
+    <input id="key" type="password" placeholder="Access key" />
+    <p class="err" id="gate-err"></p>
+    <button id="unlock" style="margin-top:12px">Open tracker</button>
+  </div>
+  <div id="app" hidden>
+    <div class="header">
+      <div>
+        <h1>Unbridled Hospitality <span>HR tracker</span></h1>
+        <p class="muted">Goes to jcarter@unbridledhospitality.com on submit. <a class="nav" href="/">Event orders</a></p>
+      </div>
+      <button class="btn" id="reload">Refresh</button>
+    </div>
+    <div class="tabs" id="tabs"></div>
+    <div class="stats">
+      <div class="stat"><b id="n-all">0</b><span class="muted">Total</span></div>
+      <div class="stat"><b id="n-new">0</b><span class="muted">New</span></div>
+      <div class="stat"><b id="n-hire">0</b><span class="muted">New hire</span></div>
+      <div class="stat"><b id="n-update">0</b><span class="muted">Updates</span></div>
+      <div class="stat"><b id="n-disc">0</b><span class="muted">Disciplinary</span></div>
+      <div class="stat"><b id="n-term">0</b><span class="muted">Terminations</span></div>
+    </div>
+    <div class="toolbar">
+      <input id="q" type="search" placeholder="Search name, manager, location" />
+      <select id="status-filter">
+        <option value="">All statuses</option>
+        <option value="new">New</option>
+        <option value="in-progress">In progress</option>
+        <option value="done">Done</option>
+      </select>
+    </div>
+    <div style="overflow:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>When</th>
+            <th>Type</th>
+            <th>Employee</th>
+            <th>Manager</th>
+            <th>Status</th>
+            <th>Notes</th>
+            <th>Email</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </div>
+  <script>
+    const KEY = 'hsc-hr-tracker-key';
+    const TABS = [
+      { id: 'all', label: 'All' },
+      { id: 'new-hire', label: 'New Hire' },
+      { id: 'employee-update', label: 'Employee Update' },
+      { id: 'disciplinary', label: 'Disciplinary' },
+      { id: 'termination', label: 'Termination' },
+    ];
+    let access = sessionStorage.getItem(KEY) || '';
+    let allRows = [];
+    let tab = sessionStorage.getItem('hsc-hr-tab') || 'all';
+    const gate = document.getElementById('gate');
+    const app = document.getElementById('app');
+
+    function when(ms) {
+      if (!ms) return '';
+      return new Date(ms).toLocaleString('en-US', { timeZone: 'America/Denver', month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
+    }
+    function filtered() {
+      const q = (document.getElementById('q').value || '').trim().toLowerCase();
+      const st = document.getElementById('status-filter').value;
+      let rows = allRows.slice();
+      if (tab !== 'all') rows = rows.filter(o => o.type === tab);
+      if (st) rows = rows.filter(o => (o.status || 'new') === st);
+      if (q) {
+        rows = rows.filter(o => [o.employeeName, o.managerName, o.location, o.staffNotes, o.typeLabel]
+          .join(' ').toLowerCase().includes(q));
+      }
+      return rows;
+    }
+    function fieldPreview(fields) {
+      if (!fields) return '';
+      return Object.entries(fields).map(([k,v]) => k + ': ' + v).join('\n');
+    }
+    function renderTabs() {
+      document.getElementById('tabs').innerHTML = TABS.map(t => {
+        const n = t.id === 'all' ? allRows.length : allRows.filter(o => o.type === t.id).length;
+        return `<button class="tab${tab===t.id?' on':''}" data-tab="${t.id}">${t.label}<span class="count">${n}</span></button>`;
+      }).join('');
+      document.querySelectorAll('.tab').forEach(btn => {
+        btn.onclick = () => {
+          tab = btn.dataset.tab;
+          sessionStorage.setItem('hsc-hr-tab', tab);
+          render();
+        };
+      });
+    }
+    function render() {
+      renderTabs();
+      const rows = filtered();
+      document.getElementById('n-all').textContent = allRows.length;
+      document.getElementById('n-new').textContent = allRows.filter(o => (o.status || 'new') === 'new').length;
+      document.getElementById('n-hire').textContent = allRows.filter(o => o.type === 'new-hire').length;
+      document.getElementById('n-update').textContent = allRows.filter(o => o.type === 'employee-update').length;
+      document.getElementById('n-disc').textContent = allRows.filter(o => o.type === 'disciplinary').length;
+      document.getElementById('n-term').textContent = allRows.filter(o => o.type === 'termination').length;
+      const tb = document.getElementById('rows');
+      tb.innerHTML = rows.map(o => `
+        <tr data-id="${o.id}">
+          <td>${when(o.created)}</td>
+          <td>${o.typeLabel || o.type}</td>
+          <td>${o.employeeName}<div class="muted">${o.location || ''}</div><div class="detail">${fieldPreview(o.fields)}</div></td>
+          <td>${o.managerName || ''}</td>
+          <td>
+            <select class="st">
+              <option value="new"${(o.status||'new')==='new'?' selected':''}>New</option>
+              <option value="in-progress"${o.status==='in-progress'?' selected':''}>In progress</option>
+              <option value="done"${o.status==='done'?' selected':''}>Done</option>
+            </select>
+          </td>
+          <td><input class="sn" value="${(o.staffNotes||'').replace(/"/g,'&quot;')}" placeholder="HR note" /></td>
+          <td>${o.emailId ? 'Sent' : (o.emailError || '—')}</td>
+        </tr>`).join('') || '<tr><td colspan="7" class="muted">Nothing in this view.</td></tr>';
+      tb.querySelectorAll('tr[data-id]').forEach(tr => {
+        const save = async () => {
+          await fetch('/api/hr/submissions', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'x-hr-key': access },
+            body: JSON.stringify({ id: tr.dataset.id, status: tr.querySelector('.st').value, staffNotes: tr.querySelector('.sn').value })
+          });
+        };
+        tr.querySelector('.st').addEventListener('change', save);
+        tr.querySelector('.sn').addEventListener('change', save);
+      });
+    }
+    async function load() {
+      const res = await fetch('/api/hr/submissions', { headers: { 'x-hr-key': access } });
+      if (res.status === 401) throw new Error('Wrong key');
+      const data = await res.json();
+      allRows = data.submissions || [];
+      render();
+    }
+    async function openBoard() {
+      try {
+        await load();
+        sessionStorage.setItem(KEY, access);
+        gate.hidden = true;
+        app.hidden = false;
+      } catch (e) {
+        document.getElementById('gate-err').textContent = e.message;
+      }
+    }
+    document.getElementById('unlock').onclick = () => {
+      access = document.getElementById('key').value.trim();
+      openBoard();
+    };
+    document.getElementById('reload').onclick = load;
+    document.getElementById('key').addEventListener('keydown', (e) => { if (e.key === 'Enter') document.getElementById('unlock').click(); });
+    document.getElementById('q').addEventListener('input', render);
+    document.getElementById('status-filter').addEventListener('change', render);
+    if (access) openBoard();
+  </script>
+</body>
+</html>
