@@ -60,7 +60,35 @@ h1 { font-size:20px; font-weight:700; }
 .toolbar { display:flex; gap:10px; flex-wrap:wrap; padding:12px 22px; align-items:center; background:var(--navy); }
 .search { flex:1; min-width:180px; background:transparent; border:none; border-bottom:1px solid var(--input-line); color:var(--text); font:inherit; font-size:15px; padding:6px 4px; }
 .search:focus { outline:none; border-bottom-color:var(--gold); }
-.wrap { padding:16px 22px 80px; max-width:1280px; }
+.wrap { padding:12px 10px 80px; max-width:none; }
+.grain { display:flex; border:1px solid var(--border); border-radius:6px; overflow:hidden; }
+.grain button { background:var(--card); border:none; color:var(--muted); font-size:11px; font-weight:700; letter-spacing:0.6px; text-transform:uppercase; padding:6px 14px; cursor:pointer; font-family:inherit; }
+.grain button.active { background:var(--gold); color:#0f1923; }
+.sheet-wrap { overflow-x:auto; margin-bottom:28px; }
+table.sheet { width:100%; border-collapse:collapse; font-size:12px; }
+.sheet th { background:#0d1620; color:var(--blue); font-size:10px; letter-spacing:0.7px; text-transform:uppercase; text-align:center; padding:7px 8px; border-bottom:1px solid var(--border); white-space:nowrap; }
+.sheet th.left, .sheet td.left { text-align:left; }
+.sheet td { padding:6px 8px; text-align:right; border-bottom:1px solid rgba(90,139,167,0.12); color:var(--text); background:var(--card); font-variant-numeric:tabular-nums; vertical-align:middle; }
+.sheet td.left { text-align:left; font-weight:600; }
+.sheet tr.week-tot td { background:#4a5560; color:#e8e0d4; font-weight:700; }
+.sheet tr.week-tot td.sticky { background:#4a5560; }
+.sheet tr.total td { background:#0d1620; color:var(--gold); font-weight:700; border-top:1px solid var(--gold); }
+.sheet tr.total td.sticky { background:#0d1620; color:var(--gold); }
+.sheet tr.hot td { box-shadow:inset 3px 0 0 var(--gold); }
+.sheet tr.due td { box-shadow:inset 3px 0 0 var(--orange); }
+th.split, td.split { border-left:3px solid #c9aa7c; }
+td.sticky, th.sticky { position:sticky; left:0; z-index:3; background:#0d1620; min-width:168px; border-right:3px solid #c9aa7c; }
+.sheet td.num { font-weight:700; }
+.sheet .muted { color:var(--muted); font-weight:400; }
+.sheet input.cell { min-height:24px; padding:2px 2px; font-size:12px; }
+.sheet input.cell.num { text-align:right; width:56px; }
+.sheet textarea.cell { min-height:32px; font-size:12px; }
+.hi { color:var(--gold); font-weight:700; }
+.ok { color:var(--green); font-weight:700; }
+.warn { color:var(--orange); font-weight:700; }
+.busy { background:rgba(201,170,124,0.16) !important; }
+.busy.full { background:rgba(76,175,125,0.18) !important; }
+.busy.over { background:rgba(224,90,90,0.18) !important; }
 .name { font-weight:700; color:var(--text); }
 .sub { font-size:12px; color:var(--muted); margin-top:3px; line-height:1.4; }
 input.cell, textarea.cell {
@@ -192,6 +220,10 @@ input[type="date"].cell { min-width:0; }
 <div class="tabs" id="yearTabs"></div>
 <div class="tabs" id="statusTabs"></div>
 <div class="toolbar">
+  <div class="grain">
+    <button type="button" id="grain-nights" class="active" onclick="setGrain('nights')">Nights</button>
+    <button type="button" id="grain-groups" onclick="setGrain('groups')">Groups</button>
+  </div>
   <input class="search" id="q" placeholder="Search name, type, notes, Cloudbeds code">
 </div>
 </div>
@@ -244,6 +276,7 @@ let events = [];
 let cb = { groups:[], blocks:[], fetchedAt:null };
 let viewYear = 2026;
 let viewStatus = 'confirmed';
+let viewGrain = 'nights';
 let saveLock = Promise.resolve();
 let saveTimer = null;
 
@@ -363,6 +396,38 @@ async function refreshCb(force) {
   render();
 }
 
+function nightsOf(e) {
+  if (Number(e.nights) > 0) return Number(e.nights);
+  if (e.startDate && e.endDate) {
+    const n = Math.round((Date.parse(e.endDate) - Date.parse(e.startDate)) / 86400000);
+    return Math.max(1, n);
+  }
+  return 1;
+}
+function roomsOnNight(e) {
+  const p = pickupOf(e);
+  if (p.heldRooms) return p.heldRooms;
+  return Number(e.rooms) || 0;
+}
+function eachStayNight(e, fn) {
+  if (!e.startDate) return;
+  const start = e.startDate;
+  const n = nightsOf(e);
+  for (let i = 0; i < n; i++) fn(addDays(start, i), e, i);
+}
+function mondayOf(ymd) {
+  const [y,m,d] = ymd.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m-1, d));
+  const dow = dt.getUTCDay(); // 0 Sun
+  const back = dow === 0 ? 6 : dow - 1;
+  dt.setUTCDate(dt.getUTCDate() - back);
+  return dt.toISOString().slice(0,10);
+}
+function fmtShort(ymd) {
+  if (!ymd) return '';
+  const [y,m,d] = ymd.split('-').map(Number);
+  return new Date(Date.UTC(y,m-1,d)).toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', timeZone:'UTC' });
+}
 function yearsPresent() {
   const ys = new Set(events.map(yearOf));
   ys.add(2026); ys.add(2027);
@@ -524,6 +589,144 @@ function renderTabs() {
 
 function setYear(y) { flushRowEdits(); viewYear = y; render(); }
 function setStatusView(id) { flushRowEdits(); viewStatus = id; render(); }
+function setGrain(g) {
+  viewGrain = g === 'groups' ? 'groups' : 'nights';
+  document.getElementById('grain-nights').classList.toggle('active', viewGrain==='nights');
+  document.getElementById('grain-groups').classList.toggle('active', viewGrain==='groups');
+  render();
+}
+
+function nightsHtml(list) {
+  const byDay = {};
+  list.forEach(e => {
+    eachStayNight(e, (ymd) => {
+      if (!byDay[ymd]) byDay[ymd] = [];
+      byDay[ymd].push(e);
+    });
+  });
+  const days = Object.keys(byDay).sort();
+  if (!days.length) return '';
+  let html = `<div class="sheet-wrap"><table class="sheet"><thead>
+    <tr>
+      <th class="left sticky">Night</th>
+      <th class="split">Groups</th>
+      <th>Rooms on books</th>
+      <th>Picked up</th>
+      <th>Who</th>
+    </tr></thead><tbody>`;
+  let weekKey = '';
+  let wRooms = 0, wPu = 0, wGroups = 0, wNights = 0;
+  let tRooms = 0, tPu = 0, tGroups = 0, tNights = 0;
+  const flushWeek = () => {
+    if (!wNights) return '';
+    const row = `<tr class="week-tot"><td class="left sticky">Weekly totals</td>
+      <td class="split">${wGroups}</td><td>${wRooms}</td><td>${wPu}</td>
+      <td class="left muted">${wNights} nights</td></tr>`;
+    wRooms = wPu = wGroups = wNights = 0;
+    return row;
+  };
+  days.forEach(ymd => {
+    const mk = mondayOf(ymd);
+    if (weekKey && mk !== weekKey) html += flushWeek();
+    weekKey = mk;
+    const gs = byDay[ymd];
+    const rooms = gs.reduce((s,e) => s + roomsOnNight(e), 0);
+    const pu = gs.reduce((s,e) => s + (pickupOf(e).puRooms || 0), 0);
+    const names = gs.map(e => `${esc(e.name)} (${roomsOnNight(e)})`).join(' · ');
+    const busyCls = rooms >= 30 ? 'busy over' : rooms >= 15 ? 'busy full' : rooms > 0 ? 'busy' : '';
+    html += `<tr>
+      <td class="left sticky">${fmtShort(ymd)}</td>
+      <td class="split num">${gs.length}</td>
+      <td class="num ${busyCls}">${rooms || '—'}</td>
+      <td class="num">${pu || '—'}</td>
+      <td class="left">${names}</td>
+    </tr>`;
+    wRooms += rooms; wPu += pu; wGroups += gs.length; wNights += 1;
+    tRooms += rooms; tPu += pu; tGroups += gs.length; tNights += 1;
+  });
+  html += flushWeek();
+  html += `<tr class="total"><td class="left sticky">On the books</td>
+    <td class="split">${tGroups}</td><td>${tRooms}</td><td>${tPu}</td>
+    <td class="left">${tNights} nights with a group · rooms column is peak rooms that night; weekly/total is room-nights</td></tr>`;
+  html += '</tbody></table></div>';
+  return html;
+}
+
+function groupsHtml(list) {
+  let html = `<div class="sheet-wrap"><table class="sheet"><thead>
+    <tr>
+      <th class="left sticky">Group</th>
+      <th>Type</th>
+      <th>Status</th>
+      <th class="split">Arrive</th>
+      <th>Depart</th>
+      <th>Nights</th>
+      <th>Rooms</th>
+      <th class="split">Pickup RN</th>
+      <th>Held RN</th>
+      <th>%</th>
+      <th>Release</th>
+      <th>360</th>
+      <th>Price</th>
+      <th>News</th>
+      <th>Notes</th>
+    </tr></thead><tbody>`;
+  let totRooms = 0, totNights = 0, totPu = 0, totHeld = 0;
+  html += list.map(e => {
+    const due = (() => { const i = daysToRelease(e); return i && i.diff <= 7 && i.diff >= 0 && e.status==='confirmed' && !e.released; })();
+    const p = pickupOf(e);
+    const hot = p.b && p.heldRn > 0 && (p.puRn / p.heldRn) < 0.5 && e.status==='confirmed';
+    const blocks = cb.blocks || [];
+    const opt = blocks.map(b => `<div class="dd-item ${b.code===e.cbBlockCode?'active':''}" onclick="event.stopPropagation();linkBlock('${e.id}','${b.code}')">${esc(b.name)} · ${b.roomsPickedUp}/${b.roomsHeld}</div>`).join('');
+    const pct = p.heldRn ? Math.round(p.puRn / p.heldRn * 100) : null;
+    totRooms += Number(e.rooms)||0;
+    totNights += nightsOf(e);
+    totPu += p.puRn || 0;
+    totHeld += p.heldRn || 0;
+    const rel = releaseCell(e);
+    return `<tr class="${due?'due':''} ${hot?'hot':''}">
+      <td class="left sticky">
+        <input class="cell" data-id="${e.id}" data-field="name" value="${escAttr(e.name)}" onchange="onField(this)">
+        <div class="sub">${e.cbGroupCode || ''}</div>
+      </td>
+      <td><input class="cell" data-id="${e.id}" data-field="type" value="${escAttr(e.type||'')}" onchange="onField(this)"></td>
+      <td>
+        <div class="dd st-${e.status}">
+          <button type="button" class="dd-btn" onclick="event.stopPropagation();toggleMenu('${e.id}', this)">${statusLabel(e.status)}</button>
+          <div class="dd-menu" id="menu-${e.id}">
+            ${STATUSES.map(s => `<div class="dd-item ${s.id===e.status?'active':''}" onclick="event.stopPropagation();pickStatus('${e.id}','${s.id}')">${s.label}</div>`).join('')}
+          </div>
+        </div>
+      </td>
+      <td class="split"><input class="cell" type="date" data-id="${e.id}" data-field="startDate" value="${e.startDate||''}" onchange="onField(this)"></td>
+      <td><input class="cell" type="date" data-id="${e.id}" data-field="endDate" value="${e.endDate||''}" onchange="onField(this)"></td>
+      <td><input class="cell num" type="number" min="0" data-id="${e.id}" data-field="nights" value="${e.nights??''}" onchange="onField(this)"></td>
+      <td class="num"><input class="cell num" type="number" min="0" data-id="${e.id}" data-field="rooms" value="${e.rooms??''}" onchange="onField(this)"></td>
+      <td class="split num ${pct!=null && pct>=90?'ok':pct!=null && pct<50?'warn':''}">${p.b ? (p.puRn + ' / ' + p.heldRn) : '—'}</td>
+      <td class="num">${p.heldRn != null ? p.heldRn : '—'}</td>
+      <td class="num">${pct!=null ? pct+'%' : '—'}</td>
+      <td class="left">${rel}
+        <div class="dd" style="margin-top:4px">
+          <button type="button" class="dd-btn" onclick="event.stopPropagation();toggleMenu('cb-${e.id}', this)">${e.cbBlockCode ? e.cbBlockCode : 'Link'}</button>
+          <div class="dd-menu" id="menu-cb-${e.id}">
+            ${opt || '<div class="dd-item">Refresh Cloudbeds first</div>'}
+            ${e.cbBlockCode ? `<div class="dd-item" onclick="event.stopPropagation();unlinkBlock('${e.id}')">Unlink</div>` : ''}
+          </div>
+        </div>
+      </td>
+      <td><input type="checkbox" data-id="${e.id}" data-field="in360" ${e.in360?'checked':''} onchange="onField(this)"></td>
+      <td><input type="checkbox" data-id="${e.id}" data-field="pricingUpdated" ${e.pricingUpdated?'checked':''} onchange="onField(this)"></td>
+      <td><input type="checkbox" data-id="${e.id}" data-field="newsletterSent" ${e.newsletterSent?'checked':''} onchange="onField(this)"></td>
+      <td><input class="cell" data-id="${e.id}" data-field="notes" value="${escAttr(e.notes||e.eventInfo||'')}" onchange="onField(this)"></td>
+    </tr>`;
+  }).join('');
+  html += `<tr class="total"><td class="left sticky">On the books</td><td></td><td></td>
+    <td class="split"></td><td></td><td>${totNights}</td><td>${totRooms}</td>
+    <td class="split">${totPu}</td><td>${totHeld}</td><td>${totHeld ? Math.round(totPu/totHeld*100)+'%' : '—'}</td>
+    <td colspan="5" class="left">${list.length} groups</td></tr>`;
+  html += '</tbody></table></div>';
+  return html;
+}
 
 function render() {
   renderTabs();
@@ -531,77 +734,7 @@ function render() {
   document.getElementById('hero').innerHTML = heroHtml(list);
   const tb = document.getElementById('rows');
   document.getElementById('empty').hidden = list.length > 0;
-  tb.innerHTML = list.map(e => {
-    const due = (() => { const i = daysToRelease(e); return i && i.diff <= 7 && i.diff >= 0 && e.status==='confirmed' && !e.released; })();
-    const p = pickupOf(e);
-    const hot = p.b && p.heldRn > 0 && (p.puRn / p.heldRn) < 0.5 && e.status==='confirmed';
-    const blocks = cb.blocks || [];
-    const opt = blocks.map(b => `<div class="dd-item ${b.code===e.cbBlockCode?'active':''}" onclick="event.stopPropagation();linkBlock('${e.id}','${b.code}')">${esc(b.name)} · ${b.roomsPickedUp}/${b.roomsHeld}</div>`).join('');
-    const typeLc = (e.type||'').toLowerCase();
-    const typeChip = typeLc.includes('wedding') ? 'wedding' : typeLc.includes('corporate') ? 'corporate' : '';
-    return `<article class="event ${due?'due':''} ${hot?'hot':''}">
-      <div class="event-head">
-        <div class="event-id">
-          <input class="cell" data-id="${e.id}" data-field="name" value="${escAttr(e.name)}" onchange="onField(this)">
-          <div class="sub">${e.inquiryDate ? 'Inquired ' + fmtDate(e.inquiryDate) : ''}${e.cbGroupCode ? (e.inquiryDate ? ' · ' : '') + e.cbGroupCode : ''}</div>
-        </div>
-        <div class="event-head-meta">
-          <input class="cell type-in" data-id="${e.id}" data-field="type" value="${escAttr(e.type||'')}" onchange="onField(this)" placeholder="Type">
-          <div class="dd st-${e.status}">
-            <button type="button" class="dd-btn" onclick="event.stopPropagation();toggleMenu('${e.id}', this)">${statusLabel(e.status)}</button>
-            <div class="dd-menu" id="menu-${e.id}">
-              ${STATUSES.map(s => `<div class="dd-item ${s.id===e.status?'active':''}" onclick="event.stopPropagation();pickStatus('${e.id}','${s.id}')">${s.label}</div>`).join('')}
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="event-grid">
-        <div class="field">
-          <span class="lbl">Stay</span>
-          <div class="dates">
-            <input class="cell" type="date" data-id="${e.id}" data-field="startDate" value="${e.startDate||''}" onchange="onField(this)">
-            <input class="cell" type="date" data-id="${e.id}" data-field="endDate" value="${e.endDate||''}" onchange="onField(this)">
-          </div>
-          <div class="sub">${e.dateLabel || ''}</div>
-        </div>
-        <div class="field">
-          <span class="lbl">Block</span>
-          <div class="rooms">
-            <input class="cell num" type="number" min="0" data-id="${e.id}" data-field="rooms" value="${e.rooms??''}" onchange="onField(this)" placeholder="Rooms">
-            <input class="cell num" type="number" min="0" data-id="${e.id}" data-field="nights" value="${e.nights??''}" onchange="onField(this)" placeholder="Nights">
-          </div>
-          <div class="sub">${e.roomsNote && !String(e.roomsNote).includes(String(e.rooms||'')) ? esc(e.roomsNote) : ''}</div>
-        </div>
-        <div class="field">
-          <span class="lbl">Pickup</span>
-          ${pickupCell(e)}
-          <div class="dd" style="margin-top:8px">
-            <button type="button" class="dd-btn" onclick="event.stopPropagation();toggleMenu('cb-${e.id}', this)">${e.cbBlockCode ? 'Block ' + e.cbBlockCode : 'Link block'}</button>
-            <div class="dd-menu" id="menu-cb-${e.id}">
-              ${opt || '<div class="dd-item">Refresh Cloudbeds first</div>'}
-              ${e.cbBlockCode ? `<div class="dd-item" onclick="event.stopPropagation();unlinkBlock('${e.id}')">Unlink</div>` : ''}
-            </div>
-          </div>
-        </div>
-        <div class="field">
-          <span class="lbl">Release</span>
-          ${releaseCell(e)}
-          <div class="check" style="margin-top:10px">
-            <label><input type="checkbox" data-id="${e.id}" data-field="in360" ${e.in360?'checked':''} onchange="onField(this)"> 360</label>
-            <label><input type="checkbox" data-id="${e.id}" data-field="pricingUpdated" ${e.pricingUpdated?'checked':''} onchange="onField(this)"> Pricing</label>
-            <label><input type="checkbox" data-id="${e.id}" data-field="newsletterSent" ${e.newsletterSent?'checked':''} onchange="onField(this)"> Newsletter</label>
-            <label><input type="checkbox" data-id="${e.id}" data-field="released" ${e.released?'checked':''} onchange="onField(this)"> Released</label>
-          </div>
-        </div>
-      </div>
-      <div class="event-foot">
-        <div class="field" style="grid-column:1/-1">
-          <span class="lbl">Notes</span>
-          <textarea class="cell" data-id="${e.id}" data-field="notes" onchange="onField(this)">${esc(e.notes||e.eventInfo||'')}</textarea>
-        </div>
-      </div>
-    </article>`;
-  }).join('');
+  tb.innerHTML = viewGrain === 'nights' ? nightsHtml(list) : groupsHtml(list);
 
   const ul = unlinkedBlocks();
   const box = document.getElementById('unlinked');
