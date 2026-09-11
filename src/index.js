@@ -153,6 +153,18 @@ export default {
       if (p === "/facilities-guide" || p === "/facilities-guide.html") {
         return Response.redirect(new URL("/assets/facilities-guide", url).toString(), 302);
       }
+      if (p === "/gift-cert-sop" || p === "/gift-cert-sop.html") {
+        return serveAsset(env, request, "/assets/gift-cert-sop.html");
+      }
+      if (p === "/gift-cert-sop.pdf") {
+        return serveAsset(env, request, "/assets/gift-cert-sop.pdf");
+      }
+      if (p === "/gift-cert-generator" || p === "/gift-cert-generator.html") {
+        return serveAsset(env, request, "/assets/gift-cert-generator.html");
+      }
+      if (p === "/front-desk-manual" || p === "/front-desk-manual.html") {
+        return serveAsset(env, request, "/assets/front-desk-manual.html");
+      }
     }
 
     // tools.fremontmakers.com — FM dashboard + maintenance, same Worker/KV/R2 as offers.
