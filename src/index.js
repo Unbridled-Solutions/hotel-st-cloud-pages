@@ -150,6 +150,9 @@ export default {
       if (p === "/hr" || p === "/hr-tracker") {
         return serveAsset(env, request, "/assets/hsc-hr-tracker.html");
       }
+      if (p === "/facilities-guide" || p === "/facilities-guide.html") {
+        return Response.redirect(new URL("/assets/facilities-guide", url).toString(), 302);
+      }
     }
 
     // tools.fremontmakers.com — FM dashboard + maintenance, same Worker/KV/R2 as offers.
