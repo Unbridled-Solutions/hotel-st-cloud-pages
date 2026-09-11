@@ -547,7 +547,6 @@ function render() {
         </div>
         <div class="event-head-meta">
           <input class="cell type-in" data-id="${e.id}" data-field="type" value="${escAttr(e.type||'')}" onchange="onField(this)" placeholder="Type">
-          <span class="chip ${typeChip}">${esc(e.type||'Other')}</span>
           <div class="dd st-${e.status}">
             <button type="button" class="dd-btn" onclick="event.stopPropagation();toggleMenu('${e.id}', this)">${statusLabel(e.status)}</button>
             <div class="dd-menu" id="menu-${e.id}">
@@ -571,7 +570,7 @@ function render() {
             <input class="cell num" type="number" min="0" data-id="${e.id}" data-field="rooms" value="${e.rooms??''}" onchange="onField(this)" placeholder="Rooms">
             <input class="cell num" type="number" min="0" data-id="${e.id}" data-field="nights" value="${e.nights??''}" onchange="onField(this)" placeholder="Nights">
           </div>
-          <div class="sub">${e.rooms ? e.rooms + ' rooms' : ''}${e.nights ? ' · ' + e.nights + (e.nights===1?' night':' nights') : ''}${e.roomsNote ? ' · ' + esc(e.roomsNote) : ''}</div>
+          <div class="sub">${e.roomsNote && !String(e.roomsNote).includes(String(e.rooms||'')) ? esc(e.roomsNote) : ''}</div>
         </div>
         <div class="field">
           <span class="lbl">Pickup</span>
