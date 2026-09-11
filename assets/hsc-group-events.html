@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Group Events Worksheet — Hotel St. Cloud</title>
+<script>
+(function(){
+  try {
+    var t = localStorage.getItem('uhg-hub-theme');
+    if (t === 'dark' || t === 'paper') document.documentElement.setAttribute('data-theme', t);
+  } catch (e) {}
+})();
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root, html[data-theme="dark"] {
+  --bg:#0f1923; --navy:#1a2e3b; --card:#162433; --section:#0d1620;
+  --blue:#5a8ba7; --gold:#c9aa7c; --text:#e8e0d4; --muted:#8a9aaa;
+  --border:rgba(90,139,167,0.22); --green:#4caf7d; --red:#e05a5a; --orange:#f97316;
+  --active-bg:#c9aa7c; --active-fg:#0f1923; --input-line:rgba(201,170,124,0.3);
+  --bar-track:rgba(90,139,167,0.18); --chip:#0d1a27;
+}
+html[data-theme="paper"] {
+  --bg:#f3efe6; --navy:#efe8dc; --card:#fbf6f0; --section:#efe8dc;
+  --blue:#3d6a86; --gold:#a8883a; --text:#1b2744; --muted:#6a655c;
+  --border:#ddd6c8; --green:#2f7d55; --red:#c44027; --orange:#c05621;
+  --active-bg:#1b2744; --active-fg:#ffffff; --input-line:rgba(27,39,68,0.28);
+  --bar-track:#e6dfd2; --chip:#efe8dc;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:var(--bg); color:var(--text); font-family:'Josefin Sans',sans-serif; font-weight:300; min-height:100vh; }
+.header { background:var(--navy); border-bottom:2px solid var(--gold); padding:14px 22px 12px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; position:sticky; top:0; z-index:60; }
+.eyebrow { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--gold); margin-bottom:3px; }
+h1 { font-size:20px; font-weight:700; }
+.hdr-right { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.theme-toggle { display:flex; gap:4px; }
+.theme-toggle button, .hdr-btn {
+  padding:6px 12px; border-radius:6px; border:1px solid var(--border);
+  background:transparent; color:var(--muted); font-size:12px; cursor:pointer; font-family:inherit; font-weight:600;
+}
+.theme-toggle button.on { background:var(--active-bg); color:var(--active-fg); border-color:var(--active-bg); }
+.hdr-btn:hover { border-color:var(--gold); color:var(--gold); }
+.hdr-btn.gold { background:var(--gold); color:#0f1923; border-color:var(--gold); }
+.hdr-btn.blue { background:var(--blue); color:#0f1923; border-color:var(--blue); }
+.status { font-size:12px; color:var(--muted); }
+.policy { padding:10px 22px; background:var(--section); border-bottom:1px solid var(--border); font-size:13px; color:var(--muted); line-height:1.45; }
+.policy b { color:var(--text); font-weight:600; }
+.hero { display:grid; grid-template-columns:repeat(5,minmax(120px,1fr)); gap:10px; padding:14px 22px 8px; }
+.hero-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px 14px; min-width:0; }
+.hero-lbl { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
+.hero-val { font-size:22px; font-weight:700; color:var(--gold); font-variant-numeric:tabular-nums; }
+.hero-sub { font-size:11px; color:var(--muted); margin-top:3px; }
+.filters { position:sticky; top:58px; z-index:50; background:var(--bg); border-bottom:1px solid var(--border); }
+.tabs { display:flex; gap:0; padding:0 22px; background:var(--section); border-bottom:1px solid var(--border); overflow-x:auto; }
+.tab { background:transparent; border:none; color:var(--muted); font-size:12px; font-weight:700; letter-spacing:0.6px; text-transform:uppercase; padding:12px 16px; cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap; font-family:inherit; }
+.tab.active { color:var(--gold); border-bottom-color:var(--gold); }
+.tab .n { font-weight:400; color:var(--muted); margin-left:8px; }
+.toolbar { display:flex; gap:10px; flex-wrap:wrap; padding:12px 22px; align-items:center; background:var(--navy); }
+.search { flex:1; min-width:180px; background:transparent; border:none; border-bottom:1px solid var(--input-line); color:var(--text); font:inherit; font-size:15px; padding:6px 4px; }
+.search:focus { outline:none; border-bottom-color:var(--gold); }
+.wrap { padding:16px 22px 80px; max-width:1280px; }
+.name { font-weight:700; color:var(--text); }
+.sub { font-size:12px; color:var(--muted); margin-top:3px; line-height:1.4; }
+input.cell, textarea.cell {
+  width:100%; background:transparent; border:none; border-bottom:1px solid var(--input-line);
+  color:var(--text); font:inherit; padding:4px 2px; min-height:28px;
+}
+input.cell:focus, textarea.cell:focus { outline:none; border-bottom-color:var(--gold); background:rgba(201,170,124,0.05); }
+textarea.cell { min-height:44px; resize:vertical; }
+.num { text-align:right; font-variant-numeric:tabular-nums; }
+input[type="date"].cell { min-width:0; }
+.bar { height:7px; background:var(--bar-track); border-radius:4px; overflow:hidden; margin-top:6px; }
+.bar > span { display:block; height:100%; background:var(--gold); }
+.bar.full > span { background:var(--green); }
+.bar.warn > span { background:var(--orange); }
+.bar.empty > span { background:var(--muted); width:0 !important; }
+.pu-num { font-weight:700; font-variant-numeric:tabular-nums; font-size:15px; }
+.pu-ok { color:var(--green); }
+.pu-mid { color:var(--gold); }
+.pu-low { color:var(--orange); }
+.chip { display:inline-block; font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:3px 8px; border-radius:4px; border:1px solid var(--border); color:var(--muted); }
+.chip.wedding { color:var(--gold); border-color:rgba(201,170,124,.45); }
+.chip.corporate { color:var(--blue); }
+.check { display:flex; gap:10px 14px; flex-wrap:wrap; font-size:12px; color:var(--muted); }
+.check label { display:flex; gap:6px; align-items:center; cursor:pointer; white-space:nowrap; min-height:28px; }
+.dd { position:relative; display:inline-block; font-size:12px; font-weight:700; }
+.dd-btn { background:var(--chip); color:var(--gold); border:1px solid rgba(201,170,124,0.4); border-radius:4px; padding:6px 18px 6px 10px; cursor:pointer; font-weight:700; font-family:inherit; min-height:32px; }
+.dd-btn::after { content:' ▾'; font-size:9px; color:var(--gold); }
+.dd-menu {
+  display:none; position:fixed; background:#ffffff; border:1px solid #ccc; border-radius:4px;
+  z-index:9999; min-width:160px; max-height:min(280px, 50vh); overflow:auto;
+  box-shadow:0 8px 24px rgba(0,0,0,0.35);
+}
+.dd-menu.open { display:block; }
+.dd-item { padding:9px 12px; color:#1a2e3b; font-size:13px; cursor:pointer; line-height:1.3; }
+.dd-item:hover { background:#e8f0f8; }
+.dd-item.active { font-weight:700; background:#ddeeff; }
+.event {
+  background:var(--card); border:1px solid var(--border); border-radius:12px;
+  padding:16px 18px 14px; margin-bottom:12px; overflow:visible;
+}
+.event.due { box-shadow: inset 4px 0 0 var(--orange); }
+.event.hot { box-shadow: inset 4px 0 0 var(--gold); }
+.event-head { display:flex; gap:16px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; margin-bottom:14px; }
+.event-id { flex:1; min-width:220px; }
+.event-id input.cell { font-size:17px; font-weight:700; }
+.event-head-meta { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.event-head-meta .type-in { width:140px; }
+.event-grid {
+  display:grid;
+  grid-template-columns:repeat(4, minmax(0,1fr));
+  gap:14px 20px;
+  align-items:start;
+}
+.field { min-width:0; }
+.lbl { display:block; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--blue); margin-bottom:6px; font-weight:600; }
+.dates { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.rooms { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.event-foot {
+  display:grid; grid-template-columns:minmax(240px,1fr) minmax(200px,1.2fr);
+  gap:14px 20px; margin-top:14px; padding-top:12px; border-top:1px solid var(--border);
+}
+.ul-list { display:flex; flex-direction:column; gap:8px; }
+.ul-row {
+  display:grid; grid-template-columns:minmax(180px,1.4fr) minmax(90px,.7fr) minmax(90px,.6fr) 140px;
+  gap:12px; align-items:center; background:var(--card); border:1px solid var(--border);
+  border-radius:8px; padding:12px 14px;
+}
+.st-inquiry .dd-btn { color:#8a9aaa; }
+.st-pending .dd-btn { color:#f97316; }
+.st-confirmed .dd-btn { color:#c9aa7c; }
+.st-released .dd-btn { color:#5a8ba7; }
+.st-completed .dd-btn { color:#4caf7d; }
+.st-lost .dd-btn { color:#e05a5a; }
+.empty { padding:40px 22px; color:var(--muted); text-align:center; }
+.drawer {
+  position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; z-index:80;
+  align-items:flex-start; justify-content:center; padding:40px 16px;
+}
+.drawer.open { display:flex; }
+.drawer-card { background:var(--card); border:1px solid var(--border); border-radius:12px; width:min(560px,100%); padding:20px; max-height:90vh; overflow:auto; }
+.drawer-card h2 { font-size:18px; margin-bottom:12px; }
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.form-grid label { font-size:11px; color:var(--muted); display:flex; flex-direction:column; gap:4px; }
+.form-grid label.span { grid-column:1/-1; }
+.form-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:16px; }
+.unlinked { margin-top:28px; }
+.unlinked h3 { font-size:13px; letter-spacing:1px; text-transform:uppercase; color:var(--gold); margin-bottom:8px; }
+.link-btn { background:transparent; border:1px solid var(--border); color:var(--blue); border-radius:4px; padding:2px 8px; cursor:pointer; font-size:11px; font-family:inherit; }
+@media (max-width:980px) {
+  .hero { grid-template-columns:1fr 1fr; }
+  .form-grid { grid-template-columns:1fr; }
+  .event-grid { grid-template-columns:1fr 1fr; }
+  .event-foot { grid-template-columns:1fr; }
+  .ul-row { grid-template-columns:1fr 1fr; }
+  .filters { top:0; }
+}
+@media (max-width:640px) {
+  .hero { grid-template-columns:1fr; }
+  .event-grid { grid-template-columns:1fr; }
+  .dates, .rooms { grid-template-columns:1fr; }
+}
+@media print {
+  .theme-toggle, .hdr-btn, .toolbar, .drawer { display:none !important; }
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <div class="eyebrow">Hotel St. Cloud · Groups</div>
+    <h1>Event worksheet</h1>
+  </div>
+  <div class="hdr-right">
+    <span class="status" id="status">Loading…</span>
+    <div class="theme-toggle" title="Looks only — saved on this device">
+      <button type="button" id="theme-paper-btn" onclick="uhgSetTheme('paper')">Paper</button>
+      <button type="button" id="theme-dark-btn" onclick="uhgSetTheme('dark')">Dark</button>
+    </div>
+    <button class="hdr-btn" onclick="refreshCb(true)">Refresh Cloudbeds</button>
+    <button class="hdr-btn blue" onclick="cloudPull(true)">Sync</button>
+    <button class="hdr-btn gold" onclick="saveNow()">Save</button>
+    <button class="hdr-btn" onclick="openAdd()">Add event</button>
+    <button class="hdr-btn" onclick="window.print()">Print</button>
+  </div>
+</div>
+<p class="policy"><b>Block rule:</b> complimentary holds for 10+ rooms. Unused rooms release to public inventory about 30 days before check-in. Group rate still honored after release if we have rooms. Pickup is live from Cloudbeds allotment blocks (room-nights held vs picked up).</p>
+<div class="hero" id="hero"></div>
+<div class="filters">
+<div class="tabs" id="yearTabs"></div>
+<div class="tabs" id="statusTabs"></div>
+<div class="toolbar">
+  <input class="search" id="q" placeholder="Search name, type, notes, Cloudbeds code">
+</div>
+</div>
+<div class="wrap">
+  <div id="rows"></div>
+  <p class="empty" id="empty" hidden>Nothing in this view.</p>
+  <div class="unlinked" id="unlinked"></div>
+</div>
+<div class="drawer" id="drawer" onclick="if(event.target===this) closeAdd()">
+  <div class="drawer-card">
+    <h2>Add event</h2>
+    <div class="form-grid">
+      <label class="span">Name<input id="a-name" class="cell"></label>
+      <label>Start<input id="a-start" class="cell" type="date"></label>
+      <label>End<input id="a-end" class="cell" type="date"></label>
+      <label>Peak rooms<input id="a-rooms" class="cell num" type="number" min="0"></label>
+      <label>Nights<input id="a-nights" class="cell num" type="number" min="0"></label>
+      <label>Type<input id="a-type" class="cell" placeholder="Wedding, Corporate…"></label>
+      <label>Inquiry date<input id="a-inq" class="cell" type="date"></label>
+      <label class="span">Notes<textarea id="a-notes" class="cell"></textarea></label>
+    </div>
+    <div class="form-actions">
+      <button class="hdr-btn" onclick="closeAdd()">Cancel</button>
+      <button class="hdr-btn gold" onclick="addEvent()">Save event</button>
+    </div>
+  </div>
+</div>
+<script>
+const CLOUD_URL = '/api/planner/bundle?ns=hsc-events';
+const CB_URL = '/api/hsc/group-blocks';
+const SEED_EVENTS = [{"id":"e002","name":"Meg Hammonds & Jake Zeigler Wedding","year":2026,"inquiryDate":"2025-12-02","startDate":"2026-09-04","endDate":"2026-09-07","dateLabel":"September 4th-7th, 2026","rooms":15,"nights":3,"roomsNote":"15 rooms, 3 nights","type":"Wedding","status":"confirmed","releaseDate":"8-14","released":false,"in360":true,"pricingUpdated":true,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g403951","cbBlockCode":"b855129"},{"id":"e003","name":"Paul & Ashton Wedding","year":2026,"inquiryDate":"","startDate":"2026-09-05","endDate":"2026-09-07","dateLabel":"September 5th-7th, 2026","rooms":15,"nights":2,"roomsNote":"15 rooms, 2 nights","type":"Wedding","status":"confirmed","releaseDate":"8-14","released":false,"in360":true,"pricingUpdated":true,"newsletterSent":false,"newsletterInfo":"","eventInfo":"using post office for wedding","notes":"","venue":"post-office","cbGroupCode":"g009971422738","cbBlockCode":"b418924"},{"id":"e004","name":"Doty/Dixon Wedding","year":2026,"inquiryDate":"2026-01-09","startDate":"2026-09-20","endDate":"2026-09-22","dateLabel":"September 20th-September 22nd, 2026","rooms":20,"nights":2,"roomsNote":"20 rooms, 2 nights","type":"Wedding","status":"confirmed","releaseDate":"8-30","released":false,"in360":true,"pricingUpdated":true,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g959034","cbBlockCode":"b001561"},{"id":"e005","name":"Stoggie Balls - Tim Wolff","year":2026,"inquiryDate":"2026-09-23","startDate":"2026-09-23","endDate":"2026-09-23","dateLabel":"September 23rd, 2026","rooms":12,"nights":1,"roomsNote":"12 rooms, 1 night","type":"Other","status":"confirmed","releaseDate":"9-2","released":false,"in360":false,"pricingUpdated":false,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g616863","cbBlockCode":"b984264"},{"id":"e006","name":"Bri Reising - CO Motorcycle Adventures","year":2026,"inquiryDate":"2026-02-05","startDate":"2026-09-24","endDate":"2026-09-24","dateLabel":"September 24th, 2026","rooms":12,"nights":1,"roomsNote":"12 rooms, 1 night","type":"Other","status":"confirmed","releaseDate":"9-3","released":false,"in360":true,"pricingUpdated":true,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g739655","cbBlockCode":"b057501"},{"id":"e007","name":"NACo 2026 Fall WIR Board Meeting","year":2026,"inquiryDate":"2026-03-19","startDate":"2026-09-30","endDate":"2026-10-02","dateLabel":"9/30-10/2","rooms":22,"nights":2,"roomsNote":"22 rooms, 2 nights","type":"Corporate","status":"confirmed","releaseDate":"9-7","released":false,"in360":true,"pricingUpdated":false,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"","cbBlockCode":""},{"id":"e008","name":"Jensen-Neinas Wedding","year":2026,"inquiryDate":"2025-12-03","startDate":"2026-10-02","endDate":"2026-10-04","dateLabel":"October 2nd-4th, 2026","rooms":10,"nights":2,"roomsNote":"10 rooms, 2 nights","type":"Wedding","status":"confirmed","releaseDate":"9-11","released":false,"in360":true,"pricingUpdated":true,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g657320","cbBlockCode":"b219644"},{"id":"e009","name":"Sofi & Russell Wedding","year":2026,"inquiryDate":"2026-03-02","startDate":"2026-10-06","endDate":"2026-10-10","dateLabel":"October 6th-10th, 2026","rooms":36,"nights":4,"roomsNote":"36 rooms, 4 nights","type":"Wedding","status":"confirmed","releaseDate":"9-15","released":false,"in360":true,"pricingUpdated":true,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g609312983550","cbBlockCode":"b453010"},{"id":"e010","name":"PIGS (Pueblo Investment Group)","year":2026,"inquiryDate":"2026-06-10","startDate":"2026-10-10","endDate":"2026-10-10","dateLabel":"October 10th, 2026","rooms":10,"nights":1,"roomsNote":"10 rooms, 1 night","type":"Corporate","status":"confirmed","releaseDate":"","released":false,"in360":true,"pricingUpdated":false,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g147223304145","cbBlockCode":"b230457"},{"id":"e011","name":"Andrea Bennett - Wirtz Wedding","year":2026,"inquiryDate":"2026-07-10","startDate":"2026-11-11","endDate":"2026-11-11","dateLabel":"November 11th, 2026","rooms":10,"nights":null,"roomsNote":"10 rooms","type":"Wedding","status":"confirmed","releaseDate":"10-11","released":false,"in360":true,"pricingUpdated":false,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g662612204469","cbBlockCode":"b728479"},{"id":"e012","name":"Thomas Smith","year":2026,"inquiryDate":"2026-08-04","startDate":"2026-11-18","endDate":"2026-11-21","dateLabel":"November 18th-21st","rooms":9,"nights":4,"roomsNote":"9 rooms, 4 nights","type":"Other","status":"confirmed","releaseDate":"11-3","released":false,"in360":true,"pricingUpdated":false,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g708552633678","cbBlockCode":"b359359"},{"id":"e016","name":"B Garica","year":2026,"inquiryDate":"2026-04-27","startDate":"2026-10-03","endDate":"2026-10-05","dateLabel":"october 3rd-5th","rooms":null,"nights":null,"roomsNote":"?","type":"Wedding","status":"pending","releaseDate":"","released":false,"in360":false,"pricingUpdated":false,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"","cbBlockCode":""},{"id":"e017","name":"Julie Agleston","year":2026,"inquiryDate":"2026-02-23","startDate":"2026-10-15","endDate":"2026-10-17","dateLabel":"October 15th-17th","rooms":6,"nights":null,"roomsNote":"5 or 6 rooms","type":"Wedding","status":"pending","releaseDate":"","released":false,"in360":false,"pricingUpdated":false,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"","cbBlockCode":""},{"id":"e020","name":"Katrina Franzoy and Chris Lopez Wedding","year":2026,"inquiryDate":"","startDate":"2026-03-27","endDate":"2026-03-29","dateLabel":"March 27th-29th","rooms":15,"nights":2,"roomsNote":"15 rooms, 2 nights","type":"Wedding","status":"completed","releaseDate":"3-6","released":true,"in360":true,"pricingUpdated":true,"newsletterSent":true,"newsletterInfo":"info sent to lorelei & reili on 3-13-26","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g975105","cbBlockCode":"b005688"},{"id":"e021","name":"Interroll","year":2026,"inquiryDate":"","startDate":"2026-03-30","endDate":"2026-04-01","dateLabel":"March 30th-April 1st","rooms":9,"nights":2,"roomsNote":"9 rooms, 2 nights","type":"Corporate","status":"completed","releaseDate":"3-9","released":false,"in360":true,"pricingUpdated":true,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"reached out to them on 3-21 to make sure they are still needing the rooms","venue":"hotel","cbGroupCode":"g977348957515","cbBlockCode":"b119424"},{"id":"e022","name":"CASE Southern Colorado Superintendent Meeting (Penny Bergsten LaMont Travel)","year":2026,"inquiryDate":"","startDate":"2026-04-01","endDate":"2026-04-02","dateLabel":"April 1st-2nd","rooms":10,"nights":1,"roomsNote":"10 rooms, 1 night","type":"Government or Education","status":"completed","releaseDate":"3-11","released":false,"in360":true,"pricingUpdated":false,"newsletterSent":true,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g958454","cbBlockCode":"b213286"},{"id":"e023","name":"Tour Colorado (Hosted by Royal Gorge Bridge / Gail Dexter)","year":2026,"inquiryDate":"2026-01-30","startDate":"2026-04-15","endDate":"2026-04-16","dateLabel":"April 15th-16th","rooms":30,"nights":2,"roomsNote":"30 rooms, 1-2 nights","type":"Corporate","status":"completed","releaseDate":"3-25","released":false,"in360":true,"pricingUpdated":true,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g910814864293","cbBlockCode":"b889461"},{"id":"e024","name":"Thomas Memorial","year":2026,"inquiryDate":"","startDate":"2026-04-17","endDate":"2026-04-20","dateLabel":"April 17th-20th, 2026","rooms":15,"nights":3,"roomsNote":"15 rooms, 3 nights","type":"Other","status":"completed","releaseDate":"3-27","released":false,"in360":true,"pricingUpdated":true,"newsletterSent":false,"newsletterInfo":"","eventInfo":"Using Post Office for memorial","notes":"","venue":"post-office","cbGroupCode":"g273753","cbBlockCode":"b936280"},{"id":"e025","name":"Emergent Campus","year":2026,"inquiryDate":"2026-04-02","startDate":"2026-04-21","endDate":"2026-04-23","dateLabel":"April 21st-23rd, 2026","rooms":10,"nights":2,"roomsNote":"10 rooms, 2 nights","type":"Corporate","status":"completed","releaseDate":"n/a","released":false,"in360":true,"pricingUpdated":true,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g764342184501","cbBlockCode":"b248578"},{"id":"e026","name":"Lykins Wedding","year":2026,"inquiryDate":"","startDate":"2026-05-01","endDate":"2026-05-04","dateLabel":"May 1st-4th, 2026","rooms":5,"nights":3,"roomsNote":"5 rooms, 3 nights","type":"Wedding","status":"completed","releaseDate":"3-7-26","released":true,"in360":true,"pricingUpdated":true,"newsletterSent":true,"newsletterInfo":"info sent to lorelei & reili on 3-16-26","eventInfo":"Using Post Office for wedding","notes":"","venue":"post-office","cbGroupCode":"g562879","cbBlockCode":"b759573"},{"id":"e027","name":"DOLA Tier 2 Training","year":2026,"inquiryDate":"","startDate":"2026-05-04","endDate":"2026-05-07","dateLabel":"May 4th-7th, 2026","rooms":25,"nights":3,"roomsNote":"25 rooms, 3 nights","type":"Corporate","status":"completed","releaseDate":"4-10","released":false,"in360":true,"pricingUpdated":true,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g970597","cbBlockCode":"b923288"},{"id":"e028","name":"Dell 2026 Winter Leadership Summit","year":2026,"inquiryDate":"","startDate":"2026-05-18","endDate":"2026-05-22","dateLabel":"May 18th-22nd, 2026","rooms":36,"nights":null,"roomsNote":"36 rooms","type":"Corporate","status":"completed","releaseDate":"4-27","released":false,"in360":true,"pricingUpdated":true,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g112664","cbBlockCode":"b316151"},{"id":"e029","name":"Budd-Lane Wedding","year":2026,"inquiryDate":"","startDate":"2026-05-22","endDate":"2026-05-24","dateLabel":"May 22nd-24th, 2026","rooms":8,"nights":3,"roomsNote":"8 rooms, 3 nights","type":"Wedding","status":"completed","releaseDate":"5-1","released":false,"in360":true,"pricingUpdated":true,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g406628","cbBlockCode":"b342933"},{"id":"e030","name":"Sanchez/Stake Wedding","year":2026,"inquiryDate":"","startDate":"2026-05-30","endDate":"2026-05-31","dateLabel":"May 30th - May 31st, 2026","rooms":10,"nights":1,"roomsNote":"10 rooms, 1 night","type":"Wedding","status":"completed","releaseDate":"5-9","released":false,"in360":true,"pricingUpdated":true,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g538402","cbBlockCode":"b482369"},{"id":"e031","name":"Bri Reising - CO Motorcycle Adventures","year":2026,"inquiryDate":"2026-02-05","startDate":"2026-06-07","endDate":"2026-06-07","dateLabel":"June 7th, 2026","rooms":7,"nights":1,"roomsNote":"7 rooms, 1 night","type":"Other","status":"completed","releaseDate":"5-17","released":false,"in360":true,"pricingUpdated":true,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g724260","cbBlockCode":"b609213"},{"id":"e032","name":"McGraw-Cox Wedding","year":2026,"inquiryDate":"2025-01-01","startDate":"2026-06-11","endDate":"2026-06-13","dateLabel":"June 11th-13th 2026","rooms":36,"nights":null,"roomsNote":"4 rooms on 11th, 36 rooms on 12th & 13th","type":"Wedding","status":"completed","releaseDate":"5-21","released":false,"in360":true,"pricingUpdated":true,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g675343","cbBlockCode":"b592700"},{"id":"e033","name":"Genius Hour - school distrcit","year":2026,"inquiryDate":"2026-02-05","startDate":"2026-06-14","endDate":"2026-06-16","dateLabel":"June 14th-16th, 2026","rooms":34,"nights":2,"roomsNote":"34 rooms, 2 nights","type":"Government or Education","status":"completed","releaseDate":"5-24","released":false,"in360":true,"pricingUpdated":true,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g671358","cbBlockCode":"b617653"},{"id":"e034","name":"Wings & Rails","year":2026,"inquiryDate":"2026-04-21","startDate":"2026-06-19","endDate":"2026-06-21","dateLabel":"June 19th-June 21st","rooms":27,"nights":2,"roomsNote":"27 rooms, 2 nights","type":"Other","status":"completed","releaseDate":"","released":false,"in360":true,"pricingUpdated":false,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g444592592636","cbBlockCode":"b716978"},{"id":"e035","name":"Madic Wedding","year":2026,"inquiryDate":"2026-01-06","startDate":"2026-06-20","endDate":"2026-06-20","dateLabel":"June 20th, 2026","rooms":10,"nights":1,"roomsNote":"10 rooms, 1 night","type":"Wedding","status":"completed","releaseDate":"5-30","released":true,"in360":true,"pricingUpdated":true,"newsletterSent":true,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g610227","cbBlockCode":"b888750"},{"id":"e036","name":"Ensley/Neuhold Wedding","year":2026,"inquiryDate":"","startDate":"2026-06-25","endDate":"2026-06-28","dateLabel":"June 25th-June 28th, 2026","rooms":1,"nights":null,"roomsNote":"only used 1 room","type":"Wedding","status":"completed","releaseDate":"5-29","released":false,"in360":true,"pricingUpdated":true,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g718806","cbBlockCode":"b773938"},{"id":"e037","name":"McCarty Wedding","year":2026,"inquiryDate":"2025-07-14","startDate":"2026-07-08","endDate":"2026-07-12","dateLabel":"July 8th - July 12th 2026","rooms":34,"nights":4,"roomsNote":"34 rooms, 4 nights","type":"Wedding","status":"completed","releaseDate":"6-17","released":false,"in360":true,"pricingUpdated":true,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g214005","cbBlockCode":"b203782"},{"id":"e038","name":"Royal Rumble","year":2026,"inquiryDate":"2026-04-08","startDate":"2026-07-17","endDate":"2026-07-19","dateLabel":"July 17th-19th","rooms":6,"nights":2,"roomsNote":"6 rooms, 2 nights","type":"Other","status":"completed","releaseDate":"5-30","released":true,"in360":true,"pricingUpdated":true,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g207265799635","cbBlockCode":"b979523"},{"id":"e039","name":"Miller-Tarka Wedding","year":2026,"inquiryDate":"","startDate":"2026-07-24","endDate":"2026-07-25","dateLabel":"July 24th & 25th, 2026","rooms":36,"nights":2,"roomsNote":"36 rooms, 2 nights","type":"Wedding","status":"completed","releaseDate":"7-3","released":true,"in360":true,"pricingUpdated":true,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g194768","cbBlockCode":"b556810"},{"id":"e040","name":"Gatzke-Panici Wedding","year":2026,"inquiryDate":"2025-11-04","startDate":"2026-07-30","endDate":"2026-08-01","dateLabel":"July 30th-August 1st","rooms":1,"nights":null,"roomsNote":"1 room","type":"Wedding","status":"completed","releaseDate":"7-9","released":true,"in360":true,"pricingUpdated":true,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g844211","cbBlockCode":"b662861"},{"id":"e041","name":"SolidRide","year":2026,"inquiryDate":"2025-12-29","startDate":"2026-08-03","endDate":"2026-08-03","dateLabel":"August 3rd, 2026","rooms":8,"nights":1,"roomsNote":"8 rooms, 1 night","type":"Other","status":"completed","releaseDate":"7-13","released":true,"in360":true,"pricingUpdated":true,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g154186","cbBlockCode":"b065476"},{"id":"e042","name":"Turbine Capital / Four Mile Ranch","year":2026,"inquiryDate":"2026-06-04","startDate":"2026-08-13","endDate":"2026-08-13","dateLabel":"August 13th, 2026","rooms":29,"nights":1,"roomsNote":"1 night, 29 rooms","type":"Other","status":"completed","releaseDate":"7-31","released":false,"in360":true,"pricingUpdated":false,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g726681010272","cbBlockCode":"b921825"},{"id":"e043","name":"Unbridled Partner Retreat 2026","year":2026,"inquiryDate":"2026-02-26","startDate":"2026-08-17","endDate":"2026-08-19","dateLabel":"August 17th-19th, 2026","rooms":26,"nights":2,"roomsNote":"26 rooms, 2 nights","type":"Corporate","status":"completed","releaseDate":"7-27","released":false,"in360":true,"pricingUpdated":true,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g949588414210","cbBlockCode":"b579019"},{"id":"e044","name":"Wealth Retirement Seminar","year":2026,"inquiryDate":"2026-07-30","startDate":"2026-08-20","endDate":"2026-08-20","dateLabel":"August 20th","rooms":6,"nights":1,"roomsNote":"1 night, 6 rooms","type":"Corporate","status":"completed","releaseDate":"","released":false,"in360":true,"pricingUpdated":false,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g430307650470","cbBlockCode":"b469842"},{"id":"e045","name":"Wealth Retirement Seminar","year":2026,"inquiryDate":"2026-07-30","startDate":"2026-08-24","endDate":"2026-08-24","dateLabel":"August 24th","rooms":6,"nights":1,"roomsNote":"1 night, 6 rooms","type":"Corporate","status":"completed","releaseDate":"","released":false,"in360":true,"pricingUpdated":false,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g484013275066","cbBlockCode":"b084586"},{"id":"e048","name":"Sam Winner","year":2026,"inquiryDate":"2026-02-02","startDate":"2026-03-11","endDate":"2026-03-14","dateLabel":"March 11th-14th, 2026","rooms":13,"nights":null,"roomsNote":"13","type":"Other","status":"lost","releaseDate":"","released":false,"in360":false,"pricingUpdated":false,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"","cbBlockCode":""},{"id":"e049","name":"Sallie Clark - USDA Rural Development CO","year":2026,"inquiryDate":"2026-02-17","startDate":"2026-09-14","endDate":"2026-09-16","dateLabel":"September 14th-16th, 2026","rooms":20,"nights":2,"roomsNote":"20 rooms, 2 nights","type":"Government or Education","status":"lost","releaseDate":"","released":false,"in360":false,"pricingUpdated":false,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"reached out on 3-20 confimring block, they backed out due to state budget","venue":"hotel","cbGroupCode":"","cbBlockCode":""},{"id":"e050","name":"jackclowe@gmail.com","year":2026,"inquiryDate":"2026-02-23","startDate":"2026-05-02","endDate":"2026-05-02","dateLabel":"4-30-may 2","rooms":null,"nights":null,"roomsNote":"","type":"Wedding","status":"pending","releaseDate":"","released":false,"in360":false,"pricingUpdated":false,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"","cbBlockCode":""},{"id":"e051","name":"Honor Flight Banquet","year":2026,"inquiryDate":"2026-03-23","startDate":"2026-04-11","endDate":"2026-04-11","dateLabel":"April 11th","rooms":null,"nights":null,"roomsNote":"","type":"Other","status":"pending","releaseDate":"","released":false,"in360":false,"pricingUpdated":false,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"","cbBlockCode":""},{"id":"e052","name":"Univeristy of Oklahoma","year":2026,"inquiryDate":"2026-05-07","startDate":"2026-08-05","endDate":"2026-08-07","dateLabel":"august 5th-7th","rooms":25,"nights":2,"roomsNote":"25 rooms, 2 nights","type":"Government or Education","status":"pending","releaseDate":"","released":false,"in360":false,"pricingUpdated":false,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"","cbBlockCode":""},{"id":"e053","name":"Southwest Adventure Tours","year":2026,"inquiryDate":"2026-04-21","startDate":"2026-09-13","endDate":"2026-09-13","dateLabel":"September 13th, 2026","rooms":11,"nights":1,"roomsNote":"11 rooms, 1 night","type":"Other","status":"confirmed","releaseDate":"6-13","released":false,"in360":true,"pricingUpdated":true,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g373490478978","cbBlockCode":"b939967"},{"id":"e054","name":"Discovery Mens Group","year":2026,"inquiryDate":"2026-02-24","startDate":"2026-07-18","endDate":"2026-07-19","dateLabel":"July 18th-19th","rooms":15,"nights":1,"roomsNote":"15 rooms, 1 night","type":"Other","status":"confirmed","releaseDate":"6-27","released":true,"in360":true,"pricingUpdated":true,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"g998764154928","cbBlockCode":"b996868"},{"id":"e055","name":"Crippler Bike Race","year":2026,"inquiryDate":"2026-01-30","startDate":"2026-08-23","endDate":"2026-08-23","dateLabel":"August 23rd, 2026","rooms":null,"nights":null,"roomsNote":"","type":"Other","status":"pending","releaseDate":"","released":false,"in360":false,"pricingUpdated":false,"newsletterSent":false,"newsletterInfo":"","eventInfo":"","notes":"","venue":"hotel","cbGroupCode":"","cbBlockCode":""}];
+const STATUSES = [
+  { id:'inquiry', label:'Inquiry' },
+  { id:'pending', label:'Pending' },
+  { id:'confirmed', label:'Confirmed' },
+  { id:'released', label:'Released' },
+  { id:'completed', label:'Completed' },
+  { id:'lost', label:'Lost' },
+];
+const STATUS_VIEWS = [
+  { id:'pipeline', label:'Pipeline', match: e => e.status==='inquiry' || e.status==='pending' },
+  { id:'confirmed', label:'Confirmed', match: e => e.status==='confirmed' },
+  { id:'released', label:'Released', match: e => e.status==='released' || e.released },
+  { id:'completed', label:'Completed', match: e => e.status==='completed' },
+  { id:'lost', label:'Lost', match: e => e.status==='lost' },
+  { id:'all', label:'All', match: () => true },
+];
+
+let events = [];
+let cb = { groups:[], blocks:[], fetchedAt:null };
+let viewYear = 2026;
+let viewStatus = 'confirmed';
+let saveLock = Promise.resolve();
+let saveTimer = null;
+
+function uhgSetTheme(theme) {
+  const t = theme === 'paper' ? 'paper' : 'dark';
+  document.documentElement.setAttribute('data-theme', t);
+  try { localStorage.setItem('uhg-hub-theme', t); } catch (e) {}
+  uhgSyncThemeToggle();
+}
+function uhgSyncThemeToggle() {
+  let t = 'dark';
+  try { t = localStorage.getItem('uhg-hub-theme') || document.documentElement.getAttribute('data-theme') || 'dark'; } catch (e) {}
+  if (t !== 'dark' && t !== 'paper') t = 'dark';
+  document.documentElement.setAttribute('data-theme', t);
+  document.getElementById('theme-paper-btn').classList.toggle('on', t === 'paper');
+  document.getElementById('theme-dark-btn').classList.toggle('on', t === 'dark');
+}
+uhgSyncThemeToggle();
+
+function uid() { return 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function todayYmd() {
+  return new Intl.DateTimeFormat('en-CA', { timeZone:'America/Denver', year:'numeric', month:'2-digit', day:'2-digit' }).format(new Date());
+}
+function addDays(ymd, n) {
+  if (!ymd) return '';
+  const [y,m,d] = ymd.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m-1, d));
+  dt.setUTCDate(dt.getUTCDate() + n);
+  return dt.toISOString().slice(0,10);
+}
+function fmtDate(ymd) {
+  if (!ymd) return '';
+  const [y,m,d] = ymd.split('-').map(Number);
+  return new Date(Date.UTC(y,m-1,d)).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric', timeZone:'UTC' });
+}
+function yearOf(e) {
+  if (e.year) return Number(e.year);
+  if (e.startDate) return Number(e.startDate.slice(0,4));
+  return 2026;
+}
+function blockFor(e) {
+  if (!e.cbBlockCode) return null;
+  return (cb.blocks || []).find(b => b.code === e.cbBlockCode) || null;
+}
+function pickupOf(e) {
+  const b = blockFor(e);
+  const heldRn = b ? Number(b.roomsHeld || 0) : null;
+  const puRn = b ? Number(b.roomsPickedUp || 0) : null;
+  const nights = Number(e.nights) || (e.startDate && e.endDate ? Math.max(1, (Date.parse(e.endDate) - Date.parse(e.startDate)) / 86400000) : 0);
+  const peak = Number(e.rooms) || 0;
+  let puRooms = null, heldRooms = peak || null;
+  if (heldRn != null && nights > 0) {
+    heldRooms = Math.round(heldRn / nights) || heldRooms;
+    puRooms = Math.round(puRn / nights);
+  } else if (heldRn != null) {
+    heldRooms = heldRn;
+    puRooms = puRn;
+  }
+  return { b, heldRn, puRn, nights, peak, puRooms, heldRooms, res: b ? b.reservationsCount : null };
+}
+
+function setStatus(msg) { document.getElementById('status').textContent = msg; }
+
+async function cloudPull(force) {
+  try {
+    const res = await fetch(CLOUD_URL);
+    const json = await res.json();
+    const data = json.data || {};
+    if (Array.isArray(data.events) && data.events.length) {
+      events = data.events;
+      setStatus('Loaded ' + events.length + ' events');
+    } else if (!events.length) {
+      events = JSON.parse(JSON.stringify(SEED_EVENTS));
+      setStatus('Seeded from group sheet — hit Save once');
+      await cloudPush();
+    }
+  } catch (err) {
+    if (!events.length) events = JSON.parse(JSON.stringify(SEED_EVENTS));
+    setStatus('Cloud pull failed — working from seed');
+  }
+  render();
+}
+
+async function cloudPush() {
+  const job = saveLock.then(async () => {
+    const res = await fetch(CLOUD_URL);
+    const json = res.ok ? await res.json() : { data:{} };
+    const existing = json.data || {};
+    const body = Object.assign({}, existing, {
+      events,
+      updatedAt: new Date().toISOString(),
+    });
+    await fetch(CLOUD_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    setStatus('Saved ' + new Date().toLocaleTimeString('en-US', { timeZone:'America/Denver' }));
+  }).catch(err => setStatus('Save failed: ' + err.message));
+  saveLock = job.catch(() => {});
+  return job;
+}
+function saveSoon() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => cloudPush(), 700);
+}
+function saveNow() { flushRowEdits(); cloudPush(); }
+
+async function refreshCb(force) {
+  setStatus('Pulling Cloudbeds…');
+  try {
+    const res = await fetch(CB_URL + (force ? '?refresh=1' : ''));
+    const json = await res.json();
+    if (!json.success && !json.blocks) throw new Error(json.error || 'Cloudbeds error');
+    cb = json;
+    const when = json.fetchedAt ? new Date(json.fetchedAt).toLocaleTimeString('en-US', { timeZone:'America/Denver' }) : '';
+    setStatus((json.cached ? 'Cloudbeds cached' : 'Cloudbeds live') + (when ? ' · ' + when : '') + (json.stale ? ' (stale)' : ''));
+  } catch (err) {
+    setStatus('Cloudbeds: ' + err.message);
+  }
+  render();
+}
+
+function yearsPresent() {
+  const ys = new Set(events.map(yearOf));
+  ys.add(2026); ys.add(2027);
+  return [...ys].sort();
+}
+function visible() {
+  const q = (document.getElementById('q').value || '').trim().toLowerCase();
+  const view = STATUS_VIEWS.find(v => v.id === viewStatus) || STATUS_VIEWS[0];
+  return events.filter(e => {
+    if (viewYear !== 'all' && yearOf(e) !== Number(viewYear)) return false;
+    if (!view.match(e)) return false;
+    if (!q) return true;
+    const hay = [e.name, e.type, e.notes, e.eventInfo, e.cbGroupCode, e.cbBlockCode, e.dateLabel].join(' ').toLowerCase();
+    return hay.includes(q);
+  }).sort((a,b) => (a.startDate || '9').localeCompare(b.startDate || '9') || a.name.localeCompare(b.name));
+}
+
+function heroHtml(list) {
+  const allYear = events.filter(e => viewYear==='all' || yearOf(e)===Number(viewYear));
+  const conf = allYear.filter(e => e.status==='confirmed' || e.status==='released');
+  const pipe = allYear.filter(e => e.status==='inquiry' || e.status==='pending');
+  let held=0, pu=0, peak=0;
+  conf.forEach(e => {
+    const p = pickupOf(e);
+    if (p.heldRn != null) { held += p.heldRn; pu += p.puRn; }
+    peak += Number(e.rooms)||0;
+  });
+  const pct = held ? Math.round(pu/held*100) : 0;
+  return `
+    <div class="hero-card"><div class="hero-lbl">This year</div><div class="hero-val">${allYear.length}</div><div class="hero-sub">${pipe.length} in pipeline</div></div>
+    <div class="hero-card"><div class="hero-lbl">Confirmed</div><div class="hero-val">${conf.length}</div><div class="hero-sub">${allYear.filter(e=>e.status==='completed').length} completed</div></div>
+    <div class="hero-card"><div class="hero-lbl">Peak rooms on books</div><div class="hero-val">${peak || '—'}</div><div class="hero-sub">sum of confirmed blocks</div></div>
+    <div class="hero-card"><div class="hero-lbl">Room-nights pickup</div><div class="hero-val">${pu} / ${held || '—'}</div><div class="hero-sub">${held ? pct + '% picked up' : 'link a Cloudbeds block'}</div></div>
+    <div class="hero-card"><div class="hero-lbl">Cloudbeds blocks</div><div class="hero-val">${(cb.blocks||[]).length}</div><div class="hero-sub">${unlinkedBlocks().length} not on this sheet</div></div>`;
+}
+
+function unlinkedBlocks() {
+  const used = new Set(events.map(e => e.cbBlockCode).filter(Boolean));
+  return (cb.blocks || []).filter(b => b.code && !used.has(b.code));
+}
+
+function statusLabel(id) {
+  return (STATUSES.find(s => s.id===id) || { label:id }).label;
+}
+
+function toggleMenu(id, btn) {
+  const menu = document.getElementById('menu-' + id);
+  if (!menu) return;
+  const open = menu.classList.contains('open');
+  document.querySelectorAll('.dd-menu.open').forEach(m => m.classList.remove('open'));
+  if (open) return;
+  menu.classList.add('open');
+  const r = (btn || menu.previousElementSibling).getBoundingClientRect();
+  const w = Math.max(160, menu.offsetWidth || 160);
+  let left = r.left;
+  if (left + w > window.innerWidth - 12) left = Math.max(12, window.innerWidth - w - 12);
+  let top = r.bottom + 4;
+  const h = Math.min(menu.scrollHeight || 200, window.innerHeight * 0.5);
+  if (top + h > window.innerHeight - 8) top = Math.max(8, r.top - h - 4);
+  menu.style.left = left + 'px';
+  menu.style.top = top + 'px';
+  menu.style.minWidth = Math.max(w, r.width) + 'px';
+}
+function pickStatus(id, val) {
+  const e = events.find(x => x.id===id);
+  if (!e) return;
+  e.status = val;
+  if (val === 'released') e.released = true;
+  if (val === 'confirmed') e.released = false;
+  document.getElementById('menu-' + id).classList.remove('open');
+  saveSoon();
+  render();
+}
+
+function daysToRelease(e) {
+  const start = e.startDate;
+  if (!start) return null;
+  const rel = addDays(start, -30);
+  const t = todayYmd();
+  const diff = Math.round((Date.parse(rel+'T00:00:00Z') - Date.parse(t+'T00:00:00Z'))/86400000);
+  return { rel, diff };
+}
+
+function flushRowEdits() {
+  document.querySelectorAll('[data-field]').forEach(el => {
+    const id = el.getAttribute('data-id');
+    const field = el.getAttribute('data-field');
+    const e = events.find(x => x.id===id);
+    if (!e) return;
+    if (el.type === 'checkbox') e[field] = el.checked;
+    else if (el.type === 'number') e[field] = el.value === '' ? null : Number(el.value);
+    else e[field] = el.value;
+    if (field === 'startDate' && e.startDate) e.year = Number(e.startDate.slice(0,4));
+  });
+}
+
+function onField(el) {
+  const id = el.getAttribute('data-id');
+  const field = el.getAttribute('data-field');
+  const e = events.find(x => x.id===id);
+  if (!e) return;
+  if (el.type === 'checkbox') e[field] = el.checked;
+  else if (el.type === 'number') e[field] = el.value === '' ? null : Number(el.value);
+  else e[field] = el.value;
+  if (field === 'startDate' && e.startDate) e.year = Number(e.startDate.slice(0,4));
+  saveSoon();
+}
+
+function linkBlock(eid, code) {
+  const e = events.find(x => x.id===eid);
+  const b = (cb.blocks||[]).find(x => x.code===code);
+  if (!e || !b) return;
+  e.cbBlockCode = b.code;
+  e.cbGroupCode = b.groupCode || '';
+  saveSoon(); render();
+}
+function unlinkBlock(eid) {
+  const e = events.find(x => x.id===eid);
+  if (!e) return;
+  e.cbBlockCode = '';
+  e.cbGroupCode = '';
+  saveSoon(); render();
+}
+
+function pickupCell(e) {
+  const p = pickupOf(e);
+  if (!p.b) return '<span class="sub">No Cloudbeds block linked</span>';
+  const heldR = p.heldRooms || 0;
+  const puR = p.puRooms || 0;
+  const pct = p.heldRn ? Math.round(p.puRn / p.heldRn * 100) : 0;
+  const cls = pct >= 90 ? 'full' : pct >= 50 ? '' : pct > 0 ? 'warn' : 'empty';
+  const ncls = pct >= 90 ? 'pu-ok' : pct >= 50 ? 'pu-mid' : 'pu-low';
+  const roomsLine = (heldR || puR) ? `${puR} of ${heldR} rooms` : '';
+  return `<div class="pu-num ${ncls}">${p.puRn} / ${p.heldRn} RN</div>
+    <div class="sub">${roomsLine}${p.res!=null ? ' · ' + p.res + ' res' : ''}</div>
+    <div class="bar ${cls}"><span style="width:${pct}%"></span></div>`;
+}
+
+function releaseCell(e) {
+  const info = daysToRelease(e);
+  const released = e.released || e.status==='released';
+  if (released) return '<span class="chip">Released</span><div class="sub">group rate still honored</div>';
+  if (!info) return '<span class="sub">Set start date</span>';
+  if (info.diff > 0) return `<div>${fmtDate(info.rel)}</div><div class="sub">${info.diff} days out</div>`;
+  if (info.diff === 0) return '<div>Release today</div><div class="sub">unused rooms to public</div>';
+  return `<div>${fmtDate(info.rel)}</div><div class="sub">${Math.abs(info.diff)} days past</div>`;
+}
+
+function renderTabs() {
+  const ys = yearsPresent();
+  document.getElementById('yearTabs').innerHTML =
+    ys.map(y => `<button type="button" class="tab ${viewYear===y?'active':''}" onclick="setYear(${y})">${y}<span class="n">${events.filter(e=>yearOf(e)===y).length}</span></button>`).join('') +
+    `<button type="button" class="tab ${viewYear==='all'?'active':''}" onclick="setYear('all')">All years</button>`;
+  document.getElementById('statusTabs').innerHTML = STATUS_VIEWS.map(v => {
+    const n = events.filter(e => (viewYear==='all' || yearOf(e)===Number(viewYear)) && v.match(e)).length;
+    return `<button type="button" class="tab ${viewStatus===v.id?'active':''}" onclick="setStatusView('${v.id}')">${v.label}<span class="n">${n}</span></button>`;
+  }).join('');
+}
+
+function setYear(y) { flushRowEdits(); viewYear = y; render(); }
+function setStatusView(id) { flushRowEdits(); viewStatus = id; render(); }
+
+function render() {
+  renderTabs();
+  const list = visible();
+  document.getElementById('hero').innerHTML = heroHtml(list);
+  const tb = document.getElementById('rows');
+  document.getElementById('empty').hidden = list.length > 0;
+  tb.innerHTML = list.map(e => {
+    const due = (() => { const i = daysToRelease(e); return i && i.diff <= 7 && i.diff >= 0 && e.status==='confirmed' && !e.released; })();
+    const p = pickupOf(e);
+    const hot = p.b && p.heldRn > 0 && (p.puRn / p.heldRn) < 0.5 && e.status==='confirmed';
+    const blocks = cb.blocks || [];
+    const opt = blocks.map(b => `<div class="dd-item ${b.code===e.cbBlockCode?'active':''}" onclick="event.stopPropagation();linkBlock('${e.id}','${b.code}')">${esc(b.name)} · ${b.roomsPickedUp}/${b.roomsHeld}</div>`).join('');
+    const typeLc = (e.type||'').toLowerCase();
+    const typeChip = typeLc.includes('wedding') ? 'wedding' : typeLc.includes('corporate') ? 'corporate' : '';
+    return `<article class="event ${due?'due':''} ${hot?'hot':''}">
+      <div class="event-head">
+        <div class="event-id">
+          <input class="cell" data-id="${e.id}" data-field="name" value="${escAttr(e.name)}" onchange="onField(this)">
+          <div class="sub">${e.inquiryDate ? 'Inquired ' + fmtDate(e.inquiryDate) : ''}${e.cbGroupCode ? (e.inquiryDate ? ' · ' : '') + e.cbGroupCode : ''}</div>
+        </div>
+        <div class="event-head-meta">
+          <input class="cell type-in" data-id="${e.id}" data-field="type" value="${escAttr(e.type||'')}" onchange="onField(this)" placeholder="Type">
+          <span class="chip ${typeChip}">${esc(e.type||'Other')}</span>
+          <div class="dd st-${e.status}">
+            <button type="button" class="dd-btn" onclick="event.stopPropagation();toggleMenu('${e.id}', this)">${statusLabel(e.status)}</button>
+            <div class="dd-menu" id="menu-${e.id}">
+              ${STATUSES.map(s => `<div class="dd-item ${s.id===e.status?'active':''}" onclick="event.stopPropagation();pickStatus('${e.id}','${s.id}')">${s.label}</div>`).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="event-grid">
+        <div class="field">
+          <span class="lbl">Stay</span>
+          <div class="dates">
+            <input class="cell" type="date" data-id="${e.id}" data-field="startDate" value="${e.startDate||''}" onchange="onField(this)">
+            <input class="cell" type="date" data-id="${e.id}" data-field="endDate" value="${e.endDate||''}" onchange="onField(this)">
+          </div>
+          <div class="sub">${e.dateLabel || ''}</div>
+        </div>
+        <div class="field">
+          <span class="lbl">Block</span>
+          <div class="rooms">
+            <input class="cell num" type="number" min="0" data-id="${e.id}" data-field="rooms" value="${e.rooms??''}" onchange="onField(this)" placeholder="Rooms">
+            <input class="cell num" type="number" min="0" data-id="${e.id}" data-field="nights" value="${e.nights??''}" onchange="onField(this)" placeholder="Nights">
+          </div>
+          <div class="sub">${e.rooms ? e.rooms + ' rooms' : ''}${e.nights ? ' · ' + e.nights + (e.nights===1?' night':' nights') : ''}${e.roomsNote ? ' · ' + esc(e.roomsNote) : ''}</div>
+        </div>
+        <div class="field">
+          <span class="lbl">Pickup</span>
+          ${pickupCell(e)}
+          <div class="dd" style="margin-top:8px">
+            <button type="button" class="dd-btn" onclick="event.stopPropagation();toggleMenu('cb-${e.id}', this)">${e.cbBlockCode ? 'Block ' + e.cbBlockCode : 'Link block'}</button>
+            <div class="dd-menu" id="menu-cb-${e.id}">
+              ${opt || '<div class="dd-item">Refresh Cloudbeds first</div>'}
+              ${e.cbBlockCode ? `<div class="dd-item" onclick="event.stopPropagation();unlinkBlock('${e.id}')">Unlink</div>` : ''}
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <span class="lbl">Release</span>
+          ${releaseCell(e)}
+          <div class="check" style="margin-top:10px">
+            <label><input type="checkbox" data-id="${e.id}" data-field="in360" ${e.in360?'checked':''} onchange="onField(this)"> 360</label>
+            <label><input type="checkbox" data-id="${e.id}" data-field="pricingUpdated" ${e.pricingUpdated?'checked':''} onchange="onField(this)"> Pricing</label>
+            <label><input type="checkbox" data-id="${e.id}" data-field="newsletterSent" ${e.newsletterSent?'checked':''} onchange="onField(this)"> Newsletter</label>
+            <label><input type="checkbox" data-id="${e.id}" data-field="released" ${e.released?'checked':''} onchange="onField(this)"> Released</label>
+          </div>
+        </div>
+      </div>
+      <div class="event-foot">
+        <div class="field" style="grid-column:1/-1">
+          <span class="lbl">Notes</span>
+          <textarea class="cell" data-id="${e.id}" data-field="notes" onchange="onField(this)">${esc(e.notes||e.eventInfo||'')}</textarea>
+        </div>
+      </div>
+    </article>`;
+  }).join('');
+
+  const ul = unlinkedBlocks();
+  const box = document.getElementById('unlinked');
+  if (!ul.length) { box.innerHTML = ''; return; }
+  box.innerHTML = `<h3>Cloudbeds blocks not on this sheet</h3>
+    <div class="ul-list">
+    ${ul.map(b => `<div class="ul-row">
+      <div><div class="name">${esc(b.name)}</div><div class="sub">${b.code} · ${b.status}</div></div>
+      <div class="sub">${esc(b.groupCode||'')}</div>
+      <div class="pu-num">${b.roomsPickedUp} / ${b.roomsHeld} RN</div>
+      <div>
+        <div class="dd">
+          <button type="button" class="dd-btn" onclick="event.stopPropagation();toggleMenu('ul-${b.code}', this)">Attach</button>
+          <div class="dd-menu" id="menu-ul-${b.code}">
+            ${events.filter(e => viewYear==='all' || yearOf(e)===Number(viewYear)).map(e => `<div class="dd-item" onclick="event.stopPropagation();linkBlock('${e.id}','${b.code}')">${esc(e.name)}</div>`).join('')}
+          </div>
+        </div>
+      </div>
+    </div>`).join('')}
+    </div>`;
+}
+
+function esc(s) {
+  const map = { amp: '&'+'amp;', lt: '&'+'lt;', gt: '&'+'gt;', quot: '&'+'quot;', apos: '&#39;' };
+  return String(s || '').replace(/[&<>"']/g, c => ({
+    '&': map.amp, '<': map.lt, '>': map.gt, '"': map.quot, "'": map.apos
+  }[c]));
+}
+function escAttr(s) { return esc(s).replace(/`/g,''); }
+
+function openAdd() { document.getElementById('drawer').classList.add('open'); document.getElementById('a-name').focus(); }
+function closeAdd() { document.getElementById('drawer').classList.remove('open'); }
+function addEvent() {
+  const name = document.getElementById('a-name').value.trim();
+  if (!name) return;
+  const start = document.getElementById('a-start').value;
+  const end = document.getElementById('a-end').value || start;
+  const rooms = document.getElementById('a-rooms').value;
+  const nights = document.getElementById('a-nights').value;
+  events.push({
+    id: uid(),
+    name,
+    year: start ? Number(start.slice(0,4)) : viewYear==='all' ? 2026 : Number(viewYear),
+    inquiryDate: document.getElementById('a-inq').value || todayYmd(),
+    startDate: start, endDate: end, dateLabel: '',
+    rooms: rooms===''?null:Number(rooms),
+    nights: nights===''?null:Number(nights),
+    roomsNote: '',
+    type: document.getElementById('a-type').value.trim() || 'Other',
+    status: 'inquiry',
+    releaseDate: '',
+    released:false, in360:false, pricingUpdated:false, newsletterSent:false,
+    newsletterInfo:'', eventInfo:'', notes: document.getElementById('a-notes').value.trim(),
+    venue:'hotel', cbGroupCode:'', cbBlockCode:''
+  });
+  ['a-name','a-start','a-end','a-rooms','a-nights','a-type','a-inq','a-notes'].forEach(id => document.getElementById(id).value='');
+  closeAdd();
+  viewStatus = 'pipeline';
+  cloudPush(); render();
+}
+
+document.addEventListener('click', () => document.querySelectorAll('.dd-menu.open').forEach(m => m.classList.remove('open')));
+window.addEventListener('scroll', () => document.querySelectorAll('.dd-menu.open').forEach(m => m.classList.remove('open')), true);
+document.getElementById('q').addEventListener('input', () => render());
+
+(async function init(){
+  uhgSyncThemeToggle();
+  await cloudPull();
+  await refreshCb(false);
+})();
+</script>
+</body>
+</html>
