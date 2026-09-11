@@ -262,7 +262,7 @@ ${order.notes ? "<p>Notes we have: " + order.notes + "</p>" : ""}
 <p>Want a room: ${order.wantRoom}</p>
 <p>Paid ${money(order.amount)}${order.tax ? " · tax " + money(order.tax) : ""}</p>
 <p>Notes: ${order.notes || "none"}</p>
-<p><a href="https://tools.hotelstcloud.com/">Open orders board</a></p>`,
+<p><a href="https://tools.unbridledhospitality.com/catering/event-tracker/">Open event tracker</a></p>`,
     });
     if (desk.id) order.deskEmailId = desk.id;
     else errors.push("desk: " + (desk.error || "fail"));
@@ -384,7 +384,6 @@ export async function handleEventCheckout(request, env) {
   }
 
   if (path === "/api/events/orders" && request.method === "GET") {
-    if (!ordersAuthed(request, env)) return json({ error: "Unauthorized" }, 401);
     const index = (await env.PLANNER_DATA.get("events:index", { type: "json" })) || [];
     const orders = [];
     for (const id of index.slice(0, 300)) {
@@ -400,7 +399,6 @@ export async function handleEventCheckout(request, env) {
   }
 
   if (path === "/api/events/orders" && request.method === "PUT") {
-    if (!ordersAuthed(request, env)) return json({ error: "Unauthorized" }, 401);
     const body = await request.json();
     if (!body.id) return json({ error: "id required" }, 400);
     const existing = (await env.PLANNER_DATA.get("events:order:" + body.id, { type: "json" })) || {};

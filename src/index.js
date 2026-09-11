@@ -145,7 +145,7 @@ export default {
     if (isHscToolsHost(url.hostname) && !url.pathname.startsWith("/api")) {
       const p = url.pathname.replace(/\/$/, "") || "/";
       if (p === "/" || p === "/index.html" || p === "/dashboard" || p === "/event-orders" || p === "/orders") {
-        return serveAsset(env, request, "/assets/hsc-event-orders.html");
+        return Response.redirect("https://tools.unbridledhospitality.com/catering/event-tracker/", 302);
       }
       if (p === "/hr" || p === "/hr-tracker") {
         return serveAsset(env, request, "/assets/hsc-hr-tracker.html");
