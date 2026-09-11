@@ -154,7 +154,7 @@ export default {
         return Response.redirect("https://tools.unbridledhospitality.com/catering/event-tracker/", 302);
       }
       if (p === "/hr" || p === "/hr-tracker") {
-        return serveAsset(env, request, "/assets/hsc-hr-tracker.html");
+        return Response.redirect("https://tools.unbridledhospitality.com/hr/tracker/", 302);
       }
       if (p === "/facilities-guide" || p === "/facilities-guide.html") {
         return Response.redirect(new URL("/assets/facilities-guide", url).toString(), 302);

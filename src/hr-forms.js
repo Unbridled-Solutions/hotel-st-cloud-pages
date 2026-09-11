@@ -165,7 +165,7 @@ export async function handleHrForms(request, env) {
 Manager: ${rec.managerName || "—"}<br>
 Location: ${rec.location || "—"}</p>
 ${fieldsHtml(fields)}
-<p><a href="https://tools.hotelstcloud.com/hr">Open HR tracker</a></p>
+<p><a href="https://tools.unbridledhospitality.com/hr/tracker/">Open HR tracker</a></p>
 <p style="color:#888;font-size:12px">SSN and uploaded files are not included in this email.</p>`,
     });
     if (mail.id) rec.emailId = mail.id;
