@@ -385,7 +385,11 @@ async function refreshCb(force) {
   setStatus('Pulling Cloudbeds…');
   try {
     const res = await fetch(CB_URL + (force ? '?refresh=1' : ''));
-    const json = await res.json();
+    const text = await res.text();
+    if (!text) throw new Error('no reply from Cloudbeds (' + res.status + ')');
+    let json;
+    try { json = JSON.parse(text); }
+    catch (_) { throw new Error('Cloudbeds sent a bad reply (' + res.status + ')'); }
     if (!json.success && !json.blocks) throw new Error(json.error || 'Cloudbeds error');
     cb = json;
     const when = json.fetchedAt ? new Date(json.fetchedAt).toLocaleTimeString('en-US', { timeZone:'America/Denver' }) : '';

@@ -6,6 +6,7 @@
 import { handlePlannerSync, handlePlannerSyncStatus, handlePlannerLyoy } from './planner-sync.js';
 import { handleEventCheckout } from './event-checkout.js';
 import { handleHrForms } from './hr-forms.js';
+import { handleHscGroupBlocks } from './hsc-group-blocks.js';
 
 const AIRTABLE_BASE = "appUUjLXEUwlyx23M";
 const SOCC_TABLE    = "SOCC%20Barista%20Applications";
@@ -140,6 +141,11 @@ export default {
     if (url.pathname.startsWith("/api/hr/")) {
       const hrRes = await handleHrForms(request, env);
       if (hrRes) return hrRes;
+    }
+
+    if (url.pathname === '/api/hsc/group-blocks') {
+      const gb = await handleHscGroupBlocks(request, env);
+      if (gb) return gb;
     }
 
     if (isHscToolsHost(url.hostname) && !url.pathname.startsWith("/api")) {
