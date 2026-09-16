@@ -7,6 +7,7 @@ import { handlePlannerSync, handlePlannerSyncStatus, handlePlannerLyoy } from '.
 import { handleEventCheckout } from './event-checkout.js';
 import { handleHrForms } from './hr-forms.js';
 import { handleHscGroupBlocks } from './hsc-group-blocks.js';
+import { handlePayroll } from './payroll.js';
 
 const AIRTABLE_BASE = "appUUjLXEUwlyx23M";
 const SOCC_TABLE    = "SOCC%20Barista%20Applications";
@@ -22,7 +23,7 @@ function optionsResponse() {
   return new Response(null, { headers: {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, x-hr-key, x-event-key",
+    "Access-Control-Allow-Headers": "Content-Type, x-hr-key, x-event-key, x-payroll-pin",
   }});
 }
 
@@ -143,6 +144,11 @@ export default {
       if (hrRes) return hrRes;
     }
 
+    if (url.pathname.startsWith("/api/payroll/")) {
+      const payRes = await handlePayroll(request, env);
+      if (payRes) return payRes;
+    }
+
     if (url.pathname === '/api/hsc/group-blocks') {
       const gb = await handleHscGroupBlocks(request, env);
       if (gb) return gb;
@@ -173,17 +179,81 @@ export default {
       }
     }
 
-    // tools.fremontmakers.com — FM dashboard + maintenance, same Worker/KV/R2 as offers.
+    // tools.fremontmakers.com — FM dashboard, quote-to-cash, maintenance. Same Worker/KV/R2 as offers.
     if (isFmToolsHost(url.hostname) && !url.pathname.startsWith("/api")) {
       const p = url.pathname.replace(/\/$/, "") || "/";
-      if (p === "/" || p === "/index.html" || p === "/dashboard") {
-        return serveAsset(env, request, "/assets/fremont-makers-dashboard.html");
+      if (p === "/quote-release-notes") {
+        const dest = new URL("/release-notes", url.origin);
+        dest.search = url.search;
+        dest.hash = url.hash;
+        return Response.redirect(dest.toString(), 302);
       }
-      if (p === "/maintenance-request" || p === "/maintenance-request.html") {
-        return serveAsset(env, request, "/assets/maintenance-request.html");
+      const FM_PAGES = {
+        "/": "/assets/fremont-makers-dashboard.html",
+        "/index.html": "/assets/fremont-makers-dashboard.html",
+        "/dashboard": "/assets/fremont-makers-dashboard.html",
+        "/quote": "/assets/fremont-makers-quote.html",
+        "/quote.html": "/assets/fremont-makers-quote.html",
+        "/contract": "/assets/fremont-makers-contract-packet.html",
+        "/contract-packet": "/assets/fremont-makers-contract-packet.html",
+        "/sales-agreement": "/assets/fremont-makers-sales-agreement.html",
+        "/pipeline": "/assets/fremont-makers-pipeline.html",
+        "/release-notes": "/assets/fremont-makers-quote-release-notes.html",
+        "/elevation": "/assets/fremont-makers-elevation.html",
+        "/maintenance-request": "/assets/maintenance-request.html",
+        "/maintenance-request.html": "/assets/maintenance-request.html",
+        "/maintenance-tracker": "/assets/maintenance-tracker.html",
+        "/maintenance-tracker.html": "/assets/maintenance-tracker.html",
+        "/logo.png": "/assets/fremontmakers-logo.png",
+        "/wordmark.png": "/assets/fremontmakers-wordmark.png",
+      };
+      if (FM_PAGES[p]) return serveAsset(env, request, FM_PAGES[p]);
+      if (p.startsWith("/assets/fremont-makers-") || p.startsWith("/assets/fremontmakers-")) {
+        const pretty = {
+          "/assets/fremont-makers-quote": "/quote",
+          "/assets/fremont-makers-quote.html": "/quote",
+          "/assets/fremont-makers-contract-packet": "/contract",
+          "/assets/fremont-makers-contract-packet.html": "/contract",
+          "/assets/fremont-makers-dashboard": "/",
+          "/assets/fremont-makers-dashboard.html": "/",
+          "/assets/fremont-makers-sales-agreement": "/sales-agreement",
+          "/assets/fremont-makers-sales-agreement.html": "/sales-agreement",
+          "/assets/fremont-makers-pipeline": "/pipeline",
+          "/assets/fremont-makers-quote-release-notes": "/release-notes",
+        };
+        if (pretty[p]) {
+          const dest = new URL(pretty[p], url.origin);
+          dest.search = url.search;
+          dest.hash = url.hash;
+          return Response.redirect(dest.toString(), 302);
+        }
       }
-      if (p === "/maintenance-tracker" || p === "/maintenance-tracker.html") {
-        return serveAsset(env, request, "/assets/maintenance-tracker.html");
+    }
+
+    // Old offers URLs for FM quote-to-cash → tools.fremontmakers.com
+    if (url.hostname === "offers.hotelstcloud.com" && !url.pathname.startsWith("/api")) {
+      const p = url.pathname.replace(/\/$/, "") || "/";
+      const OFFERS_TO_FM = {
+        "/assets/fremont-makers-quote": "/quote",
+        "/assets/fremont-makers-quote.html": "/quote",
+        "/assets/fremont-makers-contract-packet": "/contract",
+        "/assets/fremont-makers-contract-packet.html": "/contract",
+        "/assets/fremont-makers-dashboard": "/",
+        "/assets/fremont-makers-dashboard.html": "/",
+        "/assets/fremont-makers-sales-agreement": "/sales-agreement",
+        "/assets/fremont-makers-sales-agreement.html": "/sales-agreement",
+        "/assets/fremont-makers-pipeline": "/pipeline",
+        "/assets/fremont-makers-pipeline.html": "/pipeline",
+        "/assets/fremont-makers-quote-release-notes": "/release-notes",
+        "/assets/fremont-makers-quote-release-notes.html": "/release-notes",
+        "/assets/fremont-makers-elevation": "/elevation",
+        "/assets/fremont-makers-elevation.html": "/elevation",
+      };
+      if (OFFERS_TO_FM[p]) {
+        const dest = new URL("https://tools.fremontmakers.com" + OFFERS_TO_FM[p]);
+        dest.search = url.search;
+        dest.hash = url.hash;
+        return Response.redirect(dest.toString(), 302);
       }
     }
 
@@ -381,7 +451,15 @@ export default {
         d.file_errors = fileErrors;
         if (d.id) {
           try {
-            await env.PLANNER_DATA.put(`maint:req:${d.id}`, JSON.stringify(d));
+            let existing = {};
+            try { existing = (await env.PLANNER_DATA.get(`maint:req:${d.id}`, { type: "json" })) || {}; } catch (_) {}
+            const merged = Object.assign({}, existing, d, {
+              attachments: fileNames.length ? fileNames : (d.attachments || existing.attachments || []),
+              attachment_urls: attachmentUrls,
+              notes: existing.notes || d.notes || "",
+              status: existing.status || d.status || "new",
+            });
+            await env.PLANNER_DATA.put(`maint:req:${d.id}`, JSON.stringify(merged));
           } catch (_) { /* KV overlay is non-fatal */ }
         }
 
