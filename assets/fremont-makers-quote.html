@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Quote Builder v0909j</title>
+<title>Fremont Makers — Project Builder v0916a</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20260909j-ar-12mo -->
+<!-- FM-BUILD-v20260916a-dash-back -->
 <script>
 (function(){
   try {
@@ -106,7 +106,18 @@
   }
 
   /* ── TABS ── */
-  .tabs { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .tabs { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; }
+  .tab-group {
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .tab-group-label {
+    font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--muted); font-weight: 700;
+  }
+  .tab-group-btns { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .tab-group.books { padding-left: 14px; border-left: 1px solid var(--border); }
+  .dash-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 290px; }
+  .dash-actions .modal-btn { padding: 4px 10px; font-size: 11px; white-space: nowrap; }
   .theme-toggle { display: flex; gap: 4px; margin-left: 8px; }
   .theme-toggle button {
     padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border);
@@ -141,6 +152,13 @@
   }
   .tab-btn.active { background: var(--active-bg); color: var(--active-fg); border-color: var(--active-bg); font-weight: 700; }
   .tab-btn:not(.active):hover { border-color: var(--accent); color: var(--accent); }
+  a.dash-back {
+    padding: 8px 14px; border-radius: 6px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); font-size: 13px;
+    text-decoration: none; white-space: nowrap; display: inline-block;
+    transition: all .15s;
+  }
+  a.dash-back:hover { border-color: var(--accent); color: var(--accent); }
 
   /* ── STATUS BAR ── */
   .status-bar {
@@ -479,19 +497,31 @@
     <div class="logo-text">
       <h1>Fremont Makers</h1>
       <div class="tagline">making freedom</div>
-      <div class="subtitle">Cabinet Quote Builder</div>
+      <div class="subtitle">Project Builder</div>
     </div>
+    <a class="dash-back" href="https://tools.fremontmakers.com/">← Dashboard</a>
   </div>
   <div class="tabs">
-    <button class="tab-btn" onclick="switchTab('dashboard')" data-tab="dashboard">📁 All Quotes</button>
-    <button class="tab-btn active" onclick="switchTab('quote')" data-tab="quote">📋 Quote</button>
-    <button class="tab-btn" onclick="switchTab('invoice')" data-tab="invoice">🧾 Invoice</button>
-    <button class="tab-btn" onclick="switchTab('invoice'); setTimeout(()=>window.print(),300)" data-tab="printquote">🖨️ Print Invoice</button>
-    <button class="tab-btn" onclick="switchTab('reconcile')" data-tab="reconcile">🔍 Reconcile</button>
-    <button class="tab-btn" onclick="switchTab('companypnl')" data-tab="companypnl">📈 Company P&L</button>
-    <button class="tab-btn" onclick="switchTab('balancesheet')" data-tab="balancesheet">📋 Balance Sheet</button>
-    <button class="tab-btn" onclick="switchTab('pipeline')" data-tab="pipeline">📊 Pipeline</button>
-    <button class="tab-btn" onclick="switchTab('ar')" data-tab="ar">💵 Deposits Due</button>
+    <div class="tab-group">
+      <div class="tab-group-label">Project</div>
+      <div class="tab-group-btns">
+        <button type="button" class="tab-btn" onclick="newQuote(true)" style="border-color:var(--accent);color:var(--accent);font-weight:700;">＋ New Project</button>
+        <button class="tab-btn" onclick="switchTab('dashboard')" data-tab="dashboard">All Projects</button>
+        <button class="tab-btn" onclick="switchTab('quote')" data-tab="quote">Quote</button>
+        <button class="tab-btn" onclick="switchTab('contracts')" data-tab="contracts">Contracts</button>
+        <button class="tab-btn" onclick="switchTab('invoices')" data-tab="invoices">Invoices</button>
+      </div>
+    </div>
+    <div class="tab-group books">
+      <div class="tab-group-label">Company books</div>
+      <div class="tab-group-btns">
+        <button class="tab-btn" onclick="switchTab('pipeline')" data-tab="pipeline">Pipeline</button>
+        <button class="tab-btn" onclick="switchTab('ar')" data-tab="ar">Deposits Due</button>
+        <button class="tab-btn" onclick="switchTab('reconcile')" data-tab="reconcile">Reconcile</button>
+        <button class="tab-btn" onclick="switchTab('companypnl')" data-tab="companypnl">P&L</button>
+        <button class="tab-btn" onclick="switchTab('balancesheet')" data-tab="balancesheet">Balance Sheet</button>
+      </div>
+    </div>
     <div class="theme-toggle" title="Looks only — not saved to the cloud">
       <button type="button" id="theme-paper-btn" onclick="fmSetTheme('paper')">Paper</button>
       <button type="button" id="theme-dark-btn" onclick="fmSetTheme('dark')">Dark</button>
@@ -502,9 +532,7 @@
 <!-- STATUS BAR -->
 <div class="status-bar">
   <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-    <button class="status-btn" style="border-color:var(--accent);color:var(--accent);font-size:0.8rem;" onclick="newQuoteAndImport()">+ New Quote</button>
     <button class="status-btn" id="btn-save" style="font-size:0.8rem;" onclick="saveQuoteManual()">💾 Save</button>
-    <button class="status-btn" style="font-size:0.8rem;" onclick="switchTab('dashboard')">📁 All Quotes</button>
     <button class="status-btn" style="font-size:0.8rem;border-color:#a78bfa;color:#a78bfa;" onclick="showImportModal()">📥 Import Supplier Quote</button>
     <input type="file" id="restore-file-input" accept=".json" style="display:none" onchange="importBackupFile(event)" />
     <!-- Bulk markup setter -->
@@ -516,7 +544,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0909j</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0916a</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
     <span class="status-label">Status:</span>
@@ -528,6 +556,7 @@
       <label><input type="radio" name="fm-status" id="radio-lost" value="lost" onchange="onStatusRadio('lost')"> Lost</label>
     </div>
     <button type="button" class="status-btn" id="btn-issue-contract" onclick="openIssueContract()" style="border-color:var(--accent);color:var(--accent);font-weight:700;">Issue Contract</button>
+    <button type="button" class="status-btn" id="btn-open-packet" onclick="openContractPacket(activeQuoteId)" style="display:none;border-color:var(--accent);color:var(--accent);font-weight:700;">Open contract packet</button>
     <div class="status-btns" style="display:none">
       <button class="status-btn btn-active" id="btn-proposed" onclick="setStatus('proposed')">Proposed</button>
       <button class="status-btn btn-contract" id="btn-contract" onclick="requestContract()">Contracted</button>
@@ -546,6 +575,10 @@
   <div class="job-field">
     <label>Customer / Builder</label>
     <input type="text" id="customer-name" placeholder="e.g. Sunrise Builders" oninput="recalc(); saveLocal()" />
+  </div>
+  <div class="job-field">
+    <label>Signer name</label>
+    <input type="text" id="signer-name" placeholder="Person who will sign" oninput="saveLocal()" />
   </div>
   <div class="job-field">
     <label>Project Name</label>
@@ -580,7 +613,7 @@
         <datalist id="dashboard-search-list"></datalist>
         <div style="display:flex;gap:8px;flex-shrink:0;">
           <button class="add-line-btn" style="margin-top:0; border-style:solid; border-color:#3de8c8; color:#3de8c8;" onclick="seedAllModelQuotes()">🏗️ Generate All Model Quotes</button>
-          <button class="add-line-btn" style="margin-top:0; border-style: solid;" onclick="newQuoteAndImport()">+ New Quote</button>
+          <button class="add-line-btn" style="margin-top:0; border-style: solid;" onclick="newQuote(true)">＋ New Project</button>
         </div>
       </div>
 
@@ -606,17 +639,67 @@
       <table class="quote-table">
         <thead>
           <tr>
-            <th style="width:12%">Job Code</th>
-            <th style="width:20%">Customer</th>
-            <th style="width:25%">Project</th>
-            <th style="width:12%">Date</th>
+            <th style="width:10%">Job Code</th>
+            <th style="width:16%">Customer</th>
+            <th style="width:18%">Project</th>
+            <th style="width:10%">Date</th>
             <th style="width:10%">Status</th>
             <th style="width:10%; text-align:right">Total</th>
-            <th style="width:11%">Actions</th>
+            <th style="width:26%">Actions</th>
           </tr>
         </thead>
         <tbody id="quotes-table-body">
-          <tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 20px;">No quotes yet. Click "+ New Quote" to start.</td></tr>
+          <tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 20px;">No projects yet. Click New Project to start.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="contracts-view" style="display:none;">
+    <div class="section">
+      <div class="section-header" style="justify-content:space-between;align-items:center;">
+        <span class="section-title">Contracts</span>
+        <span style="font-size:13px;color:var(--muted);">Projects moved to contracted status</span>
+      </div>
+      <table class="quote-table">
+        <thead>
+          <tr>
+            <th>Job Code</th>
+            <th>Customer</th>
+            <th>Project</th>
+            <th>Install</th>
+            <th style="text-align:right">Total</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="contracts-table-body">
+          <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px;">No contracted projects yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="invoices-view" style="display:none;">
+    <div class="section">
+      <div class="section-header" style="justify-content:space-between;align-items:center;">
+        <span class="section-title">Invoices</span>
+        <span style="font-size:13px;color:var(--muted);">All invoices issued with a contract</span>
+      </div>
+      <table class="quote-table">
+        <thead>
+          <tr>
+            <th>Invoice</th>
+            <th>Job Code</th>
+            <th>Customer</th>
+            <th>Project</th>
+            <th>Due</th>
+            <th>Status</th>
+            <th style="text-align:right">Amount</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="invoices-table-body">
+          <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px;">No invoices yet. Issue a contract to generate Invoice 1, 2, and 3.</td></tr>
         </tbody>
       </table>
     </div>
@@ -1281,18 +1364,11 @@ async function fmCloudPullForce() {
     if (!res.ok) return;
     const { data } = await res.json();
     if (!data || typeof data !== 'object' || Object.keys(data).length === 0) return;
-    Object.entries(data).forEach(([k, v]) => {
-      try {
-        const incoming = typeof v === 'string' ? v : JSON.stringify(v);
-        localStorage.setItem(k, incoming);
-      } catch(e) {}
-    });
-    // Load cpnl month data
+    // Cloud only — do not copy quote/contract data into localStorage.
     cpnlLoadFromKV(data);
-    // Populate sqArchive
     try {
-      const raw = localStorage.getItem('fm-sq-archive');
-      if (raw) sqArchive = JSON.parse(raw);
+      const raw = data['fm-sq-archive'];
+      sqArchive = raw ? (typeof raw === 'string' ? JSON.parse(raw) : raw) : [];
     } catch(e) { sqArchive = []; }
   } catch(e) {}
 }
@@ -1339,21 +1415,13 @@ async function fmCloudPull() {
     const { data } = await res.json();
     if (!data || typeof data !== 'object' || Object.keys(data).length === 0) return;
 
-    // Cloud pool is the only source of truth. localStorage is a write-through cache.
+    // Cloud pool is the only source of truth. Do not store quote/contract data in the browser.
     _kvData = data;
     _fmPullOk = true;
+  } catch(e) { /* offline — memory stays empty until cloud is reachable */ }
 
-    Object.entries(data).forEach(([k, v]) => {
-      try {
-        const incoming = typeof v === 'string' ? v : JSON.stringify(v);
-        localStorage.setItem(k, incoming);
-      } catch(e) {}
-    });
-  } catch(e) { /* offline — will fall back to localStorage cache */ }
-
-  // Populate sqArchive — prefer _kvData, fall back to localStorage
   try {
-    const raw = _kvData['fm-sq-archive'] || localStorage.getItem('fm-sq-archive');
+    const raw = _kvData['fm-sq-archive'];
     sqArchive = raw ? (typeof raw === 'string' ? JSON.parse(raw) : raw) : [];
   } catch(e) { sqArchive = []; }
 
@@ -1466,7 +1534,7 @@ function deleteQuoteFromLibrary(id) {
   if (!confirm('Delete this quote? This cannot be undone.')) return;
   delete quoteData[id];
   quotesIndex = quotesIndex.filter(q => q.id !== id);
-  try { localStorage.removeItem('fm-quote-' + id); } catch(e) {}
+  try { delete _kvData['fm-quote-' + id]; } catch(e) {}
   saveLocal();
   renderImportLibrary();
   renderDashboard();
@@ -1509,7 +1577,6 @@ function loadSupplierQuote(sourceId) {
   if (!source) return;
   if (!sqArchive.find(q => q.id === sourceId)) {
     sqArchive.push(source);
-    try { localStorage.setItem('fm-sq-archive', JSON.stringify(sqArchive)); } catch(e) {}
   }
   // Brand-new quote — never write cabinets onto the quote that was already open
   const target = openFreshQuoteForImport();
@@ -2156,23 +2223,7 @@ async function fmForceSync() {
     const { data } = await res.json();
     if (!data || Object.keys(data).length === 0) throw new Error('KV returned empty bundle');
 
-    // Clear ALL fm- keys from localStorage first
-    const toRemove = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k && k.startsWith('fm-')) toRemove.push(k);
-    }
-    toRemove.forEach(k => localStorage.removeItem(k));
-
-    // Write all KV data into localStorage
-    Object.entries(data).forEach(([k, v]) => {
-      try {
-        const str = typeof v === 'string' ? v : JSON.stringify(v);
-        localStorage.setItem(k, str);
-      } catch(e) {}
-    });
-
-    // Directly populate in-memory state
+    // Directly populate in-memory state from cloud. Do not write quotes into localStorage.
     const rawIdx = data['fm-quotes-index'];
     const newIndex = Array.isArray(rawIdx) ? rawIdx : (typeof rawIdx === 'string' ? JSON.parse(rawIdx) : []);
     quotesIndex = newIndex;
@@ -2245,7 +2296,7 @@ function renderDashboard() {
   let totalLost = 0;
 
   if (quotesIndex.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 20px;">No quotes yet. Click "+ New Quote" to start.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 20px;">No projects yet. Click New Project to start.</td></tr>';
     document.getElementById('dashboard-total-quoted').textContent = fmt(0);
     document.getElementById('dashboard-total-contracted').textContent = fmt(0);
     document.getElementById('dashboard-total-completed').textContent = fmt(0);
@@ -2315,9 +2366,12 @@ function renderDashboard() {
         </td>
         <td style="text-align:right">${fmt(quoteTotal)}</td>
         <td>
-          <button class="modal-btn" onclick="loadQuoteAndSwitchTab('${quote.id}')" style="padding: 4px 8px; font-size: 11px;">Load</button>
-          <button class="modal-btn" onclick="duplicateQuote('${quote.id}')" style="padding: 4px 8px; font-size: 11px;">Duplicate</button>
-          <button class="del-btn" onclick="deleteQuote('${quote.id}')">✕</button>
+          <div class="dash-actions">
+            <button class="modal-btn" onclick="loadQuoteAndSwitchTab('${quote.id}')">Load</button>
+            <button class="modal-btn" onclick="duplicateQuote('${quote.id}')">Duplicate</button>
+            <button class="del-btn" onclick="deleteQuote('${quote.id}')">Delete</button>
+            ${st === 'contract' ? `<button class="modal-btn" onclick="openContractPacket('${quote.id}')" style="border-color:var(--accent);color:var(--accent);">Open contract packet</button>` : ''}
+          </div>
         </td>
       </tr>
     `;
@@ -2327,6 +2381,101 @@ function renderDashboard() {
   document.getElementById('dashboard-total-contracted').textContent = fmt(totalContracted);
   document.getElementById('dashboard-total-completed').textContent = fmt(totalCompleted);
   document.getElementById('dashboard-total-lost').textContent = fmt(totalLost);
+}
+
+function dashRowTotal(quote) {
+  let quoteTotal = quote.total || 0;
+  if (quoteTotal === 0 && quoteData[quote.id] && quoteData[quote.id].cabinets) {
+    const qd = quoteData[quote.id];
+    const cabSell = (qd.cabinets || []).reduce((s, c) => s + (parseFloat(c.qty)||0) * (parseFloat(c.cost)||0) * (1 + (parseFloat(c.markup)||0)/100), 0);
+    const cabNet  = (qd.cabinets || []).reduce((s, c) => s + (parseFloat(c.qty)||0) * (parseFloat(c.cost)||0), 0);
+    const laborCost = (qd.labor || []).reduce((s, l) => s + (parseFloat(l.rate)||0) * (parseFloat(l.hours)||0), 0);
+    const gnaPct = parseFloat(qd.gnaPct) || 0;
+    const taxPct = parseFloat(qd.taxPct) || 0;
+    const bulkDisc = parseFloat(qd.bulkDiscPct) || 0;
+    const cabAfterDisc = cabSell - cabNet * bulkDisc/100;
+    const tax = cabAfterDisc * taxPct / 100;
+    const gna = (cabAfterDisc + laborCost) * gnaPct / 100;
+    quoteTotal = cabAfterDisc + laborCost + gna + tax;
+  }
+  return contractTotalOf(quoteData[quote.id] || quote, quoteTotal);
+}
+
+function renderContracts() {
+  const tbody = document.getElementById('contracts-table-body');
+  if (!tbody) return;
+  const rows = quotesIndex.filter(q => pipeStatus(quoteData[q.id] || q) === 'contract');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px;">No contracted projects yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(quote => {
+    const qd = quoteData[quote.id] || quote;
+    const total = dashRowTotal(quote);
+    return `<tr>
+      <td><span style="font-family:monospace;color:var(--accent);font-weight:700;">${quote.jobCode || '—'}</span></td>
+      <td>${quote.customer || '—'}</td>
+      <td>${quote.project || '—'}</td>
+      <td>${qd.installDate || '—'}</td>
+      <td style="text-align:right">${fmt(total)}</td>
+      <td>
+        <div class="dash-actions">
+          <button class="modal-btn" onclick="loadQuoteAndSwitchTab('${quote.id}')">Load</button>
+          <button class="modal-btn" onclick="openContractPacket('${quote.id}')" style="border-color:var(--accent);color:var(--accent);">Open contract packet</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderInvoices() {
+  const tbody = document.getElementById('invoices-table-body');
+  if (!tbody) return;
+  const labels = { 1: 'Invoice 1 · 50%', 2: 'Invoice 2 · 30%', 3: 'Invoice 3 · 20%' };
+  const pct = { 1: 0.5, 2: 0.3, 3: 0.2 };
+  const rows = [];
+  quotesIndex.forEach(quote => {
+    const qd = quoteData[quote.id] || quote;
+    if (pipeStatus(qd) !== 'contract') return;
+    const total = dashRowTotal(quote);
+    const ar = scheduleOf(qd, total);
+    [1,2,3].forEach(n => {
+      const paid = !!ar['d' + n + 'Paid'];
+      rows.push({
+        id: quote.id,
+        n,
+        job: quote.jobCode || '—',
+        customer: quote.customer || '—',
+        project: quote.project || '—',
+        due: ar['d' + n + 'Due'] || '—',
+        status: paid ? ('Paid' + (ar['d' + n + 'PaidAt'] ? ' ' + ar['d' + n + 'PaidAt'] : '')) : 'Due',
+        amt: total * pct[n]
+      });
+    });
+  });
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px;">No invoices yet. Issue a contract to generate Invoice 1, 2, and 3.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(r => `<tr>
+    <td>${labels[r.n]}</td>
+    <td><span style="font-family:monospace;color:var(--accent);font-weight:700;">${r.job}</span></td>
+    <td>${r.customer}</td>
+    <td>${r.project}</td>
+    <td>${r.due}</td>
+    <td>${r.status}</td>
+    <td style="text-align:right">${fmt(r.amt)}</td>
+    <td>
+      <div class="dash-actions">
+        <button class="modal-btn" onclick="openInvoiceSheet('${r.id}', ${r.n})">Open invoice</button>
+      </div>
+    </td>
+  </tr>`).join('');
+}
+
+function openInvoiceSheet(id, n) {
+  const url = FM_PACKET_URL + '?id=' + encodeURIComponent(id) + '&invoice=' + n;
+  window.open(url, '_blank');
 }
 
 
@@ -2440,9 +2589,17 @@ function renderPipeline() {
     if (st === 'contract') {
       const con = document.createElement('button');
       con.className = 'status-btn';
-      con.textContent = 'Open contract';
+      con.textContent = 'Open contract packet';
       con.onclick = () => openContractPacket(q.id);
       bar.appendChild(con);
+      [['d1',1],['d2',2],['d3',3]].forEach(pair => {
+        if (!ar[pair[0] + 'Paid']) return;
+        const rec = document.createElement('button');
+        rec.className = 'status-btn';
+        rec.textContent = 'Receipt ' + pair[1];
+        rec.onclick = () => openPaidReceipt(q.id, pair[1]);
+        bar.appendChild(rec);
+      });
       const done = document.createElement('button');
       done.className = 'status-btn';
       done.textContent = 'Completed';
@@ -2466,32 +2623,51 @@ function pipeTogglePaid(id, which, paid) {
   if (!quoteData[id]) quoteData[id] = {};
   if (!quoteData[id].ar || typeof quoteData[id].ar !== 'object') quoteData[id].ar = {};
   quoteData[id].ar[which + 'Paid'] = !!paid;
+  quoteData[id].ar[which + 'PaidAt'] = paid ? today() : '';
   quoteData[id].saved_at = Date.now();
   saveQuoteData(id);
   fmCloudPushDebounced();
   renderPipeline();
 }
+function openPaidReceipt(id, n) {
+  if (!id) id = activeQuoteId;
+  const payload = packetPayload(id);
+  const url = FM_PACKET_URL + '?id=' + encodeURIComponent(id) + '&receipt=d' + n;
+  window.open(url, '_blank');
+}
 
 
 function packetPayload(id) {
+  if (id === activeQuoteId) {
+    try { Object.assign(quoteData[id] || {}, collectData()); } catch (e) {}
+  }
   const q = quoteData[id] || {};
   const unit = quoteGrandFromData(q) || 0;
   const qty = modelQtyOf(q);
   const total = contractTotalOf(q, unit);
   const ar = scheduleOf(q, total);
   return {
-    id, customer: q.customer || '', project: q.project || '', jobCode: q.jobCode || '',
+    id, customer: q.customer || '', signerName: q.signerName || q.customer || '', project: q.project || '', jobCode: q.jobCode || '',
     quoteDate: q.date || '', address: q.address || '', installDate: q.installDate || '',
     modelQty: qty, unit, total,
     d1Due: ar.d1Due, d2Due: ar.d2Due, d3Due: ar.d3Due,
-    d1Amt: total * 0.50, d2Amt: total * 0.30, d3Amt: total * 0.20
+    d1Amt: total * 0.50, d2Amt: total * 0.30, d3Amt: total * 0.20,
+    d1Paid: !!ar.d1Paid, d2Paid: !!ar.d2Paid, d3Paid: !!ar.d3Paid,
+    d1PaidAt: ar.d1PaidAt || '', d2PaidAt: ar.d2PaidAt || '', d3PaidAt: ar.d3PaidAt || '',
+    cabinets: q.cabinets || [], labor: q.labor || [],
+    gnaPct: q.gnaPct, taxPct: q.taxPct, bulkDiscPct: q.bulkDiscPct
   };
 }
 function openContractPacket(id) {
   if (!id) id = activeQuoteId;
   const payload = packetPayload(id);
-  const url = FM_PACKET_URL + '#' + encodeURIComponent(JSON.stringify(payload));
+  const url = FM_PACKET_URL + '?id=' + encodeURIComponent(id);
   window.open(url, '_blank');
+}
+function openContractFromHeader() {
+  const st = pipeStatus(quoteData[activeQuoteId] || {});
+  if (st === 'contract') openContractPacket(activeQuoteId);
+  else openIssueContract();
 }
 function arMonthKey(due) {
   const m = String(due || '').match(/^(\d{4})-(\d{2})/);
@@ -2557,7 +2733,7 @@ function renderAr() {
       + '<td>' + cell(ar.d2Paid, ar.d2Due, total*0.3) + '</td>'
       + '<td>' + cell(ar.d3Paid, ar.d3Due, total*0.2) + '</td>'
       + '<td style="text-align:right">' + fmt(ar.open) + '</td>'
-      + '<td><button class="status-btn" onclick="openContractPacket(\'' + row.id + '\')">Open packet</button></td>'
+      + '<td><button class="status-btn" onclick="openContractPacket(\'' + row.id + '\')">Open contract packet</button></td>'
       + '</tr>';
   });
   const next11 = months.slice(1).reduce((s, m) => s + m.amt, 0) + later;
@@ -2608,7 +2784,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000))
     ]);
   } catch(e) {
-    console.warn('Cloud pull failed or timed out, falling back to localStorage:', e.message);
+    console.warn('Cloud pull failed or timed out:', e.message);
   }
 
   try {
@@ -2771,6 +2947,8 @@ function loadQuote(id) {
   // Populate form with loaded data
   document.getElementById('job-code-display').textContent     = q.jobCode;
   document.getElementById('customer-name').value              = q.customer || '';
+  const signerEl = document.getElementById('signer-name');
+  if (signerEl) signerEl.value = q.signerName || q.customer || '';
   document.getElementById('project-name').value               = q.project  || '';
   document.getElementById('quote-date').value                 = q.date     || today();
   document.getElementById('install-address').value            = q.address  || '';
@@ -2828,14 +3006,13 @@ function duplicateQuote(id) {
 }
 
 function deleteQuote(id) {
-  if (!confirm('Are you sure you want to delete this quote? This action cannot be undone.')) {
+  if (!confirm('Are you sure you want to delete this project? This cannot be undone.')) {
     return;
   }
 
   delete quoteData[id];
   quotesIndex = quotesIndex.filter(q => q.id !== id);
 
-  localStorage.removeItem(`fm-quote-${id}`); // Remove from localStorage
   saveQuotesIndex();
 
   if (activeQuoteId === id) {
@@ -2895,6 +3072,7 @@ function collectData() {
     status:   quoteData[activeQuoteId]?.status || 'proposed', // Use active quote's status
     jobCode:  document.getElementById('job-code-display')?.textContent || '', // jobCode from display
     customer: document.getElementById('customer-name')?.value || '',
+    signerName: document.getElementById('signer-name')?.value || '',
     project:  document.getElementById('project-name')?.value  || '',
     date:     document.getElementById('quote-date')?.value    || '',
     address:  document.getElementById('install-address')?.value || '',
@@ -2928,29 +3106,24 @@ function saveLocal() {
 
 // New functions for multi-quote management
 function saveActiveQuoteId() {
-  try {
-    localStorage.setItem('fm-active-quote', activeQuoteId);
-  } catch (e) { console.error('Error saving active quote ID', e); }
+  if (activeQuoteId) _kvData['fm-active-quote'] = activeQuoteId;
+  fmCloudPushDebounced();
 }
 
 function loadActiveQuoteId() {
-  try {
-    return localStorage.getItem('fm-active-quote');
-  } catch (e) { console.error('Error loading active quote ID', e); return null; }
+  return _kvData['fm-active-quote'] || null;
 }
 
 function saveQuotesIndex() {
-  try {
-    localStorage.setItem('fm-quotes-index', JSON.stringify(quotesIndex));
-    fmCloudPushDebounced();
-  } catch (e) { console.error('Error saving quotes index', e); }
+  _kvData['fm-quotes-index'] = quotesIndex;
+  fmCloudPushDebounced();
 }
 
 function loadQuotesIndex() {
   try {
     const rawIndex = (_kvData['fm-quotes-index'])
       ? (typeof _kvData['fm-quotes-index'] === 'string' ? _kvData['fm-quotes-index'] : JSON.stringify(_kvData['fm-quotes-index']))
-      : localStorage.getItem('fm-quotes-index');
+      : null;
 
     quotesIndex = rawIndex ? (typeof rawIndex === 'string' ? JSON.parse(rawIndex) : rawIndex) : [];
 
@@ -2969,19 +3142,14 @@ function loadQuotesIndex() {
       activeQuoteId = null;
     }
 
-    // Load all full quote data into memory — prefer _kvData, fall back to localStorage
+    // Load all full quote data into memory from cloud KV only
     quotesIndex.forEach(q => {
       const kvKey = `fm-quote-${q.id}`;
       const kvEntry = _kvData[kvKey];
       if (kvEntry) {
         quoteData[q.id] = typeof kvEntry === 'object' ? kvEntry : JSON.parse(kvEntry);
       } else {
-        const rawQuote = localStorage.getItem(kvKey);
-        if (rawQuote) {
-          quoteData[q.id] = JSON.parse(rawQuote);
-        } else {
-          quoteData[q.id] = { id: q.id, jobCode: q.jobCode, customer: q.customer, project: q.project, date: q.date, status: q.status, cabinets: [], labor: [], gnaPct: '10', taxPct: '8.7', reconciliationData: null };
-        }
+        quoteData[q.id] = { id: q.id, jobCode: q.jobCode, customer: q.customer, project: q.project, date: q.date, status: q.status, cabinets: [], labor: [], gnaPct: '10', taxPct: '8.7', reconciliationData: null };
       }
     });
 
@@ -2995,60 +3163,24 @@ function loadQuotesIndex() {
 function saveQuoteData(id) {
   try {
     const dataToSave = quoteData[id];
-    dataToSave.saved_at = Date.now(); // always stamp — prevents stale localStorage from beating cloud
-    localStorage.setItem(`fm-quote-${id}`, JSON.stringify(dataToSave));
+    dataToSave.saved_at = Date.now();
+    _kvData['fm-quote-' + id] = dataToSave;
+    fmCloudPushDebounced();
   } catch (e) { console.error(`Error saving quote data for ${id}`, e); }
 }
 
 function migrateOldQuote() {
+  // Quotes live in KV. Do not hydrate from the browser.
   try {
-    const oldRawQuote = localStorage.getItem('fm-quote');
-    const indexExists = localStorage.getItem('fm-quotes-index');
-
-    if (oldRawQuote && !indexExists) {
-      console.log('Migrating old fm-quote data...');
-      const oldQuote = JSON.parse(oldRawQuote);
-      const newId = generateQuoteId();
-      
-      // Ensure jobCode is present, generate if missing
-      if (!oldQuote.jobCode) {
-          oldQuote.jobCode = generateJobCode();
-      }
-
-      oldQuote.id = newId;
-      oldQuote.status = oldQuote.status || 'proposed';
-      oldQuote.createdAt = Date.now();
-      
-      // Clear reconciliation data for migrated quote if it exists, as it's scope changed.
-      oldQuote.reconciliationData = null;
-
-      // Update the state variables
-      activeQuoteId = newId;
-      quotesIndex = [{
-        id: newId,
-        jobCode: oldQuote.jobCode,
-        customer: oldQuote.customer || '',
-        project: oldQuote.project || '',
-        date: oldQuote.date || today(),
-        status: oldQuote.status,
-        total: 0, // Will be updated on first recalc/save
-        createdAt: oldQuote.createdAt
-      }];
-      quoteData[newId] = oldQuote;
-
-      saveActiveQuoteId();
-      saveQuotesIndex();
-      saveQuoteData(newId);
-      
-      localStorage.removeItem('fm-quote'); // Remove old single quote key
-      console.log('Migration complete.');
-    } else if (!oldRawQuote && !indexExists) {
-        newQuote(false); // If neither exists, create a fresh one and set it as active
+    if (!_kvData['fm-quotes-index'] && quotesIndex.length === 0) {
+      newQuote(false);
+      if (quotesIndex[0]) {
         activeQuoteId = quotesIndex[0].id;
         saveActiveQuoteId();
+      }
     }
   } catch (e) {
-    console.error('Error during migration', e);
+    console.error('Error during init', e);
   }
 }
 
@@ -3214,7 +3346,7 @@ function setStatus(s) {
   });
 
   const locked = s === 'contract' || s === 'completed';
-  document.querySelectorAll('.tbl-input, .markup-select, .gna-select, .tax-input, #customer-name, #project-name, #install-address').forEach(el => {
+  document.querySelectorAll('.tbl-input, .markup-select, .gna-select, .tax-input, #customer-name, #signer-name, #project-name, #install-address').forEach(el => {
     if (locked) el.classList.add('locked');
     else el.classList.remove('locked');
   });
@@ -3227,8 +3359,8 @@ function setStatus(s) {
   syncIssueBtn();
 }
 
-const FM_SA_URL = 'https://offers.hotelstcloud.com/assets/fremont-makers-sales-agreement';
-const FM_PACKET_URL = 'https://offers.hotelstcloud.com/assets/fremont-makers-contract-packet';
+const FM_SA_URL = 'https://tools.fremontmakers.com/sales-agreement';
+const FM_PACKET_URL = 'https://tools.fremontmakers.com/contract';
 
 function isoAddDays(iso, days) {
   const d = new Date(iso + 'T12:00:00');
@@ -3300,9 +3432,10 @@ function dashSetStatus(id, s) {
 
 function syncIssueBtn() {
   const btn = document.getElementById('btn-issue-contract');
-  if (!btn) return;
+  const pkt = document.getElementById('btn-open-packet');
   const st = pipeStatus(quoteData[activeQuoteId] || {});
-  btn.style.display = st === 'proposed' ? '' : 'none';
+  if (btn) btn.style.display = st === 'proposed' ? '' : 'none';
+  if (pkt) pkt.style.display = st === 'contract' ? '' : 'none';
 }
 
 function confirmContract() {
@@ -3371,6 +3504,10 @@ function switchTab(tab) {
   });
 
   document.getElementById('dashboard-view').style.display = tab==='dashboard' ? '' : 'none';
+  const contractsEl = document.getElementById('contracts-view');
+  if (contractsEl) contractsEl.style.display = tab==='contracts' ? '' : 'none';
+  const invoicesEl = document.getElementById('invoices-view');
+  if (invoicesEl) invoicesEl.style.display = tab==='invoices' ? '' : 'none';
   const pipeEl = document.getElementById('pipeline-view');
   if (pipeEl) pipeEl.style.display = tab==='pipeline' ? '' : 'none';
   const arEl = document.getElementById('ar-view');
@@ -3391,6 +3528,8 @@ function switchTab(tab) {
   if (jobInfo)   jobInfo.style.display   = showQuoteChrome ? '' : 'none';
 
   if (tab === 'dashboard') renderDashboard();
+  if (tab === 'contracts') renderContracts();
+  if (tab === 'invoices') renderInvoices();
   if (tab === 'pipeline') renderPipeline();
   if (tab === 'ar') renderAr();
   if (tab === 'quote') {
@@ -3498,8 +3637,8 @@ function buildInvoice() {
     const nxt = nextDeposit(currentQuoteData, contractGrand);
     dueEl.style.display = '';
     dueEl.innerHTML = nxt.n
-      ? '<strong>This invoice:</strong> ' + nxt.label + ' · due ' + (nxt.due || '—') + ' · ' + fmt(nxt.amt)
-        + '<div style="margin-top:6px;color:#555;">Install ' + (currentQuoteData.installDate || '—') + '. Print Invoice uses the open quote that is contracted, and the next unpaid deposit on its 90-day schedule.</div>'
+      ? '<strong>Invoice ' + nxt.n + ' of 3:</strong> ' + nxt.label + ' · due ' + (nxt.due || '—') + ' · ' + fmt(nxt.amt)
+        + '<div style="margin-top:6px;color:#555;">Install / delivery ' + (currentQuoteData.installDate || '—') + (nxt.n === 1 ? '. The factory order is not placed until Invoice 1 is paid in full.' : '.') + '</div>'
       : '<strong>Paid in full.</strong>';
   } else {
     dueEl.style.display = 'none';
@@ -3971,15 +4110,18 @@ function cpnlMonthKey(ym) { return 'fm-cpnl-' + ym; }
 function cpnlGetMonth(ym) {
   if (_cpnlMonthData[ym]) return _cpnlMonthData[ym];
   try {
-    const raw = localStorage.getItem(cpnlMonthKey(ym));
-    if (raw) { _cpnlMonthData[ym] = JSON.parse(raw); return _cpnlMonthData[ym]; }
+    const raw = _kvData[cpnlMonthKey(ym)];
+    if (raw) {
+      _cpnlMonthData[ym] = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      return _cpnlMonthData[ym];
+    }
   } catch(e) {}
   return null;
 }
 
 function cpnlSaveMonth(ym, data) {
   _cpnlMonthData[ym] = data;
-  try { localStorage.setItem(cpnlMonthKey(ym), JSON.stringify(data)); } catch(e) {}
+  _kvData[cpnlMonthKey(ym)] = data;
   fmCloudPushDebounced();
 }
 
@@ -4375,7 +4517,7 @@ function bsSave() {
   const data = { date: document.getElementById('bs-date-input')?.value || '' };
   BS_FIELDS.forEach(id => { data[id] = document.getElementById(id)?.value || '0'; });
   try {
-    localStorage.setItem('fm-balance-sheet', JSON.stringify(data));
+    _kvData['fm-balance-sheet'] = data;
     fmCloudPushDebounced();
   } catch(e) {}
 }
@@ -4384,7 +4526,7 @@ function bsLoad() {
   try {
     const raw = (_kvData['fm-balance-sheet'])
       ? (typeof _kvData['fm-balance-sheet'] === 'string' ? _kvData['fm-balance-sheet'] : JSON.stringify(_kvData['fm-balance-sheet']))
-      : localStorage.getItem('fm-balance-sheet');
+      : null;
     if (!raw) { bsRecalc(); return; }
     const data = typeof raw === 'string' ? JSON.parse(raw) : raw;
     if (data.date) {
