@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v0916a</title>
+<title>Fremont Makers — Project Builder v0917m</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20260916a-dash-back -->
+<!-- FM-BUILD-v20260917m-house-import -->
 <script>
 (function(){
   try {
@@ -36,10 +36,20 @@
     --on-green: #ffffff;
     --active-bg: #1b2744;
     --active-fg: #ffffff;
-    --pill-proposed-bg: #e8e4dc;
-    --pill-contract-bg: #efe6d4;
-    --pill-completed-bg: #dce8e0;
+    --pill-proposed-bg: #f6efd8;
+    --pill-contract-bg: #e4eef6;
+    --pill-completed-bg: #e3f0e6;
     --pill-lost-bg: #efe0e0;
+    --pill-proposed-fg: #8a6a20;
+    --pill-contract-fg: #3a5f7a;
+    --pill-completed-fg: #2f7a4a;
+    --pill-lost-fg: #c45c5c;
+    --row-proposed: #f6efd8;
+    --row-contract: #e4eef6;
+    --row-completed: #e3f0e6;
+    --row-proposed-hover: #efe4c4;
+    --row-contract-hover: #d7e6f1;
+    --row-completed-hover: #d4e8d9;
     font-family: 'Segoe UI', system-ui, sans-serif;
   }
   html[data-theme="dark"] {
@@ -60,10 +70,20 @@
     --on-green: #111111;
     --active-bg: #c9a84c;
     --active-fg: #111111;
-    --pill-proposed-bg: #1a2a3a;
-    --pill-contract-bg: #2d1a1a;
-    --pill-completed-bg: #1a2d1a;
+    --pill-proposed-bg: #2a2618;
+    --pill-contract-bg: #1a2430;
+    --pill-completed-bg: #1a2a20;
     --pill-lost-bg: #2d1a1a;
+    --pill-proposed-fg: #e8d59a;
+    --pill-contract-fg: #8eb4c9;
+    --pill-completed-fg: #3de8a0;
+    --pill-lost-fg: #e85050;
+    --row-proposed: #2a2618;
+    --row-contract: #1a2430;
+    --row-completed: #1a2a20;
+    --row-proposed-hover: #342e1c;
+    --row-contract-hover: #223040;
+    --row-completed-hover: #223628;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); min-height: 100vh; }
@@ -116,8 +136,12 @@
   }
   .tab-group-btns { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
   .tab-group.books { padding-left: 14px; border-left: 1px solid var(--border); }
-  .dash-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 290px; }
+  .dash-actions { display: flex; flex-wrap: nowrap; gap: 6px; align-items: center; min-width: 0; }
   .dash-actions .modal-btn { padding: 4px 10px; font-size: 11px; white-space: nowrap; }
+  .dash-actions .modal-btn.del { color: var(--red); border-color: var(--red); }
+  .th-sort { cursor: pointer; user-select: none; white-space: nowrap; }
+  .th-sort:hover { color: var(--text); }
+  .quote-table tbody td { padding: 8px 8px; vertical-align: middle; }
   .theme-toggle { display: flex; gap: 4px; margin-left: 8px; }
   .theme-toggle button {
     padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border);
@@ -172,10 +196,10 @@
     padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;
     letter-spacing: .04em; text-transform: uppercase;
   }
-  .pill-proposed { background: var(--pill-proposed-bg); color: var(--blue); border: 1px solid var(--blue); }
-  .pill-contract, .pill-contracted { background: var(--pill-contract-bg); color: var(--accent); border: 1px solid var(--accent); }
-  .pill-completed { background: var(--pill-completed-bg); color: var(--green); border: 1px solid var(--green); }
-  .pill-lost { background: var(--pill-lost-bg); color: var(--red); border: 1px solid var(--red); }
+  .pill-proposed { background: var(--pill-proposed-bg); color: var(--pill-proposed-fg); border: 1px solid var(--pill-proposed-fg); }
+  .pill-contract, .pill-contracted { background: var(--pill-contract-bg); color: var(--pill-contract-fg); border: 1px solid var(--pill-contract-fg); }
+  .pill-completed { background: var(--pill-completed-bg); color: var(--pill-completed-fg); border: 1px solid var(--pill-completed-fg); }
+  .pill-lost { background: var(--pill-lost-bg); color: var(--pill-lost-fg); border: 1px solid var(--pill-lost-fg); }
 
   .status-btns { display: flex; gap: 8px; margin-left: auto; }
   .status-btn {
@@ -214,14 +238,21 @@
     background: var(--surface);
     border-bottom: 1px solid var(--border);
     padding: 14px 32px;
-    display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end;
+    display: flex; gap: 16px; flex-wrap: nowrap; align-items: flex-end;
+    overflow-x: auto;
   }
-  .job-field { display: flex; flex-direction: column; gap: 4px; }
-  .job-field label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .job-field { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+  .job-field label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
   .job-field input, .job-field select {
     background: var(--input-bg); border: 1px solid var(--border);
     color: var(--text); border-radius: 5px; padding: 6px 10px; font-size: 13px;
     min-width: 120px;
+  }
+  #quote-date {
+    min-width: 220px;
+    width: 220px;
+    max-width: none;
+    box-sizing: border-box;
   }
   .job-field input:focus, .job-field select:focus { outline: none; border-color: var(--accent); }
   .job-code-badge {
@@ -232,6 +263,15 @@
 
   /* ── MAIN LAYOUT ── */
   .main { padding: 24px 32px; max-width: 1100px; }
+  .main.wide { max-width: 1320px; }
+  #invoices-view { overflow-x: auto; }
+  #invoices-view .quote-table { min-width: 1100px; table-layout: auto; }
+  #invoices-view .quote-table th,
+  #invoices-view .quote-table td { white-space: nowrap; }
+  #invoices-view .quote-table td:nth-child(3),
+  #invoices-view .quote-table td:nth-child(4) { white-space: normal; min-width: 140px; }
+  #invoices-view .quote-table th:last-child,
+  #invoices-view .quote-table td:last-child { text-align: left; }
   .section { margin-bottom: 28px; }
   .section-header {
     display: flex; align-items: center; justify-content: space-between;
@@ -252,7 +292,21 @@
   .quote-table thead th:last-child { text-align: right; }
   .quote-table tbody tr { background: var(--surface); }
   .quote-table tbody tr:hover { background: var(--surface2); }
-  .quote-table tbody td { padding: 5px 4px; }
+  #dashboard-view .quote-table tbody tr.row-child { background: transparent; }
+  #dashboard-view .quote-table tbody tr.row-child td:first-child { padding-left: 22px; }
+  #dashboard-view .quote-table tbody tr.row-order td { font-weight: 600; }
+  .npw-choice { display:flex; flex-direction:column; gap:8px; margin:12px 0 16px; }
+  .npw-choice button { text-align:left; padding:12px 14px; }
+  #dashboard-view .quote-table tbody tr.row-proposed { background: var(--row-proposed); }
+  #dashboard-view .quote-table tbody tr.row-contract { background: var(--row-contract); }
+  #dashboard-view .quote-table tbody tr.row-completed { background: var(--row-completed); }
+  #dashboard-view .quote-table tbody tr.row-proposed:hover { background: var(--row-proposed-hover); }
+  #dashboard-view .quote-table tbody tr.row-contract:hover { background: var(--row-contract-hover); }
+  #dashboard-view .quote-table tbody tr.row-completed:hover { background: var(--row-completed-hover); }
+  #dashboard-view .quote-table tbody tr.row-proposed .dash-status,
+  #dashboard-view .quote-table tbody tr.row-contract .dash-status,
+  #dashboard-view .quote-table tbody tr.row-completed .dash-status { background: transparent; }
+  .quote-table tbody td { padding: 8px 8px; vertical-align: middle; }
   .quote-table tbody td:first-child { padding-left: 8px; border-radius: 6px 0 0 6px; }
   .quote-table tbody td:last-child  { padding-right: 8px; border-radius: 0 6px 6px 0; text-align: right; }
 
@@ -339,6 +393,11 @@
   /* ── INVOICE VIEW ── */
   #invoice-view {
     display: none;
+    background: #fff; color: #222; max-width: 800px; padding: 48px;
+    border-radius: 12px; margin: 24px auto; font-family: Georgia, serif;
+  }
+  #print-quote-view { display: none; }
+  .pq-sheet {
     background: #fff; color: #222; max-width: 800px; padding: 48px;
     border-radius: 12px; margin: 24px auto; font-family: Georgia, serif;
   }
@@ -444,17 +503,26 @@
     .header { flex-direction: column; align-items: flex-start; }
   }
   @media print {
-    body > *:not(#invoice-view) { display: none !important; }
-    #invoice-view { display: block !important; background: #fff; padding: 0; }
-    .print-btn { display: none; }
-  }
-
-  @media print {
-    body > *:not(#print-quote-view) { display: none !important; }
-    #print-quote-view { display: block !important; }
-    #pq-btns { display: none !important; }
-    .screen-header, .status-bar, .job-info { display: none !important; }
-    @page { margin: 0.6in; size: portrait; }
+    @page { margin: 0.55in; size: portrait; }
+    html, body { background: #fff !important; }
+    .print-btn, #pq-btns, .header, .status-bar, .job-info, .tabs, .modal-overlay { display: none !important; }
+    body.printing-quote * { visibility: hidden; }
+    body.printing-quote #print-quote-view,
+    body.printing-quote #print-quote-view * { visibility: visible; }
+    body.printing-quote #print-quote-view {
+      display: block !important;
+      position: absolute; left: 0; top: 0; width: 100%;
+      background: #fff !important;
+    }
+    body.printing-quote #pq-content { border: none; margin: 0; max-width: none; box-shadow: none; }
+    body.printing-invoice * { visibility: hidden; }
+    body.printing-invoice #invoice-view,
+    body.printing-invoice #invoice-view * { visibility: visible; }
+    body.printing-invoice #invoice-view {
+      display: block !important;
+      position: absolute; left: 0; top: 0; width: 100%;
+      background: #fff !important; padding: 0;
+    }
   }
 
 .bs-input:disabled{background:transparent!important;border-color:transparent!important;color:var(--text)!important;cursor:default;pointer-events:none;}
@@ -505,7 +573,7 @@
     <div class="tab-group">
       <div class="tab-group-label">Project</div>
       <div class="tab-group-btns">
-        <button type="button" class="tab-btn" onclick="newQuote(true)" style="border-color:var(--accent);color:var(--accent);font-weight:700;">＋ New Project</button>
+        <button type="button" class="tab-btn" onclick="openNewProjectWizard()" style="border-color:var(--accent);color:var(--accent);font-weight:700;">＋ New Project</button>
         <button class="tab-btn" onclick="switchTab('dashboard')" data-tab="dashboard">All Projects</button>
         <button class="tab-btn" onclick="switchTab('quote')" data-tab="quote">Quote</button>
         <button class="tab-btn" onclick="switchTab('contracts')" data-tab="contracts">Contracts</button>
@@ -544,7 +612,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0916a</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0917m</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
     <span class="status-label">Status:</span>
@@ -555,8 +623,9 @@
       <label><input type="radio" name="fm-status" id="radio-completed" value="completed" onchange="onStatusRadio('completed')"> Completed</label>
       <label><input type="radio" name="fm-status" id="radio-lost" value="lost" onchange="onStatusRadio('lost')"> Lost</label>
     </div>
-    <button type="button" class="status-btn" id="btn-issue-contract" onclick="openIssueContract()" style="border-color:var(--accent);color:var(--accent);font-weight:700;">Issue Contract</button>
-    <button type="button" class="status-btn" id="btn-open-packet" onclick="openContractPacket(activeQuoteId)" style="display:none;border-color:var(--accent);color:var(--accent);font-weight:700;">Open contract packet</button>
+    <button type="button" class="status-btn" id="btn-issue-contract" onclick="openIssueContract()" style="border-color:var(--accent);color:var(--accent);font-weight:700;">Next: Issue Contract & Invoices</button>
+    <button type="button" class="status-btn" id="btn-mark-completed" onclick="markQuoteCompleted()" style="display:none;border-color:var(--green);color:var(--green);font-weight:700;">Next: Mark as Completed</button>
+    <button type="button" class="status-btn" id="btn-open-packet" onclick="openContractPacket(activeQuoteId)" style="display:none;">Open contract packet</button>
     <div class="status-btns" style="display:none">
       <button class="status-btn btn-active" id="btn-proposed" onclick="setStatus('proposed')">Proposed</button>
       <button class="status-btn btn-contract" id="btn-contract" onclick="requestContract()">Contracted</button>
@@ -586,7 +655,7 @@
   </div>
   <div class="job-field">
     <label>Quote Date</label>
-    <input type="date" id="quote-date" oninput="saveLocal()" />
+    <input type="date" id="quote-date" oninput="saveLocal()" style="min-width:220px;width:220px;" />
   </div>
   <div class="job-field">
     <label>Install Address</label>
@@ -612,8 +681,7 @@
           style="flex:1;min-width:200px;max-width:420px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 12px;color:var(--text);font-size:13px;outline:none;" />
         <datalist id="dashboard-search-list"></datalist>
         <div style="display:flex;gap:8px;flex-shrink:0;">
-          <button class="add-line-btn" style="margin-top:0; border-style:solid; border-color:#3de8c8; color:#3de8c8;" onclick="seedAllModelQuotes()">🏗️ Generate All Model Quotes</button>
-          <button class="add-line-btn" style="margin-top:0; border-style: solid;" onclick="newQuote(true)">＋ New Project</button>
+          <button class="add-line-btn" style="margin-top:0; border-style: solid;" onclick="openNewProjectWizard()">＋ New Project</button>
         </div>
       </div>
 
@@ -639,13 +707,13 @@
       <table class="quote-table">
         <thead>
           <tr>
-            <th style="width:10%">Job Code</th>
-            <th style="width:16%">Customer</th>
-            <th style="width:18%">Project</th>
-            <th style="width:10%">Date</th>
-            <th style="width:10%">Status</th>
-            <th style="width:10%; text-align:right">Total</th>
-            <th style="width:26%">Actions</th>
+            <th class="th-sort" onclick="dashSort('jobCode')">Job Code</th>
+            <th class="th-sort" onclick="dashSort('customer')">Customer</th>
+            <th class="th-sort" onclick="dashSort('project')">Project</th>
+            <th class="th-sort" onclick="dashSort('date')">Date</th>
+            <th class="th-sort" onclick="dashSort('status')">Status</th>
+            <th class="th-sort" style="text-align:right" onclick="dashSort('total')">Total</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody id="quotes-table-body">
@@ -688,22 +756,54 @@
       <table class="quote-table">
         <thead>
           <tr>
-            <th>Invoice</th>
-            <th>Job Code</th>
-            <th>Customer</th>
-            <th>Project</th>
-            <th>Due</th>
-            <th>Status</th>
-            <th style="text-align:right">Amount</th>
+            <th class="th-sort" onclick="invSort('invoice')">Invoice</th>
+            <th class="th-sort" onclick="invSort('job')">Job Code</th>
+            <th class="th-sort" onclick="invSort('customer')">Customer</th>
+            <th class="th-sort" onclick="invSort('project')">Project</th>
+            <th class="th-sort" onclick="invSort('due')">Due</th>
+            <th class="th-sort" onclick="invSort('status')">Status</th>
+            <th class="th-sort" onclick="invSort('check')">Check #</th>
+            <th class="th-sort" style="text-align:right" onclick="invSort('amt')">Amount</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody id="invoices-table-body">
-          <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px;">No invoices yet. Issue a contract to generate Invoice 1, 2, and 3.</td></tr>
+          <tr><td colspan="9" style="text-align:center;color:var(--muted);padding:20px;">No invoices yet. Issue a contract to generate Invoice 1, 2, and 3.</td></tr>
         </tbody>
       </table>
+      <p style="font-size:13px;color:var(--muted);margin-top:12px;">Mark paid, check copy, and revise remaining live on this tab. Quote tab still owns line items. Remaining invoices must still add up to contract total minus cash already received.</p>
     </div>
   </div>
+<div class="modal-overlay" id="inv-pay-modal">
+  <div class="modal" style="max-width:420px;text-align:left;">
+    <h3 id="inv-pay-title">Mark paid</h3>
+    <p id="inv-pay-sub" style="font-size:13px;color:var(--muted);margin-bottom:12px;"></p>
+    <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Paid date</label>
+    <input type="date" id="inv-pay-date" style="width:100%;margin-bottom:10px;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />
+    <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Check #</label>
+    <input type="text" id="inv-pay-check" placeholder="Optional" style="width:100%;margin-bottom:10px;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />
+    <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Amount received</label>
+    <input type="number" id="inv-pay-amt" step="0.01" min="0" style="width:100%;margin-bottom:10px;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;text-align:right;" />
+    <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Check copy</label>
+    <input type="file" id="inv-pay-file" accept="image/*,.pdf" style="width:100%;margin-bottom:14px;" />
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="modal-btn" type="button" onclick="closeInvPayModal()">Cancel</button>
+      <button class="modal-btn" type="button" onclick="saveInvPaid()" style="border-color:var(--green);color:var(--green);">Save paid</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="inv-rev-modal">
+  <div class="modal" style="max-width:440px;text-align:left;">
+    <h3>Revise remaining</h3>
+    <p id="inv-rev-sub" style="font-size:13px;color:var(--muted);margin-bottom:12px;"></p>
+    <div id="inv-rev-fields"></div>
+    <p id="inv-rev-err" style="font-size:13px;color:var(--red);min-height:18px;"></p>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+      <button class="modal-btn" type="button" onclick="closeInvRevModal()">Cancel</button>
+      <button class="modal-btn" type="button" onclick="saveInvRevise()" style="border-color:var(--accent);color:var(--accent);">Save amounts</button>
+    </div>
+  </div>
+</div>
 
   <!-- ── PIPELINE VIEW ── -->
   <div id="pipeline-view" style="display:none;">
@@ -761,8 +861,15 @@
     <!-- CABINETS SECTION -->
     <div class="section">
       <div class="section-header">
-        <span class="section-title">📦 Cabinet Line Items</span>
+        <span class="section-title">Cabinet Line Items</span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <button type="button" class="modal-btn" onclick="saveQuoteVersion()">Save quote version</button>
+          <button type="button" class="modal-btn" onclick="saveQuoteAsModelTemplate()">Save as model recipe</button>
+          <button type="button" class="modal-btn" onclick="downloadCustomerQuote()" style="border-color:var(--accent);color:var(--accent);">Download quote PDF</button>
+          <button type="button" class="modal-btn" id="btn-download-packet" onclick="openContractPacket(activeQuoteId)" style="display:none;border-color:var(--accent);color:var(--accent);">Download contract packet</button>
+        </div>
       </div>
+      <div id="quote-versions" style="font-size:13px;color:var(--muted);margin-bottom:10px;"></div>
       <table class="quote-table">
         <datalist id="markup-presets">
           <option value="25"><option value="30"><option value="35"><option value="40">
@@ -858,74 +965,9 @@
 
   </div><!-- /quote-view -->
 
-
-<div id="print-quote-view" style="display:none">
-  <div id="pq-content" style="background:#fff;color:#111;max-width:780px;margin:0 auto;padding:40px 48px;font-family:'Segoe UI',system-ui,sans-serif;border:1px solid #ddd;border-radius:8px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:16px;border-bottom:2px solid #111">
-      <div>
-        <div style="font-size:22px;font-weight:900;color:#111">Fremont Makers</div>
-        <div style="font-size:11px;color:#888;margin-top:2px;text-transform:uppercase;letter-spacing:.06em">Cabinet Quote</div>
-      </div>
-      <div style="text-align:right">
-        <div style="font-size:13px;font-weight:700" id="pq-jobcode">-</div>
-        <div style="font-size:11px;color:#666" id="pq-date">-</div>
-        <div style="display:inline-block;margin-top:6px;padding:3px 10px;border-radius:3px;font-size:10px;font-weight:800;text-transform:uppercase;border:1px solid #ccc;color:#888" id="pq-status-badge">PROPOSED</div>
-      </div>
-    </div>
-    <div style="display:flex;gap:32px;margin-bottom:24px;flex-wrap:wrap">
-      <div>
-        <div style="font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px">Customer</div>
-        <div style="font-size:14px;font-weight:700" id="pq-customer">-</div>
-        <div style="font-size:12px;color:#555" id="pq-project"></div>
-      </div>
-      <div>
-        <div style="font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px">Install Address</div>
-        <div style="font-size:12px;color:#555" id="pq-address">-</div>
-      </div>
-    </div>
-    <div style="font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#aaa;margin-bottom:8px">Cabinet Line Items</div>
-    <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:20px">
-      <thead><tr style="border-bottom:2px solid #111">
-        <th style="text-align:left;padding:6px 4px;font-size:10px;color:#555;font-weight:700;text-transform:uppercase">Description</th>
-        <th style="text-align:left;padding:6px 4px;font-size:10px;color:#555;font-weight:700;text-transform:uppercase">Serial/Model</th>
-        <th style="text-align:center;padding:6px 4px;font-size:10px;color:#555;font-weight:700;text-transform:uppercase">Qty</th>
-        <th style="text-align:right;padding:6px 4px;font-size:10px;color:#555;font-weight:700;text-transform:uppercase">Unit Price</th>
-        <th style="text-align:right;padding:6px 4px;font-size:10px;color:#555;font-weight:700;text-transform:uppercase">Total</th>
-      </tr></thead>
-      <tbody id="pq-cab-rows"></tbody>
-    </table>
-    <div style="font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#aaa;margin-bottom:8px">Labor</div>
-    <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:24px">
-      <thead><tr style="border-bottom:2px solid #111">
-        <th style="text-align:left;padding:6px 4px;font-size:10px;color:#555;font-weight:700;text-transform:uppercase">Name / Role</th>
-        <th style="text-align:right;padding:6px 4px;font-size:10px;color:#555;font-weight:700;text-transform:uppercase">Rate</th>
-        <th style="text-align:right;padding:6px 4px;font-size:10px;color:#555;font-weight:700;text-transform:uppercase">Hours</th>
-        <th style="text-align:right;padding:6px 4px;font-size:10px;color:#555;font-weight:700;text-transform:uppercase">Total</th>
-      </tr></thead>
-      <tbody id="pq-labor-rows"></tbody>
-    </table>
-    <div style="max-width:320px;margin-left:auto">
-      <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eee;font-size:12px"><span style="color:#555">Cabinets</span><span id="pq-t-cabinets">$0.00</span></div>
-      <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eee;font-size:12px" id="pq-bulk-row"><span style="color:#e05c5c" id="pq-bulk-label">Mfr. Bulk Discount</span><span style="color:#e05c5c" id="pq-t-bulk-discount">−$0.00</span></div>
-      <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eee;font-size:12px"><span style="color:#555">Assembly Labor</span><span id="pq-t-labor">$0.00</span></div>
-      <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eee;font-size:12px"><span style="color:#555" id="pq-gna-label">G&amp;A Fee</span><span id="pq-t-gna">$0.00</span></div>
-      <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:2px solid #111;font-size:12px"><span style="color:#555" id="pq-tax-label">Tax</span><span id="pq-t-tax">$0.00</span></div>
-      <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:16px;font-weight:800"><span>TOTAL</span><span id="pq-t-grand">$0.00</span></div>
-    </div>
-    <div style="margin-top:32px;padding-top:16px;border-top:1px solid #eee;font-size:10px;color:#aaa;display:flex;justify-content:space-between">
-      <span>Fremont Makers &middot; Flat-pack cabinets, assembled and delivered.</span>
-      <span id="pq-footer-date">-</span>
-    </div>
-  </div>
-  <div style="max-width:780px;margin:12px auto;display:flex;gap:10px" id="pq-btns">
-    <button onclick="window.print()" style="padding:10px 24px;background:#e8a135;color:#0e1117;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">Print / Save PDF</button>
-    <button onclick="switchTab('quote')" style="padding:10px 18px;background:transparent;border:1px solid #444;color:#aaa;border-radius:6px;font-size:13px;cursor:pointer">Back to Quote</button>
-  </div>
-</div>
-
   <!-- ── INVOICE VIEW ── -->
   <div id="invoice-view">
-    <button class="print-btn" onclick="window.print()">🖨️ Print / Save PDF</button>
+    <button class="print-btn" onclick="printCustomerInvoice()">Print / Save PDF</button>
     <div class="inv-header">
       <div class="inv-brand">
         <div class="inv-brand-mark">
@@ -1231,6 +1273,65 @@
 
 </div><!-- /main -->
 
+<div id="print-quote-view" style="display:none">
+  <div id="pq-content" class="pq-sheet">
+    <div class="inv-header">
+      <div class="inv-brand">
+        <div class="inv-brand-mark">
+          <span class="fm-l">F</span>
+          <div class="fm-r"></div>
+          <span class="fm-l">M</span>
+        </div>
+        <div class="inv-brand-info">
+          <h2>Fremont Makers</h2>
+          <div class="inv-tagline">making freedom</div>
+        </div>
+      </div>
+      <div class="inv-meta">
+        <strong>QUOTE</strong>
+        Job: <span id="pq-jobcode">—</span><br />
+        Date: <span id="pq-date">—</span>
+        <span id="pq-status-badge" style="display:none"></span>
+      </div>
+    </div>
+    <div class="inv-to">
+      <strong id="pq-customer">—</strong>
+      <span id="pq-address"></span>
+      <span id="pq-project" style="display:block;font-size:13px;color:#555;margin-top:4px;font-style:italic;"></span>
+    </div>
+    <table class="inv-table">
+      <thead><tr><th>Description</th><th>Qty</th><th>Serial/Model</th><th>Unit</th><th>Total</th></tr></thead>
+      <tbody id="pq-cab-rows"></tbody>
+    </table>
+    <div class="inv-totals">
+      <div class="inv-totals-row"><span>Cabinets</span><span id="pq-t-cabinets">—</span></div>
+      <div class="inv-totals-row" id="pq-bulk-row"><span style="color:#e05c5c" id="pq-bulk-label">Mfr. Bulk Discount</span><span style="color:#e05c5c" id="pq-t-bulk-discount">—</span></div>
+      <div class="inv-totals-row"><span>Assembly Labor</span><span id="pq-t-labor">—</span></div>
+      <div class="inv-totals-row"><span id="pq-gna-label">G&A Fee</span><span id="pq-t-gna">—</span></div>
+      <div class="inv-totals-row"><span id="pq-tax-label">Tax</span><span id="pq-t-tax">—</span></div>
+      <div class="inv-totals-row grand"><span>QUOTE TOTAL</span><span id="pq-t-grand">—</span></div>
+    </div>
+    <div class="inv-footer">Fremont Makers &mdash; <em>making freedom</em> &nbsp;·&nbsp; <span id="pq-footer-date">—</span></div>
+  </div>
+  <div id="pq-btns" style="max-width:800px;margin:0 auto 24px;display:flex;gap:10px;justify-content:center;">
+    <button class="print-btn" style="margin:0;" onclick="printCustomerQuote()">Print / Save PDF</button>
+    <button class="modal-btn" type="button" onclick="switchTab('quote')">Back to Quote</button>
+  </div>
+</div>
+
+<!-- NEW PROJECT WIZARD -->
+<div class="modal-overlay" id="npw-modal">
+  <div class="modal" style="max-width:560px;width:95%;text-align:left;">
+    <h3 id="npw-title">New Project</h3>
+    <p id="npw-lede" style="color:var(--muted);font-size:13px;margin-bottom:8px;">Cabinets first. Framing and woodshop wait.</p>
+    <div id="npw-step"></div>
+    <div class="modal-btns" style="margin-top:16px;">
+      <button class="modal-btn" type="button" onclick="closeNewProjectWizard()">Cancel</button>
+      <button class="modal-btn confirm" type="button" id="npw-next" onclick="npwNext()">Continue</button>
+    </div>
+  </div>
+</div>
+
 <!-- IMPORT SUPPLIER QUOTE MODAL -->
 <div class="modal-overlay" id="import-modal">
   <div class="modal" style="max-width:580px;width:95%">
@@ -1257,13 +1358,13 @@
     <!-- Import New panel -->
     <div id="sq-panel-import" style="display:none;">
       <p style="color:var(--muted);font-size:13px;margin-bottom:12px;">Upload a supplier quote PDF or document. MC will extract the cabinet line items automatically.</p>
-      <!-- Step 1: New Quote -->
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">
+      <!-- Step 1: Target quote -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
         <div>
-          <div style="font-weight:700;font-size:13px;color:var(--text);">Step 1 — Create a new quote</div>
+          <div style="font-weight:700;font-size:13px;color:var(--text);" id="sq-step1-title">Load into this house</div>
           <div id="sq-active-quote-label" style="font-size:11px;color:var(--muted);margin-top:2px;">Active: none</div>
         </div>
-        <button class="modal-btn" onclick="sqCreateNewQuote()" style="border-color:#4ade80;color:#4ade80;font-weight:700;">+ New Quote</button>
+        <button class="modal-btn" id="sq-new-quote-btn" onclick="sqCreateNewQuote()" style="border-color:#4ade80;color:#4ade80;font-weight:700;display:none;">+ New Quote</button>
       </div>
       <!-- Step 2: Upload -->
       <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Step 2 — Upload supplier PDF</div>
@@ -1472,9 +1573,20 @@ function showImportModal() {
   }
 }
 
+function importPdfIntoHouse(id) {
+  window._sqPinTarget = id;
+  loadQuote(id);
+  const modal = document.getElementById('import-modal');
+  if (modal) modal.style.display = 'flex';
+  switchSQTab('import');
+  renderImportLibrary();
+  renderImportArchive();
+}
+
 function closeImportModal() {
   const modal = document.getElementById('import-modal');
   if (modal) modal.style.display = 'none';
+  window._sqPinTarget = null;
 }
 
 function switchSQTab(tab) {
@@ -1490,21 +1602,33 @@ function switchSQTab(tab) {
     btn.style.color = active ? 'var(--accent)' : 'var(--muted)';
   });
   if (tab === 'import') {
-    // Reset import panel
     const paste = document.getElementById('sq-import-paste');
     if (paste) paste.value = '';
     const preview = document.getElementById('sq-import-preview');
     if (preview) preview.style.display = 'none';
     const confirmBtn = document.getElementById('sq-import-confirm-btn');
     if (confirmBtn) confirmBtn.style.display = 'none';
-    // Show current active quote name
-    const label = document.getElementById('sq-active-quote-label');
-    if (label) {
-      const aq = activeQuoteId && quoteData[activeQuoteId];
-      label.textContent = aq && (aq.customer || aq.project)
-        ? `Active: ${aq.customer || ''} ${aq.project || ''} — tap "+ New Quote" to start fresh`
-        : 'Tap "+ New Quote" to create a blank quote first';
-    }
+    sqRefreshImportTargetLabel();
+  }
+}
+
+function sqRefreshImportTargetLabel() {
+  const label = document.getElementById('sq-active-quote-label');
+  const title = document.getElementById('sq-step1-title');
+  const newBtn = document.getElementById('sq-new-quote-btn');
+  const aq = activeQuoteId && quoteData[activeQuoteId];
+  const pinned = window._sqPinTarget && quoteData[window._sqPinTarget];
+  const child = aq && quoteKind(aq) === 'child';
+  if (title) title.textContent = (pinned || child) ? 'Load into this house' : 'Load into the open quote';
+  if (newBtn) newBtn.style.display = (pinned || child) ? 'none' : '';
+  if (!label) return;
+  if (pinned || child) {
+    const q = pinned || aq;
+    label.textContent = (q.project || q.jobCode || 'This house') + (q.customer ? ' · ' + q.customer : '') + ' — PDF replaces cabinets on this house only';
+  } else if (aq && (aq.customer || aq.project || aq.jobCode)) {
+    label.textContent = 'Active: ' + (aq.jobCode || '') + ' ' + (aq.customer || '') + ' ' + (aq.project || '');
+  } else {
+    label.textContent = 'No quote open. Use + New Quote, or open a house first.';
   }
 }
 
@@ -1560,14 +1684,51 @@ function renderImportArchive() {
 
 function quoteHasHistory(q) {
   if (!q) return false;
+  if (quoteKind(q) === 'child' || quoteKind(q) === 'order') return false;
   const hasCabinets = Array.isArray(q.cabinets) && q.cabinets.length > 0;
   const hasCustomer = !!(q.customer && String(q.customer).trim());
   const hasProject = !!(q.project && String(q.project).trim());
   return hasCabinets || hasCustomer || hasProject;
 }
 
-// Import always lands on a FRESH quote. Never overwrite an existing one.
+function applyCabinetsToActiveQuote(lines, extras) {
+  const id = window._sqPinTarget || activeQuoteId;
+  if (!id || !quoteData[id]) return null;
+  activeQuoteId = id;
+  const target = quoteData[id];
+  const keep = {
+    customer: target.customer, signerName: target.signerName, project: target.project,
+    jobCode: target.jobCode, kind: target.kind, parentOrderId: target.parentOrderId,
+    modelKey: target.modelKey, modelName: target.modelName, unitIndex: target.unitIndex,
+    childIds: target.childIds, modelMix: target.modelMix, isOrder: target.isOrder,
+    builderProgram: target.builderProgram, labor: target.labor, status: target.status,
+    gnaPct: target.gnaPct, taxPct: target.taxPct, bulkDiscPct: target.bulkDiscPct,
+    address: target.address, date: target.date, ar: target.ar
+  };
+  target.cabinets = (lines || []).map(l => ({
+    desc: l.desc,
+    qty: l.qty,
+    cost: (l.cost != null ? l.cost : '').toString(),
+    markup: l.markup != null ? String(l.markup) : '35',
+    serial: l.serial || '',
+    id: l.id || ('r' + Math.random().toString(36).substr(2, 10))
+  }));
+  Object.keys(keep).forEach(k => { if (keep[k] !== undefined) target[k] = keep[k]; });
+  if (extras) Object.assign(target, extras);
+  saveQuoteData(id);
+  loadQuote(id);
+  recalc();
+  return target;
+}
+
+// Import always lands on a FRESH quote. Never overwrite an existing one — unless we pinned a house.
 function openFreshQuoteForImport() {
+  if (window._sqPinTarget && quoteData[window._sqPinTarget]) {
+    activeQuoteId = window._sqPinTarget;
+    return quoteData[activeQuoteId];
+  }
+  const aq = activeQuoteId && quoteData[activeQuoteId];
+  if (aq && quoteKind(aq) === 'child') return aq;
   newQuote(true);
   return quoteData[activeQuoteId] || null;
 }
@@ -1578,16 +1739,20 @@ function loadSupplierQuote(sourceId) {
   if (!sqArchive.find(q => q.id === sourceId)) {
     sqArchive.push(source);
   }
-  // Brand-new quote — never write cabinets onto the quote that was already open
-  const target = openFreshQuoteForImport();
-  if (target) {
-    target.customer = source.customer || '';
-    target.project = source.project || '';
-    target.address = source.address || '';
-    target.cabinets = (source.cabinets || []).map(c => ({...c, id: 'r' + Math.random().toString(36).substr(2,10)}));
-    saveQuoteData(activeQuoteId);
-    loadQuote(activeQuoteId);
-    recalc();
+  const pin = window._sqPinTarget || (quoteData[activeQuoteId] && quoteKind(quoteData[activeQuoteId]) === 'child' ? activeQuoteId : null);
+  if (pin) {
+    applyCabinetsToActiveQuote(source.cabinets || []);
+  } else {
+    const target = openFreshQuoteForImport();
+    if (target) {
+      target.customer = source.customer || '';
+      target.project = source.project || '';
+      target.address = source.address || '';
+      target.cabinets = (source.cabinets || []).map(c => ({...c, id: 'r' + Math.random().toString(36).substr(2,10)}));
+      saveQuoteData(activeQuoteId);
+      loadQuote(activeQuoteId);
+      recalc();
+    }
   }
   closeImportModal();
   switchTab('quote');
@@ -1596,15 +1761,20 @@ function loadSupplierQuote(sourceId) {
 function loadArchivedSupplierQuote(index) {
   const source = sqArchive[index];
   if (!source) return;
-  const target = openFreshQuoteForImport();
-  if (target) {
-    target.customer = source.customer || '';
-    target.project = source.project || '';
-    target.address = source.address || '';
-    target.cabinets = (source.cabinets || []).map(c => ({...c, id: 'r' + Math.random().toString(36).substr(2,10)}));
-    saveQuoteData(activeQuoteId);
-    loadQuote(activeQuoteId);
-    recalc();
+  const pin = window._sqPinTarget || (quoteData[activeQuoteId] && quoteKind(quoteData[activeQuoteId]) === 'child' ? activeQuoteId : null);
+  if (pin) {
+    applyCabinetsToActiveQuote(source.cabinets || []);
+  } else {
+    const target = openFreshQuoteForImport();
+    if (target) {
+      target.customer = source.customer || '';
+      target.project = source.project || '';
+      target.address = source.address || '';
+      target.cabinets = (source.cabinets || []).map(c => ({...c, id: 'r' + Math.random().toString(36).substr(2,10)}));
+      saveQuoteData(activeQuoteId);
+      loadQuote(activeQuoteId);
+      recalc();
+    }
   }
   closeImportModal();
   switchTab('quote');
@@ -1668,6 +1838,7 @@ const WC_COLOR_NAMES = {
   SDG: 'Slim Dark Green',
   VGW: 'Verona Gloss White',
   BWS: 'Bayview Wood Shaker',
+  SWD: 'Bayview Wood Shaker',
   SGS: 'Slate Grey Shaker'
 };
 
@@ -1678,16 +1849,24 @@ function wcLooksLikeSerial(t) {
   const s = String(t).toUpperCase();
   if (/^(PAGE|TEL|FAX|PO|CO|US|SKU|ITEM|QTY|SAMPLE|DOOR|TAX|TOTAL|SUBTOTAL|LINE)-/i.test(s)) return false;
   if (/^BASICKITCHEN-/i.test(s)) return false;
-  if (!/^[A-Z0-9]{2,22}-[A-Z0-9]*[A-Z][A-Z0-9]{0,7}$/i.test(s)) return false;
+  // Multi-segment + decimals + parens: FP9624-1.5-VDH, SM8(SCR)-SWD. Last chunk is color.
+  if (!/^[A-Z0-9(][A-Z0-9.()]{0,24}(?:-[A-Z0-9.()]+)*-[A-Z0-9]*[A-Z][A-Z0-9]{0,7}$/i.test(s)) return false;
+  if ((s.match(/-/g) || []).length < 1) return false;
   return wcIsRealSku(s);
 }
 
+function wcSkuBase(serial) {
+  const parts = String(serial || '').toUpperCase().split('-').filter(Boolean);
+  if (parts.length < 2) return parts[0] || '';
+  return parts.slice(0, -1).join('-');
+}
+
 function wcIsRealSku(serial) {
-  const sku = String(serial || '').toUpperCase().split('-')[0];
+  const sku = wcSkuBase(serial);
   if (sku.length < 2) return false;
   if (!/[A-Z]/.test(sku)) return false;
-  if (/^\d+$/.test(sku)) return false;
-  if (/^(PAGE|QTY|TAX|TOTAL|SUBTOTAL|ITEM|LINE|SALES)$/.test(sku)) return false;
+  if (/^\d+(\.\d+)?$/.test(sku)) return false;
+  if (/^(PAGE|QTY|TAX|TOTAL|SUBTOTAL|ITEM|LINE|SALES)$/.test(sku.split('-')[0])) return false;
   return true;
 }
 
@@ -1758,22 +1937,25 @@ function wcHarvestMissingBillLines(text, already, bill) {
   const blob = String(text || '');
   const extras = [];
 
-  function skuNear(idx) {
-    const window = blob.slice(Math.max(0, idx - 160), idx + 8);
-    let m = window.match(/\b([A-Z]{1,4}\d{1,4}[A-Z]{0,4})\s+VDH\b/i)
-         || window.match(/\b([A-Z]{1,4}\d{1,4}[A-Z]{0,4})-VDH\b/i)
-         || window.match(/\b([A-Z0-9]{3,12})-VDH\b/i);
-    if (m && wcIsRealSku(m[1] + '-VDH')) return m[1].toUpperCase();
-    return 'HICK' + extras.length;
+  function serialNear(idx) {
+    const window = blob.slice(Math.max(0, idx - 220), idx + 8);
+    const re = /\b([A-Z][A-Z0-9.()]*-[A-Z0-9.()]*(?:-[A-Z0-9.()]+)*)\b/gi;
+    let last = null, m;
+    while ((m = re.exec(window))) {
+      const serial = m[1].toUpperCase();
+      if (wcLooksLikeSerial(serial)) last = serial;
+    }
+    return last;
   }
 
   function pushAmt(amt, idx) {
-    const sku = skuNear(idx);
+    const serial = serialNear(idx);
+    if (!serial) return;
     extras.push({
-      desc: 'Dark Hickory Shaker ' + sku,
+      desc: wcColorLabel(serial, []) + ' ' + wcSkuBase(serial),
       qty: 1,
       cost: amt,
-      serial: sku + '-VDH',
+      serial,
       ext: wcMoney(amt)
     });
     takenAmt.add(amt.toFixed(2));
@@ -1838,12 +2020,12 @@ function wcTokenize(text) {
     const n2 = joined[i + 2];
     const suf = n ? String(n).toUpperCase().replace(/^-/, '') : '';
     const suf2 = n2 ? String(n2).toUpperCase().replace(/^-/, '') : '';
-    if (n && WC_SUFFIXES.includes(suf) && /^[A-Z0-9]{2,22}-?$/i.test(t) && !String(t).includes('-')) {
+    if (n && WC_SUFFIXES.includes(suf) && /^[A-Z0-9(][A-Z0-9.()\-]{0,28}-?$/i.test(t) && !WC_SUFFIXES.includes(String(t).toUpperCase().replace(/^-/, ''))) {
       tokens.push(String(t).replace(/-$/, '') + '-' + suf);
       i++;
       continue;
     }
-    if (n === '-' && n2 && WC_SUFFIXES.includes(suf2) && /^[A-Z0-9]{2,22}$/i.test(t)) {
+    if (n === '-' && n2 && WC_SUFFIXES.includes(suf2) && /^[A-Z0-9(][A-Z0-9.()\-]{0,28}$/i.test(t)) {
       tokens.push(t + '-' + suf2);
       i += 2;
       continue;
@@ -1951,7 +2133,7 @@ function parseWholesaleCabinetsQuote(text) {
     const unitCost = wcPickUnitCost(qty, prices);
     if (unitCost > 0) {
       const color = wcColorLabel(serial, following);
-      const sku = serial.replace(/-[A-Z0-9]{1,8}$/i, '');
+      const sku = wcSkuBase(serial);
       items.push({
         desc: color + ' ' + sku,
         qty,
@@ -2185,24 +2367,29 @@ function sqConfirmImport() {
     alert('Scan does not match the Wholesale Cabinets bill. Fix the import before loading.');
     return;
   }
-  // Use the blank quote from "+ New Quote" if that's what's open.
-  // If the open quote already has history, spin up a fresh one — never wipe it.
-  let target = activeQuoteId ? quoteData[activeQuoteId] : null;
-  if (!target || quoteHasHistory(target)) {
-    target = openFreshQuoteForImport();
+  const pin = window._sqPinTarget || (quoteData[activeQuoteId] && quoteKind(quoteData[activeQuoteId]) === 'child' ? activeQuoteId : null);
+  if (pin) {
+    window._sqPinTarget = pin;
+    activeQuoteId = pin;
+    applyCabinetsToActiveQuote(_sqParsedLines);
+  } else {
+    let target = activeQuoteId ? quoteData[activeQuoteId] : null;
+    if (!target || quoteHasHistory(target)) {
+      target = openFreshQuoteForImport();
+    }
+    if (!target) return;
+    target.cabinets = _sqParsedLines.map(l => ({
+      desc: l.desc,
+      qty: l.qty,
+      cost: l.cost.toString(),
+      markup: '35',
+      serial: l.serial,
+      id: 'r' + Math.random().toString(36).substr(2, 10)
+    }));
+    saveQuoteData(activeQuoteId);
+    loadQuote(activeQuoteId);
+    recalc();
   }
-  if (!target) return;
-  target.cabinets = _sqParsedLines.map(l => ({
-    desc: l.desc,
-    qty: l.qty,
-    cost: l.cost.toString(),
-    markup: '35',
-    serial: l.serial,
-    id: 'r' + Math.random().toString(36).substr(2, 10)
-  }));
-  saveQuoteData(activeQuoteId);
-  loadQuote(activeQuoteId);
-  recalc();
   closeImportModal();
   switchTab('quote');
   _sqParsedLines = [];
@@ -2286,6 +2473,12 @@ function updateSearchSuggestions(val) {
   dl.innerHTML = options.slice(0, 8).map(o => `<option value="${o}">`).join('');
 }
 
+function dashSort(key) {
+  const cur = window._dashSort || { key: 'date', dir: -1 };
+  window._dashSort = { key, dir: (cur.key === key ? -cur.dir : (key === 'date' || key === 'total' ? -1 : 1)) };
+  renderDashboard();
+}
+
 function renderDashboard() {
   const tbody = document.getElementById('quotes-table-body');
   tbody.innerHTML = ''; // Clear existing rows
@@ -2306,55 +2499,67 @@ function renderDashboard() {
 
   const searchEl = document.getElementById('dashboard-search');
   const searchTerm = searchEl ? searchEl.value.trim().toLowerCase() : '';
+  const sort = window._dashSort || { key: 'date', dir: -1 };
 
-  const sortedQuotes = [...quotesIndex]
+  const sortedQuotes = dashVisibleQuotes()
     .filter(q => {
       if (!searchTerm) return true;
-      return (q.customer || '').toLowerCase().includes(searchTerm)
-          || (q.project || '').toLowerCase().includes(searchTerm)
-          || (q.date || '').toLowerCase().includes(searchTerm)
-          || (q.jobCode || '').toLowerCase().includes(searchTerm);
+      const kids = quoteKind(quoteData[q.id] || q) === 'order' ? childrenOfOrder(q.id) : [];
+      const blob = [q.customer, q.project, q.date, q.jobCode].concat(kids.map(k => (k.project || '') + ' ' + (k.jobCode || ''))).join(' ').toLowerCase();
+      return blob.includes(searchTerm);
     })
     .sort((a,b) => {
-      // Sort by quote date descending (newest first); fall back to creation time
-      const da = a.date || '', db = b.date || '';
-      if (da && db) return db.localeCompare(da);
-      if (da) return -1;
-      if (db) return 1;
-      return b.createdAt - a.createdAt;
+      const key = sort.key;
+      let va, vb;
+      if (key === 'total') {
+        va = quoteKind(quoteData[a.id] || a) === 'order' ? orderRollupTotal(a.id) : dashRowTotal(a);
+        vb = quoteKind(quoteData[b.id] || b) === 'order' ? orderRollupTotal(b.id) : dashRowTotal(b);
+      } else if (key === 'status') {
+        va = pipeStatus(a);
+        vb = pipeStatus(b);
+      } else {
+        va = (a[key] || '').toString().toLowerCase();
+        vb = (b[key] || '').toString().toLowerCase();
+      }
+      if (va < vb) return -1 * sort.dir;
+      if (va > vb) return 1 * sort.dir;
+      return (b.createdAt || 0) - (a.createdAt || 0);
     });
 
-  sortedQuotes.forEach(quote => {
-    // Get total from index — don't call loadQuote inside render (causes recursion)
-    let quoteTotal = quote.total || 0;
-    if (quoteTotal === 0 && quoteData[quote.id] && quoteData[quote.id].cabinets) {
-      // Calculate total directly from cabinet data without calling loadQuote
-      const qd = quoteData[quote.id];
-      const cabSell = (qd.cabinets || []).reduce((s, c) => s + (parseFloat(c.qty)||0) * (parseFloat(c.cost)||0) * (1 + (parseFloat(c.markup)||0)/100), 0);
-      const cabNet  = (qd.cabinets || []).reduce((s, c) => s + (parseFloat(c.qty)||0) * (parseFloat(c.cost)||0), 0);
-      const laborCost = (qd.labor || []).reduce((s, l) => s + (parseFloat(l.rate)||0) * (parseFloat(l.hours)||0), 0);
-      const gnaPct = parseFloat(qd.gnaPct) || 0;
-      const taxPct = parseFloat(qd.taxPct) || 0;
-      const bulkDisc = parseFloat(qd.bulkDiscPct) || 0;
-      const cabAfterDisc = cabSell - cabNet * bulkDisc/100;
-      const tax = cabAfterDisc * taxPct / 100;                 // product only — never on G&A
-      const gna = (cabAfterDisc + laborCost) * gnaPct / 100;   // G&A before tax
-      quoteTotal = cabAfterDisc + laborCost + gna + tax;
-      quote.total = contractTotalOf(qd, quoteTotal);
-    }
-    quoteTotal = contractTotalOf(quoteData[quote.id] || quote, quoteTotal);
+  function dashActions(quote, st, isChild) {
+    const packet = st === 'contract' ? `<button class="modal-btn" onclick="openContractPacket('${quote.id}')" style="border-color:var(--accent);color:var(--accent);">Download contract packet</button>` : '';
+    const loadLbl = isChild ? 'Open house' : (quoteKind(quoteData[quote.id] || quote) === 'order' ? 'Open order' : 'Load');
+    const dup = (!isChild && quoteKind(quoteData[quote.id] || quote) !== 'order')
+      ? `<button class="modal-btn" onclick="duplicateQuote('${quote.id}')">Duplicate</button>` : '';
+    return `<div class="dash-actions">
+            <button class="modal-btn" onclick="loadQuoteAndSwitchTab('${quote.id}')">${loadLbl}</button>
+            ${isChild ? `<button class="modal-btn" onclick="event.stopPropagation();importPdfIntoHouse('${quote.id}')">Import PDF</button>` : dup}
+            <button class="modal-btn del" onclick="deleteQuote('${quote.id}')">Delete</button>
+            ${packet}
+          </div>`;
+  }
 
-    const st = pipeStatus(quote);
+  sortedQuotes.forEach(quote => {
+    const qd = quoteData[quote.id] || quote;
+    const kind = quoteKind(qd);
+    let quoteTotal = kind === 'order' ? orderRollupTotal(quote.id) : dashRowTotal(quote);
+    const st = pipeStatus(qd);
     if (st === 'proposed') totalQuoted += quoteTotal;
     else if (st === 'contract') totalContracted += quoteTotal;
     else if (st === 'completed') totalCompleted += quoteTotal;
     else if (st === 'lost') totalLost += quoteTotal;
 
+    const mix = kind === 'order' ? orderMixLabel(quote.id) : (quote.project || '—');
+    const open = !!window._dashOpenOrders[quote.id];
+    const toggle = kind === 'order'
+      ? `<button class="modal-btn" onclick="window._dashOpenOrders['${quote.id}']=!window._dashOpenOrders['${quote.id}'];renderDashboard()">${open ? '▾' : '▸'} ${childrenOfOrder(quote.id).length} houses</button>`
+      : '';
+
     tbody.innerHTML += `
-      <tr>
+      <tr class="row-${st}${kind === 'order' ? ' row-order' : ''}">
         <td><span style="font-family: monospace; color: var(--accent); font-weight: 700;">${quote.jobCode}</span></td>
         <td>${quote.customer || '—'}</td>
-        <td>${quote.project || '—'}</td>
+        <td>${mix}${kind === 'order' ? '<div style="font-size:11px;color:var(--muted);font-weight:400;margin-top:2px;">Builder order</div>' : ''}</td>
         <td>${quote.date || '—'}</td>
         <td>
           <select class="dash-status" onchange="dashSetStatus('${quote.id}', this.value)" onclick="event.stopPropagation()">
@@ -2367,14 +2572,29 @@ function renderDashboard() {
         <td style="text-align:right">${fmt(quoteTotal)}</td>
         <td>
           <div class="dash-actions">
-            <button class="modal-btn" onclick="loadQuoteAndSwitchTab('${quote.id}')">Load</button>
-            <button class="modal-btn" onclick="duplicateQuote('${quote.id}')">Duplicate</button>
-            <button class="del-btn" onclick="deleteQuote('${quote.id}')">Delete</button>
-            ${st === 'contract' ? `<button class="modal-btn" onclick="openContractPacket('${quote.id}')" style="border-color:var(--accent);color:var(--accent);">Open contract packet</button>` : ''}
+            ${toggle}
+            ${dashActions(quote, st, false)}
           </div>
         </td>
       </tr>
     `;
+    if (kind === 'order' && open) {
+      childrenOfOrder(quote.id).forEach(ch => {
+        const cqd = quoteData[ch.id] || ch;
+        const cst = pipeStatus(cqd);
+        const ctot = dashRowTotal(ch);
+        tbody.innerHTML += `
+      <tr class="row-${cst} row-child">
+        <td><span style="font-family: monospace; color: var(--muted);">${ch.jobCode}</span></td>
+        <td></td>
+        <td>${ch.project || '—'}</td>
+        <td>${ch.date || '—'}</td>
+        <td><span class="status-pill pill-${cst}">${statusLabel(cst)}</span></td>
+        <td style="text-align:right">${fmt(ctot)}</td>
+        <td>${dashActions(ch, cst, true)}</td>
+      </tr>`;
+      });
+    }
   });
 
   document.getElementById('dashboard-total-quoted').textContent = fmt(totalQuoted);
@@ -2384,9 +2604,10 @@ function renderDashboard() {
 }
 
 function dashRowTotal(quote) {
+  const qd = quoteData[quote.id] || quote;
+  if (quoteKind(qd) === 'order') return orderRollupTotal(quote.id);
   let quoteTotal = quote.total || 0;
-  if (quoteTotal === 0 && quoteData[quote.id] && quoteData[quote.id].cabinets) {
-    const qd = quoteData[quote.id];
+  if (quoteTotal === 0 && qd && qd.cabinets) {
     const cabSell = (qd.cabinets || []).reduce((s, c) => s + (parseFloat(c.qty)||0) * (parseFloat(c.cost)||0) * (1 + (parseFloat(c.markup)||0)/100), 0);
     const cabNet  = (qd.cabinets || []).reduce((s, c) => s + (parseFloat(c.qty)||0) * (parseFloat(c.cost)||0), 0);
     const laborCost = (qd.labor || []).reduce((s, l) => s + (parseFloat(l.rate)||0) * (parseFloat(l.hours)||0), 0);
@@ -2398,13 +2619,17 @@ function dashRowTotal(quote) {
     const gna = (cabAfterDisc + laborCost) * gnaPct / 100;
     quoteTotal = cabAfterDisc + laborCost + gna + tax;
   }
-  return contractTotalOf(quoteData[quote.id] || quote, quoteTotal);
+  return contractTotalOf(qd, quoteTotal);
 }
 
 function renderContracts() {
   const tbody = document.getElementById('contracts-table-body');
   if (!tbody) return;
-  const rows = quotesIndex.filter(q => pipeStatus(quoteData[q.id] || q) === 'contract');
+  const rows = quotesIndex.filter(q => {
+    const qd = quoteData[q.id] || q;
+    if (quoteKind(qd) === 'child' || quoteKind(qd) === 'template') return false;
+    return pipeStatus(qd) === 'contract';
+  });
   if (!rows.length) {
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px;">No contracted projects yet.</td></tr>';
     return;
@@ -2421,53 +2646,84 @@ function renderContracts() {
       <td>
         <div class="dash-actions">
           <button class="modal-btn" onclick="loadQuoteAndSwitchTab('${quote.id}')">Load</button>
-          <button class="modal-btn" onclick="openContractPacket('${quote.id}')" style="border-color:var(--accent);color:var(--accent);">Open contract packet</button>
+          <button class="modal-btn" onclick="openContractPacket('${quote.id}')" style="border-color:var(--accent);color:var(--accent);">Download contract packet</button>
         </div>
       </td>
     </tr>`;
   }).join('');
 }
 
+function invSort(key) {
+  const cur = window._invSort || { key: 'job', dir: 1 };
+  window._invSort = { key, dir: (cur.key === key ? -cur.dir : (key === 'amt' || key === 'due' ? -1 : 1)) };
+  renderInvoices();
+}
+
 function renderInvoices() {
   const tbody = document.getElementById('invoices-table-body');
   if (!tbody) return;
   const labels = { 1: 'Invoice 1 · 50%', 2: 'Invoice 2 · 30%', 3: 'Invoice 3 · 20%' };
-  const pct = { 1: 0.5, 2: 0.3, 3: 0.2 };
   const rows = [];
   quotesIndex.forEach(quote => {
     const qd = quoteData[quote.id] || quote;
+    if (quoteKind(qd) === 'child' || quoteKind(qd) === 'template') return;
     if (pipeStatus(qd) !== 'contract') return;
     const total = dashRowTotal(quote);
     const ar = scheduleOf(qd, total);
     [1,2,3].forEach(n => {
       const paid = !!ar['d' + n + 'Paid'];
+      const chk = ar['d' + n + 'Check'] || '';
       rows.push({
         id: quote.id,
         n,
+        invoice: n,
         job: quote.jobCode || '—',
         customer: quote.customer || '—',
         project: quote.project || '—',
-        due: ar['d' + n + 'Due'] || '—',
+        due: ar['d' + n + 'Due'] || '',
         status: paid ? ('Paid' + (ar['d' + n + 'PaidAt'] ? ' ' + ar['d' + n + 'PaidAt'] : '')) : 'Due',
-        amt: total * pct[n]
+        check: chk,
+        amt: Number(ar['d' + n + 'Amt']) || 0,
+        paid
       });
     });
   });
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px;">No invoices yet. Issue a contract to generate Invoice 1, 2, and 3.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:20px;">No invoices yet. Issue a contract to generate Invoice 1, 2, and 3.</td></tr>';
     return;
   }
+  const sort = window._invSort || { key: 'job', dir: 1 };
+  rows.sort((a, b) => {
+    const key = sort.key;
+    let va = a[key], vb = b[key];
+    if (key === 'amt' || key === 'invoice' || key === 'n') {
+      va = Number(va) || 0; vb = Number(vb) || 0;
+      if (va < vb) return -1 * sort.dir;
+      if (va > vb) return 1 * sort.dir;
+    } else {
+      va = String(va || '').toLowerCase();
+      vb = String(vb || '').toLowerCase();
+      if (va < vb) return -1 * sort.dir;
+      if (va > vb) return 1 * sort.dir;
+    }
+    return (a.job || '').localeCompare(b.job || '') || (a.n - b.n);
+  });
   tbody.innerHTML = rows.map(r => `<tr>
     <td>${labels[r.n]}</td>
     <td><span style="font-family:monospace;color:var(--accent);font-weight:700;">${r.job}</span></td>
     <td>${r.customer}</td>
     <td>${r.project}</td>
-    <td>${r.due}</td>
+    <td>${r.due || '—'}</td>
     <td>${r.status}</td>
+    <td>${r.check || '—'}</td>
     <td style="text-align:right">${fmt(r.amt)}</td>
     <td>
       <div class="dash-actions">
         <button class="modal-btn" onclick="openInvoiceSheet('${r.id}', ${r.n})">Open invoice</button>
+        ${r.paid
+          ? `<button class="modal-btn" onclick="openPaidReceipt('${r.id}', ${r.n})">Receipt</button>`
+          : `<button class="modal-btn" onclick="openInvPay('${r.id}', ${r.n})" style="border-color:var(--green);color:var(--green);">Mark paid</button>`}
+        ${r.n === 1 ? `<button class="modal-btn" onclick="openInvRevise('${r.id}')">Revise remaining</button>` : ''}
       </div>
     </td>
   </tr>`).join('');
@@ -2476,6 +2732,131 @@ function renderInvoices() {
 function openInvoiceSheet(id, n) {
   const url = FM_PACKET_URL + '?id=' + encodeURIComponent(id) + '&invoice=' + n;
   window.open(url, '_blank');
+}
+
+let _invPay = { id: '', n: 0 };
+let _invRevId = '';
+
+function ensureAr(id) {
+  if (!quoteData[id]) quoteData[id] = {};
+  if (!quoteData[id].ar || typeof quoteData[id].ar !== 'object') quoteData[id].ar = {};
+  return quoteData[id].ar;
+}
+
+function closeInvPayModal() {
+  const el = document.getElementById('inv-pay-modal');
+  if (el) el.classList.remove('open');
+  _invPay = { id: '', n: 0 };
+}
+function closeInvRevModal() {
+  const el = document.getElementById('inv-rev-modal');
+  if (el) el.classList.remove('open');
+  _invRevId = '';
+}
+
+function openInvPay(id, n) {
+  const qd = quoteData[id] || {};
+  const total = contractTotalOf(qd, quoteGrandFromData(qd) || 0);
+  const ar = scheduleOf(qd, total);
+  _invPay = { id, n };
+  document.getElementById('inv-pay-title').textContent = 'Mark Invoice ' + n + ' paid';
+  document.getElementById('inv-pay-sub').textContent = (qd.customer || '') + ' · ' + (qd.jobCode || '') + ' · billed ' + fmt(ar['d' + n + 'Amt']);
+  document.getElementById('inv-pay-date').value = today();
+  document.getElementById('inv-pay-check').value = ar['d' + n + 'Check'] || '';
+  document.getElementById('inv-pay-amt').value = ar['d' + n + 'Amt'].toFixed(2);
+  const file = document.getElementById('inv-pay-file');
+  if (file) file.value = '';
+  document.getElementById('inv-pay-modal').classList.add('open');
+}
+
+async function saveInvPaid() {
+  const { id, n } = _invPay;
+  if (!id || !n) return;
+  const ar = ensureAr(id);
+  const qd = quoteData[id];
+  const total = contractTotalOf(qd, quoteGrandFromData(qd) || 0);
+  const billed = invoiceAmtOf(qd, total, n);
+  const received = invMoney(document.getElementById('inv-pay-amt').value);
+  ar['d' + n + 'Paid'] = true;
+  ar['d' + n + 'PaidAt'] = document.getElementById('inv-pay-date').value || today();
+  ar['d' + n + 'Check'] = (document.getElementById('inv-pay-check').value || '').trim();
+  ar['d' + n + 'PaidAmt'] = received;
+  if (n === 1) ar.depositPaid = received;
+  if (n === 2) ar.progressPaid = received;
+  if (n === 3) ar.finalPaid = received;
+  const file = document.getElementById('inv-pay-file') && document.getElementById('inv-pay-file').files[0];
+  if (file) {
+    try {
+      ar['d' + n + 'CopyName'] = file.name;
+      ar['d' + n + 'Copy'] = await new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => resolve(String(r.result || ''));
+        r.onerror = reject;
+        r.readAsDataURL(file);
+      });
+    } catch (e) {}
+  }
+  quoteData[id].saved_at = Date.now();
+  saveQuoteData(id);
+  fmCloudPushDebounced();
+  closeInvPayModal();
+  renderInvoices();
+  renderPipeline();
+  renderAr();
+}
+
+function openInvRevise(id) {
+  const qd = quoteData[id] || {};
+  const total = contractTotalOf(qd, quoteGrandFromData(qd) || 0);
+  const ar = scheduleOf(qd, total);
+  _invRevId = id;
+  const received = ar.received;
+  const remain = invMoney(total - received);
+  document.getElementById('inv-rev-sub').textContent =
+    (qd.customer || '') + ' · contract ' + fmt(total) + ' · received ' + fmt(received) + ' · remaining must equal ' + fmt(remain);
+  const fields = [];
+  [1,2,3].forEach(n => {
+    if (ar['d' + n + 'Paid']) return;
+    fields.push('<label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Invoice ' + n + '</label>'
+      + '<input type="number" id="inv-rev-d' + n + '" step="0.01" min="0" value="' + ar['d' + n + 'Amt'].toFixed(2) + '" style="width:100%;margin-bottom:10px;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;text-align:right;" />');
+  });
+  document.getElementById('inv-rev-fields').innerHTML = fields.join('') || '<p style="color:var(--muted);">Nothing left to revise. Job is paid in full.</p>';
+  document.getElementById('inv-rev-err').textContent = '';
+  document.getElementById('inv-rev-modal').classList.add('open');
+}
+
+function saveInvRevise() {
+  const id = _invRevId;
+  if (!id) return;
+  const ar = ensureAr(id);
+  const qd = quoteData[id];
+  const total = contractTotalOf(qd, quoteGrandFromData(qd) || 0);
+  const sched = scheduleOf(qd, total);
+  const remainNeed = invMoney(total - sched.received);
+  let remainSum = 0;
+  const next = {};
+  [1,2,3].forEach(n => {
+    if (sched['d' + n + 'Paid']) return;
+    const el = document.getElementById('inv-rev-d' + n);
+    if (!el) return;
+    next[n] = invMoney(el.value);
+    remainSum = invMoney(remainSum + next[n]);
+  });
+  if (Math.abs(remainSum - remainNeed) >= 0.02) {
+    document.getElementById('inv-rev-err').textContent = 'Open invoices must add to ' + fmt(remainNeed) + ' (got ' + fmt(remainSum) + ').';
+    return;
+  }
+  [1,2,3].forEach(n => {
+    if (next[n] == null) return;
+    ar['d' + n + 'Amt'] = next[n];
+  });
+  quoteData[id].saved_at = Date.now();
+  saveQuoteData(id);
+  fmCloudPushDebounced();
+  closeInvRevModal();
+  renderInvoices();
+  renderPipeline();
+  renderAr();
 }
 
 
@@ -2524,7 +2905,11 @@ function renderPipeline() {
   };
   if (!buckets.proposed || !buckets.contract) return;
   Object.values(buckets).forEach(el => { if (el) el.innerHTML = ''; });
-  const named = quotesIndex.filter(q => q.customer || q.project);
+  const named = quotesIndex.filter(q => {
+    const qd = quoteData[q.id] || q;
+    if (quoteKind(qd) === 'child' || quoteKind(qd) === 'template') return false;
+    return q.customer || q.project;
+  });
   const groups = { proposed: [], contract: [], completed: [], lost: [] };
   named.forEach(q => {
     const st = pipeStatus(q);
@@ -2557,9 +2942,9 @@ function renderPipeline() {
       + '<div style="margin-top:6px;"><span class="status-pill pill-' + st + '">' + statusLabel(st) + '</span></div>';
     if (showAr) {
       const rows = [
-        ['d1', '1st 50%', ar.d1Due, ar.d1Paid, total * 0.50],
-        ['d2', '2nd 30%', ar.d2Due, ar.d2Paid, total * 0.30],
-        ['d3', '3rd 20%', ar.d3Due, ar.d3Paid, total * 0.20]
+        ['d1', '1st 50%', ar.d1Due, ar.d1Paid, ar.d1Amt],
+        ['d2', '2nd 30%', ar.d2Due, ar.d2Paid, ar.d2Amt],
+        ['d3', '3rd 20%', ar.d3Due, ar.d3Paid, ar.d3Amt]
       ];
       rows.forEach(r => {
         wrap.innerHTML += '<div class="ar-row"><label><input type="checkbox" ' + (r[3] ? 'checked' : '') + ' onchange="pipeTogglePaid(\'' + q.id + '\',\'' + r[0] + '\',this.checked)" /> ' + r[1] + '</label><span>' + (r[2] || '—') + ' · ' + fmt(r[4]) + '</span></div>';
@@ -2589,7 +2974,7 @@ function renderPipeline() {
     if (st === 'contract') {
       const con = document.createElement('button');
       con.className = 'status-btn';
-      con.textContent = 'Open contract packet';
+      con.textContent = 'Download contract packet';
       con.onclick = () => openContractPacket(q.id);
       bar.appendChild(con);
       [['d1',1],['d2',2],['d3',3]].forEach(pair => {
@@ -2641,26 +3026,48 @@ function packetPayload(id) {
   if (id === activeQuoteId) {
     try { Object.assign(quoteData[id] || {}, collectData()); } catch (e) {}
   }
-  const q = quoteData[id] || {};
-  const unit = quoteGrandFromData(q) || 0;
-  const qty = modelQtyOf(q);
-  const total = contractTotalOf(q, unit);
+  let q = quoteData[id] || {};
+  if (quoteKind(q) === 'child' && q.parentOrderId) {
+    id = q.parentOrderId;
+    q = quoteData[id] || q;
+  }
+  const unit = quoteKind(q) === 'order' ? orderRollupTotal(id) : (quoteGrandFromData(q) || 0);
+  const qty = quoteKind(q) === 'order' ? 1 : modelQtyOf(q);
+  const total = quoteKind(q) === 'order' ? unit : contractTotalOf(q, quoteGrandFromData(q) || 0);
   const ar = scheduleOf(q, total);
+  const kids = quoteKind(q) === 'order' ? childrenOfOrder(id).map(ch => {
+    const cqd = quoteData[ch.id] || ch;
+    return {
+      id: ch.id,
+      jobCode: cqd.jobCode || ch.jobCode,
+      project: cqd.project || ch.project,
+      modelName: cqd.modelName || '',
+      unitIndex: cqd.unitIndex || 0,
+      total: dashRowTotal(ch),
+      cabinets: cqd.cabinets || [],
+      labor: cqd.labor || [],
+      gnaPct: cqd.gnaPct, taxPct: cqd.taxPct, bulkDiscPct: cqd.bulkDiscPct
+    };
+  }) : [];
   return {
-    id, customer: q.customer || '', signerName: q.signerName || q.customer || '', project: q.project || '', jobCode: q.jobCode || '',
+    id, customer: q.customer || '', signerName: q.signerName || q.customer || '', project: q.project || orderMixLabel(id), jobCode: q.jobCode || '',
     quoteDate: q.date || '', address: q.address || '', installDate: q.installDate || '',
-    modelQty: qty, unit, total,
+    modelQty: qty, unit: quoteKind(q) === 'order' ? total : (quoteGrandFromData(q) || 0), total,
+    kind: quoteKind(q), mixLabel: orderMixLabel(id),
+    children: kids,
     d1Due: ar.d1Due, d2Due: ar.d2Due, d3Due: ar.d3Due,
-    d1Amt: total * 0.50, d2Amt: total * 0.30, d3Amt: total * 0.20,
+    d1Amt: ar.d1Amt, d2Amt: ar.d2Amt, d3Amt: ar.d3Amt,
     d1Paid: !!ar.d1Paid, d2Paid: !!ar.d2Paid, d3Paid: !!ar.d3Paid,
     d1PaidAt: ar.d1PaidAt || '', d2PaidAt: ar.d2PaidAt || '', d3PaidAt: ar.d3PaidAt || '',
+    d1Check: ar.d1Check || '', d2Check: ar.d2Check || '', d3Check: ar.d3Check || '',
     cabinets: q.cabinets || [], labor: q.labor || [],
     gnaPct: q.gnaPct, taxPct: q.taxPct, bulkDiscPct: q.bulkDiscPct
   };
 }
 function openContractPacket(id) {
   if (!id) id = activeQuoteId;
-  const payload = packetPayload(id);
+  const q = quoteData[id] || {};
+  if (quoteKind(q) === 'child' && q.parentOrderId) id = q.parentOrderId;
   const url = FM_PACKET_URL + '?id=' + encodeURIComponent(id);
   window.open(url, '_blank');
 }
@@ -2709,9 +3116,9 @@ function renderAr() {
     const ar = scheduleOf(q, total);
     open += ar.open;
     const bits = [
-      [ar.d1Paid, ar.d1Due, total * 0.5],
-      [ar.d2Paid, ar.d2Due, total * 0.3],
-      [ar.d3Paid, ar.d3Due, total * 0.2]
+      [ar.d1Paid, ar.d1Due, ar.d1Amt],
+      [ar.d2Paid, ar.d2Due, ar.d2Amt],
+      [ar.d3Paid, ar.d3Due, ar.d3Amt]
     ];
     bits.forEach(b => {
       if (b[0] || !b[2]) return;
@@ -2733,7 +3140,7 @@ function renderAr() {
       + '<td>' + cell(ar.d2Paid, ar.d2Due, total*0.3) + '</td>'
       + '<td>' + cell(ar.d3Paid, ar.d3Due, total*0.2) + '</td>'
       + '<td style="text-align:right">' + fmt(ar.open) + '</td>'
-      + '<td><button class="status-btn" onclick="openContractPacket(\'' + row.id + '\')">Open contract packet</button></td>'
+      + '<td><button class="status-btn" onclick="openContractPacket(\'' + row.id + '\')">Download contract packet</button></td>'
       + '</tr>';
   });
   const next11 = months.slice(1).reduce((s, m) => s + m.amt, 0) + later;
@@ -2753,6 +3160,29 @@ function renderAr() {
 }
 
 function loadQuoteAndSwitchTab(id) {
+  const qd = quoteData[id] || {};
+  if (quoteKind(qd) === 'order') {
+    activeQuoteId = id;
+    saveActiveQuoteId();
+    window._dashOpenOrders[id] = true;
+    const st = pipeStatus(qd);
+    const pill = document.getElementById('status-pill');
+    if (pill) { pill.textContent = statusLabel(st); pill.className = 'status-pill pill-' + st; }
+    ['proposed','contract','completed','lost'].forEach(k => {
+      const r = document.getElementById('radio-' + k);
+      if (r) r.checked = (k === st);
+    });
+    syncIssueBtn();
+    const code = document.getElementById('job-code-display');
+    if (code) code.textContent = qd.jobCode || '—';
+    const cust = document.getElementById('customer-name');
+    if (cust) cust.value = qd.customer || '';
+    const proj = document.getElementById('project-name');
+    if (proj) proj.value = qd.project || orderMixLabel(id);
+    switchTab('dashboard');
+    renderDashboard();
+    return;
+  }
   loadQuote(id);
   switchTab('quote');
 }
@@ -2872,6 +3302,237 @@ function generateJobCode() {
   return `FM-${yr}${mo}-${seq}`;
 }
 
+const FM_WILLOW_MODELS = [
+  { key: 'san-luis', name: 'San Luis', note: 'model 3' },
+  { key: 'mesa-ridge', name: 'Mesa Ridge', note: 'model 4' },
+  { key: 'sangre-vista', name: 'Sangre Vista', note: '' },
+  { key: 'pinon-crest', name: 'Pinon Crest', note: '' },
+  { key: 'cimmaron-peak', name: 'Cimmaron Peak', note: '' },
+  { key: '4-plex', name: '4-Plex', note: '' }
+];
+let _npw = { step: 'type', stream: 'cabinets', mode: 'single', builder: 'Willow Creek', contact: 'Rod Stambaugh', qtys: {} };
+window._dashOpenOrders = window._dashOpenOrders || {};
+
+function quoteKind(q) {
+  if (!q) return 'job';
+  if (q.kind === 'order' || q.isOrder) return 'order';
+  if (q.kind === 'template' || q.isTemplate) return 'template';
+  if (q.parentOrderId) return 'child';
+  return 'job';
+}
+function dashVisibleQuotes() {
+  return quotesIndex.filter(q => {
+    const qd = quoteData[q.id] || q;
+    const k = quoteKind(qd);
+    return k !== 'child' && k !== 'template';
+  });
+}
+function childrenOfOrder(orderId) {
+  return quotesIndex.filter(q => (quoteData[q.id] || q).parentOrderId === orderId)
+    .sort((a, b) => {
+      const aa = quoteData[a.id] || a;
+      const bb = quoteData[b.id] || b;
+      const ka = (aa.modelName || '') + String(aa.unitIndex || 0).padStart(3, '0');
+      const kb = (bb.modelName || '') + String(bb.unitIndex || 0).padStart(3, '0');
+      return ka.localeCompare(kb);
+    });
+}
+function orderMixLabel(orderId) {
+  const kids = childrenOfOrder(orderId);
+  const counts = {};
+  kids.forEach(k => {
+    const qd = quoteData[k.id] || k;
+    const n = qd.modelName || 'House';
+    counts[n] = (counts[n] || 0) + 1;
+  });
+  const parts = Object.keys(counts).map(n => counts[n] + ' ' + n);
+  return parts.length ? parts.join(', ') : 'No houses yet';
+}
+function orderRollupTotal(orderId) {
+  return childrenOfOrder(orderId).reduce((s, k) => s + dashRowTotal(k), 0);
+}
+function templateForModel(modelKey) {
+  const hit = quotesIndex.find(q => {
+    const qd = quoteData[q.id] || q;
+    return quoteKind(qd) === 'template' && qd.modelKey === modelKey && (qd.cabinets || []).length;
+  });
+  return hit ? quoteData[hit.id] : null;
+}
+function closeNewProjectWizard() {
+  const m = document.getElementById('npw-modal');
+  if (m) m.classList.remove('open');
+}
+function openNewProjectWizard(jump) {
+  _npw = { step: jump === 'builder' ? 'builder' : 'type', stream: 'cabinets', mode: jump === 'builder' ? 'builder' : 'single', builder: 'Willow Creek', contact: 'Rod Stambaugh', qtys: {} };
+  FM_WILLOW_MODELS.forEach(m => { _npw.qtys[m.key] = 0; });
+  const m = document.getElementById('npw-modal');
+  if (m) m.classList.add('open');
+  renderNewProjectWizard();
+}
+function npwSet(k, v) { _npw[k] = v; renderNewProjectWizard(); }
+function npwQty(key, n) {
+  _npw.qtys[key] = Math.max(0, parseInt(n, 10) || 0);
+}
+function renderNewProjectWizard() {
+  const step = document.getElementById('npw-step');
+  const title = document.getElementById('npw-title');
+  const lede = document.getElementById('npw-lede');
+  const next = document.getElementById('npw-next');
+  if (!step) return;
+  if (_npw.step === 'type') {
+    title.textContent = 'New Project';
+    lede.textContent = 'What are we quoting?';
+    next.style.display = 'none';
+    step.innerHTML = '<div class="npw-choice">'
+      + '<button class="modal-btn confirm" type="button" onclick="_npw.stream=\'cabinets\';_npw.step=\'shape\';renderNewProjectWizard()">Cabinets</button>'
+      + '<button class="modal-btn" type="button" disabled style="opacity:.45">Framing — later</button>'
+      + '<button class="modal-btn" type="button" disabled style="opacity:.45">Woodshop — later</button>'
+      + '</div>';
+    return;
+  }
+  if (_npw.step === 'shape') {
+    title.textContent = 'Cabinets';
+    lede.textContent = 'One house, or a builder order with mixed models on one contract.';
+    next.style.display = 'none';
+    step.innerHTML = '<div class="npw-choice">'
+      + '<button class="modal-btn confirm" type="button" onclick="closeNewProjectWizard();newQuote(true)">Single house quote</button>'
+      + '<button class="modal-btn" type="button" onclick="_npw.mode=\'builder\';_npw.step=\'builder\';renderNewProjectWizard()">Builder order — mixed models, one contract</button>'
+      + '</div>';
+    return;
+  }
+  if (_npw.step === 'builder') {
+    title.textContent = 'Builder order';
+    lede.textContent = 'Rod can buy 2 San Luis and 4 Mesa Ridge on one packet. Color still changes per house via Wholesale Cabinets PDF.';
+    next.style.display = '';
+    next.textContent = 'Create order';
+    const rows = FM_WILLOW_MODELS.map(m => {
+      const q = _npw.qtys[m.key] || 0;
+      return '<tr><td>' + m.name + (m.note ? ' <span style="color:var(--muted);font-size:11px">(' + m.note + ')</span>' : '') + '</td>'
+        + '<td><input type="number" min="0" step="1" value="' + q + '" style="width:72px;padding:6px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" oninput="npwQty(\'' + m.key + '\', this.value)" /></td></tr>';
+    }).join('');
+    step.innerHTML = '<label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Builder / program</label>'
+      + '<input type="text" value="' + (_npw.builder || '') + '" oninput="_npw.builder=this.value" style="width:100%;margin-bottom:10px;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />'
+      + '<label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Contact</label>'
+      + '<input type="text" value="' + (_npw.contact || '') + '" oninput="_npw.contact=this.value" style="width:100%;margin-bottom:12px;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />'
+      + '<p style="font-size:12px;color:var(--muted);margin-bottom:8px;">How many of each Willow Creek model on this order? Leave 0 to skip. Each house becomes its own quote so a color swap does not rewrite the rest.</p>'
+      + '<table class="quote-table"><thead><tr><th>Model</th><th>Qty</th></tr></thead><tbody>' + rows + '</tbody></table>';
+  }
+}
+function npwNext() {
+  if (_npw.step === 'builder') createBuilderOrderFromWizard();
+}
+function createBuilderOrderFromWizard() {
+  const mix = FM_WILLOW_MODELS.map(m => ({ key: m.key, name: m.name, qty: _npw.qtys[m.key] || 0 })).filter(x => x.qty > 0);
+  if (!mix.length) { alert('Enter at least one model quantity.'); return; }
+  const builder = (_npw.builder || 'Willow Creek').trim();
+  const contact = (_npw.contact || '').trim();
+  const orderId = generateQuoteId();
+  const orderCode = generateJobCode();
+  const mixLabel = mix.map(m => m.qty + ' ' + m.name).join(', ');
+  const order = {
+    id: orderId,
+    kind: 'order',
+    isOrder: true,
+    status: 'proposed',
+    jobCode: orderCode,
+    customer: builder,
+    signerName: contact,
+    project: mixLabel,
+    date: today(),
+    address: '',
+    gnaPct: '10',
+    taxPct: '8.7',
+    bulkDiscPct: '0',
+    cabinets: [],
+    labor: [],
+    revenueStream: 'cabinets',
+    builderProgram: builder,
+    childIds: [],
+    modelMix: mix
+  };
+  quoteData[orderId] = order;
+  quotesIndex.unshift({
+    id: orderId, jobCode: orderCode, customer: builder, project: mixLabel,
+    date: today(), status: 'proposed', total: 0, createdAt: Date.now(), kind: 'order'
+  });
+  mix.forEach(m => {
+    const tmpl = templateForModel(m.key);
+    for (let i = 1; i <= m.qty; i++) {
+      const cid = generateQuoteId();
+      const code = generateJobCode();
+      const houseName = m.name + ' ' + i;
+      const child = {
+        id: cid,
+        kind: 'child',
+        parentOrderId: orderId,
+        modelKey: m.key,
+        modelName: m.name,
+        unitIndex: i,
+        status: 'proposed',
+        jobCode: code,
+        customer: builder,
+        signerName: contact,
+        project: houseName,
+        date: today(),
+        address: '',
+        gnaPct: tmpl ? (tmpl.gnaPct || '10') : '10',
+        taxPct: tmpl ? (tmpl.taxPct || '8.7') : '8.7',
+        bulkDiscPct: '0',
+        cabinets: tmpl ? JSON.parse(JSON.stringify(tmpl.cabinets || [])) : [],
+        labor: tmpl ? JSON.parse(JSON.stringify(tmpl.labor || [])) : [],
+        revenueStream: 'cabinets',
+        modelQty: 1
+      };
+      quoteData[cid] = child;
+      quotesIndex.push({
+        id: cid, jobCode: code, customer: builder, project: houseName,
+        date: today(), status: 'proposed', total: 0, createdAt: Date.now(),
+        parentOrderId: orderId, kind: 'child'
+      });
+      order.childIds.push(cid);
+      saveQuoteData(cid);
+    }
+  });
+  saveQuoteData(orderId);
+  saveQuotesIndex();
+  window._dashOpenOrders[orderId] = true;
+  closeNewProjectWizard();
+  activeQuoteId = orderId;
+  saveActiveQuoteId();
+  renderDashboard();
+  switchTab('dashboard');
+}
+
+function saveQuoteAsModelTemplate() {
+  if (!activeQuoteId) return;
+  const q = quoteData[activeQuoteId];
+  if (!q) return;
+  const name = prompt('Model name for this recipe? Example: San Luis', q.modelName || q.project || '');
+  if (!name) return;
+  const key = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const tid = generateQuoteId();
+  const t = JSON.parse(JSON.stringify(q));
+  t.id = tid;
+  t.kind = 'template';
+  t.isTemplate = true;
+  t.status = 'proposed';
+  t.jobCode = 'TPL-' + key;
+  t.project = name + ' · template';
+  t.modelKey = key;
+  t.modelName = name;
+  t.parentOrderId = '';
+  t.ar = null;
+  quoteData[tid] = t;
+  quotesIndex.push({
+    id: tid, jobCode: t.jobCode, customer: t.customer || 'Willow Creek',
+    project: t.project, date: t.date || today(), status: 'proposed', total: 0,
+    createdAt: Date.now(), kind: 'template'
+  });
+  saveQuoteData(tid);
+  saveQuotesIndex();
+  alert('Saved as a model recipe. New builder orders of ' + name + ' will clone this box list. It stays off All Projects.');
+}
+
 function saveQuoteManual() {
   saveLocal();
   const btn = document.getElementById('btn-save');
@@ -2961,17 +3622,108 @@ function loadQuote(id) {
   (q.cabinets || []).forEach(c => addCabinetRow(c.desc, c.qty, c.cost, c.markup, c.serial, c.id));
   (q.labor || []).forEach(l => addLaborRow(l.name, l.rate, l.hours));
   
-  if (q.cabinets.length === 0) {
+  if (!(q.cabinets || []).length) {
     // Don't auto-add blank rows — leave clean for import
   }
-  if (q.labor.length === 0) {
+  if ((q.labor || []).length === 0 && quoteKind(q) !== 'order') {
     addLaborRow('Assembly', 40);
   }
 
   setStatus(q.status);
   recalc();
   loadReconciliationData(id); // Load reconciliation data for this quote
+  renderQuoteVersions();
 }
+
+function quoteVersionSnapshot() {
+  const q = collectData();
+  const unit = parseAmount('t-grand') || quoteGrandFromData(q);
+  return {
+    n: (q.quoteVersions || []).length + 1,
+    savedAt: Date.now(),
+    date: q.date || today(),
+    customer: q.customer || '',
+    project: q.project || '',
+    cabinets: JSON.parse(JSON.stringify(q.cabinets || [])),
+    labor: JSON.parse(JSON.stringify(q.labor || [])),
+    gnaPct: q.gnaPct, taxPct: q.taxPct, bulkDiscPct: q.bulkDiscPct,
+    modelQty: q.modelQty,
+    total: contractTotalOf(q, unit)
+  };
+}
+
+function saveQuoteVersion() {
+  if (!activeQuoteId) return;
+  if (!quoteData[activeQuoteId]) quoteData[activeQuoteId] = {};
+  saveLocal();
+  const versions = quoteData[activeQuoteId].quoteVersions || [];
+  const snap = quoteVersionSnapshot();
+  snap.n = versions.length + 1;
+  versions.push(snap);
+  quoteData[activeQuoteId].quoteVersions = versions;
+  saveQuoteData(activeQuoteId);
+  fmCloudPushDebounced();
+  renderQuoteVersions();
+}
+
+function restoreQuoteVersion(n) {
+  const q = quoteData[activeQuoteId];
+  if (!q) return;
+  const snap = (q.quoteVersions || []).find(v => v.n === n);
+  if (!snap) return;
+  if (!confirm('Revert this project to Quote ' + n + '? Current line items will be replaced. Saved versions stay.')) return;
+  q.cabinets = JSON.parse(JSON.stringify(snap.cabinets || []));
+  q.labor = JSON.parse(JSON.stringify(snap.labor || []));
+  q.gnaPct = snap.gnaPct; q.taxPct = snap.taxPct; q.bulkDiscPct = snap.bulkDiscPct;
+  if (snap.modelQty) q.modelQty = snap.modelQty;
+  saveQuoteData(activeQuoteId);
+  loadQuote(activeQuoteId);
+}
+
+function renderQuoteVersions() {
+  const el = document.getElementById('quote-versions');
+  if (!el) return;
+  const q = quoteData[activeQuoteId] || {};
+  const versions = q.quoteVersions || [];
+  if (!versions.length) {
+    el.innerHTML = 'No saved quotes yet. Save a version before you send it to the client, then tweak. Revert anytime.';
+    return;
+  }
+  el.innerHTML = versions.map(v => {
+    const when = v.date || '';
+    return '<span style="display:inline-flex;gap:6px;align-items:center;margin:0 10px 6px 0;">'
+      + '<strong>Quote ' + v.n + '</strong> · ' + fmt(v.total || 0) + (when ? ' · ' + when : '')
+      + ' <button type="button" class="modal-btn" onclick="restoreQuoteVersion(' + v.n + ')">Revert</button>'
+      + '</span>';
+  }).join('');
+}
+
+function downloadCustomerQuote() {
+  if (typeof saveLocal === 'function') saveLocal();
+  buildPrintQuote();
+  const view = document.getElementById('print-quote-view');
+  if (view) view.style.display = 'block';
+  document.body.classList.remove('printing-invoice');
+  document.body.classList.add('printing-quote');
+  requestAnimationFrame(() => requestAnimationFrame(() => window.print()));
+}
+function printCustomerQuote() {
+  buildPrintQuote();
+  const view = document.getElementById('print-quote-view');
+  if (view) view.style.display = 'block';
+  document.body.classList.remove('printing-invoice');
+  document.body.classList.add('printing-quote');
+  requestAnimationFrame(() => requestAnimationFrame(() => window.print()));
+}
+function printCustomerInvoice() {
+  if (typeof buildInvoice === 'function') buildInvoice();
+  document.body.classList.remove('printing-quote');
+  document.body.classList.add('printing-invoice');
+  requestAnimationFrame(() => requestAnimationFrame(() => window.print()));
+}
+window.addEventListener('afterprint', () => {
+  document.body.classList.remove('printing-quote', 'printing-invoice');
+});
 
 function duplicateQuote(id) {
   const originalQuote = quoteData[id];
@@ -3006,16 +3758,21 @@ function duplicateQuote(id) {
 }
 
 function deleteQuote(id) {
-  if (!confirm('Are you sure you want to delete this project? This cannot be undone.')) {
-    return;
-  }
+  const qd = quoteData[id] || {};
+  const kind = quoteKind(qd);
+  const msg = kind === 'order'
+    ? 'Delete this builder order and all of its houses? This cannot be undone.'
+    : 'Are you sure you want to delete this project? This cannot be undone.';
+  if (!confirm(msg)) return;
 
-  delete quoteData[id];
-  quotesIndex = quotesIndex.filter(q => q.id !== id);
+  const drop = [id];
+  if (kind === 'order') childrenOfOrder(id).forEach(c => drop.push(c.id));
+  drop.forEach(did => { delete quoteData[did]; });
+  quotesIndex = quotesIndex.filter(q => drop.indexOf(q.id) === -1);
 
   saveQuotesIndex();
 
-  if (activeQuoteId === id) {
+  if (drop.indexOf(activeQuoteId) !== -1) {
     // If the deleted quote was active, load another or create a new one
     activeQuoteId = null;
     saveActiveQuoteId();
@@ -3084,7 +3841,19 @@ function collectData() {
     reconciliationData: currentReconciliationData || quoteData[activeQuoteId].reconciliationData,
     ar: quoteData[activeQuoteId]?.ar || null,
     installDate: quoteData[activeQuoteId]?.installDate || '',
-    modelQty: Math.max(1, parseInt(document.getElementById('model-qty')?.value, 10) || quoteData[activeQuoteId]?.modelQty || 1)
+    modelQty: Math.max(1, parseInt(document.getElementById('model-qty')?.value, 10) || quoteData[activeQuoteId]?.modelQty || 1),
+    quoteVersions: quoteData[activeQuoteId]?.quoteVersions || [],
+    kind: quoteData[activeQuoteId]?.kind || 'job',
+    isOrder: !!quoteData[activeQuoteId]?.isOrder,
+    isTemplate: !!quoteData[activeQuoteId]?.isTemplate,
+    parentOrderId: quoteData[activeQuoteId]?.parentOrderId || '',
+    childIds: quoteData[activeQuoteId]?.childIds || [],
+    modelMix: quoteData[activeQuoteId]?.modelMix || [],
+    modelKey: quoteData[activeQuoteId]?.modelKey || '',
+    modelName: quoteData[activeQuoteId]?.modelName || '',
+    unitIndex: quoteData[activeQuoteId]?.unitIndex || 0,
+    builderProgram: quoteData[activeQuoteId]?.builderProgram || '',
+    revenueStream: quoteData[activeQuoteId]?.revenueStream || 'cabinets'
   };
 }
 
@@ -3381,7 +4150,11 @@ function issueFillFromInstall() {
   document.getElementById('issue-d3').value = d3;
 }
 function openIssueContract() {
-  const q = quoteData[activeQuoteId] || {};
+  let q = quoteData[activeQuoteId] || {};
+  if (quoteKind(q) === 'child' && q.parentOrderId) {
+    loadQuote(q.parentOrderId);
+    q = quoteData[activeQuoteId] || q;
+  }
   const install = q.installDate || '';
   document.getElementById('issue-install').value = install;
   if (q.ar && q.ar.d1Due) {
@@ -3431,11 +4204,26 @@ function dashSetStatus(id, s) {
 }
 
 function syncIssueBtn() {
-  const btn = document.getElementById('btn-issue-contract');
-  const pkt = document.getElementById('btn-open-packet');
   const st = pipeStatus(quoteData[activeQuoteId] || {});
-  if (btn) btn.style.display = st === 'proposed' ? '' : 'none';
-  if (pkt) pkt.style.display = st === 'contract' ? '' : 'none';
+  const proposed = st === 'proposed';
+  const contracted = st === 'contract';
+  const showPacket = contracted || st === 'completed';
+  const setDisp = (id, on) => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = on ? '' : 'none';
+  };
+  setDisp('btn-issue-contract', proposed);
+  setDisp('btn-mark-completed', contracted);
+  setDisp('btn-download-packet', showPacket);
+  setDisp('btn-open-packet', false);
+}
+
+function markQuoteCompleted() {
+  if (!activeQuoteId) return;
+  if (!confirm('Mark this project as completed?')) return;
+  setStatus('completed');
+  if (typeof renderDashboard === 'function') renderDashboard();
+  if (typeof renderPipeline === 'function') renderPipeline();
 }
 
 function confirmContract() {
@@ -3460,29 +4248,77 @@ function confirmContract() {
   quoteData[activeQuoteId].ar = {
     d1Due: d1, d2Due: d2, d3Due: d3,
     d1Paid: !!prev.d1Paid, d2Paid: !!prev.d2Paid, d3Paid: !!prev.d3Paid,
+    d1PaidAt: prev.d1PaidAt || '', d2PaidAt: prev.d2PaidAt || '', d3PaidAt: prev.d3PaidAt || '',
+    d1Amt: prev.d1Amt, d2Amt: prev.d2Amt, d3Amt: prev.d3Amt,
+    d1PaidAmt: prev.d1PaidAmt, d2PaidAmt: prev.d2PaidAmt, d3PaidAmt: prev.d3PaidAmt,
+    d1Check: prev.d1Check || '', d2Check: prev.d2Check || '', d3Check: prev.d3Check || '',
+    d1Copy: prev.d1Copy || '', d2Copy: prev.d2Copy || '', d3Copy: prev.d3Copy || '',
     depositPaid: Number(prev.depositPaid) || 0,
     progressPaid: Number(prev.progressPaid) || 0,
     finalPaid: Number(prev.finalPaid) || 0
   };
   closeModal();
   setStatus('contract');
+  const locked = quoteData[activeQuoteId];
+  if (quoteKind(locked) === 'order') {
+    childrenOfOrder(activeQuoteId).forEach(ch => {
+      if (!quoteData[ch.id]) return;
+      quoteData[ch.id].status = 'contract';
+      quoteData[ch.id].installDate = install;
+      saveQuoteData(ch.id);
+    });
+    const idx = quotesIndex.find(q => q.id === activeQuoteId);
+    if (idx) { idx.status = 'contract'; idx.project = orderMixLabel(activeQuoteId); idx.total = orderRollupTotal(activeQuoteId); }
+    saveQuotesIndex();
+  }
   syncIssueBtn();
   openContractPacket(activeQuoteId);
 }
 
 function nextDeposit(qd, total) {
   const ar = scheduleOf(qd, total);
-  if (!ar.d1Paid) return { n: 1, label: '1st deposit 50%', due: ar.d1Due, amt: total * 0.50 };
-  if (!ar.d2Paid) return { n: 2, label: '2nd deposit 30%', due: ar.d2Due, amt: total * 0.30 };
-  if (!ar.d3Paid) return { n: 3, label: '3rd deposit 20%', due: ar.d3Due, amt: total * 0.20 };
+  if (!ar.d1Paid) return { n: 1, label: '1st deposit 50%', due: ar.d1Due, amt: ar.d1Amt };
+  if (!ar.d2Paid) return { n: 2, label: '2nd deposit 30%', due: ar.d2Due, amt: ar.d2Amt };
+  if (!ar.d3Paid) return { n: 3, label: '3rd deposit 20%', due: ar.d3Due, amt: ar.d3Amt };
   return { n: 0, label: 'Paid in full', due: '', amt: 0 };
+}
+function invMoney(n) { return Math.round((Number(n) || 0) * 100) / 100; }
+function invoiceAmtsOf(qd, total) {
+  const t = invMoney(total);
+  const ar = (qd && qd.ar && typeof qd.ar === 'object') ? qd.ar : {};
+  const d1 = ar.d1Amt != null && ar.d1Amt !== '' ? invMoney(ar.d1Amt) : invMoney(t * 0.50);
+  const d2 = ar.d2Amt != null && ar.d2Amt !== '' ? invMoney(ar.d2Amt) : invMoney(t * 0.30);
+  let d3 = ar.d3Amt != null && ar.d3Amt !== '' ? invMoney(ar.d3Amt) : invMoney(t * 0.20);
+  const sum = invMoney(d1 + d2 + d3);
+  if (Math.abs(sum - t) >= 0.02 && (ar.d3Amt == null || ar.d3Amt === '')) d3 = invMoney(t - d1 - d2);
+  return { d1, d2, d3 };
+}
+function invoiceAmtOf(qd, total, n) {
+  const a = invoiceAmtsOf(qd, total);
+  return n === 1 ? a.d1 : n === 2 ? a.d2 : a.d3;
+}
+function cashReceivedOf(qd, total) {
+  const ar = (qd && qd.ar && typeof qd.ar === 'object') ? qd.ar : {};
+  const a = invoiceAmtsOf(qd, total);
+  let got = 0;
+  if (ar.d1Paid) got += (ar.d1PaidAmt != null && ar.d1PaidAmt !== '') ? invMoney(ar.d1PaidAmt) : a.d1;
+  if (ar.d2Paid) got += (ar.d2PaidAmt != null && ar.d2PaidAmt !== '') ? invMoney(ar.d2PaidAmt) : a.d2;
+  if (ar.d3Paid) got += (ar.d3PaidAmt != null && ar.d3PaidAmt !== '') ? invMoney(ar.d3PaidAmt) : a.d3;
+  return invMoney(got);
 }
 function scheduleOf(qd, total) {
   const ar = (qd && qd.ar && typeof qd.ar === 'object') ? qd.ar : {};
+  const a = invoiceAmtsOf(qd, total);
+  const received = cashReceivedOf(qd, total);
   return {
     d1Due: ar.d1Due || '', d2Due: ar.d2Due || '', d3Due: ar.d3Due || '',
     d1Paid: !!ar.d1Paid, d2Paid: !!ar.d2Paid, d3Paid: !!ar.d3Paid,
-    open: Math.max(0, total - (ar.d1Paid ? total*0.5 : 0) - (ar.d2Paid ? total*0.3 : 0) - (ar.d3Paid ? total*0.2 : 0))
+    d1PaidAt: ar.d1PaidAt || '', d2PaidAt: ar.d2PaidAt || '', d3PaidAt: ar.d3PaidAt || '',
+    d1Check: ar.d1Check || '', d2Check: ar.d2Check || '', d3Check: ar.d3Check || '',
+    d1Copy: ar.d1Copy || '', d2Copy: ar.d2Copy || '', d3Copy: ar.d3Copy || '',
+    d1Amt: a.d1, d2Amt: a.d2, d3Amt: a.d3,
+    received,
+    open: Math.max(0, invMoney(total - received))
   };
 }
 
@@ -3502,6 +4338,8 @@ function switchTab(tab) {
       b.classList.remove('active');
     }
   });
+  const main = document.querySelector('.main');
+  if (main) main.classList.toggle('wide', tab === 'invoices' || tab === 'dashboard');
 
   document.getElementById('dashboard-view').style.display = tab==='dashboard' ? '' : 'none';
   const contractsEl = document.getElementById('contracts-view');
@@ -3514,7 +4352,7 @@ function switchTab(tab) {
   if (arEl) arEl.style.display = tab==='ar' ? '' : 'none';
   document.getElementById('quote-view').style.display   = tab==='quote'   ? '' : 'none';
   document.getElementById('invoice-view').style.display = tab==='invoice' ? 'block' : 'none';
-  document.getElementById('print-quote-view').style.display = tab==='printquote' ? '' : 'none';
+  document.getElementById('print-quote-view').style.display = tab==='printquote' ? 'block' : 'none';
   document.getElementById('reconcile-view').style.display = tab==='reconcile' ? '' : 'none';
   document.getElementById('company-pnl-view').style.display = tab==='companypnl' ? '' : 'none';
   document.getElementById('balance-sheet-view').style.display = tab==='balancesheet' ? '' : 'none';
@@ -3534,6 +4372,7 @@ function switchTab(tab) {
   if (tab === 'ar') renderAr();
   if (tab === 'quote') {
     recalc();
+    renderQuoteVersions();
     // Ensure the current active quote's status is reflected in the main status bar
     const cur = pipeStatus(quoteData[activeQuoteId] || {});
     document.getElementById('status-pill').textContent = statusLabel(cur);
@@ -3646,73 +4485,50 @@ function buildInvoice() {
 }
 
 function buildPrintQuote() {
-  const q = quoteData[activeQuoteId];
-  if (!q) return;
-
-  // Header
-  const jc = document.getElementById('job-code-display')?.textContent || q.jobCode || '—';
+  const q = quoteData[activeQuoteId] || {};
   const el = id => document.getElementById(id);
-  if (el('pq-jobcode'))    el('pq-jobcode').textContent    = jc;
+  const nums = (typeof quoteGrandFromData === 'function') ? quoteGrandFromData(q) : 0;
+  const unit = (nums && typeof nums === 'object') ? nums.unit : (Number(nums) || 0);
+  const total = (typeof contractTotalOf === 'function') ? contractTotalOf(q, unit) : unit;
+  const gnaPct = parseFloat(q.gnaPct) || 0;
+  const taxPct = parseFloat(q.taxPct) || 0;
+  const bulkPct = parseFloat(q.bulkDiscPct) || 0;
+  const cabSell = (q.cabinets || []).reduce((s, c) => s + (parseFloat(c.qty)||0) * (parseFloat(c.cost)||0) * (1 + (parseFloat(c.markup)||0)/100), 0);
+  const cabNet  = (q.cabinets || []).reduce((s, c) => s + (parseFloat(c.qty)||0) * (parseFloat(c.cost)||0), 0);
+  const laborCost = (q.labor || []).reduce((s, l) => s + (parseFloat(l.rate)||0) * (parseFloat(l.hours)||0), 0);
+  const cabAfter = cabSell - cabNet * bulkPct/100;
+  const bulkDisc = cabNet * bulkPct/100;
+  const tax = cabAfter * taxPct / 100;
+  const gna = (cabAfter + laborCost) * gnaPct / 100;
+
+  if (el('pq-jobcode'))    el('pq-jobcode').textContent    = q.jobCode || '—';
   if (el('pq-date'))       el('pq-date').textContent       = q.date || today();
   if (el('pq-customer'))   el('pq-customer').textContent   = q.customer || '(Customer)';
   if (el('pq-address'))    el('pq-address').textContent    = q.address || '';
-  if (el('pq-project'))    el('pq-project').textContent    = q.project ? 'Model: ' + q.project : '';
-  if (el('pq-status-badge')) el('pq-status-badge').textContent = (q.status || 'proposed').toUpperCase();
+  if (el('pq-project'))    el('pq-project').textContent    = q.project || '';
   if (el('pq-footer-date'))  el('pq-footer-date').textContent  = q.date || today();
 
-  // Cabinet rows
-  const cabHtml = [];
-  document.querySelectorAll('#cabinet-tbody tr').forEach(tr => {
-    const desc   = tr.querySelector('input[type=text]')?.value || '—';
-    const qty    = tr.querySelector('.qty-display')?.textContent || '1';
-    const cost   = parseFloat(tr.querySelectorAll('input[type=number]')[0]?.value) || 0;
-    const markup = parseFloat(tr.querySelector('.markup-select')?.value) || 0;
-    const serial = tr.querySelectorAll('input[type=text]')[1]?.value || '';
-    const unit   = cost * (1 + markup / 100);
-    const total  = parseInt(qty) * unit;
-    if (cost > 0 || desc.trim()) {
-      cabHtml.push(`<tr><td>${desc}</td><td style="font-family:monospace;font-size:11px">${serial||'—'}</td><td style="text-align:center">${qty}</td><td style="text-align:right">${fmt(unit)}</td><td style="text-align:right">${fmt(total)}</td></tr>`);
-    }
-  });
-  if (el('pq-cab-rows')) el('pq-cab-rows').innerHTML = cabHtml.join('') || '<tr><td colspan="5" style="color:#aaa">No cabinets</td></tr>';
+  const cabHtml = (q.cabinets || []).filter(c => (parseFloat(c.cost)||0) > 0 || (c.desc || '').trim()).map(c => {
+    const qty = parseFloat(c.qty) || 0;
+    const cost = parseFloat(c.cost) || 0;
+    const markup = parseFloat(c.markup) || 0;
+    const sell = cost * (1 + markup/100);
+    return `<tr><td>${c.desc || '—'}</td><td>${qty}</td><td style="font-family:monospace;font-size:11px">${c.serial||'—'}</td><td>${fmt(sell)}</td><td>${fmt(qty * sell)}</td></tr>`;
+  }).join('');
+  if (el('pq-cab-rows')) el('pq-cab-rows').innerHTML = cabHtml || '<tr><td colspan="5" style="color:#aaa">No cabinets</td></tr>';
 
-  // Bulk discount
-  const bulkPct  = parseFloat(document.getElementById('bulk-discount-pct')?.value) || 0;
-  const cabTotal = parseAmount('t-cabinets');
-  const cabNetTotal = parseAmount('col-net-total') || cabTotal; // net cost from manufacturer
-  const bulkDisc = cabNetTotal * bulkPct / 100;   // discount off net cost
   const pqBulkRow = el('pq-bulk-row');
   if (pqBulkRow) pqBulkRow.style.display = bulkPct > 0 ? '' : 'none';
   if (el('pq-bulk-label'))    el('pq-bulk-label').textContent    = 'Mfr. Bulk Discount (' + bulkPct + '%)';
   if (el('pq-t-bulk-discount')) el('pq-t-bulk-discount').textContent = '−' + fmt(bulkDisc);
 
-  // Labor rows
-  const labHtml = [];
-  document.querySelectorAll('#labor-tbody tr').forEach(tr => {
-    const name = tr.querySelector('input[type=text]')?.value || 'Assembly';
-    const rate = parseFloat(tr.querySelectorAll('input[type=number]')[0]?.value) || 0;
-    const hrs  = parseFloat(tr.querySelectorAll('input[type=number]')[1]?.value) || 0;
-    if (hrs > 0) {
-      labHtml.push(`<tr><td>${name}</td><td style="text-align:center">${hrs} hrs</td><td style="text-align:right">${fmt(rate)}/hr</td><td style="text-align:right">${fmt(rate * hrs)}</td></tr>`);
-    }
-  });
-  if (el('pq-labor-rows')) el('pq-labor-rows').innerHTML = labHtml.join('') || '<tr><td colspan="4" style="color:#aaa">No labor</td></tr>';
-
-  // Totals
-  const labTotal = parseAmount('t-labor');
-  const gna      = parseAmount('t-gna');
-  const tax      = parseAmount('t-tax');
-  const grand    = parseAmount('t-grand');
-  const gnaPct   = document.getElementById('gna-pct')?.value || '0';
-  const taxPct   = document.getElementById('tax-pct')?.value || '0';
-
-  if (el('pq-t-cabinets'))  el('pq-t-cabinets').textContent  = fmt(cabTotal);
-  if (el('pq-t-labor'))     el('pq-t-labor').textContent     = fmt(labTotal);
+  if (el('pq-t-cabinets'))  el('pq-t-cabinets').textContent  = fmt(cabSell);
+  if (el('pq-t-labor'))     el('pq-t-labor').textContent     = fmt(laborCost);
   if (el('pq-gna-label'))   el('pq-gna-label').textContent   = 'G&A Fee (' + gnaPct + '%)';
   if (el('pq-t-gna'))       el('pq-t-gna').textContent       = fmt(gna);
   if (el('pq-tax-label'))   el('pq-tax-label').textContent   = 'Tax (' + taxPct + '%)';
   if (el('pq-t-tax'))       el('pq-t-tax').textContent       = fmt(tax);
-  if (el('pq-t-grand'))     el('pq-t-grand').textContent     = fmt(grand);
+  if (el('pq-t-grand'))     el('pq-t-grand').textContent     = fmt(total);
 }
 
 // ── RECONCILIATION FUNCTIONS ─────────────────────────────────────────
