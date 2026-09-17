@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v0917n</title>
+<title>Fremont Makers — Project Builder v0917p</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20260917n-open-order -->
+<!-- FM-BUILD-v20260917p-adjust-schedule -->
 <script>
 (function(){
   try {
@@ -612,7 +612,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0917n</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0917p</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
     <span class="status-label">Status:</span>
@@ -624,6 +624,7 @@
       <label><input type="radio" name="fm-status" id="radio-lost" value="lost" onchange="onStatusRadio('lost')"> Lost</label>
     </div>
     <button type="button" class="status-btn" id="btn-issue-contract" onclick="openIssueContract()" style="border-color:var(--accent);color:var(--accent);font-weight:700;">Next: Issue Contract & Invoices</button>
+    <button type="button" class="status-btn" id="btn-adjust-schedule" onclick="openAdjustSchedule()" style="display:none;">Adjust payment schedule</button>
     <button type="button" class="status-btn" id="btn-mark-completed" onclick="markQuoteCompleted()" style="display:none;border-color:var(--green);color:var(--green);font-weight:700;">Next: Mark as Completed</button>
     <button type="button" class="status-btn" id="btn-open-packet" onclick="openContractPacket(activeQuoteId)" style="display:none;">Open contract packet</button>
     <div class="status-btns" style="display:none">
@@ -863,6 +864,7 @@
         <span class="section-title">Builder order</span>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
           <button type="button" class="modal-btn" onclick="openIssueContract()" style="border-color:var(--accent);color:var(--accent);font-weight:700;">Next: Issue Contract & Invoices</button>
+          <button type="button" class="modal-btn" id="btn-order-adjust" onclick="openAdjustSchedule()" style="display:none;">Adjust payment schedule</button>
           <button type="button" class="modal-btn" id="btn-order-packet" onclick="openContractPacket(activeQuoteId)" style="display:none;border-color:var(--accent);color:var(--accent);">Download contract packet</button>
         </div>
       </div>
@@ -1459,6 +1461,22 @@
     <div class="modal-btns">
       <button class="modal-btn" onclick="closeModal()">Cancel</button>
       <button class="modal-btn confirm" onclick="confirmContract()">Issue and lock</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="adjust-schedule-modal">
+  <div class="modal" style="max-width:520px;text-align:left;">
+    <h3>Adjust payment schedule</h3>
+    <p id="adj-sub" style="font-size:13px;color:var(--muted);margin-bottom:12px;"></p>
+    <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Install / delivery date</label>
+    <input type="date" id="adj-install" style="width:100%;margin-bottom:12px;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />
+    <div id="adj-fields"></div>
+    <p id="adj-err" style="font-size:13px;color:var(--red);min-height:18px;"></p>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Paid invoices stay frozen. Unpaid due dates and amounts can move. Remaining invoices must still add to contract total minus cash already received. Reprint the packet after you save.</p>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="modal-btn" type="button" onclick="closeAdjustSchedule()">Cancel</button>
+      <button class="modal-btn confirm" type="button" onclick="saveAdjustSchedule()">Save schedule</button>
     </div>
   </div>
 </div>
@@ -3394,6 +3412,8 @@ function renderOrderSummary(orderId) {
   }
   const pkt = document.getElementById('btn-order-packet');
   if (pkt) pkt.style.display = (isOrder && (pipeStatus(q) === 'contract' || pipeStatus(q) === 'completed')) ? '' : 'none';
+  const adj = document.getElementById('btn-order-adjust');
+  if (adj) adj.style.display = (isOrder && pipeStatus(q) === 'contract') ? '' : 'none';
   if (!isOrder) return;
   const mix = orderMixRows(orderId);
   const orderTotal = mix.reduce((s, m) => s + m.amt, 0);
@@ -4319,9 +4339,113 @@ function syncIssueBtn() {
     if (el) el.style.display = on ? '' : 'none';
   };
   setDisp('btn-issue-contract', proposed);
+  setDisp('btn-adjust-schedule', contracted);
   setDisp('btn-mark-completed', contracted);
   setDisp('btn-download-packet', showPacket);
   setDisp('btn-open-packet', false);
+}
+
+function scheduleTargetId() {
+  let id = activeQuoteId;
+  const q = quoteData[id] || {};
+  if (quoteKind(q) === 'child' && q.parentOrderId) id = q.parentOrderId;
+  return id;
+}
+function closeAdjustSchedule() {
+  const el = document.getElementById('adjust-schedule-modal');
+  if (el) el.classList.remove('open');
+}
+function openAdjustSchedule() {
+  const id = scheduleTargetId();
+  const q = quoteData[id] || {};
+  if (pipeStatus(q) !== 'contract') {
+    alert('Adjust payment schedule is for contracted jobs. Issue Contract first.');
+    return;
+  }
+  if (id !== activeQuoteId) loadQuote(id);
+  const total = contractTotalOf(q, quoteGrandFromData(q) || 0);
+  const ar = scheduleOf(q, total);
+  document.getElementById('adj-sub').textContent =
+    (q.customer || '') + ' · ' + (q.jobCode || '') + ' · contract ' + fmt(total)
+    + ' · received ' + fmt(ar.received) + ' · remaining ' + fmt(ar.open);
+  document.getElementById('adj-install').value = q.installDate || '';
+  const labels = { 1: 'Invoice 1 · 50%', 2: 'Invoice 2 · 30%', 3: 'Invoice 3 · 20%' };
+  const fields = [1, 2, 3].map(n => {
+    const paid = ar['d' + n + 'Paid'];
+    const due = ar['d' + n + 'Due'] || '';
+    const amt = ar['d' + n + 'Amt'];
+    if (paid) {
+      return '<div style="margin-bottom:12px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);">'
+        + '<div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">' + labels[n] + ' · paid</div>'
+        + '<div>' + fmt(amt) + (due ? ' · due ' + due : '') + (ar['d' + n + 'PaidAt'] ? ' · paid ' + ar['d' + n + 'PaidAt'] : '') + '</div></div>';
+    }
+    return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">'
+      + '<div><label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">' + labels[n] + ' due</label>'
+      + '<input type="date" id="adj-d' + n + '-due" value="' + due + '" style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" /></div>'
+      + '<div><label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Amount</label>'
+      + '<input type="number" id="adj-d' + n + '-amt" step="0.01" min="0" value="' + (amt != null ? Number(amt).toFixed(2) : '') + '" style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;text-align:right;" /></div>'
+      + '</div>';
+  }).join('');
+  document.getElementById('adj-fields').innerHTML = fields;
+  document.getElementById('adj-err').textContent = '';
+  document.getElementById('adjust-schedule-modal').classList.add('open');
+}
+function saveAdjustSchedule() {
+  const id = scheduleTargetId();
+  const q = quoteData[id];
+  if (!q || pipeStatus(q) !== 'contract') return;
+  const install = document.getElementById('adj-install').value;
+  if (!install) {
+    document.getElementById('adj-err').textContent = 'Install / delivery date is required.';
+    return;
+  }
+  const total = contractTotalOf(q, quoteGrandFromData(q) || 0);
+  const sched = scheduleOf(q, total);
+  const ar = ensureAr(id);
+  const nextAmt = {};
+  const nextDue = {};
+  let remainSum = 0;
+  for (let n = 1; n <= 3; n++) {
+    if (sched['d' + n + 'Paid']) {
+      nextAmt[n] = sched['d' + n + 'Amt'];
+      nextDue[n] = sched['d' + n + 'Due'];
+      continue;
+    }
+    const dueEl = document.getElementById('adj-d' + n + '-due');
+    const amtEl = document.getElementById('adj-d' + n + '-amt');
+    const due = dueEl ? dueEl.value : '';
+    if (!due) {
+      document.getElementById('adj-err').textContent = 'Every unpaid invoice needs a due date.';
+      return;
+    }
+    nextDue[n] = due;
+    nextAmt[n] = invMoney(amtEl && amtEl.value);
+    remainSum = invMoney(remainSum + nextAmt[n]);
+  }
+  const remainNeed = invMoney(total - sched.received);
+  if (Math.abs(remainSum - remainNeed) >= 0.02) {
+    document.getElementById('adj-err').textContent = 'Open invoices must add to ' + fmt(remainNeed) + ' (got ' + fmt(remainSum) + ').';
+    return;
+  }
+  q.installDate = install;
+  ar.d1Due = nextDue[1]; ar.d2Due = nextDue[2]; ar.d3Due = nextDue[3];
+  ar.d1Amt = nextAmt[1]; ar.d2Amt = nextAmt[2]; ar.d3Amt = nextAmt[3];
+  q.saved_at = Date.now();
+  saveQuoteData(id);
+  if (quoteKind(q) === 'order') {
+    childrenOfOrder(id).forEach(ch => {
+      if (!quoteData[ch.id]) return;
+      quoteData[ch.id].installDate = install;
+      saveQuoteData(ch.id);
+    });
+  }
+  fmCloudPushDebounced();
+  closeAdjustSchedule();
+  if (typeof renderInvoices === 'function') renderInvoices();
+  if (typeof renderPipeline === 'function') renderPipeline();
+  if (typeof renderAr === 'function') renderAr();
+  if (typeof renderDashboard === 'function') renderDashboard();
+  if (typeof renderOrderSummary === 'function') renderOrderSummary(id);
 }
 
 function markQuoteCompleted() {
