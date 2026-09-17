@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v0917m</title>
+<title>Fremont Makers — Project Builder v0917n</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20260917m-house-import -->
+<!-- FM-BUILD-v20260917n-open-order -->
 <script>
 (function(){
   try {
@@ -612,7 +612,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0917m</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0917n</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
     <span class="status-label">Status:</span>
@@ -858,8 +858,41 @@
   <!-- ── QUOTE TAB ── -->
   <div id="quote-view">
 
+    <div class="section" id="order-summary" style="display:none;">
+      <div class="section-header">
+        <span class="section-title">Builder order</span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <button type="button" class="modal-btn" onclick="openIssueContract()" style="border-color:var(--accent);color:var(--accent);font-weight:700;">Next: Issue Contract & Invoices</button>
+          <button type="button" class="modal-btn" id="btn-order-packet" onclick="openContractPacket(activeQuoteId)" style="display:none;border-color:var(--accent);color:var(--accent);">Download contract packet</button>
+        </div>
+      </div>
+      <p id="order-summary-lede" style="font-size:14px;color:var(--muted);margin-bottom:12px;line-height:1.5;">This contract covers the mix below. Import a Wholesale Cabinets PDF on each house. Issue Contract here — one 50/30/20 for the order.</p>
+      <table class="quote-table" style="margin-bottom:14px;">
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th style="text-align:right">Houses</th>
+            <th style="text-align:right">Amount</th>
+          </tr>
+        </thead>
+        <tbody id="order-mix-tbody"></tbody>
+      </table>
+      <table class="quote-table">
+        <thead>
+          <tr>
+            <th>House</th>
+            <th>Job</th>
+            <th>Cabinets</th>
+            <th style="text-align:right">Amount</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="order-houses-tbody"></tbody>
+      </table>
+    </div>
+
     <!-- CABINETS SECTION -->
-    <div class="section">
+    <div class="section" id="quote-cabinets-section">
       <div class="section-header">
         <span class="section-title">Cabinet Line Items</span>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
@@ -904,7 +937,7 @@
     </div>
 
     <!-- LABOR SECTION -->
-    <div class="section">
+    <div class="section" id="quote-labor-section">
       <div class="section-header">
         <span class="section-title">👷 Labor</span>
         <button class="add-line-btn" style="margin-top:0" onclick="addLaborRow()">+ Add Worker</button>
@@ -924,7 +957,7 @@
     </div>
 
     <!-- TOTALS -->
-    <div class="section">
+    <div class="section" id="quote-totals-section">
       <div class="totals-block">
         <div class="totals-row">
           <span class="totals-label">Cabinets Subtotal</span>
@@ -1564,6 +1597,11 @@ async function fmCloudPush() {
 
 // ── IMPORT SUPPLIER QUOTE MODAL ────────────────────────────────────
 function showImportModal() {
+  const q = quoteData[activeQuoteId] || {};
+  if (quoteKind(q) === 'order') {
+    alert('Import a Wholesale Cabinets PDF on each house, not on the order. Open a house below, then Import PDF.');
+    return;
+  }
   const modal = document.getElementById('import-modal');
   if (modal) {
     modal.style.display = 'flex';
@@ -2878,6 +2916,7 @@ function modelQtyOf(qd) {
   return n > 0 ? n : 1;
 }
 function contractTotalOf(qd, unit) {
+  if (quoteKind(qd) === 'order' && qd && qd.id) return orderRollupTotal(qd.id);
   const u = (unit != null && unit === unit) ? unit : quoteGrandFromData(qd);
   return u * modelQtyOf(qd);
 }
@@ -3160,29 +3199,6 @@ function renderAr() {
 }
 
 function loadQuoteAndSwitchTab(id) {
-  const qd = quoteData[id] || {};
-  if (quoteKind(qd) === 'order') {
-    activeQuoteId = id;
-    saveActiveQuoteId();
-    window._dashOpenOrders[id] = true;
-    const st = pipeStatus(qd);
-    const pill = document.getElementById('status-pill');
-    if (pill) { pill.textContent = statusLabel(st); pill.className = 'status-pill pill-' + st; }
-    ['proposed','contract','completed','lost'].forEach(k => {
-      const r = document.getElementById('radio-' + k);
-      if (r) r.checked = (k === st);
-    });
-    syncIssueBtn();
-    const code = document.getElementById('job-code-display');
-    if (code) code.textContent = qd.jobCode || '—';
-    const cust = document.getElementById('customer-name');
-    if (cust) cust.value = qd.customer || '';
-    const proj = document.getElementById('project-name');
-    if (proj) proj.value = qd.project || orderMixLabel(id);
-    switchTab('dashboard');
-    renderDashboard();
-    return;
-  }
   loadQuote(id);
   switchTab('quote');
 }
@@ -3348,6 +3364,71 @@ function orderMixLabel(orderId) {
   const parts = Object.keys(counts).map(n => counts[n] + ' ' + n);
   return parts.length ? parts.join(', ') : 'No houses yet';
 }
+function orderMixRows(orderId) {
+  const kids = childrenOfOrder(orderId);
+  const counts = {};
+  kids.forEach(k => {
+    const qd = quoteData[k.id] || k;
+    const n = qd.modelName || 'House';
+    if (!counts[n]) counts[n] = { name: n, qty: 0, amt: 0 };
+    counts[n].qty += 1;
+    counts[n].amt += dashRowTotal(k);
+  });
+  return Object.keys(counts).map(n => counts[n]);
+}
+function renderOrderSummary(orderId) {
+  const box = document.getElementById('order-summary');
+  const cab = document.getElementById('quote-cabinets-section');
+  const lab = document.getElementById('quote-labor-section');
+  const tot = document.getElementById('quote-totals-section');
+  const q = quoteData[orderId] || {};
+  const isOrder = quoteKind(q) === 'order';
+  if (box) box.style.display = isOrder ? '' : 'none';
+  if (cab) cab.style.display = isOrder ? 'none' : '';
+  if (lab) lab.style.display = isOrder ? 'none' : '';
+  if (tot) tot.style.display = isOrder ? 'none' : '';
+  const mq = document.getElementById('model-qty');
+  if (mq && mq.closest) {
+    const field = mq.closest('.job-field');
+    if (field) field.style.display = isOrder ? 'none' : '';
+  }
+  const pkt = document.getElementById('btn-order-packet');
+  if (pkt) pkt.style.display = (isOrder && (pipeStatus(q) === 'contract' || pipeStatus(q) === 'completed')) ? '' : 'none';
+  if (!isOrder) return;
+  const mix = orderMixRows(orderId);
+  const orderTotal = mix.reduce((s, m) => s + m.amt, 0);
+  const mixBody = document.getElementById('order-mix-tbody');
+  if (mixBody) {
+    mixBody.innerHTML = (mix.map(m =>
+      '<tr><td>' + m.name + '</td><td style="text-align:right">' + m.qty + '</td><td style="text-align:right">' + fmt(m.amt) + '</td></tr>'
+    ).join('') || '<tr><td colspan="3" style="color:var(--muted)">No models yet</td></tr>')
+      + '<tr><td><strong>Order total</strong></td><td></td><td style="text-align:right"><strong>' + fmt(orderTotal) + '</strong></td></tr>';
+  }
+  const houseBody = document.getElementById('order-houses-tbody');
+  const kids = childrenOfOrder(orderId);
+  if (houseBody) {
+    houseBody.innerHTML = kids.map(ch => {
+      const cqd = quoteData[ch.id] || ch;
+      const nCab = (cqd.cabinets || []).filter(c => (c.desc || '').trim() || (parseFloat(c.cost) || 0)).length;
+      const cabNote = nCab ? nCab + ' lines' : 'No PDF yet';
+      return '<tr><td>' + (ch.project || cqd.modelName || 'House') + '</td>'
+        + '<td style="font-family:monospace">' + (ch.jobCode || '') + '</td>'
+        + '<td>' + cabNote + '</td>'
+        + '<td style="text-align:right">' + fmt(dashRowTotal(ch)) + '</td>'
+        + '<td><div class="dash-actions">'
+        + '<button class="modal-btn" type="button" onclick="loadQuoteAndSwitchTab(\'' + ch.id + '\')">Open house</button>'
+        + '<button class="modal-btn" type="button" onclick="event.stopPropagation();importPdfIntoHouse(\'' + ch.id + '\')">Import PDF</button>'
+        + '</div></td></tr>';
+    }).join('') || '<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:16px">No houses on this order.</td></tr>';
+  }
+  const lede = document.getElementById('order-summary-lede');
+  if (lede) {
+    const mixLbl = orderMixLabel(orderId);
+    lede.textContent = 'This contract is ' + mixLbl + '. Import a Wholesale Cabinets PDF on each house. Issue Contract here for one 50/30/20 covering the order.';
+  }
+  const grand = document.getElementById('t-grand');
+  if (grand) grand.textContent = fmt(orderTotal);
+}
 function orderRollupTotal(orderId) {
   return childrenOfOrder(orderId).reduce((s, k) => s + dashRowTotal(k), 0);
 }
@@ -3497,10 +3578,8 @@ function createBuilderOrderFromWizard() {
   saveQuotesIndex();
   window._dashOpenOrders[orderId] = true;
   closeNewProjectWizard();
-  activeQuoteId = orderId;
-  saveActiveQuoteId();
-  renderDashboard();
-  switchTab('dashboard');
+  loadQuote(orderId);
+  switchTab('quote');
 }
 
 function saveQuoteAsModelTemplate() {
@@ -3633,6 +3712,7 @@ function loadQuote(id) {
   recalc();
   loadReconciliationData(id); // Load reconciliation data for this quote
   renderQuoteVersions();
+  renderOrderSummary(id);
 }
 
 function quoteVersionSnapshot() {
@@ -3859,6 +3939,25 @@ function collectData() {
 
 function saveLocal() {
   if (!activeQuoteId) return;
+  const existing = quoteData[activeQuoteId] || {};
+  if (quoteKind(existing) === 'order') {
+    existing.customer = document.getElementById('customer-name')?.value || existing.customer || '';
+    existing.signerName = document.getElementById('signer-name')?.value || existing.signerName || '';
+    existing.project = document.getElementById('project-name')?.value || existing.project || '';
+    existing.date = document.getElementById('quote-date')?.value || existing.date || today();
+    existing.address = document.getElementById('install-address')?.value || existing.address || '';
+    existing.cabinets = [];
+    existing.labor = [];
+    existing.kind = 'order';
+    existing.isOrder = true;
+    quoteData[activeQuoteId] = existing;
+    saveQuoteData(activeQuoteId);
+    const totalRaw = orderRollupTotal(activeQuoteId);
+    updateQuoteIndexEntry(activeQuoteId, existing.status, totalRaw, existing.customer, existing.project || orderMixLabel(activeQuoteId), existing.date);
+    fmCloudPushDebounced();
+    renderOrderSummary(activeQuoteId);
+    return;
+  }
   const currentQuote = collectData();
   quoteData[activeQuoteId] = currentQuote;
   saveQuoteData(activeQuoteId);
@@ -4041,6 +4140,13 @@ function deleteRow(btn, tbodyId) {
 
 // ── RECALC ─────────────────────────────────────────────────────────
 function recalc() {
+  const q = quoteData[activeQuoteId] || {};
+  if (quoteKind(q) === 'order') {
+    const grand = orderRollupTotal(activeQuoteId);
+    const el = document.getElementById('t-grand');
+    if (el) el.textContent = fmt(grand);
+    return;
+  }
   // Cabinets
   let cabTotal = 0, cabCost = 0;
   document.querySelectorAll('#cabinet-tbody tr').forEach(tr => {
@@ -4373,6 +4479,7 @@ function switchTab(tab) {
   if (tab === 'quote') {
     recalc();
     renderQuoteVersions();
+    renderOrderSummary(activeQuoteId);
     // Ensure the current active quote's status is reflected in the main status bar
     const cur = pipeStatus(quoteData[activeQuoteId] || {});
     document.getElementById('status-pill').textContent = statusLabel(cur);

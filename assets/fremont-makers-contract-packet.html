@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
-  <title>Fremont Makers — Contract Packet v0917k</title>
-  <!-- FM-PACKET-v0917k-labor-total -->
+  <title>Fremont Makers — Contract Packet v0917n</title>
+  <!-- FM-PACKET-v0917n-order-mix -->
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Pinyon+Script&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     :root { --ink:#1a1a1a; --muted:#666; --line:#d8d4cc; --gold:#c9a84c; --paper:#fff; --screen:#111; }
@@ -58,7 +58,7 @@
 </head>
 <body>
   <div class="bar">
-    <strong>Fremont Makers · Contract packet <span style="opacity:.45;letter-spacing:0;">v0917k</span></strong>
+    <strong>Fremont Makers · Contract packet <span style="opacity:.45;letter-spacing:0;">v0917n</span></strong>
     <div class="actions">
       <span class="save-ok" id="save-msg"></span>
       <button type="button" onclick="window.print()">Print</button>
@@ -142,10 +142,20 @@ function childrenOf(q, data) {
 function mixLabel(kids) {
   const counts = {};
   kids.forEach(k => {
-    const n = k.modelName || k.project || 'House';
+    const n = k.modelName || String(k.project || 'House').replace(/\s+\d+$/, '') || 'House';
     counts[n] = (counts[n] || 0) + 1;
   });
   return Object.keys(counts).map(n => counts[n] + ' ' + n).join(', ') || (kids.length + ' houses');
+}
+function mixRows(kids) {
+  const counts = {};
+  kids.forEach(k => {
+    const n = k.modelName || String(k.project || 'House').replace(/\s+\d+$/, '') || 'House';
+    if (!counts[n]) counts[n] = { name: n, qty: 0, amt: 0 };
+    counts[n].qty += 1;
+    counts[n].amt += quoteGrand(k).unit * modelQty(k);
+  });
+  return Object.keys(counts).map(n => counts[n]);
 }
 function orderTotal(q, kids) {
   if (!(q.kind === 'order' || q.isOrder)) return quoteGrand(q).unit * modelQty(q);
@@ -153,7 +163,11 @@ function orderTotal(q, kids) {
 }
 function pageOrderCover(q, kids, total) {
   const mix = mixLabel(kids);
-  const rows = kids.map(c => {
+  const models = mixRows(kids);
+  const modelRows = models.map(m =>
+    '<tr><td>' + esc(m.name) + '</td><td class="r">' + m.qty + '</td><td class="r">' + money(m.amt) + '</td></tr>'
+  ).join('');
+  const houseRows = kids.map(c => {
     const n = quoteGrand(c);
     return '<tr><td>' + esc(c.project || c.modelName || '') + '</td><td>' + esc(c.jobCode || '') + '</td><td class="r">' + money(n.unit * modelQty(c)) + '</td></tr>';
   }).join('');
@@ -168,11 +182,15 @@ function pageOrderCover(q, kids, total) {
     + '<div><b>Contract total</b>' + money(total) + '</div>'
     + '</div>'
     + '<p>This packet is one contract for the mix above. Each house has its own Final Job Quote as an exhibit. Color and SKU may differ by house. Dollars and the 50 / 30 / 20 schedule live on this order, not on each exhibit.</p>'
-    + '<h2>Houses on this order</h2>'
-    + '<table><thead><tr><th>House</th><th>Job</th><th class="r">Amount</th></tr></thead><tbody>'
-    + (rows || '<tr><td colspan="3">No houses</td></tr>')
+    + '<h2>Models on this order</h2>'
+    + '<table><thead><tr><th>Model</th><th class="r">Houses</th><th class="r">Amount</th></tr></thead><tbody>'
+    + (modelRows || '<tr><td colspan="3">No models</td></tr>')
     + '</tbody></table>'
     + '<table class="tot"><tbody><tr><td>Order total</td><td class="r">' + money(total) + '</td></tr></tbody></table>'
+    + '<h2>Houses</h2>'
+    + '<table><thead><tr><th>House</th><th>Job</th><th class="r">Amount</th></tr></thead><tbody>'
+    + (houseRows || '<tr><td colspan="3">No houses</td></tr>')
+    + '</tbody></table>'
     + '</div>';
 }
 function pageQuoteExhibit(c) {
