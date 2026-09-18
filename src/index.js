@@ -8,6 +8,7 @@ import { handleEventCheckout } from './event-checkout.js';
 import { handleHrForms } from './hr-forms.js';
 import { handleHscGroupBlocks } from './hsc-group-blocks.js';
 import { handlePayroll } from './payroll.js';
+import { handleHscVaultLogins } from './hsc-manager-vault.js';
 
 const AIRTABLE_BASE = "appUUjLXEUwlyx23M";
 const SOCC_TABLE    = "SOCC%20Barista%20Applications";
@@ -23,7 +24,7 @@ function optionsResponse() {
   return new Response(null, { headers: {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, x-hr-key, x-event-key, x-payroll-pin",
+    "Access-Control-Allow-Headers": "Content-Type, x-hr-key, x-event-key, x-payroll-pin, x-vault-pin",
   }});
 }
 
@@ -154,6 +155,10 @@ export default {
       if (gb) return gb;
     }
 
+    if (url.pathname === '/api/hsc/vault-logins') {
+      return handleHscVaultLogins(request, env);
+    }
+
     if (isHscToolsHost(url.hostname) && !url.pathname.startsWith("/api")) {
       const p = url.pathname.replace(/\/$/, "") || "/";
       if (p === "/" || p === "/index.html" || p === "/dashboard" || p === "/event-orders" || p === "/orders") {
@@ -176,6 +181,9 @@ export default {
       }
       if (p === "/front-desk-manual" || p === "/front-desk-manual.html") {
         return serveAsset(env, request, "/assets/front-desk-manual.html");
+      }
+      if (p === "/manager-vault" || p === "/manager-vault.html" || p === "/hsc-manager-vault" || p === "/hsc-manager-vault.html") {
+        return serveAsset(env, request, "/assets/hsc-manager-vault.html");
       }
     }
 
@@ -251,6 +259,12 @@ export default {
       };
       if (OFFERS_TO_FM[p]) {
         const dest = new URL("https://tools.fremontmakers.com" + OFFERS_TO_FM[p]);
+        dest.search = url.search;
+        dest.hash = url.hash;
+        return Response.redirect(dest.toString(), 302);
+      }
+      if (p === "/assets/hsc-manager-vault" || p === "/assets/hsc-manager-vault.html") {
+        const dest = new URL("https://tools.hotelstcloud.com/manager-vault");
         dest.search = url.search;
         dest.hash = url.hash;
         return Response.redirect(dest.toString(), 302);
