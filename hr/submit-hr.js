@@ -46,7 +46,7 @@
       var data = await res.json().catch(function () { return {}; });
       if (!res.ok || !data.ok) throw new Error(data.error || "Could not submit");
       submitted = true;
-      setStatus(data.emailed ? "Sent to Jackie (HR). You can still print a copy for your records." : "Saved on the HR tracker. Email may have failed — tell Jackie.", true);
+      setStatus(data.emailed ? "Sent to HR. You can still print a copy for your records." : "Saved on the HR tracker. Email may have failed. Tell HR.", true);
       if (btn) btn.textContent = "Sent to HR";
       return true;
     } catch (err) {
