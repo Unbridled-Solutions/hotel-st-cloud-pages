@@ -493,6 +493,12 @@ function dayVal(arr, di) {
   const n = parseFloat(arr[di]);
   return n || 0;
 }
+function dayMoneyOrNull(arr, di) {
+  if (!Array.isArray(arr) || arr[di] == null || arr[di] === '') return null;
+  const n = parseFloat(arr[di]);
+  if (!isFinite(n) || !n) return null;
+  return n;
+}
 
 function rollDay(outlet, monday, di, bundle) {
   const key = ymd(monday);
@@ -503,13 +509,14 @@ function rollDay(outlet, monday, di, bundle) {
   if (outlet.hotel && w) hotel = dayVal(w.actrevs, di) || dayVal(w.bookedrevs, di);
   const restRev = outlet.hotel ? hotel : rest;
   const totalRev = restRev + evt;
-  const hrly = w ? dayVal(w.hrlyacts, di) : 0;
+  const hrly = w ? dayMoneyOrNull(w.hrlyacts, di) : null;
+  const hrlyN = hrly || 0;
   const mgmt = w ? dayVal(w.mgmtacts, di) : 0;
-  const tax = (hrly + mgmt) * taxRate(viewPeriod);
-  const labor = hrly + mgmt + tax;
+  const tax = (hrlyN + mgmt) * taxRate(viewPeriod);
+  const labor = hrlyN + mgmt + tax;
   const laborPct = totalRev > 0 ? labor / totalRev : null;
   const occ = (outlet.hotel && w) ? occVal(w.occrooms, di) : null;
-  const has = !!(w && (restRev || evt || hrly || mgmt || occ != null));
+  const has = !!(w && (restRev || evt || hrlyN || mgmt || occ != null));
   return { key, restRev, evt, totalRev, hrly, mgmt, tax, labor, laborPct, occ, has };
 }
 
@@ -740,7 +747,7 @@ function renderSummary() {
         row += outletCells(w, o, oi === 0);
         const acc = weekAcc[oi];
         acc.restRev += w.restRev; acc.evt += w.evt; acc.totalRev += w.totalRev;
-        acc.hrly += w.hrly; acc.mgmt += w.mgmt; acc.tax += w.tax; acc.labor += w.labor;
+        acc.hrly += (w.hrly || 0); acc.mgmt += w.mgmt; acc.tax += w.tax; acc.labor += w.labor;
         if (w.occ != null) { acc.occSum += w.occ; acc.occN += 1; }
         if (w.has) acc.has = true;
         combRev += w.totalRev; combLab += w.labor;

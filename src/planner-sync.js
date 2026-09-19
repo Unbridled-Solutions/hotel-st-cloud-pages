@@ -70,7 +70,12 @@ function rangeYmd(from, to) {
 function ymdToToast(s) { return s.replace(/-/g, ''); }
 function fmtMoney(n) {
   if (n == null || n === '' || !Number.isFinite(Number(n))) return '';
-  return Number(n).toFixed(2);
+  const x = Number(n);
+  // Never persist $0.00. Empty Toast days stay blank so Refresh cannot
+  // zero a real hotel/restaurant hourly cell (Fri labor looked like $0
+  // when today was still open, Sep 19 2026).
+  if (!x) return '';
+  return x.toFixed(2);
 }
 function fmtOcc(n) {
   if (n == null || n === '') return '';
@@ -98,6 +103,7 @@ function blankWeek(extra = {}) {
 }
 function setDay(week, field, ymd, val) {
   if (val === '' || val == null) return false;
+  if (field === 'hrlyacts' && !Number(val)) return false;
   const di = parseYmd(ymd).getUTCDay();
   const idx = di === 0 ? 6 : di - 1;
   const arr = ensure7(week[field]);
@@ -632,9 +638,18 @@ async function runSync(env, status) {
     status.errors.push('SOCC LY net sales ' + e.message);
   }
 
-  status.message = 'Cloudbeds occupancy + room $…';
+  // Hotel hourly is Toast (631 Main HSC Day/Night). Save it BEFORE the
+  // Cloudbeds crawl. A hung occupancy pull used to skip hotel labor and
+  // leave Friday Hourly at $0 on the period sheet (Stan, 19 Sep 2026).
+  status.message = 'Saving hotel labor…';
   await setStatus(env, status);
   const hsc = await kvGet(env, 'hsc');
+  status.changed.hscHrly = applySeries(hsc, 'hsc-wk-', 'hrlyacts', moneyMap(labor.hsc));
+  fillCurrentMgmt(hsc, 'hsc-wk-', laborDays, hscMgmtRate);
+  await kvPut(env, 'hsc', hsc);
+
+  status.message = 'Cloudbeds occupancy + room $…';
+  await setStatus(env, status);
   const occ = {};
   for (const d of cbDays) {
     try { occ[d] = await cloudbedsOcc(env, d); }
@@ -652,7 +667,6 @@ async function runSync(env, status) {
   }
   status.changed.hscOcc = applySeries(hsc, 'hsc-wk-', 'occrooms', occMap);
   status.changed.hscBooked = applySeries(hsc, 'hsc-wk-', 'bookedrevs', bookedMap);
-  status.changed.hscHrly = applySeries(hsc, 'hsc-wk-', 'hrlyacts', moneyMap(labor.hsc));
   let actFill = 0;
   for (const d of laborDays) {
     const key = 'hsc-wk-' + mondayOf(d);
