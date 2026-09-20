@@ -22,6 +22,10 @@ const EVENTS = {
     date: "",
     successPath: "/christmas-lights/thanks/",
     cancelPath: "/christmas-lights/",
+    dates: {
+      "2026-12-10": "Thursday, December 10, 2026",
+      "2026-12-22": "Tuesday, December 22, 2026",
+    },
   },
 };
 
@@ -205,7 +209,7 @@ function ticketLine(order) {
   if (order.event === "murder-mystery") {
     return `${order.adults || 0} ticket${Number(order.adults) === 1 ? "" : "s"}`;
   }
-  return `Adults ${order.adults || 0} · children ${order.children || 0} · family packs ${order.family || 0} · under 3: ${order.under3 || 0}`;
+  return `Adults ${order.adults || 0} · children ${order.children || 0} · family packs ${order.family || 0} · 2 and under: ${order.under3 || 0}`;
 }
 
 async function sendResend(env, payload) {
@@ -305,6 +309,14 @@ export async function handleEventCheckout(request, env) {
     }
 
     const ev = EVENTS[event];
+    let eventDate = String(body.eventDate || ev.date || "").trim();
+    if (event === "christmas-lights") {
+      const label = ev.dates && ev.dates[eventDate];
+      if (!label) {
+        return json({ error: "Please pick Thursday, December 10 or Tuesday, December 22." }, 400);
+      }
+      eventDate = label;
+    }
     const origin = originOf(request);
     const params = {
       mode: "payment",
@@ -317,7 +329,7 @@ export async function handleEventCheckout(request, env) {
       allow_promotion_codes: "true",
       "metadata[event]": event,
       "metadata[eventName]": ev.name,
-      "metadata[eventDate]": body.eventDate || ev.date || "",
+      "metadata[eventDate]": eventDate,
       "metadata[name]": name,
       "metadata[email]": email,
       "metadata[phone]": phone,
