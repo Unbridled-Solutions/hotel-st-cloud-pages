@@ -1,9 +1,9 @@
 /**
  * Live Refresh: Toast + Cloudbeds + MarginEdge for today (Denver) and yesterday.
- * After that, Cloudbeds hotel occ + booked room $ for the following ISO period
- * (future look on the period sheet). Never touches hours (state), events, or
- * typed budgets. Toast writes before any Cloudbeds crawl so a hung occupancy
- * pull cannot skip hotel labor.
+ * Hotel occ + booked room $: yesterday+today, then the rest of the current ISO
+ * period, then the following period only. Never P+2. Never touches hours
+ * (state), events, or typed budgets. Toast writes before any Cloudbeds crawl
+ * so a hung occupancy pull cannot skip hotel labor.
  */
 
 const TZ = 'America/Denver';
@@ -76,15 +76,27 @@ function isoYearOfYmd(s) {
 function periodOfYmd(s) {
   return Math.ceil(isoWeekOfYmd(s) / 4);
 }
-/** First Monday + last night of the ISO period AFTER the one that contains today. */
-function nextPeriodRange(today) {
+/** First Monday + last night of the ISO period that contains today. */
+function currentPeriodRange(today) {
   let mon = mondayOf(today);
   const y = isoYearOfYmd(mon);
   const p = periodOfYmd(mon);
   for (let i = 0; i < 8; i++) {
-    mon = addYmd(mon, 7);
-    if (periodOfYmd(mon) !== p || isoYearOfYmd(mon) !== y) break;
+    const prev = addYmd(mon, -7);
+    if (periodOfYmd(prev) !== p || isoYearOfYmd(prev) !== y) break;
+    mon = prev;
   }
+  return {
+    from: mon,
+    to: addYmd(mon, 27),
+    year: y,
+    period: p,
+  };
+}
+/** First Monday + last night of the ISO period AFTER the one that contains today. */
+function nextPeriodRange(today) {
+  const cur = currentPeriodRange(today);
+  const mon = addYmd(cur.from, 28);
   return {
     from: mon,
     to: addYmd(mon, 27),
@@ -322,6 +334,22 @@ async function cloudbedsOcc(env, ymd) {
   const data = body?.data || body || {};
   return data.percentageOccupied;
 }
+async function cloudbedsOccRange(env, days, status, errPrefix) {
+  const out = {};
+  const CONC = 5;
+  for (let i = 0; i < days.length; i += CONC) {
+    const batch = days.slice(i, i + CONC);
+    const results = await Promise.all(batch.map(async (d) => {
+      try { return [d, fmtOcc(await cloudbedsOcc(env, d))]; }
+      catch (e) {
+        status.errors.push(errPrefix + ' ' + d + ' ' + e.message);
+        return [d, null];
+      }
+    }));
+    for (const [d, v] of results) if (v != null && v !== '') out[d] = v;
+  }
+  return out;
+}
 async function cloudbedsRoomRev(env, from, to, tight = false) {
   const ids = new Set();
   // Overlapping in-house stays must be in the check-in window. A 7-day
@@ -543,6 +571,7 @@ export async function handlePlannerSync(request, env, ctx) {
   const yesterday = addYmd(today, -1);
   const lookbackFrom = yesterday;
   const cbTo = today;
+  const curP = currentPeriodRange(today);
   const nextP = nextPeriodRange(today);
   const status = {
     state: 'running',
@@ -551,6 +580,9 @@ export async function handlePlannerSync(request, env, ctx) {
     yesterday,
     lookbackFrom,
     cloudbedsTo: cbTo,
+    currentPeriod: curP.year + '-P' + curP.period,
+    currentPeriodFrom: curP.from,
+    currentPeriodTo: curP.to,
     nextPeriod: nextP.year + '-P' + nextP.period,
     nextPeriodFrom: nextP.from,
     nextPeriodTo: nextP.to,
@@ -729,35 +761,56 @@ async function runSync(env, status) {
   fillCurrentMgmt(hsc, 'hsc-wk-', laborDays, hscMgmtRate);
   await kvPut(env, 'hsc', hsc);
 
-  // Following ISO period: hotel occ + booked $ by day so the period sheet
-  // shows what is coming. Toast stays on yesterday+today. Create missing
-  // weeks. Never persist $0.00 room $. Occupancy 0 is a real empty night.
+  // Hotel occ + booked $ for the rest of the current ISO period, then the
+  // following period only (Stan, 20 Sep 2026). Toast stays yesterday+today.
+  // Create missing weeks. Never persist $0.00 room $. Occupancy 0 is a real
+  // empty night. Do not pull P+2.
+  const curP = currentPeriodRange(today);
   const nextP = nextPeriodRange(today);
+  status.currentPeriod = curP.year + '-P' + curP.period;
+  status.currentPeriodFrom = curP.from;
+  status.currentPeriodTo = curP.to;
   status.nextPeriod = nextP.year + '-P' + nextP.period;
   status.nextPeriodFrom = nextP.from;
   status.nextPeriodTo = nextP.to;
-  const nextDays = rangeYmd(nextP.from, nextP.to);
-  status.message = 'Cloudbeds next period P' + nextP.period + ' rooms…';
+  const outlookFrom = addYmd(today, 1);
+  const outlookTo = nextP.to;
+  const outlookDays = outlookFrom <= outlookTo ? rangeYmd(outlookFrom, outlookTo) : [];
+  status.message = 'Cloudbeds hotel P' + curP.period + ' remainder + P' + nextP.period + '…';
   await setStatus(env, status);
-  const nextOccMap = {};
-  for (const d of nextDays) {
-    try { nextOccMap[d] = fmtOcc(await cloudbedsOcc(env, d)); }
-    catch (e) { status.errors.push('CB next occ ' + d + ' ' + e.message); }
+  const outlookOccMap = await cloudbedsOccRange(env, outlookDays, status, 'CB outlook occ');
+  let outlookRoomRev = {};
+  if (outlookDays.length) {
+    try { outlookRoomRev = await cloudbedsRoomRev(env, outlookFrom, outlookTo, false); }
+    catch (e) { status.errors.push('CB outlook room$ ' + e.message); }
   }
-  let nextRoomRev = {};
-  try { nextRoomRev = await cloudbedsRoomRev(env, nextP.from, nextP.to, false); }
-  catch (e) { status.errors.push('CB next room$ ' + e.message); }
-  const nextBookedMap = {};
-  for (const [d, v] of Object.entries(nextRoomRev)) {
+  const outlookBookedMap = {};
+  for (const [d, v] of Object.entries(outlookRoomRev)) {
     if (v === '' || v == null || !Number(v)) continue;
-    nextBookedMap[d] = fmtMoney(v);
+    outlookBookedMap[d] = fmtMoney(v);
   }
-  const nextCreate = { create: true };
-  status.changed.hscNextOcc = applySeries(hsc, 'hsc-wk-', 'occrooms', nextOccMap, nextCreate);
-  status.changed.hscNextBooked = applySeries(hsc, 'hsc-wk-', 'bookedrevs', nextBookedMap, nextCreate);
-  copyBookedToAct(nextDays);
-  status.changed.hscActFill = actFill;
+  const outlookCreate = { create: true };
+  const curDays = outlookDays.filter((d) => d >= curP.from && d <= curP.to);
+  const nextDays = outlookDays.filter((d) => d >= nextP.from && d <= nextP.to);
+  const occCur = {};
+  const occNext = {};
+  const bookedCur = {};
+  const bookedNext = {};
+  for (const d of curDays) {
+    if (outlookOccMap[d] != null) occCur[d] = outlookOccMap[d];
+    if (outlookBookedMap[d]) bookedCur[d] = outlookBookedMap[d];
+  }
   for (const d of nextDays) {
+    if (outlookOccMap[d] != null) occNext[d] = outlookOccMap[d];
+    if (outlookBookedMap[d]) bookedNext[d] = outlookBookedMap[d];
+  }
+  status.changed.hscCurOcc = applySeries(hsc, 'hsc-wk-', 'occrooms', occCur, outlookCreate);
+  status.changed.hscCurBooked = applySeries(hsc, 'hsc-wk-', 'bookedrevs', bookedCur, outlookCreate);
+  status.changed.hscNextOcc = applySeries(hsc, 'hsc-wk-', 'occrooms', occNext, outlookCreate);
+  status.changed.hscNextBooked = applySeries(hsc, 'hsc-wk-', 'bookedrevs', bookedNext, outlookCreate);
+  copyBookedToAct(outlookDays);
+  status.changed.hscActFill = actFill;
+  for (const d of outlookDays) {
     const key = 'hsc-wk-' + mondayOf(d);
     if (!hsc[key]) continue;
     fillStandingMgmtByDay(hsc[key], mondayOf(d), hscMgmtRate);
@@ -822,7 +875,7 @@ async function runSync(env, status) {
     ts: new Date().toISOString(),
     kind: 'system',
     field: 'live-refresh',
-    note: `Refresh ${from}–${today} Toast sales+labor, Cloudbeds occ+room$, next period ${status.nextPeriod} hotel occ+room$ ${status.nextPeriodFrom}–${status.nextPeriodTo}, MarginEdge food+supplies.`,
+    note: `Refresh ${from}–${today} Toast sales+labor, Cloudbeds occ+room$ current ${status.currentPeriod} remainder ${status.currentPeriodFrom}–${status.currentPeriodTo} + next ${status.nextPeriod} ${status.nextPeriodFrom}–${status.nextPeriodTo}, MarginEdge food+supplies.`,
     from: null,
     to: null,
   });
@@ -832,7 +885,7 @@ async function runSync(env, status) {
   status.finished = new Date().toISOString();
   status.message = status.errors.length
     ? 'Pulled with warnings: ' + status.errors.slice(0, 3).join('; ')
-    : `Live through ${today} Denver. Toast + Cloudbeds + next period ${status.nextPeriod} rooms + MarginEdge.`;
+    : `Live through ${today} Denver. Toast + Cloudbeds hotel ${status.currentPeriod} remainder + ${status.nextPeriod} + MarginEdge.`;
   await setStatus(env, status);
 }
 
