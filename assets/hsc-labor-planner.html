@@ -232,7 +232,7 @@ footer span { color: var(--gold); font-weight: 600; }
   <div class="header-right">
 
     <button class="hdr-btn" onclick="window.print()">⎙ Print</button>
-    <button class="hdr-btn" id="saveBtnHdr" onclick="saveLocal()" style="border-color:var(--gold);color:var(--gold)">💾 Save</button>
+    <span id="saveStatus" class="hdr-btn" style="border:none;color:var(--muted);cursor:default;letter-spacing:1px">Cloud</span>
     <button class="hdr-btn primary" onclick="submitSchedule()">Submit for Approval →</button>
     <button class="hdr-btn" id="approveBtnHdr" style="display:none;border-color:var(--green);color:var(--green)" onclick="approveSchedule()">Approve ✓</button>
     <button class="hdr-btn" id="unlockBtnHdr" style="display:none;border-color:var(--gold);color:var(--gold)" onclick="unlockWeek()">🔓 Unlock</button>
@@ -371,7 +371,6 @@ footer span { color: var(--gold); font-weight: 600; }
     <p>Submitting saves this week to the 52-week running history below.</p>
   </div>
   <div class="submit-right">
-    <button class="sub-btn save" onclick="saveLocal()">💾 Save Draft</button>
     <button class="sub-btn submit" onclick="submitSchedule()">Submit for Approval →</button>
     <button class="sub-btn approve" id="approveBtn" onclick="approveSchedule()">Approve ✓</button>
   </div>
@@ -416,7 +415,8 @@ const CLOUD_URL = '/api/planner/bundle?ns=' + CLOUD_NS;
 const CLOUD_PREFIXES = ['hsc-wk-', 'hsc-week-index', 'hsc-history', 'hsc-roster'];
 // Bump this string any time you change a rate in the POSITIONS array.
 // Stale roster rates saved before this version will be ignored.
-const ROSTER_RATES_VERSION = '2026-08-02-hsc';
+const ROSTER_RATES_VERSION = '2026-09-21-hsc';
+let _cloudData = null;
 
 async function cloudPull() {
   try {
@@ -424,11 +424,16 @@ async function cloudPull() {
     if (!res.ok) return;
     const { data } = await res.json();
     if (!data || typeof data !== 'object') return;
+    _cloudData = data;
     Object.entries(data).forEach(([k, v]) => {
       try {
         const incoming = typeof v === 'string' ? v : JSON.stringify(v);
+        // Roster is cloud-canonical. Never let a stale phone wipe names.
+        if (k === 'hsc-roster') {
+          localStorage.setItem(k, incoming);
+          return;
+        }
         // For week keys: local wins if it has a newer saved_at timestamp
-        // This prevents a stale cloud snapshot from clobbering hand-entered data
         const existing = localStorage.getItem(k);
         if (existing) {
           try {
@@ -436,7 +441,7 @@ async function cloudPull() {
             const cloudObj   = typeof v === 'object' ? v : JSON.parse(v);
             const localTs    = localObj?.saved_at  || 0;
             const cloudTs    = cloudObj?.saved_at  || 0;
-            if (localTs >= cloudTs) return; // local is same age or newer — keep it
+            if (localTs >= cloudTs) return;
           } catch(e) { /* can't parse — fall through and overwrite */ }
         }
         localStorage.setItem(k, incoming);
@@ -466,34 +471,34 @@ async function cloudPush() {
 
 // ── POSITIONS ─────────────────────────────────────────────────────────────────
 let POSITIONS = [
-  {section:'MANAGEMENT',        name:'Director of Hotel and Event Operations', sub:'Daily Rate', role:'MGR', rate:null,  dailyRate:206.00, defH:8, defOn:true, sortOrder:1 },
-  {section:null,                name:'Asst Manager / Hotel',    sub:'Daily Rate',            role:'MGR', rate:null,  dailyRate:165.00, defH:8, defOn:true, sortOrder:2 },
-  {section:null,                name:'Asst Manager / Hotel',    sub:'Daily Rate',            role:'MGR', rate:null,  dailyRate:165.00, defH:8, defOn:true, sortOrder:3 },
+  {section:'MANAGEMENT',        name:'Lorin',                   sub:'Daily Rate', role:'MGR', rate:null,  dailyRate:206.00, defH:8, defOn:true, sortOrder:1 },
+  {section:null,                name:'Kim',                     sub:'',                     role:'MGR', rate:20.63, dailyRate:null,   defH:8, defOn:true, sortOrder:2 },
+  {section:null,                name:'Asst Manager / Hotel',    sub:'',                     role:'MGR', rate:20.63, dailyRate:null,   defH:8, defOn:true, sortOrder:3 },
 
-  {section:'FRONT DESK',        name:'Front Desk Lead',         sub:'Registration',           role:'FOH', rate:20.00, dailyRate:null,   defH:8 },
-  {section:null,                name:'Front Desk #1',           sub:'Registration',           role:'FOH', rate:17.00, dailyRate:null,   defH:8 },
-  {section:null,                name:'Front Desk #2',           sub:'Registration',           role:'FOH', rate:17.00, dailyRate:null,   defH:8 },
+  {section:'FRONT DESK',        name:'Erica',                   sub:'Registration',           role:'FOH', rate:17.00, dailyRate:null,   defH:8 },
+  {section:null,                name:'Savannah',                sub:'Registration',           role:'FOH', rate:17.00, dailyRate:null,   defH:8 },
+  {section:null,                name:'Lisa',                    sub:'Registration',           role:'FOH', rate:17.00, dailyRate:null,   defH:8 },
   {section:null,                name:'Concierge / Guest Svc',   sub:'',                       role:'FOH', rate:16.00, dailyRate:null,   defH:8 },
 
-  {section:'HOUSEKEEPING',      name:'Housekeeping Manager',    sub:'',                       role:'BOH', rate:20.00, dailyRate:null,   defH:8 },
-  {section:null,                name:'Housekeeper #1',          sub:'Rooms',                  role:'BOH', rate:17.00, dailyRate:null,   defH:7 },
-  {section:null,                name:'Housekeeper #2',          sub:'Rooms',                  role:'BOH', rate:17.00, dailyRate:null,   defH:7 },
-  {section:null,                name:'Housekeeper #3',          sub:'Rooms',                  role:'BOH', rate:17.00, dailyRate:null,   defH:7 },
-  {section:null,                name:'Housekeeper #4',          sub:'Rooms',                  role:'BOH', rate:17.00, dailyRate:null,   defH:7 },
+  {section:'HOUSEKEEPING',      name:'Saleena',                 sub:'',                       role:'BOH', rate:21.00, dailyRate:null,   defH:8 },
+  {section:null,                name:'Morgan',                  sub:'Rooms',                  role:'BOH', rate:17.00, dailyRate:null,   defH:7 },
+  {section:null,                name:'Emily',                   sub:'Rooms',                  role:'BOH', rate:17.00, dailyRate:null,   defH:7 },
+  {section:null,                name:'Izzy',                    sub:'Rooms',                  role:'BOH', rate:17.00, dailyRate:null,   defH:7 },
+  {section:null,                name:'Kim',                     sub:'Rooms',                  role:'BOH', rate:17.00, dailyRate:null,   defH:7 },
 
-  {section:'LAUNDRY',           name:'Laundry Attendant #1',    sub:'',                       role:'BOH', rate:17.00, dailyRate:null,   defH:7 },
-  {section:null,                name:'Laundry Attendant #2',    sub:'',                       role:'BOH', rate:17.00, dailyRate:null,   defH:7 },
+  {section:'LAUNDRY',           name:'Leann',                   sub:'',                       role:'BOH', rate:17.00, dailyRate:null,   defH:7 },
+  {section:null,                name:'Leslie',                  sub:'',                       role:'BOH', rate:17.00, dailyRate:null,   defH:7 },
 
-  {section:'NIGHT AUDIT / CLEANING', name:'Night Auditor',      sub:'',                       role:'MGR', rate:17.00, dailyRate:null,   defH:8 },
-  {section:null,                name:'Night Cleaner #1',        sub:'',                       role:'BOH', rate:17.00, dailyRate:null,   defH:8 },
-  {section:null,                name:'Night Cleaner #2',        sub:'',                       role:'BOH', rate:17.00, dailyRate:null,   defH:8 },
+  {section:'NIGHT AUDIT / CLEANING', name:'Zach',               sub:'',                       role:'MGR', rate:19.00, dailyRate:null,   defH:8 },
+  {section:null,                name:'Cecil',                   sub:'',                       role:'BOH', rate:19.00, dailyRate:null,   defH:8 },
+  {section:null,                name:'Walter',                  sub:'',                       role:'BOH', rate:19.00, dailyRate:null,   defH:8 },
 
   // ── ADDITIONS (appended to preserve existing row indices) ──
   {section:'MANAGEMENT',        name:'Lindsay',                 sub:'GM',                     role:'MGR', rate:null,  dailyRate:null,   defH:8, ext:true, sortOrder:0 },
   {section:'FRONT DESK',        name:'Front Desk #1',           sub:'',                       role:'FOH', rate:17.00, dailyRate:null,   defH:8 },
   {section:null,                name:'Front Desk #2',           sub:'',                       role:'FOH', rate:17.00, dailyRate:null,   defH:8 },
-  {section:'HOUSEKEEPING',      name:'Housekeeper #1',          sub:'Rooms',                  role:'BOH', rate:17.00, dailyRate:null,   defH:7 },
-  {section:null,                name:'Housekeeper #2',          sub:'Rooms',                  role:'BOH', rate:17.00, dailyRate:null,   defH:7 },
+  {section:'HOUSEKEEPING',      name:'Elisyanna',               sub:'Rooms',                  role:'BOH', rate:17.00, dailyRate:null,   defH:7 },
+  {section:null,                name:'Michael',                 sub:'Rooms',                  role:'BOH', rate:17.00, dailyRate:null,   defH:7 },
   {section:'NIGHT AUDIT / CLEANING', name:'Night Auditor',      sub:'',                       role:'MGR', rate:17.00, dailyRate:null,   defH:8 },
   {section:'HOUSEKEEPING',      name:'Housekeeper #3',          sub:'Rooms',                  role:'BOH', rate:17.00, dailyRate:null,   defH:7 },
   {section:'NIGHT AUDIT / CLEANING', name:'Night Auditor',      sub:'',                       role:'MGR', rate:17.00, dailyRate:null,   defH:8 },
@@ -522,8 +527,8 @@ function scheduleAutoSave() {
     // Don't auto-save if week is locked (approved)
     if (document.body.classList.contains('week-locked')) return;
     saveLocal(false);
-    const btn = document.getElementById('saveBtnHdr');
-    if (btn) { btn.textContent = '✓ Saved'; setTimeout(() => { btn.textContent = '💾 Save'; }, 1500); }
+    const st = document.getElementById('saveStatus');
+    if (st) { st.textContent = 'Saved'; st.style.color = 'var(--gold)'; setTimeout(() => { st.textContent = 'Cloud'; st.style.color = 'var(--muted)'; }, 1500); }
   }, 2000);
 }
 
@@ -717,6 +722,7 @@ function buildFooter() {
 function persistRoster() {
   const roster = POSITIONS.map(p => ({name:p.name, rate:p.rate, dailyRate:p.dailyRate}));
   localStorage.setItem('hsc-roster', JSON.stringify({roster, rates_version: ROSTER_RATES_VERSION, saved_at: Date.now()}));
+  cloudPush();
 }
 
 function moneyHdr(n) {
@@ -1512,9 +1518,8 @@ function applyRoster() {
       : null;
     const localRaw = localStorage.getItem('hsc-roster');
     const localRoster = localRaw ? JSON.parse(localRaw) : null;
-    const cloudTs = cloudRoster?.saved_at || 0;
-    const localTs = localRoster?.saved_at || 0;
-    const best = (localTs > cloudTs) ? localRoster : (cloudRoster || localRoster);
+    // Cloud roster is canonical. Local only if we are offline.
+    const best = cloudRoster || localRoster;
     if (!best || !Array.isArray(best.roster)) return;
     best.roster.forEach((r, pi) => {
       if (!POSITIONS[pi]) return;
@@ -1524,6 +1529,7 @@ function applyRoster() {
         if (r.dailyRate != null) POSITIONS[pi].dailyRate = r.dailyRate;
       }
     });
+    if (POSITIONS[0] && /^lauren$/i.test(POSITIONS[0].name || '')) POSITIONS[0].name = 'Lorin';
   } catch(e) {}
 }
 
