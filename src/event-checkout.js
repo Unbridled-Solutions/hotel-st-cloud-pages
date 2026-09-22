@@ -146,6 +146,10 @@ function orderFromSession(session, extra = {}) {
     status: extra.status || "new",
     created: session.created ? session.created * 1000 : Date.now(),
     staffNotes: extra.staffNotes || "",
+    refundStatus: extra.refundStatus || "",
+    refundNotes: extra.refundNotes || "",
+    workedBy: extra.workedBy || "",
+    activity: Array.isArray(extra.activity) ? extra.activity : [],
     guestEmailId: extra.guestEmailId || "",
     deskEmailId: extra.deskEmailId || "",
     emailError: extra.emailError || "",
@@ -415,9 +419,27 @@ export async function handleEventCheckout(request, env) {
     if (!body.id) return json({ error: "id required" }, 400);
     const existing = (await env.PLANNER_DATA.get("events:order:" + body.id, { type: "json" })) || {};
     const next = Object.assign({}, existing, {
-      status: body.status || existing.status,
+      status: body.status != null && body.status !== "" ? body.status : existing.status,
       staffNotes: body.staffNotes != null ? body.staffNotes : existing.staffNotes,
+      refundStatus: body.refundStatus != null ? body.refundStatus : existing.refundStatus,
+      refundNotes: body.refundNotes != null ? body.refundNotes : existing.refundNotes,
+      workedBy: body.workedBy != null ? body.workedBy : existing.workedBy,
     });
+    const log = Array.isArray(existing.activity) ? existing.activity.slice() : [];
+    if (body.activityEntry && typeof body.activityEntry === "object") {
+      const entry = {
+        at: Number(body.activityEntry.at) || Date.now(),
+        initials: String(body.activityEntry.initials || "").trim().slice(0, 12),
+        action: String(body.activityEntry.action || "").trim().slice(0, 80),
+        note: String(body.activityEntry.note || "").trim().slice(0, 600),
+        refundStatus: String(body.activityEntry.refundStatus || "").trim().slice(0, 40),
+      };
+      if (entry.initials || entry.action || entry.note) {
+        log.push(entry);
+        if (log.length > 80) log.splice(0, log.length - 80);
+      }
+    }
+    next.activity = log;
     await saveOrder(env, next);
     return json({ ok: true, order: next });
   }
