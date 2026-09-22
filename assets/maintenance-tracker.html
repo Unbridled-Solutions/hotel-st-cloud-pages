@@ -1,16 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
   <title>Maintenance Requests — Unbridled Properties</title>
+  <script>
+  (function(){
+    try {
+      var t = localStorage.getItem('uhg-hub-theme');
+      if (t === 'dark' || t === 'paper') document.documentElement.setAttribute('data-theme', t);
+    } catch (e) {}
+  })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    :root {
+    :root, html[data-theme="dark"] {
       --bg:       #0f1117;
       --surface:  #1a1d27;
       --surface2: #22263a;
@@ -23,7 +32,37 @@
       --success:  #3de8c8;
       --yellow:   #ffd166;
       --font:     'Inter', system-ui, sans-serif;
+      --active-bg: #4a9eff;
+      --active-fg: #0f1117;
     }
+    html[data-theme="paper"] {
+      --bg: #f3efe6;
+      --surface: #efe8dc;
+      --surface2: #fbf6f0;
+      --border: #ddd6c8;
+      --text: #1b2744;
+      --muted: #6a655c;
+      --accent: #3d6a86;
+      --danger: #c44027;
+      --warning: #c05621;
+      --success: #2f7d55;
+      --yellow: #a8883a;
+      --active-bg: #1b2744;
+      --active-fg: #ffffff;
+    }
+    .theme-toggle { display: flex; gap: 4px; }
+    .theme-toggle button {
+      padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border);
+      background: transparent; color: var(--muted); font-size: 12px; cursor: pointer;
+      font-family: var(--font); font-weight: 600;
+    }
+    .theme-toggle button.on { background: var(--active-bg); color: var(--active-fg); border-color: var(--active-bg); }
+    .tabs { display: flex; gap: 1px; background: var(--border); border-bottom: 1px solid var(--border); }
+    .tab { flex: 0 0 auto; background: var(--surface); padding: 12px 22px; font-size: 13px; font-weight: 600; color: var(--muted); text-decoration: none; }
+    .tab:hover { color: var(--text); background: var(--surface2); }
+    .tab.active { color: var(--text); border-bottom: 2px solid var(--accent); background: var(--surface2); }
+    .td-requestor { font-weight: 600; }
+    .att-thumb { max-width: 160px; max-height: 120px; border-radius: 6px; border: 1px solid var(--border); display: block; }
 
     body {
       background: var(--bg);
@@ -409,8 +448,17 @@
     </div>
   </div>
   <div class="header-right">
+    <div class="theme-toggle">
+      <button type="button" id="theme-paper-btn">Paper</button>
+      <button type="button" id="theme-dark-btn">Dark</button>
+    </div>
     <a href="https://tools.fremontmakers.com/" class="btn">← FM Dashboard</a>
   </div>
+</div>
+<div class="tabs">
+  <a class="tab active" href="https://tools.fremontmakers.com/maintenance-tracker">Requests</a>
+  <a class="tab" href="https://tools.fremontmakers.com/maintenance-annual">Recurring</a>
+  <a class="tab" href="https://tools.fremontmakers.com/maintenance-paint">HW leftover</a>
 </div>
 
 <!-- STATS BAR -->
@@ -447,19 +495,25 @@
 
 <!-- TOOLBAR -->
 <div class="toolbar">
-  <input class="toolbar-search" type="text" id="searchInput" placeholder="Search by name, building, description…" />
+  <input class="toolbar-search" type="text" id="searchInput" placeholder="Search by requestor, building, description…" />
   <select class="filter-select" id="buildingFilter">
     <option value="">All Buildings</option>
-    <option>Apex — 425-431 Main St</option>
-    <option>Harrison — 609-617 Main St</option>
-    <option>414 Main — 414 Main St</option>
-    <option>Hotel St. Cloud — 631 Main St</option>
-    <option>Standard Oil — 701 Main St</option>
-    <option>Annex — 507 Main St</option>
-    <option>Scholastica — 707 7th St</option>
-    <option>Office Building — 110 7th St</option>
-    <option>Fremont Makers — 719 Main St</option>
+    <option>414–416 Main</option>
+    <option>Abstract — 709 Main</option>
+    <option>Annex — 507 Main</option>
+    <option>Apex — 425-431 Main</option>
+    <option>Chapel — 707 N 7th</option>
+    <option>Fremont Makers — 719 Main</option>
+    <option>Harrison — 609-617 Main</option>
+    <option>Hotel St. Cloud — 631 Main</option>
+    <option>Office Building — 110 N 7th</option>
+    <option>Post Office — 505 Macon</option>
+    <option>Scholastica — 615 Pike</option>
+    <option>Standard Oil — 701 Main</option>
     <option>Other</option>
+  </select>
+  <select class="filter-select" id="requestorFilter">
+    <option value="">All Requestors</option>
   </select>
   <select class="filter-select" id="urgencyFilter">
     <option value="">All Urgencies</option>
@@ -521,6 +575,7 @@ async function loadRequests() {
   allRequests = items.filter(Boolean).sort((a, b) =>
     (b.submitted_at || '').localeCompare(a.submitted_at || '')
   );
+  fillRequestors();
   render();
 }
 
@@ -535,10 +590,12 @@ function render() {
 function getFiltered() {
   const q = document.getElementById('searchInput').value.toLowerCase();
   const bldg = document.getElementById('buildingFilter').value;
+  const req = document.getElementById('requestorFilter').value;
   const urg = document.getElementById('urgencyFilter').value;
   return allRequests.filter(r => {
     if (activeFilter !== 'all' && r.status !== activeFilter) return false;
     if (bldg && r.building !== bldg) return false;
+    if (req && (r.name || '') !== req) return false;
     if (urg && !r.urgency?.includes(urg)) return false;
     if (q) {
       const hay = [r.name, r.building, r.suite, r.tenant_org, r.category, r.description, r.notes]
@@ -602,12 +659,13 @@ function renderTable(rows) {
 
   const cols = [
     { key: 'submitted_at', label: 'Date' },
-      { key: 'building', label: 'Building' },
-      { key: 'category', label: 'Category' },
-      { key: 'urgency', label: 'Urgency' },
-      { key: 'status', label: 'Status' },
-      { key: 'updated_at', label: 'Last Updated' },
-      { key: 'description', label: 'Description' },
+    { key: 'building', label: 'Building' },
+    { key: 'name', label: 'Requestor' },
+    { key: 'category', label: 'Category' },
+    { key: 'urgency', label: 'Urgency' },
+    { key: 'status', label: 'Status' },
+    { key: 'updated_at', label: 'Last Updated' },
+    { key: 'description', label: 'Description' },
   ];
 
   const thead = cols.map(c => {
@@ -621,7 +679,11 @@ function renderTable(rows) {
       <td class="td-date">${formatDate(r.submitted_at)}</td>
       <td>
         <div class="td-building">${r.building || '—'}</div>
-        <div class="td-tenant">${[r.suite, r.tenant_org || r.name].filter(Boolean).join(' · ')}</div>
+        <div class="td-tenant">${r.suite || ''}</div>
+      </td>
+      <td>
+        <div class="td-requestor">${r.name || '—'}</div>
+        <div class="td-tenant">${r.tenant_org || ''}</div>
       </td>
       <td class="td-category">${r.category?.split('—')[0].trim() || '—'}</td>
       <td><span class="badge ${urgencyClass(r.urgency)}">${urgencyLabel(r.urgency)}</span></td>
@@ -667,7 +729,7 @@ function openDrawer(id) {
     <div class="drawer-sub">${[r.suite, r.location_detail].filter(Boolean).join(' · ') || 'No location detail'}</div>
 
     <div class="drawer-section">
-      <div class="drawer-section-label">Submitted By</div>
+      <div class="drawer-section-label">Requestor</div>
       <div class="drawer-row"><span class="drawer-row-label">Name</span><span class="drawer-row-value">${r.name || '—'}</span></div>
       <div class="drawer-row"><span class="drawer-row-label">Business</span><span class="drawer-row-value">${r.tenant_org || '—'}</span></div>
       <div class="drawer-row"><span class="drawer-row-label">Email</span><span class="drawer-row-value">${r.email ? `<a href="mailto:${r.email}" style="color:var(--accent)">${r.email}</a>` : '—'}</span></div>
@@ -680,21 +742,7 @@ function openDrawer(id) {
       <div class="drawer-row"><span class="drawer-row-label">Urgency</span><span class="drawer-row-value"><span class="badge ${urgencyClass(r.urgency)}">${urgencyLabel(r.urgency)}</span></span></div>
       <div class="drawer-row"><span class="drawer-row-label">Best Access Time</span><span class="drawer-row-value">${r.best_time || '—'}</span></div>
       <div style="margin-top:10px"><div class="drawer-desc">${r.description || '—'}</div></div>
-      ${r.attachments?.length ? `
-      <div style="margin-top:14px;">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;">Attachments</div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;">
-          ${r.attachments.map(name => {
-            const isImage = /\.(jpe?g|png|gif|webp|heic|heif)$/i.test(name);
-            const isVideo = /\.(mp4|mov|avi|webm)$/i.test(name);
-            const icon = isImage ? '🖼️' : isVideo ? '🎥' : '📄';
-            return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;">
-              <span>${icon}</span><span>${name}</span>
-              <span style="font-size:10px;color:#555;font-style:italic;">— see email</span>
-            </div>`;
-          }).join('')}
-        </div>
-      </div>` : ''}
+      ${attachmentHtml(r)}
     </div>
 
     <div class="drawer-section">
@@ -784,8 +832,58 @@ document.getElementById('drawerClose').addEventListener('click', closeDrawer);
 document.getElementById('drawerBackdrop').addEventListener('click', closeDrawer);
 
 // ── Filter/search listeners ──────────────────────────────────
+function fillRequestors() {
+  const sel = document.getElementById('requestorFilter');
+  const names = [...new Set(allRequests.map(r => r.name).filter(Boolean))].sort((a,b) => a.localeCompare(b));
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">All Requestors</option>' + names.map(n => `<option>${n}</option>`).join('');
+  if (names.includes(cur)) sel.value = cur;
+}
+function fileUrl(r, name) {
+  if (r.attachment_urls && r.attachment_urls[name]) return r.attachment_urls[name];
+  const urls = r.attachment_urls;
+  if (Array.isArray(urls) && urls.length) {
+    const hit = urls.find(u => String(u).includes(encodeURIComponent(name)) || String(u).endsWith(name));
+    if (hit) return hit;
+  }
+  return `/api/maintenance-file/maint/${encodeURIComponent(r.id)}/${encodeURIComponent(name)}`;
+}
+function attachmentHtml(r) {
+  const names = r.attachments || [];
+  if (!names.length && !(r.attachment_urls && r.attachment_urls.length)) return '';
+  const list = names.length ? names : (r.attachment_urls || []).map(u => decodeURIComponent(String(u).split('/').pop()));
+  return `<div style="margin-top:14px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;">Attachments</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          ${list.map(name => {
+            const href = fileUrl(r, name);
+            const isImage = /\.(jpe?g|png|gif|webp|heic|heif)$/i.test(name);
+            const isVideo = /\.(mp4|mov|avi|webm)$/i.test(name);
+            if (isImage) return `<a href="${href}" target="_blank" rel="noopener"><img class="att-thumb" src="${href}" alt="${name}" /></a>`;
+            const icon = isVideo ? '🎥' : '📄';
+            return `<a href="${href}" target="_blank" rel="noopener" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--accent);display:flex;align-items:center;gap:6px;text-decoration:none;">
+              <span>${icon}</span><span>${name}</span>
+            </a>`;
+          }).join('')}
+        </div>
+      </div>`;
+}
+function setTheme(th) {
+  if (th !== 'dark' && th !== 'paper') th = 'dark';
+  document.documentElement.setAttribute('data-theme', th);
+  try { localStorage.setItem('uhg-hub-theme', th); } catch (e) {}
+  const d = document.getElementById('theme-dark-btn');
+  const p = document.getElementById('theme-paper-btn');
+  if (d) d.classList.toggle('on', th === 'dark');
+  if (p) p.classList.toggle('on', th === 'paper');
+}
+document.getElementById('theme-paper-btn').addEventListener('click', () => setTheme('paper'));
+document.getElementById('theme-dark-btn').addEventListener('click', () => setTheme('dark'));
+setTheme(document.documentElement.getAttribute('data-theme') || 'dark');
+
 document.getElementById('searchInput').addEventListener('input', render);
 document.getElementById('buildingFilter').addEventListener('change', render);
+document.getElementById('requestorFilter').addEventListener('change', render);
 document.getElementById('urgencyFilter').addEventListener('change', render);
 
 document.querySelectorAll('.stat-pill').forEach(pill => {

@@ -212,6 +212,10 @@ export default {
         "/maintenance-request.html": "/assets/maintenance-request.html",
         "/maintenance-tracker": "/assets/maintenance-tracker.html",
         "/maintenance-tracker.html": "/assets/maintenance-tracker.html",
+        "/maintenance-annual": "/assets/maintenance-annual.html",
+        "/maintenance-annual.html": "/assets/maintenance-annual.html",
+        "/maintenance-paint": "/assets/maintenance-paint.html",
+        "/maintenance-paint.html": "/assets/maintenance-paint.html",
         "/logo.png": "/assets/fremontmakers-logo.png",
         "/wordmark.png": "/assets/fremontmakers-wordmark.png",
       };
