@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Elevation Connect CRM</title>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f4efe6;
+      --paper: #fff;
+      --ink: #12202b;
+      --muted: #3d4f5c;
+      --navy: #1a3d52;
+      --blue: #5a8ba7;
+      --gold: #8a6a32;
+      --line: rgba(18,32,43,0.14);
+      --s1: #5a8ba7;
+      --s2: #8a6a32;
+      --s3: #1f6b4a;
+      --won: #1f6b4a;
+      --lost: #8a2e2e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; }
+    body {
+      font-family: "Source Sans 3", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      font-size: 16px;
+      line-height: 1.45;
+    }
+    header {
+      position: sticky; top: 0; z-index: 8;
+      background: var(--navy); color: #f4efe6;
+      padding: 14px 18px; padding-top: max(14px, env(safe-area-inset-top));
+      display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    }
+    header h1 { font-family: Fraunces, Georgia, serif; font-size: clamp(18px, 3vw, 22px); font-weight: 500; flex: 1; }
+    header .sub { font-size: 12px; opacity: 0.75; width: 100%; }
+    button, .btn {
+      font-family: inherit; font-weight: 700; font-size: 13px;
+      letter-spacing: 0.04em; text-transform: uppercase;
+      border: 0; cursor: pointer; border-radius: 999px;
+      padding: 10px 16px; text-decoration: none; display: inline-block;
+    }
+    .btn-gold { background: #d4c4a0; color: var(--navy); }
+    .btn-ink { background: var(--ink); color: #fff; }
+    .btn-ghost { background: transparent; color: var(--navy); border: 1.5px solid var(--line); }
+    .btn-call { background: var(--s3); color: #fff; }
+    main { max-width: 1280px; margin: 0 auto; padding: 20px 16px 80px; }
+    .quarters {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px;
+    }
+    .q {
+      background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 14px 14px 12px;
+    }
+    .q b { display: block; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); }
+    .q strong { font-size: 22px; letter-spacing: -0.03em; }
+    .q span { display: block; font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; align-items: center; }
+    .toolbar input, .toolbar select {
+      font: 15px "Source Sans 3", sans-serif; padding: 10px 12px;
+      border: 1px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--ink);
+    }
+    .board {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+    }
+    .col {
+      background: rgba(255,255,255,0.45); border: 1px solid var(--line); border-radius: 14px; padding: 12px;
+      min-height: 240px;
+    }
+    .col h2 { font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+    .col .hint { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+    .col.s1 h2 { color: var(--s1); }
+    .col.s2 h2 { color: var(--s2); }
+    .col.s3 h2 { color: var(--s3); }
+    .card {
+      background: var(--paper); border: 1px solid var(--line); border-radius: 10px;
+      padding: 12px; margin-bottom: 8px; cursor: pointer; text-align: left; width: 100%;
+      font: inherit; color: inherit;
+    }
+    .card:hover { border-color: var(--blue); }
+    .card .name { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+    .card .meta { font-size: 12px; color: var(--muted); }
+    .done {
+      margin-top: 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    }
+    .backdrop { position: fixed; inset: 0; background: rgba(18,32,43,0.45); z-index: 20; display: none; }
+    .drawer {
+      position: fixed; top: 0; right: 0; height: 100%; width: min(520px, 100%);
+      background: var(--paper); z-index: 21; overflow: auto;
+      padding: 20px 18px calc(40px + env(safe-area-inset-bottom));
+      display: none; box-shadow: -8px 0 24px rgba(18,32,43,0.12);
+    }
+    .backdrop.on, .drawer.on { display: block; }
+    .drawer h2 { font-family: Fraunces, Georgia, serif; font-size: 24px; font-weight: 500; margin: 8px 0 14px; }
+    label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 10px 0 4px; }
+    input, select, textarea {
+      width: 100%; font: 16px "Source Sans 3", sans-serif; padding: 10px 10px;
+      border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink);
+    }
+    textarea { min-height: 72px; resize: vertical; }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .name-preview { font-size: 14px; color: var(--navy); font-weight: 700; margin: 4px 0 8px; }
+    .notes { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 12px; }
+    .note { font-size: 14px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+    .note time { display: block; font-size: 11px; color: var(--muted); }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .status { font-size: 13px; color: var(--muted); margin-left: 8px; }
+    .rec {
+      background: var(--paper); border: 1px solid var(--line); border-radius: 12px;
+      padding: 14px 16px; margin: 18px 0 8px; font-size: 14px; color: var(--muted);
+    }
+    .rec b { color: var(--ink); }
+    footer { margin-top: 24px; font-size: 12px; color: var(--muted); }
+    @media (max-width: 860px) {
+      .quarters, .board, .done, .row2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Elevation Connect CRM</h1>
+    <button class="btn-gold" type="button" id="btnNew">New opportunity</button>
+    <div class="sub">Cloud database. Same record for Chris and the room. Unbridled Connect, public face Elevation Connect.</div>
+  </header>
+  <main>
+    <div class="quarters" id="quarters"></div>
+    <div class="toolbar">
+      <input id="search" placeholder="Search company, scope, location" />
+      <select id="filterOwner">
+        <option value="">All owners</option>
+        <option>Chris</option>
+        <option>Brad</option>
+        <option>Eric</option>
+        <option>Stan</option>
+      </select>
+      <span class="status" id="saveStatus"></span>
+    </div>
+    <div class="board" id="board"></div>
+    <div class="done" id="done"></div>
+    <div class="rec">
+      <b>What else is in this space, and why this instead.</b>
+      Salesforce and HubSpot are the default BPO sales stack. Too much object model for a boutique pipeline. Pipedrive and Copper are the closest commercial cousins: three-stage deal, activity notes, phone on the contact. Five9 / Talkdesk add true dialer logging when you outgrow tap-to-call. We built this first because Chris named the convention (Company · scope · location), the three stages, and a four-quarter view. Those are not checkboxes in a generic CRM. Tap-to-call uses the phone on the record (<code>tel:</code>). When you want the call logged back into the note automatically, that is a Five9 or Twilio pass, not this first version.
+    </div>
+    <footer>Private. Stored in Cloudflare KV namespace <code>ec-crm</code>. Not Excel. Not a laptop copy. 22 Sep 2026.</footer>
+  </main>
+  <div class="backdrop" id="backdrop"></div>
+  <aside class="drawer" id="drawer"></aside>
+<script>
+const KV_BASE = "/api/kv";
+const NS = "ec-crm";
+const STAGES = [
+  { id: "1", title: "Stage 1 · Discovery", hint: "Meetings. Scope. How we would run it." },
+  { id: "2", title: "Stage 2 · RFP / pricing", hint: "They asked for a number. Solution on the table." },
+  { id: "3", title: "Stage 3 · Forecast", hint: "Close date and revenue locked for the quarter view." }
+];
+
+let opps = [];
+let activeId = null;
+
+function money(n) {
+  const v = Number(n) || 0;
+  return "$" + v.toLocaleString("en-US", { maximumFractionDigits: 0 });
+}
+function uid() {
+  return "o" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+function oppName(o) {
+  const c = (o.company || "").trim();
+  const s = (o.scope || "").trim();
+  const loc = (o.location || "").trim();
+  return [c, s, loc].filter(Boolean).join(" · ") || "Untitled opportunity";
+}
+async function kvGet(key) {
+  const r = await fetch(KV_BASE + "?ns=" + NS + "&key=" + encodeURIComponent(key));
+  if (!r.ok) return null;
+  try { return await r.json(); } catch { return null; }
+}
+async function kvPut(key, val) {
+  const r = await fetch(KV_BASE + "?ns=" + NS + "&key=" + encodeURIComponent(key), {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(val)
+  });
+  return r.ok;
+}
+async function kvList(prefix) {
+  const r = await fetch(KV_BASE + "/list?ns=" + NS + "&prefix=" + encodeURIComponent(prefix));
+  if (!r.ok) return [];
+  const d = await r.json();
+  return d.keys || [];
+}
+async function kvDel(key) {
+  await fetch(KV_BASE + "?ns=" + NS + "&key=" + encodeURIComponent(key), { method: "DELETE" });
+}
+
+function nextFourQuarters() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const q = Math.floor(now.getMonth() / 3) + 1;
+  const out = [];
+  for (let i = 0; i < 4; i++) {
+    let qq = q + i;
+    let yy = y;
+    while (qq > 4) { qq -= 4; yy += 1; }
+    const startM = (qq - 1) * 3;
+    const start = new Date(yy, startM, 1);
+    const end = new Date(yy, startM + 3, 0);
+    out.push({ key: "Q" + qq + " " + yy, start, end });
+  }
+  return out;
+}
+function inRange(iso, start, end) {
+  if (!iso) return false;
+  const d = new Date(iso + "T12:00:00");
+  return d >= start && d <= end;
+}
+function telHref(phone) {
+  const d = String(phone || "").replace(/[^\d+]/g, "");
+  if (!d) return "";
+  return "tel:" + d;
+}
+
+async function loadAll() {
+  const keys = await kvList("opp:");
+  const items = await Promise.all(keys.map(k => kvGet(k)));
+  opps = items.filter(Boolean);
+  render();
+}
+
+function filtered() {
+  const q = (document.getElementById("search").value || "").toLowerCase();
+  const owner = document.getElementById("filterOwner").value;
+  return opps.filter(o => {
+    if (owner && o.owner !== owner) return false;
+    const blob = (oppName(o) + " " + (o.contactName || "")).toLowerCase();
+    if (q && blob.indexOf(q) === -1) return false;
+    return true;
+  });
+}
+
+function renderQuarters(list) {
+  const qs = nextFourQuarters();
+  document.getElementById("quarters").innerHTML = qs.map(q => {
+    const committed = list.filter(o => o.stage === "3" && inRange(o.closeDate, q.start, q.end));
+    const pricing = list.filter(o => o.stage === "2" && inRange(o.closeDate, q.start, q.end));
+    const cSum = committed.reduce((a, o) => a + (Number(o.revenue) || 0), 0);
+    const pSum = pricing.reduce((a, o) => a + (Number(o.revenue) || 0), 0);
+    return `<div class="q"><b>${q.key}</b><strong>${money(cSum)}</strong><span>Stage 3 close · Stage 2 still in pricing ${money(pSum)}</span></div>`;
+  }).join("");
+}
+
+function cardHtml(o) {
+  const close = o.closeDate ? o.closeDate : "no close date";
+  const phone = o.phone ? `<span>${o.phone}</span>` : "";
+  return `<button class="card" type="button" data-id="${o.id}">
+    <div class="name">${escapeHtml(oppName(o))}</div>
+    <div class="meta">${money(o.revenue)} · ${escapeHtml(close)} · ${escapeHtml(o.owner || "unassigned")} ${phone}</div>
+  </button>`;
+}
+
+function render() {
+  const list = filtered();
+  renderQuarters(list);
+  document.getElementById("board").innerHTML = STAGES.map(s => {
+    const items = list.filter(o => o.stage === s.id);
+    return `<section class="col s${s.id}"><h2>${s.title} · ${items.length}</h2><p class="hint">${s.hint}</p>${items.map(cardHtml).join("") || "<p class='hint'>None yet.</p>"}</section>`;
+  }).join("");
+  const won = list.filter(o => o.stage === "won");
+  const lost = list.filter(o => o.stage === "lost");
+  document.getElementById("done").innerHTML =
+    `<section class="col"><h2>Won · ${won.length}</h2>${won.map(cardHtml).join("") || "<p class='hint'>None.</p>"}</section>` +
+    `<section class="col"><h2>Lost · ${lost.length}</h2>${lost.map(cardHtml).join("") || "<p class='hint'>None.</p>"}</section>`;
+}
+
+function escapeHtml(s) {
+  return String(s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function openDrawer(id) {
+  activeId = id;
+  const o = id ? opps.find(x => x.id === id) : blankOpp();
+  const call = telHref(o.phone);
+  const notes = (o.notes || []).slice().reverse();
+  document.getElementById("drawer").innerHTML = `
+    <button class="btn-ghost" type="button" id="closeDrawer">Close</button>
+    <h2>${id ? "Opportunity" : "New opportunity"}</h2>
+    <p class="name-preview" id="namePreview">${escapeHtml(oppName(o))}</p>
+    <div class="row2">
+      <div><label>Company</label><input id="fCompany" value="${escapeHtml(o.company)}" /></div>
+      <div><label>Scope of work</label><input id="fScope" value="${escapeHtml(o.scope)}" placeholder="customer support" /></div>
+    </div>
+    <label>Delivery location</label>
+    <input id="fLocation" value="${escapeHtml(o.location)}" placeholder="ECA" />
+    <div class="row2">
+      <div>
+        <label>Stage</label>
+        <select id="fStage">
+          <option value="1"${o.stage==="1"?" selected":""}>1 · Discovery</option>
+          <option value="2"${o.stage==="2"?" selected":""}>2 · RFP / pricing</option>
+          <option value="3"${o.stage==="3"?" selected":""}>3 · Forecast</option>
+          <option value="won"${o.stage==="won"?" selected":""}>Won</option>
+          <option value="lost"${o.stage==="lost"?" selected":""}>Lost</option>
+        </select>
+      </div>
+      <div>
+        <label>Owner</label>
+        <select id="fOwner">
+          ${["Chris","Brad","Eric","Stan"].map(n => `<option${o.owner===n?" selected":""}>${n}</option>`).join("")}
+        </select>
+      </div>
+    </div>
+    <div class="row2">
+      <div><label>Contact</label><input id="fContact" value="${escapeHtml(o.contactName)}" /></div>
+      <div><label>Phone</label><input id="fPhone" value="${escapeHtml(o.phone)}" placeholder="303-555-0100" /></div>
+    </div>
+    <label>Email</label>
+    <input id="fEmail" value="${escapeHtml(o.email)}" />
+    <div class="row2">
+      <div><label>Proposed revenue</label><input id="fRevenue" type="number" min="0" step="1" value="${Number(o.revenue)||0}" /></div>
+      <div><label>Close date</label><input id="fClose" type="date" value="${escapeHtml(o.closeDate)}" /></div>
+    </div>
+    <p class="hint" style="color:var(--muted);font-size:13px;margin-top:8px">Stage 3 is when close date and revenue hit the four-quarter strip. Put a date on Stage 2 if you want it in the “still in pricing” line.</p>
+    <div class="actions">
+      ${call ? `<a class="btn btn-call" href="${call}">Call ${escapeHtml(o.phone)}</a>` : ""}
+      ${o.email ? `<a class="btn btn-ghost" href="mailto:${escapeHtml(o.email)}">Email</a>` : ""}
+      <button class="btn-ink" type="button" id="saveOpp">Save to cloud</button>
+      ${id ? `<button class="btn-ghost" type="button" id="delOpp">Remove</button>` : ""}
+    </div>
+    <div class="notes">
+      <label>Add a note from this call</label>
+      <textarea id="fNote" placeholder="What we heard. What we promised. Next step."></textarea>
+      <button class="btn-gold" type="button" id="addNote" style="margin-top:8px">Save note</button>
+      <div id="noteList">${notes.map(n => `<div class="note"><time>${escapeHtml(n.at)} · ${escapeHtml(n.who || "")}</time>${escapeHtml(n.text)}</div>`).join("") || "<p class='hint' style='color:var(--muted);font-size:13px;margin-top:8px'>No notes yet. Chris should be able to pick up the last call here.</p>"}</div>
+    </div>
+  `;
+  document.getElementById("backdrop").classList.add("on");
+  document.getElementById("drawer").classList.add("on");
+  ["fCompany","fScope","fLocation"].forEach(id => {
+    document.getElementById(id).addEventListener("input", () => {
+      document.getElementById("namePreview").textContent = oppName(readForm(o));
+    });
+  });
+  document.getElementById("closeDrawer").onclick = closeDrawer;
+  document.getElementById("backdrop").onclick = closeDrawer;
+  document.getElementById("saveOpp").onclick = () => saveOpp(o, false);
+  document.getElementById("addNote").onclick = () => saveOpp(o, true);
+  const del = document.getElementById("delOpp");
+  if (del) del.onclick = () => removeOpp(o.id);
+}
+
+function blankOpp() {
+  return {
+    id: uid(),
+    company: "", scope: "", location: "",
+    stage: "1", owner: "Chris",
+    contactName: "", phone: "", email: "",
+    revenue: 0, closeDate: "",
+    notes: [], createdAt: new Date().toISOString()
+  };
+}
+function readForm(base) {
+  const o = Object.assign({}, base);
+  o.company = document.getElementById("fCompany").value;
+  o.scope = document.getElementById("fScope").value;
+  o.location = document.getElementById("fLocation").value;
+  o.stage = document.getElementById("fStage").value;
+  o.owner = document.getElementById("fOwner").value;
+  o.contactName = document.getElementById("fContact").value;
+  o.phone = document.getElementById("fPhone").value;
+  o.email = document.getElementById("fEmail").value;
+  o.revenue = Number(document.getElementById("fRevenue").value) || 0;
+  o.closeDate = document.getElementById("fClose").value;
+  o.name = oppName(o);
+  o.updatedAt = new Date().toISOString();
+  return o;
+}
+function setStatus(t) { document.getElementById("saveStatus").textContent = t; }
+
+async function saveOpp(base, withNote) {
+  const o = readForm(base);
+  if (withNote) {
+    const text = (document.getElementById("fNote").value || "").trim();
+    if (text) {
+      o.notes = (base.notes || []).concat([{
+        at: new Date().toLocaleString("en-US", { timeZone: "America/Denver" }),
+        who: o.owner || "Chris",
+        text
+      }]);
+    }
+  } else {
+    o.notes = base.notes || [];
+  }
+  if (!o.createdAt) o.createdAt = new Date().toISOString();
+  setStatus("Saving…");
+  const ok = await kvPut("opp:" + o.id, o);
+  setStatus(ok ? "Saved to cloud" : "Save failed");
+  const i = opps.findIndex(x => x.id === o.id);
+  if (i >= 0) opps[i] = o; else opps.push(o);
+  render();
+  openDrawer(o.id);
+}
+
+async function removeOpp(id) {
+  setStatus("Removing…");
+  await kvDel("opp:" + id);
+  opps = opps.filter(o => o.id !== id);
+  closeDrawer();
+  render();
+  setStatus("Removed");
+}
+
+function closeDrawer() {
+  document.getElementById("backdrop").classList.remove("on");
+  document.getElementById("drawer").classList.remove("on");
+  activeId = null;
+}
+
+document.getElementById("btnNew").onclick = () => openDrawer(null);
+document.getElementById("board").addEventListener("click", e => {
+  const b = e.target.closest("[data-id]");
+  if (b) openDrawer(b.getAttribute("data-id"));
+});
+document.getElementById("done").addEventListener("click", e => {
+  const b = e.target.closest("[data-id]");
+  if (b) openDrawer(b.getAttribute("data-id"));
+});
+document.getElementById("search").addEventListener("input", render);
+document.getElementById("filterOwner").addEventListener("change", render);
+
+loadAll();
+</script>
+</body>
+</html>
