@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
-  <title>Fremont Makers — Contract Packet v0917o</title>
-  <!-- FM-PACKET-v0917o-cover-copy -->
+  <title>Fremont Makers — Contract Packet v0923a</title>
+  <!-- FM-PACKET-v0923a-fifty-fifty -->
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Pinyon+Script&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     :root { --ink:#1a1a1a; --muted:#666; --line:#d8d4cc; --gold:#c9a84c; --paper:#fff; --screen:#111; }
@@ -58,7 +58,7 @@
 </head>
 <body>
   <div class="bar">
-    <strong>Fremont Makers · Contract packet <span style="opacity:.45;letter-spacing:0;">v0917o</span></strong>
+    <strong>Fremont Makers · Contract packet <span style="opacity:.45;letter-spacing:0;">v0923a</span></strong>
     <div class="actions">
       <span class="save-ok" id="save-msg"></span>
       <button type="button" onclick="window.print()">Print</button>
@@ -118,6 +118,12 @@ function quoteGrand(qd) {
     unit: cabAfterDisc + laborCost + gna + tax,
     gnaPct, taxPct, bulkDisc
   };
+}
+function payPlanOf(q) {
+  if (!q) return '50-30-20';
+  if (q.payPlan === '50-50' || q.builderId === 'willow-creek') return '50-50';
+  if (q.payPlan === '50-30-20') return '50-30-20';
+  return '50-30-20';
 }
 function modelQty(qd) {
   const n = parseInt(qd && qd.modelQty, 10);
@@ -229,13 +235,15 @@ function pageAgreement(q, nums) {
     + '<h1>Fremont Makers</h1><div class="tag">making freedom</div>'
     + jobMeta(q, nums)
     + '<h2>Parties and Entire Agreement</h2>'
-    + '<p>Seller is Fremont Makers LLC, a Colorado limited liability company, 719 Main Street, Cañon City, CO 81212. Buyer is ' + esc(q.customer || 'the buyer named above') + (q.signerName ? ' (' + esc(q.signerName) + ')' : '') + '. This Agreement, the Quote, the Payment Schedule, and the three invoices in this packet are the entire deal. Dollars live on the invoices and the Final Job Quote. Pricing is by bid.</p>'
+    + '<p>Seller is Fremont Makers LLC, a Colorado limited liability company, 719 Main Street, Cañon City, CO 81212. Buyer is ' + esc(q.customer || 'the buyer named above') + (q.signerName ? ' (' + esc(q.signerName) + ')' : '') + '. This Agreement, the Quote, the Payment Schedule, and the invoices in this packet are the entire deal. Dollars live on the invoices and the Final Job Quote. Pricing is by bid.</p>'
     + '<h2>Goods</h2>'
     + '<p>Seller sells the ready-to-assemble cabinets and hardware listed on the Final Job Quote. Unless the Quote says otherwise in writing: no design professional services, no field measuring, no install into the building, no plumbing, no electrical, no countertops, no appliances.</p>'
     + '<h2>Nature of Seller</h2>'
     + '<p>Seller is a reseller, not the manufacturer. Most items ship from warehouses in the United States. Out-of-stock orders may take longer because some product originates overseas. Lead times are estimates. Manufacturing or freight delay is not a breach if Seller keeps Buyer reasonably informed.</p>'
     + '<h2>Payment Terms</h2>'
-    + '<p>Payment is 50 / 30 / 20 of the contract total of ' + money(total) + '. Invoice 1 (50%) is the deposit. The factory order is not placed until Invoice 1 is paid in full. That deposit is non-refundable once the factory order is placed, except as required by law. Invoice 2 (30%) is a progress payment as the order proceeds. Invoice 3 (20%) is due at pickup or delivery. Goods do not leave Seller until paid in full. Colorado sales tax applies as required.</p>'
+    + (payPlanOf(q) === '50-50'
+      ? '<p>Payment is 50 / 50 of the contract total of ' + money(total) + '. Invoice 1 (50%) is due when the order is placed. The factory order is not placed until Invoice 1 is paid in full. That deposit is non-refundable once the factory order is placed, except as required by law. Invoice 2 (50%) is due at pickup or delivery. Goods do not leave Seller until paid in full. Colorado sales tax applies as required.</p>'
+      : '<p>Payment is 50 / 30 / 20 of the contract total of ' + money(total) + '. Invoice 1 (50%) is the deposit. The factory order is not placed until Invoice 1 is paid in full. That deposit is non-refundable once the factory order is placed, except as required by law. Invoice 2 (30%) is a progress payment as the order proceeds. Invoice 3 (20%) is due at pickup or delivery. Goods do not leave Seller until paid in full. Colorado sales tax applies as required.</p>')
     + '<h2>Measurements and Elevations</h2>'
     + '<p>Buyer owns measurements, quantities, layouts, and specs. Manufacturer elevation views ship with the Quote. Buyer verifies them against the job. Providing elevations does not make Seller the designer, the measurer, or a warrantor of fit. Order from a bad elevation is Buyer cost, including reorder, restocking, and freight.</p>'
     + '<h2>Delivery, Inspection, and Assembly</h2>'
@@ -257,14 +265,20 @@ function pageAgreement(q, nums) {
 function pageSchedule(q, nums) {
   const total = nums.unit * modelQty(q);
   const ar = q.ar || {};
+  const plan = payPlanOf(q);
   const a1 = invAmt(ar, total, 1, 0.5);
-  const a2 = invAmt(ar, total, 2, 0.3);
+  const a2 = invAmt(ar, total, 2, plan === '50-50' ? 0.5 : 0.3);
   const a3 = invAmt(ar, total, 3, 0.2);
-  const rows = [
-    ['Invoice 1 · 50% deposit', 'Factory order is not placed until this invoice is paid in full.', ar.d1Due, a1, ar.d1Paid],
-    ['Invoice 2 · 30% progress', 'Progress payment as the order proceeds.', ar.d2Due, a2, ar.d2Paid],
-    ['Invoice 3 · 20% pickup or delivery', 'Due at pickup or delivery.', ar.d3Due, a3, ar.d3Paid]
-  ];
+  const rows = plan === '50-50'
+    ? [
+      ['Invoice 1 · 50% at order', 'Factory order is not placed until this invoice is paid in full.', ar.d1Due, a1, ar.d1Paid],
+      ['Invoice 2 · 50% at delivery', 'Due at pickup or delivery.', ar.d2Due, a2, ar.d2Paid]
+    ]
+    : [
+      ['Invoice 1 · 50% deposit', 'Factory order is not placed until this invoice is paid in full.', ar.d1Due, a1, ar.d1Paid],
+      ['Invoice 2 · 30% progress', 'Progress payment as the order proceeds.', ar.d2Due, a2, ar.d2Paid],
+      ['Invoice 3 · 20% pickup or delivery', 'Due at pickup or delivery.', ar.d3Due, a3, ar.d3Paid]
+    ];
   const tr = rows.map(r => '<tr><td>' + esc(r[0]) + '<div class="fine">' + esc(r[1]) + '</div></td><td>' + esc(prettyDate(r[2])) + '</td><td class="r">' + money(r[3]) + (r[4] ? ' · PAID' : '') + '</td></tr>').join('');
   return '<div class="page">' + head('Payment Schedule')
     + '<h1>Payment Schedule</h1><div class="tag">making freedom</div>'
@@ -279,11 +293,19 @@ function pageSchedule(q, nums) {
 function pageInvoice(q, nums, n) {
   const total = nums.unit * modelQty(q);
   const ar = q.ar || {};
-  const spec = {
-    1: { pct: 0.5, due: ar.d1Due, paid: ar.d1Paid, paidAt: ar.d1PaidAt, check: ar.d1Check, title: 'Invoice 1', sub: '50% deposit', note: 'The factory order is not placed until this invoice is paid in full. Once the factory order is placed, this deposit is non-refundable except as required by law.' },
-    2: { pct: 0.3, due: ar.d2Due, paid: ar.d2Paid, paidAt: ar.d2PaidAt, check: ar.d2Check, title: 'Invoice 2', sub: '30% progress payment', note: 'Progress payment as the order proceeds.' },
-    3: { pct: 0.2, due: ar.d3Due, paid: ar.d3Paid, paidAt: ar.d3PaidAt, check: ar.d3Check, title: 'Invoice 3', sub: '20% pickup or delivery', note: 'Due at pickup or delivery. Goods do not leave until paid in full.' }
-  }[n];
+  const plan = payPlanOf(q);
+  const specs = plan === '50-50'
+    ? {
+      1: { pct: 0.5, due: ar.d1Due, paid: ar.d1Paid, paidAt: ar.d1PaidAt, check: ar.d1Check, title: 'Invoice 1', sub: '50% at order', note: 'The factory order is not placed until this invoice is paid in full. Once the factory order is placed, this deposit is non-refundable except as required by law.' },
+      2: { pct: 0.5, due: ar.d2Due, paid: ar.d2Paid, paidAt: ar.d2PaidAt, check: ar.d2Check, title: 'Invoice 2', sub: '50% at delivery', note: 'Due at pickup or delivery. Goods do not leave until paid in full.' }
+    }
+    : {
+      1: { pct: 0.5, due: ar.d1Due, paid: ar.d1Paid, paidAt: ar.d1PaidAt, check: ar.d1Check, title: 'Invoice 1', sub: '50% deposit', note: 'The factory order is not placed until this invoice is paid in full. Once the factory order is placed, this deposit is non-refundable except as required by law.' },
+      2: { pct: 0.3, due: ar.d2Due, paid: ar.d2Paid, paidAt: ar.d2PaidAt, check: ar.d2Check, title: 'Invoice 2', sub: '30% progress payment', note: 'Progress payment as the order proceeds.' },
+      3: { pct: 0.2, due: ar.d3Due, paid: ar.d3Paid, paidAt: ar.d3PaidAt, check: ar.d3Check, title: 'Invoice 3', sub: '20% pickup or delivery', note: 'Due at pickup or delivery. Goods do not leave until paid in full.' }
+    };
+  const spec = specs[n];
+  if (!spec) return '';
   const amt = invAmt(ar, total, n, spec.pct);
   return '<div class="page">' + (spec.paid ? '<div class="paid">PAID</div>' : '')
     + head(spec.title)
@@ -349,11 +371,13 @@ function render(q, data) {
   else if (isOrder) {
     html = pageOrderCover(q, kids, total)
       + pageAgreement(q, nums) + pageSchedule(q, nums)
-      + pageInvoice(q, nums, 1) + pageInvoice(q, nums, 2) + pageInvoice(q, nums, 3)
+      + pageInvoice(q, nums, 1) + pageInvoice(q, nums, 2)
+      + (payPlanOf(q) === '50-50' ? '' : pageInvoice(q, nums, 3))
       + kids.map(c => pageQuoteExhibit(c)).join('');
   } else {
     html = pageAgreement(q, nums) + pageSchedule(q, nums)
-      + pageInvoice(q, nums, 1) + pageInvoice(q, nums, 2) + pageInvoice(q, nums, 3)
+      + pageInvoice(q, nums, 1) + pageInvoice(q, nums, 2)
+      + (payPlanOf(q) === '50-50' ? '' : pageInvoice(q, nums, 3))
       + pageQuote(q, nums);
   }
   root.innerHTML = html;

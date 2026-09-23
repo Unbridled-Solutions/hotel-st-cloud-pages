@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v0917r</title>
+<title>Fremont Makers — Project Builder v0923a</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20260917r-btn-hover -->
+<!-- FM-BUILD-v20260923a-rod-builder -->
 <script>
 (function(){
   try {
@@ -619,7 +619,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0917r</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0923a</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
     <span class="status-label">Status:</span>
@@ -893,6 +893,8 @@
           <tr>
             <th>House</th>
             <th>Job</th>
+            <th>Address</th>
+            <th>Color</th>
             <th>Cabinets</th>
             <th style="text-align:right">Amount</th>
             <th>Actions</th>
@@ -1444,20 +1446,20 @@
 <div class="modal-overlay" id="contract-modal">
   <div class="modal" style="max-width:480px;text-align:left;">
     <h3>Issue Contract</h3>
-    <p style="margin-bottom:12px;">This is what moves a quote from Proposed to Contracted. Set the install date. Deposits work backwards over 90 days: 50% today, 30% in 45 days, 20% at install. You can edit the dates. Password 5476 locks it.</p>
+    <p id="issue-copy" style="margin-bottom:12px;">This is what moves a quote from Proposed to Contracted. Set the install date. Deposits work backwards over 90 days: 50% today, 30% in 45 days, 20% at install. You can edit the dates. Password 5476 locks it.</p>
     <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Install / delivery date</label>
     <input type="date" id="issue-install" onchange="issueFillFromInstall()" style="width:100%;margin-bottom:12px;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
       <div>
-        <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">1st deposit 50% due</label>
+        <label id="issue-d1-label" style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">1st deposit 50% due</label>
         <input type="date" id="issue-d1" style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />
       </div>
       <div>
-        <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">2nd deposit 30% due</label>
+        <label id="issue-d2-label" style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">2nd deposit 30% due</label>
         <input type="date" id="issue-d2" style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />
       </div>
-      <div>
-        <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">3rd deposit 20% due</label>
+      <div id="issue-d3-wrap">
+        <label id="issue-d3-label" style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">3rd deposit 20% due</label>
         <input type="date" id="issue-d3" style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />
       </div>
       <div>
@@ -2743,6 +2745,7 @@ function invSort(key) {
 function renderInvoices() {
   const tbody = document.getElementById('invoices-table-body');
   if (!tbody) return;
+  const labels50 = { 1: 'Invoice 1 · 50% at order', 2: 'Invoice 2 · 50% at delivery' };
   const labels = { 1: 'Invoice 1 · 50%', 2: 'Invoice 2 · 30%', 3: 'Invoice 3 · 20%' };
   const rows = [];
   quotesIndex.forEach(quote => {
@@ -2751,7 +2754,9 @@ function renderInvoices() {
     if (pipeStatus(qd) !== 'contract') return;
     const total = dashRowTotal(quote);
     const ar = scheduleOf(qd, total);
-    [1,2,3].forEach(n => {
+    const plan = payPlanOf(qd);
+    const ns = plan === '50-50' ? [1, 2] : [1, 2, 3];
+    ns.forEach(n => {
       const paid = !!ar['d' + n + 'Paid'];
       const chk = ar['d' + n + 'Check'] || '';
       rows.push({
@@ -2765,7 +2770,8 @@ function renderInvoices() {
         status: paid ? ('Paid' + (ar['d' + n + 'PaidAt'] ? ' ' + ar['d' + n + 'PaidAt'] : '')) : 'Due',
         check: chk,
         amt: Number(ar['d' + n + 'Amt']) || 0,
-        paid
+        paid,
+        label: (plan === '50-50' ? labels50[n] : labels[n])
       });
     });
   });
@@ -2790,7 +2796,7 @@ function renderInvoices() {
     return (a.job || '').localeCompare(b.job || '') || (a.n - b.n);
   });
   tbody.innerHTML = rows.map(r => `<tr>
-    <td>${labels[r.n]}</td>
+    <td>${r.label || labels[r.n]}</td>
     <td><span style="font-family:monospace;color:var(--accent);font-weight:700;">${r.job}</span></td>
     <td>${r.customer}</td>
     <td>${r.project}</td>
@@ -3023,11 +3029,9 @@ function renderPipeline() {
       + '<div style="font-size:13px;color:var(--muted);margin-top:4px;">' + (q.project || '—') + ' · ' + (q.jobCode || '') + '</div>'
       + '<div style="margin-top:6px;"><span class="status-pill pill-' + st + '">' + statusLabel(st) + '</span></div>';
     if (showAr) {
-      const rows = [
-        ['d1', '1st 50%', ar.d1Due, ar.d1Paid, ar.d1Amt],
-        ['d2', '2nd 30%', ar.d2Due, ar.d2Paid, ar.d2Amt],
-        ['d3', '3rd 20%', ar.d3Due, ar.d3Paid, ar.d3Amt]
-      ];
+      const rows = payPlanOf(qd) === '50-50'
+        ? [['d1', '50% at order', ar.d1Due, ar.d1Paid, ar.d1Amt], ['d2', '50% at delivery', ar.d2Due, ar.d2Paid, ar.d2Amt]]
+        : [['d1', '1st 50%', ar.d1Due, ar.d1Paid, ar.d1Amt], ['d2', '2nd 30%', ar.d2Due, ar.d2Paid, ar.d2Amt], ['d3', '3rd 20%', ar.d3Due, ar.d3Paid, ar.d3Amt]];
       rows.forEach(r => {
         wrap.innerHTML += '<div class="ar-row"><label><input type="checkbox" ' + (r[3] ? 'checked' : '') + ' onchange="pipeTogglePaid(\'' + q.id + '\',\'' + r[0] + '\',this.checked)" /> ' + r[1] + '</label><span>' + (r[2] || '—') + ' · ' + fmt(r[4]) + '</span></div>';
       });
@@ -3369,8 +3373,43 @@ const FM_WILLOW_MODELS = [
   { key: 'cimmaron-peak', name: 'Cimmaron Peak', note: '' },
   { key: '4-plex', name: '4-Plex', note: '' }
 ];
-let _npw = { step: 'type', stream: 'cabinets', mode: 'single', builder: 'Willow Creek', contact: 'Rod Stambaugh', qtys: {} };
+const FM_CABINET_COLORS = [
+  { key: 'gs', name: 'Grey Shaker' },
+  { key: 'sbw', name: 'Bayview White Shaker' },
+  { key: 'sbn', name: 'Bayview Navy Shaker' },
+  { key: 'bws', name: 'Bayview Wood Shaker' },
+  { key: 'swd', name: 'Bayview Wood Shaker' },
+  { key: 'sgs', name: 'Slate Grey Shaker' },
+  { key: 'vdh', name: 'Dark Hickory Shaker' }
+];
+const FM_BUILDERS = [
+  {
+    id: 'willow-creek',
+    label: 'Rod Stambaugh · Willow Creek Estates',
+    customer: 'Willow Creek Estates',
+    contact: 'Rod Stambaugh',
+    program: 'Willow Creek',
+    payPlan: '50-50',
+    models: FM_WILLOW_MODELS
+  }
+];
+function npwBlank() {
+  return { step: 'type', stream: 'cabinets', mode: 'single', builderId: '', builder: '', contact: '', payPlan: '50-30-20', qtys: {}, houses: [] };
+}
+let _npw = npwBlank();
 window._dashOpenOrders = window._dashOpenOrders || {};
+
+function payPlanOf(q) {
+  if (!q) return '50-30-20';
+  if (q.payPlan === '50-50' || q.builderId === 'willow-creek') return '50-50';
+  if (q.payPlan === '50-30-20') return '50-30-20';
+  return '50-30-20';
+}
+function paySplits(plan) {
+  return plan === '50-50'
+    ? [{ n: 1, pct: 0.5, label: 'Invoice 1 · 50% at order' }, { n: 2, pct: 0.5, label: 'Invoice 2 · 50% at delivery' }]
+    : [{ n: 1, pct: 0.5, label: 'Invoice 1 · 50%' }, { n: 2, pct: 0.3, label: 'Invoice 2 · 30%' }, { n: 3, pct: 0.2, label: 'Invoice 3 · 20%' }];
+}
 
 function quoteKind(q) {
   if (!q) return 'job';
@@ -3460,6 +3499,8 @@ function renderOrderSummary(orderId) {
       const cabNote = nCab ? nCab + ' lines' : 'No PDF yet';
       return '<tr><td>' + (ch.project || cqd.modelName || 'House') + '</td>'
         + '<td style="font-family:monospace">' + (ch.jobCode || '') + '</td>'
+        + '<td>' + (cqd.address || '—') + '</td>'
+        + '<td>' + (cqd.colorName || '—') + '</td>'
         + '<td>' + cabNote + '</td>'
         + '<td style="text-align:right">' + fmt(dashRowTotal(ch)) + '</td>'
         + '<td><div class="dash-actions">'
@@ -3471,7 +3512,7 @@ function renderOrderSummary(orderId) {
   const lede = document.getElementById('order-summary-lede');
   if (lede) {
     const mixLbl = orderMixLabel(orderId);
-    lede.textContent = 'This contract is ' + mixLbl + '. Import a Wholesale Cabinets PDF on each house. Issue Contract here for one 50/30/20 covering the order.';
+    lede.textContent = 'This contract is ' + mixLbl + '. Import a Wholesale Cabinets PDF on each house. Issue Contract here for one ' + (payPlanOf(q) === '50-50' ? '50/50' : '50/30/20') + ' covering the order.';
   }
   const grand = document.getElementById('t-grand');
   if (grand) grand.textContent = fmt(orderTotal);
@@ -3491,7 +3532,8 @@ function closeNewProjectWizard() {
   if (m) m.classList.remove('open');
 }
 function openNewProjectWizard(jump) {
-  _npw = { step: jump === 'builder' ? 'builder' : 'type', stream: 'cabinets', mode: jump === 'builder' ? 'builder' : 'single', builder: 'Willow Creek', contact: 'Rod Stambaugh', qtys: {} };
+  _npw = npwBlank();
+  if (jump === 'builder') { _npw.mode = 'builder'; _npw.step = 'pick-builder'; }
   FM_WILLOW_MODELS.forEach(m => { _npw.qtys[m.key] = 0; });
   const m = document.getElementById('npw-modal');
   if (m) m.classList.add('open');
@@ -3500,6 +3542,51 @@ function openNewProjectWizard(jump) {
 function npwSet(k, v) { _npw[k] = v; renderNewProjectWizard(); }
 function npwQty(key, n) {
   _npw.qtys[key] = Math.max(0, parseInt(n, 10) || 0);
+}
+function npwPickBuilder(id) {
+  const b = FM_BUILDERS.find(x => x.id === id);
+  if (!b) return;
+  _npw.builderId = b.id;
+  _npw.builder = b.customer;
+  _npw.contact = b.contact;
+  _npw.program = b.program;
+  _npw.payPlan = b.payPlan;
+  _npw.step = 'builder-qty';
+  renderNewProjectWizard();
+}
+function npwPickNewBuilder() {
+  _npw.builderId = 'new';
+  _npw.builder = '';
+  _npw.contact = '';
+  _npw.payPlan = '50-30-20';
+  _npw.step = 'new-builder';
+  renderNewProjectWizard();
+}
+function npwColorOptions(selected) {
+  return FM_CABINET_COLORS.map(c =>
+    '<option value="' + c.name.replace(/"/g, '') + '"' + (selected === c.name ? ' selected' : '') + '>' + c.name + '</option>'
+  ).join('');
+}
+function npwBuildHouseDrafts() {
+  const houses = [];
+  FM_WILLOW_MODELS.forEach(m => {
+    const qty = _npw.qtys[m.key] || 0;
+    for (let i = 1; i <= qty; i++) {
+      const prev = (_npw.houses || []).find(h => h.modelKey === m.key && h.unitIndex === i) || {};
+      houses.push({
+        modelKey: m.key,
+        modelName: m.name,
+        unitIndex: i,
+        address: prev.address || '',
+        colorName: prev.colorName || ''
+      });
+    }
+  });
+  _npw.houses = houses;
+}
+function npwHouseField(i, field, val) {
+  if (!_npw.houses[i]) return;
+  _npw.houses[i][field] = val;
 }
 function renderNewProjectWizard() {
   const step = document.getElementById('npw-step');
@@ -3524,39 +3611,93 @@ function renderNewProjectWizard() {
     next.style.display = 'none';
     step.innerHTML = '<div class="npw-choice">'
       + '<button class="modal-btn confirm" type="button" onclick="closeNewProjectWizard();newQuote(true)">Single house quote</button>'
-      + '<button class="modal-btn" type="button" onclick="_npw.mode=\'builder\';_npw.step=\'builder\';renderNewProjectWizard()">Builder order — mixed models, one contract</button>'
+      + '<button class="modal-btn" type="button" onclick="_npw.mode=\'builder\';_npw.step=\'pick-builder\';renderNewProjectWizard()">Builder order — mixed models, one contract</button>'
       + '</div>';
     return;
   }
-  if (_npw.step === 'builder') {
-    title.textContent = 'Builder order';
-    lede.textContent = 'Rod can buy 2 San Luis and 4 Mesa Ridge on one packet. Color still changes per house via Wholesale Cabinets PDF.';
+  if (_npw.step === 'pick-builder') {
+    title.textContent = 'Which builder?';
+    lede.textContent = 'Use an existing builder profile, or start a new one.';
+    next.style.display = 'none';
+    const existing = FM_BUILDERS.map(b =>
+      '<button class="modal-btn confirm" type="button" onclick="npwPickBuilder(\'' + b.id + '\')">' + b.label + '<div style="font-size:12px;font-weight:500;color:var(--muted);margin-top:4px;">Willow Creek models. 50/50 deposits — 50% at order, 50% at delivery.</div></button>'
+    ).join('');
+    step.innerHTML = '<div class="npw-choice">'
+      + existing
+      + '<button class="modal-btn" type="button" onclick="npwPickNewBuilder()">Create new builder<div style="font-size:12px;font-weight:500;color:var(--muted);margin-top:4px;">Name, contact, then mixed models. 50/30/20 unless you set another plan later.</div></button>'
+      + '</div>';
+    return;
+  }
+  if (_npw.step === 'new-builder') {
+    title.textContent = 'New builder';
+    lede.textContent = 'Name the builder. Models and house details come next.';
     next.style.display = '';
-    next.textContent = 'Create order';
+    next.textContent = 'Continue';
+    step.innerHTML = '<label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Builder / company</label>'
+      + '<input type="text" value="' + (_npw.builder || '') + '" oninput="_npw.builder=this.value" placeholder="e.g. Sunrise Builders" style="width:100%;margin-bottom:10px;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />'
+      + '<label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Contact</label>'
+      + '<input type="text" value="' + (_npw.contact || '') + '" oninput="_npw.contact=this.value" placeholder="Person who will sign" style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />';
+    return;
+  }
+  if (_npw.step === 'builder-qty') {
+    title.textContent = _npw.builderId === 'willow-creek' ? 'Willow Creek · how many homes?' : 'How many of each model?';
+    lede.textContent = _npw.builderId === 'willow-creek'
+      ? 'Rod Stambaugh · Willow Creek Estates. Enter qty per model. Next you will set address and color on each house. Deposits default to 50/50.'
+      : 'How many of each model on this order? Leave 0 to skip.';
+    next.style.display = '';
+    next.textContent = 'Continue';
     const rows = FM_WILLOW_MODELS.map(m => {
       const q = _npw.qtys[m.key] || 0;
       return '<tr><td>' + m.name + (m.note ? ' <span style="color:var(--muted);font-size:11px">(' + m.note + ')</span>' : '') + '</td>'
         + '<td><input type="number" min="0" step="1" value="' + q + '" style="width:72px;padding:6px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" oninput="npwQty(\'' + m.key + '\', this.value)" /></td></tr>';
     }).join('');
-    step.innerHTML = '<label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Builder / program</label>'
-      + '<input type="text" value="' + (_npw.builder || '') + '" oninput="_npw.builder=this.value" style="width:100%;margin-bottom:10px;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />'
-      + '<label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Contact</label>'
-      + '<input type="text" value="' + (_npw.contact || '') + '" oninput="_npw.contact=this.value" style="width:100%;margin-bottom:12px;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />'
-      + '<p style="font-size:12px;color:var(--muted);margin-bottom:8px;">How many of each Willow Creek model on this order? Leave 0 to skip. Each house becomes its own quote so a color swap does not rewrite the rest.</p>'
-      + '<table class="quote-table"><thead><tr><th>Model</th><th>Qty</th></tr></thead><tbody>' + rows + '</tbody></table>';
+    step.innerHTML = '<table class="quote-table"><thead><tr><th>Model</th><th>Qty</th></tr></thead><tbody>' + rows + '</tbody></table>';
+    return;
+  }
+  if (_npw.step === 'builder-houses') {
+    title.textContent = 'Address and color';
+    lede.textContent = 'Tie each house to an address and a cabinet color. You can still import a Wholesale Cabinets PDF on the house after.';
+    next.style.display = '';
+    next.textContent = 'Create order';
+    const rows = (_npw.houses || []).map((h, i) =>
+      '<tr><td>' + h.modelName + ' ' + h.unitIndex + '</td>'
+      + '<td><input type="text" value="' + String(h.address || '').replace(/"/g, '&quot;') + '" placeholder="Lot / street" oninput="npwHouseField(' + i + ',\'address\', this.value)" style="width:100%;padding:6px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" /></td>'
+      + '<td><select onchange="npwHouseField(' + i + ',\'colorName\', this.value)" style="width:100%;padding:6px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;">'
+      + '<option value="">Select color</option>' + npwColorOptions(h.colorName) + '</select></td></tr>'
+    ).join('');
+    step.innerHTML = '<table class="quote-table"><thead><tr><th>House</th><th>Address</th><th>Color</th></tr></thead><tbody>'
+      + (rows || '<tr><td colspan="3">No houses</td></tr>') + '</tbody></table>';
   }
 }
 function npwNext() {
-  if (_npw.step === 'builder') createBuilderOrderFromWizard();
+  if (_npw.step === 'new-builder') {
+    if (!String(_npw.builder || '').trim()) { alert('Name the builder.'); return; }
+    _npw.step = 'builder-qty';
+    renderNewProjectWizard();
+    return;
+  }
+  if (_npw.step === 'builder-qty') {
+    const mix = FM_WILLOW_MODELS.map(m => (_npw.qtys[m.key] || 0)).reduce((s, n) => s + n, 0);
+    if (!mix) { alert('Enter at least one model quantity.'); return; }
+    npwBuildHouseDrafts();
+    _npw.step = 'builder-houses';
+    renderNewProjectWizard();
+    return;
+  }
+  if (_npw.step === 'builder-houses') createBuilderOrderFromWizard();
 }
 function createBuilderOrderFromWizard() {
-  const mix = FM_WILLOW_MODELS.map(m => ({ key: m.key, name: m.name, qty: _npw.qtys[m.key] || 0 })).filter(x => x.qty > 0);
-  if (!mix.length) { alert('Enter at least one model quantity.'); return; }
-  const builder = (_npw.builder || 'Willow Creek').trim();
+  const houses = _npw.houses || [];
+  if (!houses.length) { alert('Enter at least one model quantity.'); return; }
+  const builder = (_npw.builder || 'Builder').trim();
   const contact = (_npw.contact || '').trim();
+  const payPlan = _npw.payPlan || '50-30-20';
   const orderId = generateQuoteId();
   const orderCode = generateJobCode();
-  const mixLabel = mix.map(m => m.qty + ' ' + m.name).join(', ');
+  const counts = {};
+  houses.forEach(h => { counts[h.modelName] = (counts[h.modelName] || 0) + 1; });
+  const mixLabel = Object.keys(counts).map(n => counts[n] + ' ' + n).join(', ');
+  const mix = Object.keys(counts).map(n => ({ name: n, qty: counts[n] }));
   const order = {
     id: orderId,
     kind: 'order',
@@ -3574,7 +3715,9 @@ function createBuilderOrderFromWizard() {
     cabinets: [],
     labor: [],
     revenueStream: 'cabinets',
-    builderProgram: builder,
+    builderProgram: _npw.program || builder,
+    builderId: _npw.builderId || '',
+    payPlan: payPlan,
     childIds: [],
     modelMix: mix
   };
@@ -3583,43 +3726,43 @@ function createBuilderOrderFromWizard() {
     id: orderId, jobCode: orderCode, customer: builder, project: mixLabel,
     date: today(), status: 'proposed', total: 0, createdAt: Date.now(), kind: 'order'
   });
-  mix.forEach(m => {
-    const tmpl = templateForModel(m.key);
-    for (let i = 1; i <= m.qty; i++) {
-      const cid = generateQuoteId();
-      const code = generateJobCode();
-      const houseName = m.name + ' ' + i;
-      const child = {
-        id: cid,
-        kind: 'child',
-        parentOrderId: orderId,
-        modelKey: m.key,
-        modelName: m.name,
-        unitIndex: i,
-        status: 'proposed',
-        jobCode: code,
-        customer: builder,
-        signerName: contact,
-        project: houseName,
-        date: today(),
-        address: '',
-        gnaPct: tmpl ? (tmpl.gnaPct || '10') : '10',
-        taxPct: tmpl ? (tmpl.taxPct || '8.7') : '8.7',
-        bulkDiscPct: '0',
-        cabinets: tmpl ? JSON.parse(JSON.stringify(tmpl.cabinets || [])) : [],
-        labor: tmpl ? JSON.parse(JSON.stringify(tmpl.labor || [])) : [],
-        revenueStream: 'cabinets',
-        modelQty: 1
-      };
-      quoteData[cid] = child;
-      quotesIndex.push({
-        id: cid, jobCode: code, customer: builder, project: houseName,
-        date: today(), status: 'proposed', total: 0, createdAt: Date.now(),
-        parentOrderId: orderId, kind: 'child'
-      });
-      order.childIds.push(cid);
-      saveQuoteData(cid);
-    }
+  houses.forEach(h => {
+    const tmpl = templateForModel(h.modelKey);
+    const cid = generateQuoteId();
+    const code = generateJobCode();
+    const houseName = h.modelName + ' ' + h.unitIndex;
+    const child = {
+      id: cid,
+      kind: 'child',
+      parentOrderId: orderId,
+      modelKey: h.modelKey,
+      modelName: h.modelName,
+      unitIndex: h.unitIndex,
+      status: 'proposed',
+      jobCode: code,
+      customer: builder,
+      signerName: contact,
+      project: houseName,
+      date: today(),
+      address: h.address || '',
+      colorName: h.colorName || '',
+      gnaPct: tmpl ? (tmpl.gnaPct || '10') : '10',
+      taxPct: tmpl ? (tmpl.taxPct || '8.7') : '8.7',
+      bulkDiscPct: '0',
+      cabinets: tmpl ? JSON.parse(JSON.stringify(tmpl.cabinets || [])) : [],
+      labor: tmpl ? JSON.parse(JSON.stringify(tmpl.labor || [])) : [],
+      revenueStream: 'cabinets',
+      modelQty: 1,
+      payPlan: payPlan
+    };
+    quoteData[cid] = child;
+    quotesIndex.push({
+      id: cid, jobCode: code, customer: builder, project: houseName,
+      date: today(), status: 'proposed', total: 0, createdAt: Date.now(),
+      parentOrderId: orderId, kind: 'child'
+    });
+    order.childIds.push(cid);
+    saveQuoteData(cid);
   });
   saveQuoteData(orderId);
   saveQuotesIndex();
@@ -3980,6 +4123,9 @@ function collectData() {
     modelName: quoteData[activeQuoteId]?.modelName || '',
     unitIndex: quoteData[activeQuoteId]?.unitIndex || 0,
     builderProgram: quoteData[activeQuoteId]?.builderProgram || '',
+    builderId: quoteData[activeQuoteId]?.builderId || '',
+    payPlan: quoteData[activeQuoteId]?.payPlan || payPlanOf(quoteData[activeQuoteId] || {}),
+    colorName: quoteData[activeQuoteId]?.colorName || '',
     revenueStream: quoteData[activeQuoteId]?.revenueStream || 'cabinets'
   };
 }
@@ -4292,7 +4438,15 @@ function isoAddDays(iso, days) {
 function issueFillFromInstall() {
   const install = document.getElementById('issue-install').value;
   if (!install) return;
+  const q = quoteData[activeQuoteId] || {};
+  const plan = payPlanOf(q);
   const todayIso = today();
+  if (plan === '50-50') {
+    document.getElementById('issue-d1').value = todayIso;
+    document.getElementById('issue-d2').value = install;
+    document.getElementById('issue-d3').value = '';
+    return;
+  }
   let d1 = isoAddDays(install, -90);
   let d2 = isoAddDays(install, -45);
   let d3 = install;
@@ -4302,12 +4456,32 @@ function issueFillFromInstall() {
   document.getElementById('issue-d2').value = d2;
   document.getElementById('issue-d3').value = d3;
 }
+function syncIssuePlanUi(q) {
+  const plan = payPlanOf(q);
+  const copy = document.getElementById('issue-copy');
+  const d1l = document.getElementById('issue-d1-label');
+  const d2l = document.getElementById('issue-d2-label');
+  const wrap3 = document.getElementById('issue-d3-wrap');
+  if (plan === '50-50') {
+    if (copy) copy.textContent = 'Willow Creek / Rod defaults to 50/50. Invoice 1 is 50% due at order. Invoice 2 is 50% due at delivery. Password 5476 locks it.';
+    if (d1l) d1l.textContent = '50% at order · due';
+    if (d2l) d2l.textContent = '50% at delivery · due';
+    if (wrap3) wrap3.style.display = 'none';
+  } else {
+    if (copy) copy.textContent = 'This is what moves a quote from Proposed to Contracted. Set the install date. Deposits work backwards over 90 days: 50% today, 30% in 45 days, 20% at install. You can edit the dates. Password 5476 locks it.';
+    if (d1l) d1l.textContent = '1st deposit 50% due';
+    if (d2l) d2l.textContent = '2nd deposit 30% due';
+    if (wrap3) wrap3.style.display = '';
+  }
+}
 function openIssueContract() {
   let q = quoteData[activeQuoteId] || {};
   if (quoteKind(q) === 'child' && q.parentOrderId) {
     loadQuote(q.parentOrderId);
     q = quoteData[activeQuoteId] || q;
   }
+  syncIssuePlanUi(q);
+  const plan = payPlanOf(q);
   const install = q.installDate || '';
   document.getElementById('issue-install').value = install;
   if (q.ar && q.ar.d1Due) {
@@ -4316,6 +4490,10 @@ function openIssueContract() {
     document.getElementById('issue-d3').value = q.ar.d3Due || '';
   } else if (install) {
     issueFillFromInstall();
+  } else if (plan === '50-50') {
+    document.getElementById('issue-d1').value = today();
+    document.getElementById('issue-d2').value = '';
+    document.getElementById('issue-d3').value = '';
   } else {
     document.getElementById('issue-d1').value = today();
     document.getElementById('issue-d2').value = isoAddDays(today(), 45);
@@ -4393,8 +4571,10 @@ function adjLiveCheck() {
   if (!q || !live) return true;
   const total = contractTotalOf(q, quoteGrandFromData(q) || 0);
   const sched = scheduleOf(q, total);
+  const plan = payPlanOf(q);
+  const maxN = plan === '50-50' ? 2 : 3;
   let remainSum = 0;
-  for (let n = 1; n <= 3; n++) {
+  for (let n = 1; n <= maxN; n++) {
     if (sched['d' + n + 'Paid']) continue;
     const amtEl = document.getElementById('adj-d' + n + '-amt');
     remainSum = invMoney(remainSum + invMoney(amtEl && amtEl.value));
@@ -4422,8 +4602,12 @@ function openAdjustSchedule(idArg) {
     (q.customer || '') + ' · ' + (q.jobCode || '') + ' · contracted total ' + fmt(total) + ' (locked)'
     + ' · received ' + fmt(ar.received) + ' · remaining ' + fmt(ar.open);
   document.getElementById('adj-install').value = q.installDate || '';
-  const labels = { 1: 'Invoice 1 · 50%', 2: 'Invoice 2 · 30%', 3: 'Invoice 3 · 20%' };
-  const fields = [1, 2, 3].map(n => {
+  const plan = payPlanOf(q);
+  const labels = plan === '50-50'
+    ? { 1: 'Invoice 1 · 50% at order', 2: 'Invoice 2 · 50% at delivery' }
+    : { 1: 'Invoice 1 · 50%', 2: 'Invoice 2 · 30%', 3: 'Invoice 3 · 20%' };
+  const ns = plan === '50-50' ? [1, 2] : [1, 2, 3];
+  const fields = ns.map(n => {
     const paid = ar['d' + n + 'Paid'];
     const due = ar['d' + n + 'Due'] || '';
     const amt = ar['d' + n + 'Amt'];
@@ -4459,7 +4643,9 @@ function saveAdjustSchedule() {
   const ar = ensureAr(id);
   const nextAmt = {};
   const nextDue = {};
-  for (let n = 1; n <= 3; n++) {
+  const plan = payPlanOf(q);
+  const maxN = plan === '50-50' ? 2 : 3;
+  for (let n = 1; n <= maxN; n++) {
     if (sched['d' + n + 'Paid']) {
       nextAmt[n] = sched['d' + n + 'Amt'];
       nextDue[n] = sched['d' + n + 'Due'];
@@ -4476,8 +4662,8 @@ function saveAdjustSchedule() {
     nextAmt[n] = invMoney(amtEl && amtEl.value);
   }
   q.installDate = install;
-  ar.d1Due = nextDue[1]; ar.d2Due = nextDue[2]; ar.d3Due = nextDue[3];
-  ar.d1Amt = nextAmt[1]; ar.d2Amt = nextAmt[2]; ar.d3Amt = nextAmt[3];
+  ar.d1Due = nextDue[1]; ar.d2Due = nextDue[2]; ar.d3Due = plan === '50-50' ? '' : nextDue[3];
+  ar.d1Amt = nextAmt[1]; ar.d2Amt = nextAmt[2]; ar.d3Amt = plan === '50-50' ? 0 : nextAmt[3];
   q.saved_at = Date.now();
   saveQuoteData(id);
   if (quoteKind(q) === 'order') {
@@ -4528,8 +4714,12 @@ function confirmContract() {
   const d2 = document.getElementById('issue-d2').value;
   const d3 = document.getElementById('issue-d3').value;
   const err = document.getElementById('pw-error');
-  if (!install || !d1 || !d2 || !d3) {
-    err.textContent = 'Install date and all three deposit dates are required.';
+  const q0 = quoteData[activeQuoteId] || {};
+  const plan = payPlanOf(q0);
+  if (!install || !d1 || !d2 || (plan !== '50-50' && !d3)) {
+    err.textContent = plan === '50-50'
+      ? 'Install date, order deposit date, and delivery deposit date are required.'
+      : 'Install date and all three deposit dates are required.';
     return;
   }
   if (pw !== CONTRACT_PW) {
@@ -4540,11 +4730,12 @@ function confirmContract() {
   if (!quoteData[activeQuoteId]) quoteData[activeQuoteId] = {};
   const prev = quoteData[activeQuoteId].ar && typeof quoteData[activeQuoteId].ar === 'object' ? quoteData[activeQuoteId].ar : {};
   quoteData[activeQuoteId].installDate = install;
+  quoteData[activeQuoteId].payPlan = plan;
   quoteData[activeQuoteId].ar = {
-    d1Due: d1, d2Due: d2, d3Due: d3,
-    d1Paid: !!prev.d1Paid, d2Paid: !!prev.d2Paid, d3Paid: !!prev.d3Paid,
-    d1PaidAt: prev.d1PaidAt || '', d2PaidAt: prev.d2PaidAt || '', d3PaidAt: prev.d3PaidAt || '',
-    d1Amt: prev.d1Amt, d2Amt: prev.d2Amt, d3Amt: prev.d3Amt,
+    d1Due: d1, d2Due: d2, d3Due: plan === '50-50' ? '' : d3,
+    d1Paid: !!prev.d1Paid, d2Paid: !!prev.d2Paid, d3Paid: plan === '50-50' ? false : !!prev.d3Paid,
+    d1PaidAt: prev.d1PaidAt || '', d2PaidAt: prev.d2PaidAt || '', d3PaidAt: plan === '50-50' ? '' : (prev.d3PaidAt || ''),
+    d1Amt: prev.d1Amt, d2Amt: prev.d2Amt, d3Amt: plan === '50-50' ? 0 : prev.d3Amt,
     d1PaidAmt: prev.d1PaidAmt, d2PaidAmt: prev.d2PaidAmt, d3PaidAmt: prev.d3PaidAmt,
     d1Check: prev.d1Check || '', d2Check: prev.d2Check || '', d3Check: prev.d3Check || '',
     d1Copy: prev.d1Copy || '', d2Copy: prev.d2Copy || '', d3Copy: prev.d3Copy || '',
@@ -4560,6 +4751,7 @@ function confirmContract() {
       if (!quoteData[ch.id]) return;
       quoteData[ch.id].status = 'contract';
       quoteData[ch.id].installDate = install;
+      quoteData[ch.id].payPlan = plan;
       saveQuoteData(ch.id);
     });
     const idx = quotesIndex.find(q => q.id === activeQuoteId);
@@ -4572,15 +4764,24 @@ function confirmContract() {
 
 function nextDeposit(qd, total) {
   const ar = scheduleOf(qd, total);
-  if (!ar.d1Paid) return { n: 1, label: '1st deposit 50%', due: ar.d1Due, amt: ar.d1Amt };
-  if (!ar.d2Paid) return { n: 2, label: '2nd deposit 30%', due: ar.d2Due, amt: ar.d2Amt };
-  if (!ar.d3Paid) return { n: 3, label: '3rd deposit 20%', due: ar.d3Due, amt: ar.d3Amt };
+  const plan = payPlanOf(qd);
+  if (!ar.d1Paid) return { n: 1, label: plan === '50-50' ? '50% at order' : '1st deposit 50%', due: ar.d1Due, amt: ar.d1Amt };
+  if (!ar.d2Paid) return { n: 2, label: plan === '50-50' ? '50% at delivery' : '2nd deposit 30%', due: ar.d2Due, amt: ar.d2Amt };
+  if (plan !== '50-50' && !ar.d3Paid) return { n: 3, label: '3rd deposit 20%', due: ar.d3Due, amt: ar.d3Amt };
   return { n: 0, label: 'Paid in full', due: '', amt: 0 };
 }
 function invMoney(n) { return Math.round((Number(n) || 0) * 100) / 100; }
 function invoiceAmtsOf(qd, total) {
   const t = invMoney(total);
   const ar = (qd && qd.ar && typeof qd.ar === 'object') ? qd.ar : {};
+  const plan = payPlanOf(qd);
+  if (plan === '50-50') {
+    const d1 = ar.d1Amt != null && ar.d1Amt !== '' ? invMoney(ar.d1Amt) : invMoney(t * 0.50);
+    let d2 = ar.d2Amt != null && ar.d2Amt !== '' ? invMoney(ar.d2Amt) : invMoney(t - d1);
+    const sum = invMoney(d1 + d2);
+    if (Math.abs(sum - t) >= 0.02 && (ar.d2Amt == null || ar.d2Amt === '')) d2 = invMoney(t - d1);
+    return { d1, d2, d3: 0 };
+  }
   const d1 = ar.d1Amt != null && ar.d1Amt !== '' ? invMoney(ar.d1Amt) : invMoney(t * 0.50);
   const d2 = ar.d2Amt != null && ar.d2Amt !== '' ? invMoney(ar.d2Amt) : invMoney(t * 0.30);
   let d3 = ar.d3Amt != null && ar.d3Amt !== '' ? invMoney(ar.d3Amt) : invMoney(t * 0.20);
