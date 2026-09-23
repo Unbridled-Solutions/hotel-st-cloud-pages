@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v0923a</title>
+<title>Fremont Makers — Project Builder v0923b</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20260923a-rod-builder -->
+<!-- FM-BUILD-v20260923b-house-nowrap -->
 <script>
 (function(){
   try {
@@ -299,6 +299,13 @@
   #dashboard-view .quote-table tbody tr.row-order td { font-weight: 600; }
   .npw-choice { display:flex; flex-direction:column; gap:8px; margin:12px 0 16px; }
   .npw-choice button { text-align:left; padding:12px 14px; }
+  #npw-modal .modal { max-width: 720px; }
+  #npw-step .quote-table { table-layout: fixed; }
+  #npw-step .quote-table thead th { text-align: left; }
+  #npw-step .quote-table tbody td { white-space: nowrap; overflow: hidden; }
+  #npw-step .quote-table tbody td:first-child { width: 150px; white-space: nowrap; }
+  #npw-step .quote-table tbody td:nth-child(2) { overflow: visible; }
+  #npw-step .quote-table tbody td:last-child { text-align: left; width: 220px; }
   #dashboard-view .quote-table tbody tr.row-proposed { background: var(--row-proposed); }
   #dashboard-view .quote-table tbody tr.row-contract { background: var(--row-contract); }
   #dashboard-view .quote-table tbody tr.row-completed { background: var(--row-completed); }
@@ -619,7 +626,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0923a</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0923b</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
     <span class="status-label">Status:</span>
@@ -3660,12 +3667,12 @@ function renderNewProjectWizard() {
     next.style.display = '';
     next.textContent = 'Create order';
     const rows = (_npw.houses || []).map((h, i) =>
-      '<tr><td>' + h.modelName + ' ' + h.unitIndex + '</td>'
+      '<tr><td style="white-space:nowrap;">' + h.modelName + '&nbsp;' + h.unitIndex + '</td>'
       + '<td><input type="text" value="' + String(h.address || '').replace(/"/g, '&quot;') + '" placeholder="Lot / street" oninput="npwHouseField(' + i + ',\'address\', this.value)" style="width:100%;padding:6px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" /></td>'
       + '<td><select onchange="npwHouseField(' + i + ',\'colorName\', this.value)" style="width:100%;padding:6px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;">'
       + '<option value="">Select color</option>' + npwColorOptions(h.colorName) + '</select></td></tr>'
     ).join('');
-    step.innerHTML = '<table class="quote-table"><thead><tr><th>House</th><th>Address</th><th>Color</th></tr></thead><tbody>'
+    step.innerHTML = '<table class="quote-table"><thead><tr><th style="width:150px">House</th><th>Address</th><th style="width:220px;text-align:left">Color</th></tr></thead><tbody>'
       + (rows || '<tr><td colspan="3">No houses</td></tr>') + '</tbody></table>';
   }
 }
