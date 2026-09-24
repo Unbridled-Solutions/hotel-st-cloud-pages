@@ -350,6 +350,13 @@ async function cloudbedsOccRange(env, days, status, errPrefix) {
   }
   return out;
 }
+function stayOverlapsWindow(start, end, from, to) {
+  // Nights occupied are [startDate, endDate). Keep the row if we cannot
+  // tell. A 70-day checkIn window without this filter pulled 600+ already-
+  // departed stays and hung Refresh on rate-details (Stan, 23 Sep 2026).
+  if (!start || !end) return true;
+  return start <= to && end > from;
+}
 async function cloudbedsRoomRev(env, from, to, tight = false) {
   const ids = new Set();
   // Overlapping in-house stays must be in the check-in window. A 7-day
@@ -366,10 +373,12 @@ async function cloudbedsRoomRev(env, from, to, tight = false) {
     const recs = body?.data || [];
     for (const rec of recs) {
       const st = String(rec.status || '').toLowerCase();
-      if (['confirmed', 'checked_in', 'checked_out'].includes(st)) {
-        const rid = rec.reservationID || rec.reservationId;
-        if (rid) ids.add(String(rid));
-      }
+      if (!['confirmed', 'checked_in', 'checked_out'].includes(st)) continue;
+      const start = rec.startDate || rec.start_date || '';
+      const end = rec.endDate || rec.end_date || '';
+      if (!stayOverlapsWindow(start, end, from, to)) continue;
+      const rid = rec.reservationID || rec.reservationId;
+      if (rid) ids.add(String(rid));
     }
     if (recs.length < 100) break;
   }
