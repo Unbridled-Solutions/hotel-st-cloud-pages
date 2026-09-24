@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>FF&E log — Hotel St. Cloud</title>
+  <script>
+  (function(){
+    try {
+      var t = localStorage.getItem('uhg-hub-theme');
+      if (t === 'dark' || t === 'paper') document.documentElement.setAttribute('data-theme', t);
+    } catch (e) {}
+  })();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root, html[data-theme="dark"] {
+      --bg:#0f1923; --navy:#1a2e3b; --card:#162433; --section:#0d1620;
+      --blue:#5a8ba7; --gold:#c9aa7c; --text:#e8e0d4; --muted:#8a9aaa;
+      --border:rgba(90,139,167,0.22); --ok:#3de8c8; --warn:#e8b86d; --rust:#c44027;
+      --input:#121c27; --active-bg:#c9aa7c; --active-fg:#0f1923;
+    }
+    html[data-theme="paper"] {
+      --bg:#f3efe6; --navy:#ebe4d6; --card:#fbf6f0; --section:#efe8dc;
+      --blue:#3d6a86; --gold:#a8883a; --text:#1b2744; --muted:#6a655c;
+      --border:#ddd6c8; --ok:#2e7d4f; --warn:#b8860b; --rust:#c44027;
+      --input:#fff; --active-bg:#1b2744; --active-fg:#ffffff;
+    }
+    html[data-theme="paper"] th[data-sort].on { color:#3c4737; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { background:var(--bg); color:var(--text); font-family:'Josefin Sans',sans-serif; font-weight:300; min-height:100vh; font-size:16px; }
+    header { background:var(--navy); border-bottom:1px solid var(--border); padding:18px 24px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+    .header-right { display:flex; align-items:center; gap:12px; margin-left:auto; flex-wrap:wrap; }
+    .theme-toggle { display:flex; gap:4px; }
+    .theme-toggle button {
+      padding:6px 12px; border-radius:6px; border:1px solid var(--border);
+      background:transparent; color:var(--muted); font-size:12px; cursor:pointer; font-family:inherit;
+    }
+    .theme-toggle button.on { background:var(--active-bg); color:var(--active-fg); border-color:var(--active-bg); font-weight:700; }
+    a.back { color:var(--gold); text-decoration:none; font-size:13px; font-weight:600; }
+    h1 { font-size:22px; font-weight:700; }
+    .sub { font-size:13px; color:var(--muted); margin-top:3px; }
+    .status { font-size:12px; color:var(--muted); }
+    .status.ok { color:var(--ok); }
+    .status.err { color:var(--rust); }
+    main { max-width:1280px; margin:0 auto; padding:24px 20px 80px; }
+    .lede { font-size:15px; color:var(--muted); line-height:1.55; max-width:760px; margin-bottom:18px; }
+    .lede a { color:var(--gold); }
+    .bar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:10px; }
+    .search { flex:1; min-width:220px; font-family:inherit; font-size:16px; padding:12px 14px; border:none; border-bottom:1px solid rgba(201,170,124,0.3); background:transparent; color:var(--text); }
+    .search:focus { outline:none; border-bottom-color:var(--gold); background:rgba(201,170,124,0.05); }
+    .ftab, .btn {
+      font-family:inherit; font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase;
+      padding:10px 14px; border-radius:999px; border:1.5px solid var(--border); background:var(--card); color:var(--text); cursor:pointer;
+    }
+    .ftab.on { background:var(--gold); color:#0f1923; border-color:var(--gold); }
+    html[data-theme="paper"] .ftab.on { color:#fff; }
+    .btn.gold { background:var(--gold); color:#0f1923; border-color:var(--gold); font-weight:700; }
+    .count { font-size:13px; color:var(--muted); margin-left:auto; }
+    .wrap { background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:auto; }
+    table { width:100%; border-collapse:collapse; min-width:1080px; }
+    th { text-align:left; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--blue); font-weight:700; padding:12px 14px; border-bottom:1px solid var(--border); background:var(--section); position:sticky; top:0; z-index:2; }
+    th[data-sort] { cursor:pointer; user-select:none; white-space:nowrap; min-height:44px; }
+    th[data-sort]:hover { color:var(--gold); }
+    th[data-sort].on { color:var(--gold); }
+    th[data-sort] .arrow { font-size:10px; margin-left:4px; opacity:.85; }
+    td { padding:14px 14px; border-bottom:1px solid var(--border); vertical-align:top; font-size:15px; }
+    tr:hover td { background:rgba(201,170,124,0.05); }
+    .name { font-weight:700; letter-spacing:.02em; line-height:1.35; }
+    .size { font-size:13px; color:var(--muted); margin-top:3px; }
+    .loc { font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--blue); }
+    .vendor { font-size:14px; }
+    .money { font-variant-numeric:tabular-nums; white-space:nowrap; }
+    a.prod {
+      display:inline-flex; align-items:center; justify-content:center;
+      min-height:44px; min-width:132px; padding:10px 16px;
+      background:var(--gold); color:#0f1923; font-weight:700;
+      font-size:12px; letter-spacing:.08em; text-transform:uppercase;
+      text-decoration:none; border-radius:999px; border:1.5px solid var(--gold);
+      white-space:nowrap;
+    }
+    a.prod:hover { filter:brightness(1.08); }
+    html[data-theme="paper"] a.prod { color:#fff; }
+    button.prod-miss {
+      display:inline-flex; align-items:center; justify-content:center;
+      min-height:44px; min-width:132px; padding:10px 16px;
+      background:transparent; color:var(--gold); font-weight:700;
+      font-size:12px; letter-spacing:.08em; text-transform:uppercase;
+      font-family:inherit; cursor:pointer;
+      border-radius:999px; border:1.5px solid var(--gold);
+      white-space:nowrap;
+    }
+    .notes { width:100%; min-height:48px; font-family:inherit; font-size:13px; padding:8px; border:none; border-bottom:1px solid rgba(201,170,124,0.3); background:transparent; color:var(--text); resize:vertical; }
+    .notes:focus { outline:none; border-bottom-color:var(--gold); background:rgba(201,170,124,0.05); }
+    .tiny { font-size:11px; letter-spacing:.08em; text-transform:uppercase; font-weight:700; border:none; background:transparent; color:var(--blue); cursor:pointer; padding:8px 0; min-height:44px; }
+    .empty { padding:28px 16px; text-align:center; color:var(--muted); }
+    .modal-bg { position:fixed; inset:0; background:rgba(15,25,35,.72); display:none; align-items:flex-end; justify-content:center; z-index:40; padding:16px; }
+    .modal-bg.on { display:flex; }
+    .modal { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:22px; width:min(560px,100%); max-height:90vh; overflow:auto; }
+    .modal h2 { font-size:18px; font-weight:700; margin-bottom:14px; }
+    label { display:block; font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin:10px 0 4px; }
+    .modal input, .modal textarea {
+      width:100%; font-family:inherit; font-size:16px; padding:10px 12px;
+      border:none; border-bottom:1px solid rgba(201,170,124,0.3); background:transparent; color:var(--text);
+    }
+    .modal input:focus, .modal textarea:focus { outline:none; border-bottom-color:var(--gold); background:rgba(201,170,124,0.05); }
+    .modal textarea { min-height:72px; }
+    .dd { position:relative; }
+    .dd-btn {
+      width:100%; text-align:left; font-family:inherit; font-size:16px; padding:10px 28px 10px 12px;
+      background:#0d1a27; color:var(--gold); border:1px solid rgba(201,170,124,0.4); border-radius:4px; cursor:pointer; height:42px;
+    }
+    html[data-theme="paper"] .dd-btn { background:#fff; color:var(--text); border-color:var(--border); }
+    .dd-btn::after { content:' ▾'; font-size:11px; color:var(--gold); position:absolute; right:10px; top:12px; }
+    .dd-menu { display:none; position:absolute; top:46px; left:0; right:0; background:#ffffff; border:1px solid #ccc; border-radius:4px; z-index:999; box-shadow:0 4px 12px rgba(0,0,0,0.3); }
+    .dd-menu.open { display:block; }
+    .dd-item { padding:10px 12px; color:#1a2e3b; font-size:14px; cursor:pointer; }
+    .dd-item:hover { background:#e8f0f8; }
+    .dd-item.active { font-weight:700; background:#ddeeff; }
+    .modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:16px; }
+    footer { text-align:center; margin-top:36px; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); }
+    @media (max-width:720px) { .hide-sm { display:none; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>FF&E log</h1>
+      <div class="sub">Hotel St. Cloud · what we bought, where it lives, how to reorder</div>
+    </div>
+    <div class="header-right">
+      <a class="back" href="https://tools.unbridledhospitality.com/brands/hotel-st-cloud/">← Hotel St. Cloud</a>
+      <div class="theme-toggle" title="Looks only — saved on this device">
+        <button type="button" id="theme-paper-btn" onclick="uhgSetTheme('paper')">Paper</button>
+        <button type="button" id="theme-dark-btn" onclick="uhgSetTheme('dark')">Dark</button>
+      </div>
+      <div class="status" id="status">Loading…</div>
+    </div>
+  </header>
+  <main>
+    <p class="lede">Single source for furniture, lamps, Keurigs, mirrors, and the rest of the house kit. Filter by location. Click a header to sort. <b>Open product</b> is the gold button on every row. Edit a line when a SKU dies. Notes autosave to the same cloud as the labor planners.</p>
+    <div class="bar">
+      <input class="search" id="q" type="search" placeholder="Search item, vendor, size, notes…" autocomplete="off" />
+      <button class="btn gold" type="button" id="addBtn">Add item</button>
+      <span class="count" id="count"></span>
+    </div>
+    <div class="bar" id="locTabs"></div>
+    <div class="wrap">
+      <table>
+        <thead>
+          <tr>
+            <th data-sort="name">Item</th>
+            <th data-sort="link">Product</th>
+            <th data-sort="location">Location</th>
+            <th data-sort="qty">Qty bought</th>
+            <th data-sort="onHand">On hand</th>
+            <th data-sort="vendor">Vendor</th>
+            <th data-sort="cost">Cost</th>
+            <th data-sort="notes">Notes</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="empty" id="empty" hidden>No matches.</div>
+    </div>
+    <footer>Unbridled Hospitality · Internal · Hotel St. Cloud</footer>
+  </main>
+
+  <div class="modal-bg" id="modalBg">
+    <form class="modal" id="form">
+      <h2 id="modalTitle">Add item</h2>
+      <input type="hidden" id="fId" />
+      <label for="fName">Item</label>
+      <input id="fName" required />
+      <label for="fSize">Size / variant</label>
+      <input id="fSize" placeholder='36" x 42", Navy, King…' />
+      <label>Location</label>
+      <div class="dd" id="locDd">
+        <button class="dd-btn" type="button" id="locBtn"></button>
+        <div class="dd-menu" id="locMenu"></div>
+      </div>
+      <label for="fQty">Qty purchased</label>
+      <input id="fQty" />
+      <label for="fOnHand">On hand</label>
+      <input id="fOnHand" />
+      <label for="fCost">Unit cost</label>
+      <input id="fCost" placeholder="$0" />
+      <label for="fVendor">Vendor</label>
+      <input id="fVendor" />
+      <label for="fLast">Last ordered</label>
+      <input id="fLast" placeholder="2025-02-10" />
+      <label for="fLink">Product link</label>
+      <input id="fLink" inputmode="url" placeholder="https://…" />
+      <label for="fNotes">Notes</label>
+      <textarea id="fNotes" placeholder="Replacement SKU, which rooms, discontinued note…"></textarea>
+      <div class="modal-actions">
+        <button class="ftab" type="button" id="cancelBtn">Cancel</button>
+        <button class="btn gold" type="submit">Save</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const API = 'https://offers.hotelstcloud.com/api/planner/bundle?ns=hsc-ffe';
+    const SORT_STORE = 'table-sort:hsc-ffe';
+    const LOCS = ['Guest rooms','Fremont Public House','War Room','1887','Hotel public','House / BOH','Unassigned'];
+    const MIRROR = 'https://www.wayfair.com/home/pdp/lark-manor-anthonette-wood-framed-mirror-with-safety-backing-ideal-for-bathroom-vanity-mirror-dkyu1066.html';
+    const SEED = [
+      { id:'small-coffee', name:'Small coffee table', size:'Marble top / metal legs', qty:'3', onHand:'', cost:'$172.49', vendor:'Overstock', location:'Unassigned', status:'Active', lastOrdered:'', link:'https://www.overstock.com/products/marble-top-coffee-table-sintered-stone-long-tabletop-with-sturdy-metal-legs-38423346?variant=45423828435103', notes:'From Furniture sheet. Set location when you know which rooms.' },
+      { id:'large-coffee', name:'Large coffee table', size:'Naquita marble / bronzed metal', qty:'3', onHand:'', cost:'$879.99', vendor:'Wayfair', location:'Unassigned', status:'Active', lastOrdered:'', link:'https://www.wayfair.com/furniture/pdp/everly-quinn-naquita-modern-marblebronzed-metal-handmade-coffee-table-qlr12910.html', notes:'From Furniture sheet. Everly Quinn Naquita.' },
+      { id:'desk-stool', name:'Desk stool', size:'', qty:'17', onHand:'', cost:'$113.82', vendor:'Amazon', location:'Guest rooms', status:'Active', lastOrdered:'', link:'https://www.amazon.com/dp/B0DBZNL9NR', notes:'' },
+      { id:'room-lamp', name:'Hotel room lamp', size:'Richmond 28.5" brown table lamp', qty:'68', onHand:'', cost:'$64.99', vendor:'Wayfair', location:'Guest rooms', status:'Active', lastOrdered:'', link:'https://www.wayfair.com/lighting/pdp/lark-manor-richmond-285-brown-table-lamp-w002174211.html', notes:'Lark Manor Richmond. Primary guest-room lamp.' },
+      { id:'lamp-2', name:'Lamp #2', size:'Willersley 29" gold table lamp', qty:'9', onHand:'', cost:'$74.99', vendor:'Wayfair', location:'Unassigned', status:'Active', lastOrdered:'', link:'https://www.wayfair.com/lighting/pdp/astoria-grand-willersley-29-gold-table-lamp-astg4951.html', notes:'Sheet labeled Lamp #2 (?). Confirm location.' },
+      { id:'armless-sofa', name:'Armless sofa', size:'57" genuine leather', qty:'1', onHand:'', cost:'$7,275', vendor:'Perigold', location:'Unassigned', status:'Active', lastOrdered:'', link:'https://www.perigold.com/furniture/pdp/sarreid-ltd-57-genuine-leather-armless-sofa-p000876927.html', notes:'Sarreid Ltd. Confirm Public House vs lobby.' },
+      { id:'richmond-lamp-extra', name:'Richmond table lamp', size:'28.5" brown', qty:'1', onHand:'', cost:'$137.99', vendor:'Wayfair', location:'Guest rooms', status:'Active', lastOrdered:'', link:'https://www.wayfair.com/lighting/pdp/lark-manor-richmond-285-brown-table-lamp-w002174211.html', notes:'Same SKU as hotel room lamp; sheet has a separate $137.99 line for qty 1.' },
+      { id:'stepstool', name:'Stepstool', size:'Wooden', qty:'1', onHand:'', cost:'$40', vendor:'Amazon', location:'House / BOH', status:'Active', lastOrdered:'', link:'https://www.amazon.com/HOLANA-Wooden-Adults-Assembled-Sturdy/dp/B0BKQTZRSG', notes:'' },
+      { id:'mirror-36-24', name:'Anthonette wood framed mirror', size:'36" x 24"', qty:'2', onHand:'2', cost:'', vendor:'Wayfair', location:'Guest rooms', status:'Active', lastOrdered:'2025-01-20', link:MIRROR, notes:'Lark Manor. Safety backing. Delivered Mon Jan 20. Same product family as the other sizes.' },
+      { id:'mirror-36-36', name:'Anthonette wood framed mirror', size:'36" x 36"', qty:'1', onHand:'1', cost:'$499.99', vendor:'Wayfair', location:'Guest rooms', status:'Active', lastOrdered:'2025-02-10', link:MIRROR + '?piid=58245066', notes:'Lark Manor. Delivered Mon Feb 10. Listed price is current Wayfair, not original PO.' },
+      { id:'mirror-36-54', name:'Anthonette wood framed mirror', size:'36" x 54"', qty:'18', onHand:'18', cost:'', vendor:'Wayfair', location:'Guest rooms', status:'Active', lastOrdered:'2025-02-10', link:MIRROR, notes:'Lark Manor. Delivered Mon Feb 10.' },
+      { id:'mirror-36-42', name:'Anthonette wood framed mirror', size:'36" x 42"', qty:'17', onHand:'17', cost:'', vendor:'Wayfair', location:'Guest rooms', status:'Active', lastOrdered:'2025-02-10', link:MIRROR, notes:'Lark Manor. Delivered Mon Feb 10.' },
+      { id:'keurig', name:'Coffee maker', size:'Keurig K-Mini Go · Navy', qty:'42', onHand:'', cost:'$99.99', vendor:'Target', location:'Guest rooms', status:'Active', lastOrdered:'', link:'https://www.target.com/p/keurig-k-mini-go-single-serve-k-cup-pod-coffee-maker-navy/-/A-90116757', notes:'Guest-room Keurig.' },
+      { id:'clock', name:'Clock', size:'Non-ticking', qty:'38', onHand:'', cost:'$19.99', vendor:'Amazon', location:'Guest rooms', status:'Active', lastOrdered:'', link:'https://www.amazon.com/Maxspace-Non-Ticking-Operated-Movement-Decoration/dp/B07ZGFWSJ2', notes:'' },
+      { id:'noise', name:'Noise machine', size:'', qty:'10', onHand:'', cost:'$18.99', vendor:'Amazon', location:'Guest rooms', status:'Active', lastOrdered:'', link:'https://www.amazon.com/dp/B07DDLHF2N', notes:'' },
+      { id:'pod-holder', name:'Coffee pod holder', size:'', qty:'38', onHand:'', cost:'$15.99', vendor:'Amazon', location:'Guest rooms', status:'Active', lastOrdered:'', link:'https://www.amazon.com/dp/B07F7TZ75V', notes:'' },
+      { id:'tissue-boxes', name:'Tissue boxes', size:'', qty:'38', onHand:'', cost:'$16.02', vendor:'Amazon', location:'Guest rooms', status:'Active', lastOrdered:'', link:'https://www.amazon.com/dp/B00O9LAB0U', notes:'' },
+      { id:'guest-trash', name:'Trash can (guest room)', size:'Leather storage', qty:'38', onHand:'', cost:'$48.42', vendor:'Amazon', location:'Guest rooms', status:'Active', lastOrdered:'', link:'https://www.amazon.com/KINGFOM-Classic-Leather-Storage-Bathroom/dp/B00O9LAB0U', notes:'' },
+      { id:'tieback-knobs', name:'Curtain tie-back knobs', size:'Kerkhoven', qty:'166', onHand:'', cost:'', vendor:'Wayfair', location:'Guest rooms', status:'Active', lastOrdered:'', link:'https://www.wayfair.com/decor-pillows/pdp/astoria-grand-kerkhoven-curtain-holdback-w003458083.html?piid=1002812404', notes:'' },
+      { id:'tieback-tassels', name:'Curtain tie-back tassels', size:'', qty:'166', onHand:'', cost:'$80.00', vendor:'Etsy', location:'Guest rooms', status:'Active', lastOrdered:'', link:'', notes:'' },
+      { id:'throw', name:'Throw blanket', size:'', qty:'54', onHand:'', cost:'$45.00', vendor:'Kassatex', location:'Guest rooms', status:'Active', lastOrdered:'', link:'', notes:'' },
+      { id:'hangers', name:'Hangers', size:'', qty:'500', onHand:'', cost:'$1.29', vendor:'SLX', location:'Guest rooms', status:'Active', lastOrdered:'', link:'', notes:'' },
+      { id:'hair-dryer', name:'Hair dryer', size:'', qty:'40', onHand:'', cost:'$35.25', vendor:'SLX', location:'Guest rooms', status:'Active', lastOrdered:'', link:'', notes:'' },
+      { id:'steamer', name:'Steamer', size:'', qty:'40', onHand:'', cost:'$53.33', vendor:'SLX', location:'Guest rooms', status:'Active', lastOrdered:'', link:'', notes:'' },
+      { id:'amenity-tray', name:'Bathroom amenity tray', size:'', qty:'36', onHand:'', cost:'$20.00', vendor:'Kassatex', location:'Guest rooms', status:'Active', lastOrdered:'', link:'', notes:'' },
+      { id:'bath-trash', name:'Bathroom trash can', size:'', qty:'36', onHand:'', cost:'$55.00', vendor:'Kassatex', location:'Guest rooms', status:'Active', lastOrdered:'', link:'', notes:'' },
+      { id:'dispensers', name:'Triple amenity dispensers', size:'Light grey simple text', qty:'36', onHand:'', cost:'$47.00 per dispenser', vendor:'Kure', location:'Guest rooms', status:'Active', lastOrdered:'', link:'https://kureproducts.com/shop/light-grey-simple-text-triple', notes:'' },
+      { id:'bath-hw', name:'Bathroom hardware', size:'Kingston Brass Santa Fe 5-piece', qty:'36', onHand:'', cost:'', vendor:'Wayfair', location:'Guest rooms', status:'Active', lastOrdered:'', link:'https://www.wayfair.com/home-improvement/pdp/kingston-brass-santa-fe-5-piece-bathroom-hardware-set-kbbb4339.html?piid=16776308', notes:'Sheet spelling: Hardwear.' },
+      { id:'polaroid', name:'Polaroid cameras', size:'', qty:'', onHand:'', cost:'$77.96', vendor:'Amazon', location:'Unassigned', status:'Active', lastOrdered:'', link:'https://www.amazon.com/gp/product/B0852844YB', notes:'From Equipment tab.' },
+      { id:'water-bottles', name:'Water bottles', size:'', qty:'', onHand:'', cost:'$13.00', vendor:'Crystal Imagery', location:'Guest rooms', status:'Active', lastOrdered:'', link:'https://crystalimagery.com/collections/wholesale', notes:'' },
+      { id:'luggage-carts', name:'Luggage carts', size:'Bellman silver', qty:'3', onHand:'3', cost:'', vendor:'Uline', location:'Hotel public', status:'Active', lastOrdered:'2025-03-28', link:'https://www.uline.com/Product/Detail/H-5010SIL/Luggage-Carts/Luggage-Cart-Bellman-Silver', notes:'Par 3.' },
+      { id:'pack-n-play', name:'Pack n play', size:'', qty:'1', onHand:'3', cost:'', vendor:'Webstaurant', location:'House / BOH', status:'Active', lastOrdered:'', link:'', notes:'Sheet on-hand 3 vs qty 1 — confirm count.' },
+      { id:'tp-holder', name:'Toilet paper roll holder', size:'Kingston Brass vintage freestanding', qty:'1', onHand:'', cost:'$139.95', vendor:'Wayfair', location:'Unassigned', status:'Active', lastOrdered:'', link:'https://www.wayfair.com/home-improvement/pdp/kingston-brass-vintage-freestanding-toilet-paper-holder-kbbb3092.html?piid=11177885', notes:'' },
+      { id:'luggage-racks', name:'Luggage racks', size:'', qty:'1', onHand:'9', cost:'$45.99', vendor:'Amazon', location:'Guest rooms', status:'Active', lastOrdered:'', link:'https://www.amazon.com/dp/B0D633H7HH', notes:'Sheet on-hand 9 vs qty 1 — likely a sample line; confirm house count.' },
+      { id:'humidifiers', name:'Humidifiers', size:'', qty:'12', onHand:'', cost:'', vendor:'Amazon', location:'Guest rooms', lastOrdered:'', link:'', notes:'' },
+      { id:'wr-seth-stool', name:'Seth bar stool', size:'Black crocodile', qty:'', onHand:'', cost:'', vendor:'Safavieh', location:'War Room', lastOrdered:'', link:'https://www.safaviehhome.com/products/safavieh-sh-seth-bar-stool-black-crocodilesh', notes:'From FF&E Furniture links. War Room chairs. Qty not on the Notion page.' },
+      { id:'fph-edenwood', name:'Edenwood bar stool', size:'30\" chocolate faux leather swivel', qty:'', onHand:'', cost:'$265', vendor:'AFA / Hillsdale', location:'Fremont Public House', lastOrdered:'', link:'https://www.afastores.com/products/hillsdale-furniture-edenwood-wood-bar-height-swivel-stool-chocolate-with-chestnut-faux-leather-5945-830', notes:'Originally Houzz $265 each, discontinued there. AFA replacement SKU 5945-830. Qty not on the Notion page.' },
+      { id:'fph-picardy', name:'Picardy counter-height chair', size:'Cherry oak and PU, set of 2', qty:'', onHand:'', cost:'$729.99 / set of 2', vendor:'ACME', location:'Fremont Public House', lastOrdered:'', link:'https://www.walmart.com/ip/ACME-Picardy-Counter-Height-Chair-Set-of-2-in-Cherry-Oak-and-PU/760674505', notes:'Tall chairs in Fremont Public House. Originally $729.99 for a set of 2. Qty not on the Notion page.' },
+      { id:'1887-floral-chair', name:'Floral wood-frame dining chair', size:'Espresso faux leather, model F1395, set of 2', qty:'', onHand:'', cost:'', vendor:'Walmart', location:'1887', lastOrdered:'', link:'https://www.walmart.com/ip/Set-of-2-Formal-Dining-Side-Chairs-Brown-Rubberwood-with-Intricate-Carved-Floral-Design-and-Faux-Leather-Upholstered-Seat/20877911589', notes:'Originally Houzz, no longer there. Walmart lookalike. Dining room chairs.' },
+      { id:'1887-arden-patio', name:'Arden patio dining set', size:'41\" 5-piece cast aluminum, table + 4 chairs', qty:'4', onHand:'', cost:'$599', vendor:'Amazon / Kinger Home', location:'1887', lastOrdered:'2024-01-05', link:'https://www.amazon.com/clp/B0996CDJMP', notes:'Amazon order 113-1271552-3943406. 4 sets. $2,396 before tax / $2,597.56 total. Standard-height patio for 1887.' },
+      { id:'fph-sunnydaze-set', name:'Sunnydaze bar table + chairs set', size:'Black scrolling wrought iron, 1 table + 2 chairs', qty:'9', onHand:'', cost:'$379', vendor:'Bed Bath & Beyond / Sunnydaze', location:'Fremont Public House', lastOrdered:'2024-01-05', link:'https://www.bedbathandbeyond.com/Home-Garden/Sunnydaze-Outdoor-Black-Scrolling-Wrought-Iron-Bar-Chair-and-Table-Set/35430546/product.html', notes:'Order #421501469. ITEM 39585413. Tall patio sets out front of Fremont Public House.' },
+      { id:'fph-sunnydaze-chairs', name:'Sunnydaze bar chairs extra', size:'Black wrought iron scrolling, set of 2', qty:'3', onHand:'', cost:'$205.47', vendor:'Bed Bath & Beyond / Sunnydaze', location:'Fremont Public House', lastOrdered:'2024-01-05', link:'https://www.bedbathandbeyond.com/Home-Garden/Sunnydaze-Outdoor-Black-Wrought-Iron-Scrolling-Bar-Chairs-Set-of-2/35430954/product.html', notes:'Same order #421501469. ITEM 39585790. Extra tall chairs for FPH patio. 3 sets of 2.' },
+      { id:'lobby-evalena', name:'Evalena lobby bar stool', size:'Counter 27\", Monaco Eclipse Velvet', qty:'2', onHand:'', cost:'$390', vendor:'Wayfair', location:'Hotel public', lastOrdered:'2024-03-15', link:'https://www.wayfair.com/furniture/pdp/search?keyword=W006832145', notes:'Invoice #4235100599. SKU W006832145. Two additional lobby bar chairs along the window. $845.80 order total with tax.' },
+      { id:'lobby-chesterfield', name:'Chesterfield roll-arm armchair', size:'45\" small, faux mohair velvet Midnight', qty:'2', onHand:'', cost:'$1,849', vendor:'Pottery Barn', location:'Hotel public', lastOrdered:'2024-01-19', link:'https://www.potterybarn.com/products/chesterfield-tufted-upholstered-armchair-collection/', notes:'Order 340192089142. SKU 84-5666372. Navy lobby chairs (Notion said navy and green; this receipt is Midnight). Paid $3,539.69 after discount. White glove. Custom / no return.' },
+      { id:'lobby-sarreid-settee', name:'Sarreid leather sofa / settee', size:'Gold lobby 4-seater', qty:'1', onHand:'', cost:'$4,400', vendor:'Perigold', location:'Hotel public', lastOrdered:'2023-10-02', link:'https://www.perigold.com/furniture/pdp/sarreid-ltd-57-genuine-leather-armless-sofa-p000876927.html', notes:'Order #3619684359. $4,769.88 with tax. Notion: gold lobby 4-seater settee. Same Sarreid family as the existing armless sofa line. Confirm if this is a second piece or the same sofa already logged.' }
+    ];
+
+    let rows = [];
+    let locFilter = 'all';
+    let sortKey = 'name';
+    let sortDir = 'asc';
+    let noteTimers = {};
+    let formLoc = 'Guest rooms';
+
+    function uhgSetTheme(t) {
+      document.documentElement.setAttribute('data-theme', t);
+      try { localStorage.setItem('uhg-hub-theme', t); } catch (e) {}
+      paintTheme();
+    }
+    function paintTheme() {
+      const t = document.documentElement.getAttribute('data-theme') || 'dark';
+      document.getElementById('theme-paper-btn').classList.toggle('on', t === 'paper');
+      document.getElementById('theme-dark-btn').classList.toggle('on', t === 'dark');
+    }
+    function esc(s) {
+      return String(s || '').replace(/[&<>"']/g, function(c) {
+        return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c];
+      });
+    }
+    function setStatus(msg, cls) {
+      const el = document.getElementById('status');
+      el.textContent = msg;
+      el.className = 'status' + (cls ? ' ' + cls : '');
+    }
+    function hay(r) {
+      return [r.name, r.size, r.vendor, r.location, r.cost, r.qty, r.onHand, r.notes, r.link, r.lastOrdered].join(' ').toLowerCase();
+    }
+    function moneyKey(s) {
+      const n = parseFloat(String(s || '').replace(/[^0-9.]/g, ''));
+      return isNaN(n) ? null : n;
+    }
+    function sortVal(r, key) {
+      if (key === 'cost') return moneyKey(r.cost);
+      if (key === 'qty' || key === 'onHand') {
+        const n = parseFloat(String(r[key] || '').replace(/,/g, ''));
+        return isNaN(n) ? String(r[key] || '').toLowerCase() : n;
+      }
+      if (key === 'link') return r.link ? 1 : 0;
+      return String(r[key] || '').toLowerCase();
+    }
+    function cmp(a, b, key, dir) {
+      const va = sortVal(a, key), vb = sortVal(b, key);
+      const aEmpty = va === '' || va == null;
+      const bEmpty = vb === '' || vb == null;
+      if (aEmpty && !bEmpty) return 1;
+      if (!aEmpty && bEmpty) return -1;
+      if (va < vb) return dir === 'asc' ? -1 : 1;
+      if (va > vb) return dir === 'asc' ? 1 : -1;
+      return String(a.name || '').localeCompare(String(b.name || ''));
+    }
+    function prodCell(r) {
+      if (r.link) {
+        return '<a class="prod" href="' + esc(r.link) + '" target="_blank" rel="noopener">Open product</a>';
+      }
+      return '<button class="prod-miss" type="button" data-edit="' + esc(r.id) + '">Add product</button>';
+    }
+    function paintSortHeaders() {
+      document.querySelectorAll('th[data-sort]').forEach(th => {
+        th.classList.remove('on');
+        const old = th.querySelector('.arrow');
+        if (old) old.remove();
+        if (th.getAttribute('data-sort') === sortKey) {
+          th.classList.add('on');
+          const sp = document.createElement('span');
+          sp.className = 'arrow';
+          sp.textContent = sortDir === 'asc' ? '▲' : '▼';
+          th.appendChild(sp);
+        }
+      });
+    }
+    function renderTabs() {
+      const locEl = document.getElementById('locTabs');
+      locEl.innerHTML = ['all'].concat(LOCS).map(v => {
+        const label = v === 'all' ? 'All locations' : v;
+        const on = locFilter === v ? ' on' : '';
+        return '<button class="ftab' + on + '" type="button" data-loc="' + esc(v) + '">' + esc(label) + '</button>';
+      }).join('');
+    }
+    function filtered() {
+      const q = (document.getElementById('q').value || '').trim().toLowerCase();
+      return rows.filter(r => {
+        if (r.archived) return false;
+        if (locFilter !== 'all' && r.location !== locFilter) return false;
+        if (q && hay(r).indexOf(q) < 0) return false;
+        return true;
+      }).slice().sort((a, b) => cmp(a, b, sortKey, sortDir));
+    }
+    function render() {
+      const list = filtered();
+      document.getElementById('count').textContent = list.length + ' item' + (list.length === 1 ? '' : 's');
+      const tb = document.getElementById('tbody');
+      const empty = document.getElementById('empty');
+      if (!list.length) { tb.innerHTML = ''; empty.hidden = false; return; }
+      empty.hidden = true;
+      tb.innerHTML = list.map(r => {
+        return '<tr data-id="' + esc(r.id) + '">'
+          + '<td><div class="name">' + esc(r.name) + '</div>'
+          + (r.size ? '<div class="size">' + esc(r.size) + '</div>' : '')
+          + (r.lastOrdered ? '<div class="size">Last ordered ' + esc(r.lastOrdered) + '</div>' : '')
+          + '</td>'
+          + '<td>' + prodCell(r) + '</td>'
+          + '<td><span class="loc">' + esc(r.location || 'Unassigned') + '</span></td>'
+          + '<td>' + esc(r.qty || '—') + '</td>'
+          + '<td>' + esc(r.onHand || '—') + '</td>'
+          + '<td class="vendor">' + esc(r.vendor || '—') + '</td>'
+          + '<td class="money">' + esc(r.cost || '—') + '</td>'
+          + '<td><textarea class="notes" data-id="' + esc(r.id) + '" placeholder="Notes…">' + esc(r.notes || '') + '</textarea></td>'
+          + '<td><button class="tiny" type="button" data-edit="' + esc(r.id) + '">Edit</button></td>'
+          + '</tr>';
+      }).join('');
+      paintSortHeaders();
+    }
+    async function load() {
+      try {
+        const res = await fetch(API + '&_=' + Date.now());
+        const json = await res.json();
+        const data = (json && json.data) || {};
+        if (Array.isArray(data.rows) && data.rows.length) {
+          rows = data.rows;
+          const have = new Set(rows.map(r => r.id));
+          let added = 0;
+          SEED.forEach(s => {
+            if (!have.has(s.id)) { rows.push(Object.assign({}, s)); added++; }
+          });
+          if (added) await save(false);
+        } else {
+          rows = SEED.map(r => Object.assign({}, r));
+          await save(false);
+        }
+        setStatus('Saved in cloud', 'ok');
+      } catch (e) {
+        rows = SEED.map(r => Object.assign({}, r));
+        setStatus('Offline — showing seed list', 'err');
+      }
+      render();
+    }
+    async function save(toast) {
+      try {
+        const get = await fetch(API + '&_=' + Date.now());
+        const json = await get.json();
+        const existing = (json && json.data) || {};
+        existing.rows = rows;
+        existing.updated = new Date().toISOString();
+        const put = await fetch(API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(existing)
+        });
+        if (!put.ok) throw new Error('save failed');
+        if (toast !== false) setStatus('Saved ' + new Date().toLocaleTimeString([], { hour:'numeric', minute:'2-digit' }), 'ok');
+      } catch (e) {
+        setStatus('Could not save — try again', 'err');
+      }
+    }
+    function setLoc(v) { formLoc = v; fillDd('locMenu','locBtn',LOCS,formLoc,setLoc); }
+    function fillDd(menuId, btnId, values, current, setter) {
+      const menu = document.getElementById(menuId);
+      const btn = document.getElementById(btnId);
+      btn.textContent = current;
+      menu.innerHTML = values.map(v => {
+        const on = v === current ? ' active' : '';
+        return '<div class="dd-item' + on + '" data-v="' + esc(v) + '">' + esc(v) + '</div>';
+      }).join('');
+      menu.querySelectorAll('.dd-item').forEach(el => {
+        el.onclick = (ev) => {
+          ev.stopPropagation();
+          setter(el.getAttribute('data-v'));
+          menu.classList.remove('open');
+        };
+      });
+    }
+    function openModal(row) {
+      document.getElementById('modalTitle').textContent = row ? 'Edit item' : 'Add item';
+      document.getElementById('fId').value = row ? row.id : '';
+      document.getElementById('fName').value = row ? (row.name || '') : '';
+      document.getElementById('fSize').value = row ? (row.size || '') : '';
+      document.getElementById('fQty').value = row ? (row.qty || '') : '';
+      document.getElementById('fOnHand').value = row ? (row.onHand || '') : '';
+      document.getElementById('fCost').value = row ? (row.cost || '') : '';
+      document.getElementById('fVendor').value = row ? (row.vendor || '') : '';
+      document.getElementById('fLast').value = row ? (row.lastOrdered || '') : '';
+      document.getElementById('fLink').value = row ? (row.link || '') : '';
+      document.getElementById('fNotes').value = row ? (row.notes || '') : '';
+      formLoc = row ? (row.location || 'Unassigned') : 'Guest rooms';
+      fillDd('locMenu', 'locBtn', LOCS, formLoc, setLoc);
+      document.getElementById('modalBg').classList.add('on');
+      (row && !row.link ? document.getElementById('fLink') : document.getElementById('fName')).focus();
+    }
+    function closeModal() { document.getElementById('modalBg').classList.remove('on'); }
+
+    document.getElementById('q').addEventListener('input', render);
+    document.getElementById('locTabs').addEventListener('click', e => {
+      const b = e.target.closest('[data-loc]');
+      if (!b) return;
+      locFilter = b.getAttribute('data-loc');
+      renderTabs(); render();
+    });
+    document.querySelectorAll('th[data-sort]').forEach(th => {
+      th.addEventListener('click', () => {
+        const k = th.getAttribute('data-sort');
+        if (sortKey === k) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+        else { sortKey = k; sortDir = (k === 'cost' || k === 'qty' || k === 'onHand' || k === 'link') ? 'desc' : 'asc'; }
+        try { localStorage.setItem(SORT_STORE, JSON.stringify({ key: sortKey, dir: sortDir })); } catch (e) {}
+        render();
+      });
+    });
+    document.getElementById('addBtn').addEventListener('click', () => openModal(null));
+    document.getElementById('cancelBtn').addEventListener('click', closeModal);
+    document.getElementById('modalBg').addEventListener('click', e => { if (e.target.id === 'modalBg') closeModal(); });
+    document.getElementById('locBtn').addEventListener('click', e => {
+      e.stopPropagation();
+      const menu = document.getElementById('locMenu');
+      const open = menu.classList.contains('open');
+      document.querySelectorAll('.dd-menu.open').forEach(m => m.classList.remove('open'));
+      if (!open) menu.classList.add('open');
+    });
+    document.addEventListener('click', () => document.querySelectorAll('.dd-menu.open').forEach(m => m.classList.remove('open')));
+    document.getElementById('form').addEventListener('submit', e => {
+      e.preventDefault();
+      const id = document.getElementById('fId').value || ('ffe-' + Date.now());
+      const rec = {
+        id,
+        name: document.getElementById('fName').value.trim(),
+        size: document.getElementById('fSize').value.trim(),
+        qty: document.getElementById('fQty').value.trim(),
+        onHand: document.getElementById('fOnHand').value.trim(),
+        cost: document.getElementById('fCost').value.trim(),
+        vendor: document.getElementById('fVendor').value.trim(),
+        location: formLoc,
+        lastOrdered: document.getElementById('fLast').value.trim(),
+        link: document.getElementById('fLink').value.trim(),
+        notes: document.getElementById('fNotes').value.trim()
+      };
+      const i = rows.findIndex(r => r.id === id);
+      if (i >= 0) rows[i] = rec; else rows.push(rec);
+      closeModal();
+      render();
+      save();
+    });
+    document.getElementById('tbody').addEventListener('input', e => {
+      const ta = e.target.closest('.notes');
+      if (!ta) return;
+      const id = ta.getAttribute('data-id');
+      const row = rows.find(r => r.id === id);
+      if (!row) return;
+      row.notes = ta.value;
+      clearTimeout(noteTimers[id]);
+      noteTimers[id] = setTimeout(() => save(), 600);
+    });
+    document.getElementById('tbody').addEventListener('click', e => {
+      const edit = e.target.getAttribute('data-edit');
+      if (edit) {
+        const row = rows.find(r => r.id === edit);
+        if (row) openModal(row);
+      }
+    });
+    try {
+      const saved = JSON.parse(localStorage.getItem(SORT_STORE) || 'null');
+      if (saved && saved.key && saved.key !== 'status') { sortKey = saved.key; sortDir = saved.dir === 'desc' ? 'desc' : 'asc'; }
+    } catch (e) {}
+    paintTheme();
+    renderTabs();
+    load();
+  </script>
+</body>
+</html>
