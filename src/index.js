@@ -273,6 +273,12 @@ export default {
         dest.hash = url.hash;
         return Response.redirect(dest.toString(), 302);
       }
+      if (p === "/assets/front-desk-manual" || p === "/assets/front-desk-manual.html") {
+        const dest = new URL("https://tools.hotelstcloud.com/front-desk-manual");
+        dest.search = url.search;
+        dest.hash = url.hash;
+        return Response.redirect(dest.toString(), 302);
+      }
     }
 
     // ── DELETE /api/socc-candidates ──────────────────────────────────────────
