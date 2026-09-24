@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v0923c</title>
+<title>Fremont Makers — Project Builder v0923d</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20260923c-moss-green -->
+<!-- FM-BUILD-v20260923d-house-color -->
 <script>
 (function(){
   try {
@@ -325,7 +325,9 @@
     width: 100%;
   }
   .tbl-input:focus { outline: none; border-color: var(--accent); }
-  .tbl-input.locked { background: var(--locked); color: var(--muted); pointer-events: none; }
+  .tbl-input.locked, .job-field input.locked, .job-field select.locked {
+    background: var(--locked); color: var(--muted); pointer-events: none;
+  }
   .tbl-input.serial { font-family: monospace; font-size: 11px; }
   .qty-cell { display: flex; align-items: center; gap: 4px; }
   .qty-btn {
@@ -626,7 +628,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0923c</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0923d</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
     <span class="status-label">Status:</span>
@@ -676,6 +678,10 @@
   <div class="job-field">
     <label>Install Address</label>
     <input type="text" id="install-address" placeholder="123 Main St, Canon City CO" style="min-width:220px" oninput="saveLocal()" />
+  </div>
+  <div class="job-field" id="house-color-field">
+    <label>Cabinet color</label>
+    <select id="house-color" onchange="saveLocal()" style="min-width:220px"></select>
   </div>
   <div class="job-field">
     <label>Houses (qty)</label>
@@ -3481,6 +3487,7 @@ function renderOrderSummary(orderId) {
     const field = mq.closest('.job-field');
     if (field) field.style.display = isOrder ? 'none' : '';
   }
+  syncHouseColorField(q);
   const pkt = document.getElementById('btn-order-packet');
   if (pkt) pkt.style.display = (isOrder && (pipeStatus(q) === 'contract' || pipeStatus(q) === 'completed')) ? '' : 'none';
   const adj = document.getElementById('btn-order-adjust');
@@ -3573,6 +3580,25 @@ function npwColorOptions(selected) {
   return FM_CABINET_COLORS.map(c =>
     '<option value="' + c.name.replace(/"/g, '') + '"' + (selected === c.name ? ' selected' : '') + '>' + c.name + '</option>'
   ).join('');
+}
+function houseColorOptionsHtml(selected) {
+  const names = FM_CABINET_COLORS.map(c => c.name);
+  let extra = '';
+  if (selected && names.indexOf(selected) === -1) {
+    extra = '<option value="' + String(selected).replace(/"/g, '') + '" selected>' + selected + '</option>';
+  }
+  return '<option value="">Select color</option>' + extra + npwColorOptions(selected);
+}
+function syncHouseColorField(q) {
+  const wrap = document.getElementById('house-color-field');
+  const sel = document.getElementById('house-color');
+  if (!wrap || !sel) return;
+  const show = quoteKind(q) !== 'order';
+  wrap.style.display = show ? '' : 'none';
+  if (!show) return;
+  const cur = (q && q.colorName) || '';
+  sel.innerHTML = houseColorOptionsHtml(cur);
+  sel.value = cur;
 }
 function npwBuildHouseDrafts() {
   const houses = [];
@@ -3889,6 +3915,7 @@ function loadQuote(id) {
   document.getElementById('project-name').value               = q.project  || '';
   document.getElementById('quote-date').value                 = q.date     || today();
   document.getElementById('install-address').value            = q.address  || '';
+  syncHouseColorField(q);
   const mq = document.getElementById('model-qty');
   if (mq) mq.value = Math.max(1, parseInt(q.modelQty, 10) || 1);
   document.getElementById('gna-pct').value                    = q.gnaPct  || '10';
@@ -4132,7 +4159,7 @@ function collectData() {
     builderProgram: quoteData[activeQuoteId]?.builderProgram || '',
     builderId: quoteData[activeQuoteId]?.builderId || '',
     payPlan: quoteData[activeQuoteId]?.payPlan || payPlanOf(quoteData[activeQuoteId] || {}),
-    colorName: quoteData[activeQuoteId]?.colorName || '',
+    colorName: document.getElementById('house-color')?.value || quoteData[activeQuoteId]?.colorName || '',
     revenueStream: quoteData[activeQuoteId]?.revenueStream || 'cabinets'
   };
 }
@@ -4421,7 +4448,7 @@ function setStatus(s) {
   });
 
   const locked = s === 'contract' || s === 'completed';
-  document.querySelectorAll('.tbl-input, .markup-select, .gna-select, .tax-input, #customer-name, #signer-name, #project-name, #install-address').forEach(el => {
+  document.querySelectorAll('.tbl-input, .markup-select, .gna-select, .tax-input, #customer-name, #signer-name, #project-name, #install-address, #house-color').forEach(el => {
     if (locked) el.classList.add('locked');
     else el.classList.remove('locked');
   });
