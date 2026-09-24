@@ -279,6 +279,18 @@ export default {
         dest.hash = url.hash;
         return Response.redirect(dest.toString(), 302);
       }
+      if (p === "/assets/hsc-tax-exempt" || p === "/assets/hsc-tax-exempt.html") {
+        const dest = new URL("https://brief.hotelstcloud.com/briefs/tax-exempt-rooms/");
+        dest.search = url.search;
+        dest.hash = url.hash;
+        return Response.redirect(dest.toString(), 302);
+      }
+      if (p === "/assets/hsc-tax-exempt-print" || p === "/assets/hsc-tax-exempt-print.html" || p === "/assets/hsc-tax-exempt-print.pdf") {
+        const dest = new URL("https://brief.hotelstcloud.com/briefs/tax-exempt-rooms/");
+        dest.search = url.search;
+        dest.hash = url.hash;
+        return Response.redirect(dest.toString(), 302);
+      }
     }
 
     // ── DELETE /api/socc-candidates ──────────────────────────────────────────
