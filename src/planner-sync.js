@@ -33,6 +33,11 @@ const SUPPLY_CATS = [
 const SUPPLY_SET = new Set(SUPPLY_CATS);
 const HSC_TITLES = new Set(['HSC DAY STAFF', 'HSC NIGHT STAFF']);
 const MGMT = { fp: '412.00', fph: '206.00', hsc: '534.00', socc: '0' };
+const FPH_MGMT_AFTER_DATE = '2026-09-21';
+const FPH_MGMT_AFTER = '370.00';
+function fphMgmtRate(ymd) {
+  return ymd >= FPH_MGMT_AFTER_DATE ? FPH_MGMT_AFTER : MGMT.fph;
+}
 const HSC_CHRIS_OFF = '2026-09-14';
 const HSC_MGMT_AFTER = '369.86';
 function hscMgmtRate(ymd) {
@@ -713,7 +718,7 @@ async function runSync(env, status) {
   const fph = await kvGet(env, 'fp-ph');
   status.changed.fphAct = applySeries(fph, 'fp-ph-wk-', 'actrevs', sales.fph);
   status.changed.fphHrly = applySeries(fph, 'fp-ph-wk-', 'hrlyacts', moneyMap(labor.fph));
-  fillCurrentMgmt(fph, 'fp-ph-wk-', laborDays, MGMT.fph);
+  fillCurrentMgmt(fph, 'fp-ph-wk-', laborDays, fphMgmtRate);
   await kvPut(env, 'fp-ph', fph);
   try {
     const lyDays = [...new Set(salesDays.map(priorYearYmd))];
@@ -952,7 +957,9 @@ function fillStandingMgmtByDay(week, mon, rateFn) {
     const ymd = addYmd(mon, i);
     const r = rateFn(ymd);
     const cur = arr[i];
-    if (cur === '' || cur == null || cur === MGMT.hsc) arr[i] = r;
+    const n = Number(cur);
+    // Blank, or the old standing rate this outlet is leaving (hotel 534, 1887 206).
+    if (cur === '' || cur == null || n === Number(MGMT.hsc) || n === Number(MGMT.fph)) arr[i] = r;
   }
   week.mgmtacts = arr;
 }
