@@ -80,7 +80,7 @@
     <div class="wrap" style="max-width:760px">
       <div class="eyebrow">Book the night</div>
       <h2>Tell us the date.</h2>
-      <p class="ok" id="sent">Request opened in your email. If nothing popped up, write hello@unbridledhospitality.com or call (719) 602-3469.</p>
+      <p class="ok" id="sent">Got it. It went to hello@unbridledhospitality.com. We will write back.</p>
       <form id="venue-form" data-venue="Holidays at the Post Office, 505 Macon Ave">
         <div class="row">
           <div><label for="name">Your name</label><input id="name" required /></div>
@@ -125,19 +125,7 @@
       document.querySelectorAll('.tab-panel').forEach(function (p) { p.hidden = p.id !== id; });
       document.querySelectorAll('.tabs button').forEach(function (b) { b.classList.toggle('on', b === btn); });
     }
-    var form = document.getElementById('venue-form');
-    if (form) form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      var g = function (id) { return (document.getElementById(id).value || '').trim(); };
-      var venue = form.getAttribute('data-venue');
-      var body = ['Venue inquiry, ' + venue, '',
-        'Name: ' + g('name'), 'Email: ' + g('email'), 'Phone: ' + g('phone'),
-        'Event type: ' + g('kind'), 'Date: ' + g('date'), 'Headcount: ' + g('guests'),
-        'Notes: ' + g('notes')].join('\n');
-      var subject = venue + ' · ' + (g('kind') || 'inquiry') + ' · ' + (g('date') || 'date TBD');
-      window.location.href = 'mailto:hello@unbridledhospitality.com?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
-      document.getElementById('sent').style.display = 'block';
-    });
   </script>
+  <script src="venue-inquire.js"></script>
 </body>
 </html>

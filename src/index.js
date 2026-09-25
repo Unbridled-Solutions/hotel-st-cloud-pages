@@ -9,6 +9,7 @@ import { handleHrForms } from './hr-forms.js';
 import { handleHscGroupBlocks } from './hsc-group-blocks.js';
 import { handlePayroll } from './payroll.js';
 import { handleHscVaultLogins } from './hsc-manager-vault.js';
+import { handleVenueInquire } from './venue-inquire.js';
 
 const AIRTABLE_BASE = "appUUjLXEUwlyx23M";
 const SOCC_TABLE    = "SOCC%20Barista%20Applications";
@@ -157,6 +158,11 @@ export default {
 
     if (url.pathname === '/api/hsc/vault-logins') {
       return handleHscVaultLogins(request, env);
+    }
+
+    if (url.pathname === '/api/venue-inquire') {
+      const vi = await handleVenueInquire(request, env);
+      if (vi) return vi;
     }
 
     if (isHscToolsHost(url.hostname) && !url.pathname.startsWith("/api")) {
