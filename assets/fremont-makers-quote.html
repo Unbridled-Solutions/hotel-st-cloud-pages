@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v0923d</title>
+<title>Fremont Makers — Project Builder v0923e</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20260923d-house-color -->
+<!-- FM-BUILD-v20260923e-moss-umo -->
 <script>
 (function(){
   try {
@@ -628,7 +628,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0923d</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0923e</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
     <span class="status-label">Status:</span>
@@ -1048,6 +1048,7 @@
     <div class="inv-to">
       <strong id="inv-customer">—</strong>
       <span id="inv-address"></span>
+      <span id="inv-color" style="display:block;font-size:13px;color:#555;margin-top:4px;"></span>
       <span id="inv-project" style="display:block;font-size:13px;color:#555;margin-top:4px;font-style:italic;"></span>
     </div>
     <table class="inv-table">
@@ -1356,6 +1357,7 @@
     <div class="inv-to">
       <strong id="pq-customer">—</strong>
       <span id="pq-address"></span>
+      <span id="pq-color" style="display:block;font-size:13px;color:#555;margin-top:4px;"></span>
       <span id="pq-project" style="display:block;font-size:13px;color:#555;margin-top:4px;font-style:italic;"></span>
     </div>
     <table class="inv-table">
@@ -1797,7 +1799,7 @@ function applyCabinetsToActiveQuote(lines, extras) {
     childIds: target.childIds, modelMix: target.modelMix, isOrder: target.isOrder,
     builderProgram: target.builderProgram, labor: target.labor, status: target.status,
     gnaPct: target.gnaPct, taxPct: target.taxPct, bulkDiscPct: target.bulkDiscPct,
-    address: target.address, date: target.date, ar: target.ar
+    address: target.address, colorName: target.colorName, date: target.date, ar: target.ar
   };
   target.cabinets = (lines || []).map(l => ({
     desc: l.desc,
@@ -1933,7 +1935,8 @@ const WC_COLOR_NAMES = {
   VGW: 'Verona Gloss White',
   BWS: 'Bayview Wood Shaker',
   SWD: 'Bayview Wood Shaker',
-  SGS: 'Slate Grey Shaker'
+  SGS: 'Slate Grey Shaker',
+  UMO: 'Moss Green Shaker'
 };
 
 const WC_SUFFIXES = Object.keys(WC_COLOR_NAMES);
@@ -1986,7 +1989,19 @@ function wcColorLabel(serial, following) {
     if (/^[A-Za-z][A-Za-z0-9\/\-]*$/.test(raw)) words.push(raw);
     if (words.length >= 4) break;
   }
+  const joined = words.join(' ');
+  if (/moss\s*green/i.test(joined)) return 'Moss Green Shaker';
   return words.length ? words.join(' ') : (suf || 'Cabinet');
+}
+function colorwayOf(q) {
+  return String((q && q.colorName) || '').trim();
+}
+function setPrintColorway(id, q) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const c = colorwayOf(q);
+  el.textContent = c ? ('Color: ' + c) : '';
+  el.style.display = c ? 'block' : 'none';
 }
 
 function wcMoney(n) { return Math.round((Number(n) || 0) * 100) / 100; }
@@ -3391,7 +3406,7 @@ const FM_CABINET_COLORS = [
   { key: 'sbw', name: 'Bayview White Shaker' },
   { key: 'sbn', name: 'Bayview Navy Shaker' },
   { key: 'bws', name: 'Bayview Wood Shaker' },
-  { key: 'moss', name: 'Moss Green' },
+  { key: 'moss', name: 'Moss Green Shaker' },
   { key: 'sgs', name: 'Slate Grey Shaker' },
   { key: 'vdh', name: 'Dark Hickory Shaker' }
 ];
@@ -4937,6 +4952,7 @@ function buildInvoice() {
   document.getElementById('inv-date').textContent      = currentQuoteData.date || today();
   document.getElementById('inv-customer').textContent  = currentQuoteData.customer || '(Customer)';
   document.getElementById('inv-address').textContent   = currentQuoteData.address;
+  setPrintColorway('inv-color', currentQuoteData);
   document.getElementById('inv-project').textContent   = currentQuoteData.project ? `Model: ${currentQuoteData.project}` : '';
 
   // Cabinet rows
@@ -5036,6 +5052,7 @@ function buildPrintQuote() {
   if (el('pq-date'))       el('pq-date').textContent       = q.date || today();
   if (el('pq-customer'))   el('pq-customer').textContent   = q.customer || '(Customer)';
   if (el('pq-address'))    el('pq-address').textContent    = q.address || '';
+  setPrintColorway('pq-color', q);
   if (el('pq-project'))    el('pq-project').textContent    = q.project || '';
   if (el('pq-footer-date'))  el('pq-footer-date').textContent  = q.date || today();
 

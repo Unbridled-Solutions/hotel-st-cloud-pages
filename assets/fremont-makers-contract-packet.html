@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
-  <title>Fremont Makers — Contract Packet v0923a</title>
-  <!-- FM-PACKET-v0923a-fifty-fifty -->
+  <title>Fremont Makers — Contract Packet v0923e</title>
+  <!-- FM-PACKET-v0923e-colorway -->
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Pinyon+Script&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     :root { --ink:#1a1a1a; --muted:#666; --line:#d8d4cc; --gold:#c9a84c; --paper:#fff; --screen:#111; }
@@ -58,7 +58,7 @@
 </head>
 <body>
   <div class="bar">
-    <strong>Fremont Makers · Contract packet <span style="opacity:.45;letter-spacing:0;">v0923a</span></strong>
+    <strong>Fremont Makers · Contract packet <span style="opacity:.45;letter-spacing:0;">v0923e</span></strong>
     <div class="actions">
       <span class="save-ok" id="save-msg"></span>
       <button type="button" onclick="window.print()">Print</button>
@@ -175,7 +175,7 @@ function pageOrderCover(q, kids, total) {
   ).join('');
   const houseRows = kids.map(c => {
     const n = quoteGrand(c);
-    return '<tr><td>' + esc(c.project || c.modelName || '') + '</td><td>' + esc(c.jobCode || '') + '</td><td class="r">' + money(n.unit * modelQty(c)) + '</td></tr>';
+    return '<tr><td>' + esc(c.project || c.modelName || '') + '</td><td>' + esc(c.jobCode || '') + '</td><td>' + esc(c.address || '—') + '</td><td>' + esc(c.colorName || '—') + '</td><td class="r">' + money(n.unit * modelQty(c)) + '</td></tr>';
   }).join('');
   return '<div class="page">' + head('Builder order')
     + '<h1>Builder Order</h1><div class="tag">making freedom</div>'
@@ -193,8 +193,8 @@ function pageOrderCover(q, kids, total) {
     + '</tbody></table>'
     + '<table class="tot"><tbody><tr><td>Order total</td><td class="r">' + money(total) + '</td></tr></tbody></table>'
     + '<h2>Houses</h2>'
-    + '<table><thead><tr><th>House</th><th>Job</th><th class="r">Amount</th></tr></thead><tbody>'
-    + (houseRows || '<tr><td colspan="3">No houses</td></tr>')
+    + '<table><thead><tr><th>House</th><th>Job</th><th>Address</th><th>Color</th><th class="r">Amount</th></tr></thead><tbody>'
+    + (houseRows || '<tr><td colspan="5">No houses</td></tr>')
     + '</tbody></table>'
     + '</div>';
 }
@@ -225,6 +225,7 @@ function jobMeta(q, nums) {
     + '<div><b>Quote date</b>' + esc(prettyDate(q.date)) + '</div>'
     + '<div><b>Install / delivery</b>' + esc(prettyDate(q.installDate)) + '</div>'
     + '<div><b>Site</b>' + esc(q.address || '—') + '</div>'
+    + (q.colorName ? '<div><b>Color</b>' + esc(q.colorName) + '</div>' : '')
     + (qty > 1 ? '<div><b>Quantity</b>' + qty + ' of this model · unit ' + money(nums.unit) + '</div><div><b>Contract total</b>' + money(nums.unit * qty) + '</div>' : '<div><b>Contract total</b>' + money(nums.unit * qty) + '</div>')
     + '</div>';
 }
