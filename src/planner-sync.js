@@ -168,10 +168,16 @@ function fillStandingMgmt(week, rate) {
 async function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
 async function fetchJson(url, opts = {}, retries = 5) {
+  const timeoutMs = opts.timeoutMs ?? (String(url).includes('cloudbeds.com') ? 20000 : 25000);
+  const tries = String(url).includes('cloudbeds.com') ? Math.min(retries, 3) : retries;
+  const fetchOpts = { ...opts };
+  delete fetchOpts.timeoutMs;
   let last;
-  for (let i = 0; i < retries; i++) {
+  for (let i = 0; i < tries; i++) {
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), timeoutMs);
     try {
-      const res = await fetch(url, opts);
+      const res = await fetch(url, { ...fetchOpts, signal: ac.signal });
       if (res.status === 429 || res.status >= 500) {
         const wait = Math.min(20000, 800 * 2 ** i);
         await sleep(wait);
@@ -185,7 +191,9 @@ async function fetchJson(url, opts = {}, retries = 5) {
       return { body, headers: res.headers, status: res.status };
     } catch (e) {
       last = e;
-      await sleep(Math.min(12000, 400 * 2 ** i));
+      await sleep(Math.min(String(url).includes('cloudbeds.com') ? 4000 : 12000, 400 * 2 ** i));
+    } finally {
+      clearTimeout(timer);
     }
   }
   throw last || new Error('fetch failed');
@@ -363,7 +371,14 @@ async function cloudbedsRoomRev(env, from, to, tight = false) {
   // lookback misses guests who arrived earlier and still occupy tonight,
   // which wrote $0.00 over real room $ (Wed/Thu 2026-09-09/10).
   const checkInFrom = tight ? addYmd(from, -21) : addYmd(from, -30);
-  const pageCap = tight ? 12 : 50;
+  const pageCap = tight ? 12 : 20;
+  // Future outlook does not need already-departed checked_out stays.
+  // Including them hung Refresh on 600+ rate-detail IDs (Stan, 23 Sep 2026)
+  // and froze hotel $ while Cloudbeds still took new bookings (25 Sep 2026).
+  const today = denverYmd();
+  const occupying = from >= today
+    ? ['confirmed', 'checked_in']
+    : ['confirmed', 'checked_in', 'checked_out'];
   for (let page = 1; page <= pageCap; page++) {
     const url = `${CB_HOST}/getReservations?propertyID=${PROP}&pageSize=100&pageNumber=${page}`
       + `&checkInFrom=${checkInFrom}&checkInTo=${to}`;
@@ -373,7 +388,7 @@ async function cloudbedsRoomRev(env, from, to, tight = false) {
     const recs = body?.data || [];
     for (const rec of recs) {
       const st = String(rec.status || '').toLowerCase();
-      if (!['confirmed', 'checked_in', 'checked_out'].includes(st)) continue;
+      if (!occupying.includes(st)) continue;
       const start = rec.startDate || rec.start_date || '';
       const end = rec.endDate || rec.end_date || '';
       if (!stayOverlapsWindow(start, end, from, to)) continue;
@@ -384,25 +399,38 @@ async function cloudbedsRoomRev(env, from, to, tight = false) {
   }
   const nightly = {};
   const list = [...ids];
-  for (let i = 0; i < list.length; i += 20) {
-    const batch = list.slice(i, i + 20);
-    const url = `${CB_HOST}/getReservationsWithRateDetails?propertyID=${PROP}&reservationID=${batch.join(',')}`;
-    try {
-      const { body } = await fetchJson(url, {
-        headers: { Authorization: 'Bearer ' + env.CLOUDBEDS_API_KEY, Accept: 'application/json' },
-      });
-      let data = body?.data || [];
-      if (data && !Array.isArray(data)) data = [data];
-      for (const res of data) {
-        const rooms = res.rooms || res.reservationRooms || [];
-        for (const room of rooms) {
-          const rates = room.detailedRoomRates || {};
-          for (const [day, amt] of Object.entries(rates)) {
-            nightly[day] = (nightly[day] || 0) + Number(amt || 0);
-          }
+  const RATE_CONC = 3;
+  const addRates = (data) => {
+    for (const res of data) {
+      const rooms = res.rooms || res.reservationRooms || [];
+      for (const room of rooms) {
+        const rates = room.detailedRoomRates || {};
+        for (const [day, amt] of Object.entries(rates)) {
+          nightly[day] = (nightly[day] || 0) + Number(amt || 0);
         }
       }
-    } catch (_) { /* keep going */ }
+    }
+  };
+  for (let i = 0; i < list.length; i += 20 * RATE_CONC) {
+    const groups = [];
+    for (let g = 0; g < RATE_CONC; g++) {
+      const batch = list.slice(i + g * 20, i + (g + 1) * 20);
+      if (batch.length) groups.push(batch);
+    }
+    const bodies = await Promise.all(groups.map(async (batch) => {
+      const url = `${CB_HOST}/getReservationsWithRateDetails?propertyID=${PROP}&reservationID=${batch.join(',')}`;
+      try {
+        const { body } = await fetchJson(url, {
+          headers: { Authorization: 'Bearer ' + env.CLOUDBEDS_API_KEY, Accept: 'application/json' },
+        });
+        let data = body?.data || [];
+        if (data && !Array.isArray(data)) data = [data];
+        return data;
+      } catch (_) {
+        return [];
+      }
+    }));
+    for (const data of bodies) addRates(data);
   }
   const out = {};
   for (const d of rangeYmd(from, to)) {
@@ -788,8 +816,32 @@ async function runSync(env, status) {
   status.message = 'Cloudbeds hotel P' + curP.period + ' remainder + P' + nextP.period + '…';
   await setStatus(env, status);
   const outlookOccMap = await cloudbedsOccRange(env, outlookDays, status, 'CB outlook occ');
+  const outlookCreate = { create: true };
+  const curDays = outlookDays.filter((d) => d >= curP.from && d <= curP.to);
+  const nextDays = outlookDays.filter((d) => d >= nextP.from && d <= nextP.to);
+  const occCur = {};
+  const occNext = {};
+  for (const d of curDays) {
+    if (outlookOccMap[d] != null) occCur[d] = outlookOccMap[d];
+  }
+  for (const d of nextDays) {
+    if (outlookOccMap[d] != null) occNext[d] = outlookOccMap[d];
+  }
+  // Occupancy first. Rate-details used to hang here and freeze both occ
+  // and room $ while Cloudbeds still took bookings (Stan, 25 Sep 2026).
+  status.changed.hscCurOcc = applySeries(hsc, 'hsc-wk-', 'occrooms', occCur, outlookCreate);
+  status.changed.hscNextOcc = applySeries(hsc, 'hsc-wk-', 'occrooms', occNext, outlookCreate);
+  for (const d of outlookDays) {
+    const key = 'hsc-wk-' + mondayOf(d);
+    if (!hsc[key]) continue;
+    fillStandingMgmtByDay(hsc[key], mondayOf(d), hscMgmtRate);
+  }
+  await kvPut(env, 'hsc', hsc);
+
   let outlookRoomRev = {};
   if (outlookDays.length) {
+    status.message = 'Cloudbeds hotel room $ P' + curP.period + ' remainder + P' + nextP.period + '…';
+    await setStatus(env, status);
     try { outlookRoomRev = await cloudbedsRoomRev(env, outlookFrom, outlookTo, false); }
     catch (e) { status.errors.push('CB outlook room$ ' + e.message); }
   }
@@ -798,32 +850,18 @@ async function runSync(env, status) {
     if (v === '' || v == null || !Number(v)) continue;
     outlookBookedMap[d] = fmtMoney(v);
   }
-  const outlookCreate = { create: true };
-  const curDays = outlookDays.filter((d) => d >= curP.from && d <= curP.to);
-  const nextDays = outlookDays.filter((d) => d >= nextP.from && d <= nextP.to);
-  const occCur = {};
-  const occNext = {};
   const bookedCur = {};
   const bookedNext = {};
   for (const d of curDays) {
-    if (outlookOccMap[d] != null) occCur[d] = outlookOccMap[d];
     if (outlookBookedMap[d]) bookedCur[d] = outlookBookedMap[d];
   }
   for (const d of nextDays) {
-    if (outlookOccMap[d] != null) occNext[d] = outlookOccMap[d];
     if (outlookBookedMap[d]) bookedNext[d] = outlookBookedMap[d];
   }
-  status.changed.hscCurOcc = applySeries(hsc, 'hsc-wk-', 'occrooms', occCur, outlookCreate);
   status.changed.hscCurBooked = applySeries(hsc, 'hsc-wk-', 'bookedrevs', bookedCur, outlookCreate);
-  status.changed.hscNextOcc = applySeries(hsc, 'hsc-wk-', 'occrooms', occNext, outlookCreate);
   status.changed.hscNextBooked = applySeries(hsc, 'hsc-wk-', 'bookedrevs', bookedNext, outlookCreate);
   copyBookedToAct(outlookDays);
   status.changed.hscActFill = actFill;
-  for (const d of outlookDays) {
-    const key = 'hsc-wk-' + mondayOf(d);
-    if (!hsc[key]) continue;
-    fillStandingMgmtByDay(hsc[key], mondayOf(d), hscMgmtRate);
-  }
   await kvPut(env, 'hsc', hsc);
   try {
     const lyDays = [...new Set(cbDays.map(priorYearYmd))];
