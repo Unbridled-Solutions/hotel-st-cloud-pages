@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v0923e</title>
+<title>Fremont Makers — Project Builder v0923f</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20260923e-moss-umo -->
+<!-- FM-BUILD-v20260923f-clear-house -->
 <script>
 (function(){
   try {
@@ -628,7 +628,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0923e</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0923f</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
     <span class="status-label">Status:</span>
@@ -639,6 +639,7 @@
       <label><input type="radio" name="fm-status" id="radio-completed" value="completed" onchange="onStatusRadio('completed')"> Completed</label>
       <label><input type="radio" name="fm-status" id="radio-lost" value="lost" onchange="onStatusRadio('lost')"> Lost</label>
     </div>
+    <button type="button" class="status-btn" id="btn-clear-house-pdf" onclick="clearHouseManufacturerUpload(activeQuoteId)" style="display:none;">Clear manufacturer PDF</button>
     <button type="button" class="status-btn" id="btn-issue-contract" onclick="openIssueContract()" style="border-color:var(--accent);color:var(--accent);font-weight:700;">Next: Issue Contract & Invoices</button>
     <button type="button" class="status-btn" id="btn-adjust-schedule" onclick="openAdjustSchedule()" style="display:none;">Adjust payment schedule</button>
     <button type="button" class="status-btn" id="btn-change-order" onclick="openChangeOrder()" style="display:none;">Create change order</button>
@@ -1639,6 +1640,9 @@ async function fmCloudPush() {
     if (activeQuoteId) bundle['fm-active-quote'] = activeQuoteId;
     Object.keys(quoteData).forEach(id => {
       bundle['fm-quote-' + id] = quoteData[id];
+    });
+    Object.keys(window._fmDroppedQuoteIds || {}).forEach(id => {
+      delete bundle['fm-quote-' + id];
     });
     Object.keys(_kvData).forEach(k => {
       if (k.startsWith('fm-cpnl-') || k === 'fm-balance-sheet' || k === 'fm-sq-archive') bundle[k] = _kvData[k];
@@ -2644,8 +2648,9 @@ function renderDashboard() {
     return `<div class="dash-actions">
             <button class="modal-btn" onclick="loadQuoteAndSwitchTab('${quote.id}')">${loadLbl}</button>
             ${isChild ? `<button class="modal-btn" onclick="event.stopPropagation();importPdfIntoHouse('${quote.id}')">Import PDF</button>` : dup}
+            ${isChild ? `<button class="modal-btn" onclick="event.stopPropagation();clearHouseManufacturerUpload('${quote.id}')">Clear PDF</button>` : ''}
             ${sched}
-            <button class="modal-btn del" onclick="deleteQuote('${quote.id}')">Delete</button>
+            <button class="modal-btn del" onclick="event.stopPropagation();deleteQuote('${quote.id}')">${isChild ? 'Remove house' : 'Delete'}</button>
             ${packet}
           </div>`;
   }
@@ -3535,8 +3540,10 @@ function renderOrderSummary(orderId) {
         + '<td><div class="dash-actions">'
         + '<button class="modal-btn" type="button" onclick="loadQuoteAndSwitchTab(\'' + ch.id + '\')">Open house</button>'
         + '<button class="modal-btn" type="button" onclick="event.stopPropagation();importPdfIntoHouse(\'' + ch.id + '\')">Import PDF</button>'
+        + '<button class="modal-btn" type="button" onclick="event.stopPropagation();clearHouseManufacturerUpload(\'' + ch.id + '\')">Clear PDF</button>'
+        + '<button class="modal-btn del" type="button" onclick="event.stopPropagation();deleteQuote(\'' + ch.id + '\')">Remove house</button>'
         + '</div></td></tr>';
-    }).join('') || '<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:16px">No houses on this order.</td></tr>';
+    }).join('') || '<tr><td colspan="7" style="color:var(--muted);text-align:center;padding:16px">No houses on this order.</td></tr>';
   }
   const lede = document.getElementById('order-summary-lede');
   if (lede) {
@@ -4076,26 +4083,93 @@ function duplicateQuote(id) {
   switchTab('dashboard'); // Stay on dashboard after duplicating
 }
 
+function unlinkHouseFromOrder(houseId) {
+  const house = quoteData[houseId] || {};
+  const parentId = house.parentOrderId;
+  if (!parentId || !quoteData[parentId]) return parentId || '';
+  const parent = quoteData[parentId];
+  if (Array.isArray(parent.childIds)) {
+    parent.childIds = parent.childIds.filter(cid => cid !== houseId);
+  }
+  const kids = childrenOfOrder(parentId).filter(k => k.id !== houseId);
+  const counts = {};
+  kids.forEach(k => {
+    const qd = quoteData[k.id] || k;
+    const n = qd.modelName || 'House';
+    counts[n] = (counts[n] || 0) + 1;
+  });
+  const mixLabel = Object.keys(counts).map(n => counts[n] + ' ' + n).join(', ') || parent.project;
+  parent.modelMix = Object.keys(counts).map(n => ({ name: n, qty: counts[n] }));
+  parent.project = mixLabel;
+  saveQuoteData(parentId);
+  const idx = quotesIndex.find(q => q.id === parentId);
+  if (idx) {
+    idx.project = mixLabel;
+    idx.total = kids.reduce((s, k) => s + dashRowTotal(k), 0);
+  }
+  return parentId;
+}
+
+function dropQuoteRecord(id) {
+  delete quoteData[id];
+  quotesIndex = quotesIndex.filter(q => q.id !== id);
+  try { delete _kvData['fm-quote-' + id]; } catch (e) {}
+  window._fmDroppedQuoteIds = window._fmDroppedQuoteIds || {};
+  window._fmDroppedQuoteIds[id] = true;
+}
+
+function clearHouseManufacturerUpload(id) {
+  id = id || activeQuoteId;
+  const q = quoteData[id];
+  if (!q) return;
+  if (quoteKind(q) === 'order') {
+    alert('Clear the manufacturer PDF on each house, not on the order.');
+    return;
+  }
+  const n = (q.cabinets || []).filter(c => (c.desc || '').trim() || (parseFloat(c.cost) || 0)).length;
+  const who = q.project || q.jobCode || 'this house';
+  if (!confirm('Clear the manufacturer PDF on ' + who + '? Address and color stay. You can Import PDF again.' + (n ? ' (' + n + ' cabinet lines)' : ''))) return;
+  q.cabinets = [];
+  saveQuoteData(id);
+  if (id === activeQuoteId) {
+    const tbody = document.getElementById('cabinet-tbody');
+    if (tbody) tbody.innerHTML = '';
+    recalc();
+  }
+  const parentId = q.parentOrderId;
+  if (parentId) {
+    const idx = quotesIndex.find(row => row.id === parentId);
+    if (idx) idx.total = orderRollupTotal(parentId);
+    saveQuotesIndex();
+    if (typeof renderOrderSummary === 'function') renderOrderSummary(parentId);
+  }
+  fmCloudPushDebounced();
+  renderDashboard();
+}
+
 function deleteQuote(id) {
   const qd = quoteData[id] || {};
   const kind = quoteKind(qd);
   const msg = kind === 'order'
     ? 'Delete this builder order and all of its houses? This cannot be undone.'
-    : 'Are you sure you want to delete this project? This cannot be undone.';
+    : kind === 'child'
+      ? 'Remove ' + (qd.project || qd.jobCode || 'this house') + ' from the builder order? Address, color, and the manufacturer PDF on this house go with it. The rest of the order stays.'
+      : 'Are you sure you want to delete this project? This cannot be undone.';
   if (!confirm(msg)) return;
 
   const drop = [id];
   if (kind === 'order') childrenOfOrder(id).forEach(c => drop.push(c.id));
-  drop.forEach(did => { delete quoteData[did]; });
-  quotesIndex = quotesIndex.filter(q => drop.indexOf(q.id) === -1);
-
+  const parentId = kind === 'child' ? unlinkHouseFromOrder(id) : '';
+  drop.forEach(did => dropQuoteRecord(did));
   saveQuotesIndex();
 
   if (drop.indexOf(activeQuoteId) !== -1) {
-    // If the deleted quote was active, load another or create a new one
     activeQuoteId = null;
     saveActiveQuoteId();
-    if (quotesIndex.length > 0) {
+    if (parentId && quoteData[parentId]) {
+      loadQuote(parentId);
+      switchTab('quote');
+    } else if (quotesIndex.length > 0) {
       loadQuote(quotesIndex[0].id);
       switchTab('quote');
     } else {
@@ -4103,6 +4177,9 @@ function deleteQuote(id) {
     }
   }
   renderDashboard();
+  if (parentId && typeof renderOrderSummary === 'function' && activeQuoteId === parentId) {
+    renderOrderSummary(parentId);
+  }
 }
 
 function updateQuoteIndexEntry(quoteId, newStatus, newTotal, customer, project, date) {
@@ -4593,6 +4670,7 @@ function syncIssueBtn() {
     if (el) el.style.display = on ? '' : 'none';
   };
   setDisp('btn-issue-contract', proposed);
+  setDisp('btn-clear-house-pdf', quoteKind(quoteData[activeQuoteId] || {}) === 'child');
   setDisp('btn-adjust-schedule', contracted);
   setDisp('btn-change-order', contracted);
   setDisp('btn-mark-completed', contracted);
