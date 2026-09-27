@@ -123,6 +123,12 @@
     }
     .ticket-form textarea { min-height:72px; }
     .ticket-form .row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .ticket-form .row3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+    @media (max-width: 820px) { .ticket-form .row3 { grid-template-columns: 1fr; } }
+    .menu-list { list-style:none; margin: 0 0 8px; }
+    .menu-list li { margin: 0 0 14px; padding-left: 0; }
+    .menu-list strong { display:block; color: var(--cream); font-weight: 600; }
+    .menu-list span { display:block; font-size: 0.92rem; opacity: 0.88; }
     .ticket-form .err { color:#ffb4a8; font-size:0.88rem; min-height:1.2em; margin-top:8px; }
     .ticket-form .check { display:flex; gap:8px; align-items:flex-start; margin:14px 0; font-size:0.92rem; letter-spacing:0; text-transform:none; color:var(--cream); }
     .ticket-form .check input { width:auto; margin-top:4px; }
@@ -170,9 +176,9 @@
   <div class="strip">
     <div class="strip-grid">
       <div class="strip-item"><strong>Friday, Oct 30</strong><span>Halloween night</span></div>
-      <div class="strip-item"><strong>Hotel St. Cloud</strong><span>631 Main Street</span></div>
-      <div class="strip-item"><strong>Red Herring</strong><span>New show, new cast</span></div>
-      <div class="strip-item"><strong>Get in the mood</strong><span>Dress is optional</span></div>
+      <div class="strip-item"><strong>6:30pm cocktails</strong><span>Seating at 7 · dinner about 7:15</span></div>
+      <div class="strip-item"><strong>$99 early bird</strong><span>$114 after October 23</span></div>
+      <div class="strip-item"><strong>Dress is optional</strong><span>Get in the mood if you want</span></div>
     </div>
   </div>
 
@@ -184,20 +190,30 @@
         <p class="lede">A railroad detective makes a stop in Buffalo Chip, Colorado. Nefarious business. Conflicting romantic interests. Gunslingers, outlaws, ranchers, holy rollers, and prospectors in a gala that is, for once, being held somewhere respectable.</p>
         <p class="lede">You can skip the saloon. The shindig is here. Red Herring has been writing these rooms for forty years. We have hosted them in this building before. This year the script is new. The hotel is the same one that has been taking in strangers since 1883, which feels about right for a town called Buffalo Chip.</p>
         <div class="includes">
-          <h3>What to expect</h3>
+          <h3>The night, in order</h3>
           <ul>
+            <li>Cocktail hour at 6:30pm</li>
+            <li>Seating and the show at 7pm</li>
+            <li>Meal service around 7:15pm</li>
             <li>A fully interactive Red Herring mystery, not a play you sit still for</li>
-            <li>Dinner at Hotel St. Cloud</li>
             <li>Get in the mood if you want. Dress to the theme is welcome, not required</li>
             <li>Family-friendly felony. Funny, not gory</li>
-            <li>Buy tickets here. Not Eventbrite. A room is extra if you want one</li>
+          </ul>
+        </div>
+        <div class="includes">
+          <h3>Dinner, your choice</h3>
+          <p class="lede">Each plate comes with a side salad. Pick one entree per ticket when you buy. If you need something the kitchen can work around, write it in the notes or email us.</p>
+          <ul class="menu-list">
+            <li><strong>6oz Tenderloin</strong><span>Mashed potatoes and asparagus</span></li>
+            <li><strong>Chicken Piccata</strong><span>Mashed potatoes, cherry tomatoes, and asparagus</span></li>
+            <li><strong>Honey Lavender Salmon</strong><span>Fingerling potatoes and bourbon carrots</span></li>
           </ul>
         </div>
       </div>
       <aside class="book-card">
         <p class="kicker">Tickets</p>
         <h3>Buy online</h3>
-        <p>Pay here. We get your name on the list. Test checkout for now; dinner price may still move before we go live.</p>
+        <p id="price-line">Early bird is $99 a ticket through October 23. After that it is $114. Tax is added at checkout. Banquet service is already covered, so there is no extra gratuity on the ticket.</p>
         <form class="ticket-form" id="ticket-form">
           <label for="name">Name</label>
           <input id="name" name="name" required autocomplete="name" />
@@ -218,23 +234,27 @@
               </select>
             </div>
           </div>
-          <div class="row2">
+          <div class="row3">
             <div>
-              <label for="entreeA">Entree A</label>
-              <input id="entreeA" name="entreeA" type="number" min="0" max="20" value="2" />
+              <label for="entreeTenderloin">Tenderloin</label>
+              <input id="entreeTenderloin" name="entreeTenderloin" type="number" min="0" max="20" value="2" />
             </div>
             <div>
-              <label for="entreeB">Entree B</label>
-              <input id="entreeB" name="entreeB" type="number" min="0" max="20" value="0" />
+              <label for="entreePiccata">Chicken Piccata</label>
+              <input id="entreePiccata" name="entreePiccata" type="number" min="0" max="20" value="0" />
+            </div>
+            <div>
+              <label for="entreeSalmon">Salmon</label>
+              <input id="entreeSalmon" name="entreeSalmon" type="number" min="0" max="20" value="0" />
             </div>
           </div>
-          <label for="notes">Notes (allergies, table)</label>
-          <textarea id="notes" name="notes"></textarea>
+          <label for="notes">Notes (allergies, dietary, table)</label>
+          <textarea id="notes" name="notes" placeholder="Tell us about restrictions. We will do what we can."></textarea>
           <p class="err" id="form-err"></p>
-          <button class="btn-primary" type="submit" id="pay-btn">Pay with card · $85 each</button>
+          <button class="btn-primary" type="submit" id="pay-btn">Pay with card · $99 each</button>
         </form>
-        <p class="fine">Entree A and B are placeholders until the kitchen names them. Counts must add up to your tickets. Tax is added at checkout.</p>
-        <p class="fine">Stripe test mode. Use card 4242 4242 4242 4242, any future date, any CVC. A room is not in this checkout. If you want one, we will call you.</p>
+        <p class="fine">One plate per ticket. Counts must add up to your tickets. Tax is added at checkout after you enter your billing ZIP. There is no extra gratuity on the ticket. Extra drinks that night go on a tab.</p>
+        <p class="fine">A room is not in this checkout. If you want one, we will call you.</p>
         <a class="alt" href="tel:7196023469">Or call (719) 602-3469</a>
       </aside>
     </div>
@@ -262,7 +282,7 @@
         <article class="day-card">
           <p class="day-num">Eat</p>
           <h3>Dinner in the house</h3>
-          <p>This is a dinner show. Come hungry. 1887 and the hotel kitchen take it from there.</p>
+          <p>This is a dinner show. Come hungry. Cocktail hour at 6:30, seating at 7, plates around 7:15. Each entree comes with a side salad. Pick tenderloin, chicken piccata, or honey lavender salmon when you buy.</p>
         </article>
         <article class="day-card">
           <p class="day-num">Stay</p>
@@ -291,6 +311,10 @@
     </p>
   </footer>
   <script>
+    const EARLY_ENDS = Date.parse('2026-10-24T06:00:00.000Z');
+    const PRICE = Date.now() < EARLY_ENDS ? 99 : 114;
+    const payBtn = document.getElementById('pay-btn');
+    if (payBtn) payBtn.textContent = 'Pay with card · $' + PRICE + ' each';
     document.getElementById('ticket-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const err = document.getElementById('form-err');
@@ -303,15 +327,16 @@
         email: document.getElementById('email').value.trim(),
         phone: document.getElementById('phone').value.trim(),
         adults: document.getElementById('adults').value,
-        entreeA: document.getElementById('entreeA').value,
-        entreeB: document.getElementById('entreeB').value,
+        entreeTenderloin: document.getElementById('entreeTenderloin').value,
+        entreePiccata: document.getElementById('entreePiccata').value,
+        entreeSalmon: document.getElementById('entreeSalmon').value,
         wantRoom: document.getElementById('wantRoom').value,
         notes: document.getElementById('notes').value.trim()
       };
       const tickets = Number(body.adults || 0);
-      const entrees = Number(body.entreeA || 0) + Number(body.entreeB || 0);
+      const entrees = Number(body.entreeTenderloin || 0) + Number(body.entreePiccata || 0) + Number(body.entreeSalmon || 0);
       if (tickets !== entrees) {
-        err.textContent = 'Entree A and B need to add up to the number of tickets.';
+        err.textContent = 'Tenderloin, chicken, and salmon counts need to add up to the number of tickets.';
         btn.disabled = false;
         return;
       }

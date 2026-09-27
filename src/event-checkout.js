@@ -5,10 +5,29 @@
 
 const PRICES = {
   "hsc-mm-adult": "price_1UEFDLCYPk1DQzaWAOcPZpAu",
+  "hsc-mm-early": "price_1UK7OKCYPk1DQzaW9vX2vQYx",
+  "hsc-mm-regular": "price_1UK7OKCYPk1DQzaWLB038Uiz",
   "hsc-lights-adult": "price_1UEFDLCYPk1DQzaWH4FAJHNf",
   "hsc-lights-child": "price_1UEFDMCYPk1DQzaWtqD6Gvq8",
   "hsc-lights-family": "price_1UEFDMCYPk1DQzaWS6TPn5wS",
 };
+
+/** Early bird through Oct 23, 2026 (America/Denver). After that, $114. */
+const MM_EARLY_ENDS_MS = Date.parse("2026-10-24T06:00:00.000Z");
+
+const MM_ENTREES = {
+  tenderloin: "6oz Tenderloin",
+  piccata: "Chicken Piccata",
+  salmon: "Honey Lavender Salmon",
+};
+
+function murderLookup() {
+  return Date.now() < MM_EARLY_ENDS_MS ? "hsc-mm-early" : "hsc-mm-regular";
+}
+
+function murderTicketType(lookup) {
+  return lookup === "hsc-mm-early" ? "early" : "regular";
+}
 
 const EVENTS = {
   "murder-mystery": {
@@ -83,7 +102,8 @@ function buildLineItems(event, body) {
   const items = [];
   if (event === "murder-mystery") {
     const n = qty(body.adults || body.qty);
-    if (n) items.push({ price: PRICES["hsc-mm-adult"], quantity: n, lookup: "hsc-mm-adult" });
+    const lookup = murderLookup();
+    if (n) items.push({ price: PRICES[lookup], quantity: n, lookup });
   } else if (event === "christmas-lights") {
     const a = qty(body.adults);
     const c = qty(body.children);
@@ -136,6 +156,11 @@ function orderFromSession(session, extra = {}) {
     under3: meta.under3 || "0",
     wantRoom: meta.wantRoom || "no",
     notes: meta.notes || "",
+    ticketType: meta.ticketType || extra.ticketType || "",
+    ticketLookup: meta.ticketLookup || extra.ticketLookup || "",
+    entreeTenderloin: meta.entreeTenderloin || extra.entreeTenderloin || "0",
+    entreePiccata: meta.entreePiccata || extra.entreePiccata || "0",
+    entreeSalmon: meta.entreeSalmon || extra.entreeSalmon || "0",
     entreeA: meta.entreeA || extra.entreeA || "0",
     entreeB: meta.entreeB || extra.entreeB || "0",
     amount: session.amount_total || 0,
@@ -209,9 +234,31 @@ function money(cents) {
   return "$" + (Number(cents || 0) / 100).toFixed(2);
 }
 
+function ticketTypeLabel(order) {
+  const t = order.ticketType || (order.ticketLookup === "hsc-mm-early" ? "early" : order.ticketLookup === "hsc-mm-regular" ? "regular" : "");
+  if (t === "early") return "Early bird $99";
+  if (t === "regular") return "After Oct 23 $114";
+  return t || "Ticket";
+}
+
+function menuLine(order) {
+  const bits = [];
+  const t = qty(order.entreeTenderloin);
+  const p = qty(order.entreePiccata);
+  const s = qty(order.entreeSalmon);
+  if (t) bits.push(t + " × " + MM_ENTREES.tenderloin);
+  if (p) bits.push(p + " × " + MM_ENTREES.piccata);
+  if (s) bits.push(s + " × " + MM_ENTREES.salmon);
+  if (!bits.length && (qty(order.entreeA) || qty(order.entreeB))) {
+    bits.push("A " + (order.entreeA || 0) + " · B " + (order.entreeB || 0));
+  }
+  return bits.join(" · ") || "none";
+}
+
 function ticketLine(order) {
   if (order.event === "murder-mystery") {
-    return `${order.adults || 0} ticket${Number(order.adults) === 1 ? "" : "s"}`;
+    const n = order.adults || 0;
+    return `${n} ticket${Number(n) === 1 ? "" : "s"} · ${ticketTypeLabel(order)}`;
   }
   return `Adults ${order.adults || 0} · children ${order.children || 0} · family packs ${order.family || 0} · 2 and under: ${order.under3 || 0}`;
 }
@@ -233,6 +280,7 @@ async function sendResend(env, payload) {
 
 const FROM_HOTEL = "Hotel St. Cloud <reservations@hotelstcloud.com>";
 const DESK = "reservations@hotelstcloud.com";
+const HOSPITALITY = "hello@unbridledhospitality.com";
 
 async function sendHotelMail(env, payload) {
   const sent = await sendResend(env, Object.assign({}, payload, { from: FROM_HOTEL }));
@@ -251,7 +299,7 @@ async function notifyOrder(env, order) {
       html: `<p>Hi ${order.name || "there"},</p>
 <p>We have your tickets for <strong>${order.eventName}</strong>${order.eventDate ? " on " + order.eventDate : ""}.</p>
 <p>${ticketLine(order)}<br>Paid ${money(order.amount)}${order.tax ? " (includes " + money(order.tax) + " tax)" : ""}.</p>
-${Number(order.entreeA) || Number(order.entreeB) ? "<p>Entrees: A " + (order.entreeA || 0) + " · B " + (order.entreeB || 0) + "</p>" : ""}
+${order.event === "murder-mystery" ? "<p>Menu: " + menuLine(order) + "</p><p>Cocktail hour 6:30pm. Seating 7pm. Meal service about 7:15pm. Each plate comes with a side salad.</p>" : ""}
 ${order.wantRoom === "yes" ? "<p>You asked about a room. The desk will follow up.</p>" : ""}
 ${order.notes ? "<p>Notes we have: " + order.notes + "</p>" : ""}
 <p>Hotel St. Cloud · 631 Main Street, Cañon City<br>(719) 602-3469 · reservations@hotelstcloud.com</p>`,
@@ -261,12 +309,13 @@ ${order.notes ? "<p>Notes we have: " + order.notes + "</p>" : ""}
   }
   if (!order.deskEmailId) {
     const desk = await sendHotelMail(env, {
-      to: [DESK],
+      to: [HOSPITALITY, DESK],
       subject: `[Tickets] ${order.eventName} · ${order.name}`,
       html: `<p><strong>${order.name}</strong> (${order.email} / ${order.phone || "no phone"})</p>
 <p>${order.eventName} ${order.eventDate || ""}</p>
 <p>${ticketLine(order)}</p>
-<p>Entrees: A ${order.entreeA || 0} · B ${order.entreeB || 0}</p>
+<p>Purchase type: ${ticketTypeLabel(order)}</p>
+<p>Menu: ${menuLine(order)}</p>
 <p>Want a room: ${order.wantRoom}</p>
 <p>Paid ${money(order.amount)}${order.tax ? " · tax " + money(order.tax) : ""}</p>
 <p>Notes: ${order.notes || "none"}</p>
@@ -303,13 +352,19 @@ export async function handleEventCheckout(request, env) {
     if (!name || !email) return json({ error: "Name and email are required." }, 400);
     const items = buildLineItems(event, body);
     if (!items.length) return json({ error: "Add at least one ticket." }, 400);
+    let tenderloin = 0;
+    let piccata = 0;
+    let salmon = 0;
+    let ticketLookup = "";
     if (event === "murder-mystery") {
       const tickets = qty(body.adults || body.qty);
-      const a = qty(body.entreeA);
-      const b = qty(body.entreeB);
-      if (a + b !== tickets) {
-        return json({ error: "Entree A and B need to add up to the number of tickets." }, 400);
+      tenderloin = qty(body.entreeTenderloin);
+      piccata = qty(body.entreePiccata);
+      salmon = qty(body.entreeSalmon);
+      if (tenderloin + piccata + salmon !== tickets) {
+        return json({ error: "Tenderloin, chicken, and salmon counts need to add up to the number of tickets." }, 400);
       }
+      ticketLookup = items[0] ? items[0].lookup : murderLookup();
     }
 
     const ev = EVENTS[event];
@@ -345,6 +400,11 @@ export async function handleEventCheckout(request, env) {
       "metadata[notes]": String(body.notes || "").slice(0, 400),
       "metadata[entreeA]": String(qty(body.entreeA)),
       "metadata[entreeB]": String(qty(body.entreeB)),
+      "metadata[entreeTenderloin]": String(tenderloin),
+      "metadata[entreePiccata]": String(piccata),
+      "metadata[entreeSalmon]": String(salmon),
+      "metadata[ticketLookup]": ticketLookup,
+      "metadata[ticketType]": ticketLookup ? murderTicketType(ticketLookup) : "",
       "automatic_tax[enabled]": "true",
     };
     items.forEach((it, i) => {
