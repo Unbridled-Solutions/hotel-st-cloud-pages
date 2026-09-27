@@ -124,8 +124,9 @@
     }
     .ticket-form textarea { min-height:72px; }
     .ticket-form .row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-    .ticket-form .row3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
-    @media (max-width: 820px) { .ticket-form .row3 { grid-template-columns: 1fr; } }
+    .plates { display:flex; flex-direction:column; gap:10px; margin-top:4px; }
+    .plate-row { display:grid; grid-template-columns: 7.5em 1fr; gap:10px; align-items:center; }
+    .plate-row .who { font-size:0.82rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--gold); }
     .menu-list { list-style:none; margin: 0 0 8px; }
     .menu-list li { margin: 0 0 14px; padding-left: 0; }
     .menu-list strong { display:block; color: var(--cream); font-weight: 600; }
@@ -224,31 +225,19 @@
           <input id="phone" name="phone" type="tel" autocomplete="tel" />
           <label for="adults">Tickets</label>
           <input id="adults" name="adults" type="number" min="1" max="20" value="2" required />
+          <label>Dinner, one plate per ticket</label>
+          <div class="plates" id="plates"></div>
           <label for="wantRoom">Would you like to stay at Hotel St. Cloud?</label>
           <select id="wantRoom" name="wantRoom" class="stay">
             <option value="no">No, I am all set</option>
             <option value="yes">Yes, please reach out</option>
           </select>
-          <div class="row3">
-            <div>
-              <label for="entreeTenderloin">Tenderloin</label>
-              <input id="entreeTenderloin" name="entreeTenderloin" type="number" min="0" max="20" value="2" />
-            </div>
-            <div>
-              <label for="entreePiccata">Chicken Piccata</label>
-              <input id="entreePiccata" name="entreePiccata" type="number" min="0" max="20" value="0" />
-            </div>
-            <div>
-              <label for="entreeSalmon">Salmon</label>
-              <input id="entreeSalmon" name="entreeSalmon" type="number" min="0" max="20" value="0" />
-            </div>
-          </div>
           <label for="notes">Notes (allergies, dietary, table)</label>
           <textarea id="notes" name="notes" placeholder="Tell us about restrictions. We will do what we can."></textarea>
           <p class="err" id="form-err"></p>
           <button class="btn-primary" type="submit" id="pay-btn">Pay with card · $99 each</button>
         </form>
-        <p class="fine">One plate per ticket. Counts must add up to your tickets. Tax is added at checkout after you enter your billing ZIP. There is no extra gratuity on the ticket. Extra drinks that night go on a tab.</p>
+        <p class="fine">One plate per ticket. Tax is added at checkout after you enter your billing ZIP. There is no extra gratuity on the ticket. Extra drinks that night go on a tab.</p>
         <p class="fine">A room is not in this checkout. If you ask us to reach out, the desk will call about staying the night.</p>
         <a class="alt" href="tel:7196023469">Or call (719) 602-3469</a>
       </aside>
@@ -308,33 +297,82 @@
   <script>
     const EARLY_ENDS = Date.parse('2026-10-24T06:00:00.000Z');
     const PRICE = Date.now() < EARLY_ENDS ? 99 : 114;
+    const PLATES = [
+      { value: 'tenderloin', label: '6oz Tenderloin' },
+      { value: 'piccata', label: 'Chicken Piccata' },
+      { value: 'salmon', label: 'Honey Lavender Salmon' }
+    ];
     const payBtn = document.getElementById('pay-btn');
+    const ticketsEl = document.getElementById('adults');
+    const platesEl = document.getElementById('plates');
     if (payBtn) payBtn.textContent = 'Pay with card · $' + PRICE + ' each';
+
+    function ticketCount() {
+      let n = parseInt(ticketsEl.value, 10);
+      if (!Number.isFinite(n) || n < 1) n = 1;
+      if (n > 20) n = 20;
+      if (String(ticketsEl.value) !== String(n)) ticketsEl.value = String(n);
+      return n;
+    }
+    function plateOptions(selected) {
+      return PLATES.map(p => '<option value="' + p.value + '"' + (p.value === selected ? ' selected' : '') + '>' + p.label + '</option>').join('');
+    }
+    function renderPlates() {
+      const n = ticketCount();
+      const prev = Array.from(platesEl.querySelectorAll('select')).map(s => s.value);
+      platesEl.innerHTML = '';
+      for (let i = 0; i < n; i++) {
+        const row = document.createElement('div');
+        row.className = 'plate-row';
+        const who = document.createElement('span');
+        who.className = 'who';
+        who.textContent = 'Ticket ' + (i + 1);
+        const sel = document.createElement('select');
+        sel.className = 'plate-pick';
+        sel.setAttribute('aria-label', 'Dinner for ticket ' + (i + 1));
+        sel.innerHTML = plateOptions(prev[i] || 'tenderloin');
+        row.appendChild(who);
+        row.appendChild(sel);
+        platesEl.appendChild(row);
+      }
+    }
+    function plateCounts() {
+      const counts = { tenderloin: 0, piccata: 0, salmon: 0 };
+      platesEl.querySelectorAll('select').forEach(s => {
+        if (counts[s.value] != null) counts[s.value] += 1;
+      });
+      return counts;
+    }
+    ticketsEl.addEventListener('input', renderPlates);
+    ticketsEl.addEventListener('change', renderPlates);
+    renderPlates();
+
     document.getElementById('ticket-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const err = document.getElementById('form-err');
       const btn = document.getElementById('pay-btn');
       err.textContent = '';
       btn.disabled = true;
+      const tickets = ticketCount();
+      const counts = plateCounts();
+      const chosen = counts.tenderloin + counts.piccata + counts.salmon;
+      if (chosen !== tickets) {
+        err.textContent = 'Pick one dinner for each ticket.';
+        btn.disabled = false;
+        return;
+      }
       const body = {
         event: 'murder-mystery',
         name: document.getElementById('name').value.trim(),
         email: document.getElementById('email').value.trim(),
         phone: document.getElementById('phone').value.trim(),
-        adults: document.getElementById('adults').value,
-        entreeTenderloin: document.getElementById('entreeTenderloin').value,
-        entreePiccata: document.getElementById('entreePiccata').value,
-        entreeSalmon: document.getElementById('entreeSalmon').value,
+        adults: String(tickets),
+        entreeTenderloin: String(counts.tenderloin),
+        entreePiccata: String(counts.piccata),
+        entreeSalmon: String(counts.salmon),
         wantRoom: document.getElementById('wantRoom').value,
         notes: document.getElementById('notes').value.trim()
       };
-      const tickets = Number(body.adults || 0);
-      const entrees = Number(body.entreeTenderloin || 0) + Number(body.entreePiccata || 0) + Number(body.entreeSalmon || 0);
-      if (tickets !== entrees) {
-        err.textContent = 'Tenderloin, chicken, and salmon counts need to add up to the number of tickets.';
-        btn.disabled = false;
-        return;
-      }
       try {
         const res = await fetch('/api/events/checkout', {
           method: 'POST',
