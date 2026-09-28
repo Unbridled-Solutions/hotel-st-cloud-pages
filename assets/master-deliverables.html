@@ -35,7 +35,7 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .section-title{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);font-weight:700}
 .section-count{font-size:10px;letter-spacing:1px;color:var(--muted);margin-left:auto}
 
-.item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem;margin-bottom:.6rem;display:flex;align-items:flex-start;gap:1rem;transition:border-color .2s}
+.item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem;margin-bottom:.6rem;display:flex;align-items:flex-start;flex-wrap:wrap;gap:1rem;transition:border-color .2s}
 .item:hover{border-color:var(--blue)}
 .item-body{flex:1;min-width:0}
 .item-title{font-size:14px;font-weight:600;color:var(--white);margin-bottom:.2rem;line-height:1.3}
@@ -133,9 +133,24 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .outline-chapter a{color:var(--blue);text-decoration:none;font-size:11px;margin-left:.5rem}
 .outline-chapter a:hover{color:var(--gold)}
 
+
+/* Per-item migrate actions — Move / Keep / Archive / Delete */
+.item-act-row{flex:1 1 100%;width:100%;display:grid;grid-template-columns:repeat(4,1fr);gap:.45rem;margin-top:.15rem}
+.btn-act{background:rgba(201,170,124,.08);border:1px solid var(--gold);border-radius:8px;padding:.7rem .4rem;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--gold);cursor:pointer;font-family:'Josefin Sans',sans-serif;font-weight:700;line-height:1.2;min-height:44px}
+.btn-act:hover{background:rgba(201,170,124,.18)}
+.btn-act.move{border-color:var(--blue);color:var(--blue);background:rgba(90,139,167,.1)}
+.btn-act.keep{border-color:var(--green);color:var(--green);background:rgba(76,175,125,.1)}
+.btn-act.arch{border-color:var(--amber);color:var(--amber);background:rgba(224,160,64,.1)}
+.btn-act.del{border-color:var(--red);color:var(--red);background:rgba(224,90,90,.1)}
+.item.item-kept{border-color:rgba(76,175,125,.4)}
+.migrate-note{font-size:12px;color:var(--muted);line-height:1.5;margin:0 0 1.25rem}
+.migrate-note strong{color:var(--gold);font-weight:600}
+.btn-trash{display:none!important}
+
 @media(max-width:600px){
   .item{flex-direction:column;gap:.5rem}
   .item-actions{flex-direction:row;align-items:center}
+  .item-act-row{grid-template-columns:1fr 1fr}
 }
 </style>
 </head>
@@ -157,12 +172,14 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
   
 <div class="wrap">
 
+  <p class="migrate-note"><strong>This sheet stays.</strong> Each card: <strong>Move</strong> to Lindsay · Everything We Built, <strong>Keep</strong> here, <strong>Archive</strong>, or <strong>Delete</strong>. Move is cloud-backed so it shows on her page too.</p>
+
   <!-- ───────────────────── BOOK PROJECT ───────────────────── -->
   <div class="section">
     <div class="section-header">
       <span class="section-icon">📖</span>
       <span class="section-title">The Unbridled Way · Book Project</span>
-      <span class="section-count">15 chapters drafted · Version B locked · Ch3 expanded July 2026</span>
+      <span class="section-count">Approved Structure · chapters live there · Entire manuscript at the bottom</span>
     </div>
 
     <!-- Book Outline -->
@@ -199,6 +216,7 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
           <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:.3rem">Back Matter</div>
           <div class="outline-chapter done">Closing · At Least We're in the Arena <a href="https://offers.hotelstcloud.com/assets/unbridled-way-closing.html" target="_blank">↗</a></div>
           <div class="outline-chapter done">Appendix · The Ancient Roots <a href="https://offers.hotelstcloud.com/assets/unbridled-way-appendix-scripture.html" target="_blank">↗</a></div>
+          <div class="outline-chapter done" style="margin-top:.85rem;border-left-color:var(--gold);padding-top:.35rem">Entire manuscript <a href="https://offers.hotelstcloud.com/assets/unbridled-way-full.html" target="_blank">↗ HTML</a> <a href="https://offers.hotelstcloud.com/assets/unbridled-way-complete.pdf" target="_blank">↗ PDF</a></div>
         </div>
       </div>
     </div>
@@ -213,156 +231,6 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
       <div class="item-actions"><span class="badge badge-live">Live</span></div>
     </div>
 
-    <div id="item-book-intro" class="item book">
-      <div class="dot dot-live"></div>
-      <div class="item-body">
-        <div class="item-title">Introduction · The Journey Is the Point</div>
-        <div class="item-desc">The motorcycle ride, the elk, the hillside download. Stan's CIA upbringing, hero's zero moment, Habakkuk. The origin of everything Unbridled.</div>
-        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-intro.html" target="_blank">↗ Read Draft</a></div>
-      </div>
-      <div class="item-actions"><span class="badge badge-live">Drafted</span></div>
-    </div>
-
-    <div id="item-book-ch1" class="item book">
-      <div class="dot dot-live"></div>
-      <div class="item-body">
-        <div class="item-title">Chapter 1 · Doing Good by Doing Well</div>
-        <div class="item-desc">The thesis. The 20/20/60 model. Why generosity is the engine, not the exhaust. The frame for everything that follows.</div>
-        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-ch1.html" target="_blank">↗ Read Draft</a></div>
-      </div>
-      <div class="item-actions"><span class="badge badge-live">Drafted</span></div>
-    </div>
-
-    <div id="item-book-destiny" class="item book">
-      <div class="dot dot-live"></div>
-      <div class="item-body">
-        <div class="item-title">Part I Opener · Destiny</div>
-        <div class="item-desc">OrangeDoor, the 51% buy-back, Jesse and the Sheedy Mansion, Jonathan Weald. Three stories of destiny and business intersecting.</div>
-        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-destiny.html" target="_blank">↗ Read Draft</a></div>
-      </div>
-      <div class="item-actions"><span class="badge badge-live">Drafted</span></div>
-    </div>
-
-    <div id="item-book-ch2" class="item book">
-      <div class="dot dot-live"></div>
-      <div class="item-body">
-        <div class="item-title">Chapter 2 · Adjacent Opportunities</div>
-        <div class="item-desc">How Unbridled spots the opportunity hidden right next to the work already done. Hotel St. Cloud, Productions, Gift'd, Travel — all adjacent moves.</div>
-        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-ch3.html" target="_blank">↗ Read Draft</a></div>
-      </div>
-      <div class="item-actions"><span class="badge badge-live">Drafted</span></div>
-    </div>
-
-    <div id="item-book-ch3" class="item book">
-      <div class="dot dot-live"></div>
-      <div class="item-body">
-        <div class="item-title">Chapter 3 · Ecosystems Over Egosystems</div>
-        <div class="item-desc">Relational equity, proximity, global sales presence, 80% in-office — how Unbridled builds through people, not hierarchy.</div>
-        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-ch2.html" target="_blank">↗ Read Draft</a></div>
-      </div>
-      <div class="item-actions"><span class="badge badge-live">Drafted</span></div>
-    </div>
-
-    <div id="item-book-ch4" class="item book">
-      <div class="dot dot-live"></div>
-      <div class="item-body">
-        <div class="item-title">Chapter 4 · A Culture of Authenticity</div>
-        <div class="item-desc">The opening of Part II. Universal premise → two dispositions (past-present vs present-future) → Unbridled mission bridge → Stan's personal story. CIA childhood, hero to zero, four limiting beliefs, Brené Brown, the Unbridled Journey.</div>
-        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-authenticity-intro.html" target="_blank">↗ Read Draft</a></div>
-      </div>
-      <div class="item-actions"><span class="badge badge-live">Drafted</span></div>
-    </div>
-
-    <div id="item-book-ch5" class="item book">
-      <div class="dot dot-live"></div>
-      <div class="item-body">
-        <div class="item-title">Chapter 5 · Our Mission: Unbridling Human Purpose and Potential</div>
-        <div class="item-desc">The mission as a standalone chapter. Inside job / structural job / organizational job. The highest form of leadership = seeing purpose, not managing performance. Three pillars as prose and visual grid.</div>
-        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-ch5-purpose.html" target="_blank">↗ Read Draft</a></div>
-      </div>
-      <div class="item-actions"><span class="badge badge-live">Drafted</span></div>
-    </div>
-
-    <div id="item-book-ch6" class="item book">
-      <div class="dot dot-live"></div>
-      <div class="item-body">
-        <div class="item-title">Chapter 6 · Values in Action</div>
-        <div class="item-desc">Four cornerstones + three Ways of Being each. Peer-on-peer recognition (Seen · Known · Valued). The Always & Never (8+8 relational commitments). Complete values architecture table: Cornerstone → Ways of Being → Client Expression.</div>
-        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-ch6-values.html" target="_blank">↗ Read Draft</a></div>
-      </div>
-      <div class="item-actions"><span class="badge badge-live">Drafted</span></div>
-    </div>
-
-    <div id="item-book-ch7" class="item book">
-      <div class="dot dot-live"></div>
-      <div class="item-body">
-        <div class="item-title">Chapter 7 · The Unbridled Journey</div>
-        <div class="item-desc">The 9-stage employee journey, 5 pivotal moments, the Epic Tale framework, and 4 support programs. Identity thesis: Unbridled is something you become, not somewhere you work.</div>
-        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-ch7-journey.html" target="_blank">↗ Read Draft</a> <span class="item-week">Week of May 25</span></div>
-      </div>
-      <div class="item-actions"><span class="badge badge-live">Drafted</span></div>
-    </div>
-
-    <div id="item-book-ch8" class="item book">
-      <div class="dot dot-live"></div>
-      <div class="item-body">
-        <div class="item-title">Chapter 8 · Deliver Exceptional. Build World Class.</div>
-        <div class="item-desc">Six pillars of exceptional client experience. Brand promises, client journey map, the DAG arc, and the output chain from individual behavior to Unbridled's reputation. Client quote: "Life is just better when Unbridled is around."</div>
-        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-ch8-client-experience.html" target="_blank">↗ Read Draft</a> <span class="item-week">Week of May 25</span></div>
-      </div>
-      <div class="item-actions"><span class="badge badge-live">Drafted</span></div>
-    </div>
-
-    <div id="item-book-closing" class="item book">
-      <div class="dot dot-live"></div>
-      <div class="item-body">
-        <div class="item-title">Closing · At Least We're in the Arena</div>
-        <div class="item-desc">The final chapter. Arena quote, the Cañon City story (Bosworth Mansion, Hotel St. Cloud, 8 years no profit), the 9-building prototype vision, the Cindy tribute, and the covenant for what comes next.</div>
-        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-closing.html" target="_blank">↗ Read Draft</a> <span class="item-week">Week of May 25</span></div>
-      </div>
-      <div class="item-actions"><span class="badge badge-live">Drafted</span></div>
-    </div>
-
-    <div id="item-book-part3" class="item book">
-      <div class="dot dot-live"></div>
-      <div class="item-body">
-        <div class="item-title">Part III · The Proof Is in the People</div>
-        <div class="item-desc">Full Part III chapter with Lindsay, Lorelei and Megg, and the UnbridledACTS story woven together. Generosity as proof of character.</div>
-        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-part3-generosity.html" target="_blank">↗ Read Draft</a></div>
-      </div>
-      <div class="item-actions"><span class="badge badge-live">Drafted</span></div>
-    </div>
-
-    <div id="item-book-acts" class="item book">
-      <div class="dot dot-live"></div>
-      <div class="item-body">
-        <div class="item-title">UnbridledACTS · A Business of Generosity</div>
-        <div class="item-desc">The 501(c)3 chapter. Programs, proof of impact, and why the mission isn't a slogan — it's the structure.</div>
-        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-acts.html" target="_blank">↗ Read Draft</a></div>
-      </div>
-      <div class="item-actions"><span class="badge badge-live">Drafted</span></div>
-    </div>
-
-    <div id="item-book-generosity-spirit" class="item book">
-      <div class="dot dot-live"></div>
-      <div class="item-body">
-        <div class="item-title">Generosity of Spirit</div>
-        <div class="item-desc">Holt-Lunstad loneliness research, Pygmalion effect, Project Aristotle, Hebrews 12:1. The science and soul of what it means to be genuinely generous with others.</div>
-        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-generosity-spirit.html" target="_blank">↗ Read Draft</a></div>
-      </div>
-      <div class="item-actions"><span class="badge badge-live">Drafted</span></div>
-    </div>
-
-    <div id="item-book-appendix" class="item book">
-      <div class="dot dot-live"></div>
-      <div class="item-body">
-        <div class="item-title">Appendix · The Ancient Roots</div>
-        <div class="item-desc">Psalms 112, Habakkuk 2:3, the scripture underpinning the Unbridled covenant. Faith-informed, not Bible-forward.</div>
-        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-appendix-scripture.html" target="_blank">↗ Read Draft</a></div>
-      </div>
-      <div class="item-actions"><span class="badge badge-live">Drafted</span></div>
-    </div>
-
     <div id="item-book-compare" class="item book">
       <div class="dot dot-live"></div>
       <div class="item-body">
@@ -373,15 +241,6 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
       <div class="item-actions"><span class="badge badge-draft">Reference</span></div>
     </div>
 
-    <div id="item-book-full-manuscript" class="item book">
-      <div class="dot dot-live"></div>
-      <div class="item-body">
-        <div class="item-title">The Unbridled Way · Complete Manuscript</div>
-        <div class="item-desc">All 15 chapters, cover, TOC, and section openers in a single scrollable HTML — plus a print-ready PDF. Progress bar, section tracker, and chapter nav included. The full book in one place.</div>
-        <div class="item-meta"><a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-full.html" target="_blank">↗ Full HTML</a> <a class="item-link" href="https://offers.hotelstcloud.com/assets/unbridled-way-complete.pdf" target="_blank">↗ Download PDF</a> <span class="item-week">Week of May 25</span></div>
-      </div>
-      <div class="item-actions"><span class="badge badge-live">Live</span></div>
-    </div>
   </div>
 
   <!-- ───────────────────── LIVE EVENTS ───────────────────── -->
@@ -2456,10 +2315,17 @@ function deleteItem(id, label) {
 
 function restoreItem(id) {
   const el = document.getElementById(id);
-  if (el) el.classList.remove('item-deleted');
+  if (el) el.classList.remove('item-deleted','item-kept');
   const archive = getArchive().filter(a => a.id !== id);
   saveArchive(archive);
   if (lastDeleted && lastDeleted.id === id) { lastDeleted = null; hideRestore(); }
+  const rec = destRec(id);
+  if (rec) {
+    rec.action = 'kept';
+    rec.date = new Date().toISOString();
+    saveDestRecord(id, rec);
+    if (el) { el.classList.add('item-kept'); markChip(el, 'kept'); }
+  }
   renderArchive();
 }
 
@@ -2507,6 +2373,137 @@ function applyDeleted() {
   getArchive().forEach(a => {
     const el = document.getElementById(a.id);
     if (el) el.classList.add('item-deleted');
+  });
+}
+
+
+// ─── MOVE / KEEP / ARCHIVE / DELETE (cloud via planner bundle ns=deliverables) ──
+const DEST_API = '/api/planner/bundle?ns=deliverables';
+let destState = {};
+function destKey(id){ return 'item:' + id; }
+function destRec(id){ return destState[destKey(id)] || null; }
+async function loadDestState(){
+  try {
+    const r = await fetch(DEST_API);
+    const j = await r.json();
+    if (j && j.data && typeof j.data === 'object') destState = j.data;
+  } catch(e) {}
+  try {
+    const local = JSON.parse(localStorage.getItem('md_dest_state') || '{}');
+    Object.keys(local).forEach(k => { if (!destState[k]) destState[k] = local[k]; });
+  } catch(e) {}
+}
+async function saveDestRecord(id, rec){
+  destState[destKey(id)] = rec;
+  try { localStorage.setItem('md_dest_state', JSON.stringify(destState)); } catch(e) {}
+  try {
+    const body = {};
+    body[destKey(id)] = rec;
+    await fetch(DEST_API, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  } catch(e) {}
+}
+function snapshotItem(el){
+  const title = (el.querySelector('.item-title')||{}).textContent || el.id;
+  const desc = (el.querySelector('.item-desc')||{}).textContent || '';
+  const link = el.querySelector('a.item-link');
+  const badge = el.querySelector('.badge');
+  return {
+    id: el.id,
+    action: 'keep',
+    label: title.trim(),
+    desc: desc.trim(),
+    href: link ? link.getAttribute('href') : '',
+    hrefLabel: link ? link.textContent.trim() : 'Open',
+    badge: badge ? badge.textContent.trim() : 'Live',
+    date: new Date().toISOString()
+  };
+}
+function markChip(el, action){
+  let chip = el.querySelector('.badge-action');
+  if (!chip) {
+    chip = document.createElement('span');
+    chip.className = 'badge badge-action';
+    const actionsEl = el.querySelector('.item-actions');
+    if (actionsEl) actionsEl.insertBefore(chip, actionsEl.querySelector('.item-act-row'));
+  }
+  chip.className = 'badge badge-action';
+  if (action === 'kept') { chip.textContent = 'Kept'; chip.classList.add('badge-live'); }
+  else if (action === 'moved') { chip.textContent = 'Moved'; chip.classList.add('badge-draft'); }
+  else if (action === 'archived') { chip.textContent = 'Archived'; chip.classList.add('badge-paused'); }
+  else if (action === 'deleted') { chip.textContent = 'Deleted'; chip.classList.add('badge-paused'); }
+  else { chip.remove(); }
+}
+function applyDestState(){
+  Object.keys(destState).forEach(k => {
+    if (!k.startsWith('item:')) return;
+    const rec = destState[k];
+    if (!rec || !rec.id) return;
+    const el = document.getElementById(rec.id);
+    if (!el) return;
+    el.classList.remove('item-deleted','item-kept');
+    if (rec.action === 'moved' || rec.action === 'deleted' || rec.action === 'archived') {
+      el.classList.add('item-deleted');
+    }
+    if (rec.action === 'kept') el.classList.add('item-kept');
+    if (rec.action === 'archived') {
+      const archive = getArchive();
+      if (!archive.find(a => a.id === rec.id)) {
+        archive.push({ id: rec.id, label: rec.label, date: rec.date, source: 'Master Deliverables' });
+        saveArchive(archive);
+      }
+    }
+    markChip(el, rec.action === 'keep' ? 'kept' : rec.action);
+  });
+}
+async function setItemAction(id, action){
+  const el = document.getElementById(id);
+  if (!el) return;
+  const snap = snapshotItem(el);
+  snap.action = action;
+  if (action === 'archived') {
+    deleteItem(id, snap.label);
+  } else if (action === 'deleted' || action === 'moved') {
+    el.classList.add('item-deleted');
+    lastDeleted = { id, label: snap.label, kind: action };
+    const msg = action === 'moved' ? 'moved to Everything We Built' : 'deleted';
+    const bar = document.getElementById('restoreBar');
+    document.getElementById('restoreMsg').textContent = '"' + snap.label.substring(0,34) + (snap.label.length>34?'…':'') + '" ' + msg;
+    bar.style.display = 'flex';
+    clearTimeout(restoreTimer);
+    restoreTimer = setTimeout(hideRestore, 5000);
+    const archive = getArchive().filter(a => a.id !== id);
+    saveArchive(archive);
+    renderArchive();
+  } else if (action === 'keep' || action === 'kept') {
+    snap.action = 'kept';
+    el.classList.remove('item-deleted');
+    el.classList.add('item-kept');
+    const archive = getArchive().filter(a => a.id !== id);
+    saveArchive(archive);
+    renderArchive();
+  }
+  markChip(el, snap.action);
+  await saveDestRecord(id, snap);
+}
+function wireActionButtons(){
+  document.querySelectorAll('.item[id]').forEach(el => {
+    if (el.querySelector('.item-act-row')) return;
+    const row = document.createElement('div');
+    row.className = 'item-act-row';
+    const mk = (cls, label, action, title) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'btn-act ' + cls;
+      b.textContent = label;
+      b.title = title;
+      b.onclick = (ev) => { ev.preventDefault(); ev.stopPropagation(); setItemAction(el.id, action); };
+      return b;
+    };
+    row.appendChild(mk('move','Move','moved','Move to Lindsay · Everything We Built. Leaves this sheet.'));
+    row.appendChild(mk('keep','Keep','kept','Keep on this master sheet'));
+    row.appendChild(mk('arch','Archive','archived','Archive on this sheet'));
+    row.appendChild(mk('del','Delete','deleted','Hide entirely. Not on Lindsay. Undo for 5 seconds.'));
+    el.appendChild(row);
   });
 }
 
@@ -2712,6 +2709,8 @@ function renderCalls() {
 // Init
 loadTodos();
 wireTrashButtons();
+wireActionButtons();
+loadDestState().then(() => { applyDestState(); renderArchive(); });
 applyDeleted();
 renderArchive();
 renderCalls();
