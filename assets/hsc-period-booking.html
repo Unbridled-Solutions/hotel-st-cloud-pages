@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Hotel St. Cloud period booking report — occupancy at the start of each period, at the end, and the same metrics one year earlier.">
+<title>Period booking report | Hotel St. Cloud</title>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root, html[data-theme="dark"] {
+  --bg:#0f1923; --navy:#1a2e3b; --card:#162433; --section:#0d1620;
+  --blue:#5a8ba7; --gold:#c9aa7c; --text:#e8e0d4; --muted:#8a9aaa;
+  --border:rgba(90,139,167,0.22); --green:#4caf7d; --red:#e05a5a;
+  --active-bg:#c9aa7c; --active-fg:#0f1923;
+}
+html[data-theme="paper"] {
+  --bg:#f3efe6; --navy:#e8e0d4; --card:#fbf6f0; --section:#efe8dc;
+  --blue:#3d6a86; --gold:#a8883a; --text:#1b2744; --muted:#6a655c;
+  --border:#ddd6c8; --green:#2f7a4a; --red:#c44027;
+  --active-bg:#1b2744; --active-fg:#ffffff;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body {
+  background:var(--bg); color:var(--text);
+  font-family:'Josefin Sans',sans-serif; font-weight:300;
+  min-height:100vh; font-size:18px; line-height:1.45;
+}
+header {
+  border-bottom:1px solid var(--border);
+  padding:16px 22px;
+  display:flex; align-items:center; justify-content:space-between;
+  gap:12px; flex-wrap:wrap;
+}
+.kicker { font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); font-weight:600; }
+h1 { font-size:clamp(22px, 4vw, 28px); font-weight:700; }
+.sub { color:var(--muted); font-size:14px; margin-top:4px; max-width:720px; }
+.theme-toggle { display:flex; gap:4px; }
+.theme-toggle button {
+  padding:8px 14px; min-height:44px; border-radius:6px; border:1px solid var(--border);
+  background:transparent; color:var(--muted); font-size:13px; cursor:pointer; font-family:inherit;
+}
+.theme-toggle button.on { background:var(--active-bg); color:var(--active-fg); border-color:var(--active-bg); font-weight:700; }
+main { max-width:1280px; margin:0 auto; padding:22px 16px 80px; }
+.heroes { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; margin:0 0 22px; }
+.hero { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:14px; }
+.hero .lbl { font-size:11px; color:var(--blue); text-transform:uppercase; letter-spacing:.08em; font-weight:600; }
+.hero .n { font-size:24px; font-weight:700; color:var(--gold); margin-top:4px; }
+.hero .hint { font-size:13px; color:var(--muted); margin-top:4px; }
+.read { background:var(--navy); border:1px solid var(--border); border-radius:12px; padding:16px 18px; margin:0 0 22px; }
+.read h2 { color:var(--gold); font-size:16px; margin-bottom:8px; }
+.read li { margin:0 0 8px 18px; font-size:16px; }
+.note { color:var(--muted); font-size:14px; margin:0 0 12px; }
+.grid { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+table { width:100%; border-collapse:collapse; font-size:15px; }
+th {
+  background:var(--section); color:var(--blue); font-weight:600;
+  text-align:right; padding:10px 8px; border-bottom:1px solid var(--border);
+  white-space:nowrap; font-size:12px; letter-spacing:.04em; text-transform:uppercase;
+}
+th:first-child, td:first-child, th:nth-child(2), td:nth-child(2) { text-align:left; }
+th[data-sort] { cursor:pointer; user-select:none; min-height:44px; }
+th[data-sort]:hover { color:var(--gold); }
+th[data-sort].on { color:var(--gold); }
+th[data-sort] .arrow { font-size:10px; margin-left:4px; opacity:.85; }
+td { padding:9px 8px; text-align:right; border-bottom:1px solid var(--border); background:var(--card); vertical-align:top; }
+tr.open td { outline:1px solid rgba(201,170,124,0.35); }
+tr.next td { background:rgba(90,139,167,0.12); }
+.rn { display:block; font-size:12px; color:var(--muted); font-weight:400; }
+.up { color:var(--green); font-weight:700; }
+.na { color:var(--muted); }
+.badge {
+  display:inline-block; font-size:11px; font-weight:700; letter-spacing:.06em;
+  text-transform:uppercase; padding:2px 7px; border-radius:4px;
+  border:1px solid var(--border); color:var(--muted);
+}
+.badge.open { color:var(--gold); border-color:var(--gold); }
+.badge.next { color:var(--blue); border-color:var(--blue); }
+footer { color:var(--muted); font-size:13px; line-height:1.5; margin-top:22px; }
+footer a { color:var(--blue); }
+@media (max-width:700px) {
+  body { font-size:16px; }
+  table { font-size:13px; }
+  th, td { padding:8px 6px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="kicker">Hotel St. Cloud · Internal</div>
+    <h1>Period booking report</h1>
+    <p class="sub">Occupancy at the start of each 28-night period, at the close (or on the books now), and the same two numbers one year earlier. Pulled 29 Sep 2026, 6:15a Denver. Run again on Monday 5 Oct when P11 opens.</p>
+  </div>
+  <div class="theme-toggle" title="Looks only — saved on this device">
+    <button type="button" id="theme-paper-btn" onclick="uhgSetTheme('paper')">Paper</button>
+    <button type="button" id="theme-dark-btn" onclick="uhgSetTheme('dark')">Dark</button>
+  </div>
+</header>
+<main>
+  <div class="heroes">
+    <div class="hero"><div class="lbl">P10 now</div><div class="n">62.5%</div><div class="hint">630 RN · started 42.3% · +20 pts · 6 nights left</div></div>
+    <div class="hero"><div class="lbl">P10 last year finish</div><div class="n">50.0%</div><div class="hint">Already past last year. Same day last year was 47.9%</div></div>
+    <div class="hero"><div class="lbl">P11 on the books</div><div class="n">30.4%</div><div class="hint">306 RN · last year this day 26.4% · opens Mon 5 Oct</div></div>
+    <div class="hero"><div class="lbl">P11 last year</div><div class="n">47.8%</div><div class="hint">Opened 29.2% · finished 47.8% · +18.6 pts</div></div>
+  </div>
+
+  <div class="read">
+    <h2>MC’s read</h2>
+    <ol>
+      <li><b>P10 is already done picking up for staffing purposes.</b> Started 42.3% (426 RN) before Monday midnight. Now 62.5% with six nights left. Last year this period finished 50%. Do not staff the rest of P10 to 75%.</li>
+      <li><b>P11 is the one to watch next week.</b> On the books today: 30.4%. Last year on this same weekday: 26.4%. Last year opened at 29.2% and finished 47.8%. If they open near 35% and pick up ~18 points, finish is about 53%. Not 75%.</li>
+      <li><b>Closed P6–P9 is the pattern.</b> Open 29–37%, pick up 18–27 points, finish 50–63%. P8 July was the outlier (+26.5). P9 is the clean recent match (+18.4).</li>
+      <li><b>P1–P5 have no last year.</b> Cloudbeds starts May 2025. Those start/finish numbers are this year only.</li>
+    </ol>
+  </div>
+
+  <p class="note">36 keys. 28 nights. 1,008 room nights. Start = occupying room nights whose reservation was created before midnight Denver on the first Monday. Finish = every occupying night, ignoring created. Future periods show on-the-books today, not a fake day-1. Last year same day = 364 days back (Tue 30 Sep 2025). Hotel opened 1 May 2025 — P1–P5 last year is blank on purpose.</p>
+
+  <div class="grid">
+    <table id="rpt">
+      <thead>
+        <tr>
+          <th class="left" data-sort="p">Period</th>
+          <th class="left" data-sort="start">Dates</th>
+          <th data-sort="status">Status</th>
+          <th data-sort="start_occ">Start</th>
+          <th data-sort="end_occ">End / now</th>
+          <th data-sort="pickup_pts">Pickup</th>
+          <th data-sort="ly_start_occ">LY start</th>
+          <th data-sort="ly_finish_occ">LY finish</th>
+          <th data-sort="ly_sameday_occ">LY same day</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <footer>
+    Occupying statuses: confirmed, checked_in, checked_out. Room nights from Cloudbeds rate details, not reservation count.
+    P10 start is books before Mon 7 Sep midnight (426 RN / 42.3%). The 45.5% / 460 RN day-1 dashboard number included Monday’s own walk-ins.
+    Labor sheet: <a href="https://offers.hotelstcloud.com/assets/labor-period-summary">Period labor summary</a>
+    · Hotel planner: <a href="https://offers.hotelstcloud.com/assets/hsc-labor-planner?week=2026-10-05">P11 week of 5 Oct</a>
+  </footer>
+</main>
+<script>
+const AS_OF = '2026-09-29T06:15:16-06:00';
+const ROWS = [{"period":"P1","p":1,"status":"closed","start":"2025-12-29","end":"2026-01-25","start_rn":89,"start_occ":8.8,"end_rn":199,"end_occ":19.7,"end_label":"finish","pickup_rn":110,"pickup_pts":10.9,"ly_start_occ":null,"ly_start_rn":null,"ly_finish_occ":null,"ly_finish_rn":null,"ly_sameday_occ":null,"ly_sameday_rn":null},{"period":"P2","p":2,"status":"closed","start":"2026-01-26","end":"2026-02-22","start_rn":88,"start_occ":8.7,"end_rn":273,"end_occ":27.1,"end_label":"finish","pickup_rn":185,"pickup_pts":18.4,"ly_start_occ":null,"ly_start_rn":null,"ly_finish_occ":null,"ly_finish_rn":null,"ly_sameday_occ":null,"ly_sameday_rn":null},{"period":"P3","p":3,"status":"closed","start":"2026-02-23","end":"2026-03-22","start_rn":121,"start_occ":12.0,"end_rn":263,"end_occ":26.1,"end_label":"finish","pickup_rn":142,"pickup_pts":14.1,"ly_start_occ":null,"ly_start_rn":null,"ly_finish_occ":null,"ly_finish_rn":null,"ly_sameday_occ":null,"ly_sameday_rn":null},{"period":"P4","p":4,"status":"closed","start":"2026-03-23","end":"2026-04-19","start_rn":170,"start_occ":16.9,"end_rn":366,"end_occ":36.3,"end_label":"finish","pickup_rn":196,"pickup_pts":19.4,"ly_start_occ":null,"ly_start_rn":null,"ly_finish_occ":null,"ly_finish_rn":null,"ly_sameday_occ":null,"ly_sameday_rn":null},{"period":"P5","p":5,"status":"closed","start":"2026-04-20","end":"2026-05-17","start_rn":227,"start_occ":22.5,"end_rn":355,"end_occ":35.2,"end_label":"finish","pickup_rn":128,"pickup_pts":12.7,"ly_start_occ":null,"ly_start_rn":null,"ly_finish_occ":null,"ly_finish_rn":null,"ly_sameday_occ":null,"ly_sameday_rn":null},{"period":"P6","p":6,"status":"closed","start":"2026-05-18","end":"2026-06-14","start_rn":289,"start_occ":28.7,"end_rn":505,"end_occ":50.1,"end_label":"finish","pickup_rn":216,"pickup_pts":21.4,"ly_start_occ":7.1,"ly_start_rn":72,"ly_finish_occ":24.3,"ly_finish_rn":245,"ly_sameday_occ":24.3,"ly_sameday_rn":245},{"period":"P7","p":7,"status":"closed","start":"2026-06-15","end":"2026-07-12","start_rn":355,"start_occ":35.2,"end_rn":580,"end_occ":57.5,"end_label":"finish","pickup_rn":225,"pickup_pts":22.3,"ly_start_occ":14.4,"ly_start_rn":145,"ly_finish_occ":28.4,"ly_finish_rn":286,"ly_sameday_occ":28.4,"ly_sameday_rn":286},{"period":"P8","p":8,"status":"closed","start":"2026-07-13","end":"2026-08-09","start_rn":369,"start_occ":36.6,"end_rn":636,"end_occ":63.1,"end_label":"finish","pickup_rn":267,"pickup_pts":26.5,"ly_start_occ":15.1,"ly_start_rn":152,"ly_finish_occ":31.6,"ly_finish_rn":319,"ly_sameday_occ":31.6,"ly_sameday_rn":319},{"period":"P9","p":9,"status":"closed","start":"2026-08-10","end":"2026-09-06","start_rn":359,"start_occ":35.6,"end_rn":544,"end_occ":54.0,"end_label":"finish","pickup_rn":185,"pickup_pts":18.4,"ly_start_occ":16.7,"ly_start_rn":168,"ly_finish_occ":36.8,"ly_finish_rn":371,"ly_sameday_occ":36.8,"ly_sameday_rn":371},{"period":"P10","p":10,"status":"open","start":"2026-09-07","end":"2026-10-04","start_rn":426,"start_occ":42.3,"end_rn":630,"end_occ":62.5,"end_label":"now","pickup_rn":204,"pickup_pts":20.2,"ly_start_occ":28.8,"ly_start_rn":290,"ly_finish_occ":50.0,"ly_finish_rn":504,"ly_sameday_occ":47.9,"ly_sameday_rn":483},{"period":"P11","p":11,"status":"future","start":"2026-10-05","end":"2026-11-01","start_rn":null,"start_occ":null,"end_rn":306,"end_occ":30.4,"end_label":"otb","pickup_rn":null,"pickup_pts":null,"ly_start_occ":29.2,"ly_start_rn":294,"ly_finish_occ":47.8,"ly_finish_rn":482,"ly_sameday_occ":26.4,"ly_sameday_rn":266},{"period":"P12","p":12,"status":"future","start":"2026-11-02","end":"2026-11-29","start_rn":null,"start_occ":null,"end_rn":74,"end_occ":7.3,"end_label":"otb","pickup_rn":null,"pickup_pts":null,"ly_start_occ":14.4,"ly_start_rn":145,"ly_finish_occ":27.3,"ly_finish_rn":275,"ly_sameday_occ":6.6,"ly_sameday_rn":67},{"period":"P13","p":13,"status":"future","start":"2026-11-30","end":"2026-12-27","start_rn":null,"start_occ":null,"end_rn":49,"end_occ":4.9,"end_label":"otb","pickup_rn":null,"pickup_pts":null,"ly_start_occ":16.7,"ly_start_rn":168,"ly_finish_occ":28.3,"ly_finish_rn":285,"ly_sameday_occ":4.6,"ly_sameday_rn":46}];
+
+const SORT_STORE = 'table-sort:hsc-period-booking';
+let sortKey = 'p';
+let sortDir = 'asc';
+
+function fmtDate(iso) {
+  const d = new Date(iso + 'T12:00:00');
+  return d.toLocaleDateString('en-US', { month:'short', day:'numeric' });
+}
+function pct(v) { return v == null ? '—' : v.toFixed(1) + '%'; }
+function cellOcc(occ, rn, label) {
+  if (occ == null) return '<span class="na">—</span>';
+  const lab = label ? `<span class="rn">${label} · ${rn} RN</span>` : `<span class="rn">${rn} RN</span>`;
+  return `${pct(occ)}${lab}`;
+}
+function statusBadge(st, p) {
+  if (st === 'open') return '<span class="badge open">In period</span>';
+  if (st === 'future' && p === 11) return '<span class="badge next">Next</span>';
+  if (st === 'future') return '<span class="badge">Later</span>';
+  return '<span class="badge">Closed</span>';
+}
+function sortVal(r, key) {
+  if (key === 'status') return ({closed:0, open:1, future:2})[r.status] ?? 9;
+  if (key === 'start') return r.start;
+  const v = r[key];
+  if (v == null) return null;
+  return v;
+}
+function cmp(a, b, key, dir) {
+  const va = sortVal(a, key), vb = sortVal(b, key);
+  const aEmpty = va === null || va === undefined || va === '';
+  const bEmpty = vb === null || vb === undefined || vb === '';
+  if (aEmpty && !bEmpty) return 1;
+  if (!aEmpty && bEmpty) return -1;
+  if (va < vb) return dir === 'asc' ? -1 : 1;
+  if (va > vb) return dir === 'asc' ? 1 : -1;
+  return a.p - b.p;
+}
+function paintSortHeaders() {
+  document.querySelectorAll('#rpt th[data-sort]').forEach(th => {
+    th.classList.toggle('on', th.getAttribute('data-sort') === sortKey);
+    const old = th.querySelector('.arrow');
+    if (old) old.remove();
+    if (th.getAttribute('data-sort') === sortKey) {
+      const s = document.createElement('span');
+      s.className = 'arrow';
+      s.textContent = sortDir === 'asc' ? ' ▲' : ' ▼';
+      th.appendChild(s);
+    }
+  });
+}
+function render() {
+  const list = ROWS.slice().sort((a,b) => cmp(a,b,sortKey,sortDir));
+  const tb = document.querySelector('#rpt tbody');
+  tb.innerHTML = list.map(r => {
+    const trClass = r.status === 'open' ? 'open' : (r.p === 11 ? 'next' : '');
+    const endLab = r.end_label === 'now' ? 'now' : (r.end_label === 'otb' ? 'on books' : 'finish');
+    const startCell = r.status === 'future'
+      ? '<span class="na">—<span class="rn">not day-1 yet</span></span>'
+      : cellOcc(r.start_occ, r.start_rn, 'day 1');
+    const pickup = r.pickup_pts == null
+      ? '<span class="na">—</span>'
+      : `<span class="up">+${r.pickup_pts.toFixed(1)}</span><span class="rn">+${r.pickup_rn} RN</span>`;
+    return `<tr class="${trClass}">
+      <td>${r.period}</td>
+      <td>${fmtDate(r.start)} – ${fmtDate(r.end)}</td>
+      <td>${statusBadge(r.status, r.p)}</td>
+      <td>${startCell}</td>
+      <td>${cellOcc(r.end_occ, r.end_rn, endLab)}</td>
+      <td>${pickup}</td>
+      <td>${cellOcc(r.ly_start_occ, r.ly_start_rn)}</td>
+      <td>${cellOcc(r.ly_finish_occ, r.ly_finish_rn)}</td>
+      <td>${cellOcc(r.ly_sameday_occ, r.ly_sameday_rn)}</td>
+    </tr>`;
+  }).join('');
+  paintSortHeaders();
+}
+document.querySelectorAll('#rpt th[data-sort]').forEach(th => {
+  th.addEventListener('click', () => {
+    const k = th.getAttribute('data-sort');
+    if (sortKey === k) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+    else { sortKey = k; sortDir = (k === 'p' || k === 'start') ? 'asc' : 'desc'; }
+    try { localStorage.setItem(SORT_STORE, JSON.stringify({ key: sortKey, dir: sortDir })); } catch (e) {}
+    render();
+  });
+});
+try {
+  const saved = JSON.parse(localStorage.getItem(SORT_STORE) || 'null');
+  if (saved && saved.key) { sortKey = saved.key; sortDir = saved.dir === 'desc' ? 'desc' : 'asc'; }
+} catch (e) {}
+render();
+
+function uhgSetTheme(theme) {
+  const t = theme === 'paper' ? 'paper' : 'dark';
+  document.documentElement.setAttribute('data-theme', t);
+  try { localStorage.setItem('uhg-hub-theme', t); } catch (e) {}
+  document.getElementById('theme-paper-btn').classList.toggle('on', t === 'paper');
+  document.getElementById('theme-dark-btn').classList.toggle('on', t === 'dark');
+}
+(function () {
+  let t = 'dark';
+  try { t = localStorage.getItem('uhg-hub-theme') || 'dark'; } catch (e) {}
+  uhgSetTheme(t);
+})();
+</script>
+</body>
+</html>
