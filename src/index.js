@@ -84,6 +84,52 @@ function mergeHiringRows(existingRows, incomingRows) {
   });
   return Object.keys(by).map(k => by[k]);
 }
+// Locked 29 Sep 2026 from Rod's Models & color sheet. Pinon → Pinyon, Cimmaron → Cimarron.
+const FM_WILLOW_KEY_ALIASES = { 'pinon-crest': 'pinyon-crest', 'cimmaron-peak': 'cimarron-peak' };
+const FM_WILLOW_MODELS = {
+  'sangre-vista': { name: 'Sangre Vista', color: 'Bayview Wood Shaker' },
+  'mesa-ridge': { name: 'Mesa Ridge', color: 'Moss Green Shaker' },
+  'san-luis': { name: 'San Luis', color: 'Bayview White Shaker' },
+  'cimarron-peak': { name: 'Cimarron Peak', color: 'Bayview White Shaker' },
+  'pinyon-crest': { name: 'Pinyon Crest', color: 'Moss Green Shaker' }
+};
+function fmWillowSpell(s) {
+  return String(s || '')
+    .replace(/Cimmaron/gi, 'Cimarron')
+    .replace(/Pi[nñ]on(?= Crest)/gi, 'Pinyon');
+}
+function canonicalizeFmQuotesValue(v) {
+  if (Array.isArray(v)) {
+    v.forEach(canonicalizeFmQuotesValue);
+    return;
+  }
+  if (!v || typeof v !== 'object') return;
+  if (typeof v.modelKey === 'string') {
+    const alias = FM_WILLOW_KEY_ALIASES[v.modelKey.toLowerCase()];
+    if (alias) v.modelKey = alias;
+  }
+  if (typeof v.key === 'string') {
+    const alias = FM_WILLOW_KEY_ALIASES[v.key.toLowerCase()];
+    if (alias) v.key = alias;
+  }
+  if (typeof v.modelName === 'string') v.modelName = fmWillowSpell(v.modelName);
+  if (typeof v.project === 'string') v.project = fmWillowSpell(v.project);
+  if (typeof v.name === 'string') v.name = fmWillowSpell(v.name);
+  const model = FM_WILLOW_MODELS[v.modelKey];
+  if (model) {
+    v.modelName = model.name;
+    if (!String(v.colorName || '').trim()) v.colorName = model.color;
+  }
+  Object.keys(v).forEach(k => {
+    if (k === 'cabinets' || k === 'labor' || k === 'ar' || k === 'reconciliationData' || k === 'quoteVersions') return;
+    canonicalizeFmQuotesValue(v[k]);
+  });
+}
+function canonicalizeFmQuotesBundle(data) {
+  if (!data || typeof data !== 'object') return data;
+  Object.keys(data).forEach(k => canonicalizeFmQuotesValue(data[k]));
+  return data;
+}
 function mergePlannerBundle(existing, incoming, ns) {
   if (ns === 'tjs-hiring') {
     const prev = existing && typeof existing === 'object' ? existing : {};
@@ -445,6 +491,7 @@ export default {
       try {
         const raw = await env.PLANNER_DATA.get(`bundle:${ns}`);
         const data = raw ? JSON.parse(raw) : {};
+        if (ns === 'fm-quotes') canonicalizeFmQuotesBundle(data);
         return new Response(JSON.stringify({ success: true, data }), { status: 200, headers: CORS });
       } catch (err) {
         return new Response(JSON.stringify({ success: false, error: err.message }), { status: 500, headers: CORS });
@@ -472,6 +519,7 @@ export default {
         const raw = await env.PLANNER_DATA.get(`bundle:${ns}`);
         const existing = raw ? JSON.parse(raw) : {};
         const merged = mergePlannerBundle(existing, body, ns);
+        if (ns === 'fm-quotes') canonicalizeFmQuotesBundle(merged);
         await env.PLANNER_DATA.put(`bundle:${ns}`, JSON.stringify(merged));
         return new Response(JSON.stringify({ success: true }), { status: 200, headers: CORS });
       } catch (err) {

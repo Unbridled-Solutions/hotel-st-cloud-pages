@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v0923f</title>
+<title>Fremont Makers — Project Builder v0929a</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20260923f-clear-house -->
+<!-- FM-BUILD-v20260929a-willow-spelling -->
 <script>
 (function(){
   try {
@@ -628,7 +628,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0923f</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0929a</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
     <span class="status-label">Status:</span>
@@ -2542,6 +2542,7 @@ async function fmForceSync() {
     } else if (quotesIndex.length > 0) {
       activeQuoteId = quotesIndex[0].id;
     }
+    const spellingDirty = canonicalizeWillowSpellingAll();
     if (activeQuoteId) loadQuote(activeQuoteId);
 
     // cpnl data
@@ -2550,6 +2551,11 @@ async function fmForceSync() {
     // Re-render
     renderDashboard();
     switchTab('dashboard');
+
+    if (spellingDirty.length) {
+      spellingDirty.forEach(id => saveQuoteData(id));
+      saveQuotesIndex();
+    }
 
     syncBtns.forEach(b => { b.textContent = '✅ Synced!'; b.style.color = '#4ade80'; b.style.borderColor = '#4ade80'; });
     setTimeout(() => {
@@ -3334,6 +3340,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   _fmReady = true;
   hideOverlay();
   syncIssueBtn();
+  const spellingDirty = canonicalizeWillowSpellingAll();
+  if (spellingDirty.length) {
+    spellingDirty.forEach(id => saveQuoteData(id));
+    saveQuotesIndex();
+  }
 });
 
 function fmSetTheme(theme) {
@@ -3398,14 +3409,71 @@ function generateJobCode() {
   return `FM-${yr}${mo}-${seq}`;
 }
 
+// Locked 29 Sep 2026 from Rod's Models & color sheet. Do not respell.
 const FM_WILLOW_MODELS = [
-  { key: 'san-luis', name: 'San Luis', note: 'model 3' },
-  { key: 'mesa-ridge', name: 'Mesa Ridge', note: 'model 4' },
-  { key: 'sangre-vista', name: 'Sangre Vista', note: '' },
-  { key: 'pinon-crest', name: 'Pinon Crest', note: '' },
-  { key: 'cimmaron-peak', name: 'Cimmaron Peak', note: '' },
-  { key: '4-plex', name: '4-Plex', note: '' }
+  { key: 'sangre-vista', name: 'Sangre Vista', note: 'model 1', defaultColor: 'Bayview Wood Shaker' },
+  { key: 'mesa-ridge', name: 'Mesa Ridge', note: 'model 2', defaultColor: 'Moss Green Shaker' },
+  { key: 'san-luis', name: 'San Luis', note: 'model 3', defaultColor: 'Bayview White Shaker' },
+  { key: 'cimarron-peak', name: 'Cimarron Peak', note: 'model 4', defaultColor: 'Bayview White Shaker' },
+  { key: 'pinyon-crest', name: 'Pinyon Crest', note: 'model 5', defaultColor: 'Moss Green Shaker' }
 ];
+const FM_WILLOW_MODEL_KEY_ALIASES = {
+  'pinon-crest': 'pinyon-crest',
+  'cimmaron-peak': 'cimarron-peak',
+  '4-plex': '4-plex'
+};
+function willowSpellingText(s) {
+  return String(s || '')
+    .replace(/Cimmaron/gi, 'Cimarron')
+    .replace(/Pi[nñ]on(?= Crest)/gi, 'Pinyon');
+}
+function willowCanonicalModel(key, name) {
+  const alias = FM_WILLOW_MODEL_KEY_ALIASES[String(key || '').toLowerCase()];
+  let k = alias || String(key || '');
+  let n = willowSpellingText(name || '');
+  if (!k && n) {
+    const hit = FM_WILLOW_MODELS.find(m => m.name.toLowerCase() === n.toLowerCase());
+    if (hit) k = hit.key;
+  }
+  const byKey = FM_WILLOW_MODELS.find(m => m.key === k);
+  if (byKey) return { key: byKey.key, name: byKey.name, defaultColor: byKey.defaultColor };
+  if (n) {
+    const byName = FM_WILLOW_MODELS.find(m => m.name.toLowerCase() === n.toLowerCase());
+    if (byName) return { key: byName.key, name: byName.name, defaultColor: byName.defaultColor };
+  }
+  return { key: k, name: n, defaultColor: '' };
+}
+function canonicalizeWillowRecord(rec) {
+  if (!rec || typeof rec !== 'object') return false;
+  let dirty = false;
+  const can = willowCanonicalModel(rec.modelKey, rec.modelName);
+  if (can.key && rec.modelKey !== can.key) { rec.modelKey = can.key; dirty = true; }
+  if (can.name && rec.modelName !== can.name) { rec.modelName = can.name; dirty = true; }
+  const proj = willowSpellingText(rec.project);
+  if (proj !== (rec.project || '')) { rec.project = proj; dirty = true; }
+  if (Array.isArray(rec.modelMix)) {
+    rec.modelMix.forEach(row => {
+      if (!row) return;
+      const c = willowCanonicalModel('', row.name);
+      if (c.name && row.name !== c.name) { row.name = c.name; dirty = true; }
+    });
+  }
+  if (can.defaultColor && !String(rec.colorName || '').trim()) {
+    rec.colorName = can.defaultColor;
+    dirty = true;
+  }
+  return dirty;
+}
+function canonicalizeWillowSpellingAll() {
+  const dirtyIds = [];
+  (quotesIndex || []).forEach(row => {
+    canonicalizeWillowRecord(row);
+  });
+  Object.keys(quoteData || {}).forEach(id => {
+    if (canonicalizeWillowRecord(quoteData[id])) dirtyIds.push(id);
+  });
+  return dirtyIds;
+}
 const FM_CABINET_COLORS = [
   { key: 'gs', name: 'Grey Shaker' },
   { key: 'sbw', name: 'Bayview White Shaker' },
@@ -3633,7 +3701,7 @@ function npwBuildHouseDrafts() {
         modelName: m.name,
         unitIndex: i,
         address: prev.address || '',
-        colorName: prev.colorName || ''
+        colorName: prev.colorName || m.defaultColor || ''
       });
     }
   });
