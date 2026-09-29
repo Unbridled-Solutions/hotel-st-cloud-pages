@@ -5,7 +5,7 @@
 
 import { handlePlannerSync, handlePlannerSyncStatus, handlePlannerLyoy } from './planner-sync.js';
 import { handleEventCheckout } from './event-checkout.js';
-import { handleHrForms } from './hr-forms.js';
+import { handleHrForms, handleHrSavingsScan } from './hr-forms.js';
 import { handleHscGroupBlocks } from './hsc-group-blocks.js';
 import { handlePayroll } from './payroll.js';
 import { handleHscVaultLogins } from './hsc-manager-vault.js';
@@ -43,7 +43,64 @@ function placeholderRevs(revs) {
   const first = nums[0];
   return nums.every(n => n === first);
 }
+function rowStamp(r) {
+  return Date.parse((r && r.lastUpdatedAt) || 0) || 0;
+}
+function pickHiringNotes(a, b) {
+  a = String(a || '');
+  b = String(b || '');
+  if (!a) return b;
+  if (!b) return a;
+  if (a === b) return a;
+  if (a.indexOf(b.trim()) >= 0) return a;
+  if (b.indexOf(a.trim()) >= 0) return b;
+  return a.length >= b.length ? a : b;
+}
+function mergeHiringRows(existingRows, incomingRows) {
+  const by = {};
+  (existingRows || []).forEach(r => { if (r && r.id) by[r.id] = r; });
+  (incomingRows || []).forEach(inc => {
+    if (!inc || !inc.id) return;
+    const prev = by[inc.id];
+    if (!prev) { by[inc.id] = inc; return; }
+    if (rowStamp(prev) > rowStamp(inc)) {
+      const keep = Object.assign({}, prev);
+      keep.notes = pickHiringNotes(prev.notes, inc.notes);
+      if (inc.votes && prev.votes) {
+        keep.votes = Object.assign({}, prev.votes);
+        Object.keys(inc.votes).forEach(k => {
+          const a = prev.votes[k], b = inc.votes[k];
+          if (b && b !== 'neutral' && (!a || a === 'neutral')) keep.votes[k] = b;
+        });
+      }
+      by[inc.id] = keep;
+      return;
+    }
+    const next = Object.assign({}, prev, inc);
+    next.notes = pickHiringNotes(prev.notes, inc.notes);
+    next.votes = Object.assign({}, prev.votes || {}, inc.votes || {});
+    if (prev.uploadedAt) next.uploadedAt = prev.uploadedAt;
+    by[inc.id] = next;
+  });
+  return Object.keys(by).map(k => by[k]);
+}
 function mergePlannerBundle(existing, incoming, ns) {
+  if (ns === 'tjs-hiring') {
+    const prev = existing && typeof existing === 'object' ? existing : {};
+    const inc = incoming && typeof incoming === 'object' ? incoming : {};
+    const out = Object.assign({}, prev, inc);
+    out.rows = mergeHiringRows(prev.rows, inc.rows);
+    if (Array.isArray(prev.actions) || Array.isArray(inc.actions)) {
+      const aby = {};
+      (prev.actions || []).forEach(a => { if (a && a.id) aby[a.id] = a; });
+      (inc.actions || []).forEach(a => { if (a && a.id) aby[a.id] = a; });
+      out.actions = Object.keys(aby).map(k => aby[k]);
+    }
+    const prevT = Date.parse(prev.updated || 0) || 0;
+    const incT = Date.parse(inc.updated || 0) || 0;
+    out.updated = incT >= prevT ? (inc.updated || prev.updated) : prev.updated;
+    return out;
+  }
   const out = Object.assign({}, existing || {});
   const prefix = weekPrefix(ns);
   for (const [k, v] of Object.entries(incoming || {})) {
@@ -214,6 +271,7 @@ export default {
         "/pipeline": "/assets/fremont-makers-pipeline.html",
         "/release-notes": "/assets/fremont-makers-quote-release-notes.html",
         "/elevation": "/assets/fremont-makers-elevation.html",
+        "/elevations": "/assets/fremont-makers-elevation.html",
         "/maintenance-request": "/assets/maintenance-request.html",
         "/maintenance-request.html": "/assets/maintenance-request.html",
         "/maintenance-tracker": "/assets/maintenance-tracker.html",
@@ -238,6 +296,8 @@ export default {
           "/assets/fremont-makers-sales-agreement.html": "/sales-agreement",
           "/assets/fremont-makers-pipeline": "/pipeline",
           "/assets/fremont-makers-quote-release-notes": "/release-notes",
+          "/assets/fremont-makers-elevation": "/elevation",
+          "/assets/fremont-makers-elevation.html": "/elevation",
         };
         if (pretty[p]) {
           const dest = new URL(pretty[p], url.origin);
@@ -695,5 +755,9 @@ export default {
     }
 
     return response;
+  },
+
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(handleHrSavingsScan(env));
   },
 };

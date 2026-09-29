@@ -1,605 +1,502 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="paper">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Kitchen Elevation</title>
+<title>Fremont Makers — Elevations v0929a</title>
+<meta name="robots" content="noindex, nofollow">
+<!-- FM-ELEV-v20260929a-kristy -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Pinyon+Script&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
-  :root {
-    --bg: #f8f7f4;
-    --surface: #ffffff;
-    --border: #d0ccc4;
-    --text: #1a1a1a;
-    --muted: #888;
-    --accent: #c47f1a;
-    --fm-dark: #1a1a1a;
-    --line: #333;
+  :root, html[data-theme="paper"] {
+    --bg: #f3efe6; --surface: #fbf6f0; --surface2: #efe9df; --border: #ddd6c8;
+    --accent: #c4a46b; --text: #1b2744; --muted: #8a8378; --input: #fff;
+    --red: #c45c5c; --green: #2f7a4a; --ink: #1b2744;
+  }
+  html[data-theme="dark"] {
+    --bg: #111; --surface: #1a1a1a; --surface2: #222; --border: #2a2a2a;
+    --accent: #c9a84c; --text: #f0ece4; --muted: #888; --input: #161616;
+    --red: #e85050; --green: #3de8a0; --ink: #f0ece4;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--bg);
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    color: var(--text);
-    min-height: 100vh;
+  body { background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; font-size: 13px; }
+  .bar {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    padding: 10px 16px; border-bottom: 1px solid var(--border); background: var(--surface);
+    position: sticky; top: 0; z-index: 8;
   }
-
-  /* ── SCREEN HEADER ── */
-  .screen-header {
-    background: var(--fm-dark);
-    color: #fff;
-    padding: 14px 28px;
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 16px; flex-wrap: wrap;
+  .bar a { color: var(--muted); text-decoration: none; font-size: 12px; }
+  .bar a:hover { color: var(--accent); }
+  .mark { font-family: 'Playfair Display', Georgia, serif; font-weight: 700; letter-spacing: .08em; }
+  .tag { font-family: 'Pinyon Script', cursive; color: var(--muted); font-size: 16px; }
+  .stamp { font-size: 10px; color: var(--muted); opacity: .6; margin-left: 4px; }
+  .job-field { display: flex; flex-direction: column; gap: 3px; }
+  .job-field label { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  input, select, button {
+    font: inherit; color: var(--text); background: var(--input);
+    border: 1px solid var(--border); border-radius: 6px; padding: 6px 9px;
   }
-  .screen-header h1 { font-size: 16px; font-weight: 700; color: #c9aa7c; letter-spacing: .04em; }
-  .screen-header p { font-size: 11px; color: #aaa; }
-  .header-right { display: flex; gap: 10px; align-items: center; }
-  .btn {
-    padding: 7px 16px; border-radius: 5px; cursor: pointer;
-    font-size: 12px; font-weight: 700; border: none; transition: opacity .15s;
+  input:focus, select:focus { outline: none; border-color: var(--accent); }
+  button { cursor: pointer; background: transparent; }
+  button:hover { border-color: var(--accent); color: var(--text); background: var(--surface2); }
+  button.gold { background: var(--accent); color: #0e1117; border-color: var(--accent); font-weight: 600; }
+  button.gold:hover { filter: brightness(1.08); }
+  button.del { color: var(--red); }
+  .tabs { display: flex; gap: 6px; padding: 10px 16px 0; }
+  .tab {
+    padding: 8px 14px; border: 1px solid var(--border); border-radius: 6px 6px 0 0;
+    background: transparent; color: var(--muted); font-weight: 500;
   }
-  .btn:hover { opacity: .85; }
-  .btn-print { background: #c9aa7c; color: #1a1a1a; }
-  .btn-outline { background: transparent; border: 1px solid #555; color: #ccc; }
-
-  /* ── AGENT BADGE ── */
-  .agent-badge {
-    display: flex; align-items: center; gap: 6px;
-    background: rgba(201,170,124,.15); border: 1px solid rgba(201,170,124,.3);
-    border-radius: 20px; padding: 3px 10px;
-    font-size: 10px; color: #c9aa7c; font-weight: 700; letter-spacing: .06em;
+  .tab.on { background: var(--surface); color: var(--text); border-bottom-color: var(--surface); }
+  .layout { display: grid; grid-template-columns: 280px 1fr 320px; gap: 0; min-height: calc(100vh - 120px); }
+  .col { padding: 14px 16px 40px; overflow: auto; }
+  .col.mid { background: var(--surface); border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
+  h3 { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin: 14px 0 8px; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .hint { font-size: 12px; color: var(--muted); margin: 6px 0 10px; }
+  .fit { font-size: 13px; font-weight: 600; margin: 8px 0 4px; }
+  .fit.ok { color: var(--green); }
+  .fit.over { color: var(--red); }
+  .box-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px; margin-bottom: 8px;
   }
-
-  /* ── MAIN LAYOUT ── */
-  .main { display: flex; gap: 0; min-height: calc(100vh - 52px); }
-
-  /* ── SIDEBAR ── */
-  .sidebar {
-    width: 260px; flex-shrink: 0;
-    background: #fff; border-right: 1px solid var(--border);
-    padding: 18px 16px; overflow-y: auto;
+  .box-card.on { border-color: var(--accent); }
+  .box-head { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+  .box-head input { flex: 1; min-width: 0; }
+  .tiny { padding: 4px 7px; font-size: 12px; }
+  svg.elev { width: 100%; height: auto; display: block; background: #fff; border: 1px solid var(--border); border-radius: 6px; }
+  html[data-theme="dark"] svg.elev { background: #0e0e0e; }
+  .dim { font-size: 11px; fill: #666; font-family: Inter, sans-serif; }
+  .cab-lab { font-size: 10px; fill: #1b2744; font-family: Inter, sans-serif; font-weight: 600; }
+  .disclaimer { font-size: 11px; color: var(--muted); margin-top: 10px; max-width: 52em; }
+  @media (max-width: 1100px) {
+    .layout { grid-template-columns: 1fr; }
+    .col.mid { border: none; border-top: 1px solid var(--border); }
   }
-  .sidebar-section { margin-bottom: 20px; }
-  .sidebar-title {
-    font-size: 10px; font-weight: 800; letter-spacing: .08em;
-    text-transform: uppercase; color: var(--muted);
-    margin-bottom: 10px; padding-bottom: 5px;
-    border-bottom: 1px solid var(--border);
-  }
-  .field { display: flex; flex-direction: column; gap: 3px; margin-bottom: 8px; }
-  .field label { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
-  .field input, .field select, .field textarea {
-    background: #f4f4f2; border: 1px solid var(--border);
-    border-radius: 4px; padding: 5px 8px;
-    font-size: 12px; color: var(--text);
-  }
-  .field input:focus, .field select:focus { outline: none; border-color: var(--accent); }
-  .field textarea { resize: vertical; min-height: 60px; font-size: 11px; }
-
-  /* ── CABINET ROW ── */
-  .cab-row {
-    background: #f8f7f4; border: 1px solid var(--border);
-    border-radius: 5px; padding: 7px 8px; margin-bottom: 5px;
-    font-size: 11px;
-  }
-  .cab-row-header { font-weight: 700; color: var(--text); margin-bottom: 2px; }
-  .cab-row-detail { color: var(--muted); }
-  .cab-row.upper { border-left: 3px solid #5a8ba7; }
-  .cab-row.base  { border-left: 3px solid var(--accent); }
-  .cab-row.appl  { border-left: 3px solid #4caf7d; }
-
-  /* ── SUGGESTIONS ── */
-  .suggestion {
-    background: #fffbf0; border: 1px solid #f0d080;
-    border-radius: 5px; padding: 8px; margin-bottom: 6px;
-    font-size: 11px; color: #7a5a10; line-height: 1.5;
-  }
-  .suggestion::before { content: '💡 '; }
-
-  /* ── DRAWING AREA ── */
-  .drawing-area {
-    flex: 1; padding: 24px;
-    display: flex; flex-direction: column; align-items: center;
-    overflow: auto;
-  }
-  .wall-label {
-    font-size: 11px; font-weight: 700; letter-spacing: .08em;
-    text-transform: uppercase; color: var(--muted);
-    margin-bottom: 8px; align-self: flex-start;
-  }
-
-  /* ── SVG ELEVATION ── */
-  .elevation-wrap {
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    box-shadow: 0 2px 12px rgba(0,0,0,.08);
-    overflow: visible;
-    max-width: 100%;
-  }
-  svg { display: block; }
-
-  /* ── PRINT ── */
   @media print {
-    .screen-header, .sidebar, .wall-label, .drawing-area > *:not(.elevation-wrap) { display: none !important; }
+    .bar, .tabs, .col.left, .col.right, .no-print { display: none !important; }
+    .layout { display: block; }
+    .col.mid { border: none; padding: 0; }
     body { background: #fff; }
-    .main { display: block; }
-    .drawing-area { padding: 0; display: block; }
-    .elevation-wrap { border: none; box-shadow: none; }
-    svg { max-width: 100%; height: auto; }
-    @page { margin: 0.5in; size: landscape; }
+    svg.elev { border: none; }
   }
 </style>
 </head>
 <body>
-
-<!-- SCREEN HEADER -->
-<div class="screen-header">
-  <div>
-    <h1>Fremont Makers — Kitchen Elevation</h1>
-    <p>Powered by DRAFT · Elevation Designer</p>
+<div class="bar">
+  <a href="https://tools.fremontmakers.com/">← Dashboard</a>
+  <span class="mark">Fremont Makers</span>
+  <span class="tag">making freedom</span>
+  <span class="stamp">v0929a</span>
+  <div class="job-field" style="margin-left:8px;">
+    <label>Job / model</label>
+    <input id="job-name" placeholder="Sangre Vista 1" style="min-width:180px" />
   </div>
-  <div class="header-right">
-    <div class="agent-badge">⚔️ DRAFT</div>
-    <button class="btn btn-outline" onclick="window.location.href='fremont-makers-quote.html'">← Quote Builder</button>
-    <button class="btn btn-print" onclick="window.print()">🖨️ Print / Export PDF</button>
+  <div class="job-field">
+    <label>Color</label>
+    <input id="job-color" placeholder="Bayview Wood Shaker" style="min-width:180px" />
+  </div>
+  <div class="job-field">
+    <label>Date</label>
+    <input id="job-date" type="date" />
+  </div>
+  <button type="button" class="gold" onclick="printElev()">Print elevation</button>
+  <button type="button" onclick="newJob()">New job</button>
+</div>
+
+<div class="tabs" id="space-tabs"></div>
+
+<div class="layout">
+  <div class="col left">
+    <h3>This wall</h3>
+    <div class="job-field" style="margin-bottom:8px;">
+      <label>Wall name</label>
+      <input id="wall-name" placeholder="Kitchen El 1" />
+    </div>
+    <div class="row2">
+      <div class="job-field"><label>Wall width (in)</label><input id="wall-w" type="number" min="12" step="0.25" /></div>
+      <div class="job-field"><label>Ceiling (in)</label><input id="ceil" type="number" min="84" step="0.25" /></div>
+    </div>
+    <div class="row2" style="margin-top:8px;">
+      <div class="job-field"><label>Toe kick</label><input id="toe" type="number" min="0" step="0.25" /></div>
+      <div class="job-field"><label>Base height</label><input id="base-h" type="number" min="12" step="0.25" /></div>
+    </div>
+    <div class="row2" style="margin-top:8px;">
+      <div class="job-field"><label>Counter thick</label><input id="counter" type="number" min="0" step="0.25" /></div>
+      <div class="job-field"><label>Walls start at</label><input id="wall-bot" type="number" min="0" step="0.25" /></div>
+    </div>
+    <p class="hint">Widths are inches. Type any size. SKUs on the packets (W3624, B21) are labels only.</p>
+    <div class="fit" id="fit-line"></div>
+    <h3>Openings on this wall</h3>
+    <p class="hint">Window, door, fridge, range. Left edge from the start of the wall.</p>
+    <div id="open-list"></div>
+    <button type="button" class="tiny" onclick="addOpening()">+ Opening</button>
+    <h3>Walls in this room</h3>
+    <div id="wall-list"></div>
+    <button type="button" class="tiny" onclick="addWall()">+ Wall</button>
+  </div>
+
+  <div class="col mid">
+    <svg class="elev" id="elev" viewBox="0 0 1000 640" role="img" aria-label="Elevation"></svg>
+    <p class="disclaimer">All dimensions are subject to verification on the job site and adjustment to fit job conditions. This drawing is a working elevation for Fremont Makers, not a manufacturer shop drawing.</p>
+  </div>
+
+  <div class="col right">
+    <h3>Boxes on this wall</h3>
+    <p class="hint">Add a box, type the width, drag order with the arrows. Elevation updates as you type.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
+      <button type="button" class="tiny" onclick="addBox('base')">+ Base</button>
+      <button type="button" class="tiny" onclick="addBox('wall')">+ Wall</button>
+      <button type="button" class="tiny" onclick="addBox('tall')">+ Tall</button>
+      <button type="button" class="tiny" onclick="addBox('vanity')">+ Vanity</button>
+      <button type="button" class="tiny" onclick="addBox('filler')">+ Filler</button>
+      <button type="button" class="tiny" onclick="addBox('appliance')">+ Appliance</button>
+      <button type="button" class="tiny" onclick="addBox('hood')">+ Hood</button>
+    </div>
+    <div id="box-list"></div>
   </div>
 </div>
 
-<div class="main">
+<script>
+const KINDS = {
+  base: { row: 'base', fill: '#e8dcc8', h: 0 },
+  wall: { row: 'wall', fill: '#d7e0e4', h: 30 },
+  tall: { row: 'tall', fill: '#d9cfc0', h: 0 },
+  vanity: { row: 'base', fill: '#e4d4c4', h: 0 },
+  filler: { row: 'base', fill: '#eee8dc', h: 0 },
+  appliance: { row: 'base', fill: '#cfd6dc', h: 0 },
+  hood: { row: 'hood', fill: '#c5cdd3', h: 12 }
+};
+const SPACE_DEFS = [
+  { id: 'kitchen', name: 'Kitchen' },
+  { id: 'hall-bath', name: 'Hall bath' },
+  { id: 'master-bath', name: 'Master bath' }
+];
+const STORE = 'fm-elevation-v0929a';
 
-  <!-- SIDEBAR: JOB INFO + CABINET LIST -->
-  <div class="sidebar">
+function uid() { return 'b' + Math.random().toString(36).slice(2, 9); }
+function num(v, d) { const n = parseFloat(v); return isFinite(n) ? n : d; }
+function today() { return new Date().toISOString().slice(0, 10); }
 
-    <div class="sidebar-section">
-      <div class="sidebar-title">Job Info</div>
-      <div class="cab-row" style="border-left:3px solid #c9aa7c">
-        <div class="cab-row-header">FM-2607-001</div>
-        <div class="cab-row-detail">Standalone Test Project</div>
-        <div class="cab-row-detail" style="margin-top:2px">Galley Kitchen · July 16, 2026</div>
-      </div>
-    </div>
+function blankWall(name) {
+  return {
+    id: uid(), name: name || 'El 1',
+    width: 99, ceiling: 108, toe: 4.5, baseH: 34.5, counter: 1.5, wallBot: 54,
+    openings: [],
+    boxes: []
+  };
+}
+function blankJob() {
+  return {
+    job: '', color: '', date: today(),
+    spaceId: 'kitchen',
+    spaces: {
+      kitchen: { walls: [blankWall('Kitchen El 1')], wallId: '' },
+      'hall-bath': { walls: [blankWall('Hall bath')], wallId: '' },
+      'master-bath': { walls: [blankWall('Master bath')], wallId: '' }
+    }
+  };
+}
+let JOB = blankJob();
+SPACE_DEFS.forEach(s => { JOB.spaces[s.id].wallId = JOB.spaces[s.id].walls[0].id; });
 
-    <div class="sidebar-section">
-      <div class="sidebar-title">Wall Specs</div>
-      <div class="cab-row" style="border-left:3px solid #888">
-        <div class="cab-row-header">Wall A — North</div>
-        <div class="cab-row-detail">Width: 144" (12'-0")</div>
-        <div class="cab-row-detail">Ceiling: 120" (10'-0")</div>
-        <div class="cab-row-detail">Countertop: Granite, 1.5" thick</div>
-      </div>
-    </div>
+function space() { return JOB.spaces[JOB.spaceId]; }
+function wall() {
+  const s = space();
+  return s.walls.find(w => w.id === s.wallId) || s.walls[0];
+}
 
-    <div class="sidebar-section">
-      <div class="sidebar-title">Upper Cabinets</div>
-      <div class="cab-row upper">
-        <div class="cab-row-header">U1 — Upper Wall</div>
-        <div class="cab-row-detail">36"W × 42"H · Pos: 0–36"</div>
-      </div>
-      <div class="cab-row upper">
-        <div class="cab-row-header">U2 — Upper Wall</div>
-        <div class="cab-row-detail">36"W × 42"H · Pos: 36–72"</div>
-      </div>
-      <div class="cab-row upper">
-        <div class="cab-row-header">U3 — Upper Wall</div>
-        <div class="cab-row-detail">36"W × 42"H · Pos: 72–108"</div>
-      </div>
-      <div class="cab-row upper">
-        <div class="cab-row-header">U4 — Upper Wall</div>
-        <div class="cab-row-detail">36"W × 42"H · Pos: 108–144"</div>
-      </div>
-      <div class="cab-row" style="border-left:3px solid #5a8ba7;background:#f0f5fa">
-        <div class="cab-row-header">Crown Moulding</div>
-        <div class="cab-row-detail">Full width · 4" profile</div>
-        <div class="cab-row-detail">Runs cabinet top to soffit</div>
-      </div>
-    </div>
+function save() {
+  JOB.job = document.getElementById('job-name').value;
+  JOB.color = document.getElementById('job-color').value;
+  JOB.date = document.getElementById('job-date').value;
+  try { localStorage.setItem(STORE, JSON.stringify(JOB)); } catch (e) {}
+}
+function load() {
+  try {
+    const raw = localStorage.getItem(STORE);
+    if (raw) {
+      const j = JSON.parse(raw);
+      if (j && j.spaces) JOB = Object.assign(blankJob(), j);
+    }
+  } catch (e) {}
+  document.getElementById('job-name').value = JOB.job || '';
+  document.getElementById('job-color').value = JOB.color || '';
+  document.getElementById('job-date').value = JOB.date || today();
+}
 
-    <div class="sidebar-section">
-      <div class="sidebar-title">Base Cabinets &amp; Appliances</div>
-      <div class="cab-row base">
-        <div class="cab-row-header">B1 — 3-Drawer Bank</div>
-        <div class="cab-row-detail">36"W × 34.5"H · Pos: 0–36"</div>
-        <div class="cab-row-detail">Silverware / utensil storage</div>
-      </div>
-      <div class="cab-row base">
-        <div class="cab-row-header">B2 — Trash Pull-Out</div>
-        <div class="cab-row-detail">12"W × 34.5"H · Pos: 36–48"</div>
-      </div>
-      <div class="cab-row base">
-        <div class="cab-row-header">B3 — Sink Base</div>
-        <div class="cab-row-detail">36"W × 34.5"H · Pos: 48–84"</div>
-        <div class="cab-row-detail">Undermount sink opening</div>
-      </div>
-      <div class="cab-row appl">
-        <div class="cab-row-header">A1 — Dishwasher</div>
-        <div class="cab-row-detail">24"W × 34"H · Pos: 84–108"</div>
-        <div class="cab-row-detail">Panel-ready finish</div>
-      </div>
-      <div class="cab-row base">
-        <div class="cab-row-header">B4 — 3-Drawer Bank</div>
-        <div class="cab-row-detail">36"W × 34.5"H · Pos: 108–144"</div>
-        <div class="cab-row-detail">Silverware / utensil storage</div>
-      </div>
-      <div class="cab-row" style="border-left:3px solid #888;background:#f8f8f8;margin-top:4px">
-        <div class="cab-row-detail" style="font-weight:600">Total lower run: 144" ✓</div>
-        <div class="cab-row-detail">36 + 12 + 24 + 36 + 36 = 144"</div>
-      </div>
-    </div>
+function bindWallFields() {
+  const w = wall();
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+  set('wall-name', w.name);
+  set('wall-w', w.width);
+  set('ceil', w.ceiling);
+  set('toe', w.toe);
+  set('base-h', w.baseH);
+  set('counter', w.counter);
+  set('wall-bot', w.wallBot);
+}
+function readWallFields() {
+  const w = wall();
+  w.name = document.getElementById('wall-name').value;
+  w.width = num(document.getElementById('wall-w').value, 99);
+  w.ceiling = num(document.getElementById('ceil').value, 108);
+  w.toe = num(document.getElementById('toe').value, 4.5);
+  w.baseH = num(document.getElementById('base-h').value, 34.5);
+  w.counter = num(document.getElementById('counter').value, 1.5);
+  w.wallBot = num(document.getElementById('wall-bot').value, 54);
+}
 
-      <div class="sidebar-section">
-      <div class="sidebar-title">MC Suggestions</div>
-      <div class="suggestion">3-drawer banks on both ends are a great call for an office galley — silverware, utensils, and office snacks right where you need them, no bending to dig through base cabinets.</div>
-      <div class="suggestion">With 10ft ceilings, 42" uppers leave 24" to ceiling. The 4" crown moulding bridges most of that gap — consider a full-height soffit above crown to fully close off the space for a cleaner look.</div>
-      <div class="suggestion">Trash pull-out at 12" fits a standard single-bin pull-out unit. Placing it next to the drawer bank (and before the DW) keeps the trash close to the prep side without being right next to the sink.</div>
-      <div class="suggestion">Granite countertop on a 12ft run will require two slabs with one seam. Best seam placement: 72" from left (between DW and sink base) — falls at a natural cabinet joint and stays functional.</div>
-      <div class="suggestion">The sink at center and DW to its right is the ideal ergonomic workflow: scrape trash → rinse at sink → load the dishwasher — all in one natural left-to-right motion. Smart.</div>
-    </div>
+function renderTabs() {
+  document.getElementById('space-tabs').innerHTML = SPACE_DEFS.map(s =>
+    '<button type="button" class="tab' + (JOB.spaceId === s.id ? ' on' : '') + '" onclick="switchSpace(\'' + s.id + '\')">' + s.name + '</button>'
+  ).join('');
+}
+function switchSpace(id) {
+  readWallFields();
+  JOB.spaceId = id;
+  if (!space().wallId) space().wallId = space().walls[0].id;
+  paint();
+}
 
-  </div>
+function renderWallList() {
+  const s = space();
+  document.getElementById('wall-list').innerHTML = s.walls.map(w =>
+    '<div style="display:flex;gap:6px;margin-bottom:6px;">'
+    + '<button type="button" class="tiny' + (w.id === s.wallId ? ' gold' : '') + '" onclick="switchWall(\'' + w.id + '\')">' + (w.name || 'Wall') + '</button>'
+    + (s.walls.length > 1 ? '<button type="button" class="tiny del" onclick="removeWall(\'' + w.id + '\')">✕</button>' : '')
+    + '</div>'
+  ).join('');
+}
+function switchWall(id) {
+  readWallFields();
+  space().wallId = id;
+  paint();
+}
+function addWall() {
+  readWallFields();
+  const s = space();
+  const w = blankWall((SPACE_DEFS.find(x => x.id === JOB.spaceId) || {}).name + ' El ' + (s.walls.length + 1));
+  s.walls.push(w);
+  s.wallId = w.id;
+  paint();
+}
+function removeWall(id) {
+  const s = space();
+  if (s.walls.length < 2) return;
+  s.walls = s.walls.filter(w => w.id !== id);
+  if (s.wallId === id) s.wallId = s.walls[0].id;
+  paint();
+}
 
-  <!-- DRAWING AREA -->
-  <div class="drawing-area">
-    <div class="wall-label">Wall A — North Elevation &nbsp;|&nbsp; Scale: 1" = 6px &nbsp;|&nbsp; Job FM-DEMO-001</div>
+function addOpening() {
+  wall().openings.push({ id: uid(), kind: 'window', left: 12, width: 30, height: 36, sill: 42 });
+  paint();
+}
+function removeOpening(id) {
+  const w = wall();
+  w.openings = w.openings.filter(o => o.id !== id);
+  paint();
+}
+function renderOpenings() {
+  document.getElementById('open-list').innerHTML = wall().openings.map(o =>
+    '<div class="box-card">'
+    + '<div class="row2">'
+    + '<select onchange="updOpen(\'' + o.id + '\',\'kind\',this.value)">'
+    + ['window','door','fridge','range','other'].map(k => '<option' + (o.kind === k ? ' selected' : '') + '>' + k + '</option>').join('')
+    + '</select>'
+    + '<button type="button" class="tiny del" onclick="removeOpening(\'' + o.id + '\')">✕</button></div>'
+    + '<div class="row2" style="margin-top:6px;">'
+    + '<input type="number" step="0.25" value="' + o.left + '" oninput="updOpen(\'' + o.id + '\',\'left\',this.value)" title="From left" />'
+    + '<input type="number" step="0.25" value="' + o.width + '" oninput="updOpen(\'' + o.id + '\',\'width\',this.value)" title="Width" />'
+    + '</div>'
+    + '<div class="row2" style="margin-top:6px;">'
+    + '<input type="number" step="0.25" value="' + o.height + '" oninput="updOpen(\'' + o.id + '\',\'height\',this.value)" title="Height" />'
+    + '<input type="number" step="0.25" value="' + o.sill + '" oninput="updOpen(\'' + o.id + '\',\'sill\',this.value)" title="Sill / from floor" />'
+    + '</div><div class="hint">Left · width · height · from floor</div></div>'
+  ).join('');
+}
+function updOpen(id, k, v) {
+  const o = wall().openings.find(x => x.id === id);
+  if (!o) return;
+  o[k] = (k === 'kind') ? v : num(v, 0);
+  draw(); save();
+}
 
-    <div class="elevation-wrap">
-      <!-- SVG ELEVATION
-           Scale: 6px per inch
-           Wall: 144" × 120" → 864px × 720px
-           Padding: 90px left, 40px right, 60px top, 130px bottom
-           Total SVG: 994px × 910px
-           
-           Y coordinates (SVG top=0, floor at bottom):
-             ceiling_y = 60
-             floor_y   = 60 + 720 = 780
-             
-           Base cabinets:
-             countertop_top_y = floor_y - 36*6 = 780 - 216 = 564
-             cabinet_top_y    = 564 + 9 = 573   (countertop = 1.5*6=9px)
-             floor_y = 780
-             toe_kick_y = 780 - 4.5*6 = 780 - 27 = 753
-             
-           Upper cabinets (mount at 54" from floor):
-             upper_bottom_y = floor_y - 54*6 = 780 - 324 = 456
-             upper_top_y    = 456 - 42*6 = 456 - 252 = 204
-             crown_top_y    = 204 - 4*6 = 204 - 24 = 180
-             
-           X coordinates (left_pad = 90):
-             wall_left  = 90
-             wall_right = 90 + 864 = 954
-      -->
-      <svg width="994" height="910" viewBox="0 0 994 910"
-           xmlns="http://www.w3.org/2000/svg"
-           style="background:#fff">
+function addBox(kind) {
+  const w = wall();
+  const defW = kind === 'filler' ? 3 : kind === 'hood' ? 30 : 24;
+  w.boxes.push({
+    id: uid(), kind: kind, label: kind === 'appliance' ? 'RANGE' : kind.toUpperCase(),
+    width: defW, height: '', hinge: ''
+  });
+  paintBoxes(); draw(); save();
+}
+function removeBox(id) {
+  const w = wall();
+  w.boxes = w.boxes.filter(b => b.id !== id);
+  paintBoxes(); draw(); save();
+}
+function moveBox(id, dir) {
+  const arr = wall().boxes;
+  const i = arr.findIndex(b => b.id === id);
+  const j = i + dir;
+  if (i < 0 || j < 0 || j >= arr.length) return;
+  const t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+  paintBoxes(); draw(); save();
+}
+function updBox(id, k, v) {
+  const b = wall().boxes.find(x => x.id === id);
+  if (!b) return;
+  if (k === 'width' || k === 'height') b[k] = v;
+  else b[k] = v;
+  draw(); save();
+}
+function paintBoxes() {
+  document.getElementById('box-list').innerHTML = wall().boxes.map(b =>
+    '<div class="box-card">'
+    + '<div class="box-head">'
+    + '<select class="tiny" onchange="updBox(\'' + b.id + '\',\'kind\',this.value)">'
+    + Object.keys(KINDS).map(k => '<option' + (b.kind === k ? ' selected' : '') + '>' + k + '</option>').join('')
+    + '</select>'
+    + '<input value="' + String(b.label || '').replace(/"/g, '&quot;') + '" placeholder="Label / SKU" oninput="updBox(\'' + b.id + '\',\'label\',this.value)" />'
+    + '</div>'
+    + '<div class="row3">'
+    + '<input type="number" min="0" step="0.25" value="' + b.width + '" oninput="updBox(\'' + b.id + '\',\'width\',this.value)" title="Width in" />'
+    + '<input type="number" min="0" step="0.25" value="' + (b.height || '') + '" placeholder="H in" oninput="updBox(\'' + b.id + '\',\'height\',this.value)" title="Height in (blank = default)" />'
+    + '<select onchange="updBox(\'' + b.id + '\',\'hinge\',this.value)">'
+    + '<option value=""' + (!b.hinge ? ' selected' : '') + '>—</option>'
+    + '<option value="L"' + (b.hinge === 'L' ? ' selected' : '') + '>L</option>'
+    + '<option value="R"' + (b.hinge === 'R' ? ' selected' : '') + '>R</option>'
+    + '</select></div>'
+    + '<div style="display:flex;gap:4px;margin-top:6px;">'
+    + '<button type="button" class="tiny" onclick="moveBox(\'' + b.id + '\',-1)">↑</button>'
+    + '<button type="button" class="tiny" onclick="moveBox(\'' + b.id + '\',1)">↓</button>'
+    + '<button type="button" class="tiny del" onclick="removeBox(\'' + b.id + '\')">Remove</button>'
+    + '</div></div>'
+  ).join('') || '<p class="hint">No boxes yet.</p>';
+}
 
-        <!-- ═══════════════════════════════════════
-             DEFINE REUSABLE PATTERNS
-        ═══════════════════════════════════════ -->
-        <defs>
-          <!-- Hatch for granite countertop -->
-          <pattern id="granite" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-            <line x1="0" y1="0" x2="0" y2="6" stroke="#ccc" stroke-width=".5"/>
-          </pattern>
-        </defs>
+function rowWidth(row) {
+  return wall().boxes.filter(b => KINDS[b.kind] && KINDS[b.kind].row === row)
+    .reduce((s, b) => s + num(b.width, 0), 0);
+}
+function fitHtml() {
+  const w = wall();
+  const base = rowWidth('base');
+  const walls = rowWidth('wall');
+  const tall = rowWidth('tall');
+  const bits = [];
+  function one(label, used) {
+    const rem = Math.round((w.width - used) * 100) / 100;
+    const over = rem < -0.02;
+    bits.push(label + ' ' + used + '" of ' + w.width + '" · ' + (over ? 'OVER by ' + Math.abs(rem) : rem + '" left'));
+    return over;
+  }
+  const over = one('Base', base) | one('Wall', walls) | (tall ? one('Tall', tall) : 0);
+  const el = document.getElementById('fit-line');
+  el.className = 'fit ' + (over ? 'over' : 'ok');
+  el.textContent = bits.join('  ·  ');
+}
 
-        <!-- ═══════════════════════════════════════
-             WALL BACKGROUND + OUTLINE
-        ═══════════════════════════════════════ -->
-        <!-- Wall area (light fill) -->
-        <rect x="90" y="60" width="864" height="720" fill="#fafaf8" stroke="none"/>
+function boxH(b, w) {
+  const h = num(b.height, 0);
+  if (h > 0) return h;
+  if (b.kind === 'wall') return 30;
+  if (b.kind === 'hood') return 12;
+  if (b.kind === 'tall') return Math.max(12, w.ceiling - 3);
+  if (b.kind === 'appliance' && /ref/i.test(b.label || '')) return Math.max(60, w.ceiling - 12);
+  return w.baseH;
+}
+function boxY0(b, w) {
+  if (b.kind === 'wall') return w.wallBot;
+  if (b.kind === 'hood') return w.wallBot - 3;
+  return 0;
+}
 
-        <!-- Wall ceiling line -->
-        <line x1="90" y1="60" x2="954" y2="60" stroke="#333" stroke-width="2.5"/>
-        <!-- Wall floor line -->
-        <line x1="90" y1="780" x2="954" y2="780" stroke="#333" stroke-width="3"/>
-        <!-- Wall left edge -->
-        <line x1="90" y1="60" x2="90" y2="780" stroke="#333" stroke-width="2.5"/>
-        <!-- Wall right edge -->
-        <line x1="954" y1="60" x2="954" y2="780" stroke="#333" stroke-width="2.5"/>
+function draw() {
+  readWallFields();
+  fitHtml();
+  const w = wall();
+  const svg = document.getElementById('elev');
+  const W = 1000, H = 640;
+  const padL = 56, padR = 28, padT = 36, padB = 48;
+  const innerW = W - padL - padR, innerH = H - padT - padB;
+  const scale = Math.min(innerW / Math.max(w.width, 12), innerH / Math.max(w.ceiling, 84));
+  const ox = padL, oy = padT;
+  function X(inches) { return ox + inches * scale; }
+  function Y(fromFloor) { return oy + (w.ceiling - fromFloor) * scale; }
+  function rect(x, y0, wi, hi, fill, stroke) {
+    const x1 = X(x), y1 = Y(y0 + hi), ww = wi * scale, hh = hi * scale;
+    return '<rect x="' + x1.toFixed(1) + '" y="' + y1.toFixed(1) + '" width="' + Math.max(ww, 1).toFixed(1) + '" height="' + Math.max(hh, 1).toFixed(1) + '" fill="' + fill + '" stroke="' + (stroke || '#1b2744') + '" stroke-width="1.2" />';
+  }
+  let html = '';
+  html += '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="#fff"/>';
+  html += rect(0, 0, w.width, w.ceiling, '#f7f4ee', '#1b2744');
+  w.openings.forEach(o => {
+    html += rect(num(o.left, 0), num(o.sill, 0), num(o.width, 12), num(o.height, 36), '#eef3f6', '#587b83');
+    const cx = X(num(o.left, 0) + num(o.width, 0) / 2);
+    const cy = Y(num(o.sill, 0) + num(o.height, 0) / 2);
+    html += '<text class="cab-lab" text-anchor="middle" x="' + cx.toFixed(1) + '" y="' + cy.toFixed(1) + '">' + (o.kind || '').toUpperCase() + '</text>';
+  });
+  const rows = { base: 0, wall: 0, tall: 0, hood: 0 };
+  w.boxes.forEach(b => {
+    const kind = KINDS[b.kind] || KINDS.base;
+    const row = kind.row;
+    const x = rows[row] || 0;
+    const wi = num(b.width, 0);
+    const hi = boxH(b, w);
+    const y0 = boxY0(b, w);
+    html += rect(x, y0, wi, hi, kind.fill, '#1b2744');
+    if (b.kind === 'base' || b.kind === 'vanity' || b.kind === 'filler') {
+      html += rect(x, 0, wi, w.toe, '#d9d0c4', '#1b2744');
+    }
+    const cx = X(x + wi / 2);
+    const cy = Y(y0 + hi / 2);
+    const lab = (b.label || '') + (b.hinge ? '-' + b.hinge : '');
+    html += '<text class="cab-lab" text-anchor="middle" x="' + cx.toFixed(1) + '" y="' + (cy - 4).toFixed(1) + '">' + lab + '</text>';
+    html += '<text class="dim" text-anchor="middle" x="' + cx.toFixed(1) + '" y="' + (cy + 10).toFixed(1) + '">' + wi + '"</text>';
+    rows[row] = x + wi;
+  });
+  html += '<line x1="' + X(0) + '" y1="' + Y(0) + '" x2="' + X(w.width) + '" y2="' + Y(0) + '" stroke="#1b2744" stroke-width="2" />';
+  html += '<text class="dim" x="' + X(w.width / 2) + '" y="' + (Y(0) + 28) + '" text-anchor="middle">' + w.width + '" wall</text>';
+  html += '<text class="dim" x="' + (X(0) - 8) + '" y="' + Y(w.ceiling / 2) + '" text-anchor="end">' + w.ceiling + '"</text>';
+  const title = (document.getElementById('job-name').value || 'Elevation') + '  ·  ' + (w.name || '') + (document.getElementById('job-color').value ? '  ·  ' + document.getElementById('job-color').value : '');
+  html += '<text class="cab-lab" x="' + X(0) + '" y="' + (oy - 12) + '">' + title + '</text>';
+  svg.innerHTML = html;
+}
 
-        <!-- ════════════════════════════════════════
-             BASE CABINETS — NEW ORDER (L→R):
-             B1: 36" Drawer Bank  x=90–306
-             B2: 12" Trash P/O    x=306–378
-             B3: 24" DW           x=378–522
-             B4: 36" Sink Base    x=522–738
-             B5: 36" Drawer Bank  x=738–954
-        ════════════════════════════════════════ -->
+function paint() {
+  renderTabs();
+  bindWallFields();
+  renderWallList();
+  renderOpenings();
+  paintBoxes();
+  draw();
+  save();
+}
 
-        <!-- B1: 3-DRAWER BANK 36" — x=90–306 -->
-        <rect x="90" y="573" width="216" height="207" fill="#e8e4dc" stroke="#333" stroke-width="1.2"/>
-        <!-- Toe kick -->
-        <rect x="90" y="753" width="216" height="27" fill="#d0ccc4" stroke="#333" stroke-width=".8"/>
-        <!-- Drawer 1 (top) -->
-        <rect x="93" y="576" width="210" height="58" fill="#ede9e2" stroke="#555" stroke-width=".8"/>
-        <rect x="190" y="591" width="36" height="14" rx="2" fill="#999" stroke="none"/>
-        <!-- Drawer 2 (middle) -->
-        <rect x="93" y="637" width="210" height="58" fill="#ede9e2" stroke="#555" stroke-width=".8"/>
-        <rect x="190" y="652" width="36" height="14" rx="2" fill="#999" stroke="none"/>
-        <!-- Drawer 3 (bottom) -->
-        <rect x="93" y="698" width="210" height="52" fill="#ede9e2" stroke="#555" stroke-width=".8"/>
-        <rect x="190" y="711" width="36" height="14" rx="2" fill="#999" stroke="none"/>
-        <!-- Drawer label -->
-        <text x="198" y="630" text-anchor="middle" font-family="monospace" font-size="8" fill="#666">3-DRAWER</text>
+['job-name','job-color','job-date','wall-name','wall-w','ceil','toe','base-h','counter','wall-bot'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => { draw(); save(); });
+});
 
-        <!-- B2: TRASH PULL-OUT 12" — x=306–378 -->
-        <rect x="306" y="573" width="72" height="207" fill="#e8e4dc" stroke="#333" stroke-width="1.2"/>
-        <!-- Toe kick -->
-        <rect x="306" y="753" width="72" height="27" fill="#d0ccc4" stroke="#333" stroke-width=".8"/>
-        <!-- Single door with X -->
-        <rect x="309" y="576" width="66" height="174" fill="#ede9e2" stroke="#555" stroke-width=".8"/>
-        <line x1="309" y1="576" x2="375" y2="750" stroke="#aaa" stroke-width=".8"/>
-        <line x1="375" y1="576" x2="309" y2="750" stroke="#aaa" stroke-width=".8"/>
-        <!-- Pull handle -->
-        <circle cx="342" cy="663" r="4" fill="none" stroke="#888" stroke-width="1.2"/>
-        <text x="342" y="685" text-anchor="middle" font-family="monospace" font-size="7" fill="#666">TRASH</text>
+function newJob() {
+  if (!confirm('Start a blank elevation job? This clears the walls on this browser.')) return;
+  JOB = blankJob();
+  SPACE_DEFS.forEach(s => { JOB.spaces[s.id].wallId = JOB.spaces[s.id].walls[0].id; });
+  document.getElementById('job-name').value = '';
+  document.getElementById('job-color').value = '';
+  document.getElementById('job-date').value = today();
+  paint();
+}
+function printElev() { window.print(); }
 
-        <!-- B3: SINK BASE 36" — x=378–594 -->
-        <rect x="378" y="573" width="216" height="207" fill="#e8e4dc" stroke="#333" stroke-width="1.2"/>
-        <!-- Toe kick -->
-        <rect x="378" y="753" width="216" height="27" fill="#d0ccc4" stroke="#333" stroke-width=".8"/>
-        <!-- Two doors -->
-        <rect x="381" y="576" width="103" height="174" fill="#ede9e2" stroke="#555" stroke-width=".8"/>
-        <rect x="487" y="576" width="104" height="174" fill="#ede9e2" stroke="#555" stroke-width=".8"/>
-        <line x1="381" y1="576" x2="484" y2="750" stroke="#aaa" stroke-width=".8"/>
-        <line x1="484" y1="576" x2="381" y2="750" stroke="#aaa" stroke-width=".8"/>
-        <line x1="487" y1="576" x2="591" y2="750" stroke="#aaa" stroke-width=".8"/>
-        <line x1="591" y1="576" x2="487" y2="750" stroke="#aaa" stroke-width=".8"/>
-        <rect x="473" y="655" width="6" height="18" rx="2" fill="#888" stroke="none"/>
-        <rect x="489" y="655" width="6" height="18" rx="2" fill="#888" stroke="none"/>
-        <!-- Undermount sink oval -->
-        <ellipse cx="486" cy="568" rx="62" ry="7" fill="none" stroke="#666" stroke-width="1.2" stroke-dasharray="4,3"/>
-        <text x="486" y="630" text-anchor="middle" font-family="monospace" font-size="9" fill="#555">SINK BASE</text>
-
-        <!-- B4: DISHWASHER 24" — x=594–738 -->
-        <rect x="594" y="573" width="144" height="207" fill="#e0e8f0" stroke="#333" stroke-width="1.2"/>
-        <!-- Toe kick -->
-        <rect x="594" y="753" width="144" height="27" fill="#ccd4dc" stroke="#333" stroke-width=".8"/>
-        <!-- DW door panel -->
-        <rect x="597" y="576" width="138" height="174" fill="#e4ecf4" stroke="#5577aa" stroke-width=".8"/>
-        <!-- DW control panel strip -->
-        <rect x="597" y="576" width="138" height="16" fill="#b8c8dc" stroke="#5577aa" stroke-width=".8"/>
-        <!-- DW handle bar -->
-        <rect x="614" y="594" width="104" height="6" rx="3" fill="#8899bb" stroke="none"/>
-        <text x="666" y="680" text-anchor="middle" font-family="monospace" font-size="10" fill="#5577aa" font-weight="700">DW</text>
-
-        <!-- B5: 3-DRAWER BANK 36" — x=738–954 -->
-        <rect x="738" y="573" width="216" height="207" fill="#e8e4dc" stroke="#333" stroke-width="1.2"/>
-        <!-- Toe kick -->
-        <rect x="738" y="753" width="216" height="27" fill="#d0ccc4" stroke="#333" stroke-width=".8"/>
-        <!-- Drawer 1 (top) -->
-        <rect x="741" y="576" width="210" height="58" fill="#ede9e2" stroke="#555" stroke-width=".8"/>
-        <rect x="838" y="591" width="36" height="14" rx="2" fill="#999" stroke="none"/>
-        <!-- Drawer 2 (middle) -->
-        <rect x="741" y="637" width="210" height="58" fill="#ede9e2" stroke="#555" stroke-width=".8"/>
-        <rect x="838" y="652" width="36" height="14" rx="2" fill="#999" stroke="none"/>
-        <!-- Drawer 3 (bottom) -->
-        <rect x="741" y="698" width="210" height="52" fill="#ede9e2" stroke="#555" stroke-width=".8"/>
-        <rect x="838" y="711" width="36" height="14" rx="2" fill="#999" stroke="none"/>
-        <!-- Drawer label -->
-        <text x="846" y="630" text-anchor="middle" font-family="monospace" font-size="8" fill="#666">3-DRAWER</text>
-
-        <!-- ═══════════════════════════════════════
-             GRANITE COUNTERTOP (full run)
-             y=564 to y=573, width=864
-        ═══════════════════════════════════════ -->
-        <rect x="90" y="564" width="864" height="9" fill="url(#granite)" stroke="#555" stroke-width="1.2"/>
-        <!-- Countertop front edge shadow line -->
-        <line x1="90" y1="573" x2="954" y2="573" stroke="#444" stroke-width="1.5"/>
-        <!-- Countertop overhang cap lines -->
-        <line x1="90" y1="564" x2="954" y2="564" stroke="#333" stroke-width="1.2"/>
-        <!-- Countertop label -->
-        <text x="522" y="561" text-anchor="middle" font-family="monospace" font-size="9" fill="#666">GRANITE COUNTERTOP — 1.5" THK · FULL 12'-0" RUN</text>
-
-        <!-- ═══════════════════════════════════════
-             UPPER CABINETS
-             upper_bottom_y = 456
-             upper_top_y    = 204
-             crown_top_y    = 180
-        ═══════════════════════════════════════ -->
-
-        <!-- U1 — 0"–36" → x=90–306 -->
-        <rect x="90" y="204" width="216" height="252" fill="#e0dcd4" stroke="#333" stroke-width="1.2"/>
-        <!-- Two doors -->
-        <rect x="93" y="207" width="103" height="246" fill="#e8e4dc" stroke="#555" stroke-width=".8"/>
-        <rect x="199" y="207" width="104" height="246" fill="#e8e4dc" stroke="#555" stroke-width=".8"/>
-        <line x1="93" y1="207" x2="196" y2="453" stroke="#bbb" stroke-width=".8"/>
-        <line x1="196" y1="207" x2="93" y2="453" stroke="#bbb" stroke-width=".8"/>
-        <line x1="199" y1="207" x2="303" y2="453" stroke="#bbb" stroke-width=".8"/>
-        <line x1="303" y1="207" x2="199" y2="453" stroke="#bbb" stroke-width=".8"/>
-        <!-- Handles -->
-        <rect x="186" y="322" width="6" height="18" rx="2" fill="#999" stroke="none"/>
-        <rect x="202" y="322" width="6" height="18" rx="2" fill="#999" stroke="none"/>
-
-        <!-- U2 — 36"–72" → x=306–522 -->
-        <rect x="306" y="204" width="216" height="252" fill="#e0dcd4" stroke="#333" stroke-width="1.2"/>
-        <rect x="309" y="207" width="103" height="246" fill="#e8e4dc" stroke="#555" stroke-width=".8"/>
-        <rect x="415" y="207" width="104" height="246" fill="#e8e4dc" stroke="#555" stroke-width=".8"/>
-        <line x1="309" y1="207" x2="412" y2="453" stroke="#bbb" stroke-width=".8"/>
-        <line x1="412" y1="207" x2="309" y2="453" stroke="#bbb" stroke-width=".8"/>
-        <line x1="415" y1="207" x2="519" y2="453" stroke="#bbb" stroke-width=".8"/>
-        <line x1="519" y1="207" x2="415" y2="453" stroke="#bbb" stroke-width=".8"/>
-        <rect x="402" y="322" width="6" height="18" rx="2" fill="#999" stroke="none"/>
-        <rect x="418" y="322" width="6" height="18" rx="2" fill="#999" stroke="none"/>
-
-        <!-- U3 — 72"–108" → x=522–738 -->
-        <rect x="522" y="204" width="216" height="252" fill="#e0dcd4" stroke="#333" stroke-width="1.2"/>
-        <rect x="525" y="207" width="103" height="246" fill="#e8e4dc" stroke="#555" stroke-width=".8"/>
-        <rect x="631" y="207" width="104" height="246" fill="#e8e4dc" stroke="#555" stroke-width=".8"/>
-        <line x1="525" y1="207" x2="628" y2="453" stroke="#bbb" stroke-width=".8"/>
-        <line x1="628" y1="207" x2="525" y2="453" stroke="#bbb" stroke-width=".8"/>
-        <line x1="631" y1="207" x2="735" y2="453" stroke="#bbb" stroke-width=".8"/>
-        <line x1="735" y1="207" x2="631" y2="453" stroke="#bbb" stroke-width=".8"/>
-        <rect x="618" y="322" width="6" height="18" rx="2" fill="#999" stroke="none"/>
-        <rect x="634" y="322" width="6" height="18" rx="2" fill="#999" stroke="none"/>
-
-        <!-- U4 — 108"–144" → x=738–954 -->
-        <rect x="738" y="204" width="216" height="252" fill="#e0dcd4" stroke="#333" stroke-width="1.2"/>
-        <rect x="741" y="207" width="103" height="246" fill="#e8e4dc" stroke="#555" stroke-width=".8"/>
-        <rect x="847" y="207" width="104" height="246" fill="#e8e4dc" stroke="#555" stroke-width=".8"/>
-        <line x1="741" y1="207" x2="844" y2="453" stroke="#bbb" stroke-width=".8"/>
-        <line x1="844" y1="207" x2="741" y2="453" stroke="#bbb" stroke-width=".8"/>
-        <line x1="847" y1="207" x2="951" y2="453" stroke="#bbb" stroke-width=".8"/>
-        <line x1="951" y1="207" x2="847" y2="453" stroke="#bbb" stroke-width=".8"/>
-        <rect x="834" y="322" width="6" height="18" rx="2" fill="#999" stroke="none"/>
-        <rect x="850" y="322" width="6" height="18" rx="2" fill="#999" stroke="none"/>
-
-        <!-- CROWN MOULDING — full run across all 4 uppers -->
-        <!-- Crown shape: simple stepped profile -->
-        <rect x="90" y="180" width="864" height="24" fill="#d4cfC8" stroke="#333" stroke-width="1.2"/>
-        <!-- Crown profile detail line -->
-        <line x1="90" y1="192" x2="954" y2="192" stroke="#aaa" stroke-width=".8" stroke-dasharray="3,2"/>
-        <!-- Crown top cap -->
-        <rect x="88" y="178" width="868" height="4" fill="#bbb9b4" stroke="#555" stroke-width=".8"/>
-        <!-- Crown label -->
-        <text x="522" y="174" text-anchor="middle" font-family="monospace" font-size="9" fill="#555" font-style="italic">CROWN MOULDING — 4" PROFILE · FULL RUN</text>
-
-        <!-- Gap between upper and crown to ceiling -->
-        <!-- Soffit / wall shown above crown to ceiling line -->
-        <text x="522" y="124" text-anchor="middle" font-family="monospace" font-size="9" fill="#aaa">← WALL ABOVE CROWN — 18" TO 10'-0" CEILING →</text>
-
-        <!-- ═══════════════════════════════════════
-             DIMENSION LINES
-        ═══════════════════════════════════════ -->
-
-        <!-- LOWER DIMENSION LINE (below floor) -->
-        <!-- Main wall span line -->
-        <line x1="90" y1="810" x2="954" y2="810" stroke="#333" stroke-width=".8"/>
-        <line x1="90" y1="804" x2="90" y2="816" stroke="#333" stroke-width=".8"/>
-        <line x1="954" y1="804" x2="954" y2="816" stroke="#333" stroke-width=".8"/>
-        <text x="522" y="827" text-anchor="middle" font-family="monospace" font-size="11" fill="#333" font-weight="700">12'-0"  (144")</text>
-
-        <!-- Individual base cabinet dimension ticks -->
-        <!-- B1 Drawer: 0–36" (x=90–306) -->
-        <line x1="90" y1="793" x2="306" y2="793" stroke="#666" stroke-width=".7"/>
-        <line x1="90" y1="789" x2="90" y2="797" stroke="#666" stroke-width=".7"/>
-        <line x1="306" y1="789" x2="306" y2="797" stroke="#666" stroke-width=".7"/>
-        <text x="198" y="787" text-anchor="middle" font-family="monospace" font-size="9" fill="#666">36"</text>
-
-        <!-- B2 Trash: 36–48" (x=306–378) -->
-        <line x1="306" y1="793" x2="378" y2="793" stroke="#666" stroke-width=".7"/>
-        <line x1="378" y1="789" x2="378" y2="797" stroke="#666" stroke-width=".7"/>
-        <text x="342" y="787" text-anchor="middle" font-family="monospace" font-size="9" fill="#666">12"</text>
-
-        <!-- B3 Sink: 48–84" (x=378–594) -->
-        <line x1="378" y1="793" x2="594" y2="793" stroke="#666" stroke-width=".7"/>
-        <line x1="594" y1="789" x2="594" y2="797" stroke="#666" stroke-width=".7"/>
-        <text x="486" y="787" text-anchor="middle" font-family="monospace" font-size="9" fill="#666">36"</text>
-
-        <!-- B4 DW: 84–108" (x=594–738) -->
-        <line x1="594" y1="793" x2="738" y2="793" stroke="#666" stroke-width=".7"/>
-        <line x1="738" y1="789" x2="738" y2="797" stroke="#666" stroke-width=".7"/>
-        <text x="666" y="787" text-anchor="middle" font-family="monospace" font-size="9" fill="#5577aa">24"</text>
-
-        <!-- B5 Drawer: 108–144" (x=738–954) -->
-        <line x1="738" y1="793" x2="954" y2="793" stroke="#666" stroke-width=".7"/>
-        <text x="846" y="787" text-anchor="middle" font-family="monospace" font-size="9" fill="#666">36"</text>
-
-        <!-- UPPER DIMENSION LINE (above drawing) -->
-        <!-- Main upper span -->
-        <line x1="90" y1="36" x2="954" y2="36" stroke="#333" stroke-width=".8"/>
-        <line x1="90" y1="30" x2="90" y2="42" stroke="#333" stroke-width=".8"/>
-        <line x1="954" y1="30" x2="954" y2="42" stroke="#333" stroke-width=".8"/>
-        <text x="522" y="24" text-anchor="middle" font-family="monospace" font-size="11" fill="#333" font-weight="700">4 × 36"W = 144" TOTAL</text>
-
-        <!-- Individual upper ticks -->
-        <line x1="306" y1="30" x2="306" y2="42" stroke="#888" stroke-width=".7"/>
-        <line x1="522" y1="30" x2="522" y2="42" stroke="#888" stroke-width=".7"/>
-        <line x1="738" y1="30" x2="738" y2="42" stroke="#888" stroke-width=".7"/>
-
-        <!-- LEFT DIMENSION LINE (height callouts) -->
-        <!-- Ceiling height -->
-        <line x1="54" y1="60" x2="54" y2="780" stroke="#555" stroke-width=".8"/>
-        <line x1="48" y1="60" x2="60" y2="60" stroke="#555" stroke-width=".8"/>
-        <line x1="48" y1="780" x2="60" y2="780" stroke="#555" stroke-width=".8"/>
-        <text x="18" y="430" text-anchor="middle" font-family="monospace" font-size="10" fill="#333" font-weight="700" transform="rotate(-90,18,430)">CEILING HT: 10'-0" (120")</text>
-
-        <!-- Upper cabinet mount height from floor -->
-        <line x1="70" y1="456" x2="90" y2="456" stroke="#5577aa" stroke-width=".8" stroke-dasharray="3,2"/>
-        <text x="68" y="460" text-anchor="end" font-family="monospace" font-size="8" fill="#5577aa">54" AFF</text>
-
-        <!-- Top of upper / bottom of crown -->
-        <line x1="70" y1="204" x2="90" y2="204" stroke="#5577aa" stroke-width=".8" stroke-dasharray="3,2"/>
-        <text x="68" y="208" text-anchor="end" font-family="monospace" font-size="8" fill="#5577aa">96" AFF</text>
-
-        <!-- Countertop height -->
-        <line x1="70" y1="564" x2="90" y2="564" stroke="#c47f1a" stroke-width=".8" stroke-dasharray="3,2"/>
-        <text x="68" y="568" text-anchor="end" font-family="monospace" font-size="8" fill="#c47f1a">36" AFF</text>
-
-        <!-- Cabinet labels (BELOW each unit) -->
-        <text x="198" y="842" text-anchor="middle" font-family="monospace" font-size="8" fill="#888">3-DRAWER</text>
-        <text x="342" y="842" text-anchor="middle" font-family="monospace" font-size="8" fill="#888">TRASH</text>
-        <text x="486" y="842" text-anchor="middle" font-family="monospace" font-size="8" fill="#888">SINK BASE</text>
-        <text x="666" y="842" text-anchor="middle" font-family="monospace" font-size="8" fill="#5577aa">DISHWASHER</text>
-        <text x="846" y="842" text-anchor="middle" font-family="monospace" font-size="8" fill="#888">3-DRAWER</text>
-
-        <!-- ═══════════════════════════════════════
-             TITLE BLOCK
-        ═══════════════════════════════════════ -->
-        <!-- Title block border -->
-        <rect x="90" y="856" width="864" height="48" fill="#1a1a1a" stroke="#333" stroke-width="1"/>
-        <!-- Title dividers -->
-        <line x1="260" y1="856" x2="260" y2="904" stroke="#444" stroke-width=".8"/>
-        <line x1="500" y1="856" x2="500" y2="904" stroke="#444" stroke-width=".8"/>
-        <line x1="700" y1="856" x2="700" y2="904" stroke="#444" stroke-width=".8"/>
-        <line x1="820" y1="856" x2="820" y2="904" stroke="#444" stroke-width=".8"/>
-
-        <!-- Col 1: Project -->
-        <text x="100" y="869" font-family="monospace" font-size="8" fill="#aaa" letter-spacing=".06em">PROJECT</text>
-        <text x="100" y="884" font-family="monospace" font-size="11" fill="#ffffff" font-weight="700">Standalone Test Project</text>
-        <text x="100" y="898" font-family="monospace" font-size="9" fill="#c9aa7c">Galley Kitchen</text>
-
-        <!-- Col 2: Wall / Drawing -->
-        <text x="270" y="869" font-family="monospace" font-size="8" fill="#aaa" letter-spacing=".06em">DRAWING</text>
-        <text x="270" y="884" font-family="monospace" font-size="11" fill="#ffffff" font-weight="700">Wall A — North Elevation</text>
-        <text x="270" y="898" font-family="monospace" font-size="9" fill="#888">Scale: 1" = 6px · Sheet 1 of 1</text>
-
-        <!-- Col 3: Job Code -->
-        <text x="510" y="869" font-family="monospace" font-size="8" fill="#aaa" letter-spacing=".06em">JOB CODE</text>
-        <text x="510" y="884" font-family="monospace" font-size="13" fill="#c9aa7c" font-weight="700">FM-2607-001</text>
-        <text x="510" y="898" font-family="monospace" font-size="9" fill="#888">July 16, 2026</text>
-
-        <!-- Col 4: Prepared by -->
-        <text x="710" y="869" font-family="monospace" font-size="8" fill="#aaa" letter-spacing=".06em">PREPARED BY</text>
-        <text x="710" y="884" font-family="monospace" font-size="11" fill="#ffffff" font-weight="700">Fremont Makers</text>
-        <text x="710" y="898" font-family="monospace" font-size="9" fill="#888">Powered by DRAFT</text>
-
-        <!-- Col 5: Confidential stamp -->
-        <text x="830" y="869" font-family="monospace" font-size="8" fill="#aaa" letter-spacing=".06em">STATUS</text>
-        <text x="830" y="884" font-family="monospace" font-size="9" fill="#c9aa7c" font-weight="700">BID DOCUMENT</text>
-        <text x="830" y="898" font-family="monospace" font-size="8" fill="#888">Fremont.ai</text>
-
-        <!-- ═══════════════════════════════════════
-             CABINET LABEL CALLOUTS (on drawing)
-        ═══════════════════════════════════════ -->
-        <!-- Trash label -->
-        <text x="135" y="660" text-anchor="middle" font-family="monospace" font-size="8" fill="#666" transform="rotate(-90,135,660)">TRASH P/O</text>
-        <!-- Sink label -->
-        <text x="432" y="630" text-anchor="middle" font-family="monospace" font-size="9" fill="#555">SINK BASE</text>
-
-        <!-- Upper cabinet "42H" labels -->
-        <text x="198" y="332" text-anchor="middle" font-family="monospace" font-size="9" fill="#777">42"H</text>
-        <text x="414" y="332" text-anchor="middle" font-family="monospace" font-size="9" fill="#777">42"H</text>
-        <text x="630" y="332" text-anchor="middle" font-family="monospace" font-size="9" fill="#777">42"H</text>
-        <text x="846" y="332" text-anchor="middle" font-family="monospace" font-size="9" fill="#777">42"H</text>
-
-        <!-- "UPPER W-36" labels under each upper -->
-        <text x="198" y="468" text-anchor="middle" font-family="monospace" font-size="9" fill="#5577aa">W36 UPPER</text>
-        <text x="414" y="468" text-anchor="middle" font-family="monospace" font-size="9" fill="#5577aa">W36 UPPER</text>
-        <text x="630" y="468" text-anchor="middle" font-family="monospace" font-size="9" fill="#5577aa">W36 UPPER</text>
-        <text x="846" y="468" text-anchor="middle" font-family="monospace" font-size="9" fill="#5577aa">W36 UPPER</text>
-
-        <!-- AFF note -->
-        <text x="970" y="460" font-family="monospace" font-size="8" fill="#888">AFF =</text>
-        <text x="970" y="472" font-family="monospace" font-size="8" fill="#888">Above</text>
-        <text x="970" y="484" font-family="monospace" font-size="8" fill="#888">Finish</text>
-        <text x="970" y="496" font-family="monospace" font-size="8" fill="#888">Floor</text>
-
-      </svg>
-    </div><!-- / elevation-wrap -->
-
-  </div><!-- / drawing-area -->
-</div><!-- / main -->
-
+load();
+paint();
+</script>
 </body>
 </html>
