@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Elevations v0930a</title>
+<title>Fremont Makers — Elevations v0930b</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-ELEV-v20260930a-house-link -->
+<!-- FM-ELEV-v20260930b-left-fields -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Pinyon+Script&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -27,17 +27,23 @@
     padding: 10px 16px; border-bottom: 1px solid var(--border); background: var(--surface);
     position: sticky; top: 0; z-index: 8;
   }
-  .bar a { color: var(--muted); text-decoration: none; font-size: 12px; }
+  .bar a { color: var(--muted); text-decoration: none; font-size: 12px; white-space: nowrap; }
   .bar a:hover { color: var(--accent); }
   .mark { font-family: 'Playfair Display', Georgia, serif; font-weight: 700; letter-spacing: .08em; }
   .tag { font-family: 'Pinyon Script', cursive; color: var(--muted); font-size: 16px; }
   .stamp { font-size: 10px; color: var(--muted); opacity: .6; margin-left: 4px; }
-  .job-field { display: flex; flex-direction: column; gap: 3px; }
+  .job-field { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
   .job-field label { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
   input, select, button {
     font: inherit; color: var(--text); background: var(--input);
     border: 1px solid var(--border); border-radius: 6px; padding: 6px 9px;
+    width: 100%; min-width: 0; max-width: 100%;
   }
+  input[type=number] { -moz-appearance: textfield; }
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .bar input, .bar select, .bar button { width: auto; }
+  button { width: auto; }
   input:focus, select:focus { outline: none; border-color: var(--accent); }
   button { cursor: pointer; background: transparent; }
   button:hover { border-color: var(--accent); color: var(--text); background: var(--surface2); }
@@ -50,23 +56,24 @@
     background: transparent; color: var(--muted); font-weight: 500;
   }
   .tab.on { background: var(--surface); color: var(--text); border-bottom-color: var(--surface); }
-  .layout { display: grid; grid-template-columns: 280px 1fr 320px; gap: 0; min-height: calc(100vh - 120px); }
-  .col { padding: 14px 16px 40px; overflow: auto; }
+  .layout { display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr) minmax(0, 320px); gap: 0; min-height: calc(100vh - 120px); }
+  .col { padding: 14px 16px 40px; overflow: auto; min-width: 0; }
+  .col.left, .col.right { overflow-x: hidden; }
   .col.mid { background: var(--surface); border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
   h3 { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin: 14px 0 8px; }
-  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-  .hint { font-size: 12px; color: var(--muted); margin: 6px 0 10px; }
-  .fit { font-size: 13px; font-weight: 600; margin: 8px 0 4px; }
+  .row2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+  .row3 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+  .hint { font-size: 12px; color: var(--muted); margin: 6px 0 10px; overflow-wrap: anywhere; }
+  .fit { font-size: 13px; font-weight: 600; margin: 8px 0 4px; overflow-wrap: anywhere; line-height: 1.35; }
   .fit.ok { color: var(--green); }
   .fit.over { color: var(--red); }
   .box-card {
     background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
-    padding: 8px; margin-bottom: 8px;
+    padding: 8px; margin-bottom: 8px; overflow: hidden; min-width: 0;
   }
-  .box-head { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
-  .box-head input { flex: 1; min-width: 0; }
-  .tiny { padding: 4px 7px; font-size: 12px; }
+  .box-head { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; min-width: 0; }
+  .box-head input, .box-head select { flex: 1; min-width: 0; width: auto; }
+  .tiny { padding: 4px 7px; font-size: 12px; width: auto; flex-shrink: 0; }
   svg.elev { width: 100%; height: auto; display: block; background: #fff; border: 1px solid var(--border); border-radius: 6px; }
   html[data-theme="dark"] svg.elev { background: #0e0e0e; }
   .dim { font-size: 11px; fill: #666; font-family: Inter, sans-serif; }
@@ -92,9 +99,10 @@
 <body>
 <div class="bar">
   <a class="dash-link" href="https://tools.fremontmakers.com/">← Dashboard</a>
+  <a class="house-link" id="back-to-house" href="#" style="display:none;">← House quote</a>
   <span class="mark">Fremont Makers</span>
   <span class="tag">making freedom</span>
-  <span class="stamp">v0930a</span>
+  <span class="stamp">v0930b</span>
   <div class="job-field" style="margin-left:8px;">
     <label>Job / model</label>
     <input id="job-name" placeholder="Sangre Vista 1" style="min-width:180px" />
@@ -418,6 +426,11 @@ async function boot() {
         JOB = Object.assign(blankJob(), JSON.parse(JSON.stringify(HOUSE.elevationDraft)));
       } else loadScratch();
       applyHouseMeta();
+      const back = document.getElementById('back-to-house');
+      if (back) {
+        back.style.display = '';
+        back.href = 'https://tools.fremontmakers.com/quote?id=' + encodeURIComponent(HOUSE_ID);
+      }
     } else if (HOUSE_ID) {
       document.getElementById('house-banner').style.display = '';
       document.getElementById('house-banner').textContent = 'That house is not in the cloud yet. Open Project Builder, wait for it to save, then open Elevations again.';
@@ -507,19 +520,19 @@ function removeOpening(id) {
 function renderOpenings() {
   document.getElementById('open-list').innerHTML = wall().openings.map(o =>
     '<div class="box-card">'
-    + '<div class="row2">'
+    + '<div class="box-head">'
     + '<select onchange="updOpen(\'' + o.id + '\',\'kind\',this.value)">'
     + ['window','door','fridge','range','other'].map(k => '<option' + (o.kind === k ? ' selected' : '') + '>' + k + '</option>').join('')
     + '</select>'
     + '<button type="button" class="tiny del" onclick="removeOpening(\'' + o.id + '\')">✕</button></div>'
     + '<div class="row2" style="margin-top:6px;">'
-    + '<input type="number" step="0.25" value="' + o.left + '" oninput="updOpen(\'' + o.id + '\',\'' + 'left' + '\',this.value)" title="From left" />'
-    + '<input type="number" step="0.25" value="' + o.width + '" oninput="updOpen(\'' + o.id + '\',\'width\',this.value)" title="Width" />'
+    + '<div class="job-field"><label>From left</label><input type="number" step="0.25" value="' + o.left + '" oninput="updOpen(\'' + o.id + '\',\'left\',this.value)" /></div>'
+    + '<div class="job-field"><label>Width</label><input type="number" step="0.25" value="' + o.width + '" oninput="updOpen(\'' + o.id + '\',\'width\',this.value)" /></div>'
     + '</div>'
     + '<div class="row2" style="margin-top:6px;">'
-    + '<input type="number" step="0.25" value="' + o.height + '" oninput="updOpen(\'' + o.id + '\',\'height\',this.value)" title="Height" />'
-    + '<input type="number" step="0.25" value="' + o.sill + '" oninput="updOpen(\'' + o.id + '\',\'sill\',this.value)" title="Sill / from floor" />'
-    + '</div><div class="hint">Left · width · height · from floor</div></div>'
+    + '<div class="job-field"><label>Height</label><input type="number" step="0.25" value="' + o.height + '" oninput="updOpen(\'' + o.id + '\',\'height\',this.value)" /></div>'
+    + '<div class="job-field"><label>From floor</label><input type="number" step="0.25" value="' + o.sill + '" oninput="updOpen(\'' + o.id + '\',\'sill\',this.value)" /></div>'
+    + '</div></div>'
   ).join('');
 }
 function updOpen(id, k, v) {

@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v0930a</title>
+<title>Fremont Makers — Project Builder v0930b</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20260930a-elev-tab -->
+<!-- FM-BUILD-v20260930b-elev-back -->
 <script>
 (function(){
   try {
@@ -629,7 +629,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0930a</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0930b</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
     <span class="status-label">Status:</span>
@@ -3339,14 +3339,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     migrateOldQuote();
     loadQuotesIndex();
 
-    if (activeQuoteId) {
+    if (new URLSearchParams(location.search).get('id') && quoteData[new URLSearchParams(location.search).get('id')]) {
+      loadQuote(new URLSearchParams(location.search).get('id'));
+      switchTab('quote');
+    } else if (activeQuoteId) {
       loadQuote(activeQuoteId);
+      switchTab('dashboard');
     } else if (quotesIndex.length > 0) {
       loadQuote(quotesIndex[0].id);
+      switchTab('dashboard');
     } else {
       newQuote(false);
+      switchTab('dashboard');
     }
-    switchTab('dashboard');
     recalc();
     renderDashboard();
   } catch(e) {
