@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v0929a</title>
+<title>Fremont Makers — Project Builder v0930a</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20260929a-willow-spelling -->
+<!-- FM-BUILD-v20260930a-elev-tab -->
 <script>
 (function(){
   try {
@@ -592,6 +592,7 @@
         <button type="button" class="tab-btn" onclick="openNewProjectWizard()" style="border-color:var(--accent);color:var(--accent);font-weight:700;">＋ New Project</button>
         <button class="tab-btn" onclick="switchTab('dashboard')" data-tab="dashboard">All Projects</button>
         <button class="tab-btn" onclick="switchTab('quote')" data-tab="quote">Quote</button>
+        <button class="tab-btn" onclick="switchTab('elevation')" data-tab="elevation">Elevations</button>
         <button class="tab-btn" onclick="switchTab('contracts')" data-tab="contracts">Contracts</button>
         <button class="tab-btn" onclick="switchTab('invoices')" data-tab="invoices">Invoices</button>
       </div>
@@ -628,7 +629,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0929a</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0930a</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
     <span class="status-label">Status:</span>
@@ -1331,6 +1332,20 @@
       </div>
     </div>
   </div><!-- /balance-sheet-view -->
+
+  <!-- ── ELEVATION VIEW ── -->
+  <div id="elevation-view" style="display:none;">
+    <div style="padding:14px 16px 6px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span style="font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);">Elevations</span>
+      <span id="elev-view-label" style="font-size:13px;color:var(--muted);"></span>
+      <button type="button" class="modal-btn" id="btn-open-elevation" onclick="openHouseElevation()" style="border-color:var(--accent);color:var(--accent);">Open elevation tool</button>
+    </div>
+    <div style="padding:14px 16px;">
+      <p style="color:var(--muted);font-size:13px;margin-bottom:12px;">The elevation tool opens in a new tab, linked to this house. Draft and saved versions come back here.</p>
+      <div id="elev-view-versions" style="font-size:13px;color:var(--muted);"></div>
+      <div id="elev-view-preview" style="margin-top:14px;"></div>
+    </div>
+  </div>
 
 </div><!-- /main -->
 
@@ -2654,6 +2669,7 @@ function renderDashboard() {
     return `<div class="dash-actions">
             <button class="modal-btn" onclick="loadQuoteAndSwitchTab('${quote.id}')">${loadLbl}</button>
             ${isChild ? `<button class="modal-btn" onclick="event.stopPropagation();importPdfIntoHouse('${quote.id}')">Import PDF</button>` : dup}
+            ${isChild ? `<button class="modal-btn" onclick="event.stopPropagation();openHouseElevation('${quote.id}')">Elevation</button>` : ''}
             ${isChild ? `<button class="modal-btn" onclick="event.stopPropagation();clearHouseManufacturerUpload('${quote.id}')">Clear PDF</button>` : ''}
             ${sched}
             <button class="modal-btn del" onclick="event.stopPropagation();deleteQuote('${quote.id}')">${isChild ? 'Remove house' : 'Delete'}</button>
@@ -3607,6 +3623,7 @@ function renderOrderSummary(orderId) {
         + '<td style="text-align:right">' + fmt(dashRowTotal(ch)) + '</td>'
         + '<td><div class="dash-actions">'
         + '<button class="modal-btn" type="button" onclick="loadQuoteAndSwitchTab(\'' + ch.id + '\')">Open house</button>'
+        + '<button class="modal-btn" type="button" onclick="openHouseElevation(\'' + ch.id + '\')">Elevation</button>'
         + '<button class="modal-btn" type="button" onclick="event.stopPropagation();importPdfIntoHouse(\'' + ch.id + '\')">Import PDF</button>'
         + '<button class="modal-btn" type="button" onclick="event.stopPropagation();clearHouseManufacturerUpload(\'' + ch.id + '\')">Clear PDF</button>'
         + '<button class="modal-btn del" type="button" onclick="event.stopPropagation();deleteQuote(\'' + ch.id + '\')">Remove house</button>'
@@ -5045,11 +5062,12 @@ function switchTab(tab) {
   document.getElementById('invoice-view').style.display = tab==='invoice' ? 'block' : 'none';
   document.getElementById('print-quote-view').style.display = tab==='printquote' ? 'block' : 'none';
   document.getElementById('reconcile-view').style.display = tab==='reconcile' ? '' : 'none';
+  document.getElementById('elevation-view').style.display = tab==='elevation' ? '' : 'none';
   document.getElementById('company-pnl-view').style.display = tab==='companypnl' ? '' : 'none';
   document.getElementById('balance-sheet-view').style.display = tab==='balancesheet' ? '' : 'none';
 
   // Hide status bar + job info on non-quote tabs (they're only relevant when editing a quote)
-  const quoteChromeTabs = ['quote','invoice','printquote','reconcile'];
+  const quoteChromeTabs = ['quote','invoice','printquote','reconcile','elevation'];
   const showQuoteChrome = quoteChromeTabs.includes(tab);
   const statusBar = document.querySelector('.status-bar');
   const jobInfo   = document.querySelector('.job-info');
@@ -5086,7 +5104,62 @@ function switchTab(tab) {
   }
   if (tab === 'reconcile') {
     recalcFinalReconciliation();
-    loadReconciliationData(activeQuoteId); // Load reconciliation data for the active quote
+    loadReconciliationData(activeQuoteId);
+  }
+  if (tab === 'elevation') renderElevationView();
+}
+
+const FM_ELEV_URL = 'https://tools.fremontmakers.com/elevation';
+function openHouseElevation(id) {
+  const houseId = id || activeQuoteId;
+  const q = quoteData[houseId] || {};
+  const kind = quoteKind(q);
+  if (kind === 'order') {
+    alert('Open a house on the Quote tab, then click Open elevation tool.');
+    return;
+  }
+  window.open(FM_ELEV_URL + '?id=' + encodeURIComponent(houseId), '_blank');
+}
+function renderElevationView() {
+  const q = quoteData[activeQuoteId] || {};
+  const kind = quoteKind(q);
+  const label = document.getElementById('elev-view-label');
+  const btn = document.getElementById('btn-open-elevation');
+  const vers = document.getElementById('elev-view-versions');
+  const prev = document.getElementById('elev-view-preview');
+  if (kind === 'order') {
+    if (label) label.textContent = 'Builder order — open a house, then switch to Elevations.';
+    if (btn) btn.style.display = 'none';
+    if (vers) vers.innerHTML = '';
+    if (prev) prev.innerHTML = '';
+    return;
+  }
+  const name = (q.project || q.modelName || q.jobCode || 'This house') + (q.colorName ? ' · ' + q.colorName : '');
+  if (label) label.textContent = name;
+  if (btn) { btn.style.display = ''; btn.onclick = () => openHouseElevation(activeQuoteId); }
+  const versions = q.elevationVersions || [];
+  if (vers) {
+    if (!versions.length) {
+      vers.innerHTML = 'No saved elevation versions yet. Click Open elevation tool, draw the walls, then Save elevation version. Versions come back here.';
+    } else {
+      vers.innerHTML = '<strong>Saved versions:</strong><br>' + versions.map(v => {
+        const when = v.date || '';
+        return '<span style="display:inline-flex;gap:6px;align-items:center;margin:0 10px 6px 0;">'
+          + '<strong>Elev ' + v.n + '</strong>' + (when ? ' · ' + when : '')
+          + '</span>';
+      }).join('');
+    }
+  }
+  if (prev) {
+    const draft = q.elevationDraft;
+    if (!draft) { prev.innerHTML = ''; return; }
+    const sp = draft.spaces || {};
+    const spKeys = Object.keys(sp).filter(k => sp[k] && sp[k].walls && sp[k].walls.length);
+    prev.innerHTML = spKeys.map(k => {
+      const s = sp[k];
+      const wallList = (s.walls || []).map(w => '<li>' + (w.name || 'Wall') + ' · ' + (w.width || '?') + '"' + (w.ceiling ? ' · ' + w.ceiling + '" ceiling' : '') + ' · ' + (w.boxes || []).length + ' boxes</li>').join('');
+      return '<div style="margin-bottom:10px;"><strong>' + k + '</strong><ul style="margin:4px 0 0 16px;font-size:12px;color:var(--muted);">' + (wallList || '<li>No walls</li>') + '</ul></div>';
+    }).join('') || '<p style="color:var(--muted);font-size:13px;">No draft saved yet.</p>';
   }
 }
 

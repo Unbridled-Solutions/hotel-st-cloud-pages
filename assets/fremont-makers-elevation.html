@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Elevations v0929a</title>
+<title>Fremont Makers — Elevations v0930a</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-ELEV-v20260929a-kristy -->
+<!-- FM-ELEV-v20260930a-house-link -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Pinyon+Script&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -64,7 +64,6 @@
     background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
     padding: 8px; margin-bottom: 8px;
   }
-  .box-card.on { border-color: var(--accent); }
   .box-head { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
   .box-head input { flex: 1; min-width: 0; }
   .tiny { padding: 4px 7px; font-size: 12px; }
@@ -73,6 +72,10 @@
   .dim { font-size: 11px; fill: #666; font-family: Inter, sans-serif; }
   .cab-lab { font-size: 10px; fill: #1b2744; font-family: Inter, sans-serif; font-weight: 600; }
   .disclaimer { font-size: 11px; color: var(--muted); margin-top: 10px; max-width: 52em; }
+  .sku-row { display:flex; gap:6px; align-items:center; margin-bottom:6px; font-size:12px; }
+  .sku-row span { flex:1; min-width:0; }
+  html.embed .bar .dash-link { display:none; }
+  html.embed .layout { min-height: calc(100vh - 90px); }
   @media (max-width: 1100px) {
     .layout { grid-template-columns: 1fr; }
     .col.mid { border: none; border-top: 1px solid var(--border); }
@@ -88,10 +91,10 @@
 </head>
 <body>
 <div class="bar">
-  <a href="https://tools.fremontmakers.com/">← Dashboard</a>
+  <a class="dash-link" href="https://tools.fremontmakers.com/">← Dashboard</a>
   <span class="mark">Fremont Makers</span>
   <span class="tag">making freedom</span>
-  <span class="stamp">v0929a</span>
+  <span class="stamp">v0930a</span>
   <div class="job-field" style="margin-left:8px;">
     <label>Job / model</label>
     <input id="job-name" placeholder="Sangre Vista 1" style="min-width:180px" />
@@ -105,8 +108,11 @@
     <input id="job-date" type="date" />
   </div>
   <button type="button" class="gold" onclick="printElev()">Print elevation</button>
-  <button type="button" onclick="newJob()">New job</button>
+  <button type="button" class="gold" onclick="saveElevationVersion()">Save elevation version</button>
+  <button type="button" id="btn-new-job" onclick="newJob()">New job</button>
 </div>
+<div id="house-banner" class="hint" style="padding:8px 16px;display:none;"></div>
+<div id="elev-versions" style="padding:0 16px 4px;font-size:13px;color:var(--muted);"></div>
 
 <div class="tabs" id="space-tabs"></div>
 
@@ -129,7 +135,7 @@
       <div class="job-field"><label>Counter thick</label><input id="counter" type="number" min="0" step="0.25" /></div>
       <div class="job-field"><label>Walls start at</label><input id="wall-bot" type="number" min="0" step="0.25" /></div>
     </div>
-    <p class="hint">Widths are inches. Type any size. SKUs on the packets (W3624, B21) are labels only.</p>
+    <p class="hint">Widths are inches. Type any size, or pick a cabinet from this house’s manufacturer PDF.</p>
     <div class="fit" id="fit-line"></div>
     <h3>Openings on this wall</h3>
     <p class="hint">Window, door, fridge, range. Left edge from the start of the wall.</p>
@@ -146,8 +152,11 @@
   </div>
 
   <div class="col right">
+    <h3>From this house PDF</h3>
+    <p class="hint" id="sku-hint">Open a house in Project Builder (or pass ?id=) after Import PDF. Click a line to drop it on this wall.</p>
+    <div id="sku-list"></div>
     <h3>Boxes on this wall</h3>
-    <p class="hint">Add a box, type the width, drag order with the arrows. Elevation updates as you type.</p>
+    <p class="hint">Add a box, type the width, reorder with arrows. Elevation updates as you type.</p>
     <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
       <button type="button" class="tiny" onclick="addBox('base')">+ Base</button>
       <button type="button" class="tiny" onclick="addBox('wall')">+ Wall</button>
@@ -177,10 +186,12 @@ const SPACE_DEFS = [
   { id: 'master-bath', name: 'Master bath' }
 ];
 const STORE = 'fm-elevation-v0929a';
+const CLOUD = '/api/planner/bundle?ns=fm-quotes';
 
 function uid() { return 'b' + Math.random().toString(36).slice(2, 9); }
 function num(v, d) { const n = parseFloat(v); return isFinite(n) ? n : d; }
 function today() { return new Date().toISOString().slice(0, 10); }
+function qs() { return new URLSearchParams(location.search); }
 
 function blankWall(name) {
   return {
@@ -203,6 +214,10 @@ function blankJob() {
 }
 let JOB = blankJob();
 SPACE_DEFS.forEach(s => { JOB.spaces[s.id].wallId = JOB.spaces[s.id].walls[0].id; });
+let HOUSE_ID = '';
+let HOUSE = null;
+let BUNDLE = {};
+let SAVE_T = null;
 
 function space() { return JOB.spaces[JOB.spaceId]; }
 function wall() {
@@ -210,13 +225,158 @@ function wall() {
   return s.walls.find(w => w.id === s.wallId) || s.walls[0];
 }
 
-function save() {
+function skuGuess(serial, desc) {
+  const s = String(serial || '').toUpperCase();
+  const base = (s.split('-')[0] || s).replace(/[^A-Z0-9]/g, '');
+  const blob = (base + ' ' + String(desc || '')).toUpperCase();
+  let kind = 'base';
+  if (/HOOD|MW\.HOOD|MICRO/.test(blob)) kind = 'hood';
+  else if (/^W\d|^W[A-Z]|WALL/.test(blob) && !/^WSV|^WP/.test(base)) kind = 'wall';
+  else if (/^VS|^3VDB|^VDB|VANITY/.test(blob)) kind = 'vanity';
+  else if (/^T\d|TALL|PANTRY|S2496|S24/.test(blob)) kind = 'tall';
+  else if (/RANGE|FRIDGE|REF\.|DISH|APPLIANCE/.test(blob)) kind = 'appliance';
+  else if (/FILLER|F3|F6|TF/.test(blob)) kind = 'filler';
+  let width = 24, height = '';
+  const w4 = base.match(/^W(\d{2})(\d{2})/);
+  if (w4) { width = parseInt(w4[1], 10); height = parseInt(w4[2], 10); }
+  else {
+    const m = base.match(/(\d{2,3})/);
+    if (m) width = parseInt(m[1], 10);
+    if (width > 48 && width < 100) width = Math.round(width / 2);
+    if (width > 96) width = 24;
+  }
+  const hinge = /[-_]R\b|\bR$/.test(s) ? 'R' : /[-_]L\b|\bL$/.test(s) ? 'L' : '';
+  return { kind, width, height, hinge, label: s || desc || kind.toUpperCase() };
+}
+
+function saveLocalScratch() {
   JOB.job = document.getElementById('job-name').value;
   JOB.color = document.getElementById('job-color').value;
   JOB.date = document.getElementById('job-date').value;
   try { localStorage.setItem(STORE, JSON.stringify(JOB)); } catch (e) {}
 }
-function load() {
+function scheduleCloudSave() {
+  saveLocalScratch();
+  if (!HOUSE_ID || !HOUSE) return;
+  clearTimeout(SAVE_T);
+  SAVE_T = setTimeout(pushHouseElevation, 900);
+}
+function save() { scheduleCloudSave(); }
+
+async function pushHouseElevation() {
+  if (!HOUSE_ID || !HOUSE) return;
+  readWallFields();
+  HOUSE.elevationDraft = JSON.parse(JSON.stringify(JOB));
+  HOUSE.elevationVersions = HOUSE.elevationVersions || [];
+  BUNDLE['fm-quote-' + HOUSE_ID] = HOUSE;
+  try {
+    const kvRes = await fetch(CLOUD, { cache: 'no-store' });
+    const kvData = kvRes.ok ? ((await kvRes.json()).data || {}) : {};
+    const bundle = { ...kvData };
+    bundle['fm-quote-' + HOUSE_ID] = HOUSE;
+    await fetch(CLOUD, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bundle) });
+  } catch (e) {}
+}
+
+function applyHouseMeta() {
+  if (!HOUSE) return;
+  if (!document.getElementById('job-name').value) {
+    document.getElementById('job-name').value = HOUSE.project || HOUSE.modelName || HOUSE.jobCode || '';
+  }
+  if (!document.getElementById('job-color').value) {
+    document.getElementById('job-color').value = HOUSE.colorName || '';
+  }
+  JOB.job = document.getElementById('job-name').value;
+  JOB.color = document.getElementById('job-color').value;
+}
+
+function renderSkuList() {
+  const el = document.getElementById('sku-list');
+  const hint = document.getElementById('sku-hint');
+  const cabs = (HOUSE && HOUSE.cabinets) || [];
+  const lines = cabs.filter(c => (c.desc || '').trim() || (c.serial || '').trim() || parseFloat(c.cost));
+  if (!HOUSE_ID) {
+    hint.textContent = 'Standalone mode. Open Elevations on a house in Project Builder to pick from that PDF.';
+    el.innerHTML = '';
+    return;
+  }
+  if (!lines.length) {
+    hint.textContent = 'No manufacturer PDF on this house yet. Import PDF on the Quote tab, then come back. You can still type free widths.';
+    el.innerHTML = '';
+    return;
+  }
+  hint.textContent = 'From this house’s PDF. Click Add to drop that size on the current wall. Layout is still yours.';
+  el.innerHTML = lines.map((c, i) => {
+    const g = skuGuess(c.serial, c.desc);
+    const qty = parseFloat(c.qty) || 1;
+    return '<div class="sku-row"><span>' + (c.serial || c.desc || '—') + ' · ' + g.width + '" ' + g.kind + (qty > 1 ? ' ×' + qty : '') + '</span>'
+      + '<button type="button" class="tiny" onclick="addFromSku(' + i + ')">Add</button></div>';
+  }).join('');
+}
+function addFromSku(i) {
+  const c = ((HOUSE && HOUSE.cabinets) || [])[i];
+  if (!c) return;
+  const g = skuGuess(c.serial, c.desc);
+  wall().boxes.push({ id: uid(), kind: g.kind, label: g.label, width: g.width, height: g.height || '', hinge: g.hinge || '' });
+  paintBoxes(); draw(); save();
+}
+
+function renderVersions() {
+  const el = document.getElementById('elev-versions');
+  if (!el) return;
+  const versions = (HOUSE && HOUSE.elevationVersions) || [];
+  if (!HOUSE_ID) {
+    el.innerHTML = 'Not linked to a house. Draft stays in this browser until you open Elevations from a house.';
+    return;
+  }
+  if (!versions.length) {
+    el.innerHTML = 'No saved elevation versions yet. Save a version before you send it, then tweak. Revert anytime.';
+    return;
+  }
+  el.innerHTML = versions.map(v => {
+    const when = v.date || '';
+    return '<span style="display:inline-flex;gap:6px;align-items:center;margin:0 10px 6px 0;">'
+      + '<strong>Elev ' + v.n + '</strong>' + (when ? ' · ' + when : '')
+      + ' <button type="button" class="tiny" onclick="restoreElevationVersion(' + v.n + ')">Revert</button>'
+      + '</span>';
+  }).join('');
+}
+
+async function saveElevationVersion() {
+  readWallFields();
+  JOB.job = document.getElementById('job-name').value;
+  JOB.color = document.getElementById('job-color').value;
+  JOB.date = document.getElementById('job-date').value;
+  if (!HOUSE_ID || !HOUSE) {
+    saveLocalScratch();
+    alert('Open Elevations from a house in Project Builder to save versions on that job.');
+    return;
+  }
+  const versions = HOUSE.elevationVersions || [];
+  const snap = { n: versions.length + 1, savedAt: Date.now(), date: JOB.date || today(), draft: JSON.parse(JSON.stringify(JOB)) };
+  versions.push(snap);
+  HOUSE.elevationVersions = versions;
+  HOUSE.elevationDraft = JSON.parse(JSON.stringify(JOB));
+  await pushHouseElevation();
+  renderVersions();
+}
+function restoreElevationVersion(n) {
+  if (!HOUSE) return;
+  const snap = (HOUSE.elevationVersions || []).find(v => v.n === n);
+  if (!snap || !snap.draft) return;
+  if (!confirm('Revert this house elevation to Elev ' + n + '? Current walls will be replaced. Saved versions stay.')) return;
+  JOB = Object.assign(blankJob(), JSON.parse(JSON.stringify(snap.draft)));
+  SPACE_DEFS.forEach(s => {
+    if (!JOB.spaces[s.id]) JOB.spaces[s.id] = { walls: [blankWall(s.name)], wallId: '' };
+    if (!JOB.spaces[s.id].wallId) JOB.spaces[s.id].wallId = JOB.spaces[s.id].walls[0].id;
+  });
+  document.getElementById('job-name').value = JOB.job || '';
+  document.getElementById('job-color').value = JOB.color || '';
+  document.getElementById('job-date').value = JOB.date || today();
+  paint();
+}
+
+function loadScratch() {
   try {
     const raw = localStorage.getItem(STORE);
     if (raw) {
@@ -227,6 +387,48 @@ function load() {
   document.getElementById('job-name').value = JOB.job || '';
   document.getElementById('job-color').value = JOB.color || '';
   document.getElementById('job-date').value = JOB.date || today();
+}
+
+async function boot() {
+  const p = qs();
+  HOUSE_ID = p.get('id') || '';
+  if (p.get('embed') === '1') document.documentElement.classList.add('embed');
+  if (HOUSE_ID) {
+    document.getElementById('btn-new-job').style.display = 'none';
+    try {
+      const res = await fetch(CLOUD, { cache: 'no-store' });
+      BUNDLE = res.ok ? ((await res.json()).data || {}) : {};
+      let raw = BUNDLE['fm-quote-' + HOUSE_ID];
+      if (typeof raw === 'string') { try { raw = JSON.parse(raw); } catch (e) { raw = null; } }
+      HOUSE = raw && typeof raw === 'object' ? raw : null;
+      if (HOUSE && HOUSE.parentOrderId && (HOUSE.kind === 'order' || HOUSE.isOrder)) HOUSE = null;
+      if (HOUSE && (HOUSE.kind === 'order' || HOUSE.isOrder)) {
+        const ban = document.getElementById('house-banner');
+        ban.style.display = '';
+        ban.textContent = 'This is the builder order. Open Elevations on a house.';
+        HOUSE = null;
+        HOUSE_ID = '';
+      }
+    } catch (e) { HOUSE = null; }
+    if (HOUSE) {
+      const ban = document.getElementById('house-banner');
+      ban.style.display = '';
+      ban.textContent = (HOUSE.jobCode || '') + ' · ' + (HOUSE.project || HOUSE.modelName || 'House') + (HOUSE.colorName ? ' · ' + HOUSE.colorName : '') + ' — draft saves to this house in the cloud.';
+      if (HOUSE.elevationDraft && HOUSE.elevationDraft.spaces) {
+        JOB = Object.assign(blankJob(), JSON.parse(JSON.stringify(HOUSE.elevationDraft)));
+      } else loadScratch();
+      applyHouseMeta();
+    } else if (HOUSE_ID) {
+      document.getElementById('house-banner').style.display = '';
+      document.getElementById('house-banner').textContent = 'That house is not in the cloud yet. Open Project Builder, wait for it to save, then open Elevations again.';
+      loadScratch();
+    }
+  } else {
+    loadScratch();
+  }
+  paint();
+  renderSkuList();
+  renderVersions();
 }
 
 function bindWallFields() {
@@ -311,7 +513,7 @@ function renderOpenings() {
     + '</select>'
     + '<button type="button" class="tiny del" onclick="removeOpening(\'' + o.id + '\')">✕</button></div>'
     + '<div class="row2" style="margin-top:6px;">'
-    + '<input type="number" step="0.25" value="' + o.left + '" oninput="updOpen(\'' + o.id + '\',\'left\',this.value)" title="From left" />'
+    + '<input type="number" step="0.25" value="' + o.left + '" oninput="updOpen(\'' + o.id + '\',\'' + 'left' + '\',this.value)" title="From left" />'
     + '<input type="number" step="0.25" value="' + o.width + '" oninput="updOpen(\'' + o.id + '\',\'width\',this.value)" title="Width" />'
     + '</div>'
     + '<div class="row2" style="margin-top:6px;">'
@@ -352,8 +554,7 @@ function moveBox(id, dir) {
 function updBox(id, k, v) {
   const b = wall().boxes.find(x => x.id === id);
   if (!b) return;
-  if (k === 'width' || k === 'height') b[k] = v;
-  else b[k] = v;
+  b[k] = v;
   draw(); save();
 }
 function paintBoxes() {
@@ -392,9 +593,9 @@ function fitHtml() {
   const tall = rowWidth('tall');
   const bits = [];
   function one(label, used) {
-    const rem = Math.round((w.width - used) * 100) / 100;
-    const over = rem < -0.02;
-    bits.push(label + ' ' + used + '" of ' + w.width + '" · ' + (over ? 'OVER by ' + Math.abs(rem) : rem + '" left'));
+    const remaining = Math.round((w.width - used) * 100) / 100;
+    const over = remaining < -0.02;
+    bits.push(label + ' ' + used + '" of ' + w.width + '" · ' + (over ? 'OVER by ' + Math.abs(remaining) : remaining + '" left'));
     return over;
   }
   const over = one('Base', base) | one('Wall', walls) | (tall ? one('Tall', tall) : 0);
@@ -485,6 +686,7 @@ function paint() {
 });
 
 function newJob() {
+  if (HOUSE_ID) return;
   if (!confirm('Start a blank elevation job? This clears the walls on this browser.')) return;
   JOB = blankJob();
   SPACE_DEFS.forEach(s => { JOB.spaces[s.id].wallId = JOB.spaces[s.id].walls[0].id; });
@@ -495,8 +697,7 @@ function newJob() {
 }
 function printElev() { window.print(); }
 
-load();
-paint();
+boot();
 </script>
 </body>
 </html>
