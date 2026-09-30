@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Elevations v0930b</title>
+<title>Fremont Makers — Elevations v0930c</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-ELEV-v20260930b-left-fields -->
+<!-- FM-ELEV-v20260930c-print-header -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Pinyon+Script&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -81,6 +81,29 @@
   .disclaimer { font-size: 11px; color: var(--muted); margin-top: 10px; max-width: 52em; }
   .sku-row { display:flex; gap:6px; align-items:center; margin-bottom:6px; font-size:12px; }
   .sku-row span { flex:1; min-width:0; }
+  .print-head { display: none; }
+  .inv-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; }
+  .inv-brand { display: flex; align-items: center; gap: 14px; }
+  .inv-brand-mark {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 0; border: 1.5px solid #222; border-radius: 4px; padding: 6px 10px;
+  }
+  .inv-brand-mark .fm-l {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700; font-size: 18px; color: #1a1a1a; line-height: 1;
+  }
+  .inv-brand-mark .fm-r { width: 28px; height: 1.5px; background: #1a1a1a; margin: 2px 0; }
+  .inv-brand-info h2 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 20px; font-weight: 700; color: #1a1a1a;
+    letter-spacing: .06em; text-transform: uppercase; line-height: 1;
+  }
+  .inv-brand-info .inv-tagline {
+    font-family: 'Pinyon Script', cursive;
+    font-size: 15px; color: #666; line-height: 1.3; margin-top: 1px;
+  }
+  .inv-meta { text-align: right; font-size: 13px; color: #555; }
+  .inv-meta strong { display: block; font-size: 20px; color: #c4a46b; margin-bottom: 4px; font-family: Inter, sans-serif; }
   html.embed .bar .dash-link { display:none; }
   html.embed .layout { min-height: calc(100vh - 90px); }
   @media (max-width: 1100px) {
@@ -88,11 +111,13 @@
     .col.mid { border: none; border-top: 1px solid var(--border); }
   }
   @media print {
-    .bar, .tabs, .col.left, .col.right, .no-print { display: none !important; }
+    .bar, .tabs, .col.left, .col.right, .no-print, #house-banner, #elev-versions { display: none !important; }
+    .print-head { display: block; padding: 0 0 12px; }
     .layout { display: block; }
     .col.mid { border: none; padding: 0; }
-    body { background: #fff; }
+    body { background: #fff; color: #222; }
     svg.elev { border: none; }
+    .disclaimer { color: #888; }
   }
 </style>
 </head>
@@ -102,7 +127,7 @@
   <a class="house-link" id="back-to-house" href="#" style="display:none;">← House quote</a>
   <span class="mark">Fremont Makers</span>
   <span class="tag">making freedom</span>
-  <span class="stamp">v0930b</span>
+  <span class="stamp">v0930c</span>
   <div class="job-field" style="margin-left:8px;">
     <label>Job / model</label>
     <input id="job-name" placeholder="Sangre Vista 1" style="min-width:180px" />
@@ -119,8 +144,8 @@
   <button type="button" class="gold" onclick="saveElevationVersion()">Save elevation version</button>
   <button type="button" id="btn-new-job" onclick="newJob()">New job</button>
 </div>
-<div id="house-banner" class="hint" style="padding:8px 16px;display:none;"></div>
-<div id="elev-versions" style="padding:0 16px 4px;font-size:13px;color:var(--muted);"></div>
+<div id="house-banner" class="hint no-print" style="padding:8px 16px;display:none;"></div>
+<div id="elev-versions" class="no-print" style="padding:0 16px 4px;font-size:13px;color:var(--muted);"></div>
 
 <div class="tabs" id="space-tabs"></div>
 
@@ -155,6 +180,31 @@
   </div>
 
   <div class="col mid">
+    <div class="print-head" id="print-head">
+      <div class="inv-header">
+        <div class="inv-brand">
+          <div class="inv-brand-mark">
+            <span class="fm-l">F</span>
+            <div class="fm-r"></div>
+            <span class="fm-l">M</span>
+          </div>
+          <div class="inv-brand-info">
+            <h2>Fremont Makers</h2>
+            <div class="inv-tagline">making freedom</div>
+          </div>
+        </div>
+        <div class="inv-meta">
+          <strong>ELEVATION</strong>
+          Job: <span id="ph-jobcode">—</span><br />
+          Date: <span id="ph-date">—</span>
+        </div>
+      </div>
+      <div style="font-size:13px;color:#555;margin-bottom:10px;">
+        <strong id="ph-name">—</strong>
+        <span id="ph-color" style="display:block;margin-top:2px;"></span>
+        <span id="ph-wall" style="display:block;margin-top:2px;font-style:italic;"></span>
+      </div>
+    </div>
     <svg class="elev" id="elev" viewBox="0 0 1000 640" role="img" aria-label="Elevation"></svg>
     <p class="disclaimer">All dimensions are subject to verification on the job site and adjustment to fit job conditions. This drawing is a working elevation for Fremont Makers, not a manufacturer shop drawing.</p>
   </div>
@@ -679,9 +729,17 @@ function draw() {
   html += '<line x1="' + X(0) + '" y1="' + Y(0) + '" x2="' + X(w.width) + '" y2="' + Y(0) + '" stroke="#1b2744" stroke-width="2" />';
   html += '<text class="dim" x="' + X(w.width / 2) + '" y="' + (Y(0) + 28) + '" text-anchor="middle">' + w.width + '" wall</text>';
   html += '<text class="dim" x="' + (X(0) - 8) + '" y="' + Y(w.ceiling / 2) + '" text-anchor="end">' + w.ceiling + '"</text>';
-  const title = (document.getElementById('job-name').value || 'Elevation') + '  ·  ' + (w.name || '') + (document.getElementById('job-color').value ? '  ·  ' + document.getElementById('job-color').value : '');
-  html += '<text class="cab-lab" x="' + X(0) + '" y="' + (oy - 12) + '">' + title + '</text>';
   svg.innerHTML = html;
+  fillPrintHead();
+}
+function fillPrintHead() {
+  const w = wall();
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v || '—'; };
+  set('ph-jobcode', (HOUSE && HOUSE.jobCode) || '');
+  set('ph-date', document.getElementById('job-date').value || today());
+  set('ph-name', document.getElementById('job-name').value || (HOUSE && (HOUSE.project || HOUSE.modelName)) || '');
+  set('ph-color', document.getElementById('job-color').value || (HOUSE && HOUSE.colorName) || '');
+  set('ph-wall', w.name || '');
 }
 
 function paint() {
@@ -708,7 +766,7 @@ function newJob() {
   document.getElementById('job-date').value = today();
   paint();
 }
-function printElev() { window.print(); }
+function printElev() { fillPrintHead(); window.print(); }
 
 boot();
 </script>
