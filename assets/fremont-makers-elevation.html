@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Elevations v0930d</title>
+<title>Fremont Makers — Elevations v0930e</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-ELEV-v20260930d-print-fit -->
+<!-- FM-ELEV-v20260930e-place-boxes -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Pinyon+Script&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -74,7 +74,7 @@
   .box-head { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; min-width: 0; }
   .box-head input, .box-head select { flex: 1; min-width: 0; width: auto; }
   .tiny { padding: 4px 7px; font-size: 12px; width: auto; flex-shrink: 0; }
-  svg.elev { width: 100%; height: auto; display: block; background: #fff; border: 1px solid var(--border); border-radius: 6px; }
+  svg.elev { width: 100%; height: auto; display: block; background: #fff; border: 1px solid var(--border); border-radius: 6px; touch-action: none; }
   html[data-theme="dark"] svg.elev { background: #0e0e0e; }
   .dim { font-size: 11px; fill: #666; font-family: Inter, sans-serif; }
   .cab-lab { font-size: 10px; fill: #1b2744; font-family: Inter, sans-serif; font-weight: 600; }
@@ -138,7 +138,7 @@
   <a class="house-link" id="back-to-house" href="#" style="display:none;">← House quote</a>
   <span class="mark">Fremont Makers</span>
   <span class="tag">making freedom</span>
-  <span class="stamp">v0930d</span>
+  <span class="stamp">v0930e</span>
   <div class="job-field" style="margin-left:8px;">
     <label>Job / model</label>
     <input id="job-name" placeholder="Sangre Vista 1" style="min-width:180px" />
@@ -225,7 +225,7 @@
     <p class="hint" id="sku-hint">Open a house in Project Builder (or pass ?id=) after Import PDF. Click a line to drop it on this wall.</p>
     <div id="sku-list"></div>
     <h3>Boxes on this wall</h3>
-    <p class="hint">Add a box, type the width, reorder with arrows. Elevation updates as you type.</p>
+    <p class="hint">Add a box, type width and From left, or drag it on the drawing. Move to another wall from the dropdown.</p>
     <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
       <button type="button" class="tiny" onclick="addBox('base')">+ Base</button>
       <button type="button" class="tiny" onclick="addBox('wall')">+ Wall</button>
@@ -291,7 +291,33 @@ let SAVE_T = null;
 function space() { return JOB.spaces[JOB.spaceId]; }
 function wall() {
   const s = space();
-  return s.walls.find(w => w.id === s.wallId) || s.walls[0];
+  const w = s.walls.find(x => x.id === s.wallId) || s.walls[0];
+  ensurePackedLefts(w);
+  return w;
+}
+function boxKind(b) { return KINDS[b.kind] || KINDS.base; }
+function boxLeft(b) {
+  if (b && b.left != null && b.left !== '') return num(b.left, 0);
+  return 0;
+}
+function nextLeftFor(kind) {
+  const row = (KINDS[kind] || KINDS.base).row;
+  let max = 0;
+  wall().boxes.filter(b => boxKind(b).row === row).forEach(b => {
+    max = Math.max(max, boxLeft(b) + num(b.width, 0));
+  });
+  return Math.round(max * 4) / 4;
+}
+function ensurePackedLefts(w) {
+  if (!w || !w.boxes) return;
+  const rows = {};
+  w.boxes.forEach(b => {
+    if (b.left != null && b.left !== '') return;
+    const row = boxKind(b).row;
+    const x = rows[row] || 0;
+    b.left = x;
+    rows[row] = x + num(b.width, 0);
+  });
 }
 
 function skuGuess(serial, desc) {
@@ -386,7 +412,7 @@ function addFromSku(i) {
   const c = ((HOUSE && HOUSE.cabinets) || [])[i];
   if (!c) return;
   const g = skuGuess(c.serial, c.desc);
-  wall().boxes.push({ id: uid(), kind: g.kind, label: g.label, width: g.width, height: g.height || '', hinge: g.hinge || '' });
+  wall().boxes.push({ id: uid(), kind: g.kind, label: g.label, width: g.width, height: g.height || '', hinge: g.hinge || '', left: nextLeftFor(g.kind) });
   paintBoxes(); draw(); save();
 }
 
@@ -608,7 +634,7 @@ function addBox(kind) {
   const defW = kind === 'filler' ? 3 : kind === 'hood' ? 30 : 24;
   w.boxes.push({
     id: uid(), kind: kind, label: kind === 'appliance' ? 'RANGE' : kind.toUpperCase(),
-    width: defW, height: '', hinge: ''
+    width: defW, height: '', hinge: '', left: nextLeftFor(kind)
   });
   paintBoxes(); draw(); save();
 }
@@ -625,14 +651,39 @@ function moveBox(id, dir) {
   const t = arr[i]; arr[i] = arr[j]; arr[j] = t;
   paintBoxes(); draw(); save();
 }
+function moveBoxToWall(id, wallId) {
+  if (!wallId || wallId === wall().id) return;
+  const from = wall();
+  const dest = space().walls.find(w => w.id === wallId);
+  if (!dest) return;
+  const i = from.boxes.findIndex(b => b.id === id);
+  if (i < 0) return;
+  const [box] = from.boxes.splice(i, 1);
+  ensurePackedLefts(dest);
+  const row = boxKind(box).row;
+  let max = 0;
+  dest.boxes.filter(b => boxKind(b).row === row).forEach(b => {
+    max = Math.max(max, boxLeft(b) + num(b.width, 0));
+  });
+  box.left = Math.round(max * 4) / 4;
+  dest.boxes.push(box);
+  paintBoxes(); draw(); save();
+}
 function updBox(id, k, v) {
   const b = wall().boxes.find(x => x.id === id);
   if (!b) return;
-  b[k] = v;
+  if (k === 'width' || k === 'height' || k === 'left') b[k] = v;
+  else b[k] = v;
   draw(); save();
 }
+function otherWallOptions(excludeId) {
+  return space().walls.filter(w => w.id !== excludeId)
+    .map(w => '<option value="' + w.id + '">' + (w.name || 'Wall') + '</option>').join('');
+}
 function paintBoxes() {
-  document.getElementById('box-list').innerHTML = wall().boxes.map(b =>
+  const w = wall();
+  const others = otherWallOptions(w.id);
+  document.getElementById('box-list').innerHTML = w.boxes.map(b =>
     '<div class="box-card">'
     + '<div class="box-head">'
     + '<select class="tiny" onchange="updBox(\'' + b.id + '\',\'kind\',this.value)">'
@@ -640,25 +691,38 @@ function paintBoxes() {
     + '</select>'
     + '<input value="' + String(b.label || '').replace(/"/g, '&quot;') + '" placeholder="Label / SKU" oninput="updBox(\'' + b.id + '\',\'label\',this.value)" />'
     + '</div>'
-    + '<div class="row3">'
-    + '<input type="number" min="0" step="0.25" value="' + b.width + '" oninput="updBox(\'' + b.id + '\',\'width\',this.value)" title="Width in" />'
-    + '<input type="number" min="0" step="0.25" value="' + (b.height || '') + '" placeholder="H in" oninput="updBox(\'' + b.id + '\',\'height\',this.value)" title="Height in (blank = default)" />'
-    + '<select onchange="updBox(\'' + b.id + '\',\'hinge\',this.value)">'
+    + '<div class="row2" style="margin-top:6px;">'
+    + '<div class="job-field"><label>From left</label><input type="number" min="0" step="0.25" value="' + boxLeft(b) + '" oninput="updBox(\'' + b.id + '\',\'left\',this.value)" /></div>'
+    + '<div class="job-field"><label>Width</label><input type="number" min="0" step="0.25" value="' + b.width + '" oninput="updBox(\'' + b.id + '\',\'width\',this.value)" /></div>'
+    + '</div>'
+    + '<div class="row2" style="margin-top:6px;">'
+    + '<div class="job-field"><label>Height</label><input type="number" min="0" step="0.25" value="' + (b.height || '') + '" placeholder="default" oninput="updBox(\'' + b.id + '\',\'height\',this.value)" /></div>'
+    + '<div class="job-field"><label>Hinge</label><select onchange="updBox(\'' + b.id + '\',\'hinge\',this.value)">'
     + '<option value=""' + (!b.hinge ? ' selected' : '') + '>—</option>'
     + '<option value="L"' + (b.hinge === 'L' ? ' selected' : '') + '>L</option>'
     + '<option value="R"' + (b.hinge === 'R' ? ' selected' : '') + '>R</option>'
-    + '</select></div>'
+    + '</select></div></div>'
+    + (others ? '<div class="job-field" style="margin-top:6px;"><label>Move to wall</label><select onchange="moveBoxToWall(\'' + b.id + '\',this.value)"><option value="">This wall</option>' + others + '</select></div>' : '')
     + '<div style="display:flex;gap:4px;margin-top:6px;">'
-    + '<button type="button" class="tiny" onclick="moveBox(\'' + b.id + '\',-1)">↑</button>'
-    + '<button type="button" class="tiny" onclick="moveBox(\'' + b.id + '\',1)">↓</button>'
+    + '<button type="button" class="tiny" onclick="nudgeBox(\'' + b.id + '\',-1)">← 1"</button>'
+    + '<button type="button" class="tiny" onclick="nudgeBox(\'' + b.id + '\',1)">1" →</button>'
     + '<button type="button" class="tiny del" onclick="removeBox(\'' + b.id + '\')">Remove</button>'
     + '</div></div>'
   ).join('') || '<p class="hint">No boxes yet.</p>';
 }
+function nudgeBox(id, dir) {
+  const b = wall().boxes.find(x => x.id === id);
+  if (!b) return;
+  b.left = Math.max(0, Math.round((boxLeft(b) + dir) * 4) / 4);
+  paintBoxes(); draw(); save();
+}
 
 function rowWidth(row) {
-  return wall().boxes.filter(b => KINDS[b.kind] && KINDS[b.kind].row === row)
-    .reduce((s, b) => s + num(b.width, 0), 0);
+  let max = 0;
+  wall().boxes.filter(b => boxKind(b).row === row).forEach(b => {
+    max = Math.max(max, boxLeft(b) + num(b.width, 0));
+  });
+  return max;
 }
 function fitHtml() {
   const w = wall();
@@ -702,12 +766,12 @@ function draw() {
   const padL = 56, padR = 28, padT = 36, padB = 48;
   const innerW = W - padL - padR, innerH = H - padT - padB;
   const scale = Math.min(innerW / Math.max(w.width, 12), innerH / Math.max(w.ceiling, 84));
-  const ox = padL, oy = padT;
-  function X(inches) { return ox + inches * scale; }
-  function Y(fromFloor) { return oy + (w.ceiling - fromFloor) * scale; }
-  function rect(x, y0, wi, hi, fill, stroke) {
+  VIEW = { scale, ox: padL, oy: padT, W, H };
+  function X(inches) { return padL + inches * scale; }
+  function Y(fromFloor) { return padT + (w.ceiling - fromFloor) * scale; }
+  function rect(x, y0, wi, hi, fill, stroke, extra) {
     const x1 = X(x), y1 = Y(y0 + hi), ww = wi * scale, hh = hi * scale;
-    return '<rect x="' + x1.toFixed(1) + '" y="' + y1.toFixed(1) + '" width="' + Math.max(ww, 1).toFixed(1) + '" height="' + Math.max(hh, 1).toFixed(1) + '" fill="' + fill + '" stroke="' + (stroke || '#1b2744') + '" stroke-width="1.2" />';
+    return '<rect x="' + x1.toFixed(1) + '" y="' + y1.toFixed(1) + '" width="' + Math.max(ww, 1).toFixed(1) + '" height="' + Math.max(hh, 1).toFixed(1) + '" fill="' + fill + '" stroke="' + (stroke || '#1b2744') + '" stroke-width="1.2"' + (extra || '') + ' />';
   }
   let html = '';
   html += '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="#fff"/>';
@@ -718,30 +782,65 @@ function draw() {
     const cy = Y(num(o.sill, 0) + num(o.height, 0) / 2);
     html += '<text class="cab-lab" text-anchor="middle" x="' + cx.toFixed(1) + '" y="' + cy.toFixed(1) + '">' + (o.kind || '').toUpperCase() + '</text>';
   });
-  const rows = { base: 0, wall: 0, tall: 0, hood: 0 };
   w.boxes.forEach(b => {
-    const kind = KINDS[b.kind] || KINDS.base;
-    const row = kind.row;
-    const x = rows[row] || 0;
+    const kind = boxKind(b);
+    const x = boxLeft(b);
     const wi = num(b.width, 0);
     const hi = boxH(b, w);
     const y0 = boxY0(b, w);
-    html += rect(x, y0, wi, hi, kind.fill, '#1b2744');
+    const extra = ' class="cab-box" data-id="' + b.id + '" style="cursor:grab"';
+    html += rect(x, y0, wi, hi, kind.fill, '#1b2744', extra);
     if (b.kind === 'base' || b.kind === 'vanity' || b.kind === 'filler') {
-      html += rect(x, 0, wi, w.toe, '#d9d0c4', '#1b2744');
+      html += rect(x, 0, wi, w.toe, '#d9d0c4', '#1b2744', extra);
     }
     const cx = X(x + wi / 2);
     const cy = Y(y0 + hi / 2);
     const lab = (b.label || '') + (b.hinge ? '-' + b.hinge : '');
-    html += '<text class="cab-lab" text-anchor="middle" x="' + cx.toFixed(1) + '" y="' + (cy - 4).toFixed(1) + '">' + lab + '</text>';
-    html += '<text class="dim" text-anchor="middle" x="' + cx.toFixed(1) + '" y="' + (cy + 10).toFixed(1) + '">' + wi + '"</text>';
-    rows[row] = x + wi;
+    html += '<text class="cab-lab" text-anchor="middle" x="' + cx.toFixed(1) + '" y="' + (cy - 4).toFixed(1) + '" pointer-events="none">' + lab + '</text>';
+    html += '<text class="dim" text-anchor="middle" x="' + cx.toFixed(1) + '" y="' + (cy + 10).toFixed(1) + '" pointer-events="none">' + wi + '"</text>';
   });
   html += '<line x1="' + X(0) + '" y1="' + Y(0) + '" x2="' + X(w.width) + '" y2="' + Y(0) + '" stroke="#1b2744" stroke-width="2" />';
   html += '<text class="dim" x="' + X(w.width / 2) + '" y="' + (Y(0) + 28) + '" text-anchor="middle">' + w.width + '" wall</text>';
   html += '<text class="dim" x="' + (X(0) - 8) + '" y="' + Y(w.ceiling / 2) + '" text-anchor="end">' + w.ceiling + '"</text>';
   svg.innerHTML = html;
   fillPrintHead();
+}
+
+let VIEW = { scale: 1, ox: 56, oy: 36 };
+let DRAG = null;
+function svgInchesFromClient(ev) {
+  const svg = document.getElementById('elev');
+  const pt = svg.createSVGPoint();
+  pt.x = ev.clientX; pt.y = ev.clientY;
+  const ctm = svg.getScreenCTM();
+  if (!ctm) return 0;
+  const loc = pt.matrixTransform(ctm.inverse());
+  return (loc.x - VIEW.ox) / VIEW.scale;
+}
+function onElevDown(ev) {
+  const t = ev.target.closest && ev.target.closest('.cab-box');
+  if (!t) return;
+  const id = t.getAttribute('data-id');
+  const b = wall().boxes.find(x => x.id === id);
+  if (!b) return;
+  ev.preventDefault();
+  DRAG = { id, startIn: svgInchesFromClient(ev), startLeft: boxLeft(b) };
+}
+function onElevMove(ev) {
+  if (!DRAG) return;
+  const b = wall().boxes.find(x => x.id === DRAG.id);
+  if (!b) return;
+  const now = svgInchesFromClient(ev);
+  let left = DRAG.startLeft + (now - DRAG.startIn);
+  left = Math.max(0, Math.round(left * 4) / 4);
+  b.left = left;
+  draw();
+}
+function onElevUp() {
+  if (!DRAG) return;
+  DRAG = null;
+  paintBoxes();
+  save();
 }
 function fillPrintHead() {
   const w = wall();
@@ -766,6 +865,13 @@ function paint() {
 ['job-name','job-color','job-date','wall-name','wall-w','ceil','toe','base-h','counter','wall-bot'].forEach(id => {
   document.getElementById(id).addEventListener('input', () => { draw(); save(); });
 });
+(function bindElevDrag() {
+  const svg = document.getElementById('elev');
+  svg.addEventListener('pointerdown', onElevDown);
+  window.addEventListener('pointermove', onElevMove);
+  window.addEventListener('pointerup', onElevUp);
+  window.addEventListener('pointercancel', onElevUp);
+})();
 
 function newJob() {
   if (HOUSE_ID) return;
