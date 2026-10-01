@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Elevations v0930f</title>
+<title>Fremont Makers — Elevations v0930g</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-ELEV-v20260930f-openings-uppers -->
+<!-- FM-ELEV-v20260930g-side-dims -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Pinyon+Script&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -138,7 +138,7 @@
   <a class="house-link" id="back-to-house" href="#" style="display:none;">← House quote</a>
   <span class="mark">Fremont Makers</span>
   <span class="tag">making freedom</span>
-  <span class="stamp">v0930f</span>
+  <span class="stamp">v0930g</span>
   <div class="job-field" style="margin-left:8px;">
     <label>Job / model</label>
     <input id="job-name" placeholder="Sangre Vista 1" style="min-width:180px" />
@@ -177,9 +177,12 @@
     </div>
     <div class="row2" style="margin-top:8px;">
       <div class="job-field"><label>Counter thick</label><input id="counter" type="number" min="0" step="0.25" /></div>
+      <div class="job-field"><label>Space to uppers</label><input id="gap" type="number" min="0" step="0.25" /></div>
+    </div>
+    <div class="row2" style="margin-top:8px;">
       <div class="job-field"><label>Soffit (from ceiling)</label><input id="wall-bot" type="number" min="0" step="0.25" /></div>
     </div>
-    <p class="hint">Widths are inches. Wall (upper) cabinets hang from the ceiling. Set Soffit if they stop short of it.</p>
+    <p class="hint">Space to uppers is from the counter top to the bottom of the wall cabinets. Side of the drawing shows those heights.</p>
     <div class="fit" id="fit-line"></div>
     <h3>Openings on this wall</h3>
     <p class="hint">Window, door, fridge, range. Drag on the drawing or type From left / From floor.</p>
@@ -265,7 +268,7 @@ function qs() { return new URLSearchParams(location.search); }
 function blankWall(name) {
   return {
     id: uid(), name: name || 'El 1',
-    width: 99, ceiling: 108, toe: 4.5, baseH: 34.5, counter: 1.5, soffit: 0, wallBot: 0,
+    width: 99, ceiling: 108, toe: 4.5, baseH: 34.5, counter: 1.5, gap: 18, soffit: 0, wallBot: 0,
     openings: [],
     boxes: []
   };
@@ -540,6 +543,7 @@ function bindWallFields() {
   set('toe', w.toe);
   set('base-h', w.baseH);
   set('counter', w.counter);
+  set('gap', gapOf(w));
   set('wall-bot', soffitOf(w));
 }
 function readWallFields() {
@@ -550,8 +554,13 @@ function readWallFields() {
   w.toe = num(document.getElementById('toe').value, 4.5);
   w.baseH = num(document.getElementById('base-h').value, 34.5);
   w.counter = num(document.getElementById('counter').value, 1.5);
+  w.gap = num(document.getElementById('gap').value, 18);
   w.soffit = num(document.getElementById('wall-bot').value, 0);
   w.wallBot = w.soffit;
+}
+function gapOf(w) {
+  const g = num(w.gap, NaN);
+  return isFinite(g) ? g : 18;
 }
 function soffitOf(w) {
   if (w.soffit != null && w.soffit !== '') return num(w.soffit, 0);
@@ -768,7 +777,12 @@ function fitHtml() {
 function boxH(b, w) {
   const h = num(b.height, 0);
   if (h > 0) return h;
-  if (b.kind === 'wall') return 30;
+  if (b.kind === 'wall') {
+    if (h > 0) return h;
+    const fill = num(w.ceiling, 108) - soffitOf(w) - upperBottom(w);
+    if (fill > 0 && fill < 30) return Math.round(fill * 4) / 4;
+    return 30;
+  }
   if (b.kind === 'hood') return 12;
   if (b.kind === 'tall') return Math.max(12, w.ceiling - 3);
   if (b.kind === 'appliance' && /ref/i.test(b.label || '')) return Math.max(60, w.ceiling - 12);
@@ -776,11 +790,12 @@ function boxH(b, w) {
 }
 function boxY0(b, w) {
   const h = boxH(b, w);
-  const sof = soffitOf(w);
-  const ceil = num(w.ceiling, 108);
-  if (b.kind === 'wall') return Math.max(0, ceil - sof - h);
-  if (b.kind === 'hood') return Math.max(0, ceil - sof - 30 - h);
+  if (b.kind === 'wall') return upperBottom(w);
+  if (b.kind === 'hood') return Math.max(0, upperBottom(w) - h);
   return 0;
+}
+function upperBottom(w) {
+  return num(w.baseH, 34.5) + num(w.counter, 1.5) + gapOf(w);
 }
 
 function draw() {
@@ -789,7 +804,7 @@ function draw() {
   const w = wall();
   const svg = document.getElementById('elev');
   const W = 1000, H = 640;
-  const padL = 56, padR = 28, padT = 36, padB = 48;
+  const padL = 78, padR = 28, padT = 36, padB = 48;
   const innerW = W - padL - padR, innerH = H - padT - padB;
   const scale = Math.min(innerW / Math.max(w.width, 12), innerH / Math.max(w.ceiling, 84));
   VIEW = { scale, ox: padL, oy: padT, W, H };
@@ -828,9 +843,51 @@ function draw() {
   });
   html += '<line x1="' + X(0) + '" y1="' + Y(0) + '" x2="' + X(w.width) + '" y2="' + Y(0) + '" stroke="#1b2744" stroke-width="2" />';
   html += '<text class="dim" x="' + X(w.width / 2) + '" y="' + (Y(0) + 28) + '" text-anchor="middle">' + w.width + '" wall</text>';
-  html += '<text class="dim" x="' + (X(0) - 8) + '" y="' + Y(w.ceiling / 2) + '" text-anchor="end">' + w.ceiling + '"</text>';
+  html += sideDims(w, X, Y);
   svg.innerHTML = html;
   fillPrintHead();
+}
+function sideDims(w, X, Y) {
+  const ceil = num(w.ceiling, 108);
+  const toe = num(w.toe, 4.5);
+  const base = num(w.baseH, 34.5);
+  const ctr = num(w.counter, 1.5);
+  const gap = gapOf(w);
+  const sof = soffitOf(w);
+  const counterTop = base + ctr;
+  const upBot = upperBottom(w);
+  const upH = (function () {
+    const walls = w.boxes.filter(b => b.kind === 'wall');
+    if (!walls.length) return 30;
+    return boxH(walls[0], w);
+  })();
+  const upTop = upBot + upH;
+  const x0 = X(0) - 10;
+  const x1 = X(0) - 22;
+  const xLab = X(0) - 26;
+  function tick(y, label) {
+    const yy = Y(y);
+    return '<line x1="' + x1 + '" y1="' + yy + '" x2="' + x0 + '" y2="' + yy + '" stroke="#666" stroke-width="1" />'
+      + '<text class="dim" x="' + xLab + '" y="' + (yy + 3) + '" text-anchor="end">' + label + '</text>';
+  }
+  function span(yA, yB, label) {
+    const ya = Y(yA), yb = Y(yB);
+    const mid = (ya + yb) / 2;
+    return '<line x1="' + x1 + '" y1="' + ya + '" x2="' + x1 + '" y2="' + yb + '" stroke="#666" stroke-width="1" />'
+      + '<text class="dim" x="' + (x1 - 4) + '" y="' + (mid + 3) + '" text-anchor="end">' + label + '</text>';
+  }
+  let s = '';
+  s += tick(0, '0"');
+  s += tick(toe, toe + '" toe');
+  s += tick(base, base + '" base');
+  s += tick(counterTop, counterTop + '" ctr');
+  s += tick(upBot, upBot + '"');
+  s += span(counterTop, upBot, gap + '"');
+  s += tick(upTop, upTop + '"');
+  if (sof > 0) s += tick(ceil - sof, (ceil - sof) + '" sof');
+  s += tick(ceil, ceil + '"');
+  s += span(upBot, upTop, upH + '"');
+  return s;
 }
 
 let VIEW = { scale: 1, ox: 56, oy: 36 };
@@ -916,7 +973,7 @@ function paint() {
   save();
 }
 
-['job-name','job-color','job-date','wall-name','wall-w','ceil','toe','base-h','counter','wall-bot'].forEach(id => {
+['job-name','job-color','job-date','wall-name','wall-w','ceil','toe','base-h','counter','gap','wall-bot'].forEach(id => {
   document.getElementById(id).addEventListener('input', () => { draw(); save(); });
 });
 (function bindElevDrag() {
