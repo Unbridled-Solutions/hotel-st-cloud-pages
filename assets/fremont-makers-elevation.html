@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Elevations v0930e</title>
+<title>Fremont Makers — Elevations v0930f</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-ELEV-v20260930e-place-boxes -->
+<!-- FM-ELEV-v20260930f-openings-uppers -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Pinyon+Script&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -138,7 +138,7 @@
   <a class="house-link" id="back-to-house" href="#" style="display:none;">← House quote</a>
   <span class="mark">Fremont Makers</span>
   <span class="tag">making freedom</span>
-  <span class="stamp">v0930e</span>
+  <span class="stamp">v0930f</span>
   <div class="job-field" style="margin-left:8px;">
     <label>Job / model</label>
     <input id="job-name" placeholder="Sangre Vista 1" style="min-width:180px" />
@@ -177,12 +177,12 @@
     </div>
     <div class="row2" style="margin-top:8px;">
       <div class="job-field"><label>Counter thick</label><input id="counter" type="number" min="0" step="0.25" /></div>
-      <div class="job-field"><label>Walls start at</label><input id="wall-bot" type="number" min="0" step="0.25" /></div>
+      <div class="job-field"><label>Soffit (from ceiling)</label><input id="wall-bot" type="number" min="0" step="0.25" /></div>
     </div>
-    <p class="hint">Widths are inches. Type any size, or pick a cabinet from this house’s manufacturer PDF.</p>
+    <p class="hint">Widths are inches. Wall (upper) cabinets hang from the ceiling. Set Soffit if they stop short of it.</p>
     <div class="fit" id="fit-line"></div>
     <h3>Openings on this wall</h3>
-    <p class="hint">Window, door, fridge, range. Left edge from the start of the wall.</p>
+    <p class="hint">Window, door, fridge, range. Drag on the drawing or type From left / From floor.</p>
     <div id="open-list"></div>
     <button type="button" class="tiny" onclick="addOpening()">+ Opening</button>
     <h3>Walls in this room</h3>
@@ -265,7 +265,7 @@ function qs() { return new URLSearchParams(location.search); }
 function blankWall(name) {
   return {
     id: uid(), name: name || 'El 1',
-    width: 99, ceiling: 108, toe: 4.5, baseH: 34.5, counter: 1.5, wallBot: 54,
+    width: 99, ceiling: 108, toe: 4.5, baseH: 34.5, counter: 1.5, soffit: 0, wallBot: 0,
     openings: [],
     boxes: []
   };
@@ -540,7 +540,7 @@ function bindWallFields() {
   set('toe', w.toe);
   set('base-h', w.baseH);
   set('counter', w.counter);
-  set('wall-bot', w.wallBot);
+  set('wall-bot', soffitOf(w));
 }
 function readWallFields() {
   const w = wall();
@@ -550,7 +550,14 @@ function readWallFields() {
   w.toe = num(document.getElementById('toe').value, 4.5);
   w.baseH = num(document.getElementById('base-h').value, 34.5);
   w.counter = num(document.getElementById('counter').value, 1.5);
-  w.wallBot = num(document.getElementById('wall-bot').value, 54);
+  w.soffit = num(document.getElementById('wall-bot').value, 0);
+  w.wallBot = w.soffit;
+}
+function soffitOf(w) {
+  if (w.soffit != null && w.soffit !== '') return num(w.soffit, 0);
+  const bot = num(w.wallBot, 0);
+  if (bot >= 24) return Math.max(0, num(w.ceiling, 108) - bot - 30);
+  return bot;
 }
 
 function renderTabs() {
@@ -619,14 +626,30 @@ function renderOpenings() {
     + '<div class="row2" style="margin-top:6px;">'
     + '<div class="job-field"><label>Height</label><input type="number" step="0.25" value="' + o.height + '" oninput="updOpen(\'' + o.id + '\',\'height\',this.value)" /></div>'
     + '<div class="job-field"><label>From floor</label><input type="number" step="0.25" value="' + o.sill + '" oninput="updOpen(\'' + o.id + '\',\'sill\',this.value)" /></div>'
+    + '</div>'
+    + '<div style="display:flex;gap:4px;margin-top:6px;">'
+    + '<button type="button" class="tiny" onclick="nudgeOpen(\'' + o.id + '\',-1)">← 1"</button>'
+    + '<button type="button" class="tiny" onclick="nudgeOpen(\'' + o.id + '\',1)">1" →</button>'
     + '</div></div>'
   ).join('');
 }
 function updOpen(id, k, v) {
   const o = wall().openings.find(x => x.id === id);
   if (!o) return;
-  o[k] = (k === 'kind') ? v : num(v, 0);
+  if (k === 'kind') {
+    o.kind = v;
+    if (v === 'door') o.sill = 0;
+    if (v === 'window' && !(parseFloat(o.sill) > 0)) o.sill = 42;
+  } else {
+    o[k] = num(v, 0);
+  }
   draw(); save();
+}
+function nudgeOpen(id, dir) {
+  const o = wall().openings.find(x => x.id === id);
+  if (!o) return;
+  o.left = Math.max(0, Math.round((num(o.left, 0) + dir) * 4) / 4);
+  renderOpenings(); draw(); save();
 }
 
 function addBox(kind) {
@@ -752,8 +775,11 @@ function boxH(b, w) {
   return w.baseH;
 }
 function boxY0(b, w) {
-  if (b.kind === 'wall') return w.wallBot;
-  if (b.kind === 'hood') return w.wallBot - 3;
+  const h = boxH(b, w);
+  const sof = soffitOf(w);
+  const ceil = num(w.ceiling, 108);
+  if (b.kind === 'wall') return Math.max(0, ceil - sof - h);
+  if (b.kind === 'hood') return Math.max(0, ceil - sof - 30 - h);
   return 0;
 }
 
@@ -777,10 +803,11 @@ function draw() {
   html += '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="#fff"/>';
   html += rect(0, 0, w.width, w.ceiling, '#f7f4ee', '#1b2744');
   w.openings.forEach(o => {
-    html += rect(num(o.left, 0), num(o.sill, 0), num(o.width, 12), num(o.height, 36), '#eef3f6', '#587b83');
+    const extra = ' class="open-box" data-id="' + o.id + '" style="cursor:grab"';
+    html += rect(num(o.left, 0), num(o.sill, 0), num(o.width, 12), num(o.height, 36), '#eef3f6', '#587b83', extra);
     const cx = X(num(o.left, 0) + num(o.width, 0) / 2);
     const cy = Y(num(o.sill, 0) + num(o.height, 0) / 2);
-    html += '<text class="cab-lab" text-anchor="middle" x="' + cx.toFixed(1) + '" y="' + cy.toFixed(1) + '">' + (o.kind || '').toUpperCase() + '</text>';
+    html += '<text class="cab-lab" text-anchor="middle" x="' + cx.toFixed(1) + '" y="' + cy.toFixed(1) + '" pointer-events="none">' + (o.kind || '').toUpperCase() + '</text>';
   });
   w.boxes.forEach(b => {
     const kind = boxKind(b);
@@ -813,33 +840,60 @@ function svgInchesFromClient(ev) {
   const pt = svg.createSVGPoint();
   pt.x = ev.clientX; pt.y = ev.clientY;
   const ctm = svg.getScreenCTM();
-  if (!ctm) return 0;
+  if (!ctm) return { x: 0, y: 0 };
   const loc = pt.matrixTransform(ctm.inverse());
-  return (loc.x - VIEW.ox) / VIEW.scale;
+  const w = wall();
+  return {
+    x: (loc.x - VIEW.ox) / VIEW.scale,
+    y: w.ceiling - (loc.y - VIEW.oy) / VIEW.scale
+  };
 }
 function onElevDown(ev) {
-  const t = ev.target.closest && ev.target.closest('.cab-box');
-  if (!t) return;
-  const id = t.getAttribute('data-id');
+  const openEl = ev.target.closest && ev.target.closest('.open-box');
+  const cabEl = ev.target.closest && ev.target.closest('.cab-box');
+  if (openEl) {
+    const id = openEl.getAttribute('data-id');
+    const o = wall().openings.find(x => x.id === id);
+    if (!o) return;
+    ev.preventDefault();
+    const p = svgInchesFromClient(ev);
+    DRAG = { kind: 'open', id, startX: p.x, startY: p.y, startLeft: num(o.left, 0), startSill: num(o.sill, 0) };
+    return;
+  }
+  if (!cabEl) return;
+  const id = cabEl.getAttribute('data-id');
   const b = wall().boxes.find(x => x.id === id);
   if (!b) return;
   ev.preventDefault();
-  DRAG = { id, startIn: svgInchesFromClient(ev), startLeft: boxLeft(b) };
+  const p = svgInchesFromClient(ev);
+  DRAG = { kind: 'box', id, startX: p.x, startLeft: boxLeft(b) };
 }
 function onElevMove(ev) {
   if (!DRAG) return;
+  const p = svgInchesFromClient(ev);
+  if (DRAG.kind === 'open') {
+    const o = wall().openings.find(x => x.id === DRAG.id);
+    if (!o) return;
+    o.left = Math.max(0, Math.round((DRAG.startLeft + (p.x - DRAG.startX)) * 4) / 4);
+    if (o.kind !== 'door') {
+      o.sill = Math.max(0, Math.round((DRAG.startSill + (p.y - DRAG.startY)) * 4) / 4);
+    } else {
+      o.sill = 0;
+    }
+    draw();
+    return;
+  }
   const b = wall().boxes.find(x => x.id === DRAG.id);
   if (!b) return;
-  const now = svgInchesFromClient(ev);
-  let left = DRAG.startLeft + (now - DRAG.startIn);
-  left = Math.max(0, Math.round(left * 4) / 4);
-  b.left = left;
+  b.left = Math.max(0, Math.round((DRAG.startLeft + (p.x - DRAG.startX)) * 4) / 4);
   draw();
 }
 function onElevUp() {
   if (!DRAG) return;
+  const kind = DRAG.kind;
   DRAG = null;
-  paintBoxes();
+  if (kind === 'open') renderOpenings();
+  else paintBoxes();
   save();
 }
 function fillPrintHead() {
