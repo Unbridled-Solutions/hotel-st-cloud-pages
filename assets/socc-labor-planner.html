@@ -1311,6 +1311,7 @@ function loadWeek(key) {
 
   // Rebuild table — this recreates all tfoot input elements
   applyRoster();
+  applyWeekPositions(data);
   buildTable();
   updateWeekDates(); // re-apply period-aware TAX_RATE after buildFooter() recreates the DOM
 
@@ -1608,9 +1609,15 @@ cloudPull().then(() => {
   try { recalc(); } catch(e) { console.error('recalc:', e); }
   try { renderHistory(); } catch(e) { console.error('renderHistory:', e); }
   try { renderMavg(); } catch(e) { console.error('renderMavg:', e); }
-  applyRoster();
   fetchLyoy();
 });
+function applyWeekPositions(data) {
+  if (!data || !Array.isArray(data.positions) || data.positions.length !== POSITIONS.length) return;
+  data.positions.forEach((r, pi) => {
+    if (!POSITIONS[pi] || !r) return;
+    if (r.name) POSITIONS[pi].name = r.name;
+  });
+}
 function applyRoster() {
   try {
     const localRaw = localStorage.getItem('socc-roster');

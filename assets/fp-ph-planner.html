@@ -1325,6 +1325,7 @@ function loadWeek(key) {
 
   // Rebuild table — this recreates all tfoot input elements
   applyRoster();
+  applyWeekPositions(data);
   buildTable();
   updateWeekDates(); // re-apply period-aware TAX_RATE after buildFooter() recreates the DOM
 
@@ -1621,6 +1622,13 @@ function showBanner(msg) {
 // ── INIT ──────────────────────────────────────────────────────────────────────
 
 // Apply saved roster (names + rates) to POSITIONS before building the table
+function applyWeekPositions(data) {
+  if (!data || !Array.isArray(data.positions) || data.positions.length !== POSITIONS.length) return;
+  data.positions.forEach((r, pi) => {
+    if (!POSITIONS[pi] || !r) return;
+    if (r.name) POSITIONS[pi].name = r.name;
+  });
+}
 function applyRoster() {
   try {
     const cloudRoster = (_cloudData && _cloudData['fp-ph-roster'])
