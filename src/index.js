@@ -130,6 +130,25 @@ function canonicalizeFmQuotesBundle(data) {
   Object.keys(data).forEach(k => canonicalizeFmQuotesValue(data[k]));
   return data;
 }
+function mergeHistory(prev, inc) {
+  const by = {};
+  (Array.isArray(prev) ? prev : []).forEach(e => {
+    if (e && e.weekStart) by[e.weekStart] = e;
+  });
+  (Array.isArray(inc) ? inc : []).forEach(e => {
+    if (!e || !e.weekStart) return;
+    const old = by[e.weekStart];
+    if (!old) { by[e.weekStart] = e; return; }
+    const next = Object.assign({}, old, e);
+    if (old.approved && !e.approved) next.approved = true;
+    by[e.weekStart] = next;
+  });
+  return Object.keys(by)
+    .sort((a, b) => b.localeCompare(a))
+    .map(k => by[k])
+    .slice(0, 52);
+}
+
 function mergePlannerBundle(existing, incoming, ns) {
   if (ns === 'tjs-hiring') {
     const prev = existing && typeof existing === 'object' ? existing : {};
@@ -159,6 +178,8 @@ function mergePlannerBundle(existing, incoming, ns) {
         next.revs = prevRevs;
       }
       out[k] = next;
+    } else if (typeof k === 'string' && k.endsWith('-history') && Array.isArray(v) && Array.isArray(existing?.[k])) {
+      out[k] = mergeHistory(existing[k], v);
     } else {
       out[k] = v;
     }

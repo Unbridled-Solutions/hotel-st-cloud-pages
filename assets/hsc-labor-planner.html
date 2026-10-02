@@ -1447,7 +1447,9 @@ function approveSchedule() {
 }
 
 function renderHistory() {
-  const hist = JSON.parse(localStorage.getItem('hsc-history') || '[]');
+  const hist = (_cloudData && Array.isArray(_cloudData['hsc-history']))
+    ? _cloudData['hsc-history']
+    : JSON.parse(localStorage.getItem('hsc-history') || '[]');
   const tbody = document.getElementById('histBody');
   if (!hist.length) {
     tbody.innerHTML = `<tr><td colspan="12" class="hist-empty">No weeks submitted yet.</td></tr>`;
