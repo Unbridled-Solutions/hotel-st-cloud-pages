@@ -217,6 +217,8 @@ tr.forecast-row .rev-input { font-size: 14px; padding: 4px 2px; line-height: 1.3
 .hist-period { font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--blue); }
 .hist-week { font-size: 10px; color: var(--muted); }
 .hist-empty { text-align: center; padding: 32px; color: var(--muted); font-size: 13px; }
+.hist-table tbody tr.hist-period-end td { border-bottom: 2px solid #c9aa7c !important; }
+.hist-table tbody tr.hist-quarter-end td { border-bottom: 3px solid #c9aa7c !important; }
 
 footer { text-align: center; font-size: 11px; color: var(--muted); padding: 16px 24px 28px; border-top: 1px solid var(--border); margin-top: 20px; }
 footer span { color: var(--gold); font-weight: 600; }
@@ -1446,6 +1448,34 @@ function approveSchedule() {
   renderHistory();
 }
 
+function histPeriodNum(h) {
+  const m = String(h.period || '').match(/Period\s+(\d+)/i);
+  if (m) return parseInt(m[1], 10);
+  const ws = h.weekStart;
+  if (!ws) return null;
+  const d = new Date(ws + 'T00:00:00');
+  if (isNaN(d)) return null;
+  const x = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = x.getUTCDay() || 7;
+  x.setUTCDate(x.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(x.getUTCFullYear(), 0, 1));
+  const iso = Math.ceil((((x - yearStart) / 86400000) + 1) / 7);
+  return Math.ceil(iso / 4);
+}
+function histQuarter(p) {
+  if (!p) return null;
+  return p <= 3 ? 1 : p <= 6 ? 2 : p <= 9 ? 3 : 4;
+}
+function histRowClass(h, next) {
+  const p = histPeriodNum(h);
+  const np = next ? histPeriodNum(next) : null;
+  const q = histQuarter(p);
+  const nq = histQuarter(np);
+  if (q != null && q !== nq) return 'hist-quarter-end';
+  if (p != null && p !== np) return 'hist-period-end';
+  return '';
+}
+
 function renderHistory() {
   const hist = (_cloudData && Array.isArray(_cloudData['hsc-history']))
     ? _cloudData['hsc-history']
@@ -1462,7 +1492,8 @@ function renderHistory() {
   const varClass = v => !v ? '' : v > 0 ? 'style="color:var(--green)"' : 'style="color:var(--red)"';
   const labVarClass = v => (v == null) ? '' : v > 0 ? 'style="color:var(--red)"' : v < 0 ? 'style="color:var(--green)"' : '';
 
-  tbody.innerHTML = [...hist].sort((a,b) => b.weekStart.localeCompare(a.weekStart)).map(h => {
+  const sorted = [...hist].sort((a,b) => b.weekStart.localeCompare(a.weekStart));
+  tbody.innerHTML = sorted.map((h, i) => {
     // Compute actual labor % from saved actRev if available
     const actLaborPct = (h.actual && h.actRev) ? +(h.actual / h.actRev * 100).toFixed(1) : h.actPct;
     // Display-only: forecast vs actual revenue in dollars. Never rewrite history.
@@ -1472,8 +1503,9 @@ function renderHistory() {
     const labVar = (h.actual != null && h.budget != null)
       ? (h.actual - h.budget)
       : (h.variance != null ? h.variance : null);
+    const rowCls = histRowClass(h, sorted[i + 1]);
     return `
-    <tr style="${h.approved ? 'background:rgba(76,202,128,0.06);' : ''}">
+    <tr class="${rowCls}" style="${h.approved ? 'background:rgba(76,202,128,0.06);' : ''}">
       <td><span class="hist-period">${h.period || '—'}</span><br><span class="hist-week">${h.isoWk || ''}</span></td>
       <td style="text-align:left;color:var(--text)">${h.weekDisplay || h.weekStart}</td>
       <td style="color:var(--gold)">${fmt(h.rev)}</td>
