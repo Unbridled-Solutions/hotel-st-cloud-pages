@@ -472,11 +472,12 @@ function weekFromBundle(bundle, prefix, mondayStr) {
 function rollWeek(outlet, monday, bundle) {
   const key = ymd(monday);
   const w = weekFromBundle(bundle, outlet.prefix, key);
-  const rest = w ? sumArr(w.actrevs) : 0;
+  let rest = 0;
+  if (w) {
+    for (let di = 0; di < 7; di++) rest += restDay(outlet, w, di);
+  }
   const evt = (outlet.events && w) ? sumArr(w.evtrevs) : 0;
-  let hotel = 0;
-  if (outlet.hotel && w) hotel = sumArr(w.bookedrevs) || sumArr(w.actrevs);
-  const restRev = outlet.hotel ? hotel : rest;
+  const restRev = rest;
   const totalRev = restRev + evt;
   const hrly = w ? sumArr(w.hrlyacts) : 0;
   const mgmt = w ? sumArr(w.mgmtacts) : 0;
@@ -493,6 +494,11 @@ function dayVal(arr, di) {
   const n = parseFloat(arr[di]);
   return n || 0;
 }
+function postedDay(arr, di) {
+  if (!Array.isArray(arr) || arr[di] == null || arr[di] === '') return null;
+  const n = parseFloat(arr[di]);
+  return isFinite(n) ? n : null;
+}
 function dayMoneyOrNull(arr, di) {
   if (!Array.isArray(arr) || arr[di] == null || arr[di] === '') return null;
   const n = parseFloat(arr[di]);
@@ -500,14 +506,26 @@ function dayMoneyOrNull(arr, di) {
   return n;
 }
 
+// Restaurant revenue: posted actuals win; otherwise Forecast Revenue (`revs`).
+// Hotel stays Cloudbeds booked/actual — never amortize hotel from `revs`.
+function restDay(outlet, w, di) {
+  if (!w) return 0;
+  if (outlet.hotel) {
+    const booked = postedDay(w.bookedrevs, di);
+    if (booked) return booked;
+    return postedDay(w.actrevs, di) || 0;
+  }
+  const act = postedDay(w.actrevs, di);
+  if (act != null) return act;
+  return postedDay(w.revs, di) || 0;
+}
+
 function rollDay(outlet, monday, di, bundle) {
   const key = ymd(monday);
   const w = weekFromBundle(bundle, outlet.prefix, key);
-  const rest = w ? dayVal(w.actrevs, di) : 0;
+  const rest = restDay(outlet, w, di);
   const evt = (outlet.events && w) ? dayVal(w.evtrevs, di) : 0;
-  let hotel = 0;
-  if (outlet.hotel && w) hotel = dayVal(w.bookedrevs, di) || dayVal(w.actrevs, di);
-  const restRev = outlet.hotel ? hotel : rest;
+  const restRev = rest;
   const totalRev = restRev + evt;
   const hrly = w ? dayMoneyOrNull(w.hrlyacts, di) : null;
   const hrlyN = hrly || 0;
@@ -711,7 +729,7 @@ function renderSummary() {
     <div class="hero-card"><div class="hero-lbl">UHG actual labor</div><div class="hero-val">${money(grandLab)}</div><div class="hero-sub">Hourly + standing mgmt + tax</div></div>
     <div class="hero-card"><div class="hero-lbl">Blended labor %</div><div class="hero-val">${pct(grandRev ? grandLab / grandRev : null)}</div><div class="hero-sub">This period only · UHG labor ÷ UHG revenue. Not an hourly wage.</div></div>
     <div class="hero-card"><div class="hero-lbl">Tax this period</div><div class="hero-val">${Math.round(taxRate(viewPeriod)*100)}%</div><div class="hero-sub">On hourly + management</div></div>`;
-  document.getElementById('note').textContent = 'Click an outlet name for its labor tracker. Click Supplies for the supply planner. Food $ is MarginEdge COGS: Food + Beer + Wine + Liquor + N/A Bev. FP % = FP food / FP F&B. HSC % = HSC food / (1887 + Standard Oil). Food % excludes Hotel St. Cloud room revenue. Prime is (labor + food) / all revenue.';
+  document.getElementById('note').textContent = 'Restaurant revenue is posted actuals when a day is in; otherwise Forecast Revenue from the weekly planner. Hotel is Cloudbeds booked rooms, not amortized. Click an outlet name for its labor tracker. Click Supplies for the supply planner. Food $ is MarginEdge COGS: Food + Beer + Wine + Liquor + N/A Bev. FP % = FP food / FP F&B. HSC % = HSC food / (1887 + Standard Oil). Food % excludes Hotel St. Cloud room revenue. Prime is (labor + food) / all revenue.';
 
   const grp = outlets.map((o, i) => {
     const span = o.events ? 6 : (o.hotel ? 6 : 5);
