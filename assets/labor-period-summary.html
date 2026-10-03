@@ -506,7 +506,9 @@ function dayMoneyOrNull(arr, di) {
   return n;
 }
 
-// Restaurant revenue: posted actuals win; otherwise Forecast Revenue (`revs`).
+// Restaurant revenue: posted actuals only. Do not fill blank days from
+// weekly Forecast Revenue (`revs`) — that mixed forecast and actuals in
+// the same box (Stan, 3 Oct 2026). Forecast stays on the labor planners.
 // Hotel stays Cloudbeds booked/actual — never amortize hotel from `revs`.
 function restDay(outlet, w, di) {
   if (!w) return 0;
@@ -515,9 +517,7 @@ function restDay(outlet, w, di) {
     if (booked) return booked;
     return postedDay(w.actrevs, di) || 0;
   }
-  const act = postedDay(w.actrevs, di);
-  if (act != null) return act;
-  return postedDay(w.revs, di) || 0;
+  return postedDay(w.actrevs, di) || 0;
 }
 
 function rollDay(outlet, monday, di, bundle) {

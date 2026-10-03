@@ -942,9 +942,16 @@ async function runSync(env, status) {
 }
 
 function fillCurrentMgmt(data, prefix, laborDays, rate) {
-  const todayMon = mondayOf(laborDays[laborDays.length - 1]);
-  const nextMon = addYmd(todayMon, 7);
-  for (const mon of [todayMon, nextMon]) {
+  // Standing rates through this ISO period and the next (1887 $370 was
+  // stopping after today+next week — Stan, 3 Oct 2026). Existing week
+  // keys only. Never creates weeks. Never touches state / names.
+  const today = laborDays[laborDays.length - 1];
+  const cur = currentPeriodRange(today);
+  const nxt = nextPeriodRange(today);
+  const mons = [];
+  for (let i = 0; i < 4; i++) mons.push(addYmd(cur.from, i * 7));
+  for (let i = 0; i < 4; i++) mons.push(addYmd(nxt.from, i * 7));
+  for (const mon of mons) {
     const key = prefix + mon;
     if (!data[key]) continue;
     if (typeof rate === 'function') fillStandingMgmtByDay(data[key], mon, rate);
