@@ -7,7 +7,7 @@
   <meta name="robots" content="noindex, nofollow" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet" />
   <style>
     :root {
       --navy: #191d23;
@@ -17,14 +17,15 @@
       --rust: #6e2c2c;
       --muted: #5c5648;
       --paper: #fffcf2;
+      --font: Aptos, "Aptos Display", "Source Sans 3", Calibri, "Segoe UI", sans-serif;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       background: var(--cream);
       color: var(--navy);
-      font-family: "Josefin Sans", sans-serif;
+      font-family: var(--font);
       font-size: 17px;
-      font-weight: 300;
+      font-weight: 400;
       min-height: 100vh;
     }
     header {
@@ -33,13 +34,18 @@
       padding: 14px 16px 12px;
       position: sticky; top: 0; z-index: 5;
     }
-    header h1 { font-family: Georgia, serif; font-size: 22px; font-weight: 500; }
+    header h1 { font-family: var(--font); font-size: 22px; font-weight: 700; }
     header .sub { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; opacity: .75; margin-bottom: 8px; }
     .bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
     .bar input, .bar button {
       font: inherit; min-height: 44px; padding: 8px 10px;
     }
-    .bar input[type="date"], .bar input[type="search"] {
+    .bar input[type="date"] {
+      background: #15202e; color: var(--cream); border: 1px solid rgba(228,226,217,.25);
+    }
+    .bar input[type="search"] {
+      flex: 1 1 280px;
+      min-width: min(100%, 280px);
       background: #15202e; color: var(--cream); border: 1px solid rgba(228,226,217,.25);
     }
     .bar button {
@@ -62,11 +68,11 @@
       text-align: center;
     }
     .ticker .n {
-      font-family: Georgia, serif;
+      font-family: var(--font);
       font-size: clamp(28px, 6vw, 36px);
       line-height: 1;
       color: var(--gold);
-      font-weight: 500;
+      font-weight: 700;
     }
     .ticker .l {
       font-size: 11px;
@@ -80,7 +86,7 @@
     .meal { margin: 14px 0 22px; scroll-margin-top: 210px; }
     .meal.quiet h2 { opacity: .55; }
     .meal h2 {
-      font-family: Georgia, serif; font-size: 24px; border-bottom: 1px solid rgba(183,159,54,.45); padding-bottom: 6px; margin-bottom: 10px;
+      font-family: var(--font); font-size: 22px; font-weight: 700; border-bottom: 1px solid rgba(183,159,54,.45); padding-bottom: 6px; margin-bottom: 10px;
     }
     .slot { background: var(--paper); border: 1px solid rgba(31,43,63,.12); margin-bottom: 8px; padding: 10px 12px; }
     .slot.hot { border-color: var(--gold); }
@@ -97,8 +103,32 @@
       border-top: 1px solid rgba(31,43,63,.08);
       align-items: start;
     }
-    .row b { font-weight: 600; }
+    .row b { font-weight: 700; }
     .meta { font-size: 14px; color: var(--muted); }
+    .meta p { margin: 4px 0; line-height: 1.35; }
+    .editbox {
+      display: none;
+      grid-column: 1 / -1;
+      background: #fff8dd;
+      border: 1px solid rgba(120,111,92,.3);
+      padding: 12px;
+      margin-top: 8px;
+    }
+    .row.editing .editbox { display: block; }
+    .hist {
+      display: none;
+      grid-column: 1 / -1;
+      font-size: 14px;
+      color: var(--muted);
+      padding: 8px 0 4px;
+    }
+    .row.show-hist .hist { display: block; }
+    .hist p { margin: 6px 0; padding-left: 10px; border-left: 2px solid rgba(183,159,54,.5); }
+    .hits { background: var(--paper); border: 1px solid rgba(120,111,92,.3); padding: 10px 12px; margin-bottom: 14px; }
+    .hits h3 { font-size: 14px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 8px; }
+    .hit { display: block; width: 100%; text-align: left; font: inherit; background: transparent; border: none; border-bottom: 1px solid rgba(31,43,63,.08); padding: 10px 4px; cursor: pointer; color: var(--navy); }
+    .hit:hover { background: rgba(183,159,54,.12); }
+    .hit b { font-weight: 700; }
     .acts { display: flex; gap: 6px; flex-wrap: wrap; }
     .acts button {
       font: inherit; font-size: 13px; min-height: 36px; padding: 4px 10px;
@@ -150,12 +180,13 @@
       <input id="date" type="date" />
       <button type="button" id="prev">Prev</button>
       <button type="button" id="next">Next</button>
-      <input id="q" type="search" placeholder="Search name or phone" />
+      <input id="q" type="search" placeholder="Search all reservations — name, phone, notes" />
     </div>
     <div class="ticker" id="ticker"></div>
     <div class="totals" id="totals"></div>
   </header>
   <main>
+    <div id="hits"></div>
     <button class="toggle-add" type="button" id="toggle-add">Add from the phone</button>
     <section class="add" id="addbox">
       <h3>Add from the phone</h3>
@@ -183,6 +214,8 @@
   <script>
     const API = "/api/1887-reservations";
     let data = null;
+    let searchHits = [];
+    let searchTimer = null;
     const takenKey = "1887-res-taken-by";
     document.getElementById("a-by").value = localStorage.getItem(takenKey) || "";
 
@@ -197,6 +230,17 @@
     }
     document.getElementById("date").value = todayStr();
 
+    function findRes(id) {
+      const list = (data && data.reservations) || [];
+      return list.find(function (r) { return r.id === id; }) || null;
+    }
+    function denverStamp(iso) {
+      if (!iso) return "";
+      try {
+        return new Date(iso).toLocaleString("en-US", { timeZone: "America/Denver", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+      } catch (e) { return iso; }
+    }
+
     async function load() {
       const date = document.getElementById("date").value;
       const res = await fetch(API + "?date=" + encodeURIComponent(date));
@@ -204,15 +248,40 @@
       render();
     }
 
-    function qMatch(r, q) {
-      if (!q) return true;
-      const s = (r.name + " " + r.phone + " " + (r.notes||"")).toLowerCase();
-      return s.indexOf(q) >= 0;
+    async function runSearch(q) {
+      const box = document.getElementById("hits");
+      if (!q || q.length < 2) {
+        searchHits = [];
+        box.innerHTML = "";
+        render();
+        return;
+      }
+      const res = await fetch(API + "/search?q=" + encodeURIComponent(q));
+      const out = await res.json();
+      searchHits = out.results || [];
+      renderHits();
+      render();
+    }
+
+    function renderHits() {
+      const box = document.getElementById("hits");
+      const q = document.getElementById("q").value.trim();
+      if (!q || q.length < 2) { box.innerHTML = ""; return; }
+      if (!searchHits.length) {
+        box.innerHTML = "<div class=\"hits\"><h3>All reservations</h3><p class=\"empty\">No matches.</p></div>";
+        return;
+      }
+      box.innerHTML = "<div class=\"hits\"><h3>All reservations · " + searchHits.length + "</h3>" +
+        searchHits.map(function (r) {
+          return "<button type=\"button\" class=\"hit\" data-jump=\"" + r.date + "\" data-id=\"" + r.id + "\"><b>" +
+            esc(r.name) + "</b> · party " + r.party + "<div class=\"meta\"><p>" +
+            esc(r.prettyDate) + " · " + esc(r.prettyTime) + (r.mealLabel ? " · " + esc(r.mealLabel) : "") +
+            "</p></div></button>";
+        }).join("") + "</div>";
     }
 
     function render() {
       if (!data || !data.day) return;
-      const q = document.getElementById("q").value.trim().toLowerCase();
       const day = data.day;
       const k = day.kitchen || {};
       const mealsMeta = [
@@ -229,30 +298,58 @@
       document.getElementById("totals").textContent = day.prettyDate;
       document.getElementById("book").innerHTML = day.meals.map(function (meal) {
         const slots = meal.slots.map(function (s) {
-          const rows = s.rows.filter(function (r) { return qMatch(r, q); });
+          const rows = s.rows;
           if (!rows.length) return "";
           const cls = s.covers >= 30 ? " full" : (s.covers >= 20 ? " hot" : "");
           return "<div class=\"slot" + cls + "\"><div class=\"slot-h\"><span>" + s.label + "</span><span class=\"cov\">" + s.covers + " covers</span></div>" +
             rows.map(rowHtml).join("") + "</div>";
         }).join("");
         const empty = !slots;
-        return "<section class=\"meal" + (empty && !q ? " quiet" : "") + "\" id=\"" + meal.id + "\"><h2>" + meal.label + " · " + meal.covers + " covers</h2>" +
+        return "<section class=\"meal" + (empty ? " quiet" : "") + "\" id=\"" + meal.id + "\"><h2>" + meal.label + " · " + meal.covers + " covers</h2>" +
           (slots || "<div class=\"empty\">Nothing on the book for " + meal.label.toLowerCase() + ".</div>") +
           "</section>";
       }).join("");
     }
 
     function rowHtml(r) {
-      return "<div class=\"row\" data-id=\"" + r.id + "\"><div><b>" + esc(r.name) + "</b> · party " + r.party +
-        "<div class=\"meta\">" + esc(r.phone) + (r.email ? " · " + esc(r.email) : "") +
-        (r.notes ? " · " + esc(r.notes) : "") +
-        " · " + (r.source === "web" ? "web" : esc(r.takenBy || "desk")) +
-        (r.override ? " · override" : "") +
+      const hist = (r.history || []).slice().reverse().map(function (h) {
+        return "<p><b>" + esc(denverStamp(h.at)) + "</b> · " + esc(h.action) +
+          (h.by ? " · " + esc(h.by) : "") +
+          ((h.changes || []).length ? "<br>" + esc((h.changes || []).join("; ")) : "") + "</p>";
+      }).join("") || "<p>No changes yet.</p>";
+      return "<div class=\"row\" data-id=\"" + r.id + "\" data-date=\"" + esc(r.date || "") + "\">" +
+        "<div><b>" + esc(r.name) + "</b>" +
+        "<div class=\"meta\">" +
+        "<p>Party of " + r.party + "</p>" +
+        (r.phone ? "<p>" + esc(r.phone) + "</p>" : "") +
+        (r.email ? "<p>" + esc(r.email) + "</p>" : "") +
+        (r.notes ? "<p>" + esc(r.notes) + "</p>" : "") +
+        "<p>" + (r.source === "web" ? "Booked online" : "Taken by " + esc(r.takenBy || "desk")) +
         (r.status === "noshow" ? " · no-show" : "") +
-        "</div></div><div class=\"acts\">" +
+        (r.status === "cancelled" ? " · cancelled" : "") + "</p>" +
+        "</div></div>" +
+        "<div class=\"acts\">" +
+        "<button type=\"button\" data-act=\"edit\">Edit</button>" +
+        "<button type=\"button\" data-act=\"history\">History</button>" +
         "<button type=\"button\" data-act=\"noshow\">No-show</button>" +
         "<button type=\"button\" class=\"danger\" data-act=\"cancel\">Cancel</button>" +
-        "</div></div>";
+        "</div>" +
+        "<div class=\"editbox\">" +
+        "<div class=\"grid\">" +
+        "<div><label>Name</label><input class=\"e-name\" value=\"" + esc(r.name) + "\" /></div>" +
+        "<div><label>Party</label><input class=\"e-party\" type=\"number\" min=\"1\" max=\"200\" value=\"" + r.party + "\" /></div>" +
+        "<div><label>Phone</label><input class=\"e-phone\" value=\"" + esc(r.phone || "") + "\" /></div>" +
+        "<div><label>Email</label><input class=\"e-email\" value=\"" + esc(r.email || "") + "\" /></div>" +
+        "<div><label>Time</label><input class=\"e-time\" type=\"time\" step=\"900\" value=\"" + esc(r.time || "") + "\" /></div>" +
+        "<div><label>Date</label><input class=\"e-date\" type=\"date\" value=\"" + esc(r.date || "") + "\" /></div>" +
+        "</div>" +
+        "<label style=\"margin-top:10px;display:block\">Notes</label>" +
+        "<textarea class=\"e-notes\" rows=\"2\">" + esc(r.notes || "") + "</textarea>" +
+        "<label class=\"chk\"><input type=\"checkbox\" class=\"e-over\" /> Manager override</label>" +
+        "<button type=\"button\" class=\"go\" data-act=\"save\" style=\"margin-top:10px;min-height:44px;width:100%;background:var(--gold);border:none;font:inherit;font-weight:700;cursor:pointer\">Save changes</button>" +
+        "</div>" +
+        "<div class=\"hist\">" + hist + "</div>" +
+        "</div>";
     }
     function esc(s) {
       return String(s || "").replace(/[&<>"]/g, function (c) {
@@ -263,17 +360,63 @@
       });
     }
 
+    document.getElementById("hits").addEventListener("click", function (e) {
+      const hit = e.target.closest("[data-jump]");
+      if (!hit) return;
+      document.getElementById("date").value = hit.getAttribute("data-jump");
+      load();
+    });
+
     document.getElementById("book").addEventListener("click", async (e) => {
       const btn = e.target.closest("button[data-act]");
       if (!btn) return;
       const row = btn.closest("[data-id]");
       const id = row.getAttribute("data-id");
+      const date = row.getAttribute("data-date") || document.getElementById("date").value;
       const act = btn.getAttribute("data-act");
+      if (act === "edit") {
+        row.classList.toggle("editing");
+        row.classList.remove("show-hist");
+        return;
+      }
+      if (act === "history") {
+        row.classList.toggle("show-hist");
+        row.classList.remove("editing");
+        return;
+      }
+      if (act === "save") {
+        const by = document.getElementById("a-by").value.trim() || localStorage.getItem(takenKey) || "";
+        const body = {
+          date: date,
+          id: id,
+          action: "edit",
+          name: row.querySelector(".e-name").value.trim(),
+          party: parseInt(row.querySelector(".e-party").value, 10),
+          phone: row.querySelector(".e-phone").value.trim(),
+          email: row.querySelector(".e-email").value.trim(),
+          time: row.querySelector(".e-time").value,
+          newDate: row.querySelector(".e-date").value,
+          notes: row.querySelector(".e-notes").value.trim(),
+          override: row.querySelector(".e-over").checked,
+          takenBy: by,
+          silent: true
+        };
+        const res = await fetch(API + "/update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        const out = await res.json();
+        if (!out.success) { alert(out.error === "full" ? "That slot is full. Check override to force it." : (out.error || "Could not save")); return; }
+        if (body.newDate && body.newDate !== date) document.getElementById("date").value = body.newDate;
+        load();
+        return;
+      }
       if (act === "cancel" && !confirm("Cancel this reservation?")) return;
       const res = await fetch(API + "/update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date: document.getElementById("date").value, id, action: act })
+        body: JSON.stringify({ date: date, id: id, action: act, takenBy: document.getElementById("a-by").value.trim() })
       });
       const out = await res.json();
       if (!out.success) { alert(out.error || "Could not update"); return; }
@@ -289,7 +432,11 @@
       document.getElementById("date").value = shiftDate(document.getElementById("date").value, 1);
       load();
     });
-    document.getElementById("q").addEventListener("input", render);
+    document.getElementById("q").addEventListener("input", function () {
+      const q = this.value.trim();
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(function () { runSearch(q); }, 220);
+    });
 
     document.getElementById("a-go").addEventListener("click", async () => {
       const err = document.getElementById("a-err");

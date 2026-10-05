@@ -12,6 +12,10 @@ const NS_CFG = "1887-res:config";
 function resKey(date, id) {
   return "1887-res:" + date + ":" + id;
 }
+function dayIndexKey(date) {
+  return "1887-res-day:" + date;
+}
+const SEARCH_KEY = "1887-res-search";
 const TZ = "America/Denver";
 const PHONE = "(719) 602-3469";
 const PHONE_TEL = "7196023469";
@@ -201,8 +205,8 @@ async function loadCfg(env) {
 }
 
 async function loadDay(env, date) {
+  const byId = {};
   const prefix = "1887-res:" + date + ":";
-  const reservations = [];
   let cursor;
   do {
     const page = await env.PLANNER_DATA.list({ prefix, cursor, limit: 1000 });
@@ -210,18 +214,92 @@ async function loadDay(env, date) {
       const raw = await env.PLANNER_DATA.get(k.name);
       if (!raw) continue;
       try {
-        reservations.push(JSON.parse(raw));
+        const r = JSON.parse(raw);
+        if (r && r.id) byId[r.id] = r;
       } catch {
-        /* skip bad row */
+        /* skip */
       }
     }
     cursor = page.list_complete ? null : page.cursor;
   } while (cursor);
+  try {
+    const idxRaw = await env.PLANNER_DATA.get(dayIndexKey(date));
+    const ids = idxRaw ? JSON.parse(idxRaw) : [];
+    for (const id of ids) {
+      if (byId[id]) continue;
+      const raw = await env.PLANNER_DATA.get(resKey(date, id));
+      if (!raw) continue;
+      try {
+        const r = JSON.parse(raw);
+        if (r && r.id) byId[r.id] = r;
+      } catch {
+        /* skip */
+      }
+    }
+  } catch {
+    /* no index yet */
+  }
+  const reservations = Object.values(byId);
   return { date, reservations, version: reservations.length };
+}
+
+function searchRow(r) {
+  return {
+    id: r.id,
+    date: r.date,
+    time: r.time,
+    name: r.name,
+    phone: r.phone,
+    notes: r.notes,
+    party: r.party,
+    status: r.status,
+    meal: r.meal,
+    mealLabel: r.mealLabel,
+  };
+}
+
+async function upsertSearch(env, r) {
+  let list = [];
+  try {
+    const raw = await env.PLANNER_DATA.get(SEARCH_KEY);
+    list = raw ? JSON.parse(raw) : [];
+  } catch {
+    list = [];
+  }
+  if (!Array.isArray(list)) list = [];
+  const i = list.findIndex((x) => x && x.id === r.id);
+  const row = searchRow(r);
+  if (i >= 0) list[i] = row;
+  else list.push(row);
+  await env.PLANNER_DATA.put(SEARCH_KEY, JSON.stringify(list));
 }
 
 async function saveRes(env, r) {
   await env.PLANNER_DATA.put(resKey(r.date, r.id), JSON.stringify(r));
+  let ids = [];
+  try {
+    const raw = await env.PLANNER_DATA.get(dayIndexKey(r.date));
+    ids = raw ? JSON.parse(raw) : [];
+  } catch {
+    ids = [];
+  }
+  if (!Array.isArray(ids)) ids = [];
+  if (!ids.includes(r.id)) {
+    ids.push(r.id);
+    await env.PLANNER_DATA.put(dayIndexKey(r.date), JSON.stringify(ids));
+  }
+  await upsertSearch(env, r);
+}
+
+function pushHist(cur, action, by, changes) {
+  if (!Array.isArray(cur.history)) cur.history = [];
+  cur.history.push({
+    at: new Date().toISOString(),
+    action,
+    by: String(by || "").slice(0, 60),
+    changes: changes || [],
+  });
+  if (cur.history.length > 40) cur.history = cur.history.slice(-40);
 }
 
 function overAfterInsert(cfg, list, reservation) {
@@ -457,6 +535,33 @@ export async function handleEateryReservations(request, env, ctx) {
     });
   }
 
+  if (url.pathname === "/api/1887-reservations/search" && request.method === "GET") {
+    const q = String(url.searchParams.get("q") || "").trim().toLowerCase();
+    if (q.length < 2) return json({ success: true, results: [] });
+    let list = [];
+    try {
+      const raw = await env.PLANNER_DATA.get(SEARCH_KEY);
+      list = raw ? JSON.parse(raw) : [];
+    } catch {
+      list = [];
+    }
+    if (!Array.isArray(list)) list = [];
+    const results = list
+      .filter((r) => {
+        if (!r) return false;
+        const hay = [r.name, r.phone, r.notes, r.date, r.mealLabel].join(" ").toLowerCase();
+        return hay.indexOf(q) >= 0;
+      })
+      .sort((a, b) => String(a.date).localeCompare(String(b.date)) || String(a.time).localeCompare(String(b.time)))
+      .slice(0, 40)
+      .map((r) => ({
+        ...r,
+        prettyDate: validDate(r.date) ? prettyDate(r.date) : r.date,
+        prettyTime: r.time ? prettyTime(r.time) : "",
+      }));
+    return json({ success: true, results });
+  }
+
   if (url.pathname === "/api/1887-reservations/availability" && request.method === "GET") {
     const date = url.searchParams.get("date") || "";
     const party = Number(url.searchParams.get("party") || 2);
@@ -546,6 +651,14 @@ export async function handleEateryReservations(request, env, ctx) {
       status: "booked",
       override: override || false,
       createdAt: new Date().toISOString(),
+      history: [
+        {
+          at: new Date().toISOString(),
+          action: "created",
+          by: source === "web" ? "web" : takenBy || source,
+          changes: ["booked party of " + party + " at " + prettyTime(time)],
+        },
+      ],
     };
 
     const before = await loadDay(env, date);
@@ -611,39 +724,90 @@ export async function handleEateryReservations(request, env, ctx) {
     } catch {
       return json({ success: false, error: "not found" }, 404);
     }
-    if (action === "cancel") cur.status = "cancelled";
-    else if (action === "noshow") cur.status = "noshow";
-    else if (action === "restore") cur.status = "booked";
-    else if (action === "edit") {
-      if (body.name != null) cur.name = g(body.name, 80);
-      if (body.phone != null) cur.phone = g(body.phone, 40);
-      if (body.email != null) cur.email = g(body.email, 120);
-      if (body.notes != null) cur.notes = g(body.notes, 400);
+    const by = g(body.takenBy, 60) || g(body.by, 60);
+    if (action === "cancel") {
+      pushHist(cur, "cancelled", by, ["status booked → cancelled"]);
+      cur.status = "cancelled";
+    } else if (action === "noshow") {
+      pushHist(cur, "no-show", by, ["status → no-show"]);
+      cur.status = "noshow";
+    } else if (action === "restore") {
+      pushHist(cur, "restored", by, ["status → booked"]);
+      cur.status = "booked";
+    } else if (action === "edit") {
+      const changes = [];
+      const oldDate = cur.date;
+      if (body.name != null && g(body.name, 80) !== cur.name) {
+        changes.push("name " + cur.name + " → " + g(body.name, 80));
+        cur.name = g(body.name, 80);
+      }
+      if (body.phone != null && g(body.phone, 40) !== cur.phone) {
+        changes.push("phone → " + g(body.phone, 40));
+        cur.phone = g(body.phone, 40);
+      }
+      if (body.email != null && g(body.email, 120) !== cur.email) {
+        changes.push("email → " + g(body.email, 120));
+        cur.email = g(body.email, 120);
+      }
+      if (body.notes != null && g(body.notes, 400) !== cur.notes) {
+        changes.push("notes updated");
+        cur.notes = g(body.notes, 400);
+      }
       if (body.takenBy != null) cur.takenBy = g(body.takenBy, 60);
-      if (body.party != null) cur.party = Number(body.party) || cur.party;
+      if (body.party != null && Number(body.party) !== cur.party) {
+        const nextParty = Number(body.party);
+        if (!Number.isFinite(nextParty) || nextParty < 1) return json({ error: "party" }, 400);
+        changes.push("party " + cur.party + " → " + nextParty);
+        cur.party = nextParty;
+      }
       if (body.time) {
         const t = g(body.time, 5);
-        const meal = mealForTime(cfg, t);
-        if (!meal) return json({ error: "that time is not a seating" }, 400);
-        cur.time = t;
-        cur.meal = meal;
-        cur.mealLabel = cfg.meals[meal].label;
+        if (t !== cur.time) {
+          const meal = mealForTime(cfg, t);
+          if (!meal) return json({ error: "that time is not a seating" }, 400);
+          changes.push("time " + prettyTime(cur.time) + " → " + prettyTime(t));
+          cur.time = t;
+          cur.meal = meal;
+          cur.mealLabel = cfg.meals[meal].label;
+        }
+      }
+      let newDate = oldDate;
+      if (body.newDate && validDate(g(body.newDate, 10)) && g(body.newDate, 10) !== oldDate) {
+        newDate = g(body.newDate, 10);
+        changes.push("date " + prettyDate(oldDate) + " → " + prettyDate(newDate));
       }
       if (!body.override) {
-        const day = await loadDay(env, date);
+        const day = await loadDay(env, newDate);
         const others = day.reservations.filter((r) => r.id !== id);
         const fit = fitsPacing(cfg, others, cur.time, cur.party);
         if (!fit.ok) return json({ success: false, error: "full", reason: fit.reason }, 409);
       } else {
         cur.override = true;
       }
+      if (!changes.length) return json({ success: true, reservation: cur, unchanged: true });
+      pushHist(cur, "edited", by, changes);
+      cur.updatedAt = new Date().toISOString();
+      if (newDate !== oldDate) {
+        cur.date = newDate;
+        await env.PLANNER_DATA.delete(resKey(oldDate, id));
+        try {
+          const rawIdx = await env.PLANNER_DATA.get(dayIndexKey(oldDate));
+          const ids = rawIdx ? JSON.parse(rawIdx) : [];
+          await env.PLANNER_DATA.put(dayIndexKey(oldDate), JSON.stringify((ids || []).filter((x) => x !== id)));
+        } catch {
+          /* ignore */
+        }
+      }
+      await saveRes(env, cur);
+      if (!body.silent) ctxEmail(env, ctx, cur, "update");
+      return json({ success: true, reservation: cur });
     } else {
       return json({ success: false, error: "bad action" }, 400);
     }
     cur.updatedAt = new Date().toISOString();
     await saveRes(env, cur);
     const kind = action === "cancel" ? "cancel" : "update";
-    if (action !== "noshow") ctxEmail(env, ctx, cur, kind);
+    if (action !== "noshow" && !body.silent) ctxEmail(env, ctx, cur, kind);
     return json({ success: true, reservation: cur });
   }
 
