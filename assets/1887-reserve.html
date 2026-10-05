@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reserve a table | 1887 Historic Eatery</title>
+  <meta name="description" content="Book breakfast, lunch, or dinner at 1887 Historic Eatery inside Hotel St. Cloud in Cañon City. Parties of 10 or more, please call." />
+  <link rel="canonical" href="https://offers.hotelstcloud.com/assets/1887-reserve" />
+  <meta name="robots" content="index, follow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy: #1f2b3f;
+      --cream: #e4e2d9;
+      --gold: #ba8032;
+      --rust: #600f0f;
+      --ink: #1c2838;
+      --muted: #5c6570;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--cream);
+      color: var(--navy);
+      font-family: "Josefin Sans", sans-serif;
+      font-size: 18px;
+      font-weight: 300;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+    header {
+      background: var(--navy);
+      color: var(--cream);
+      padding: 18px 20px;
+      text-align: center;
+    }
+    header .kicker {
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      font-size: 11px;
+      opacity: .8;
+    }
+    header h1 {
+      font-family: Georgia, serif;
+      font-size: clamp(28px, 5vw, 40px);
+      font-weight: 500;
+      margin-top: 6px;
+    }
+    main { max-width: 560px; margin: 0 auto; padding: 28px 18px 80px; }
+    p.lead { margin-bottom: 22px; }
+    label { display: block; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; margin: 16px 0 6px; font-weight: 600; }
+    input, textarea {
+      width: 100%;
+      font: inherit;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid rgba(31,43,63,.35);
+      padding: 10px 2px;
+      color: var(--navy);
+    }
+    input:focus, textarea:focus { outline: none; border-bottom-color: var(--gold); }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .meals { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 4px; }
+    .meals button, .times button {
+      font: inherit;
+      cursor: pointer;
+      border: 1px solid rgba(31,43,63,.25);
+      background: #fffdf8;
+      color: var(--navy);
+      padding: 10px 14px;
+      min-height: 44px;
+    }
+    .meals button.on, .times button.on { background: var(--navy); color: var(--cream); border-color: var(--navy); }
+    .times { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .times button[disabled] { opacity: .35; cursor: not-allowed; }
+    .hint { color: var(--muted); font-size: 16px; margin-top: 14px; }
+    .hint a { color: var(--rust); font-weight: 600; }
+    .err { color: var(--rust); margin-top: 12px; }
+    .go {
+      margin-top: 24px;
+      width: 100%;
+      min-height: 48px;
+      background: var(--gold);
+      color: var(--navy);
+      border: none;
+      font: inherit;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    .go[disabled] { opacity: .45; cursor: not-allowed; }
+    .done { background: #fffdf8; border: 1px solid rgba(186,128,50,.4); padding: 22px; margin-top: 12px; }
+    .done h2 { font-family: Georgia, serif; font-size: 28px; margin-bottom: 8px; }
+    footer { text-align: center; color: var(--muted); font-size: 14px; padding: 24px; }
+    .callbox { background: #fffdf8; border: 1px solid rgba(96,15,15,.25); padding: 20px; margin-top: 12px; }
+    .callbox a { color: var(--rust); font-weight: 600; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="kicker">Hotel St. Cloud · Cañon City</div>
+    <h1>1887 Historic Eatery</h1>
+  </header>
+  <main>
+    <p class="lead">Breakfast, lunch, or dinner. Parties of 10 or more, please call us.</p>
+    <div id="form">
+      <div class="row">
+        <div>
+          <label for="date">Date</label>
+          <input id="date" type="date" />
+        </div>
+        <div>
+          <label for="party">Party size</label>
+          <input id="party" type="number" min="1" max="9" value="2" />
+        </div>
+      </div>
+      <div id="call" class="callbox" hidden></div>
+      <label>Meal</label>
+      <div class="meals" id="meals"></div>
+      <label>Time</label>
+      <div class="times" id="times"></div>
+      <p class="hint" id="hint"></p>
+      <label for="name">Name</label>
+      <input id="name" autocomplete="name" />
+      <label for="phone">Phone</label>
+      <input id="phone" type="tel" autocomplete="tel" />
+      <label for="email">Email</label>
+      <input id="email" type="email" autocomplete="email" />
+      <label for="notes">Notes <span style="font-weight:300;letter-spacing:0;text-transform:none">(birthday, anniversary)</span></label>
+      <textarea id="notes" rows="2"></textarea>
+      <p class="err" id="err"></p>
+      <button class="go" id="go" type="button">Reserve</button>
+    </div>
+    <div id="done" class="done" hidden></div>
+  </main>
+  <footer>631 Main Street · (719) 602-3469</footer>
+  <script>
+    const API = "/api/1887-reservations";
+    const PHONE = "(719) 602-3469";
+    const CALL = "Don't see a time that works? Call us at (719) 602-3469 — we'll see if there are any alternate times that might work for your group.";
+    let meal = "dinner";
+    let time = "";
+    let avail = null;
+
+    function todayStr() {
+      const f = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Denver", year:"numeric", month:"2-digit", day:"2-digit" });
+      return f.format(new Date());
+    }
+    document.getElementById("date").value = todayStr();
+    document.getElementById("date").min = todayStr();
+
+    function partyN() {
+      return Math.max(1, parseInt(document.getElementById("party").value, 10) || 1);
+    }
+
+    async function loadAvail() {
+      const date = document.getElementById("date").value;
+      const party = partyN();
+      const callEl = document.getElementById("call");
+      const mealsEl = document.getElementById("meals");
+      const timesEl = document.getElementById("times");
+      document.getElementById("err").textContent = "";
+      if (party >= 10) {
+        callEl.hidden = false;
+        callEl.innerHTML = "Parties of 10 or more, please call <a href=\"tel:+17196023469\">" + PHONE + "</a> so we can set the room for you.";
+        mealsEl.innerHTML = "";
+        timesEl.innerHTML = "";
+        time = "";
+        document.getElementById("go").disabled = true;
+        document.getElementById("hint").textContent = "";
+        return;
+      }
+      callEl.hidden = true;
+      document.getElementById("go").disabled = false;
+      const res = await fetch(API + "/availability?date=" + encodeURIComponent(date) + "&party=" + party);
+      avail = await res.json();
+      const meals = ["breakfast", "lunch", "dinner"];
+      mealsEl.innerHTML = meals.map(id => {
+        const label = (avail.meals && avail.meals[id] && avail.meals[id].label) || id;
+        const any = (avail.slots || []).some(s => s.meal === id && s.open);
+        return "<button type=\"button\" data-meal=\"" + id + "\" class=\"" + (id === meal ? "on" : "") + "\">" + label + (any ? "" : "") + "</button>";
+      }).join("");
+      renderTimes();
+      document.getElementById("hint").textContent = CALL;
+    }
+
+    function renderTimes() {
+      const timesEl = document.getElementById("times");
+      const slots = (avail && avail.slots || []).filter(s => s.meal === meal);
+      timesEl.innerHTML = slots.map(s => {
+        const on = s.time === time && s.open ? " on" : "";
+        return "<button type=\"button\" data-time=\"" + s.time + "\"" + (s.open ? "" : " disabled") + " class=\"" + on.trim() + "\">" + s.label + "</button>";
+      }).join("");
+      if (!slots.some(s => s.open)) {
+        time = "";
+      } else if (!slots.some(s => s.time === time && s.open)) {
+        time = "";
+      }
+    }
+
+    document.getElementById("meals").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-meal]");
+      if (!b) return;
+      meal = b.getAttribute("data-meal");
+      time = "";
+      [...document.getElementById("meals").querySelectorAll("button")].forEach(x => x.classList.toggle("on", x === b));
+      renderTimes();
+    });
+    document.getElementById("times").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-time]");
+      if (!b || b.disabled) return;
+      time = b.getAttribute("data-time");
+      [...document.getElementById("times").querySelectorAll("button")].forEach(x => x.classList.toggle("on", x === b));
+    });
+    document.getElementById("date").addEventListener("change", loadAvail);
+    document.getElementById("party").addEventListener("input", loadAvail);
+
+    document.getElementById("go").addEventListener("click", async () => {
+      const err = document.getElementById("err");
+      err.textContent = "";
+      if (partyN() >= 10) return;
+      if (!time) { err.textContent = "Pick a time."; return; }
+      const name = document.getElementById("name").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const email = document.getElementById("email").value.trim();
+      if (!name || !phone || !email) { err.textContent = "Name, phone, and email please."; return; }
+      document.getElementById("go").disabled = true;
+      const res = await fetch(API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: document.getElementById("date").value,
+          time,
+          party: partyN(),
+          name, phone, email,
+          notes: document.getElementById("notes").value.trim(),
+          source: "web"
+        })
+      });
+      const data = await res.json();
+      document.getElementById("go").disabled = false;
+      if (!data.success) {
+        err.textContent = data.error === "full"
+          ? CALL
+          : (data.callLine || data.error || "Could not book that time.");
+        loadAvail();
+        return;
+      }
+      document.getElementById("form").hidden = true;
+      const d = data.reservation;
+      document.getElementById("done").hidden = false;
+      document.getElementById("done").innerHTML =
+        "<h2>You're booked.</h2><p>" + d.prettyDate + " · " + d.prettyTime + "</p><p>Party of " + d.party + " · " + d.name + "</p><p>Confirmation " + d.confirmation + "</p><p style=\"margin-top:12px\">We emailed you. Questions? Call " + PHONE + ".</p>";
+    });
+
+    loadAvail().catch(() => {
+      document.getElementById("err").textContent = "Could not load times. Call " + PHONE + ".";
+    });
+  </script>
+</body>
+</html>

@@ -10,6 +10,7 @@ import { handleHscGroupBlocks } from './hsc-group-blocks.js';
 import { handlePayroll } from './payroll.js';
 import { handleHscVaultLogins } from './hsc-manager-vault.js';
 import { handleVenueInquire } from './venue-inquire.js';
+import { handleEateryReservations } from './eatery-reservations.js';
 
 const AIRTABLE_BASE = "appUUjLXEUwlyx23M";
 const SOCC_TABLE    = "SOCC%20Barista%20Applications";
@@ -287,6 +288,22 @@ export default {
     if (url.pathname === '/api/venue-inquire') {
       const vi = await handleVenueInquire(request, env);
       if (vi) return vi;
+    }
+
+    if (url.pathname.startsWith('/api/1887-reservations')) {
+      const er = await handleEateryReservations(request, env, ctx);
+      if (er) return er;
+    }
+
+    {
+      const p = url.pathname.replace(/\/$/, "") || "/";
+      const RESERVE_PAGES = {
+        "/assets/1887-reserve": "/assets/1887-reserve.html",
+        "/1887-reserve": "/assets/1887-reserve.html",
+        "/assets/1887-reservations-book": "/assets/1887-reservations-book.html",
+        "/1887-reservations-book": "/assets/1887-reservations-book.html",
+      };
+      if (RESERVE_PAGES[p]) return serveAsset(env, request, RESERVE_PAGES[p]);
     }
 
     if (isHscToolsHost(url.hostname) && !url.pathname.startsWith("/api")) {
