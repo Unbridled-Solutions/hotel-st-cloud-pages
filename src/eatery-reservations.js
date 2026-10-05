@@ -96,10 +96,11 @@ function minToHm(min) {
 
 function mealForTime(cfg, hm) {
   const t = hmToMin(hm);
-  for (const [id, meal] of Object.entries(cfg.meals)) {
-    if (t >= hmToMin(meal.start) && t < hmToMin(meal.end)) return id;
-  }
-  return "";
+  if (t >= hmToMin("07:00") && t < hmToMin("11:00")) return "breakfast";
+  if (t >= hmToMin("11:00") && t < hmToMin("16:00")) return "lunch";
+  if (t >= hmToMin("16:00") && t < hmToMin("22:00")) return "dinner";
+  if (t >= hmToMin("04:00") && t < hmToMin("07:00")) return "breakfast";
+  return "dinner";
 }
 
 function slotsForMeal(cfg, mealId) {
@@ -250,7 +251,11 @@ function publicSlots(cfg, day, party, date) {
 function staffDayView(cfg, day) {
   const live = liveRes(day.reservations);
   const meals = ["breakfast", "lunch", "dinner"].map((id) => {
-    const slots = slotsForMeal(cfg, id).map((hm) => {
+    const extra = (day.reservations || [])
+      .filter((r) => r && r.status !== "cancelled" && (r.meal === id || mealForTime(cfg, r.time) === id))
+      .map((r) => r.time);
+    const times = [...new Set(slotsForMeal(cfg, id).concat(extra))].sort((a, b) => hmToMin(a) - hmToMin(b));
+    const slots = times.map((hm) => {
       const rows = (day.reservations || [])
         .filter((r) => r && r.time === hm && r.status !== "cancelled")
         .sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
@@ -262,17 +267,27 @@ function staffDayView(cfg, day) {
         rows,
       };
     });
-    const covers = slots.reduce((n, s) => n + s.covers, 0);
-    return { id, label: cfg.meals[id].label, covers, slots };
+    const covers = live
+      .filter((r) => r.meal === id)
+      .reduce((n, r) => n + (Number(r.party) || 0), 0);
+    const parties = live.filter((r) => r.meal === id).length;
+    return { id, label: cfg.meals[id].label, covers, parties, slots };
   });
+  const kitchen = {
+    breakfast: meals[0].covers,
+    lunch: meals[1].covers,
+    dinner: meals[2].covers,
+    day: live.reduce((n, r) => n + (Number(r.party) || 0), 0),
+  };
   return {
     date: day.date,
     prettyDate: prettyDate(day.date),
     version: day.version,
     totals: {
-      covers: live.reduce((n, r) => n + (Number(r.party) || 0), 0),
+      covers: kitchen.day,
       parties: live.length,
     },
+    kitchen,
     meals,
     cancelled: day.reservations.filter((r) => r.status === "cancelled"),
   };
@@ -484,13 +499,16 @@ export async function handleEateryReservations(request, env, ctx) {
     const email = g(body.email, 120);
     const notes = g(body.notes, 400);
     const takenBy = g(body.takenBy, 60);
-    const source = g(body.source, 20) === "staff" ? "staff" : "web";
+    const sourceRaw = g(body.source, 20);
+    const source = sourceRaw === "staff" || sourceRaw === "sheet" ? sourceRaw : "web";
+    const silent = !!body.silent || source === "sheet";
     const override = source === "staff" && !!body.override;
     const party = Number(body.party);
 
     if (!validDate(date) || !/^\d{2}:\d{2}$/.test(time)) return json({ error: "date and time required" }, 400);
-    if (!name || !phone) return json({ error: "name and phone required" }, 400);
-    if (!Number.isFinite(party) || party < 1 || party > 40) return json({ error: "party" }, 400);
+    if (!name) return json({ error: "name required" }, 400);
+    if (!phone && source === "web") return json({ error: "name and phone required" }, 400);
+    if (!Number.isFinite(party) || party < 1 || party > 200) return json({ error: "party" }, 400);
     if (source === "web") {
       if (!email) return json({ error: "email required" }, 400);
       if (party > cfg.onlinePartyMax) {
@@ -499,9 +517,11 @@ export async function handleEateryReservations(request, env, ctx) {
     }
     const meal = mealForTime(cfg, time);
     if (!meal) return json({ error: "that time is not a seating" }, 400);
-    if (!slotsForMeal(cfg, meal).includes(time)) return json({ error: "that time is not a seating" }, 400);
+    if (source === "web" && !slotsForMeal(cfg, meal).includes(time)) {
+      return json({ error: "that time is not a seating" }, 400);
+    }
     const today = todayDenver();
-    if (date < today) return json({ error: "that date has passed" }, 400);
+    if (date < today && source !== "sheet") return json({ error: "that date has passed" }, 400);
     if (date === today && time <= nowHmDenver() && source === "web") {
       return json({ error: "that time has passed" }, 400);
     }
@@ -511,7 +531,7 @@ export async function handleEateryReservations(request, env, ctx) {
     if (date > maxStr && source === "web") return json({ error: "too far out — please call" }, 400);
 
     const reservation = {
-      id: newId(),
+      id: g(body.id, 80) || newId(),
       date,
       time,
       meal,
@@ -522,14 +542,17 @@ export async function handleEateryReservations(request, env, ctx) {
       email,
       notes,
       source,
-      takenBy: source === "staff" ? takenBy || "desk" : "web",
+      takenBy: source === "web" ? "web" : takenBy || (source === "sheet" ? "sheet" : "desk"),
       status: "booked",
       override: override || false,
       createdAt: new Date().toISOString(),
     };
 
     const before = await loadDay(env, date);
-    if (!override) {
+    if (reservation.id && before.reservations.some((r) => r.id === reservation.id)) {
+      return json({ success: true, duplicate: true, reservation: before.reservations.find((r) => r.id === reservation.id) });
+    }
+    if (!override && source !== "sheet") {
       const fit = fitsPacing(cfg, before.reservations, time, party);
       if (!fit.ok) {
         return json(
@@ -541,7 +564,7 @@ export async function handleEateryReservations(request, env, ctx) {
     await saveRes(env, reservation);
     const after = await loadDay(env, date);
     const saved = after.reservations.find((r) => r.id === reservation.id) || reservation;
-    if (!override) {
+    if (!override && source !== "sheet") {
       const over = overAfterInsert(cfg, after.reservations, saved);
       if (over) {
         await env.PLANNER_DATA.delete(resKey(date, reservation.id));
@@ -551,7 +574,7 @@ export async function handleEateryReservations(request, env, ctx) {
         );
       }
     }
-    ctxEmail(env, ctx, saved, "new");
+    if (!silent) ctxEmail(env, ctx, saved, "new");
     return json({
       success: true,
       reservation: {
