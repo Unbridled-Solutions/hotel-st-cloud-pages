@@ -429,7 +429,7 @@ async function emailGuest(env, r, kind) {
   const extra =
     kind === "cancel"
       ? ""
-      : `<p style="margin:18px 0 8px;font-size:15px;color:#191d23">While you wait, take a look at the menu.</p><p>${menuHtml()}</p>`;
+      : `<p style="margin:18px 0 8px;font-size:15px;color:#191d23">We can't wait to host you. If you're the kind that likes to think ahead, here are our menus. If you'd rather be surprised, we'll see you ${esc(prettyDate(r.date))}.</p><p>${menuHtml()}</p>`;
   const html = resHtml(title, [
     ["Name", r.name],
     ["When", when],
