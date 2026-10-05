@@ -293,19 +293,33 @@ async function sendResend(env, payload) {
   return { id: data.id };
 }
 
-function resHtml(title, rows) {
+const MENU_LINKS = [
+  ["Breakfast", "https://irp.cdn-website.com/0f03241a/files/uploaded/1887+Historic+Eatery_Breakfast+Menu_2026+Web.pdf"],
+  ["Lunch", "https://irp.cdn-website.com/0f03241a/files/uploaded/1887+Historic+Eatery_Lunch+Menu_2026+Web.pdf"],
+  ["Dinner", "https://irp.cdn-website.com/0f03241a/files/uploaded/1887+Historic+Eatery_Spring+Menu+2026.pdf"],
+];
+
+function menuHtml() {
+  return MENU_LINKS.map(
+    ([label, href]) =>
+      `<a href="${href}" style="display:inline-block;margin:0 10px 8px 0;color:#786f5c;font-weight:600">${esc(label)} menu</a>`
+  ).join("");
+}
+
+function resHtml(title, rows, extra) {
   const body = rows
     .map(
       ([k, v]) =>
-        `<tr><td style="padding:8px 12px;color:#666;white-space:nowrap">${esc(k)}</td><td style="padding:8px 12px">${esc(v) || "—"}</td></tr>`
+        `<tr><td style="padding:8px 12px;color:#786f5c;white-space:nowrap">${esc(k)}</td><td style="padding:8px 12px">${esc(v) || "—"}</td></tr>`
     )
     .join("");
-  return `<!DOCTYPE html><html><body style="font-family:Georgia,serif;background:#f3ece1;padding:24px">
-  <div style="max-width:560px;margin:0 auto;background:#fffdf8;border:1px solid #e6dccb;padding:24px">
-    <p style="letter-spacing:.16em;text-transform:uppercase;font-size:11px;color:#6e2c2c;margin:0 0 8px">1887 Historic Eatery</p>
-    <h1 style="font-size:22px;margin:0 0 16px;color:#1c2838">${esc(title)}</h1>
+  return `<!DOCTYPE html><html><body style="font-family:Georgia,serif;background:#fff8dd;padding:24px">
+  <div style="max-width:560px;margin:0 auto;background:#fffcf2;border:1px solid #cfc6a8;padding:24px">
+    <p style="letter-spacing:.16em;text-transform:uppercase;font-size:11px;color:#b79f36;margin:0 0 8px">1887 Historic Eatery</p>
+    <h1 style="font-size:24px;margin:0 0 16px;color:#191d23">${esc(title)}</h1>
     <table style="width:100%;border-collapse:collapse;font-size:15px">${body}</table>
-    <p style="margin:18px 0 0;font-size:14px;color:#444">Questions? Call ${esc(PHONE)}.</p>
+    ${extra || ""}
+    <p style="margin:18px 0 0;font-size:14px;color:#5c5648">Questions? Call ${esc(PHONE)}.</p>
   </div></body></html>`;
 }
 
@@ -315,10 +329,14 @@ async function emailGuest(env, r, kind) {
   const when = prettyDate(r.date) + " · " + prettyTime(r.time);
   const title =
     kind === "cancel"
-      ? "Reservation cancelled"
+      ? "We released your table"
       : kind === "update"
-        ? "Reservation updated"
-        : "You're booked";
+        ? "Your table has changed"
+        : "We'll see you at 1887";
+  const extra =
+    kind === "cancel"
+      ? ""
+      : `<p style="margin:18px 0 8px;font-size:15px;color:#191d23">While you wait, take a look at the menu.</p><p>${menuHtml()}</p>`;
   const html = resHtml(title, [
     ["Name", r.name],
     ["When", when],
@@ -327,8 +345,17 @@ async function emailGuest(env, r, kind) {
     ["Phone", r.phone],
     ["Notes", r.notes],
     ["Confirmation", r.id.slice(0, 8).toUpperCase()],
-  ]);
-  const text = [title, when, "Party of " + r.party, r.name, PHONE].join("\n");
+  ], extra);
+  const text = [
+    title,
+    when,
+    "Party of " + r.party,
+    r.name,
+    PHONE,
+    "",
+    "Menus:",
+    MENU_LINKS.map(([label, href]) => label + ": " + href).join("\n"),
+  ].join("\n");
   const payload = {
     to: [r.email],
     subject: "1887 · " + title + " · " + prettyDate(r.date),
