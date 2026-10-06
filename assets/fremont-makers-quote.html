@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v0930b</title>
+<title>Fremont Makers — Project Builder v1005a</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20260930b-elev-back -->
+<!-- FM-BUILD-v20261005a-paid-lock -->
 <script>
 (function(){
   try {
@@ -50,7 +50,7 @@
     --row-proposed-hover: #efe4c4;
     --row-contract-hover: #d7e6f1;
     --row-completed-hover: #d4e8d9;
-    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-family: Aptos, 'Segoe UI', system-ui, sans-serif;
   }
   html[data-theme="dark"] {
     --bg: #111111;
@@ -86,7 +86,12 @@
     --row-completed-hover: #223628;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); min-height: 100vh; }
+  body { background: var(--bg); color: var(--text); min-height: 100vh; font-family: Aptos, 'Segoe UI', system-ui, sans-serif; }
+  input, select, textarea, button { font-family: inherit; }
+  input[type="number"], input[type="date"] {
+    font-family: Aptos, 'Segoe UI', system-ui, sans-serif;
+    font-variant-numeric: lining-nums;
+  }
 
   /* ── HEADER ── */
   .header {
@@ -629,7 +634,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v0930b</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1005a</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
     <span class="status-label">Status:</span>
@@ -1516,7 +1521,7 @@
     <div id="adj-fields"></div>
     <p id="adj-live" style="font-size:13px;margin-bottom:8px;"></p>
     <p id="adj-err" style="font-size:13px;color:var(--red);min-height:18px;"></p>
-    <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">The contracted total does not move here. You can change when unpaid invoices are due and how the remaining dollars split. Paid invoices stay frozen. Reprint the packet after you save.</p>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Paid invoices stay frozen at the check that cleared. You only edit unpaid due dates and how remaining dollars split. Unpaid must add to contracted total minus cash received. Reprint the packet after you save.</p>
     <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">
       <button class="modal-btn" type="button" onclick="closeAdjustSchedule()">Cancel</button>
       <button class="modal-btn" type="button" onclick="closeAdjustSchedule();openChangeOrder()">Create change order</button>
@@ -3148,8 +3153,17 @@ function renderPipeline() {
 function pipeTogglePaid(id, which, paid) {
   if (!quoteData[id]) quoteData[id] = {};
   if (!quoteData[id].ar || typeof quoteData[id].ar !== 'object') quoteData[id].ar = {};
-  quoteData[id].ar[which + 'Paid'] = !!paid;
-  quoteData[id].ar[which + 'PaidAt'] = paid ? today() : '';
+  const ar = quoteData[id].ar;
+  ar[which + 'Paid'] = !!paid;
+  ar[which + 'PaidAt'] = paid ? today() : '';
+  if (paid) {
+    const total = contractTotalOf(quoteData[id], quoteGrandFromData(quoteData[id]) || 0);
+    const n = which === 'd1' ? 1 : which === 'd2' ? 2 : 3;
+    const a = invoiceAmtsOf(quoteData[id], total);
+    const fallback = n === 1 ? a.d1 : n === 2 ? a.d2 : a.d3;
+    if (ar[which + 'PaidAmt'] == null || ar[which + 'PaidAmt'] === '') ar[which + 'PaidAmt'] = invMoney(fallback);
+    ar[which + 'Amt'] = invMoney(ar[which + 'PaidAmt']);
+  }
   quoteData[id].saved_at = Date.now();
   saveQuoteData(id);
   fmCloudPushDebounced();
@@ -4815,30 +4829,39 @@ function openAdjustSchedule(idArg) {
   if (id !== activeQuoteId) loadQuote(id);
   const total = contractTotalOf(q, quoteGrandFromData(q) || 0);
   const ar = scheduleOf(q, total);
-  document.getElementById('adj-sub').textContent =
-    (q.customer || '') + ' · ' + (q.jobCode || '') + ' · contracted total ' + fmt(total) + ' (locked)'
-    + ' · received ' + fmt(ar.received) + ' · remaining ' + fmt(ar.open);
-  document.getElementById('adj-install').value = q.installDate || '';
   const plan = payPlanOf(q);
   const labels = plan === '50-50'
     ? { 1: 'Invoice 1 · 50% at order', 2: 'Invoice 2 · 50% at delivery' }
     : { 1: 'Invoice 1 · 50%', 2: 'Invoice 2 · 30%', 3: 'Invoice 3 · 20%' };
   const ns = plan === '50-50' ? [1, 2] : [1, 2, 3];
+  const unpaid = ns.filter(n => !ar['d' + n + 'Paid']);
+  document.getElementById('adj-sub').textContent =
+    (q.customer || '') + ' · ' + (q.jobCode || '')
+    + ' · contracted total ' + fmt(total) + ' (does not move here)'
+    + ' · received (locked) ' + fmt(ar.received)
+    + ' · remaining ' + fmt(ar.open) + ' must sit on unpaid invoices.';
+  document.getElementById('adj-install').value = q.installDate || '';
   const fields = ns.map(n => {
     const paid = ar['d' + n + 'Paid'];
     const due = ar['d' + n + 'Due'] || '';
     const amt = ar['d' + n + 'Amt'];
     if (paid) {
       return '<div style="margin-bottom:12px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);">'
-        + '<div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">' + labels[n] + ' · paid</div>'
-        + '<div>' + fmt(amt) + (due ? ' · due ' + due : '') + (ar['d' + n + 'PaidAt'] ? ' · paid ' + ar['d' + n + 'PaidAt'] : '') + '</div></div>';
+        + '<div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">' + labels[n] + ' · paid — locked</div>'
+        + '<div>' + fmt(amt) + (due ? ' · due ' + due : '') + (ar['d' + n + 'PaidAt'] ? ' · paid ' + ar['d' + n + 'PaidAt'] : '') + '</div>'
+        + '<div style="font-size:12px;color:var(--muted);margin-top:6px;">This check stays. A later contract-total change only moves unpaid invoices.</div></div>';
     }
-    return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">'
+    const hint = unpaid.length === 1
+      ? 'This is the only unpaid invoice. Amount must equal remaining ' + fmt(ar.open) + '.'
+      : 'Unpaid. Split remaining ' + fmt(ar.open) + ' across unpaid invoices.';
+    return '<div style="margin-bottom:12px;">'
+      + '<p style="font-size:12px;color:var(--muted);margin:0 0 8px;">' + hint + '</p>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
       + '<div><label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">' + labels[n] + ' due</label>'
       + '<input type="date" id="adj-d' + n + '-due" value="' + due + '" style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" /></div>'
-      + '<div><label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Amount</label>'
+      + '<div><label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Amount (unpaid)</label>'
       + '<input type="number" id="adj-d' + n + '-amt" step="0.01" min="0" value="' + (amt != null ? Number(amt).toFixed(2) : '') + '" oninput="adjLiveCheck()" style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;text-align:right;" /></div>'
-      + '</div>';
+      + '</div></div>';
   }).join('');
   document.getElementById('adj-fields').innerHTML = fields;
   document.getElementById('adj-err').textContent = '';
@@ -4866,6 +4889,7 @@ function saveAdjustSchedule() {
     if (sched['d' + n + 'Paid']) {
       nextAmt[n] = sched['d' + n + 'Amt'];
       nextDue[n] = sched['d' + n + 'Due'];
+      if (ar['d' + n + 'PaidAmt'] == null || ar['d' + n + 'PaidAmt'] === '') ar['d' + n + 'PaidAmt'] = nextAmt[n];
       continue;
     }
     const dueEl = document.getElementById('adj-d' + n + '-due');
@@ -4988,22 +5012,28 @@ function nextDeposit(qd, total) {
   return { n: 0, label: 'Paid in full', due: '', amt: 0 };
 }
 function invMoney(n) { return Math.round((Number(n) || 0) * 100) / 100; }
+function paidInvoiceAmt(ar, n, fallback) {
+  const paidAmt = ar['d' + n + 'PaidAmt'];
+  if (ar['d' + n + 'Paid'] && paidAmt != null && paidAmt !== '') return invMoney(paidAmt);
+  if (ar['d' + n + 'Amt'] != null && ar['d' + n + 'Amt'] !== '') return invMoney(ar['d' + n + 'Amt']);
+  return invMoney(fallback);
+}
 function invoiceAmtsOf(qd, total) {
   const t = invMoney(total);
   const ar = (qd && qd.ar && typeof qd.ar === 'object') ? qd.ar : {};
   const plan = payPlanOf(qd);
   if (plan === '50-50') {
-    const d1 = ar.d1Amt != null && ar.d1Amt !== '' ? invMoney(ar.d1Amt) : invMoney(t * 0.50);
-    let d2 = ar.d2Amt != null && ar.d2Amt !== '' ? invMoney(ar.d2Amt) : invMoney(t - d1);
+    const d1 = ar.d1Paid ? paidInvoiceAmt(ar, 1, t * 0.50) : (ar.d1Amt != null && ar.d1Amt !== '' ? invMoney(ar.d1Amt) : invMoney(t * 0.50));
+    let d2 = ar.d2Paid ? paidInvoiceAmt(ar, 2, t - d1) : (ar.d2Amt != null && ar.d2Amt !== '' ? invMoney(ar.d2Amt) : invMoney(t - d1));
+    if (ar.d1Paid && !ar.d2Paid) d2 = invMoney(t - d1);
     const sum = invMoney(d1 + d2);
-    if (Math.abs(sum - t) >= 0.02 && (ar.d2Amt == null || ar.d2Amt === '')) d2 = invMoney(t - d1);
+    if (Math.abs(sum - t) >= 0.02 && !ar.d2Paid && (ar.d2Amt == null || ar.d2Amt === '' || ar.d1Paid)) d2 = invMoney(t - d1);
     return { d1, d2, d3: 0 };
   }
-  const d1 = ar.d1Amt != null && ar.d1Amt !== '' ? invMoney(ar.d1Amt) : invMoney(t * 0.50);
-  const d2 = ar.d2Amt != null && ar.d2Amt !== '' ? invMoney(ar.d2Amt) : invMoney(t * 0.30);
-  let d3 = ar.d3Amt != null && ar.d3Amt !== '' ? invMoney(ar.d3Amt) : invMoney(t * 0.20);
-  const sum = invMoney(d1 + d2 + d3);
-  if (Math.abs(sum - t) >= 0.02 && (ar.d3Amt == null || ar.d3Amt === '')) d3 = invMoney(t - d1 - d2);
+  const d1 = ar.d1Paid ? paidInvoiceAmt(ar, 1, t * 0.50) : (ar.d1Amt != null && ar.d1Amt !== '' ? invMoney(ar.d1Amt) : invMoney(t * 0.50));
+  const d2 = ar.d2Paid ? paidInvoiceAmt(ar, 2, t * 0.30) : (ar.d2Amt != null && ar.d2Amt !== '' ? invMoney(ar.d2Amt) : invMoney(t * 0.30));
+  let d3 = ar.d3Paid ? paidInvoiceAmt(ar, 3, t * 0.20) : (ar.d3Amt != null && ar.d3Amt !== '' ? invMoney(ar.d3Amt) : invMoney(t * 0.20));
+  if (!ar.d3Paid && (ar.d1Paid || ar.d2Paid || ar.d3Amt == null || ar.d3Amt === '')) d3 = invMoney(t - d1 - d2);
   return { d1, d2, d3 };
 }
 function invoiceAmtOf(qd, total, n) {
