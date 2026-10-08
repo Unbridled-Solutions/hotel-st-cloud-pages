@@ -389,7 +389,7 @@ async function sendResend(env, payload) {
 const MENU_LINKS = [
   ["Breakfast", "https://irp.cdn-website.com/0f03241a/files/uploaded/1887+Historic+Eatery_Breakfast+Menu_2026+Web.pdf"],
   ["Lunch", "https://irp.cdn-website.com/0f03241a/files/uploaded/1887+Historic+Eatery_Lunch+Menu_2026+Web.pdf"],
-  ["Dinner", "https://irp.cdn-website.com/0f03241a/files/uploaded/1887+Historic+Eatery_Spring+Menu+2026.pdf"],
+  ["Dinner", "https://offers.hotelstcloud.com/assets/menus/1887-dinner.pdf"],
 ];
 
 function menuHtml() {
