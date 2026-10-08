@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Fremont Makers — website mockups</title>
+<!-- brief-deploy 2026-10-08 -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&family=Playfair+Display:wght@500;600;700&family=Pinyon+Script&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --juniper: #243a32;
+    --juniper-deep: #1b2c26;
+    --cream: #efe8da;
+    --cream-deep: #e4dbc7;
+    --stone: #d6cbb6;
+    --pinyon: #56654a;
+    --oak: #a47a4f;
+    --blue: #587b83;
+    --rust: #8a4f38;
+    --ink: #1b2c26;
+    --white: #fff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #111; color: var(--ink); font-family: Lato, system-ui, sans-serif; }
+  button, input, select, textarea { font: inherit; }
+  .tweaks {
+    position: sticky; top: 0; z-index: 40;
+    background: #0d0d0d; color: #f0ece4;
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    padding: 10px 16px; border-bottom: 1px solid #2a2a2a;
+  }
+  .tweaks strong { letter-spacing: .12em; text-transform: uppercase; font-size: 11px; color: var(--oak); }
+  .tweaks button {
+    background: transparent; color: #f0ece4; border: 1px solid #3a3a3a;
+    border-radius: 4px; padding: 8px 12px; cursor: pointer;
+  }
+  .tweaks button.on { border-color: var(--oak); color: var(--oak); }
+  .view { display: none; min-height: 100vh; }
+  .view.on { display: block; }
+  .serif { font-family: 'Playfair Display', Georgia, serif; }
+  .script { font-family: 'Pinyon Script', cursive; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+  a { color: inherit; }
+  .mark {
+    display: inline-flex; flex-direction: column; align-items: center;
+    border: 1.5px solid currentColor; padding: 4px 8px; line-height: 1;
+    font-family: 'Playfair Display', Georgia, serif; font-weight: 700; font-size: 16px;
+  }
+  .mark i { display: block; width: 22px; height: 1.5px; background: currentColor; margin: 2px 0; font-style: normal; }
+  form .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 720px) { form .row { grid-template-columns: 1fr; } }
+  form label { display: block; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--pinyon); margin: 10px 0 4px; }
+  form input, form select, form textarea {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--stone); background: var(--white); color: var(--ink); border-radius: 3px;
+  }
+  form textarea { min-height: 110px; resize: vertical; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 44px; padding: 0 22px; border: 1px solid var(--juniper);
+    background: var(--juniper); color: var(--white); letter-spacing: .08em;
+    text-transform: uppercase; font-size: 13px; font-weight: 700; text-decoration: none; cursor: pointer;
+  }
+  .btn.ghost { background: transparent; color: var(--juniper); }
+  .ok { display: none; padding: 16px; border: 1px solid var(--pinyon); color: var(--juniper); margin-top: 12px; }
+  footer.site { padding: 36px 0; font-size: 14px; }
+  .services { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+  @media (max-width: 900px) { .services { grid-template-columns: 1fr; } }
+
+  /* A */
+  #a { background: var(--cream); }
+  #a header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 0; border-bottom: 1px solid var(--stone);
+  }
+  #a nav { display: flex; gap: 18px; font-size: 13px; letter-spacing: .04em; }
+  #a .hero { padding: 72px 0 56px; max-width: 720px; }
+  #a .hero h1 { font-size: clamp(36px, 6vw, 60px); font-weight: 500; line-height: 1.08; }
+  #a .hero p { margin: 16px 0 28px; font-size: 18px; line-height: 1.6; color: #4a5b52; }
+  #a section { padding: 56px 0; }
+  #a h2 { font-size: 32px; font-weight: 500; margin-bottom: 12px; }
+  #a .panel { background: var(--cream-deep); padding: 48px 0; }
+  #a .svc h3 { font-size: 20px; margin-bottom: 8px; }
+  #a footer.site { background: var(--juniper); color: var(--cream); }
+
+  /* B */
+  #b { background: #f3efe6; }
+  #b header {
+    background: #fbf6f0; border-bottom: 1px solid var(--stone);
+    padding: 12px 0; display: flex; gap: 14px; align-items: center;
+  }
+  #b .stamp { font-size: 10px; color: #8a8378; }
+  #b .hero-b {
+    display: grid; grid-template-columns: 1.1fr .9fr; gap: 28px;
+    padding: 40px 0 28px; align-items: start;
+  }
+  @media (max-width: 900px) { #b .hero-b { grid-template-columns: 1fr; } }
+  #b h1 { font-size: clamp(28px, 4vw, 42px); font-weight: 600; }
+  #b .elev {
+    background: #fff; border: 1px solid var(--stone); padding: 16px;
+    min-height: 280px;
+  }
+  #b .elev svg { width: 100%; height: auto; display: block; }
+  #b .chip { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--oak); margin-bottom: 8px; }
+  #b .jobs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px; }
+  #b .jobs div { background: #fff; border: 1px solid var(--stone); padding: 12px; }
+  #b section { padding: 36px 0; }
+  #b footer.site { border-top: 1px solid var(--stone); color: #4a5b52; }
+
+  /* C */
+  #c { background: var(--juniper-deep); color: var(--cream); }
+  #c header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; }
+  #c .doors { display: grid; grid-template-columns: 1fr 1fr; min-height: 52vh; }
+  @media (max-width: 800px) { #c .doors { grid-template-columns: 1fr; } }
+  #c .door {
+    padding: 48px 32px; display: flex; flex-direction: column; justify-content: flex-end;
+    min-height: 320px; cursor: pointer; border: 0; text-align: left; color: inherit;
+  }
+  #c .door.home { background: var(--juniper); }
+  #c .door.build { background: #1e332c; }
+  #c .door h2 { font-size: 36px; font-weight: 500; margin: 8px 0 10px; }
+  #c .split { display: none; padding: 40px 0 64px; }
+  #c .split.on { display: block; }
+  #c .svc-c { border-top: 1px solid rgba(239,232,218,.2); padding-top: 16px; }
+  #c form input, #c form select, #c form textarea { background: #243a32; color: var(--cream); border-color: #4a5b52; }
+  #c .btn { background: var(--oak); border-color: var(--oak); color: var(--juniper-deep); }
+</style>
+</head>
+<body>
+<div class="tweaks">
+  <strong>Mockups</strong>
+  <button type="button" class="on" data-v="a">A Conservative</button>
+  <button type="button" data-v="b">B Strong-fit</button>
+  <button type="button" data-v="c">C Divergent</button>
+  <span style="margin-left:auto;font-size:12px;color:#888;">Not live. Pick one, then we fold it into the Next.js site.</span>
+</div>
+
+<!-- A -->
+<div id="a" class="view on">
+  <div class="wrap">
+    <header>
+      <div style="display:flex;gap:12px;align-items:center;">
+        <span class="mark">F<i></i>M</span>
+        <div>
+          <div class="serif" style="font-weight:700;letter-spacing:.08em;">Fremont Makers</div>
+          <div class="script" style="color:var(--pinyon);font-size:18px;">making freedom</div>
+        </div>
+      </div>
+      <nav>
+        <a href="#a-services">Services</a>
+        <a href="#a-work">Work</a>
+        <a href="#a-contact">Start a project</a>
+      </nav>
+    </header>
+    <div class="hero">
+      <p class="chip serif" style="letter-spacing:.14em;text-transform:uppercase;font-size:12px;color:var(--pinyon);">Cañon City, Colorado</p>
+      <h1 class="serif">Designed with you. Assembled for you. Ready for your space.</h1>
+      <p>Quality cabinet collections, a drawing you can check on site, and assembly in our shop. Pickup when the invoice is paid.</p>
+      <a class="btn" href="#a-contact">Start a project</a>
+    </div>
+  </div>
+  <section id="a-services">
+    <div class="wrap">
+      <h2 class="serif">What we do</h2>
+      <p style="max-width:40em;color:#4a5b52;margin-bottom:28px;">The same work you already see in Project Builder — named plainly.</p>
+      <div class="services">
+        <div class="svc"><h3 class="serif">Design help</h3><p>Wall width, ceiling height, what will fit. Kitchen, hall bath, master bath.</p></div>
+        <div class="svc"><h3 class="serif">Elevations</h3><p>A live drawing as you type. Print it. Verify on the job.</p></div>
+        <div class="svc"><h3 class="serif">Collections</h3><p>Bayview White, Wood, Navy. Moss Green. Grey Shaker. Established lines, not a mystery mill.</p></div>
+        <div class="svc"><h3 class="serif">Shop assembly</h3><p>Professionally assembled in Cañon City. Not install into the building.</p></div>
+        <div class="svc"><h3 class="serif">Builder programs</h3><p>One order, many houses. Sangre Vista, Mesa Ridge, San Luis, Cimarron Peak, Pinyon Crest.</p></div>
+        <div class="svc"><h3 class="serif">Quote to cash</h3><p>Job code, color, site, contract, invoices. 50/50 or 50/30/20, written down.</p></div>
+      </div>
+    </div>
+  </section>
+  <div class="panel" id="a-work">
+    <div class="wrap">
+      <h2 class="serif">Rooms we plan</h2>
+      <p style="margin-top:8px;color:#4a5b52;">Kitchens. Baths. Laundry. The rest of the house when it needs cabinets.</p>
+    </div>
+  </div>
+  <section id="a-contact">
+    <div class="wrap">
+      <h2 class="serif">Start a project</h2>
+      <p style="margin-bottom:16px;color:#4a5b52;">Name, room, and what you know about the walls. We follow up.</p>
+      <form data-demo>
+        <div class="row">
+          <div><label>Name</label><input required name="name" /></div>
+          <div><label>Email</label><input required type="email" name="email" /></div>
+        </div>
+        <div class="row">
+          <div><label>Who you are</label>
+            <select name="who"><option>Homeowner</option><option>Builder</option><option>Remodeler</option></select></div>
+          <div><label>City</label><input name="city" placeholder="Cañon City" /></div>
+        </div>
+        <div class="row">
+          <div><label>Room</label>
+            <select name="room"><option>Kitchen</option><option>Hall bath</option><option>Master bath</option><option>Laundry</option><option>Several houses</option></select></div>
+          <div><label>Ceiling height (in), if you have it</label><input name="ceil" placeholder="108" /></div>
+        </div>
+        <label>Color interest</label>
+        <select name="color">
+          <option>Not sure yet</option>
+          <option>Bayview White Shaker</option>
+          <option>Bayview Wood Shaker</option>
+          <option>Bayview Navy Shaker</option>
+          <option>Moss Green Shaker</option>
+          <option>Grey Shaker</option>
+        </select>
+        <label>Notes</label>
+        <textarea name="notes" placeholder="Wall runs, model mix, timing."></textarea>
+        <p style="margin:16px 0;"><button class="btn" type="submit">Send</button></p>
+        <div class="ok">Received. This mockup does not email the shop.</div>
+      </form>
+    </div>
+  </section>
+  <footer class="site"><div class="wrap">Fremont Makers · 719 Main Street, Cañon City · making freedom</div></footer>
+</div>
+
+<!-- B -->
+<div id="b" class="view">
+  <div class="wrap">
+    <header>
+      <span class="mark">F<i></i>M</span>
+      <strong class="serif" style="letter-spacing:.08em;">Fremont Makers</strong>
+      <span class="script" style="color:#8a8378;font-size:18px;">making freedom</span>
+      <span class="stamp">Project · Elevation · Quote</span>
+      <a class="btn" href="#b-contact" style="margin-left:auto;">Start a project</a>
+    </header>
+    <div class="hero-b">
+      <div>
+        <div class="chip">Cañon City shop</div>
+        <h1 class="serif">A cabinet is a cabinet. We help it fit the wall.</h1>
+        <p style="margin:14px 0 18px;color:#4a5b52;max-width:36em;">Type the room. We draw the elevation. Collections from established lines, assembled here. Builder orders carry color and site on every house.</p>
+        <div class="jobs">
+          <div><strong>Homeowner</strong><br />Kitchen + two baths. Free widths. Print the sheet.</div>
+          <div><strong>Builder</strong><br />Willow Creek mix. One contract. Invoices that match the check.</div>
+        </div>
+      </div>
+      <div class="elev">
+        <div class="chip">Kitchen El 1 · 108″ ceiling</div>
+        <svg viewBox="0 0 400 220" aria-hidden="true">
+          <rect x="20" y="16" width="360" height="180" fill="#f7f4ee" stroke="#1b2744"/>
+          <rect x="40" y="120" width="70" height="60" fill="#e8dcc8" stroke="#1b2744"/>
+          <rect x="110" y="120" width="90" height="60" fill="#e8dcc8" stroke="#1b2744"/>
+          <rect x="40" y="36" width="70" height="50" fill="#d7e0e4" stroke="#1b2744"/>
+          <rect x="110" y="36" width="90" height="50" fill="#d7e0e4" stroke="#1b2744"/>
+          <text x="200" y="210" text-anchor="middle" font-size="11" fill="#666">18″ to uppers · Bayview Wood Shaker</text>
+        </svg>
+      </div>
+    </div>
+    <section>
+      <h2 class="serif" style="font-size:28px;margin-bottom:16px;">Services</h2>
+      <div class="services">
+        <div><h3 class="serif">Elevation</h3><p>Kitchen, hall bath, master bath. Drag the boxes. Space to uppers is a number, not a guess.</p></div>
+        <div><h3 class="serif">Quote</h3><p>SKU, color suffix, job code. Moss Green is UMO. Color prints next to the address.</p></div>
+        <div><h3 class="serif">Contract</h3><p>Packet: agreement, schedule, invoices, Final Job Quote. Initials on the quote and invoices.</p></div>
+      </div>
+    </section>
+    <section id="b-contact">
+      <h2 class="serif" style="font-size:28px;">Start a project</h2>
+      <form data-demo>
+        <div class="row">
+          <div><label>Name</label><input required name="name" /></div>
+          <div><label>Email</label><input required type="email" name="email" /></div>
+        </div>
+        <div class="row">
+          <div><label>Who you are</label><select><option>Homeowner</option><option>Builder</option></select></div>
+          <div><label>Room / model</label><input placeholder="Sangre Vista kitchen, or hall bath" /></div>
+        </div>
+        <label>What you know</label>
+        <textarea placeholder="Ceiling, wall width, color, how many houses."></textarea>
+        <p style="margin:16px 0;"><button class="btn" type="submit">Send to the shop</button></p>
+        <div class="ok">Received. This mockup does not email the shop.</div>
+      </form>
+    </section>
+  </div>
+  <footer class="site"><div class="wrap">719 Main Street · tools stay on tools.fremontmakers.com</div></footer>
+</div>
+
+<!-- C -->
+<div id="c" class="view">
+  <div class="wrap">
+    <header>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <span class="mark">F<i></i>M</span>
+        <span class="serif" style="letter-spacing:.1em;">FREMONT MAKERS</span>
+      </div>
+      <span class="script" style="font-size:20px;color:var(--oak);">making freedom</span>
+    </header>
+  </div>
+  <div class="doors">
+    <button type="button" class="door home" data-door="home">
+      <span class="chip" style="color:var(--oak);">One house</span>
+      <h2 class="serif">Homeowner</h2>
+      <p>Kitchen and baths. Elevation first. Then a quote.</p>
+    </button>
+    <button type="button" class="door build" data-door="build">
+      <span class="chip" style="color:var(--oak);">Many houses</span>
+      <h2 class="serif">Builder</h2>
+      <p>Willow Creek and programs like it. Mix, color, 50/50.</p>
+    </button>
+  </div>
+  <div class="wrap">
+    <div id="c-home" class="split on">
+      <h3 class="serif" style="font-size:28px;margin-bottom:12px;">For the house you live in</h3>
+      <div class="services">
+        <div class="svc-c"><strong>Elevation</strong><p>108″ ceiling default. Wall boxes hang from the lid. Print one page.</p></div>
+        <div class="svc-c"><strong>Collections</strong><p>Bayview, Moss Green, Grey Shaker — pick a color, not a slogan.</p></div>
+        <div class="svc-c"><strong>Assembly</strong><p>Shop in Cañon City. You pick up, or a contractor you hire.</p></div>
+      </div>
+    </div>
+    <div id="c-build" class="split">
+      <h3 class="serif" style="font-size:28px;margin-bottom:12px;">For the tract</h3>
+      <div class="services">
+        <div class="svc-c"><strong>Models</strong><p>Sangre Vista · Mesa Ridge · San Luis · Cimarron Peak · Pinyon Crest.</p></div>
+        <div class="svc-c"><strong>Color on the house</strong><p>Not on the parent order. Change it after the wizard if the lot changes.</p></div>
+        <div class="svc-c"><strong>Schedule</strong><p>New Rod jobs 50/50. Paid invoices stay at the check that cleared.</p></div>
+      </div>
+    </div>
+    <section style="padding:28px 0 48px;">
+      <h3 class="serif" style="font-size:24px;margin-bottom:10px;">Start a project</h3>
+      <form data-demo>
+        <div class="row">
+          <div><label>Name</label><input required /></div>
+          <div><label>Email</label><input required type="email" /></div>
+        </div>
+        <div class="row">
+          <div><label>Path</label><select id="c-path"><option value="home">Homeowner</option><option value="build">Builder</option></select></div>
+          <div><label>City / community</label><input placeholder="Willow Creek, Cañon City…" /></div>
+        </div>
+        <label>Notes</label>
+        <textarea placeholder="How many houses, which models, which color."></textarea>
+        <p style="margin:16px 0;"><button class="btn" type="submit">Send</button></p>
+        <div class="ok">Received. This mockup does not email the shop.</div>
+      </form>
+    </section>
+    <footer class="site" style="opacity:.7;">Fremont Makers LLC · not a tiny-home factory · not the installer</footer>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.tweaks button[data-v]').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.tweaks button[data-v]').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === btn.dataset.v));
+  };
+});
+document.querySelectorAll('.door').forEach(d => {
+  d.onclick = () => {
+    document.getElementById('c-home').classList.toggle('on', d.dataset.door === 'home');
+    document.getElementById('c-build').classList.toggle('on', d.dataset.door === 'build');
+    const path = document.getElementById('c-path');
+    if (path) path.value = d.dataset.door;
+  };
+});
+document.querySelectorAll('form[data-demo]').forEach(f => {
+  f.addEventListener('submit', e => {
+    e.preventDefault();
+    const ok = f.querySelector('.ok');
+    if (ok) ok.style.display = 'block';
+  });
+});
+</script>
+</body>
+</html>

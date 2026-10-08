@@ -232,6 +232,10 @@ function isFmToolsHost(hostname) {
   return hostname === "tools.fremontmakers.com";
 }
 
+function isFmBriefHost(hostname) {
+  return hostname === "brief.fremontmakers.com";
+}
+
 function isHscToolsHost(hostname) {
   return hostname === "tools.hotelstcloud.com";
 }
@@ -331,6 +335,14 @@ export default {
       }
       if (p === "/manager-vault" || p === "/manager-vault.html" || p === "/hsc-manager-vault" || p === "/hsc-manager-vault.html") {
         return serveAsset(env, request, "/assets/hsc-manager-vault.html");
+      }
+    }
+
+    // brief.fremontmakers.com — public website mockups for review (not production).
+    if (isFmBriefHost(url.hostname) && !url.pathname.startsWith("/api")) {
+      const p = url.pathname.replace(/\/$/, "") || "/";
+      if (p === "/" || p === "/index.html" || p === "/mockups") {
+        return serveAsset(env, request, "/assets/fremont-makers-website-mockups.html");
       }
     }
 
