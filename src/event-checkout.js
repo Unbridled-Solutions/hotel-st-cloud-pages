@@ -16,9 +16,10 @@ const PRICES = {
 const MM_EARLY_ENDS_MS = Date.parse("2026-10-24T06:00:00.000Z");
 
 const MM_ENTREES = {
-  tenderloin: "6oz Tenderloin",
+  tenderloin: "6 oz Tenderloin",
   piccata: "Chicken Piccata",
   salmon: "Honey Lavender Salmon",
+  veg: "Vegetarian or Vegan Option",
 };
 
 function murderLookup() {
@@ -103,7 +104,7 @@ function buildLineItems(event, body) {
   if (event === "murder-mystery") {
     const n = qty(body.adults || body.qty);
     const lookup = murderLookup();
-    if (n) items.push({ price: PRICES[lookup], quantity: n, lookup });
+    if (n && n <= 8) items.push({ price: PRICES[lookup], quantity: n, lookup });
   } else if (event === "christmas-lights") {
     const a = qty(body.adults);
     const c = qty(body.children);
@@ -161,6 +162,7 @@ function orderFromSession(session, extra = {}) {
     entreeTenderloin: meta.entreeTenderloin || extra.entreeTenderloin || "0",
     entreePiccata: meta.entreePiccata || extra.entreePiccata || "0",
     entreeSalmon: meta.entreeSalmon || extra.entreeSalmon || "0",
+    entreeVeg: meta.entreeVeg || extra.entreeVeg || "0",
     entreeA: meta.entreeA || extra.entreeA || "0",
     entreeB: meta.entreeB || extra.entreeB || "0",
     amount: session.amount_total || 0,
@@ -246,9 +248,11 @@ function menuLine(order) {
   const t = qty(order.entreeTenderloin);
   const p = qty(order.entreePiccata);
   const s = qty(order.entreeSalmon);
+  const v = qty(order.entreeVeg);
   if (t) bits.push(t + " × " + MM_ENTREES.tenderloin);
   if (p) bits.push(p + " × " + MM_ENTREES.piccata);
   if (s) bits.push(s + " × " + MM_ENTREES.salmon);
+  if (v) bits.push(v + " × " + MM_ENTREES.veg);
   if (!bits.length && (qty(order.entreeA) || qty(order.entreeB))) {
     bits.push("A " + (order.entreeA || 0) + " · B " + (order.entreeB || 0));
   }
@@ -355,14 +359,19 @@ export async function handleEventCheckout(request, env) {
     let tenderloin = 0;
     let piccata = 0;
     let salmon = 0;
+    let veg = 0;
     let ticketLookup = "";
     if (event === "murder-mystery") {
       const tickets = qty(body.adults || body.qty);
+      if (tickets > 8) {
+        return json({ error: "Max 8 tickets per order. For a larger party, call the desk." }, 400);
+      }
       tenderloin = qty(body.entreeTenderloin);
       piccata = qty(body.entreePiccata);
       salmon = qty(body.entreeSalmon);
-      if (tenderloin + piccata + salmon !== tickets) {
-        return json({ error: "Tenderloin, chicken, and salmon counts need to add up to the number of tickets." }, 400);
+      veg = qty(body.entreeVeg);
+      if (tenderloin + piccata + salmon + veg !== tickets) {
+        return json({ error: "Tenderloin, chicken, salmon, and vegetarian counts need to add up to the number of tickets." }, 400);
       }
       ticketLookup = items[0] ? items[0].lookup : murderLookup();
     }
@@ -403,6 +412,7 @@ export async function handleEventCheckout(request, env) {
       "metadata[entreeTenderloin]": String(tenderloin),
       "metadata[entreePiccata]": String(piccata),
       "metadata[entreeSalmon]": String(salmon),
+      "metadata[entreeVeg]": String(veg),
       "metadata[ticketLookup]": ticketLookup,
       "metadata[ticketType]": ticketLookup ? murderTicketType(ticketLookup) : "",
       "automatic_tax[enabled]": "true",
