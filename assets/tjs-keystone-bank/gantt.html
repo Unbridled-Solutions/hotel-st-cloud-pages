@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Keystone / Mary Drive — Gantt</title>
+<style>
+:root {
+  --bg: #0f1117; --card: #1a1d24; --card2: #20242e; --border: #2a2f3e;
+  --text: #d8d0c4; --muted: #7a8a9a; --blue: #5a8ba7; --gold: #c8a96e;
+  --amber: #c87a2a; --teal: #3a9a8a; --red: #c8502a; --sage: #7aaa8a;
+  --brown: #8B6340;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 14px; }
+.header { background: var(--card); border-bottom: 2px solid var(--gold); padding: clamp(20px,4vw,36px) clamp(16px,5vw,48px); }
+.eyebrow { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+h1 { font-size: clamp(22px,4vw,32px); color: #fff; }
+.sub { color: var(--muted); margin-top: 8px; max-width: 760px; line-height: 1.5; }
+.pills { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.pill { background: var(--card2); border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; font-size: 13px; }
+.pill strong { color: var(--gold); }
+.stat-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px,1fr)); gap: 1px; background: var(--border); border-bottom: 2px solid var(--blue); }
+.stat-cell { background: var(--card); padding: 16px 12px; text-align: center; }
+.stat-val { font-size: clamp(18px,2.5vw,26px); font-weight: 700; color: var(--gold); }
+.stat-lbl { font-size: 11px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; margin-top: 4px; }
+.content { padding: clamp(16px,4vw,40px) clamp(12px,5vw,48px); max-width: 1280px; margin: 0 auto; }
+h2 { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--blue); margin: 32px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.gantt-note { background: var(--card2); border-left: 3px solid var(--blue); border-radius: 6px; padding: 10px 16px; font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.5; }
+.critical { background: rgba(200,80,42,.08); border: 1px solid rgba(200,80,42,.3); border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; font-size: 13px; color: var(--muted); line-height: 1.5; }
+.critical strong { color: var(--red); display: block; margin-bottom: 4px; }
+.gantt-wrap { overflow-x: auto; }
+.gantt { min-width: 900px; }
+.gantt-header, .gantt-row { display: flex; align-items: stretch; }
+.gantt-header { border-bottom: 2px solid var(--border); margin-bottom: 2px; }
+.gantt-label-col { flex: 0 0 200px; font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; padding: 8px 10px; display: flex; align-items: center; }
+.gantt-months { flex: 1; display: flex; }
+.month-label { flex: 1; text-align: center; font-size: 10px; color: var(--muted); padding: 4px 1px; border-left: 1px solid var(--border); }
+.month-label.s { color: #7aaa8a; }
+.month-label.u { color: var(--gold); }
+.month-label.f { color: var(--amber); }
+.month-label.w { color: #7aaacc; }
+.gantt-row { min-height: 36px; border-bottom: 1px solid var(--border); align-items: center; }
+.gantt-row:hover { background: rgba(90,139,167,.05); }
+.row-label { flex: 0 0 200px; padding: 6px 10px; font-size: 12px; color: var(--text); line-height: 1.3; }
+.row-bars { flex: 1; position: relative; height: 36px; }
+.row-bars::before {
+  content: ''; position: absolute; inset: 0;
+  background: repeating-linear-gradient(90deg, transparent, transparent calc(100%/16 - 1px), var(--border) calc(100%/16 - 1px), var(--border) calc(100%/16));
+  pointer-events: none; opacity: .4;
+}
+.bar { position: absolute; top: 50%; transform: translateY(-50%); height: 22px; border-radius: 4px; opacity: .9; font-size: 10px; font-weight: 600; color: #fff; display: flex; align-items: center; padding: 0 6px; overflow: hidden; white-space: nowrap; }
+.c-plan { background: var(--blue); }
+.c-order { background: var(--red); }
+.c-site { background: var(--brown); }
+.c-found { background: #6b4c2a; }
+.c-shell { background: var(--gold); color: #1a1200; }
+.c-gar { background: #8a7a65; }
+.c-mep { background: var(--teal); }
+.c-int { background: #6aaa9e; color: #0a1a18; }
+.c-close { background: #6a7a6a; }
+.phase-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 14px; }
+.phase-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.card-header { padding: 12px 14px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); font-weight: 700; font-size: 13px; }
+.card-months { font-size: 11px; color: var(--muted); font-weight: 500; }
+.card-body { padding: 12px 14px; }
+.card-body ul { list-style: none; }
+.card-body li { font-size: 12px; color: var(--muted); padding-left: 14px; position: relative; margin-bottom: 6px; line-height: 1.4; }
+.card-body li::before { content: '→'; position: absolute; left: 0; color: var(--blue); font-size: 10px; }
+.watch { background: rgba(200,122,42,.08); border-top: 1px solid var(--border); padding: 8px 14px; font-size: 11px; color: var(--amber); }
+.nav { display: flex; flex-wrap: wrap; gap: 10px; padding: 20px; justify-content: space-between; background: var(--card); border-top: 1px solid var(--border); margin-top: 40px; }
+.nav a { color: var(--blue); text-decoration: none; font-weight: 600; font-size: 13px; padding: 10px 18px; border: 1px solid var(--blue); border-radius: 8px; }
+.nav a.primary { background: var(--gold); color: #1a1200; border-color: var(--gold); }
+footer { text-align: center; color: var(--muted); font-size: 11px; padding: 16px; }
+@media (max-width: 600px) {
+  .gantt-label-col, .row-label { flex: 0 0 140px; font-size: 11px; }
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="eyebrow">TJ’s Log & Timber · Keystone / Mary Drive · 18 Sep 2026</div>
+  <h1>Build Gantt — 16 months</h1>
+  <p class="sub">Oct 2026 start if the bank and Grand County move this fall. Log kit ordered in month 1 or the stack crew sits. Concrete May–Sep. Roof Jun–Oct. Bars are schedule position only — tap a phase card below for the work.</p>
+  <div class="pills">
+    <div class="pill"><strong>Start:</strong> Oct 2026</div>
+    <div class="pill"><strong>Dry-in:</strong> Jul 2027</div>
+    <div class="pill"><strong>CO target:</strong> Jan 2028</div>
+    <div class="pill"><strong>Phase 1:</strong> main + upper live · basement framed</div>
+  </div>
+</div>
+<div class="stat-strip">
+  <div class="stat-cell"><div class="stat-val">16</div><div class="stat-lbl">Months</div></div>
+  <div class="stat-cell"><div class="stat-val">10</div><div class="stat-lbl">Phases</div></div>
+  <div class="stat-cell"><div class="stat-val">8–16w</div><div class="stat-lbl">Log kit lead</div></div>
+  <div class="stat-cell"><div class="stat-val">May–Sep</div><div class="stat-lbl">Concrete window</div></div>
+  <div class="stat-cell"><div class="stat-val">$1.2M</div><div class="stat-lbl">Phase 1 mid</div></div>
+</div>
+<div class="content">
+  <div class="critical">
+    <strong>Critical path: permit + log kit.</strong>
+    Submit to Grand County in month 1, not month 2 (4–8 week review). Order the 12&quot; round Keystone package the same week or stack waits on mill. Weather owns foundation: if you miss May 2027 pour, you lose a season.
+  </div>
+  <p class="gantt-note">Tap a phase card below for tasks. Colored bars are not clickable — they only show when the work sits on the calendar.</p>
+
+  <h2>Schedule</h2>
+  <div class="gantt-wrap">
+    <div class="gantt">
+      <div class="gantt-header">
+        <div class="gantt-label-col">Phase</div>
+        <div class="gantt-months">
+          <div class="month-label f">Oct</div>
+          <div class="month-label f">Nov</div>
+          <div class="month-label w">Dec</div>
+          <div class="month-label w">Jan</div>
+          <div class="month-label w">Feb</div>
+          <div class="month-label w">Mar</div>
+          <div class="month-label s">Apr</div>
+          <div class="month-label s">May</div>
+          <div class="month-label s">Jun</div>
+          <div class="month-label u">Jul</div>
+          <div class="month-label u">Aug</div>
+          <div class="month-label u">Sep</div>
+          <div class="month-label f">Oct</div>
+          <div class="month-label f">Nov</div>
+          <div class="month-label w">Dec</div>
+          <div class="month-label w">Jan</div>
+        </div>
+      </div>
+
+      <div class="gantt-row">
+        <div class="row-label">1 · Permits + Pence</div>
+        <div class="row-bars"><div class="bar c-plan" style="left:0%;width:18.75%;">Oct–Dec</div></div>
+      </div>
+      <div class="gantt-row">
+        <div class="row-label">2 · Order log kit</div>
+        <div class="row-bars"><div class="bar c-order" style="left:0%;width:12.5%;">Oct–Nov</div></div>
+      </div>
+      <div class="gantt-row">
+        <div class="row-label">⏱ Kit lead / mill</div>
+        <div class="row-bars"><div class="bar c-order" style="left:6.25%;width:37.5%;opacity:.7;">Nov–Apr</div></div>
+      </div>
+      <div class="gantt-row">
+        <div class="row-label">3 · Site / septic / well</div>
+        <div class="row-bars"><div class="bar c-site" style="left:18.75%;width:25%;">Jan–Apr</div></div>
+      </div>
+      <div class="gantt-row">
+        <div class="row-label">4 · Foundation pour</div>
+        <div class="row-bars"><div class="bar c-found" style="left:43.75%;width:12.5%;">May–Jun</div></div>
+      </div>
+      <div class="gantt-row">
+        <div class="row-label">5 · Stack logs</div>
+        <div class="row-bars"><div class="bar c-shell" style="left:50%;width:12.5%;">Jun–Jul</div></div>
+      </div>
+      <div class="gantt-row">
+        <div class="row-label">6 · Roof + windows</div>
+        <div class="row-bars"><div class="bar c-shell" style="left:56.25%;width:18.75%;">Jul–Sep</div></div>
+      </div>
+      <div class="gantt-row">
+        <div class="row-label">7 · Garage + breezeway</div>
+        <div class="row-bars"><div class="bar c-gar" style="left:56.25%;width:18.75%;">Jul–Sep</div></div>
+      </div>
+      <div class="gantt-row">
+        <div class="row-label">8 · MEP rough</div>
+        <div class="row-bars"><div class="bar c-mep" style="left:62.5%;width:18.75%;">Aug–Oct</div></div>
+      </div>
+      <div class="gantt-row">
+        <div class="row-label">9 · Finish main + upper</div>
+        <div class="row-bars"><div class="bar c-int" style="left:75%;width:18.75%;">Oct–Dec</div></div>
+      </div>
+      <div class="gantt-row">
+        <div class="row-label">10 · CO / punch</div>
+        <div class="row-bars"><div class="bar c-close" style="left:87.5%;width:12.5%;">Dec–Jan</div></div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Phase cards — tap for the work</h2>
+  <div class="phase-cards">
+    <div class="phase-card">
+      <div class="card-header">1 · Permits + Pence <span class="card-months">Oct–Dec 2026</span></div>
+      <div class="card-body">
+        <ul>
+          <li>Lock floor plans (main is locked; upper open items listed on plans page)</li>
+          <li>Pence CD refresh + structural stamp for 100+ PSF</li>
+          <li>Grand County + CWRC submittal month 1</li>
+        </ul>
+      </div>
+      <div class="watch">4–8 week review. Do not wait until spring.</div>
+    </div>
+    <div class="phase-card">
+      <div class="card-header">2 · Log kit <span class="card-months">Order Oct · mill Nov–Apr</span></div>
+      <div class="card-body">
+        <ul>
+          <li>12&quot; round Keystone package — house only, not garage</li>
+          <li>8–16 week mill lead</li>
+          <li>Delivery timed to May foundation</li>
+        </ul>
+      </div>
+      <div class="watch">Order the week you submit permits or stack sits.</div>
+    </div>
+    <div class="phase-card">
+      <div class="card-header">3 · Site <span class="card-months">Jan–Apr 2027</span></div>
+      <div class="card-body">
+        <ul>
+          <li>CWRC defensible space</li>
+          <li>Walk-out cut + drainage to the gully</li>
+          <li>Engineered septic; well only if no tap</li>
+        </ul>
+      </div>
+      <div class="watch">Neighbor well log before you size the note.</div>
+    </div>
+    <div class="phase-card">
+      <div class="card-header">4 · Foundation <span class="card-months">May–Jun 2027</span></div>
+      <div class="card-body">
+        <ul>
+          <li>Walk-out walls, garage 40×36 slab, breezeway</li>
+          <li>Frost depth 36–48&quot;</li>
+        </ul>
+      </div>
+      <div class="watch">Miss May pour, lose the season.</div>
+    </div>
+    <div class="phase-card">
+      <div class="card-header">5–6 · Shell <span class="card-months">Jun–Sep 2027</span></div>
+      <div class="card-body">
+        <ul>
+          <li>Stack 12&quot; round</li>
+          <li>Standing seam, ice & water shield</li>
+          <li>Windows, chinking, fire-rated stain</li>
+        </ul>
+      </div>
+      <div class="watch">Roof window Jun–Oct. Dry-in by July is the goal.</div>
+    </div>
+    <div class="phase-card">
+      <div class="card-header">7 · Garage <span class="card-months">Jul–Sep 2027</span></div>
+      <div class="card-body">
+        <ul>
+          <li>Board-and-batten, not logs</li>
+          <li>Three bays, wide + narrow doors as A-02</li>
+          <li>165 SF breezeway</li>
+        </ul>
+      </div>
+      <div class="watch">Do not let a GC log the garage. A-02 is batten + rock wainscot.</div>
+    </div>
+    <div class="phase-card">
+      <div class="card-header">8 · MEP <span class="card-months">Aug–Oct 2027</span></div>
+      <div class="card-body">
+        <ul>
+          <li>Radiant on finished floors</li>
+          <li>Wet rooms stacked</li>
+          <li>Log-wall pre-drill list before stack if possible</li>
+          <li>Basement rough only</li>
+        </ul>
+      </div>
+      <div class="watch">Radiant, not forced air — forced air dries logs.</div>
+    </div>
+    <div class="phase-card">
+      <div class="card-header">9–10 · Finish + CO <span class="card-months">Oct 2027–Jan 2028</span></div>
+      <div class="card-body">
+        <ul>
+          <li>Kitchen, baths, millwork on main + upper</li>
+          <li>Decks at great-room bay</li>
+          <li>Basement stays framed</li>
+          <li>CO January 2028</li>
+        </ul>
+      </div>
+      <div class="watch">Winter finish is interior. Exterior punch waits for spring if needed.</div>
+    </div>
+  </div>
+</div>
+<div class="nav">
+  <a href="./">← Floor plans</a>
+  <a class="primary" href="budget">Budget</a>
+</div>
+<footer>Unbridled · private · 18 Sep 2026 · bars show position, not a contract schedule</footer>
+</body>
+</html>

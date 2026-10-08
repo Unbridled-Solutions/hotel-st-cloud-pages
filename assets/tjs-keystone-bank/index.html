@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Keystone Model — Mary Drive</title>
+<style>
+:root {
+  --bg: #0f1923; --navy: #1a2e3b; --navy2: #162636; --card: #162433;
+  --section: #0d1620; --blue: #5a8ba7; --gold: #c9aa7c;
+  --text: #e8e0d4; --muted: #8a9aaa; --border: rgba(90,139,167,0.22);
+  --teal: #3a9a8a; --amber: #c87a2a; --paper: #f4efe6;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 18px; }
+.header { background: linear-gradient(135deg, #1a2c3b, var(--bg)); border-bottom: 2px solid var(--gold); padding: clamp(18px,3vw,32px) clamp(16px,4vw,40px); }
+.eyebrow { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+h1 { font-size: clamp(22px,4vw,34px); color: #fff; line-height: 1.2; }
+.sub { color: var(--muted); margin-top: 8px; max-width: 820px; line-height: 1.5; font-size: 15px; }
+.pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.pill { background: var(--navy2); border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; font-size: 13px; }
+.pill strong { color: var(--gold); }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px clamp(12px,4vw,40px); background: var(--navy); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 40; }
+.tabs button { background: var(--section); color: var(--muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 13px; font-weight: 700; letter-spacing: .04em; cursor: pointer; min-height: 44px; }
+.tabs button.active { background: var(--gold); color: #1a1200; border-color: var(--gold); }
+.panel { display: block; padding: clamp(16px,4vw,36px) clamp(12px,4vw,40px); max-width: 1280px; margin: 0 auto; scroll-margin-top: 76px; }
+.panel + .panel { border-top: 1px solid var(--border); }
+.sub td { background: rgba(90,139,167,.08); font-weight: 700; color: var(--text); }
+.open-q { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px,1fr)); gap: 12px; margin-top: 18px; }
+.open-card { background: var(--card); border: 1px solid var(--border); border-left: 3px solid var(--amber); border-radius: 10px; padding: 14px 16px; }
+.open-card h4 { color: var(--gold); font-size: 14px; margin-bottom: 6px; }
+.open-card p { font-size: 13px; color: var(--muted); line-height: 1.45; }
+h2 { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--blue); margin: 8px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.note { background: var(--navy2); border-left: 3px solid var(--gold); border-radius: 6px; padding: 12px 16px; font-size: 14px; color: var(--muted); line-height: 1.55; margin-bottom: 18px; }
+.note strong { color: var(--gold); }
+.sheet { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 22px; }
+.sheet h3 { padding: 14px 18px; font-size: 16px; color: #fff; border-bottom: 1px solid var(--border); }
+.sheet h3 span { color: var(--gold); font-size: 12px; font-weight: 600; letter-spacing: .08em; margin-left: 10px; }
+.sheet img { width: 100%; display: block; background: var(--paper); }
+.sheet .cap { padding: 12px 18px; font-size: 14px; color: var(--muted); line-height: 1.5; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 800px) { .grid2 { grid-template-columns: 1fr; } }
+.pair { display: grid; gap: 12px; margin-bottom: 28px; }
+.pair .sheet { margin-bottom: 0; }
+.cad-sheet img { background: #fff; }
+.stat-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 22px; }
+.stat-cell { background: var(--card); padding: 16px 12px; text-align: center; }
+.stat-val { font-size: clamp(18px,2.5vw,26px); font-weight: 700; color: var(--gold); }
+.stat-lbl { font-size: 11px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; margin-top: 4px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; padding: 10px 12px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); border-bottom: 2px solid var(--border); background: var(--section); color: var(--blue); }
+th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; }
+td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.group td { background: var(--section); color: var(--blue); font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.grand td { background: var(--navy2); font-weight: 700; font-size: 16px; border-top: 2px solid var(--gold); color: #fff; padding: 14px 12px; }
+.grand td.num { color: var(--gold); }
+.table-wrap { overflow-x: auto; background: var(--card); border: 1px solid var(--border); border-radius: 10px; }
+.disclaimer { background: rgba(200,122,42,.08); border: 1px solid rgba(200,122,42,.28); border-radius: 8px; padding: 14px 18px; font-size: 14px; color: var(--amber); line-height: 1.55; margin-bottom: 18px; }
+.gantt-note { background: var(--navy2); border-left: 3px solid var(--blue); border-radius: 6px; padding: 10px 16px; font-size: 13px; color: var(--muted); margin-bottom: 16px; line-height: 1.5; }
+.gantt-wrap { overflow-x: auto; }
+.gantt { min-width: 980px; }
+.gantt-header, .gantt-row { display: flex; align-items: stretch; }
+.gantt-header { border-bottom: 2px solid var(--border); }
+.gantt-label-col, .row-label { flex: 0 0 180px; padding: 8px 10px; font-size: 12px; }
+.gantt-label-col { color: var(--muted); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.gantt-months { flex: 1; display: flex; }
+.month-label { flex: 1; text-align: center; font-size: 9px; color: var(--muted); padding: 4px 0; border-left: 1px solid var(--border); }
+.gantt-row { min-height: 36px; border-bottom: 1px solid var(--border); align-items: center; }
+.row-label { color: var(--text); }
+.row-bars { flex: 1; position: relative; height: 36px; }
+.row-bars::before { content:''; position:absolute; inset:0; background: repeating-linear-gradient(90deg, transparent, transparent calc(100%/18 - 1px), var(--border) calc(100%/18 - 1px), var(--border) calc(100%/18)); opacity:.4; pointer-events:none; }
+.bar { position:absolute; top:50%; transform:translateY(-50%); height:22px; border-radius:4px; font-size:10px; font-weight:600; color:#fff; display:flex; align-items:center; padding:0 6px; overflow:hidden; white-space:nowrap; }
+.c-plan { background: var(--blue); }
+.c-found { background: #6b4c2a; }
+.c-shell { background: var(--gold); color:#1a1200; }
+.c-mep { background: var(--teal); }
+.c-int { background: #6aaa9e; color:#0a1a18; }
+.c-close { background: #6a7a6a; }
+.c-order { background: #c8502a; }
+.phase-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 12px; margin-top: 20px; }
+.phase-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+.phase-card h4 { color: var(--gold); font-size: 14px; margin-bottom: 6px; }
+.phase-card p { font-size: 13px; color: var(--muted); line-height: 1.45; }
+footer { text-align:center; color: var(--muted); font-size: 12px; padding: 24px; }
+a { color: var(--blue); }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="eyebrow">TJ’s Log & Timber · Holdings X · 18 Sep 2026</div>
+  <h1>Keystone Model — Mary Drive</h1>
+  <p class="sub">276 GCR 480. 12&quot; round. Elevations, three floors, owner budget, 18-month Gantt from April 1, sale at $550 / SF. Planning range. Not a bid. Not a GMP.</p>
+  <div class="pills">
+    <div class="pill"><strong>Main + upper:</strong> 3,282 SF · $400</div>
+    <div class="pill"><strong>Basement:</strong> 2,038 SF · $50 rough</div>
+    <div class="pill"><strong>Land:</strong> $200,000</div>
+    <div class="pill"><strong>Build + land:</strong> $1,396,400</div>
+    <div class="pill"><strong>Sale:</strong> $550 × 3,282 = $1,805,100</div>
+  </div>
+</div>
+<div class="tabs" role="tablist">
+  <button class="active" data-tab="elevs">Elevations</button>
+  <button data-tab="site">Site</button>
+  <button data-tab="lower">Lower</button>
+  <button data-tab="main">Main</button>
+  <button data-tab="upper">Upper</button>
+  <button data-tab="budget">Budget</button>
+  <button data-tab="gantt">Gantt</button>
+  <button data-tab="sale">Sale</button>
+</div>
+
+<section id="elevs" class="panel active">
+  <h2>Elevations. Photoreal, then the matching CAD</h2>
+  <p class="note">Photoreal, then the matching CAD. Gold numbers are back. Taking them off left a smear, so these are the original stills. Front is still <strong>10</strong> (offset garage). Rear <strong>16</strong>. Left <strong>17</strong>. Right <strong>15</strong>. Watercolors are off. Full Pence set: <a href="https://tools.tjslogandtimber.com/assets/tjs-proctor/">Pence set</a>.</p>
+
+  <div class="pair">
+    <div class="sheet">
+      <h3>Front photoreal <span>still 10 · A-02</span></h3>
+      <img src="elev/front-10.png" alt="Front elevation photoreal still 10">
+      <div class="cap">Still 10. Offset garage — set back, breezeway in the gap. Double-wide then a single. Two batten gables. Recess is still shallower than the sheet. Still 14 sat proud. Rejected.</div>
+    </div>
+    <div class="sheet cad-sheet">
+      <h3>Front CAD <span>A-02 Front</span></h3>
+      <img src="elev/cad-front.png" alt="A-02 Front elevation drawing">
+      <div class="cap">Score key. Garage plane sits behind the house. Double then single. Board and batten. Rock veneer bases. Rock chimney.</div>
+    </div>
+  </div>
+
+  <div class="pair">
+    <div class="sheet">
+      <h3>Rear photoreal <span>still 16 · A-02</span></h3>
+      <img src="elev/rear-16.png" alt="Rear elevation photoreal still 16">
+      <div class="cap">Blank batten garage gable. No overheads. Man-door at the breezeway. Walk-out stone under the living wing. Extra small window on the garage is a nit vs CAD.</div>
+    </div>
+    <div class="sheet cad-sheet">
+      <h3>Rear CAD <span>A-02 Rear</span></h3>
+      <img src="elev/cad-rear.png" alt="A-02 Rear elevation drawing">
+      <div class="cap">Score key. Garage from behind is batten, no car doors. Deck stops before the garage.</div>
+    </div>
+  </div>
+
+  <div class="pair">
+    <div class="sheet">
+      <h3>Left photoreal <span>still 17 · A-03</span></h3>
+      <img src="elev/left-17.png" alt="Left elevation photoreal still 17">
+      <div class="cap">Still 17. Log house only. Walk-out and decks. Chimney not on this face. Still 13 invented a dark outbuilding. Rejected.</div>
+    </div>
+    <div class="sheet cad-sheet">
+      <h3>Left CAD <span>A-03 Left</span></h3>
+      <img src="elev/cad-left.png" alt="A-03 Left elevation drawing">
+      <div class="cap">Score key. 16-foot log wing. River rock on the walk-out. No garage on this face.</div>
+    </div>
+  </div>
+
+  <div class="pair">
+    <div class="sheet">
+      <h3>Right photoreal <span>still 15 · A-03</span></h3>
+      <img src="elev/right-15.png" alt="Right elevation photoreal still 15">
+      <div class="cap">Lower rock-veneer garage, one far-end roll-up, not a pair of car doors. Dining octagon belongs on this side. Roof line is still the miss you called.</div>
+    </div>
+    <div class="sheet cad-sheet">
+      <h3>Right CAD <span>A-03 Right</span></h3>
+      <img src="elev/cad-right.png" alt="A-03 Right elevation drawing">
+      <div class="cap">Score key. Garage is the lower wing. One far-end door. Octagon on this side.</div>
+    </div>
+  </div>
+</section>
+
+<section id="site" class="panel">
+  <h2>Site. Aerial, then survey, then the house</h2>
+  <p class="note">276 GCR 480 / Mary Drive. 1 acre. Tract 3, Breckon. Sit holds: garage <strong>north</strong>, 8' off the plat, <strong>centered east–west</strong>. Street / control box is west. Gully is east. Scale on sheet 3 is the N 209.67' plat = 2.00 px/ft. Garage 40'.</p>
+
+  <div class="sheet">
+    <h3>Aerial <span>zoomed · landscape</span></h3>
+    <img src="site/aerial-landscape.jpg" alt="Tract 3 aerial, landscape zoom on the vacant meadow">
+    <div class="cap">Gold box is Tract 3. 1 acre. Mary Drive west. Paved hook east. Neighbors north. Not Lakeridge Lot 31.</div>
+  </div>
+
+  <div class="sheet">
+    <h3>Topographic survey <span>unmarked · Job 18091</span></h3>
+    <img src="site/topo-survey.jpg" alt="Tract 3 topographic survey unmarked">
+    <div class="cap">Vacant land. Control box and culvert on the west / street side. Contours fall east to the gully. View table: V1 neighbor deck, V4 Mount Craig (Baldy).</div>
+  </div>
+
+  <div class="sheet">
+    <h3>House on the survey <span>2.00 px/ft · garage 40'</span></h3>
+    <img src="site/survey-siting.jpg" alt="Keystone A-05 roof plan on Tract 3 topographic survey at true scale">
+    <div class="cap">North 14' toward the plat. Centered E-W. Gold box is the measured plat. Street is west. Gully is east.</div>
+  </div>
+</section>
+
+<section id="lower" class="panel">
+  <h2>Lower / walk-out</h2>
+  <p class="note"><strong>Locked.</strong> Pool Room, Mechanical. Guest bed on the north wall. 2,038 SF (Pence A-04). CAD: <a href="a04-lower.jpg">A-04</a>.</p>
+  <div class="sheet">
+    <h3>Lower furnished <span>LOCKED</span></h3>
+    <img src="plan-lower.png" alt="Lower floor plan">
+  </div>
+</section>
+
+<section id="main" class="panel">
+  <h2>Main</h2>
+  <p class="note"><strong>Locked. Do not touch.</strong> 2,038 SF + 165 SF breezeway + 1,390 SF garage. CAD: <a href="a05-main.jpg">A-05</a>.</p>
+  <div class="sheet">
+    <h3>Main furnished <span>LOCKED</span></h3>
+    <img src="plan-main.png" alt="Main floor plan">
+  </div>
+</section>
+
+<section id="upper" class="panel">
+  <h2>Upper</h2>
+  <p class="note">Working sheet 18 Sep night. Office toilet opposite the shower. Bedroom 3 L-entry from the peach hall. Bedroom 4 hall door kept. Bypass on the Bedroom 4 closet — hinged out-swing removed. Jack and Jill is the demising wall to both bedrooms. 1,244 SF + 64 SF deck (Pence A-06). CAD: <a href="a06-upper.jpg">A-06 original</a> (untouched).</p>
+  <div class="sheet">
+    <h3>Upper furnished <span>WORKING</span></h3>
+    <img src="plan-upper-scaled.png" alt="Upper floor plan">
+  </div>
+</section>
+
+<section id="budget" class="panel">
+  <h2>Budget. Keystone vs EL revised</h2>
+  <p class="note">EL revised is the compare, not the original. EL denominator is <strong>10,784 SF</strong> (three interior floors + bunk over garage. Garage pad 1,250 is out). Keystone construction is on Pence main + upper <strong>3,282 SF</strong>. Site facts that are not EL: much less excavation, well is in, city sewer tap, 10% GC / owner’s rep. Planning range. Not a bid. Not a GMP.</p>
+  <div class="stat-strip">
+    <div class="stat-cell"><div class="stat-val">$375</div><div class="stat-lbl">EL revised / SF</div></div>
+    <div class="stat-cell"><div class="stat-val">$333</div><div class="stat-lbl">Keystone / SF</div></div>
+    <div class="stat-cell"><div class="stat-val">10,784</div><div class="stat-lbl">EL SF</div></div>
+    <div class="stat-cell"><div class="stat-val">3,282</div><div class="stat-lbl">Keystone SF</div></div>
+    <div class="stat-cell"><div class="stat-val">$1,094,500</div><div class="stat-lbl">Keystone construction</div></div>
+    <div class="stat-cell"><div class="stat-val">$1,396,400</div><div class="stat-lbl">Build + land</div></div>
+  </div>
+
+  <h2>Line by line · EL revised vs Keystone</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>#</th><th>Category</th><th class="num">EL revised</th><th class="num">EL / SF</th><th class="num">Keystone</th><th class="num">KS / SF</th></tr></thead>
+      <tbody>
+        <tr class="group"><td colspan="6">Pre-construction</td></tr>
+        <tr><td>1</td><td>Permits / insp. / plans / eng</td><td class="num">$45,033</td><td class="num">$4.18</td><td class="num">$18,000</td><td class="num">$5.48</td></tr>
+        <tr><td>23</td><td>Insurance</td><td class="num">$4,345</td><td class="num">$0.40</td><td class="num">$6,000</td><td class="num">$1.83</td></tr>
+        <tr class="sub"><td></td><td>Subtotal</td><td class="num">$49,378</td><td class="num">$4.58</td><td class="num">$24,000</td><td class="num">$7.31</td></tr>
+        <tr class="group"><td colspan="6">Site · Keystone is easier than EL</td></tr>
+        <tr><td>2</td><td>Equipment rental</td><td class="num">$58,053</td><td class="num">$5.38</td><td class="num">$16,000</td><td class="num">$4.88</td></tr>
+        <tr><td>3</td><td>Excavation</td><td class="num">$223,295</td><td class="num">$20.71</td><td class="num">$40,000</td><td class="num">$12.19</td></tr>
+        <tr><td>4</td><td>Well (in)</td><td class="num">$50,707</td><td class="num">$4.70</td><td class="num">$0</td><td class="num">$0</td></tr>
+        <tr><td></td><td>City sewer tap (not septic)</td><td class="num">$0</td><td class="num">$0.00</td><td class="num">$18,000</td><td class="num">$5.48</td></tr>
+        <tr class="sub"><td></td><td>Subtotal</td><td class="num">$332,055</td><td class="num">$30.79</td><td class="num">$74,000</td><td class="num">$22.55</td></tr>
+        <tr class="group"><td colspan="6">Foundation and shell</td></tr>
+        <tr><td>5</td><td>Foundation</td><td class="num">$123,604</td><td class="num">$11.46</td><td class="num">$80,000</td><td class="num">$24.38</td></tr>
+        <tr><td>6</td><td>Log pack</td><td class="num">$618,205</td><td class="num">$57.33</td><td class="num">$180,000</td><td class="num">$54.84</td></tr>
+        <tr><td>7</td><td>Stud pack</td><td class="num">$260,824</td><td class="num">$24.19</td><td class="num">$75,000</td><td class="num">$22.85</td></tr>
+        <tr><td>8</td><td>Framing labor</td><td class="num">$148,162</td><td class="num">$13.74</td><td class="num">$42,000</td><td class="num">$12.80</td></tr>
+        <tr><td>9</td><td>Log finishing M&L</td><td class="num">$240,941</td><td class="num">$22.34</td><td class="num">$69,000</td><td class="num">$21.02</td></tr>
+        <tr><td>10</td><td>Windows</td><td class="num">$81,592</td><td class="num">$7.57</td><td class="num">$24,000</td><td class="num">$7.31</td></tr>
+        <tr><td>11</td><td>Doors</td><td class="num">$67,952</td><td class="num">$6.30</td><td class="num">$20,000</td><td class="num">$6.09</td></tr>
+        <tr><td>12</td><td>Window and door install</td><td class="num">$13,165</td><td class="num">$1.22</td><td class="num">$10,000</td><td class="num">$3.05</td></tr>
+        <tr><td>13</td><td>Roof materials</td><td class="num">$47,940</td><td class="num">$4.45</td><td class="num">$18,000</td><td class="num">$5.48</td></tr>
+        <tr><td>14</td><td>Roof installation</td><td class="num">$50,000</td><td class="num">$4.64</td><td class="num">$14,000</td><td class="num">$4.27</td></tr>
+        <tr class="sub"><td></td><td>Subtotal</td><td class="num">$1,652,385</td><td class="num">$153.23</td><td class="num">$532,000</td><td class="num">$162.10</td></tr>
+        <tr class="group"><td colspan="6">MEP and masonry</td></tr>
+        <tr><td>15</td><td>Electric</td><td class="num">$189,781</td><td class="num">$17.60</td><td class="num">$54,000</td><td class="num">$16.45</td></tr>
+        <tr><td>16</td><td>Plumbing</td><td class="num">$175,391</td><td class="num">$16.26</td><td class="num">$50,000</td><td class="num">$15.23</td></tr>
+        <tr><td>17</td><td>HVAC (radiant, not forced air)</td><td class="num">$77,350</td><td class="num">$7.17</td><td class="num">$22,000</td><td class="num">$6.70</td></tr>
+        <tr><td>18</td><td>Masonry</td><td class="num">$92,991</td><td class="num">$8.62</td><td class="num">$27,000</td><td class="num">$8.23</td></tr>
+        <tr class="sub"><td></td><td>Subtotal</td><td class="num">$535,513</td><td class="num">$49.66</td><td class="num">$153,000</td><td class="num">$46.62</td></tr>
+        <tr class="group"><td colspan="6">Finish and GC</td></tr>
+        <tr><td>19</td><td>General provisions</td><td class="num">$89,265</td><td class="num">$8.28</td><td class="num">$25,000</td><td class="num">$7.62</td></tr>
+        <tr><td>20</td><td>Interior finishing</td><td class="num">$654,930</td><td class="num">$60.73</td><td class="num">$187,000</td><td class="num">$56.98</td></tr>
+        <tr><td>21</td><td>GC / owner’s rep 10%</td><td class="num">$383,257</td><td class="num">$35.54</td><td class="num">$99,500</td><td class="num">$30.32</td></tr>
+        <tr><td>22</td><td>Contingency</td><td class="num">$348,496</td><td class="num">$32.32</td><td class="num">$0</td><td class="num">$0</td></tr>
+        <tr class="sub"><td></td><td>Subtotal</td><td class="num">$1,475,948</td><td class="num">$136.86</td><td class="num">$311,500</td><td class="num">$94.91</td></tr>
+        <tr class="grand"><td></td><td>Construction</td><td class="num">$4,045,279</td><td class="num">$375.12</td><td class="num">$1,094,500</td><td class="num">$333.49</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note" style="margin-top:14px">EL revised $4,045,279 ÷ 10,784 = <strong>$375 / SF</strong> (all lines including permits). Keystone $1,094,500 ÷ 3,282 = <strong>$333 / SF</strong>. Your $400 / SF ceiling on 3,282 is $1,312,800. This sheet is $218,300 under that ceiling. EL stays on this tab until you say take it off.</p>
+
+  <h2>Basement rough · not in EL (EL was finished)</h2>
+  <div class="table-wrap" style="margin-top:12px">
+    <table>
+      <thead><tr><th>Line</th><th>Basis</th><th class="num">Amount</th><th class="num">/ SF</th></tr></thead>
+      <tbody>
+        <tr><td>Concrete floor / slab</td><td>walk-out</td><td class="num">$42,000</td><td class="num">$20.61</td></tr>
+        <tr><td>Rough walls</td><td>framed, not finished</td><td class="num">$28,000</td><td class="num">$13.74</td></tr>
+        <tr><td>Rough plumbing stub</td><td>stack from baths above</td><td class="num">$31,900</td><td class="num">$15.65</td></tr>
+        <tr class="grand"><td>Basement rough</td><td>2,038 SF × $50</td><td class="num">$101,900</td><td class="num">$50.00</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Land</h2>
+  <div class="table-wrap" style="margin-top:12px">
+    <table>
+      <thead><tr><th>Line</th><th>Basis</th><th class="num">EL</th><th class="num">Keystone</th></tr></thead>
+      <tbody>
+        <tr><td>Land</td><td>EL 225 GCR 465 vs 276 GCR 480</td><td class="num">$350,000</td><td class="num">$200,000</td></tr>
+        <tr class="grand"><td>Build + land</td><td>construction + basement rough + land</td><td class="num">$4,395,279</td><td class="num">$1,396,400</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>What changed vs EL revised</h2>
+  <div class="open-q">
+    <div class="open-card"><h4>Excavation</h4><p>EL revised $223k / $20.71. Keystone $40k / $12.19. Walk-out to the gully, not EL’s cut.</p></div>
+    <div class="open-card"><h4>Well</h4><p>EL revised $51k. Keystone $0. Well is in.</p></div>
+    <div class="open-card"><h4>Sewer</h4><p>City tap $18k / $5.48. Not Grand County engineered septic.</p></div>
+    <div class="open-card"><h4>GC / owner’s rep</h4><p>10% of Keystone hard costs = $99,500 / $30.32. EL revised fee $383k / $35.54.</p></div>
+    <div class="open-card"><h4>Contingency</h4><p>EL revised $348k after overruns. Keystone $0 on this sheet. The $400 ceiling is $218k of air if you want it back as contingency.</p></div>
+    <div class="open-card"><h4>10,784 SF</h4><p>Three interior floors plus the bunk over the garage. Garage pad 1,250 is out. Stan lock 8 Oct 2026.</p></div>
+  </div>
+</section>
+
+<section id="gantt" class="panel">
+  <h2>Gantt — April 1, 18 months</h2>
+  <p class="gantt-note">Winter planning now. Foundation <strong>1 Apr 2027</strong>. Eighteen months from pour → <strong>30 Sep 2028</strong>. List that fall. Bars show position only — they are not clickable. Cards below are the work.</p>
+  <div class="stat-strip">
+    <div class="stat-cell"><div class="stat-val">1 Apr 2027</div><div class="stat-lbl">Foundation</div></div>
+    <div class="stat-cell"><div class="stat-val">18 mo</div><div class="stat-lbl">From pour</div></div>
+    <div class="stat-cell"><div class="stat-val">30 Sep 2028</div><div class="stat-lbl">Complete</div></div>
+    <div class="stat-cell"><div class="stat-val">Fall 2028</div><div class="stat-lbl">List</div></div>
+  </div>
+  <div class="gantt-wrap"><div class="gantt">
+    <div class="gantt-header">
+      <div class="gantt-label-col">Phase</div>
+      <div class="gantt-months">
+        <div class="month-label">Apr</div><div class="month-label">May</div><div class="month-label">Jun</div>
+        <div class="month-label">Jul</div><div class="month-label">Aug</div><div class="month-label">Sep</div>
+        <div class="month-label">Oct</div><div class="month-label">Nov</div><div class="month-label">Dec</div>
+        <div class="month-label">Jan</div><div class="month-label">Feb</div><div class="month-label">Mar</div>
+        <div class="month-label">Apr</div><div class="month-label">May</div><div class="month-label">Jun</div>
+        <div class="month-label">Jul</div><div class="month-label">Aug</div><div class="month-label">Sep</div>
+      </div>
+    </div>
+    <div class="gantt-row"><div class="row-label">Kit already on order</div><div class="row-bars"><div class="bar c-order" style="left:0%;width:16.7%;">Apr–Jun</div></div></div>
+    <div class="gantt-row"><div class="row-label">1 · Foundation</div><div class="row-bars"><div class="bar c-found" style="left:0%;width:11.1%;">Apr–May</div></div></div>
+    <div class="gantt-row"><div class="row-label">2 · Stack logs</div><div class="row-bars"><div class="bar c-shell" style="left:11.1%;width:11.1%;">Jun–Jul</div></div></div>
+    <div class="gantt-row"><div class="row-label">3 · Roof + windows</div><div class="row-bars"><div class="bar c-shell" style="left:16.7%;width:16.7%;">Jul–Sep</div></div></div>
+    <div class="gantt-row"><div class="row-label">4 · Garage + breezeway</div><div class="row-bars"><div class="bar c-plan" style="left:16.7%;width:16.7%;">Jul–Sep</div></div></div>
+    <div class="gantt-row"><div class="row-label">5 · MEP rough</div><div class="row-bars"><div class="bar c-mep" style="left:27.8%;width:16.7%;">Sep–Nov</div></div></div>
+    <div class="gantt-row"><div class="row-label">6 · Finish main + upper</div><div class="row-bars"><div class="bar c-int" style="left:44.4%;width:33.3%;">Dec–May</div></div></div>
+    <div class="gantt-row"><div class="row-label">7 · Basement rough</div><div class="row-bars"><div class="bar c-mep" style="left:33.3%;width:22.2%;">Oct–Jan</div></div></div>
+    <div class="gantt-row"><div class="row-label">8 · Punch / CO</div><div class="row-bars"><div class="bar c-close" style="left:83.3%;width:16.7%;">Jul–Sep</div></div></div>
+  </div></div>
+  <div class="phase-cards">
+    <div class="phase-card"><h4>Now → Mar 2027</h4><p>Winter planning. Permits, Pence stamp, order 12&quot; round Keystone kit so it is on site for the April pour.</p></div>
+    <div class="phase-card"><h4>Apr–May 2027</h4><p>Foundation. Walk-out walls, garage slab, breezeway. Miss April, lose the season.</p></div>
+    <div class="phase-card"><h4>Jun–Sep 2027</h4><p>Stack, roof, windows, garage board-and-batten. Dry-in before winter.</p></div>
+    <div class="phase-card"><h4>Fall 2027 – spring 2028</h4><p>MEP, finish main + upper. Basement stays rough: plumbing, slab, walls at the $50 line.</p></div>
+    <div class="phase-card"><h4>Summer–Sep 2028</h4><p>Punch, CO. Eighteen months from pour. List that fall.</p></div>
+  </div>
+</section>
+
+<section id="sale" class="panel">
+  <h2>Sale — $550 / SF</h2>
+  <p class="note">Stan: <strong>$550 a square foot</strong> on the three-thousand-plus finished feet. Using Pence main + upper <strong>3,282 SF</strong>. Not garage. Not decks. Not unfinished basement.</p>
+  <div class="stat-strip">
+    <div class="stat-cell"><div class="stat-val">$550</div><div class="stat-lbl">Sale / SF</div></div>
+    <div class="stat-cell"><div class="stat-val">3,282</div><div class="stat-lbl">Finished SF</div></div>
+    <div class="stat-cell"><div class="stat-val">$1,805,100</div><div class="stat-lbl">Ask</div></div>
+    <div class="stat-cell"><div class="stat-val">$1,396,400</div><div class="stat-lbl">Build + land in</div></div>
+    <div class="stat-cell"><div class="stat-val">$408,700</div><div class="stat-lbl">Spread before extras</div></div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Case</th><th class="num">SF</th><th class="num">Ask</th><th class="num">Vs formula</th></tr></thead>
+      <tbody>
+        <tr><td>Pence main + upper × $550</td><td class="num">3,282</td><td class="num">$1,805,100</td><td class="num">+$408,700</td></tr>
+        <tr><td>Round 3,000 × $550 (if someone uses that)</td><td class="num">3,000</td><td class="num">$1,650,000</td><td class="num">+$253,600 vs $1,396,400</td></tr>
+        <tr><td>If basement later finishes and sells in the $550 (not the plan)</td><td class="num">5,320</td><td class="num">$2,926,000</td><td class="num">Not this deal</td></tr>
+        <tr class="grand"><td>Working ask</td><td class="num">3,282</td><td class="num">$1,805,100</td><td class="num">Fall 2028 list</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note" style="margin-top:16px">Spread of $408,700 is before interest and selling costs. Well is in. City sewer is in the construction sheet. Not profit.</p>
+</section>
+
+<footer>Unbridled · private · Keystone / Mary Drive · close the tab and reopen if this looks old</footer>
+<script>
+const tabs = document.querySelectorAll('.tabs button');
+const panels = document.querySelectorAll('.panel');
+function setActive(id) {
+  tabs.forEach(b => b.classList.toggle('active', b.dataset.tab === id));
+}
+function go(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  setActive(id);
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  history.replaceState(null, '', '#' + id);
+}
+tabs.forEach(b => b.addEventListener('click', () => go(b.dataset.tab)));
+const hash = (location.hash || '').replace('#','');
+if (hash && document.getElementById(hash)) {
+  setActive(hash);
+  requestAnimationFrame(() => document.getElementById(hash).scrollIntoView({ block: 'start' }));
+}
+const obs = new IntersectionObserver((entries) => {
+  const hit = entries
+    .filter(e => e.isIntersecting)
+    .sort((a,b) => b.intersectionRatio - a.intersectionRatio)[0];
+  if (hit) setActive(hit.target.id);
+}, { rootMargin: '-90px 0px -55% 0px', threshold: [0.12, 0.35, 0.6] });
+panels.forEach(p => obs.observe(p));
+</script>
+</body>
+</html>
+
+
+
+

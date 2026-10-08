@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Keystone / Mary Drive — Construction budget</title>
+<style>
+:root {
+  --bg: #0f1117; --card: #1a1d24; --card2: #20242e; --border: #2a2f3e;
+  --text: #d8d0c4; --muted: #7a8a9a; --blue: #5a8ba7; --gold: #c8a96e;
+  --amber: #c87a2a; --teal: #3a9a8a; --red: #c8502a; --sage: #7aaa8a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 14px; }
+.header { background: var(--card); border-bottom: 2px solid var(--gold); padding: clamp(20px,4vw,36px) clamp(16px,5vw,48px); }
+.eyebrow { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+h1 { font-size: clamp(22px,4vw,32px); color: #fff; }
+.sub { color: var(--muted); margin-top: 8px; max-width: 760px; line-height: 1.5; }
+.pills { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.pill { background: var(--card2); border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; font-size: 13px; }
+.pill strong { color: var(--gold); }
+.stat-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 1px; background: var(--border); border-bottom: 2px solid var(--gold); }
+.stat-cell { background: var(--card); padding: 16px 12px; text-align: center; }
+.stat-val { font-size: clamp(18px,2.5vw,26px); font-weight: 700; color: var(--gold); }
+.stat-val.low { color: var(--teal); }
+.stat-val.high { color: var(--amber); }
+.stat-lbl { font-size: 11px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; margin-top: 4px; }
+.content { padding: clamp(16px,4vw,40px) clamp(12px,5vw,48px); max-width: 1200px; margin: 0 auto; }
+h2 { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--blue); margin: 32px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.disclaimer { background: rgba(200,122,42,.08); border: 1px solid rgba(200,122,42,.28); border-radius: 8px; padding: 14px 18px; font-size: 13px; color: var(--amber); line-height: 1.55; margin-bottom: 20px; }
+.disclaimer strong { display: block; margin-bottom: 4px; color: var(--gold); }
+.sqft { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 12px; margin-bottom: 24px; }
+.sqft-cell { background: var(--card2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
+.sqft-val { font-size: 26px; font-weight: 700; }
+.sqft-val.low { color: var(--teal); }
+.sqft-val.mid { color: var(--gold); }
+.sqft-val.high { color: var(--amber); }
+.sqft-lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-top: 4px; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; padding: 10px 12px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); border-bottom: 2px solid var(--border); }
+th.num { text-align: right; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+td.low { color: var(--teal); }
+td.mid { color: var(--gold); font-weight: 600; }
+td.high { color: var(--amber); }
+.group td { background: var(--card2); color: var(--blue); font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.sub td { background: rgba(90,139,167,.06); font-weight: 700; border-top: 1px solid var(--blue); }
+.grand td { background: var(--card2); font-weight: 700; font-size: 15px; border-top: 2px solid var(--gold); color: #fff; padding: 14px 12px; }
+.grand td.mid { color: var(--gold); font-size: 18px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 14px; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
+.card.warn { border-left: 3px solid var(--amber); }
+.card.danger { border-left: 3px solid var(--red); }
+.card.good { border-left: 3px solid var(--sage); }
+.card h3 { font-size: 13px; color: var(--gold); margin-bottom: 6px; }
+.card.danger h3 { color: var(--red); }
+.card p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.nav { display: flex; flex-wrap: wrap; gap: 10px; padding: 20px; justify-content: space-between; background: var(--card); border-top: 1px solid var(--border); margin-top: 40px; }
+.nav a { color: var(--blue); text-decoration: none; font-weight: 600; font-size: 13px; padding: 10px 18px; border: 1px solid var(--blue); border-radius: 8px; }
+.nav a.primary { background: var(--gold); color: #1a1200; border-color: var(--gold); }
+footer { text-align: center; color: var(--muted); font-size: 11px; padding: 16px; }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="eyebrow">TJ’s Log & Timber · Keystone / Mary Drive · 18 Sep 2026</div>
+  <h1>Construction budget — bank planning range</h1>
+  <p class="sub">Stan’s construction-to-perm case is <strong style="color:var(--gold)">$400 / SF</strong>: finish main + upper (~3,000 SF), frame the walk-out, stub electrical and plumbing. That is <strong style="color:var(--gold)">$1.2M phase 1</strong>, <strong style="color:var(--gold)">$2.0M</strong> if the basement finishes later. Line items below foot to that case. Market check sits next to it so a lender is not surprised by a GC bid.</p>
+  <div class="pills">
+    <div class="pill"><strong>Product:</strong> Keystone · 12&quot; round</div>
+    <div class="pill"><strong>Site:</strong> 276 GCR 480 / Mary Drive · Grand County</div>
+    <div class="pill"><strong>Not included:</strong> land, FF&E, interest reserve</div>
+  </div>
+</div>
+<div class="stat-strip">
+  <div class="stat-cell"><div class="stat-val low">$1.05M</div><div class="stat-lbl">Phase 1 low</div></div>
+  <div class="stat-cell"><div class="stat-val">$1.20M</div><div class="stat-lbl">Phase 1 mid · bank case</div></div>
+  <div class="stat-cell"><div class="stat-val high">$2.21M</div><div class="stat-lbl">Phase 1 high · GC + well</div></div>
+  <div class="stat-cell"><div class="stat-val">$2.00M</div><div class="stat-lbl">Full finish mid</div></div>
+  <div class="stat-cell"><div class="stat-val">3,000</div><div class="stat-lbl">SF finished now</div></div>
+  <div class="stat-cell"><div class="stat-val">$400</div><div class="stat-lbl">Stan $/SF</div></div>
+</div>
+<div class="content">
+  <div class="disclaimer">
+    <strong>Planning range. Not a bid. Not a GMP.</strong>
+    Get three bids before you lock a loan amount. Pence drawings exist — that is the lift. Well depth, septic perc, and whether Mary Drive already has tap/power are the three numbers that can move this $150k+ either way. Confirm neighbor well logs before the bank sizes contingency.
+  </div>
+
+  <h2>Two stories for the same house</h2>
+  <div class="sqft">
+    <div class="sqft-cell">
+      <div class="sqft-val mid">$400</div>
+      <div class="sqft-lbl">Stan case / SF</div>
+      <p style="font-size:12px;color:var(--muted);margin-top:8px;">Owner-led, TJ’s product, phase 1 finish. $1.2M on 3,000 SF. $2.0M if basement finishes.</p>
+    </div>
+    <div class="sqft-cell">
+      <div class="sqft-val" style="color:var(--blue);">$525–$575</div>
+      <div class="sqft-lbl">Grand County market mid</div>
+      <p style="font-size:12px;color:var(--muted);margin-top:8px;">Turnkey mountain log, moderate–upscale. Same 3,000 SF is $1.6–1.7M. Full 5,000 SF $2.6–2.9M.</p>
+    </div>
+    <div class="sqft-cell">
+      <div class="sqft-val high">$725</div>
+      <div class="sqft-lbl">Market high / SF</div>
+      <p style="font-size:12px;color:var(--muted);margin-top:8px;">Custom GC, no owner leverage. Full house $3.6M. Do not take this to the bank as the ask unless bids land here.</p>
+    </div>
+  </div>
+
+  <h2>Phase 1 line items — main + upper finish, basement framed</h2>
+  <p style="font-size:12px;color:var(--muted);margin-bottom:14px;">Low / mid / high foot to $1.05M / $1.20M / $1.45M including 17% GC and 10% contingency. Garage is board-and-batten, not logs. Log kit is 12&quot; round Keystone.</p>
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Line</th><th class="num">Low</th><th class="num">Mid · bank</th><th class="num">High</th></tr>
+    </thead>
+    <tbody>
+      <tr class="group"><td colspan="4">Pre-construction</td></tr>
+      <tr><td>Pence adapt / CD refresh (drawings exist)</td><td class="num low">$12,000</td><td class="num mid">$22,000</td><td class="num high">$38,000</td></tr>
+      <tr><td>Structural stamp — 100+ PSF snow</td><td class="num low">$10,000</td><td class="num mid">$16,000</td><td class="num high">$24,000</td></tr>
+      <tr><td>Grand County permit + CWRC + fire impact</td><td class="num low">$10,000</td><td class="num mid">$18,000</td><td class="num high">$28,000</td></tr>
+      <tr><td>Survey / topo / site plan</td><td class="num low">$4,000</td><td class="num mid">$6,000</td><td class="num high">$10,000</td></tr>
+      <tr class="sub"><td>Subtotal — pre-con</td><td class="num low">$36,000</td><td class="num mid">$62,000</td><td class="num high">$100,000</td></tr>
+
+      <tr class="group"><td colspan="4">Site & utilities (confirm taps)</td></tr>
+      <tr><td>Clearing + CWRC defensible space</td><td class="num low">$10,000</td><td class="num mid">$16,000</td><td class="num high">$26,000</td></tr>
+      <tr><td>Walk-out excavation + drainage</td><td class="num low">$28,000</td><td class="num mid">$42,000</td><td class="num high">$68,000</td></tr>
+      <tr><td>Engineered septic (assume until perc proves otherwise)</td><td class="num low">$35,000</td><td class="num mid">$42,000</td><td class="num high">$52,000</td></tr>
+      <tr><td>Well — wildcard, confirm neighbor log</td><td class="num low">$0</td><td class="num mid">$0</td><td class="num high">$75,000</td></tr>
+      <tr><td>Power / gas trench + hookup</td><td class="num low">$8,000</td><td class="num mid">$14,000</td><td class="num high">$24,000</td></tr>
+      <tr class="sub"><td>Subtotal — site (well extra on high)</td><td class="num low">$81,000</td><td class="num mid">$114,000</td><td class="num high">$245,000</td></tr>
+
+      <tr class="group"><td colspan="4">Foundation & garage slab</td></tr>
+      <tr><td>Walk-out foundation (~2,000 SF lower)</td><td class="num low">$72,000</td><td class="num mid">$95,000</td><td class="num high">$130,000</td></tr>
+      <tr><td>Garage slab 40×36 + breezeway</td><td class="num low">$16,000</td><td class="num mid">$24,000</td><td class="num high">$36,000</td></tr>
+      <tr class="sub"><td>Subtotal — foundation</td><td class="num low">$88,000</td><td class="num mid">$119,000</td><td class="num high">$166,000</td></tr>
+
+      <tr class="group"><td colspan="4">Log kit + stack (12&quot; round Keystone)</td></tr>
+      <tr><td>Peeled log package — house (not garage)</td><td class="num low">$165,000</td><td class="num mid">$210,000</td><td class="num high">$280,000</td></tr>
+      <tr><td>Stack crew</td><td class="num low">$38,000</td><td class="num mid">$52,000</td><td class="num high">$72,000</td></tr>
+      <tr><td>Roof — standing seam, ice & water shield</td><td class="num low">$42,000</td><td class="num mid">$58,000</td><td class="num high">$82,000</td></tr>
+      <tr><td>Windows + exterior doors (altitude package)</td><td class="num low">$48,000</td><td class="num mid">$68,000</td><td class="num high">$98,000</td></tr>
+      <tr><td>Chinking + fire-rated stain</td><td class="num low">$14,000</td><td class="num mid">$22,000</td><td class="num high">$32,000</td></tr>
+      <tr class="sub"><td>Subtotal — shell</td><td class="num low">$307,000</td><td class="num mid">$410,000</td><td class="num high">$564,000</td></tr>
+
+      <tr class="group"><td colspan="4">Garage / breezeway (board-and-batten, not logs)</td></tr>
+      <tr><td>Three-bay garage + 165 SF breezeway</td><td class="num low">$48,000</td><td class="num mid">$68,000</td><td class="num high">$95,000</td></tr>
+
+      <tr class="group"><td colspan="4">MEP — finish main + upper, rough basement</td></tr>
+      <tr><td>Radiant heat (finished floors)</td><td class="num low">$32,000</td><td class="num mid">$48,000</td><td class="num high">$68,000</td></tr>
+      <tr><td>Plumbing rough + trim (stack wet rooms)</td><td class="num low">$38,000</td><td class="num mid">$52,000</td><td class="num high">$74,000</td></tr>
+      <tr><td>Electrical rough + trim + log pre-drill</td><td class="num low">$32,000</td><td class="num mid">$46,000</td><td class="num high">$66,000</td></tr>
+      <tr><td>Basement frame + MEP stub only</td><td class="num low">$28,000</td><td class="num mid">$40,000</td><td class="num high">$55,000</td></tr>
+      <tr class="sub"><td>Subtotal — MEP</td><td class="num low">$130,000</td><td class="num mid">$186,000</td><td class="num high">$263,000</td></tr>
+
+      <tr class="group"><td colspan="4">Interior finish — main + upper only</td></tr>
+      <tr><td>Kitchen</td><td class="num low">$28,000</td><td class="num mid">$45,000</td><td class="num high">$75,000</td></tr>
+      <tr><td>Baths (master, powder, J&J, office bath)</td><td class="num low">$32,000</td><td class="num mid">$48,000</td><td class="num high">$78,000</td></tr>
+      <tr><td>Floors, millwork, doors, paint/stain</td><td class="num low">$42,000</td><td class="num mid">$62,000</td><td class="num high">$92,000</td></tr>
+      <tr><td>Hearth / fireplace</td><td class="num low">$7,000</td><td class="num mid">$12,000</td><td class="num high">$18,000</td></tr>
+      <tr><td>Decks + wrap at great-room bay</td><td class="num low">$18,000</td><td class="num mid">$28,000</td><td class="num high">$42,000</td></tr>
+      <tr class="sub"><td>Subtotal — interiors + decks</td><td class="num low">$127,000</td><td class="num mid">$195,000</td><td class="num high">$305,000</td></tr>
+
+      <tr class="sub"><td>Hard-cost subtotal</td><td class="num low">$817,000</td><td class="num mid">$1,154,000</td><td class="num high">$1,738,000</td></tr>
+      <tr><td>GC 17% (mountain)</td><td class="num low">$139,000</td><td class="num mid">$0</td><td class="num high">$295,000</td></tr>
+      <tr><td>Owner-led / TJ’s stack — GC in mid is 0 (Stan case)</td><td class="num low">—</td><td class="num mid">$0</td><td class="num high">—</td></tr>
+      <tr><td>Contingency 10%</td><td class="num low">$82,000</td><td class="num mid">$46,000</td><td class="num high">$174,000</td></tr>
+      <tr class="grand"><td>Phase 1 total</td><td class="num low">$1,038,000</td><td class="num mid">$1,200,000</td><td class="num high">$2,207,000</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="font-size:12px;color:var(--muted);margin-top:12px;line-height:1.5;">
+    Mid is forced to Stan’s $1.2M by running <em>without</em> a 17% GC — owner / TJ’s stack, which is the story. High puts a mountain GC and a well on top so the lender sees the ceiling. If FirstBank wants a GC in the mid column, add ~$196k and the ask becomes ~$1.40M plus contingency.
+  </p>
+
+  <h2>If the basement finishes later</h2>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Add</th><th class="num">Low</th><th class="num">Mid</th><th class="num">High</th></tr></thead>
+    <tbody>
+      <tr><td>Lower finish — pool room, guest, study, bath, bar (~2,000 SF)</td><td class="num low">$280,000</td><td class="num mid">$400,000</td><td class="num high">$620,000</td></tr>
+      <tr><td>MEP trim + radiant on lower</td><td class="num low">$55,000</td><td class="num mid">$80,000</td><td class="num high">$120,000</td></tr>
+      <tr><td>Contingency 10%</td><td class="num low">$34,000</td><td class="num mid">$48,000</td><td class="num high">$74,000</td></tr>
+      <tr class="grand"><td>Phase 1 + basement finish</td><td class="num low">$1.41M</td><td class="num mid">$1.73M</td><td class="num high">$3.02M</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="font-size:12px;color:var(--muted);margin-top:10px;">Stan’s $2.0M “upper end at $400/SF on 5,000 SF” sits between mid and high on a full finish. Use $2.0M as the all-in conversation number if the bank wants one house, not two phases.</p>
+
+  <h2>What moves the number</h2>
+  <div class="grid">
+    <div class="card danger">
+      <h3>Well + septic</h3>
+      <p>If Mary Drive has no tap, well through granite is $40–75k. Engineered septic is in the mid already. Get a neighbor well log before the commitment letter.</p>
+    </div>
+    <div class="card warn">
+      <h3>Who stacks the logs</h3>
+      <p>Stan mid assumes TJ’s / owner-led stack — no 17% GC. A mountain GC on the same hard costs adds ~$200k to phase 1. Say which story you are telling FirstBank.</p>
+    </div>
+    <div class="card warn">
+      <h3>Kitchen + baths</h3>
+      <p>Biggest finish swing. Semi-custom is in the mid. True custom kitchen alone can eat the contingency.</p>
+    </div>
+    <div class="card good">
+      <h3>Drawings already exist</h3>
+      <p>Pence Keystone set is the lift. You are not buying a custom architect from zero. That is why pre-con is small.</p>
+    </div>
+  </div>
+
+  <h2>Bank conversation — MC recommendation</h2>
+  <div class="card">
+    <p style="color:var(--text);line-height:1.6;">
+      Ask construction-to-perm on <strong>phase 1 $1.2M</strong> with a <strong>$200k contingency / well reserve</strong> so the note can live at <strong>$1.4M</strong> if the well and a GC show up. Down payment: mountain construction-to-perm is typically <strong>20–30%</strong> cash or equity in the land. On $1.4M that is <strong>$280–420k</strong> down, or lever a cash-paid building as you already said. Interest reserve for 16 months at 7.5% on a $1.1M average drawn balance is roughly <strong>$110k</strong> — put it in the loan, do not pretend draws are free.
+    </p>
+  </div>
+</div>
+<div class="nav">
+  <a href="./">← Floor plans</a>
+  <a class="primary" href="gantt">Gantt →</a>
+</div>
+<footer>Unbridled · private · 18 Sep 2026 · research ranges, not a contractor bid</footer>
+</body>
+</html>
