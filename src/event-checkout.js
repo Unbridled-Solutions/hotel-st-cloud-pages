@@ -99,12 +99,24 @@ function qty(v) {
   return Number.isFinite(n) && n > 0 ? n : 0;
 }
 
-function buildLineItems(event, body) {
+/** Live Stripe has different price IDs than sandbox. Lookup keys are the contract. */
+async function priceIdForLookup(env, lookup) {
+  if (!lookup) return "";
+  const q = "/prices?lookup_keys[]=" + encodeURIComponent(lookup) + "&active=true&limit=1";
+  const res = await stripeGet(env, q);
+  const id = res && res.data && res.data[0] && res.data[0].id;
+  return id || "";
+}
+
+async function buildLineItems(env, event, body) {
   const items = [];
   if (event === "murder-mystery") {
     const n = qty(body.adults || body.qty);
     const lookup = murderLookup();
-    if (n && n <= 8) items.push({ price: PRICES[lookup], quantity: n, lookup });
+    if (n && n <= 8) {
+      const price = await priceIdForLookup(env, lookup);
+      if (price) items.push({ price, quantity: n, lookup });
+    }
   } else if (event === "christmas-lights") {
     const a = qty(body.adults);
     const c = qty(body.children);
@@ -114,6 +126,14 @@ function buildLineItems(event, body) {
     if (f) items.push({ price: PRICES["hsc-lights-family"], quantity: f, lookup: "hsc-lights-family" });
   }
   return items;
+}
+
+function guestCheckoutError(session) {
+  const raw = (session && session.error && session.error.message) || "";
+  if (/no such price/i.test(raw) || /live mode key/i.test(raw) || /test mode/i.test(raw)) {
+    return "Tickets are temporarily unavailable. Call (719) 602-3469 and we will take the order.";
+  }
+  return raw || "Could not start checkout.";
 }
 
 function ordersAuthed(request, env) {
@@ -354,8 +374,10 @@ export async function handleEventCheckout(request, env) {
     const email = String(body.email || "").trim();
     const phone = String(body.phone || "").trim();
     if (!name || !email) return json({ error: "Name and email are required." }, 400);
-    const items = buildLineItems(event, body);
-    if (!items.length) return json({ error: "Add at least one ticket." }, 400);
+    const items = await buildLineItems(env, event, body);
+    if (!items.length) {
+      return json({ error: "Tickets are temporarily unavailable. Call (719) 602-3469 and we will take the order." }, 400);
+    }
     let tenderloin = 0;
     let piccata = 0;
     let salmon = 0;
@@ -427,7 +449,7 @@ export async function handleEventCheckout(request, env) {
 
     const session = await stripePost(env, "/checkout/sessions", params);
     if (!session.id || !session.url) {
-      return json({ error: session.error?.message || "Could not start checkout." }, 400);
+      return json({ error: guestCheckoutError(session) }, 400);
     }
     return json({ url: session.url, id: session.id });
   }
