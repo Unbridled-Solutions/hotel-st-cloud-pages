@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v1008b</title>
+<title>Fremont Makers — Project Builder v1008c</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20261008b-btn-feel -->
+<!-- FM-BUILD-v20261008c-summary-links -->
 <script>
 (function(){
   try {
@@ -250,6 +250,8 @@
   .project-summary td { padding: 5px 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
   .project-summary td.r { text-align: right; white-space: nowrap; }
   .project-summary .empty { font-size: 13px; color: var(--muted); }
+  .project-summary a { color: var(--accent); text-decoration: none; }
+  .project-summary a:hover { text-decoration: underline; }
   .status-radios { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
   .status-radios label {
     display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text);
@@ -685,7 +687,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1008b</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1008c</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <span class="status-label">Status:</span>
@@ -945,7 +947,6 @@
           <button type="button" class="modal-btn" onclick="openIssueContract()" style="border-color:var(--accent);color:var(--accent);font-weight:700;">Next: Issue Contract & Invoices</button>
           <button type="button" class="modal-btn" id="btn-order-adjust" onclick="openAdjustSchedule()" style="display:none;">Adjust payment schedule</button>
           <button type="button" class="modal-btn" id="btn-order-change" onclick="openChangeOrder()" style="display:none;">Create change order</button>
-          <button type="button" class="modal-btn" id="btn-order-packet" onclick="openContractPacket(activeQuoteId)" style="display:none;border-color:var(--accent);color:var(--accent);">Download contract packet</button>
         </div>
       </div>
       <p id="order-summary-lede" style="font-size:14px;color:var(--muted);margin-bottom:12px;line-height:1.5;">This contract covers the mix below. Import a Wholesale Cabinets PDF on each house. Issue Contract here — one 50/30/20 for the order.</p>
@@ -988,7 +989,6 @@
           <button type="button" class="modal-btn" onclick="saveQuoteVersion()">Save quote version</button>
           <button type="button" class="modal-btn" onclick="saveQuoteAsModelTemplate()">Save as model recipe</button>
           <button type="button" class="modal-btn" onclick="downloadCustomerQuote()" style="border-color:var(--accent);color:var(--accent);">Download quote PDF</button>
-          <button type="button" class="modal-btn" id="btn-download-packet" onclick="openContractPacket(activeQuoteId)" style="display:none;border-color:var(--accent);color:var(--accent);">Download contract packet</button>
         </div>
       </div>
       <div id="quote-versions" style="font-size:13px;color:var(--muted);margin-bottom:10px;"></div>
@@ -2760,7 +2760,7 @@ function renderDashboard() {
     });
 
   function dashActions(quote, st, isChild) {
-    const packet = st === 'contract' ? `<button class="modal-btn" onclick="openContractPacket('${quote.id}')" style="border-color:var(--accent);color:var(--accent);">Download contract packet</button>` : '';
+    const packet = '';
     const sched = (st === 'contract' && !isChild) ? `<button class="modal-btn" onclick="event.stopPropagation();window._adjId='${quote.id}';openChangeOrder()">Create change order</button>` : '';
     const loadLbl = isChild ? 'Open house' : (quoteKind(quoteData[quote.id] || quote) === 'order' ? 'Open order' : 'Load');
     const dup = (!isChild && quoteKind(quoteData[quote.id] || quote) !== 'order')
@@ -2883,7 +2883,6 @@ function renderContracts() {
       <td>
         <div class="dash-actions">
           <button class="modal-btn" onclick="loadQuoteAndSwitchTab('${quote.id}')">Load</button>
-          <button class="modal-btn" onclick="openContractPacket('${quote.id}')" style="border-color:var(--accent);color:var(--accent);">Download contract packet</button>
         </div>
       </td>
     </tr>`;
@@ -3212,11 +3211,6 @@ function renderPipeline() {
       bar.appendChild(iss);
     }
     if (st === 'contract') {
-      const con = document.createElement('button');
-      con.className = 'status-btn';
-      con.textContent = 'Download contract packet';
-      con.onclick = () => openContractPacket(q.id);
-      bar.appendChild(con);
       [['d1',1],['d2',2],['d3',3]].forEach(pair => {
         if (!ar[pair[0] + 'Paid']) return;
         const rec = document.createElement('button');
@@ -3389,7 +3383,6 @@ function renderAr() {
       + '<td>' + cell(ar.d2Paid, ar.d2Due, total*0.3) + '</td>'
       + '<td>' + cell(ar.d3Paid, ar.d3Due, total*0.2) + '</td>'
       + '<td style="text-align:right">' + fmt(ar.open) + '</td>'
-      + '<td><button class="status-btn" onclick="openContractPacket(\'' + row.id + '\')">Download contract packet</button></td>'
       + '</tr>';
   });
   const next11 = months.slice(1).reduce((s, m) => s + m.amt, 0) + later;
@@ -3706,7 +3699,7 @@ function renderOrderSummary(orderId) {
   }
   syncHouseColorField(q);
   const pkt = document.getElementById('btn-order-packet');
-  if (pkt) pkt.style.display = (isOrder && (pipeStatus(q) === 'contract' || pipeStatus(q) === 'completed')) ? '' : 'none';
+  if (pkt) pkt.style.display = 'none';
   const adj = document.getElementById('btn-order-adjust');
   if (adj) adj.style.display = 'none';
   const co = document.getElementById('btn-order-change');
@@ -4876,7 +4869,7 @@ function syncIssueBtn() {
   setDisp('btn-adjust-schedule', false);
   setDisp('btn-change-order', contracted);
   setDisp('btn-mark-completed', contracted);
-  setDisp('btn-download-packet', showPacket);
+  setDisp('btn-download-packet', false);
   setDisp('btn-open-packet', false);
 }
 
@@ -5297,7 +5290,13 @@ function renderProjectSummary(id) {
   const ar = q.ar || {};
   const plan = payPlanOf(q);
   const maxN = plan === '50-50' ? 2 : 3;
-  let html = '<p style="font-size:13px;margin-bottom:8px;"><strong>' + (q.jobCode || '') + '</strong> · ' + (pipeStatus(q) === 'contract' ? 'Contracted' : (q.status || '')) + ' · ' + fmt(total) + '</p>';
+  const st = pipeStatus(q);
+  const packetId = (quoteKind(q) === 'child' && q.parentOrderId) ? q.parentOrderId : qid;
+  const stLabel = st === 'contract' ? 'Contracted' : (st === 'completed' ? 'Completed' : (q.status || ''));
+  const totalCell = (st === 'contract' || st === 'completed')
+    ? '<a href="#" onclick="event.preventDefault();openContractPacket(\'' + packetId + '\');">' + stLabel + ' ' + fmt(total) + '</a>'
+    : stLabel + ' · ' + fmt(total);
+  let html = '<p style="font-size:13px;margin-bottom:8px;"><strong>' + (q.jobCode || '') + '</strong> · ' + totalCell + '</p>';
   html += '<table><thead><tr><th>When</th><th>What</th><th>Note</th><th class="r">Amount</th></tr></thead><tbody>';
   versions.forEach(v => {
     html += '<tr><td>' + (v.date || '') + '</td><td>Quote ' + v.n + '</td><td>Saved version</td><td class="r">' + fmt(v.total || 0) + '</td></tr>';
@@ -5309,7 +5308,8 @@ function renderProjectSummary(id) {
   for (let n = 1; n <= maxN; n++) {
     const amt = ar['d' + n + 'Paid'] ? paidInvoiceAmt(ar, n, ar['d' + n + 'Amt']) : ar['d' + n + 'Amt'];
     if (amt == null && !ar['d' + n + 'Due']) continue;
-    html += '<tr><td>' + (ar['d' + n + 'Due'] || '') + '</td><td>Invoice ' + n + (ar['d' + n + 'Paid'] ? ' · PAID' : '') + '</td><td>' + (ar['d' + n + 'Check'] ? 'Check ' + ar['d' + n + 'Check'] : '') + '</td><td class="r">' + fmt(amt || 0) + '</td></tr>';
+    const invLabel = 'Invoice ' + n + (ar['d' + n + 'Paid'] ? ' · PAID' : '');
+    html += '<tr><td>' + (ar['d' + n + 'Due'] || '') + '</td><td><a href="#" onclick="event.preventDefault();openInvoiceSheet(\'' + packetId + '\', ' + n + ');">' + invLabel + '</a></td><td>' + (ar['d' + n + 'Check'] ? 'Check ' + ar['d' + n + 'Check'] : '') + '</td><td class="r">' + fmt(amt || 0) + '</td></tr>';
   }
   if (!versions.length && !cos.length) {
     html += '<tr><td colspan="4">No saved quotes or change orders yet. Invoice rows still show below when the job is contracted.</td></tr>';
