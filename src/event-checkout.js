@@ -16,11 +16,13 @@ const PRICES = {
 const MM_EARLY_ENDS_MS = Date.parse("2026-10-24T06:00:00.000Z");
 
 const MM_ENTREES = {
-  tenderloin: "6 oz Tenderloin",
+  tenderloin: "6oz Tenderloin",
   piccata: "Chicken Piccata",
   salmon: "Honey Lavender Salmon",
-  veg: "Vegetarian or Vegan Option",
+  veg: "Vegetarian / vegan (kitchen will follow up)",
 };
+
+const MM_CAP = 60;
 
 function murderLookup() {
   return Date.now() < MM_EARLY_ENDS_MS ? "hsc-mm-early" : "hsc-mm-regular";
@@ -94,29 +96,23 @@ async function stripeGet(env, path) {
   return res.json();
 }
 
+async function priceIdForLookup(env, lookup) {
+  const data = await stripeGet(env, "/prices?lookup_keys[]=" + encodeURIComponent(lookup) + "&active=true&limit=1");
+  if (data.data && data.data[0] && data.data[0].id) return data.data[0].id;
+  return PRICES[lookup] || "";
+}
+
 function qty(v) {
   const n = parseInt(v, 10);
   return Number.isFinite(n) && n > 0 ? n : 0;
 }
 
-/** Live Stripe has different price IDs than sandbox. Lookup keys are the contract. */
-async function priceIdForLookup(env, lookup) {
-  if (!lookup) return "";
-  const q = "/prices?lookup_keys[]=" + encodeURIComponent(lookup) + "&active=true&limit=1";
-  const res = await stripeGet(env, q);
-  const id = res && res.data && res.data[0] && res.data[0].id;
-  return id || "";
-}
-
-async function buildLineItems(env, event, body) {
+function buildLineItems(event, body) {
   const items = [];
   if (event === "murder-mystery") {
     const n = qty(body.adults || body.qty);
     const lookup = murderLookup();
-    if (n && n <= 8) {
-      const price = await priceIdForLookup(env, lookup);
-      if (price) items.push({ price, quantity: n, lookup });
-    }
+    if (n) items.push({ price: PRICES[lookup], quantity: n, lookup });
   } else if (event === "christmas-lights") {
     const a = qty(body.adults);
     const c = qty(body.children);
@@ -126,14 +122,6 @@ async function buildLineItems(env, event, body) {
     if (f) items.push({ price: PRICES["hsc-lights-family"], quantity: f, lookup: "hsc-lights-family" });
   }
   return items;
-}
-
-function guestCheckoutError(session) {
-  const raw = (session && session.error && session.error.message) || "";
-  if (/no such price/i.test(raw) || /live mode key/i.test(raw) || /test mode/i.test(raw)) {
-    return "Tickets are temporarily unavailable. Call (719) 602-3469 and we will take the order.";
-  }
-  return raw || "Could not start checkout.";
 }
 
 function ordersAuthed(request, env) {
@@ -213,6 +201,26 @@ function paidTicketCount(order) {
   if (order.event === "murder-mystery") return qty(order.adults) || 1;
   const n = qty(order.adults) + qty(order.children) + qty(order.family) * 4;
   return n || 1;
+}
+
+function orderIsPaid(order) {
+  const st = String(order.status || "").toLowerCase();
+  if (st === "cancelled" || st === "canceled" || st === "refunded") return false;
+  const pay = String(order.paymentStatus || "").toLowerCase();
+  if (pay && pay !== "paid" && pay !== "complete") return false;
+  return true;
+}
+
+async function murderTicketsSold(env) {
+  const index = (await env.PLANNER_DATA.get("events:index", { type: "json" })) || [];
+  let sold = 0;
+  for (const id of index.slice(0, 500)) {
+    const row = await env.PLANNER_DATA.get("events:order:" + id, { type: "json" });
+    if (!row || row.event !== "murder-mystery") continue;
+    if (!orderIsPaid(row)) continue;
+    sold += qty(row.adults) || qty(row.ticketCount);
+  }
+  return sold;
 }
 
 async function attachStripeFees(env, order) {
@@ -312,6 +320,69 @@ async function sendHotelMail(env, payload) {
   return { error: sent.error || "send failed" };
 }
 
+function guestConfirmHtml(order) {
+  const name = order.name || "there";
+  const hero = "https://offers.hotelstcloud.com/assets/murder-mystery/hero.jpg";
+  const logo = "https://offers.hotelstcloud.com/assets/murder-mystery/hsc-horizontal-cream.png";
+  const paid = money(order.amount) + (order.tax ? " (includes " + money(order.tax) + " tax)" : "");
+  const mm = order.event === "murder-mystery";
+  const agenda = mm
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 18px;border-collapse:collapse">
+        <tr><td style="padding:8px 0;border-bottom:1px solid #e6dcc4;font-size:15px;color:#2b1a14"><strong>6:30pm</strong> &nbsp; Cocktail Hour</td></tr>
+        <tr><td style="padding:8px 0;border-bottom:1px solid #e6dcc4;font-size:15px;color:#2b1a14"><strong>7:00pm</strong> &nbsp; Seated & Show Begins</td></tr>
+        <tr><td style="padding:8px 0;border-bottom:1px solid #e6dcc4;font-size:15px;color:#2b1a14"><strong>7:15pm</strong> &nbsp; Dinner Service</td></tr>
+      </table>
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:#2b1a14">Each plate comes with a side salad. If you chose a vegetarian or vegan entrée, we will ensure the kitchen is notified.</p>
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:#2b1a14"><strong>Your menu:</strong> ${menuLine(order)}</p>`
+    : "";
+  const room = order.wantRoom === "yes"
+    ? `<p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:#2b1a14">You asked about a room. Our reservations team will follow up.</p>`
+    : "";
+  const notes = order.notes
+    ? `<p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:#2b1a14"><strong>Notes we have:</strong> ${order.notes}</p>`
+    : "";
+  return `<div style="margin:0;padding:0;background:#f4eee4">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4eee4;padding:24px 12px">
+    <tr><td align="center">
+      <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#140a0a;border-collapse:collapse">
+        <tr>
+          <td style="padding:22px 24px 12px;text-align:center">
+            <img src="${logo}" alt="Hotel St. Cloud" width="180" style="display:block;margin:0 auto;max-width:180px;height:auto;border:0" />
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <img src="${hero}" alt="Murder in Buffalo Chip" width="560" style="display:block;width:100%;max-width:560px;height:auto;border:0" />
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:18px 24px 28px;text-align:center;color:#eadfc8;font-family:Georgia,'Times New Roman',serif">
+            <div style="font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#c4a15a;margin-bottom:8px">You're in</div>
+            <div style="font-size:26px;line-height:1.2">${order.eventName}</div>
+            ${order.eventDate ? `<div style="margin-top:8px;font-size:14px;font-family:Arial,sans-serif;letter-spacing:.04em">${order.eventDate}</div>` : ""}
+          </td>
+        </tr>
+      </table>
+      <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#fffdf8;border-collapse:collapse">
+        <tr>
+          <td style="padding:28px 28px 8px;font-family:Arial,Helvetica,sans-serif;color:#2b1a14">
+            <p style="margin:0 0 16px;font-size:16px;line-height:1.55">Hi ${name},</p>
+            <p style="margin:0 0 16px;font-size:15px;line-height:1.55">We have your tickets for <strong>${order.eventName}</strong>${order.eventDate ? " on " + order.eventDate : ""}.</p>
+            <p style="margin:0 0 18px;font-size:15px;line-height:1.55">${ticketLine(order)}<br>Paid ${paid}.</p>
+            ${agenda}
+            ${room}
+            ${notes}
+            <p style="margin:24px 0 6px;font-size:15px;line-height:1.55">We cannot wait to host you.</p>
+            <p style="margin:0 0 4px;font-size:15px;line-height:1.55"><strong>Team Hotel St. Cloud</strong></p>
+            <p style="margin:0 0 8px;font-size:13px;line-height:1.55;color:#6b5346">631 Main Street, Cañon City<br>(719) 602-3469 · reservations@hotelstcloud.com</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</div>`;
+}
+
 async function notifyOrder(env, order) {
   const errors = [];
   if (order.email && !order.guestEmailId) {
@@ -320,13 +391,7 @@ async function notifyOrder(env, order) {
       cc: [DESK],
       reply_to: DESK,
       subject: `You're in · ${order.eventName}`,
-      html: `<p>Hi ${order.name || "there"},</p>
-<p>We have your tickets for <strong>${order.eventName}</strong>${order.eventDate ? " on " + order.eventDate : ""}.</p>
-<p>${ticketLine(order)}<br>Paid ${money(order.amount)}${order.tax ? " (includes " + money(order.tax) + " tax)" : ""}.</p>
-${order.event === "murder-mystery" ? "<p>Menu: " + menuLine(order) + "</p><p>Cocktail hour 6:30pm. Seating 7pm. Meal service about 7:15pm. Each plate comes with a side salad.</p>" : ""}
-${order.wantRoom === "yes" ? "<p>You asked about a room. The desk will follow up.</p>" : ""}
-${order.notes ? "<p>Notes we have: " + order.notes + "</p>" : ""}
-<p>Hotel St. Cloud · 631 Main Street, Cañon City<br>(719) 602-3469 · reservations@hotelstcloud.com</p>`,
+      html: guestConfirmHtml(order),
     });
     if (guest.id) order.guestEmailId = guest.id;
     else errors.push("guest: " + (guest.error || "fail"));
@@ -374,9 +439,14 @@ export async function handleEventCheckout(request, env) {
     const email = String(body.email || "").trim();
     const phone = String(body.phone || "").trim();
     if (!name || !email) return json({ error: "Name and email are required." }, 400);
-    const items = await buildLineItems(env, event, body);
-    if (!items.length) {
-      return json({ error: "Tickets are temporarily unavailable. Call (719) 602-3469 and we will take the order." }, 400);
+    const items = buildLineItems(event, body);
+    if (!items.length) return json({ error: "Add at least one ticket." }, 400);
+    for (const it of items) {
+      if (it.lookup) {
+        const resolved = await priceIdForLookup(env, it.lookup);
+        if (resolved) it.price = resolved;
+      }
+      if (!it.price) return json({ error: "Ticket price is not set up in Stripe yet." }, 500);
     }
     let tenderloin = 0;
     let piccata = 0;
@@ -385,15 +455,21 @@ export async function handleEventCheckout(request, env) {
     let ticketLookup = "";
     if (event === "murder-mystery") {
       const tickets = qty(body.adults || body.qty);
-      if (tickets > 8) {
-        return json({ error: "Max 8 tickets per order. For a larger party, call the desk." }, 400);
-      }
+      if (tickets > 8) return json({ error: "Eight tickets is the most in one checkout. Call us for a larger table." }, 400);
       tenderloin = qty(body.entreeTenderloin);
       piccata = qty(body.entreePiccata);
       salmon = qty(body.entreeSalmon);
       veg = qty(body.entreeVeg);
       if (tenderloin + piccata + salmon + veg !== tickets) {
         return json({ error: "Tenderloin, chicken, salmon, and vegetarian counts need to add up to the number of tickets." }, 400);
+      }
+      const sold = await murderTicketsSold(env);
+      const left = MM_CAP - sold;
+      if (left <= 0) {
+        return json({ error: "This night is sold out. Call (719) 602-3469 if you need to be on a waitlist." }, 409);
+      }
+      if (tickets > left) {
+        return json({ error: "Only " + left + " ticket" + (left === 1 ? "" : "s") + " left for this night." }, 409);
       }
       ticketLookup = items[0] ? items[0].lookup : murderLookup();
     }
@@ -449,7 +525,7 @@ export async function handleEventCheckout(request, env) {
 
     const session = await stripePost(env, "/checkout/sessions", params);
     if (!session.id || !session.url) {
-      return json({ error: guestCheckoutError(session) }, 400);
+      return json({ error: session.error?.message || "Could not start checkout." }, 400);
     }
     return json({ url: session.url, id: session.id });
   }
@@ -489,6 +565,14 @@ export async function handleEventCheckout(request, env) {
       }
     }
     return json({ received: true });
+  }
+
+  if (path === "/api/events/availability" && request.method === "GET") {
+    const event = url.searchParams.get("event") || "";
+    if (event !== "murder-mystery") return json({ error: "Unknown event" }, 400);
+    const sold = await murderTicketsSold(env);
+    const left = Math.max(0, MM_CAP - sold);
+    return json({ event, cap: MM_CAP, sold, left, soldOut: left <= 0 });
   }
 
   if (path === "/api/events/orders" && request.method === "GET") {

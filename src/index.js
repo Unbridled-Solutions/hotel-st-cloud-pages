@@ -11,6 +11,7 @@ import { handlePayroll } from './payroll.js';
 import { handleHscVaultLogins } from './hsc-manager-vault.js';
 import { handleVenueInquire } from './venue-inquire.js';
 import { handleEateryReservations } from './eatery-reservations.js';
+import { handleFmHellosign } from './fm-hellosign.js';
 
 const AIRTABLE_BASE = "appUUjLXEUwlyx23M";
 const SOCC_TABLE    = "SOCC%20Barista%20Applications";
@@ -264,6 +265,11 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (request.method === "OPTIONS") return optionsResponse();
+
+    if (url.pathname.startsWith("/api/fm/hellosign")) {
+      const hs = await handleFmHellosign(request, env);
+      if (hs) return hs;
+    }
 
     if (url.pathname.startsWith("/api/events/")) {
       const eventRes = await handleEventCheckout(request, env);
