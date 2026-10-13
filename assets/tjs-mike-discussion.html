@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="paper">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>A conversation · Mike Gustafson · TJ's Log & Timber</title>
+  <script>
+    (function(){
+      try {
+        var t = localStorage.getItem('unbridled-brief-theme');
+        if (t === 'paper' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+        else document.documentElement.setAttribute('data-theme', 'paper');
+      } catch (e) {}
+    })();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root, html[data-theme="paper"] {
+      --bg: #f3eee4;
+      --paper: #faf7f0;
+      --card: #ffffff;
+      --ink: #2b323a;
+      --blue: #6b7f8a;
+      --gold: #8a6d20;
+      --line: rgba(43,50,58,0.12);
+      --header-bg: #faf7f0;
+      --header-line: rgba(43,50,58,0.12);
+      --muted: #5c6b73;
+      --text: #2b323a;
+      --active-bg: #2b323a;
+      --active-fg: #faf7f0;
+      --hero-n: #2b323a;
+    }
+    html[data-theme="dark"] {
+      --bg: #0f1923;
+      --paper: #1a2e3b;
+      --card: #162433;
+      --ink: #e8e0d4;
+      --blue: #5a8ba7;
+      --gold: #c9aa7c;
+      --line: rgba(90,139,167,0.22);
+      --header-bg: rgba(15,25,35,0.96);
+      --header-line: rgba(90,139,167,0.18);
+      --muted: #8a9aaa;
+      --text: #e8e0d4;
+      --active-bg: #c9aa7c;
+      --active-fg: #0f1923;
+      --hero-n: #e8e0d4;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; }
+    body {
+      font-family: 'Josefin Sans', sans-serif;
+      font-weight: 300;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 17px;
+      line-height: 1.55;
+    }
+    header {
+      position: sticky; top: 0; z-index: 8;
+      padding: 14px 18px; padding-top: max(14px, env(safe-area-inset-top));
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      border-bottom: 1px solid var(--header-line); background: var(--header-bg);
+    }
+    header .brand { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--blue); flex: 1; font-weight: 600; }
+    .theme-toggle { display: flex; gap: 4px; }
+    .theme-toggle button {
+      padding: 6px 12px; border-radius: 6px; border: 1px solid var(--line);
+      background: transparent; color: var(--muted); font-size: 12px; cursor: pointer;
+      font-family: inherit; font-weight: 600;
+    }
+    .theme-toggle button.on { background: var(--active-bg); color: var(--active-fg); border-color: var(--active-bg); font-weight: 700; }
+    main { max-width: 720px; margin: 0 auto; padding: 32px 18px calc(80px + env(safe-area-inset-bottom)); }
+    .eyebrow { color: var(--gold); letter-spacing: 0.18em; text-transform: uppercase; font-size: 12px; font-weight: 600; margin-bottom: 12px; }
+    h1 { font-weight: 700; font-size: clamp(26px, 5vw, 36px); line-height: 1.15; margin-bottom: 12px; }
+    .lede { color: var(--muted); font-size: 17px; line-height: 1.6; margin-bottom: 22px; }
+    h2 { font-weight: 600; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); margin: 28px 0 12px; }
+    p, li { font-size: 16px; line-height: 1.65; font-weight: 400; }
+    p + p { margin-top: 12px; }
+    ul { margin: 8px 0 0 18px; }
+    li { margin: 7px 0; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; margin: 0 0 12px; }
+    .heroes { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin: 8px 0 16px; }
+    .hero { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+    .hero .lbl { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--blue); font-weight: 600; }
+    .hero .n { font-size: 22px; font-weight: 700; color: var(--hero-n); margin-top: 4px; }
+    .hero .hint { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    .note { margin-top: 28px; font-size: 13px; color: var(--muted); line-height: 1.55; }
+    .print { margin: 0 0 20px; }
+    .print a {
+      display: inline-block; border: 1px solid var(--gold); color: var(--gold);
+      text-decoration: none; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 8px 14px; border-radius: 99px; font-weight: 600;
+    }
+    @media print {
+      header, .print, .theme-toggle { display: none !important; }
+      body { background: #fff; color: #2b323a; }
+      .card, .hero { border-color: #ccc; background: #fff; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">TJ's Log & Timber · private</div>
+    <nav>
+      <div class="theme-toggle" title="Looks only. Saved on this device.">
+        <button type="button" id="theme-paper-btn" onclick="setTheme('paper')">Paper</button>
+        <button type="button" id="theme-dark-btn" onclick="setTheme('dark')">Dark</button>
+      </div>
+    </nav>
+  </header>
+  <main>
+    <div class="eyebrow">For discussion · not an offer</div>
+    <h1>Mike, here is the shape I am thinking.</h1>
+    <p class="lede">This is ideation. Loose on purpose. I want room for two hires, not one. Read it, mark it up, tell me what does not fit.</p>
+    <div class="print"><a href="javascript:window.print()">Print / Save PDF</a></div>
+
+    <div class="card">
+      <p>I am presenting this as employment at TJ's based on a two-hire strategy. Call it Hire 2.0.1. The goal is a General Manager and a salesperson working alongside each other. I am less of a fan of hiring you alone and stretching one person across mill, yard, and every walk-in.</p>
+      <p>The commercial aim is $2 million to $3 million a year. Then we backfill production, build, and install. Not kit-only. A concierge path: walk the customer through the whole build.</p>
+    </div>
+
+    <h2>You · General Manager</h2>
+    <p>Effective 1 December 2026, or sooner if we agree. You take the GM seat at TJ's.</p>
+    <div class="heroes">
+      <div class="hero"><div class="lbl">Base</div><div class="n">$100,000</div><div class="hint">Year. Two-hire frame, not a solo package.</div></div>
+      <div class="hero"><div class="lbl">All TJ's revenue</div><div class="n">2%</div><div class="hint">On $2.5M that is about $50,000. Not a promise of $2.5M.</div></div>
+      <div class="hero"><div class="lbl">NOI bonus</div><div class="n">10%</div><div class="hint">Of net operating income, in a year we print a profit.</div></div>
+    </div>
+    <div class="card">
+      <ul>
+        <li>Once the company is profitable in a calendar year, an extra $20,000 true-up on base.</li>
+        <li>Three weeks total: vacation, sick, and PTO combined.</li>
+        <li>Assumption: you carry medical elsewhere. Company benefits we can talk about later.</li>
+      </ul>
+    </div>
+
+    <h2>Ownership later · not a grant now</h2>
+    <div class="card">
+      <p>After we are profitable, an option to buy in at then-present value. Somewhere in the 10% to 20% range. We would value the company, price the shares, and you could put 50% of that 10% NOI bonus toward the purchase.</p>
+      <p>Example only. If NOI is $100,000, your 10% is $10,000. You could apply $5,000 toward equity at the then value. Nothing here locks 15%. Control stays with current ownership. Lawyers write the real paper later.</p>
+    </div>
+
+    <h2>The second hire · Cara</h2>
+    <p>We would also hire Cara Tetter as salesperson, working alongside you. $60,000 a year. Two weeks vacation. Medical TBD.</p>
+    <div class="heroes">
+      <div class="hero"><div class="lbl">Her sales</div><div class="n">2%</div><div class="hint">On what she sells. Not on the whole mill.</div></div>
+      <div class="hero"><div class="lbl">Design fees</div><div class="n">10%</div><div class="hint">Design fee is 2% of the customer's purchase. She gets 10% of that fee.</div></div>
+    </div>
+    <div class="card">
+      <p>On a $500,000 job she originated: 2% of the sale is $10,000. The company design fee is $10,000. Her 10% of that fee is $1,000.</p>
+      <p>What she brings that we do not have enough of: a consultative design-and-build conversation, and a white-glove walk through the entire build. Not just mill the kit and ship it. I think there is real room in that concierge service.</p>
+    </div>
+
+    <h2>Why two, inside a cap</h2>
+    <div class="heroes">
+      <div class="hero"><div class="lbl">Your base</div><div class="n">$100,000</div><div class="hint">GM</div></div>
+      <div class="hero"><div class="lbl">Cara base</div><div class="n">$60,000</div><div class="hint">Sales</div></div>
+      <div class="hero"><div class="lbl">Together</div><div class="n">$160,000</div><div class="hint">Salary cap for two seats</div></div>
+    </div>
+    <div class="card">
+      <p>That is the strategy. Two people inside a cap. The other path is a single hire, which is you. I am less of a fan of that.</p>
+    </div>
+
+    <h2>What this is not</h2>
+    <div class="card">
+      <p>Not an offer letter. Not a contract. Not units in the company today. Numbers are a starting point for the conversation. Tell me what you would change.</p>
+    </div>
+
+    <p class="note">Private. For Mike Gustafson and TJ's ownership. Starting point only. A lawyer has not reviewed this. Paper and Dark are looks only, saved on this device.</p>
+  </main>
+  <script>
+    function setTheme(t) {
+      if (t !== 'dark' && t !== 'paper') t = 'paper';
+      document.documentElement.setAttribute('data-theme', t);
+      try { localStorage.setItem('unbridled-brief-theme', t); } catch (e) {}
+      var d = document.getElementById('theme-dark-btn');
+      var p = document.getElementById('theme-paper-btn');
+      if (d) d.classList.toggle('on', t === 'dark');
+      if (p) p.classList.toggle('on', t === 'paper');
+    }
+    setTheme(document.documentElement.getAttribute('data-theme') || 'paper');
+  </script>
+</body>
+</html>
