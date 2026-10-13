@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v1013b</title>
+<title>Fremont Makers — Project Builder v1013c</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20261013b-co-ocr -->
+<!-- FM-BUILD-v20261013c-sku-lines -->
 <script>
 (function(){
   try {
@@ -687,7 +687,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1013b</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1013c</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <span class="status-label">Status:</span>
@@ -1614,12 +1614,13 @@
       </div>
     </div>
     <div id="co-step-2" class="co-step">
-      <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">Upload a Wholesale Cabinets PDF of the changed boxes. Scanned PDFs are read with OCR. Default is merge into the current list (does not wipe the job).</p>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">Upload a Wholesale Cabinets PDF of the changed boxes. We take SKU lines only — not tax, not order total. Payment is the next step.</p>
       <input type="file" id="co-pdf-file" accept=".pdf,.csv,.txt,.docx" style="display:none" onchange="coHandlePdf(event)" />
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
         <button type="button" class="modal-btn" onclick="document.getElementById('co-pdf-file').click()">Upload new cabinet PDF</button>
-        <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
-          <input type="checkbox" id="co-pdf-merge" checked /> Merge into current lines (do not replace the whole job)
+        <label style="font-size:13px;display:flex;align-items:flex-start;gap:8px;cursor:pointer;max-width:420px;line-height:1.35;">
+          <input type="checkbox" id="co-pdf-merge" checked style="margin-top:3px;" />
+          <span><strong>Update existing order</strong><br><span style="color:var(--muted);font-size:12px;">Keep current SKUs. Add or change lines from this PDF. Uncheck only if you want to wipe the list and start from this PDF.</span></span>
         </label>
       </div>
       <p id="co-pdf-status" style="font-size:13px;color:var(--muted);margin-bottom:8px;"></p>
@@ -2044,17 +2045,22 @@ function sqParseLine(line) {
 
 function sqParseText(text) {
   _sqBillCheck = null;
-  // ── Wholesale Cabinets PDF format detector ──────────────────────
-  if (text.includes('Wholesale Cabinets') || text.includes('wholesalecabinets') || text.includes('RTA Cabinets')) {
+  const looksWc = /wholesale\s*cabinets|wholesalecabinets|rta cabinets|dark hickory|bayview|shaker/i.test(text || '');
+  if (looksWc || wcOcrHarvestSkus(text).length) {
     const parsed = parseWholesaleCabinetsQuote(text);
-    if (parsed.items.length) {
-      _sqBillCheck = parsed.bill;
-      return parsed.items;
-    }
-    // Colored / mixed-line PDFs used to return 0 — fall through to generic lines
+    const harvested = wcOcrHarvestSkus(text);
+    const by = {};
+    (parsed.items || []).concat(harvested).forEach(it => {
+      if (!it || !wcIsRealSku(it.serial)) return;
+      if (wcIsBillNoise(it)) return;
+      by[String(it.serial).toUpperCase()] = it;
+    });
+    const items = Object.values(by);
+    _sqBillCheck = parsed.bill || null;
+    return items;
   }
   const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 3 && !l.match(/^[#\/]/));
-  return lines.map(sqParseLine).filter(Boolean);
+  return lines.map(sqParseLine).filter(Boolean).filter(it => !wcIsBillNoise(it));
 }
 
 const WC_COLOR_NAMES = {
@@ -2102,8 +2108,58 @@ function wcIsRealSku(serial) {
   if (sku.length < 2) return false;
   if (!/[A-Z]/.test(sku)) return false;
   if (/^\d+(\.\d+)?$/.test(sku)) return false;
-  if (/^(PAGE|QTY|TAX|TOTAL|SUBTOTAL|ITEM|LINE|SALES)$/.test(sku.split('-')[0])) return false;
+  if (/^\d{5,}/.test(sku)) return false;
+  if (/^(PAGE|QTY|TAX|TOTAL|SUBTOTAL|ITEM|LINE|SALES|ORDER|OCT|DATE)$/.test(sku.split('-')[0])) return false;
+  const suf = String(serial || '').toUpperCase().split('-').pop();
+  if (WC_SUFFIXES.length && suf && !WC_SUFFIXES.includes(suf) && sku.length < 4) return false;
   return true;
+}
+function wcIsBillNoise(it) {
+  const desc = String((it && it.desc) || '');
+  const serial = String((it && it.serial) || '');
+  if (/\b(subtotal|order total|grand total|sales tax|discount|shipping|freight|payment method)\b/i.test(desc)) return true;
+  if (/^(subtotal|total|tax|discount|shipping)\b/i.test(desc.trim())) return true;
+  if (/^\d{6,}$/.test(serial.replace(/\D/g,'')) && !/[A-Z]{2}/.test(serial)) return true;
+  if ((Number(it && it.cost) || 0) < 5) return true;
+  return false;
+}
+function wcStripBillFooter(text) {
+  return String(text || '').split(/\n\s*(?:Order\s*Total|Invoice\s*Total|Quote\s*Total|Grand\s*Total)\b/i)[0];
+}
+function wcOcrHarvestSkus(text) {
+  const blob = wcStripBillFooter(text);
+  const re = /\b([A-Z]{1,8}\d[A-Z0-9.()]{0,16}-[A-Z]{2,4})\b/g;
+  const items = [];
+  const seen = new Set();
+  let m;
+  while ((m = re.exec(blob))) {
+    const serial = m[1].toUpperCase();
+    const suf = serial.split('-').pop();
+    if (!WC_SUFFIXES.includes(suf)) continue;
+    if (!wcLooksLikeSerial(serial) || seen.has(serial)) continue;
+    seen.add(serial);
+    const after = blob.slice(m.index + m[0].length, m.index + m[0].length + 320);
+    let qty = 1;
+    const qtyM = after.match(/\b([1-9]\d?)\b/);
+    if (qtyM) qty = parseInt(qtyM[1], 10);
+    const prices = [];
+    const pr = /\$?\s*([\d,]+\.\d{2})/g;
+    let p;
+    while ((p = pr.exec(after))) {
+      const n = parseFloat(p[1].replace(/,/g, ''));
+      if (n > 5 && n < 2500) prices.push(n);
+    }
+    const cost = wcPickUnitCost(qty, prices);
+    if (!(cost > 5)) continue;
+    items.push({
+      desc: (WC_COLOR_NAMES[suf] || wcColorLabel(serial, [])) + ' ' + wcSkuBase(serial),
+      qty,
+      cost,
+      serial,
+      ext: wcMoney(cost * qty)
+    });
+  }
+  return wcCleanItems(items);
 }
 
 function wcParsePriceToken(t) {
@@ -2184,7 +2240,7 @@ async function wcOcrPdf(pdf) {
   const parts = [];
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
-    const viewport = page.getViewport({ scale: 2 });
+    const viewport = page.getViewport({ scale: 2.5 });
     const canvas = document.createElement('canvas');
     canvas.width = viewport.width;
     canvas.height = viewport.height;
@@ -2263,10 +2319,12 @@ function wcHarvestMissingBillLines(text, already, bill) {
 function wcCleanItems(items) {
   return (items || []).filter(it => {
     if (!wcIsRealSku(it.serial)) return false;
+    if (wcIsBillNoise(it)) return false;
     if (/^(TAX|SALES|SUBTOTAL|TOTAL|GRAND|SHIPPING|FREIGHT)$/i.test(String(it.desc || '').split(' ').pop() || '')) return false;
-    if (/tax|subtotal|grand total|shipping/i.test(it.desc || '') && !/shaker/i.test(it.desc || '')) return false;
+    if (/tax|subtotal|grand total|shipping|discount/i.test(it.desc || '') && !/shaker/i.test(it.desc || '')) return false;
     const cost = Number(it.cost) || 0;
-    if (cost >= 2000) return false; // footer totals never become a cabinet
+    if (cost < 5) return false;
+    if (cost >= 5000) return false;
     return true;
   });
 }
@@ -5323,13 +5381,19 @@ async function coHandlePdf(event) {
       if (status) status.textContent = 'No SKUs read from that PDF. Scanned pages need a moment of OCR — try again, or the file has no cabinet lines. Current list was not changed.';
       return;
     }
-    const incoming = lines.map(it => ({ desc: it.desc, serial: it.serial, qty: it.qty, cost: it.cost, markup: '35' }));
+    const incoming = lines.filter(it => it && wcIsRealSku(it.serial) && !wcIsBillNoise(it)).map(it => ({
+      desc: it.desc, serial: String(it.serial || '').toUpperCase(), qty: it.qty, cost: it.cost, markup: '35'
+    }));
+    if (!incoming.length) {
+      if (status) status.textContent = 'PDF had no cabinet SKU lines (tax/total ignored). Current list was not changed.';
+      return;
+    }
     const merge = document.getElementById('co-pdf-merge')?.checked !== false;
     c.cabinets = merge ? coMergeIncoming(c.oldCabinets || c.cabinets || [], incoming) : incoming;
     c.diff = coDiffSkus(c.oldCabinets || [], c.cabinets);
     coPaintSkus();
     coRenderDiff(c.diff);
-    if (status) status.textContent = (merge ? 'Merged ' : 'Replaced with ') + lines.length + ' PDF line(s) from ' + file.name + '.';
+    if (status) status.textContent = (merge ? 'Updated existing order with ' : 'Replaced list with ') + incoming.length + ' SKU line(s) from ' + file.name + '.';
   } catch (e) {
     if (status) status.textContent = 'Could not read PDF: ' + (e.message || e);
   }
