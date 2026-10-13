@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v1013c</title>
+<title>Fremont Makers — Project Builder v1013d</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20261013c-sku-lines -->
+<!-- FM-BUILD-v20261013d-replace-optin -->
 <script>
 (function(){
   try {
@@ -687,7 +687,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1013c</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1013d</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <span class="status-label">Status:</span>
@@ -1618,9 +1618,9 @@
       <input type="file" id="co-pdf-file" accept=".pdf,.csv,.txt,.docx" style="display:none" onchange="coHandlePdf(event)" />
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
         <button type="button" class="modal-btn" onclick="document.getElementById('co-pdf-file').click()">Upload new cabinet PDF</button>
-        <label style="font-size:13px;display:flex;align-items:flex-start;gap:8px;cursor:pointer;max-width:420px;line-height:1.35;">
-          <input type="checkbox" id="co-pdf-merge" checked style="margin-top:3px;" />
-          <span><strong>Update existing order</strong><br><span style="color:var(--muted);font-size:12px;">Keep current SKUs. Add or change lines from this PDF. Uncheck only if you want to wipe the list and start from this PDF.</span></span>
+        <label style="font-size:13px;display:flex;align-items:flex-start;gap:8px;cursor:pointer;max-width:440px;line-height:1.35;">
+          <input type="checkbox" id="co-pdf-replace" style="margin-top:3px;" />
+          <span><strong>Clear existing list and replace with this PDF</strong><br><span style="color:var(--muted);font-size:12px;">Leave unchecked to add or update lines on the current order. Check only if you want to wipe the list and start from this PDF.</span></span>
         </label>
       </div>
       <p id="co-pdf-status" style="font-size:13px;color:var(--muted);margin-bottom:8px;"></p>
@@ -5388,12 +5388,12 @@ async function coHandlePdf(event) {
       if (status) status.textContent = 'PDF had no cabinet SKU lines (tax/total ignored). Current list was not changed.';
       return;
     }
-    const merge = document.getElementById('co-pdf-merge')?.checked !== false;
-    c.cabinets = merge ? coMergeIncoming(c.oldCabinets || c.cabinets || [], incoming) : incoming;
+    const replace = !!document.getElementById('co-pdf-replace')?.checked;
+    c.cabinets = replace ? incoming : coMergeIncoming(c.oldCabinets || c.cabinets || [], incoming);
     c.diff = coDiffSkus(c.oldCabinets || [], c.cabinets);
     coPaintSkus();
     coRenderDiff(c.diff);
-    if (status) status.textContent = (merge ? 'Updated existing order with ' : 'Replaced list with ') + incoming.length + ' SKU line(s) from ' + file.name + '.';
+    if (status) status.textContent = (replace ? 'Replaced list with ' : 'Added to existing order: ') + incoming.length + ' SKU line(s) from ' + file.name + '.';
   } catch (e) {
     if (status) status.textContent = 'Could not read PDF: ' + (e.message || e);
   }
