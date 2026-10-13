@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v1005a</title>
+<title>Fremont Makers — Project Builder v1008a</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20261005a-paid-lock -->
+<!-- FM-BUILD-v20261008a-change-order -->
 <script>
 (function(){
   try {
@@ -196,7 +196,8 @@
     background: var(--surface2);
     border-bottom: 1px solid var(--border);
     padding: 10px 32px;
-    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    display: flex; align-items: center; gap: 10px 16px; flex-wrap: wrap;
+    justify-content: flex-start;
   }
   .status-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
   .status-pill {
@@ -219,6 +220,24 @@
   .status-btn.btn-contract.btn-active { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
   .status-btn.btn-completed.btn-active { background: var(--green); color: var(--on-green); border-color: var(--green); }
   .status-btn.btn-lost.btn-active { background: var(--red); color: #fff; border-color: var(--red); }
+  .co-step { display: none; }
+  .co-step.on { display: block; }
+  .co-pills { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 14px; }
+  .co-pill {
+    border: 1px solid var(--border); background: var(--surface); color: var(--text);
+    padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px;
+  }
+  .co-pill.on { border-color: var(--accent); background: var(--surface2); }
+  .project-summary {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 14px; margin-bottom: 14px;
+  }
+  .project-summary h4 { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  .project-summary table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .project-summary th { text-align: left; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 4px 6px; border-bottom: 1px solid var(--border); }
+  .project-summary td { padding: 5px 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .project-summary td.r { text-align: right; white-space: nowrap; }
+  .project-summary .empty { font-size: 13px; color: var(--muted); }
   .status-radios { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
   .status-radios label {
     display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text);
@@ -634,9 +653,9 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1005a</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1008a</span>
   </div>
-  <div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
+  <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <span class="status-label">Status:</span>
     <span class="status-pill pill-proposed" id="status-pill">PROPOSED</span>
     <div class="status-radios" role="radiogroup" aria-label="Quote status">
@@ -922,6 +941,11 @@
         </thead>
         <tbody id="order-houses-tbody"></tbody>
       </table>
+    </div>
+
+    <div class="project-summary" id="project-summary">
+      <h4>Project summary</h4>
+      <div id="project-summary-body" class="empty">Open a job to see quotes, change orders, and invoices.</div>
     </div>
 
     <!-- CABINETS SECTION -->
@@ -1531,13 +1555,51 @@
 </div>
 
 <div class="modal-overlay" id="change-order-modal">
-  <div class="modal" style="max-width:480px;text-align:left;">
-    <h3>Create change order</h3>
+  <div class="modal" style="max-width:760px;text-align:left;max-height:90vh;overflow:auto;">
+    <h3 id="co-title">Change order</h3>
     <p id="co-sub" style="font-size:13px;color:var(--muted);margin-bottom:12px;"></p>
-    <p style="font-size:14px;color:var(--text);margin-bottom:12px;line-height:1.5;">A change order is how you change the <strong>contracted total</strong> — cabinets, SKUs, or labor. Adjust payment schedule cannot do that. It only moves due dates and how the same total is billed.</p>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">The SKU editor for this path is next. This button is the door so nobody tries to rewrite the contract total inside the payment schedule.</p>
-    <div style="display:flex;gap:8px;justify-content:flex-end;">
-      <button class="modal-btn" type="button" onclick="closeChangeOrder()">Close</button>
+    <div id="co-step-1" class="co-step on">
+      <p style="font-size:14px;margin-bottom:8px;">What is changing on this contracted job?</p>
+      <div class="co-pills">
+        <button type="button" class="co-pill on" id="co-kind-skus" onclick="coSetKind('skus')">SKUs / cabinets</button>
+        <button type="button" class="co-pill" id="co-kind-schedule" onclick="coSetKind('schedule')">Payment schedule</button>
+        <button type="button" class="co-pill" id="co-kind-both" onclick="coSetKind('both')">Both</button>
+      </div>
+      <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Why (backorder, extra boxes, new total, …)</label>
+      <textarea id="co-reason" rows="3" style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;margin-bottom:12px;"></textarea>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="modal-btn" type="button" onclick="closeChangeOrder()">Cancel</button>
+        <button class="modal-btn confirm" type="button" onclick="coGo(2)">Next</button>
+      </div>
+    </div>
+    <div id="co-step-2" class="co-step">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">Edit the lines. Paid invoices stay locked. New total shows at the bottom.</p>
+      <div id="co-sku-wrap" style="overflow:auto;max-height:40vh;margin-bottom:10px;"></div>
+      <p id="co-sku-live" style="font-size:13px;margin-bottom:12px;"></p>
+      <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">
+        <button class="modal-btn" type="button" onclick="coGo(1)">Back</button>
+        <button class="modal-btn confirm" type="button" onclick="coAfterSkus()">Next</button>
+      </div>
+    </div>
+    <div id="co-step-3" class="co-step">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">Unpaid invoices must still add to the new remaining. Paid checks do not move.</p>
+      <div id="co-sched-fields"></div>
+      <p id="co-sched-live" style="font-size:13px;margin:8px 0;"></p>
+      <p id="co-sched-err" style="font-size:13px;color:var(--red);min-height:18px;"></p>
+      <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">
+        <button class="modal-btn" type="button" onclick="coBackFromSched()">Back</button>
+        <button class="modal-btn confirm" type="button" id="co-sched-next" onclick="coGo(4)">Next</button>
+      </div>
+    </div>
+    <div id="co-step-4" class="co-step">
+      <p style="font-size:14px;margin-bottom:8px;">Review, then save. That writes the paper trail on this job.</p>
+      <div id="co-review" style="font-size:13px;line-height:1.5;margin-bottom:12px;"></div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Request signatures is next. HelloSign API is not wired yet — send the credentials when you have them.</p>
+      <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">
+        <button class="modal-btn" type="button" onclick="coBackFromReview()">Back</button>
+        <button class="modal-btn" type="button" onclick="coRequestSignatures()">Request signatures</button>
+        <button class="modal-btn confirm" type="button" onclick="saveChangeOrder()">Save change order</button>
+      </div>
     </div>
   </div>
 </div>
@@ -2667,7 +2729,7 @@ function renderDashboard() {
 
   function dashActions(quote, st, isChild) {
     const packet = st === 'contract' ? `<button class="modal-btn" onclick="openContractPacket('${quote.id}')" style="border-color:var(--accent);color:var(--accent);">Download contract packet</button>` : '';
-    const sched = (st === 'contract' && !isChild) ? `<button class="modal-btn" onclick="event.stopPropagation();openAdjustSchedule('${quote.id}')">Adjust payment schedule</button>` : '';
+    const sched = (st === 'contract' && !isChild) ? `<button class="modal-btn" onclick="event.stopPropagation();window._adjId='${quote.id}';openChangeOrder()">Create change order</button>` : '';
     const loadLbl = isChild ? 'Open house' : (quoteKind(quoteData[quote.id] || quote) === 'order' ? 'Open order' : 'Load');
     const dup = (!isChild && quoteKind(quoteData[quote.id] || quote) !== 'order')
       ? `<button class="modal-btn" onclick="duplicateQuote('${quote.id}')">Duplicate</button>` : '';
@@ -3614,7 +3676,7 @@ function renderOrderSummary(orderId) {
   const pkt = document.getElementById('btn-order-packet');
   if (pkt) pkt.style.display = (isOrder && (pipeStatus(q) === 'contract' || pipeStatus(q) === 'completed')) ? '' : 'none';
   const adj = document.getElementById('btn-order-adjust');
-  if (adj) adj.style.display = (isOrder && pipeStatus(q) === 'contract') ? '' : 'none';
+  if (adj) adj.style.display = 'none';
   const co = document.getElementById('btn-order-change');
   if (co) co.style.display = (isOrder && pipeStatus(q) === 'contract') ? '' : 'none';
   if (!isOrder) return;
@@ -4063,6 +4125,7 @@ function loadQuote(id) {
   loadReconciliationData(id); // Load reconciliation data for this quote
   renderQuoteVersions();
   renderOrderSummary(id);
+  renderProjectSummary(id);
 }
 
 function quoteVersionSnapshot() {
@@ -4356,7 +4419,10 @@ function collectData() {
     builderId: quoteData[activeQuoteId]?.builderId || '',
     payPlan: quoteData[activeQuoteId]?.payPlan || payPlanOf(quoteData[activeQuoteId] || {}),
     colorName: document.getElementById('house-color')?.value || quoteData[activeQuoteId]?.colorName || '',
-    revenueStream: quoteData[activeQuoteId]?.revenueStream || 'cabinets'
+    revenueStream: quoteData[activeQuoteId]?.revenueStream || 'cabinets',
+    changeOrders: quoteData[activeQuoteId]?.changeOrders || [],
+    elevationDraft: quoteData[activeQuoteId]?.elevationDraft || null,
+    elevationVersions: quoteData[activeQuoteId]?.elevationVersions || []
   };
 }
 
@@ -4775,7 +4841,7 @@ function syncIssueBtn() {
   };
   setDisp('btn-issue-contract', proposed);
   setDisp('btn-clear-house-pdf', quoteKind(quoteData[activeQuoteId] || {}) === 'child');
-  setDisp('btn-adjust-schedule', contracted);
+  setDisp('btn-adjust-schedule', false);
   setDisp('btn-change-order', contracted);
   setDisp('btn-mark-completed', contracted);
   setDisp('btn-download-packet', showPacket);
@@ -4925,6 +4991,169 @@ function saveAdjustSchedule() {
 function closeChangeOrder() {
   const el = document.getElementById('change-order-modal');
   if (el) el.classList.remove('open');
+  window._co = null;
+}
+function coSetKind(kind) {
+  if (!window._co) window._co = {};
+  window._co.kind = kind;
+  ['skus','schedule','both'].forEach(k => {
+    const b = document.getElementById('co-kind-' + k);
+    if (b) b.classList.toggle('on', k === kind);
+  });
+}
+function coGo(n) {
+  if (n === 2 && window._co && window._co.kind === 'schedule') n = 3;
+  [1,2,3,4].forEach(i => {
+    const s = document.getElementById('co-step-' + i);
+    if (s) s.classList.toggle('on', i === n);
+  });
+  if (n === 2) coPaintSkus();
+  if (n === 3) coPaintSched();
+  if (n === 4) coPaintReview();
+}
+function coAfterSkus() {
+  const c = window._co;
+  if (!c) return;
+  c.cabinets = coReadSkus();
+  c.newTotal = coSkuTotal(c);
+  if (c.kind === 'skus') coGo(4);
+  else coGo(3);
+}
+function coBackFromSched() {
+  const c = window._co;
+  coGo(c && c.kind === 'schedule' ? 1 : 2);
+}
+function coBackFromReview() {
+  const c = window._co;
+  if (!c) return;
+  if (c.kind === 'skus') coGo(2);
+  else coGo(3);
+}
+function coSkuTotal(c) {
+  const q = quoteData[c.id] || {};
+  const draft = Object.assign({}, q, { cabinets: c.cabinets || q.cabinets || [] });
+  return contractTotalOf(draft, quoteGrandFromData(draft) || 0);
+}
+function coReadSkus() {
+  const rows = [];
+  document.querySelectorAll('#co-sku-body tr').forEach(tr => {
+    const inp = tr.querySelectorAll('input');
+    rows.push({
+      desc: inp[0] ? inp[0].value : '',
+      serial: inp[1] ? inp[1].value : '',
+      qty: inp[2] ? inp[2].value : '0',
+      cost: inp[3] ? inp[3].value : '0',
+      markup: inp[4] ? inp[4].value : '0',
+      id: tr.dataset.id || ''
+    });
+  });
+  return rows;
+}
+function coPaintSkus() {
+  const c = window._co;
+  const wrap = document.getElementById('co-sku-wrap');
+  if (!c || !wrap) return;
+  const q = quoteData[c.id] || {};
+  const cabs = (c.cabinets && c.cabinets.length) ? c.cabinets : (q.cabinets || []);
+  let html = '<table class="quote-table"><thead><tr><th>Description</th><th>SKU</th><th>Qty</th><th>Cost</th><th>Mk%</th><th></th></tr></thead><tbody id="co-sku-body">';
+  cabs.forEach((row, i) => {
+    html += '<tr data-id="' + (row.id || '') + '">'
+      + '<td><input type="text" value="' + String(row.desc || '').replace(/"/g,'&quot;') + '" oninput="coSkuLive()" /></td>'
+      + '<td><input type="text" value="' + String(row.serial || '').replace(/"/g,'&quot;') + '" oninput="coSkuLive()" /></td>'
+      + '<td><input type="number" step="1" min="0" value="' + (row.qty || 0) + '" oninput="coSkuLive()" style="width:64px;" /></td>'
+      + '<td><input type="number" step="0.01" min="0" value="' + (row.cost || 0) + '" oninput="coSkuLive()" style="width:88px;" /></td>'
+      + '<td><input type="number" step="1" min="0" value="' + (row.markup || 0) + '" oninput="coSkuLive()" style="width:64px;" /></td>'
+      + '<td><button type="button" class="modal-btn" onclick="this.closest(\'tr\').remove();coSkuLive()">×</button></td></tr>';
+  });
+  html += '</tbody></table><button type="button" class="modal-btn" style="margin-top:8px;" onclick="coAddSku()">Add line</button>';
+  wrap.innerHTML = html;
+  coSkuLive();
+}
+function coAddSku() {
+  const body = document.getElementById('co-sku-body');
+  if (!body) return;
+  const tr = document.createElement('tr');
+  tr.innerHTML = '<td><input type="text" oninput="coSkuLive()" /></td><td><input type="text" oninput="coSkuLive()" /></td><td><input type="number" step="1" min="0" value="1" oninput="coSkuLive()" style="width:64px;" /></td><td><input type="number" step="0.01" min="0" value="0" oninput="coSkuLive()" style="width:88px;" /></td><td><input type="number" step="1" min="0" value="35" oninput="coSkuLive()" style="width:64px;" /></td><td><button type="button" class="modal-btn" onclick="this.closest(\'tr\').remove();coSkuLive()">×</button></td>';
+  body.appendChild(tr);
+  coSkuLive();
+}
+function coSkuLive() {
+  const c = window._co;
+  const live = document.getElementById('co-sku-live');
+  if (!c || !live) return;
+  c.cabinets = coReadSkus();
+  c.newTotal = coSkuTotal(c);
+  const q = quoteData[c.id] || {};
+  const oldT = contractTotalOf(q, quoteGrandFromData(q) || 0);
+  live.textContent = 'Was ' + fmt(oldT) + ' · now ' + fmt(c.newTotal) + ' · delta ' + fmt(c.newTotal - oldT);
+}
+function coPaintSched() {
+  const c = window._co;
+  const host = document.getElementById('co-sched-fields');
+  if (!c || !host) return;
+  const q = quoteData[c.id] || {};
+  const newTotal = (c.kind === 'schedule') ? contractTotalOf(q, quoteGrandFromData(q) || 0) : (c.newTotal != null ? c.newTotal : contractTotalOf(q, quoteGrandFromData(q) || 0));
+  c.newTotal = newTotal;
+  const ar = scheduleOf(q, newTotal);
+  const plan = payPlanOf(q);
+  const maxN = plan === '50-50' ? 2 : 3;
+  let html = '';
+  for (let n = 1; n <= maxN; n++) {
+    const paid = !!ar['d' + n + 'Paid'];
+    const amt = paid ? paidInvoiceAmt(ar, n, ar['d' + n + 'Amt']) : ar['d' + n + 'Amt'];
+    const due = ar['d' + n + 'Due'] || '';
+    html += '<div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:8px;margin-bottom:8px;align-items:end;">'
+      + '<div><label style="font-size:11px;color:var(--muted);">Invoice ' + n + (paid ? ' · paid — locked' : '') + '</label>'
+      + '<input type="number" id="co-d' + n + '-amt" step="0.01" min="0" value="' + (amt != null ? Number(amt).toFixed(2) : '') + '" ' + (paid ? 'disabled' : 'oninput="coSchedLive()"') + ' style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;text-align:right;" /></div>'
+      + '<div><label style="font-size:11px;color:var(--muted);">Due</label>'
+      + '<input type="date" id="co-d' + n + '-due" value="' + due + '" ' + (paid ? 'disabled' : '') + ' style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" /></div>'
+      + '<div style="font-size:12px;color:var(--muted);padding-bottom:8px;">' + (paid ? 'Check stays.' : 'Unpaid') + '</div></div>';
+  }
+  host.innerHTML = html;
+  coSchedLive();
+}
+function coSchedLive() {
+  const c = window._co;
+  const live = document.getElementById('co-sched-live');
+  const err = document.getElementById('co-sched-err');
+  const next = document.getElementById('co-sched-next');
+  if (!c || !live) return true;
+  const q = quoteData[c.id] || {};
+  const total = c.newTotal != null ? c.newTotal : contractTotalOf(q, quoteGrandFromData(q) || 0);
+  const ar = scheduleOf(q, total);
+  const plan = payPlanOf(q);
+  const maxN = plan === '50-50' ? 2 : 3;
+  let cash = 0, unpaid = 0;
+  for (let n = 1; n <= maxN; n++) {
+    if (ar['d' + n + 'Paid']) cash += paidInvoiceAmt(ar, n, ar['d' + n + 'Amt']);
+    else {
+      const el = document.getElementById('co-d' + n + '-amt');
+      unpaid += Number(el && el.value ? el.value : 0);
+    }
+  }
+  const remain = Math.round((total - cash) * 100) / 100;
+  const ok = Math.abs(unpaid - remain) < 0.02;
+  live.textContent = 'Contract ' + fmt(total) + ' − cash ' + fmt(cash) + ' = remaining ' + fmt(remain) + '. Unpaid now ' + fmt(unpaid) + '.';
+  if (err) err.textContent = ok ? '' : 'Unpaid invoices must add to ' + fmt(remain) + '.';
+  if (next) next.disabled = !ok;
+  return ok;
+}
+function coPaintReview() {
+  const c = window._co;
+  const box = document.getElementById('co-review');
+  if (!c || !box) return;
+  const q = quoteData[c.id] || {};
+  const oldT = contractTotalOf(q, quoteGrandFromData(q) || 0);
+  const reason = (document.getElementById('co-reason') || {}).value || '';
+  c.reason = reason;
+  let html = '<p><strong>Kind:</strong> ' + c.kind + '</p>';
+  html += '<p><strong>Why:</strong> ' + (reason || '—') + '</p>';
+  if (c.kind !== 'schedule') html += '<p><strong>Total:</strong> ' + fmt(oldT) + ' → ' + fmt(c.newTotal) + '</p>';
+  else html += '<p><strong>Total stays</strong> ' + fmt(oldT) + '</p>';
+  box.innerHTML = html;
+}
+function coRequestSignatures() {
+  alert('HelloSign is not wired yet. Save the change order for the paper trail, then send the API details when you have them.');
 }
 function openChangeOrder() {
   const id = scheduleTargetId(window._adjId);
@@ -4934,10 +5163,128 @@ function openChangeOrder() {
     return;
   }
   const total = contractTotalOf(q, quoteGrandFromData(q) || 0);
+  window._co = { id: id, kind: 'skus', cabinets: JSON.parse(JSON.stringify(q.cabinets || [])), oldTotal: total, newTotal: total };
+  coSetKind('skus');
+  const reason = document.getElementById('co-reason');
+  if (reason) reason.value = '';
   const sub = document.getElementById('co-sub');
   if (sub) sub.textContent = (q.customer || '') + ' · ' + (q.jobCode || '') + ' · contracted total ' + fmt(total);
+  coGo(1);
   const el = document.getElementById('change-order-modal');
   if (el) el.classList.add('open');
+}
+function saveChangeOrder() {
+  const c = window._co;
+  if (!c) return;
+  const q = quoteData[c.id];
+  if (!q) return;
+  if (c.kind !== 'schedule' && !coSchedLive() && c.kind === 'both') {
+    /* schedule already validated on step 3 */
+  }
+  if ((c.kind === 'schedule' || c.kind === 'both') && !coSchedLive()) {
+    alert('Fix unpaid invoices so they add to remaining.');
+    return;
+  }
+  const oldTotal = contractTotalOf(q, quoteGrandFromData(q) || 0);
+  if (c.kind !== 'schedule') {
+    q.cabinets = coReadSkus();
+    if (activeQuoteId === c.id) {
+      document.getElementById('cabinet-tbody').innerHTML = '';
+      (q.cabinets || []).forEach(row => addCabinetRow(row.desc, row.qty, row.cost, row.markup, row.serial, row.id));
+      recalc();
+    }
+  }
+  const newTotal = contractTotalOf(q, quoteGrandFromData(q) || 0);
+  if (c.kind === 'skus') {
+    if (!q.ar || typeof q.ar !== 'object') q.ar = {};
+    const plan = payPlanOf(q);
+    const maxN = plan === '50-50' ? 2 : 3;
+    const sched = scheduleOf(q, newTotal);
+    let cash = 0;
+    const unpaid = [];
+    for (let n = 1; n <= maxN; n++) {
+      if (sched['d' + n + 'Paid']) cash += paidInvoiceAmt(sched, n, sched['d' + n + 'Amt']);
+      else unpaid.push(n);
+    }
+    const remain = Math.round((newTotal - cash) * 100) / 100;
+    if (unpaid.length === 1) q.ar['d' + unpaid[0] + 'Amt'] = remain;
+    else if (unpaid.length > 1) {
+      let used = 0;
+      unpaid.slice(0, -1).forEach(n => { used += Number(q.ar['d' + n + 'Amt'] || 0); });
+      q.ar['d' + unpaid[unpaid.length - 1] + 'Amt'] = Math.round((remain - used) * 100) / 100;
+    }
+  }
+  if (c.kind === 'schedule' || c.kind === 'both') {
+    if (!q.ar || typeof q.ar !== 'object') q.ar = {};
+    const plan = payPlanOf(q);
+    const maxN = plan === '50-50' ? 2 : 3;
+    const sched = scheduleOf(q, newTotal);
+    for (let n = 1; n <= maxN; n++) {
+      if (sched['d' + n + 'Paid']) continue;
+      const amtEl = document.getElementById('co-d' + n + '-amt');
+      const dueEl = document.getElementById('co-d' + n + '-due');
+      if (amtEl) q.ar['d' + n + 'Amt'] = Number(amtEl.value || 0);
+      if (dueEl) q.ar['d' + n + 'Due'] = dueEl.value;
+    }
+  }
+  const list = q.changeOrders || [];
+  list.push({
+    n: list.length + 1,
+    at: Date.now(),
+    kind: c.kind,
+    reason: (document.getElementById('co-reason') || {}).value || '',
+    oldTotal: oldTotal,
+    newTotal: newTotal,
+    signatures: 'pending'
+  });
+  q.changeOrders = list;
+  quoteData[c.id] = q;
+  saveQuoteData(c.id);
+  updateQuoteIndexEntry(c.id, q.status, newTotal, q.customer, q.project, q.date);
+  fmCloudPushDebounced();
+  if (activeQuoteId === c.id) {
+    loadQuote(c.id);
+  } else {
+    renderProjectSummary(c.id);
+  }
+  closeChangeOrder();
+}
+function renderProjectSummary(id) {
+  const body = document.getElementById('project-summary-body');
+  if (!body) return;
+  const qid = id || activeQuoteId;
+  const q = quoteData[qid] || {};
+  if (!qid || !q.jobCode) {
+    body.className = 'empty';
+    body.textContent = 'Open a job to see quotes, change orders, and invoices.';
+    return;
+  }
+  const total = contractTotalOf(q, quoteGrandFromData(q) || 0);
+  const versions = q.quoteVersions || [];
+  const cos = q.changeOrders || [];
+  const ar = q.ar || {};
+  const plan = payPlanOf(q);
+  const maxN = plan === '50-50' ? 2 : 3;
+  let html = '<p style="font-size:13px;margin-bottom:8px;"><strong>' + (q.jobCode || '') + '</strong> · ' + (pipeStatus(q) === 'contract' ? 'Contracted' : (q.status || '')) + ' · ' + fmt(total) + '</p>';
+  html += '<table><thead><tr><th>When</th><th>What</th><th>Note</th><th class="r">Amount</th></tr></thead><tbody>';
+  versions.forEach(v => {
+    html += '<tr><td>' + (v.date || '') + '</td><td>Quote ' + v.n + '</td><td>Saved version</td><td class="r">' + fmt(v.total || 0) + '</td></tr>';
+  });
+  cos.forEach(co => {
+    const when = co.at ? new Date(co.at).toLocaleDateString('en-US') : '';
+    html += '<tr><td>' + when + '</td><td>Change order ' + co.n + '</td><td>' + (co.kind || '') + (co.reason ? ' · ' + co.reason : '') + '</td><td class="r">' + fmt(co.oldTotal || 0) + ' → ' + fmt(co.newTotal || 0) + '</td></tr>';
+  });
+  for (let n = 1; n <= maxN; n++) {
+    const amt = ar['d' + n + 'Paid'] ? paidInvoiceAmt(ar, n, ar['d' + n + 'Amt']) : ar['d' + n + 'Amt'];
+    if (amt == null && !ar['d' + n + 'Due']) continue;
+    html += '<tr><td>' + (ar['d' + n + 'Due'] || '') + '</td><td>Invoice ' + n + (ar['d' + n + 'Paid'] ? ' · PAID' : '') + '</td><td>' + (ar['d' + n + 'Check'] ? 'Check ' + ar['d' + n + 'Check'] : '') + '</td><td class="r">' + fmt(amt || 0) + '</td></tr>';
+  }
+  if (!versions.length && !cos.length) {
+    html += '<tr><td colspan="4">No saved quotes or change orders yet. Invoice rows still show below when the job is contracted.</td></tr>';
+  }
+  html += '</tbody></table>';
+  body.className = '';
+  body.innerHTML = html;
 }
 
 function markQuoteCompleted() {
