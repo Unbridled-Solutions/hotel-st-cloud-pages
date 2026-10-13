@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v1008c</title>
+<title>Fremont Makers — Project Builder v1013a</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20261008c-summary-links -->
+<!-- FM-BUILD-v20261013a-sign-co -->
 <script>
 (function(){
   try {
@@ -687,7 +687,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1008c</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1013a</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <span class="status-label">Status:</span>
@@ -726,6 +726,10 @@
   <div class="job-field">
     <label>Signer name</label>
     <input type="text" id="signer-name" placeholder="Person who will sign" oninput="saveLocal()" />
+  </div>
+  <div class="job-field">
+    <label>Buyer email</label>
+    <input type="email" id="customer-email" placeholder="for HelloSign" oninput="saveLocal()" style="min-width:200px" />
   </div>
   <div class="job-field">
     <label>Project Name</label>
@@ -1559,7 +1563,12 @@
         <input type="password" id="contract-pw" placeholder="••••" maxlength="10" onkeydown="if(event.key==='Enter') confirmContract()" style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />
       </div>
     </div>
-    <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Opens the contract packet: filled terms plus invoice and deposit schedule. Print, Word, or send for signature. Dollars stay on this quote.</p>
+    <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Buyer email (HelloSign)</label>
+    <input type="email" id="issue-email" placeholder="buyer@email.com" style="width:100%;margin-bottom:10px;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:10px;cursor:pointer;">
+      <input type="checkbox" id="issue-send-sign" checked /> Send for signature after lock
+    </label>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Locks Proposed → Contracted, then emails the buyer a Dropbox Sign request. You stay on this job.</p>
     <div class="modal-error" id="pw-error"></div>
     <div class="modal-btns">
       <button class="modal-btn" onclick="closeModal()">Cancel</button>
@@ -1605,16 +1614,21 @@
       </div>
     </div>
     <div id="co-step-2" class="co-step">
-      <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">Edit the lines. Paid invoices stay locked. New total shows at the bottom.</p>
-      <div id="co-sku-wrap" style="overflow:auto;max-height:40vh;margin-bottom:10px;"></div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">Upload a new Wholesale Cabinets PDF (or edit lines). We cross-check old SKUs vs new before you approve.</p>
+      <input type="file" id="co-pdf-file" accept=".pdf,.csv,.txt,.docx" style="display:none" onchange="coHandlePdf(event)" />
+      <button type="button" class="modal-btn" onclick="document.getElementById('co-pdf-file').click()" style="margin-bottom:10px;">Upload new cabinet PDF</button>
+      <p id="co-pdf-status" style="font-size:13px;color:var(--muted);margin-bottom:8px;"></p>
+      <div id="co-sku-diff" style="font-size:13px;margin-bottom:10px;max-height:22vh;overflow:auto;"></div>
+      <div id="co-sku-wrap" style="overflow:auto;max-height:28vh;margin-bottom:10px;"></div>
       <p id="co-sku-live" style="font-size:13px;margin-bottom:12px;"></p>
       <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">
         <button class="modal-btn" type="button" onclick="coGo(1)">Back</button>
-        <button class="modal-btn confirm" type="button" onclick="coAfterSkus()">Next</button>
+        <button class="modal-btn confirm" type="button" onclick="coAfterSkus()">Approve SKU change</button>
       </div>
     </div>
     <div id="co-step-3" class="co-step">
-      <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">Unpaid invoices must still add to the new remaining. Paid checks do not move.</p>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">Paid checks never move. Pick how remaining invoices should treat the new cabinet total.</p>
+      <div id="co-pay-options" style="margin-bottom:12px;"></div>
       <div id="co-sched-fields"></div>
       <p id="co-sched-live" style="font-size:13px;margin:8px 0;"></p>
       <p id="co-sched-err" style="font-size:13px;color:var(--red);min-height:18px;"></p>
@@ -1624,12 +1638,14 @@
       </div>
     </div>
     <div id="co-step-4" class="co-step">
-      <p style="font-size:14px;margin-bottom:8px;">Review, then save. That writes the paper trail on this job.</p>
+      <p style="font-size:14px;margin-bottom:8px;">Review. Save writes the paper trail. Send for signature emails the buyer — you stay here.</p>
       <div id="co-review" style="font-size:13px;line-height:1.5;margin-bottom:12px;"></div>
-      <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Request signatures is next. HelloSign API is not wired yet — send the credentials when you have them.</p>
+      <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Buyer email</label>
+      <input type="email" id="co-sign-email" style="width:100%;margin-bottom:10px;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />
+      <p id="co-sign-msg" style="font-size:13px;min-height:18px;margin-bottom:8px;"></p>
       <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">
         <button class="modal-btn" type="button" onclick="coBackFromReview()">Back</button>
-        <button class="modal-btn" type="button" onclick="coRequestSignatures()">Request signatures</button>
+        <button class="modal-btn" type="button" onclick="coRequestSignatures()">Send for signature</button>
         <button class="modal-btn confirm" type="button" onclick="saveChangeOrder()">Save change order</button>
       </div>
     </div>
@@ -4125,6 +4141,8 @@ function loadQuote(id) {
   document.getElementById('customer-name').value              = q.customer || '';
   const signerEl = document.getElementById('signer-name');
   if (signerEl) signerEl.value = q.signerName || q.customer || '';
+  const emEl = document.getElementById('customer-email');
+  if (emEl) emEl.value = q.customerEmail || '';
   document.getElementById('project-name').value               = q.project  || '';
   document.getElementById('quote-date').value                 = q.date     || today();
   document.getElementById('install-address').value            = q.address  || '';
@@ -4418,6 +4436,7 @@ function collectData() {
     jobCode:  document.getElementById('job-code-display')?.textContent || '', // jobCode from display
     customer: document.getElementById('customer-name')?.value || '',
     signerName: document.getElementById('signer-name')?.value || '',
+    customerEmail: document.getElementById('customer-email')?.value || quoteData[activeQuoteId]?.customerEmail || '',
     project:  document.getElementById('project-name')?.value  || '',
     date:     document.getElementById('quote-date')?.value    || '',
     address:  document.getElementById('install-address')?.value || '',
@@ -4446,6 +4465,8 @@ function collectData() {
     colorName: document.getElementById('house-color')?.value || quoteData[activeQuoteId]?.colorName || '',
     revenueStream: quoteData[activeQuoteId]?.revenueStream || 'cabinets',
     changeOrders: quoteData[activeQuoteId]?.changeOrders || [],
+    customerEmail: document.getElementById('customer-email')?.value || quoteData[activeQuoteId]?.customerEmail || '',
+    signRequests: quoteData[activeQuoteId]?.signRequests || [],
     elevationDraft: quoteData[activeQuoteId]?.elevationDraft || null,
     elevationVersions: quoteData[activeQuoteId]?.elevationVersions || []
   };
@@ -5033,7 +5054,7 @@ function coGo(n) {
     if (s) s.classList.toggle('on', i === n);
   });
   if (n === 2) coPaintSkus();
-  if (n === 3) coPaintSched();
+  if (n === 3) { coPaintPayOptions(); coPaintSched(); }
   if (n === 4) coPaintReview();
 }
 function coAfterSkus() {
@@ -5041,8 +5062,7 @@ function coAfterSkus() {
   if (!c) return;
   c.cabinets = coReadSkus();
   c.newTotal = coSkuTotal(c);
-  if (c.kind === 'skus') coGo(4);
-  else coGo(3);
+  coGo(3);
 }
 function coBackFromSched() {
   const c = window._co;
@@ -5093,6 +5113,10 @@ function coPaintSkus() {
   html += '</tbody></table><button type="button" class="modal-btn" style="margin-top:8px;" onclick="coAddSku()">Add line</button>';
   wrap.innerHTML = html;
   coSkuLive();
+  if (c.oldCabinets) {
+    c.diff = coDiffSkus(c.oldCabinets, c.cabinets || coReadSkus());
+    coRenderDiff(c.diff);
+  }
 }
 function coAddSku() {
   const body = document.getElementById('co-sku-body');
@@ -5111,6 +5135,7 @@ function coSkuLive() {
   const q = quoteData[c.id] || {};
   const oldT = contractTotalOf(q, quoteGrandFromData(q) || 0);
   live.textContent = 'Was ' + fmt(oldT) + ' · now ' + fmt(c.newTotal) + ' · delta ' + fmt(c.newTotal - oldT);
+  if (c.oldCabinets) { c.diff = coDiffSkus(c.oldCabinets, c.cabinets); coRenderDiff(c.diff); }
 }
 function coPaintSched() {
   const c = window._co;
@@ -5135,6 +5160,7 @@ function coPaintSched() {
       + '<div style="font-size:12px;color:var(--muted);padding-bottom:8px;">' + (paid ? 'Check stays.' : 'Unpaid') + '</div></div>';
   }
   host.innerHTML = html;
+  coApplyPayChoice();
   coSchedLive();
 }
 function coSchedLive() {
@@ -5173,13 +5199,188 @@ function coPaintReview() {
   c.reason = reason;
   let html = '<p><strong>Kind:</strong> ' + c.kind + '</p>';
   html += '<p><strong>Why:</strong> ' + (reason || '—') + '</p>';
-  if (c.kind !== 'schedule') html += '<p><strong>Total:</strong> ' + fmt(oldT) + ' → ' + fmt(c.newTotal) + '</p>';
-  else html += '<p><strong>Total stays</strong> ' + fmt(oldT) + '</p>';
+  if (c.kind !== 'schedule') html += '<p><strong>Cabinets:</strong> ' + fmt(oldT) + ' → ' + fmt(c.newTotal) + '</p>';
+  else html += '<p><strong>Cabinet total stays</strong> ' + fmt(oldT) + '</p>';
+  const pay = c.payChoice === 'keep' ? 'Keep contracted remaining' : c.payChoice === 'pass' ? 'Pass new total through unpaid invoices' : 'Custom unpaid split';
+  html += '<p><strong>Payment:</strong> ' + pay + '</p>';
+  if (c.diff) {
+    html += '<p><strong>SKU:</strong> +' + c.diff.added.length + ' / −' + c.diff.removed.length + ' / changed ' + c.diff.changed.length + '</p>';
+  }
   box.innerHTML = html;
 }
-function coRequestSignatures() {
-  alert('HelloSign is not wired yet. Save the change order for the paper trail, then send the API details when you have them.');
+function fmBuyerEmail(q) {
+  return (document.getElementById('customer-email')?.value
+    || document.getElementById('co-sign-email')?.value
+    || document.getElementById('issue-email')?.value
+    || (q && q.customerEmail) || '').trim();
 }
+async function fmSendForSignature(opts) {
+  const q = quoteData[opts.quoteId] || {};
+  const email = (opts.email || fmBuyerEmail(q)).trim();
+  const name = (opts.name || q.signerName || q.customer || 'Buyer').trim();
+  if (!email || !email.includes('@')) return { ok: false, error: 'Buyer email is required.' };
+  const res = await fetch('/api/fm/hellosign/send', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      quoteId: opts.quoteId,
+      kind: opts.kind || 'contract',
+      signerEmail: email,
+      signerName: name,
+      title: opts.title,
+      subject: opts.subject,
+      message: opts.message,
+      documentText: opts.documentText
+    })
+  });
+  return res.json().catch(() => ({ ok: false, error: 'Could not reach HelloSign.' }));
+}
+function coSkuKey(row) {
+  return String(row.serial || row.desc || '').trim().toUpperCase();
+}
+function coDiffSkus(oldRows, newRows) {
+  const a = {}, b = {};
+  (oldRows || []).forEach(r => { const k = coSkuKey(r); if (!k) return; if (!a[k]) a[k] = { key: k, qty: 0, cost: 0, desc: r.desc || r.serial || k }; a[k].qty += Number(r.qty)||0; a[k].cost = Number(r.cost)||a[k].cost; });
+  (newRows || []).forEach(r => { const k = coSkuKey(r); if (!k) return; if (!b[k]) b[k] = { key: k, qty: 0, cost: 0, desc: r.desc || r.serial || k }; b[k].qty += Number(r.qty)||0; b[k].cost = Number(r.cost)||b[k].cost; });
+  const keys = Array.from(new Set([...Object.keys(a), ...Object.keys(b)])).sort();
+  const added = [], removed = [], changed = [], same = [];
+  keys.forEach(k => {
+    const o = a[k], n = b[k];
+    if (!o) added.push(n);
+    else if (!n) removed.push(o);
+    else if (o.qty !== n.qty || Math.abs((o.cost||0)-(n.cost||0)) > 0.009) changed.push({ key: k, desc: n.desc, oldQty: o.qty, newQty: n.qty, oldCost: o.cost, newCost: n.cost });
+    else same.push(n);
+  });
+  return { added, removed, changed, same };
+}
+function coRenderDiff(diff) {
+  const el = document.getElementById('co-sku-diff');
+  if (!el) return;
+  if (!diff) { el.innerHTML = ''; return; }
+  let html = '';
+  if (diff.added.length) html += '<p><strong>Added</strong></p><ul>' + diff.added.map(r => '<li>' + (r.desc||r.key) + ' × ' + r.qty + '</li>').join('') + '</ul>';
+  if (diff.removed.length) html += '<p><strong>Removed</strong></p><ul>' + diff.removed.map(r => '<li>' + (r.desc||r.key) + ' × ' + r.qty + '</li>').join('') + '</ul>';
+  if (diff.changed.length) html += '<p><strong>Changed</strong></p><ul>' + diff.changed.map(r => '<li>' + (r.desc||r.key) + ' qty ' + r.oldQty + ' → ' + r.newQty + '</li>').join('') + '</ul>';
+  if (!diff.added.length && !diff.removed.length && !diff.changed.length) html = '<p>No SKU differences yet. Upload a PDF or edit lines.</p>';
+  el.innerHTML = html;
+}
+async function coHandlePdf(event) {
+  const file = event.target.files && event.target.files[0];
+  const status = document.getElementById('co-pdf-status');
+  if (!file) return;
+  if (status) status.textContent = 'Reading ' + file.name + '…';
+  try {
+    await sqProcessFile(file);
+    const lines = _sqParsedLines || [];
+    const c = window._co;
+    if (!c) return;
+    c.cabinets = lines.map(it => ({ desc: it.desc, serial: it.serial, qty: it.qty, cost: it.cost, markup: '35' }));
+    c.diff = coDiffSkus(c.oldCabinets || [], c.cabinets);
+    coPaintSkus();
+    coRenderDiff(c.diff);
+    if (status) status.textContent = lines.length + ' lines from ' + file.name;
+  } catch (e) {
+    if (status) status.textContent = 'Could not read PDF: ' + (e.message || e);
+  }
+}
+function coPaintPayOptions() {
+  const host = document.getElementById('co-pay-options');
+  const c = window._co;
+  if (!host || !c) return;
+  const q = quoteData[c.id] || {};
+  const oldT = c.oldTotal != null ? c.oldTotal : contractTotalOf(q, quoteGrandFromData(q) || 0);
+  const newT = c.newTotal != null ? c.newTotal : oldT;
+  const delta = Math.round((newT - oldT) * 100) / 100;
+  const ar = scheduleOf(q, oldT);
+  const plan = payPlanOf(q);
+  const maxN = plan === '50-50' ? 2 : 3;
+  let cash = 0;
+  for (let n = 1; n <= maxN; n++) if (ar['d' + n + 'Paid']) cash += paidInvoiceAmt(ar, n, ar['d' + n + 'Amt']);
+  const remainOld = Math.round((oldT - cash) * 100) / 100;
+  const remainNew = Math.round((newT - cash) * 100) / 100;
+  if (!c.payChoice) c.payChoice = delta === 0 ? 'keep' : (delta < 0 ? 'pass' : 'collect');
+  const opt = (id, title, blurb) => '<label style="display:block;border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:8px;cursor:pointer;">'
+    + '<input type="radio" name="co-pay" value="' + id + '" ' + (c.payChoice === id ? 'checked' : '') + ' onchange="coSetPayChoice(\'' + id + '\')" /> <strong>' + title + '</strong>'
+    + '<div style="font-size:12px;color:var(--muted);margin-top:4px;">' + blurb + '</div></label>';
+  let html = '<p style="font-size:13px;margin-bottom:8px;">Was ' + fmt(oldT) + ' · cabinets now ' + fmt(newT) + ' · delta ' + fmt(delta) + '. Cash received ' + fmt(cash) + ' stays.</p>';
+  html += opt('keep', 'Keep contracted remaining', 'Unpaid invoices still add to ' + fmt(remainOld) + '. Cabinet change is on the paper trail; client does not get a dollar change on remaining invoices.');
+  html += opt('pass', 'Pass the new cabinet total through', 'Remaining unpaid becomes ' + fmt(remainNew) + ' (new total minus cash). Savings or extra cost lands on future invoices. Typical when the factory bill changed and you want the contract to match.');
+  html += opt('custom', 'Custom split', 'You type unpaid amounts. They must still add to whichever remaining you choose below.');
+  host.innerHTML = html;
+}
+function coSetPayChoice(id) {
+  if (!window._co) return;
+  window._co.payChoice = id;
+  coApplyPayChoice();
+  coSchedLive();
+}
+function coApplyPayChoice() {
+  const c = window._co;
+  if (!c) return;
+  const q = quoteData[c.id] || {};
+  const oldT = c.oldTotal != null ? c.oldTotal : contractTotalOf(q, quoteGrandFromData(q) || 0);
+  const newT = c.newTotal != null ? c.newTotal : oldT;
+  const target = (c.payChoice === 'keep') ? oldT : newT;
+  c.billTotal = target;
+  const ar = scheduleOf(q, oldT);
+  const plan = payPlanOf(q);
+  const maxN = plan === '50-50' ? 2 : 3;
+  let cash = 0;
+  const unpaid = [];
+  for (let n = 1; n <= maxN; n++) {
+    if (ar['d' + n + 'Paid']) cash += paidInvoiceAmt(ar, n, ar['d' + n + 'Amt']);
+    else unpaid.push(n);
+  }
+  const remain = Math.round((target - cash) * 100) / 100;
+  if (unpaid.length === 1) {
+    const el = document.getElementById('co-d' + unpaid[0] + '-amt');
+    if (el && c.payChoice !== 'custom') el.value = remain.toFixed(2);
+  } else if (unpaid.length > 1 && c.payChoice !== 'custom') {
+    unpaid.slice(0, -1).forEach(n => {
+      const el = document.getElementById('co-d' + n + '-amt');
+      if (el) el.value = Number(ar['d' + n + 'Amt'] || 0).toFixed(2);
+    });
+    let used = 0;
+    unpaid.slice(0, -1).forEach(n => {
+      const el = document.getElementById('co-d' + n + '-amt');
+      used += Number(el && el.value ? el.value : 0);
+    });
+    const last = document.getElementById('co-d' + unpaid[unpaid.length - 1] + '-amt');
+    if (last) last.value = (Math.round((remain - used) * 100) / 100).toFixed(2);
+  }
+}
+async function coRequestSignatures() {
+  const c = window._co;
+  const msg = document.getElementById('co-sign-msg');
+  if (!c) return;
+  saveChangeOrder(true);
+  const q = quoteData[c.id] || {};
+  const emailEl = document.getElementById('co-sign-email');
+  const email = (emailEl && emailEl.value) || fmBuyerEmail(q);
+  const oldT = c.oldTotal, newT = c.newTotal;
+  const body = [
+    'CHANGE ORDER · ' + (q.jobCode || ''),
+    'Buyer: ' + (q.customer || '') + ' · ' + (q.signerName || ''),
+    'Why: ' + (c.reason || ''),
+    'Cabinets: ' + fmt(oldT) + ' → ' + fmt(newT),
+    'Payment: ' + (c.payChoice === 'keep' ? 'Keep contracted remaining' : c.payChoice === 'pass' ? 'Pass new cabinet total through unpaid invoices' : 'Custom unpaid split'),
+    '',
+    'Sign to acknowledge this change. Paid invoices are not rewritten.'
+  ].join('\n');
+  if (msg) msg.textContent = 'Sending…';
+  const out = await fmSendForSignature({
+    quoteId: c.id,
+    kind: 'change-order',
+    email,
+    name: q.signerName || q.customer,
+    title: 'Change order · ' + (q.jobCode || ''),
+    subject: 'Please sign the Fremont Makers change order',
+    message: 'Please review and sign this change order.',
+    documentText: body
+  });
+  if (msg) msg.textContent = out.ok ? 'Sent to ' + email + '.' : (out.error || 'Send failed.');
+}
+
 function openChangeOrder() {
   const id = scheduleTargetId(window._adjId);
   const q = quoteData[id] || {};
@@ -5188,31 +5389,34 @@ function openChangeOrder() {
     return;
   }
   const total = contractTotalOf(q, quoteGrandFromData(q) || 0);
-  window._co = { id: id, kind: 'skus', cabinets: JSON.parse(JSON.stringify(q.cabinets || [])), oldTotal: total, newTotal: total };
+  window._co = { id: id, kind: 'skus', cabinets: JSON.parse(JSON.stringify(q.cabinets || [])), oldCabinets: JSON.parse(JSON.stringify(q.cabinets || [])), oldTotal: total, newTotal: total, payChoice: 'keep' };
   coSetKind('skus');
   const reason = document.getElementById('co-reason');
   if (reason) reason.value = '';
   const sub = document.getElementById('co-sub');
   if (sub) sub.textContent = (q.customer || '') + ' · ' + (q.jobCode || '') + ' · contracted total ' + fmt(total);
+  const em = document.getElementById('co-sign-email');
+  if (em) em.value = q.customerEmail || document.getElementById('customer-email')?.value || '';
   coGo(1);
   const el = document.getElementById('change-order-modal');
   if (el) el.classList.add('open');
 }
-function saveChangeOrder() {
+function saveChangeOrder(keepOpen) {
   const c = window._co;
   if (!c) return;
   const q = quoteData[c.id];
   if (!q) return;
-  if (c.kind !== 'schedule' && !coSchedLive() && c.kind === 'both') {
-    /* schedule already validated on step 3 */
+  if (c.kind !== 'schedule') {
+    c.cabinets = coReadSkus();
+    c.newTotal = coSkuTotal(c);
   }
-  if ((c.kind === 'schedule' || c.kind === 'both') && !coSchedLive()) {
+  if (!coSchedLive()) {
     alert('Fix unpaid invoices so they add to remaining.');
     return;
   }
   const oldTotal = contractTotalOf(q, quoteGrandFromData(q) || 0);
   if (c.kind !== 'schedule') {
-    q.cabinets = coReadSkus();
+    q.cabinets = c.cabinets || coReadSkus();
     if (activeQuoteId === c.id) {
       document.getElementById('cabinet-tbody').innerHTML = '';
       (q.cabinets || []).forEach(row => addCabinetRow(row.desc, row.qty, row.cost, row.markup, row.serial, row.id));
@@ -5220,37 +5424,16 @@ function saveChangeOrder() {
     }
   }
   const newTotal = contractTotalOf(q, quoteGrandFromData(q) || 0);
-  if (c.kind === 'skus') {
-    if (!q.ar || typeof q.ar !== 'object') q.ar = {};
-    const plan = payPlanOf(q);
-    const maxN = plan === '50-50' ? 2 : 3;
-    const sched = scheduleOf(q, newTotal);
-    let cash = 0;
-    const unpaid = [];
-    for (let n = 1; n <= maxN; n++) {
-      if (sched['d' + n + 'Paid']) cash += paidInvoiceAmt(sched, n, sched['d' + n + 'Amt']);
-      else unpaid.push(n);
-    }
-    const remain = Math.round((newTotal - cash) * 100) / 100;
-    if (unpaid.length === 1) q.ar['d' + unpaid[0] + 'Amt'] = remain;
-    else if (unpaid.length > 1) {
-      let used = 0;
-      unpaid.slice(0, -1).forEach(n => { used += Number(q.ar['d' + n + 'Amt'] || 0); });
-      q.ar['d' + unpaid[unpaid.length - 1] + 'Amt'] = Math.round((remain - used) * 100) / 100;
-    }
-  }
-  if (c.kind === 'schedule' || c.kind === 'both') {
-    if (!q.ar || typeof q.ar !== 'object') q.ar = {};
-    const plan = payPlanOf(q);
-    const maxN = plan === '50-50' ? 2 : 3;
-    const sched = scheduleOf(q, newTotal);
-    for (let n = 1; n <= maxN; n++) {
-      if (sched['d' + n + 'Paid']) continue;
-      const amtEl = document.getElementById('co-d' + n + '-amt');
-      const dueEl = document.getElementById('co-d' + n + '-due');
-      if (amtEl) q.ar['d' + n + 'Amt'] = Number(amtEl.value || 0);
-      if (dueEl) q.ar['d' + n + 'Due'] = dueEl.value;
-    }
+  if (!q.ar || typeof q.ar !== 'object') q.ar = {};
+  const plan = payPlanOf(q);
+  const maxN = plan === '50-50' ? 2 : 3;
+  const sched = scheduleOf(q, newTotal);
+  for (let n = 1; n <= maxN; n++) {
+    if (sched['d' + n + 'Paid']) continue;
+    const amtEl = document.getElementById('co-d' + n + '-amt');
+    const dueEl = document.getElementById('co-d' + n + '-due');
+    if (amtEl) q.ar['d' + n + 'Amt'] = Number(amtEl.value || 0);
+    if (dueEl) q.ar['d' + n + 'Due'] = dueEl.value;
   }
   const list = q.changeOrders || [];
   list.push({
@@ -5272,7 +5455,7 @@ function saveChangeOrder() {
   } else {
     renderProjectSummary(c.id);
   }
-  closeChangeOrder();
+  if (!keepOpen) closeChangeOrder();
 }
 function renderProjectSummary(id) {
   const body = document.getElementById('project-summary-body');
@@ -5379,6 +5562,30 @@ function confirmContract() {
     saveQuotesIndex();
   }
   syncIssueBtn();
+  const wantSign = document.getElementById('issue-send-sign')?.checked;
+  const issueEmail = (document.getElementById('issue-email')?.value || '').trim();
+  if (issueEmail) {
+    quoteData[activeQuoteId].customerEmail = issueEmail;
+    const emEl = document.getElementById('customer-email');
+    if (emEl) emEl.value = issueEmail;
+    saveQuoteData(activeQuoteId);
+  }
+  if (wantSign) {
+    const q = quoteData[activeQuoteId] || {};
+    const total = contractTotalOf(q, quoteGrandFromData(q) || 0);
+    fmSendForSignature({
+      quoteId: activeQuoteId,
+      kind: 'contract',
+      email: issueEmail || fmBuyerEmail(q),
+      name: q.signerName || q.customer,
+      title: 'Contract · ' + (q.jobCode || ''),
+      subject: 'Please sign your Fremont Makers contract',
+      message: 'Please review and sign the sales agreement and payment schedule.',
+      documentText: ['FREMONT MAKERS · SALES AGREEMENT', q.jobCode || '', q.customer || '', 'Contract total ' + fmt(total), 'Install ' + (q.installDate || ''), 'Sign to accept the cabinets, assembly, and payment schedule.'].join('\n')
+    }).then(out => {
+      if (!out.ok) alert(out.error || 'Could not send for signature. Packet still opened.');
+    });
+  }
   openContractPacket(activeQuoteId);
 }
 
