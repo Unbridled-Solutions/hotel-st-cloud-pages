@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v1014b</title>
+<title>Fremont Makers — Project Builder v1014c</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20261014b-pass-delta -->
+<!-- FM-BUILD-v20261014c-sku-delta -->
 <script>
 (function(){
   try {
@@ -252,6 +252,12 @@
   .project-summary .empty { font-size: 13px; color: var(--muted); }
   .project-summary a { color: var(--accent); text-decoration: none; }
   .project-summary a:hover { text-decoration: underline; }
+  .project-summary .co-ledger { font-size: 12px; color: var(--muted); margin: 2px 0 0; line-height: 1.4; }
+  .sku-delta-col { display: none; text-align: right; white-space: nowrap; }
+  #quote-cabinets-section.show-sku-delta .sku-delta-col { display: table-cell; }
+  .sku-delta-pos { color: var(--accent); }
+  .sku-delta-neg { color: var(--muted); }
+  #sku-view-banner { font-size: 13px; color: var(--text); margin: 0 0 10px; line-height: 1.4; display: none; }
   .co-pay-opt {
     display: flex; align-items: flex-start; gap: 12px;
     text-align: left; width: 100%; max-width: 720px;
@@ -704,7 +710,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1014b</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1014c</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <span class="status-label">Status:</span>
@@ -1016,6 +1022,7 @@
         </div>
       </div>
       <div id="quote-versions" style="font-size:13px;color:var(--muted);margin-bottom:10px;"></div>
+      <p id="sku-view-banner"></p>
       <table class="quote-table">
         <datalist id="markup-presets">
           <option value="25"><option value="30"><option value="35"><option value="40">
@@ -1032,6 +1039,7 @@
             <th style="width:11%; text-align:right; color:var(--muted)">Net Total</th>
             <th style="width:9%; text-align:center">Markup</th>
             <th style="width:11%; text-align:right">Customer Total</th>
+            <th class="sku-delta-col" style="width:10%; text-align:right">SKU Δ</th>
             <th style="width:4%"></th>
           </tr>
         </thead>
@@ -1042,6 +1050,7 @@
             <td style="text-align:right; padding:6px 4px; font-weight:700; color:var(--muted); font-size:13px;" id="col-net-total">$0.00</td>
             <td style="text-align:center; padding:6px 4px;"></td>
             <td style="text-align:right; padding:6px 8px; font-weight:700; color:var(--accent); font-size:13px;" id="col-customer-total">$0.00</td>
+            <td class="sku-delta-col" style="text-align:right; padding:6px 8px; font-weight:700; font-size:13px;" id="col-sku-delta">$0.00</td>
             <td></td>
           </tr>
         </tfoot>
@@ -1106,7 +1115,11 @@
           <span class="totals-label" id="t-grand-label">Total Quote</span>
           <span class="totals-value big" id="t-grand">$0.00</span>
         </div>
-        <p id="t-shop-note" style="font-size:12px;color:var(--muted);margin:6px 0 0;text-align:right;max-width:280px;margin-left:auto;"></p>
+        <div class="totals-row" id="t-theory-row" style="display:none;">
+          <span class="totals-label">Theoretical total</span>
+          <span class="totals-value" id="t-theory">$0.00</span>
+        </div>
+        <p id="t-shop-note" style="font-size:12px;color:var(--muted);margin:6px 0 0;text-align:right;max-width:320px;margin-left:auto;"></p>
       </div>
     </div>
 
@@ -4394,6 +4407,10 @@ function loadQuote(id) {
   activeQuoteId = id;
   saveActiveQuoteId();
   window._skuView = 'current';
+  const section = document.getElementById('quote-cabinets-section');
+  if (section) section.classList.remove('show-sku-delta');
+  const banner = document.getElementById('sku-view-banner');
+  if (banner) { banner.style.display = 'none'; banner.textContent = ''; }
 
   const q = quoteData[id];
   if (!q) {
@@ -4503,6 +4520,44 @@ function renderQuoteVersions() {
       + '</span>';
   }).join('');
 }
+function skuLineSell(r) {
+  const qty = Number(r && r.qty) || 0;
+  const cost = Number(r && r.cost) || 0;
+  const markup = Number(r && r.markup) || 0;
+  return qty * cost * (1 + markup / 100);
+}
+function skuBagByKey(rows) {
+  const a = {};
+  (rows || []).forEach(r => {
+    const k = String(r.serial || r.desc || '').trim().toUpperCase();
+    if (!k) return;
+    if (!a[k]) a[k] = { key: k, qty: 0, sell: 0, desc: r.desc || k, serial: r.serial || k };
+    a[k].qty += Number(r.qty) || 0;
+    a[k].sell += skuLineSell(r);
+  });
+  return a;
+}
+function coAgreementNote(co) {
+  const keep = co.payChoice === 'keep';
+  const amt = Number(co.changeAmount);
+  const billed = keep ? 0 : (amt === amt ? amt : 0);
+  let skuDelta = null;
+  if (co.newTotal != null && co.oldSkuTotal != null) {
+    skuDelta = Math.round((Number(co.newTotal) - Number(co.oldSkuTotal)) * 100) / 100;
+  } else if ((co.oldCabinets || []).length || (co.cabinets || []).length) {
+    const oldSell = (co.oldCabinets || []).reduce((s, r) => s + skuLineSell(r), 0);
+    const newSell = (co.cabinets || []).reduce((s, r) => s + skuLineSell(r), 0);
+    skuDelta = Math.round((newSell - oldSell) * 100) / 100;
+  }
+  if (keep) {
+    const extra = skuDelta != null ? ' SKU sell moved ' + fmt(skuDelta) + ' · shop ate it.' : '';
+    return { short: 'Courtesy · this change $0', long: 'Courtesy. Contracted total did not move.' + extra };
+  }
+  const extra = skuDelta != null && Math.abs(skuDelta - billed) > 0.009
+    ? ' SKU sell moved ' + fmt(skuDelta) + '.'
+    : '';
+  return { short: 'This change ' + fmt(billed), long: 'Agreed extra charge ' + fmt(billed) + ' on the contracted total.' + extra };
+}
 function renderSkuAgreementPicker() {
   const sel = document.getElementById('sku-agreement');
   if (!sel) return;
@@ -4524,18 +4579,75 @@ function showSkuAgreement(val) {
   window._skuView = val || 'current';
   const tbody = document.getElementById('cabinet-tbody');
   if (!tbody) return;
+  const section = document.getElementById('quote-cabinets-section');
+  const banner = document.getElementById('sku-view-banner');
   let rows = q.cabinets || [];
+  let baseline = q.originalCabinets || [];
+  let co = null;
   if (val === 'original') rows = q.originalCabinets || rows;
   else if (String(val).indexOf('co-') === 0) {
     const n = parseInt(String(val).slice(3), 10);
-    const co = (q.changeOrders || []).find(x => Number(x.n) === n);
+    co = (q.changeOrders || []).find(x => Number(x.n) === n);
     if (co && co.cabinets) rows = co.cabinets;
+    baseline = (co && co.oldCabinets && co.oldCabinets.length) ? co.oldCabinets : (q.originalCabinets || []);
   }
   tbody.innerHTML = '';
   (rows || []).forEach(c => addCabinetRow(c.desc, c.qty, c.cost, c.markup, c.serial, c.id));
   const locked = val && val !== 'current';
   tbody.querySelectorAll('input, select, button').forEach(el => { el.disabled = !!locked; });
+  const showDelta = String(val).indexOf('co-') === 0;
+  if (section) section.classList.toggle('show-sku-delta', showDelta);
+  if (showDelta) paintSkuDeltas(baseline, rows, co, q);
+  else if (banner) { banner.style.display = 'none'; banner.textContent = ''; }
   recalc();
+}
+function paintSkuDeltas(oldRows, newRows, co, q) {
+  const oldBag = skuBagByKey(oldRows);
+  const banner = document.getElementById('sku-view-banner');
+  let sum = 0;
+  document.querySelectorAll('#cabinet-tbody tr').forEach(tr => {
+    const serial = (tr.querySelectorAll('input[type=text]')[1]?.value || '').trim().toUpperCase();
+    const qty = parseInt(tr.querySelector('.qty-display')?.textContent) || 0;
+    const cost = parseFloat(tr.querySelectorAll('input[type=number]')[0]?.value) || 0;
+    const markup = parseFloat(tr.querySelector('.markup-select')?.value) || 0;
+    const nowSell = qty * cost * (1 + markup / 100);
+    const wasSell = oldBag[serial] ? oldBag[serial].sell : 0;
+    const d = Math.round((nowSell - wasSell) * 100) / 100;
+    sum += d;
+    const el = tr.querySelector('.sku-delta');
+    if (!el) return;
+    if (Math.abs(d) < 0.009) { el.textContent = '—'; el.className = 'sku-delta'; }
+    else {
+      el.textContent = (d > 0 ? '+' : '') + fmt(d);
+      el.className = 'sku-delta ' + (d > 0 ? 'sku-delta-pos' : 'sku-delta-neg');
+    }
+  });
+  const foot = document.getElementById('col-sku-delta');
+  if (foot) foot.textContent = (sum > 0 ? '+' : '') + fmt(sum);
+  const seen = {};
+  document.querySelectorAll('#cabinet-tbody tr').forEach(tr => {
+    const serial = (tr.querySelectorAll('input[type=text]')[1]?.value || '').trim().toUpperCase();
+    if (serial) seen[serial] = true;
+  });
+  Object.keys(oldBag).forEach(k => {
+    if (seen[k]) return;
+    const d = Math.round((-oldBag[k].sell) * 100) / 100;
+    sum += d;
+    const tr = document.createElement('tr');
+    tr.className = 'sku-removed-row';
+    tr.innerHTML = '<td>' + (oldBag[k].desc || k) + '</td>'
+      + '<td>' + (oldBag[k].serial || k) + '</td>'
+      + '<td>0</td><td></td><td></td><td></td><td></td>'
+      + '<td class="sku-delta-col"><span class="sku-delta sku-delta-neg">' + fmt(d) + '</span></td>'
+      + '<td></td>';
+    document.getElementById('cabinet-tbody').appendChild(tr);
+  });
+  if (foot) foot.textContent = (sum > 0 ? '+' : '') + fmt(sum);
+  if (banner && co) {
+    const note = coAgreementNote(co);
+    banner.style.display = 'block';
+    banner.textContent = 'Change order ' + co.n + ' · ' + note.long + ' SKU Δ column is shop math — it does not have to equal the contracted total.';
+  }
 }
 
 function downloadCustomerQuote() {
@@ -4929,6 +5041,7 @@ function addCabinetRow(desc='', qty=1, cost='', markup=35, serial='', id = null)
       </select>
     </td>
     <td style="text-align:right"><span class="line-total">$0.00</span></td>
+    <td class="sku-delta-col"><span class="sku-delta">—</span></td>
     <td><button class="del-btn" onclick="deleteRow(this,'cabinet-tbody')">✕</button></td>
   `;
   document.getElementById('cabinet-tbody').appendChild(tr);
@@ -4996,6 +5109,7 @@ function recalc() {
   // Cabinets
   let cabTotal = 0, cabCost = 0;
   document.querySelectorAll('#cabinet-tbody tr').forEach(tr => {
+    if (tr.classList.contains('sku-removed-row')) return;
     const qty    = parseInt(tr.querySelector('.qty-display')?.textContent) || 1;
     const cost   = parseFloat(tr.querySelectorAll('input[type=number]')[0]?.value) || 0;
     const markup = parseFloat(tr.querySelector('.markup-select')?.value) || 0;
@@ -5039,12 +5153,23 @@ function recalc() {
   const note = document.getElementById('t-shop-note');
   const contracted = (pipeStatus(q) === 'contract' || pipeStatus(q) === 'completed') && locked > 0;
   if (gl) gl.textContent = contracted ? 'Contracted total' : 'Total Quote';
+  const theoryRow = document.getElementById('t-theory-row');
+  const theoryEl = document.getElementById('t-theory');
+  const liveSell = quoteGrandFromData(q);
+  if (theoryRow && theoryEl) {
+    if (contracted) {
+      theoryEl.textContent = fmt(liveSell);
+      theoryRow.style.display = '';
+    } else {
+      theoryRow.style.display = 'none';
+    }
+  }
   if (note) {
     if (contracted) {
-      const carry = Math.round((grand - locked) * 100) / 100;
+      const carry = Math.round((liveSell - locked) * 100) / 100;
       note.textContent = carry > 0.009
-        ? 'SKU sell ' + fmt(grand) + ' · shop carrying ' + fmt(carry)
-        : (carry < -0.009 ? 'SKU sell ' + fmt(grand) + ' · extra margin ' + fmt(-carry) : 'SKU sell matches contracted total.');
+        ? 'If every SKU change had been billed: ' + fmt(liveSell) + '. Shop carrying ' + fmt(carry) + '.'
+        : (carry < -0.009 ? 'If every SKU change had been billed: ' + fmt(liveSell) + '. Extra margin ' + fmt(-carry) + '.' : 'SKU sell matches contracted total.');
     } else note.textContent = '';
   }
 
@@ -5871,6 +5996,7 @@ function saveChangeOrder(keepOpen) {
     payChoice: c.payChoice || '',
     changeAmount: c.changeAmount != null ? c.changeAmount : (c.payChoice === 'keep' ? 0 : (skuTotal - oldTotal)),
     oldTotal: oldTotal,
+    oldSkuTotal: c.oldSkuTotal != null ? c.oldSkuTotal : coSkuSellOf(c.oldCabinets || [], q),
     newTotal: skuTotal,
     billTotal: billTotal,
     signatures: 'pending',
@@ -5921,17 +6047,28 @@ function renderProjectSummary(id) {
     ? '<a href="#" onclick="event.preventDefault();openContractPacket(\'' + packetId + '\');">' + stLabel + ' ' + fmt(total) + '</a>'
     : stLabel + ' · ' + fmt(total);
   let html = '<p style="font-size:13px;margin-bottom:8px;"><strong>' + (q.jobCode || '') + '</strong> · ' + totalCell + '</p>';
+  const theory = quoteGrandFromData(q);
+  if (st === 'contract' || st === 'completed') {
+    html += '<p style="font-size:13px;margin:0 0 8px;">Theoretical total ' + fmt(theory) + ' <span style="color:var(--muted);">(if every SKU change had been billed)</span></p>';
+  }
+  if (cos.length) {
+    let billed = 0, courtesyN = 0;
+    cos.forEach(co => {
+      if (co.payChoice === 'keep') courtesyN += 1;
+      else billed += Number(co.changeAmount) || 0;
+    });
+    html += '<p style="font-size:13px;margin:0 0 10px;">Agreed extras on contract ' + fmt(billed)
+      + (courtesyN ? ' · ' + courtesyN + ' courtesy change' + (courtesyN === 1 ? '' : 's') + ' at $0' : '')
+      + '. Contracted total is the running agreed number, not SKU sell.</p>';
+  }
   html += '<table><thead><tr><th>When</th><th>What</th><th>Note</th></tr></thead><tbody>';
   versions.forEach(v => {
     html += '<tr><td>' + fmtMDY(v.date) + '</td><td>Quote ' + v.n + '</td><td>Saved version</td></tr>';
   });
   cos.forEach(co => {
     const when = fmtMDY(co.at || co.date);
-    const keep = co.payChoice === 'keep';
-    const amt = Number(co.changeAmount);
-    const note = keep ? 'Courtesy · this change $0'
-      : ('This change ' + fmt(amt === amt ? amt : 0));
-    html += '<tr><td>' + when + '</td><td><a href="#" onclick="event.preventDefault();openChangeOrderSheet(\'' + packetId + '\', ' + co.n + ');">Change order ' + co.n + '</a></td><td>' + note + '</td></tr>';
+    const note = coAgreementNote(co);
+    html += '<tr><td>' + when + '</td><td><a href="#" onclick="event.preventDefault();openChangeOrderSheet(\'' + packetId + '\', ' + co.n + ');">Change order ' + co.n + '</a></td><td>' + note.short + '<div class="co-ledger">' + note.long + '</div></td></tr>';
   });
   for (let n = 1; n <= maxN; n++) {
     const amt = ar['d' + n + 'Paid'] ? paidInvoiceAmt(ar, n, ar['d' + n + 'Amt']) : ar['d' + n + 'Amt'];
