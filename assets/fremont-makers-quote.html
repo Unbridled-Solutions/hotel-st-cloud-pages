@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v1013g</title>
+<title>Fremont Makers — Project Builder v1013h</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20261013g-summary-dates -->
+<!-- FM-BUILD-v20261013h-keep-lock -->
 <script>
 (function(){
   try {
@@ -704,7 +704,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1013g</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1013h</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <span class="status-label">Status:</span>
@@ -3245,6 +3245,8 @@ function modelQtyOf(qd) {
 }
 function contractTotalOf(qd, unit) {
   if (quoteKind(qd) === 'order' && qd && qd.id) return orderRollupTotal(qd.id);
+  const locked = Number(qd && qd.contractTotal);
+  if ((pipeStatus(qd) === 'contract' || pipeStatus(qd) === 'completed') && locked > 0) return locked;
   const u = (unit != null && unit === unit) ? unit : quoteGrandFromData(qd);
   return u * modelQtyOf(qd);
 }
@@ -4575,6 +4577,7 @@ function collectData() {
     colorName: document.getElementById('house-color')?.value || quoteData[activeQuoteId]?.colorName || '',
     revenueStream: quoteData[activeQuoteId]?.revenueStream || 'cabinets',
     changeOrders: quoteData[activeQuoteId]?.changeOrders || [],
+    contractTotal: quoteData[activeQuoteId]?.contractTotal,
     customerEmail: document.getElementById('customer-email')?.value || quoteData[activeQuoteId]?.customerEmail || '',
     signRequests: quoteData[activeQuoteId]?.signRequests || [],
     elevationDraft: quoteData[activeQuoteId]?.elevationDraft || null,
@@ -5589,7 +5592,7 @@ function saveChangeOrder(keepOpen) {
     alert('Fix unpaid invoices so they add to remaining.');
     return;
   }
-  const oldTotal = contractTotalOf(q, quoteGrandFromData(q) || 0);
+  const oldTotal = (c.oldTotal != null && c.oldTotal > 0) ? c.oldTotal : contractTotalOf(q, quoteGrandFromData(q) || 0);
   if (c.kind !== 'schedule') {
     q.cabinets = c.cabinets || coReadSkus();
     if (activeQuoteId === c.id) {
@@ -5598,11 +5601,14 @@ function saveChangeOrder(keepOpen) {
       recalc();
     }
   }
-  const newTotal = contractTotalOf(q, quoteGrandFromData(q) || 0);
+  const skuTotal = contractTotalOf(Object.assign({}, q, { contractTotal: null }), quoteGrandFromData(q) || 0);
+  const billTotal = (c.payChoice === 'keep') ? oldTotal : (c.billTotal != null ? c.billTotal : skuTotal);
+  if (c.payChoice === 'keep') q.contractTotal = oldTotal;
+  else q.contractTotal = billTotal;
   if (!q.ar || typeof q.ar !== 'object') q.ar = {};
   const plan = payPlanOf(q);
   const maxN = plan === '50-50' ? 2 : 3;
-  const sched = scheduleOf(q, newTotal);
+  const sched = scheduleOf(q, billTotal);
   for (let n = 1; n <= maxN; n++) {
     if (sched['d' + n + 'Paid']) continue;
     const amtEl = document.getElementById('co-d' + n + '-amt');
@@ -5619,8 +5625,8 @@ function saveChangeOrder(keepOpen) {
     reason: (document.getElementById('co-reason') || {}).value || '',
     payChoice: c.payChoice || '',
     oldTotal: oldTotal,
-    newTotal: newTotal,
-    billTotal: c.billTotal != null ? c.billTotal : (c.payChoice === 'keep' ? oldTotal : newTotal),
+    newTotal: skuTotal,
+    billTotal: billTotal,
     signatures: 'pending',
     diff: c.diff || null,
     cabinets: JSON.parse(JSON.stringify(c.cabinets || q.cabinets || [])),
@@ -5637,7 +5643,7 @@ function saveChangeOrder(keepOpen) {
   q.changeOrders = list;
   quoteData[c.id] = q;
   saveQuoteData(c.id);
-  updateQuoteIndexEntry(c.id, q.status, newTotal, q.customer, q.project, q.date);
+  updateQuoteIndexEntry(c.id, q.status, billTotal, q.customer, q.project, q.date);
   fmCloudPushDebounced();
   if (activeQuoteId === c.id) {
     loadQuote(c.id);
@@ -5738,6 +5744,10 @@ function confirmContract() {
   closeModal();
   setStatus('contract');
   const locked = quoteData[activeQuoteId];
+  if (locked && !Number(locked.contractTotal)) {
+    locked.contractTotal = contractTotalOf(Object.assign({}, locked, { contractTotal: null }), quoteGrandFromData(locked) || 0);
+    saveQuoteData(activeQuoteId);
+  }
   if (quoteKind(locked) === 'order') {
     childrenOfOrder(activeQuoteId).forEach(ch => {
       if (!quoteData[ch.id]) return;
