@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
-  <title>Fremont Makers — Contract Packet v1013f</title>
-  <!-- FM-PACKET-v1013f-change-order -->
+  <title>Fremont Makers — Contract Packet v1013j</title>
+  <!-- FM-PACKET-v1013j-co-keep -->
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Pinyon+Script&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     :root { --ink:#1a1a1a; --muted:#666; --line:#d8d4cc; --gold:#c9a84c; --paper:#fff; --screen:#111; }
@@ -66,7 +66,7 @@
 </head>
 <body>
   <div class="bar">
-    <strong>Fremont Makers · Contract packet <span style="opacity:.45;letter-spacing:0;">v1013f</span></strong>
+    <strong>Fremont Makers · Contract packet <span style="opacity:.45;letter-spacing:0;">v1013j</span></strong>
     <div class="actions">
       <span class="save-ok" id="save-msg"></span>
       <button type="button" onclick="window.print()">Print</button>
@@ -396,60 +396,40 @@ function pageChangeOrder(q, nums, n) {
   const list = q.changeOrders || [];
   const co = list.find(x => Number(x.n) === Number(n)) || list[Number(n) - 1];
   if (!co) return '<div class="page"><p>No change order ' + n + ' on this job.</p></div>';
-  const pay = co.payChoice === 'keep' ? 'Keep contracted remaining'
-    : co.payChoice === 'pass' ? 'Pass new cabinet total through unpaid invoices'
-    : (co.payChoice || '—');
+  const keep = co.payChoice === 'keep';
+  const contracted = Number(q.contractTotal) || Number(co.billTotal) || Number(co.oldTotal) || (nums.unit * modelQty(q));
   const when = co.at ? new Date(co.at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '—';
   const added = (co.diff && co.diff.added) || [];
   const removed = (co.diff && co.diff.removed) || [];
   const changed = (co.diff && co.diff.changed) || [];
+  const skuRow = (label, r, qty) => '<tr><td>' + label + '</td><td>' + esc(r.desc || r.key || '') + '</td><td>' + esc(r.key || r.serial || '') + '</td><td class="r">' + (qty != null ? qty : (r.qty || '')) + '</td></tr>';
   const diffRows = []
-    .concat(added.map(r => '<tr><td>Added</td><td>' + esc(r.desc || r.key || '') + '</td><td>' + esc(r.key || r.serial || '') + '</td><td class="r">' + (r.qty || '') + '</td></tr>'))
-    .concat(removed.map(r => '<tr><td>Removed</td><td>' + esc(r.desc || r.key || '') + '</td><td>' + esc(r.key || r.serial || '') + '</td><td class="r">' + (r.qty || '') + '</td></tr>'))
-    .concat(changed.map(r => '<tr><td>Changed</td><td>' + esc(r.desc || r.key || '') + '</td><td>' + esc(r.key || '') + '</td><td class="r">' + (r.oldQty || '') + ' → ' + (r.newQty || '') + '</td></tr>'))
+    .concat(added.map(r => skuRow('Added', r, r.qty)))
+    .concat(removed.map(r => skuRow('Removed', r, r.qty)))
+    .concat(changed.map(r => skuRow('Changed', r, (r.oldQty || '') + ' → ' + (r.newQty || ''))))
     .join('');
-  const cabs = co.cabinets || [];
-  const cabRows = cabs.filter(c => (parseFloat(c.cost)||0) > 0 || (c.desc || '').trim()).map(c => {
-    const qty = parseFloat(c.qty) || 0;
-    const cost = parseFloat(c.cost) || 0;
-    const markup = parseFloat(c.markup) || 0;
-    const unit = cost * (1 + markup/100);
-    return '<tr><td>' + esc(c.desc || '') + '</td><td>' + esc(c.serial || '') + '</td><td class="r">' + qty + '</td><td class="r">' + money(unit) + '</td><td class="r">' + money(qty * unit) + '</td></tr>';
-  }).join('');
-  const sch = co.schedule || q.ar || {};
-  const plan = payPlanOf(q);
-  const maxN = plan === '50-50' ? 2 : 3;
-  let schRows = '';
-  for (let i = 1; i <= maxN; i++) {
-    const amt = sch['d' + i + 'Amt'];
-    if (amt == null && !sch['d' + i + 'Due']) continue;
-    schRows += '<tr><td>Invoice ' + i + (sch['d' + i + 'Paid'] ? ' · PAID' : '') + '</td><td>' + esc(prettyDate(sch['d' + i + 'Due'])) + '</td><td class="r">' + money(amt || 0) + '</td></tr>';
-  }
-  return '<div class="page" data-initials="1">'
+  const lockedNums = Object.assign({}, nums, { unit: contracted });
+  let html = '<div class="page" data-initials="1">'
     + head('Change Order ' + n)
     + '<h1>Change Order ' + n + '</h1><div class="tag">making freedom</div>'
-    + jobMeta(q, nums)
+    + jobMeta(q, lockedNums)
     + '<div class="meta">'
     + '<div><b>Change date</b>' + esc(when) + '</div>'
     + '<div><b>Why</b>' + esc(co.reason || '—') + '</div>'
-    + '<div><b>Was</b>' + money(co.oldTotal) + '</div>'
-    + '<div><b>Cabinets now</b>' + money(co.newTotal) + '</div>'
-    + '<div><b>Payment</b>' + esc(pay) + '</div>'
-    + '<div><b>Bill target</b>' + money(co.billTotal != null ? co.billTotal : (co.payChoice === 'keep' ? co.oldTotal : co.newTotal)) + '</div>'
-    + '</div>'
-    + '<h2>SKU changes</h2>'
+    + '<div><b>Contracted total</b>' + money(contracted) + '</div>'
+    + '</div>';
+  if (keep) {
+    html += '<p><strong>No contracted change.</strong> The customer’s end total is still ' + money(contracted) + '. SKUs below are substitutions or extras listed at no additional charge.</p>';
+  }
+  html += '<h2>SKUs added and removed</h2>'
     + '<table><thead><tr><th></th><th>Description</th><th>SKU</th><th class="r">Qty</th></tr></thead><tbody>'
-    + (diffRows || '<tr><td colspan="4">No SKU differences recorded. See cabinet list below.</td></tr>')
-    + '</tbody></table>'
-    + '<h2>Cabinets after this change</h2>'
-    + '<table><thead><tr><th>Description</th><th>SKU</th><th class="r">Qty</th><th class="r">Unit</th><th class="r">Total</th></tr></thead><tbody>'
-    + (cabRows || '<tr><td colspan="5">No cabinet lines stored on this change order.</td></tr>')
-    + '</tbody></table>'
-    + '<h2>Payment after this change</h2>'
-    + '<table><thead><tr><th>Invoice</th><th>Due</th><th class="r">Amount</th></tr></thead><tbody>'
-    + (schRows || '<tr><td colspan="3">Schedule unchanged.</td></tr>')
-    + '</tbody></table>'
-    + '<p class="note">Paid invoices stay frozen at the check that cleared. This sheet amends the contract for the SKUs and remaining invoices listed above.</p>'
+    + (diffRows || '<tr><td colspan="4">No SKU differences recorded.</td></tr>')
+    + '</tbody></table>';
+  if (!keep) {
+    html += '<h2>Payment after this change</h2>'
+      + '<p class="note">Contracted total is now ' + money(Number(co.billTotal) || contracted) + '.</p>';
+  }
+  html += '<p class="note">Paid invoices stay frozen at the check that cleared.</p>'
     + '<div class="sig"><div>'
     + '<div class="sig-line">Buyer signature</div>'
     + '<div class="sig-line">Printed name' + (q.signerName ? ' · ' + esc(q.signerName) : '') + '</div>'
@@ -459,6 +439,7 @@ function pageChangeOrder(q, nums, n) {
     + '<div class="sig-line">Printed name</div>'
     + '<div class="sig-line">Date</div>'
     + '</div></div></div>';
+  return html;
 }
 function render(q, data) {
   const kids = childrenOf(q, data || {});
