@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v1013h</title>
+<title>Fremont Makers — Project Builder v1013i</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20261013h-keep-lock -->
+<!-- FM-BUILD-v20261013i-line-markup -->
 <script>
 (function(){
   try {
@@ -704,7 +704,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1013h</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1013i</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <span class="status-label">Status:</span>
@@ -1480,7 +1480,7 @@
 
 <!-- NEW PROJECT WIZARD -->
 <div class="modal-overlay" id="npw-modal">
-  <div class="modal" style="max-width:560px;width:95%;text-align:left;">
+  <div class="modal" style="max-width:760px;width:95%;text-align:left;">
     <h3 id="npw-title">New Project</h3>
     <p id="npw-lede" style="color:var(--muted);font-size:13px;margin-bottom:8px;">Cabinets first. Framing and woodshop wait.</p>
     <div id="npw-step"></div>
@@ -1543,10 +1543,12 @@
         <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">PARSED — <span id="sq-import-count"></span> cabinet lines found</div>
         <div id="sq-import-preview-list" style="max-height:200px;overflow-y:auto;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:10px;font-size:12px;font-family:monospace;color:var(--text);line-height:1.8;"></div>
         <div id="sq-import-crosscheck" style="display:none;margin-top:10px;padding:10px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);font-size:12px;font-family:monospace;line-height:1.7;"></div>
-        <p style="font-size:11px;color:var(--muted);margin-top:8px;">Cabinet costs must match the Wholesale Cabinets bill (subtotal, tax, total). Markup 35% is applied after that, on our quote.</p>
+        <p style="font-size:11px;color:var(--muted);margin-top:8px;">Cabinet costs must match the Wholesale Cabinets bill (subtotal, tax, total). Next you set markup per line — some items can be 0%.</p>
       </div>
+      <div id="sq-markup-wrap" style="display:none;margin-top:12px;"></div>
       <div style="display:flex;gap:8px;margin-top:14px;">
-        <button class="modal-btn" id="sq-import-confirm-btn" onclick="sqConfirmImport()" style="display:none;border-color:#4ade80;color:#4ade80;font-weight:700;">✅ Load into Quote</button>
+        <button class="modal-btn" id="sq-import-confirm-btn" onclick="sqConfirmImport()" style="display:none;border-color:#4ade80;color:#4ade80;font-weight:700;">Next: set markup</button>
+        <button class="modal-btn confirm" id="sq-markup-apply-btn" onclick="sqApplyMarkupImport()" style="display:none;">Load into quote</button>
       </div>
     </div>
     <div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end;">
@@ -2716,22 +2718,35 @@ function sqConfirmImport() {
     alert('Scan does not match the Wholesale Cabinets bill. Fix the import before loading.');
     return;
   }
+  const wrap = document.getElementById('sq-markup-wrap');
+  const applyBtn = document.getElementById('sq-markup-apply-btn');
+  const confirmBtn = document.getElementById('sq-import-confirm-btn');
+  if (wrap) {
+    wrap.style.display = '';
+    wrap.innerHTML = markupGridHtml(_sqParsedLines.map(l => Object.assign({}, l, { markup: l.markup != null ? l.markup : 35 })), 'sq');
+  }
+  if (applyBtn) applyBtn.style.display = '';
+  if (confirmBtn) confirmBtn.style.display = 'none';
+}
+function sqApplyMarkupImport() {
+  if (!_sqParsedLines || !_sqParsedLines.length) return;
+  const lines = markupReadLines(_sqParsedLines, 'sq');
   const pin = window._sqPinTarget || (quoteData[activeQuoteId] && quoteKind(quoteData[activeQuoteId]) === 'child' ? activeQuoteId : null);
   if (pin) {
     window._sqPinTarget = pin;
     activeQuoteId = pin;
-    applyCabinetsToActiveQuote(_sqParsedLines);
+    applyCabinetsToActiveQuote(lines);
   } else {
     let target = activeQuoteId ? quoteData[activeQuoteId] : null;
     if (!target || quoteHasHistory(target)) {
       target = openFreshQuoteForImport();
     }
     if (!target) return;
-    target.cabinets = _sqParsedLines.map(l => ({
+    target.cabinets = lines.map(l => ({
       desc: l.desc,
       qty: l.qty,
-      cost: l.cost.toString(),
-      markup: '35',
+      cost: String(l.cost),
+      markup: String(l.markup != null ? l.markup : 0),
       serial: l.serial,
       id: 'r' + Math.random().toString(36).substr(2, 10)
     }));
@@ -2743,6 +2758,10 @@ function sqConfirmImport() {
   switchTab('quote');
   _sqParsedLines = [];
   _sqBillCheck = null;
+  const wrap = document.getElementById('sq-markup-wrap');
+  if (wrap) { wrap.style.display = 'none'; wrap.innerHTML = ''; }
+  const applyBtn = document.getElementById('sq-markup-apply-btn');
+  if (applyBtn) applyBtn.style.display = 'none';
 }
 // ── END IMPORT SUPPLIER QUOTE MODAL ────────────────────────────────
 
@@ -3984,7 +4003,7 @@ function renderNewProjectWizard() {
     lede.textContent = 'One house, or a builder order with mixed models on one contract.';
     next.style.display = 'none';
     step.innerHTML = '<div class="npw-choice">'
-      + '<button class="modal-btn confirm" type="button" onclick="closeNewProjectWizard();newQuote(true)">Single house quote</button>'
+      + '<button class="modal-btn confirm" type="button" onclick="_npw.mode=\'single\';_npw.step=\'single-pdf\';renderNewProjectWizard()">Single house quote</button>'
       + '<button class="modal-btn" type="button" onclick="_npw.mode=\'builder\';_npw.step=\'pick-builder\';renderNewProjectWizard()">Builder order — mixed models, one contract</button>'
       + '</div>';
     return;
@@ -4041,6 +4060,26 @@ function renderNewProjectWizard() {
     ).join('');
     step.innerHTML = '<table class="quote-table"><thead><tr><th style="width:150px">House</th><th>Address</th><th style="width:220px;text-align:left">Color</th></tr></thead><tbody>'
       + (rows || '<tr><td colspan="3">No houses</td></tr>') + '</tbody></table>';
+    return;
+  }
+  if (_npw.step === 'single-pdf') {
+    title.textContent = 'Wholesale Cabinets PDF';
+    lede.textContent = 'Upload the manufacturer quote. Then set markup on each line before the job is created. Some items can be 0%.';
+    next.style.display = 'none';
+    step.innerHTML = '<input type="file" id="npw-pdf-file" accept=".pdf,.csv,.txt,.docx" style="display:none" onchange="npwHandlePdf(event)" />'
+      + '<button type="button" class="modal-btn confirm" onclick="document.getElementById(\'npw-pdf-file\').click()">Upload Wholesale Cabinets PDF</button>'
+      + '<p id="npw-pdf-status" style="font-size:13px;color:var(--muted);margin-top:10px;"></p>'
+      + '<p style="font-size:12px;color:var(--muted);margin-top:12px;">Or skip and start a blank quote.</p>'
+      + '<button type="button" class="modal-btn" onclick="closeNewProjectWizard();newQuote(true)">Skip — blank quote</button>';
+    return;
+  }
+  if (_npw.step === 'markup') {
+    title.textContent = 'Markup per line';
+    lede.textContent = 'Default is 35%. Set 0% on items that go out at cost. This is before the job is created.';
+    next.style.display = '';
+    next.textContent = 'Create quote';
+    step.innerHTML = markupGridHtml(_npw.lines || [], 'npw');
+    return;
   }
 }
 function npwNext() {
@@ -4059,6 +4098,109 @@ function npwNext() {
     return;
   }
   if (_npw.step === 'builder-houses') createBuilderOrderFromWizard();
+  if (_npw.step === 'markup') npwFinishSingle();
+}
+function markupGridHtml(lines, prefix) {
+  const rows = (lines || []).map((l, i) => {
+    const qty = Number(l.qty) || 1;
+    const cost = Number(l.cost) || 0;
+    const mk = l.markup != null ? Number(l.markup) : 35;
+    return '<tr>'
+      + '<td>' + String(l.desc || '').replace(/&/g,'&').replace(/</g,'<') + '</td>'
+      + '<td>' + String(l.serial || '').replace(/&/g,'&').replace(/</g,'<') + '</td>'
+      + '<td class="r">' + qty + '</td>'
+      + '<td class="r">$' + cost.toFixed(2) + '</td>'
+      + '<td><select id="' + prefix + '-mk-' + i + '" onchange="' + (prefix === 'npw' ? 'npwMarkupLive()' : 'sqMarkupLive()') + '">' + markupOptions(mk) + '</select></td>'
+      + '<td class="r" id="' + prefix + '-sell-' + i + '">$' + (qty * cost * (1 + mk / 100)).toFixed(2) + '</td>'
+      + '</tr>';
+  }).join('');
+  return '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">'
+    + '<span style="font-size:13px;color:var(--muted);">Set all to</span>'
+    + '<input type="number" id="' + prefix + '-mk-all" min="0" max="100" step="1" value="35" style="width:64px;padding:6px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />'
+    + '<span style="font-size:13px;color:var(--muted);">%</span>'
+    + '<button type="button" class="modal-btn" onclick="markupSetAll(\'' + prefix + '\')">Apply to all</button>'
+    + '</div>'
+    + '<div style="overflow:auto;max-height:48vh;"><table class="quote-table" style="min-width:640px;"><thead><tr><th>Description</th><th>SKU</th><th class="r">Qty</th><th class="r">Cost</th><th>Markup</th><th class="r">Sell</th></tr></thead><tbody>'
+    + (rows || '<tr><td colspan="6">No lines</td></tr>')
+    + '</tbody></table></div>';
+}
+function markupReadLines(lines, prefix) {
+  return (lines || []).map((l, i) => {
+    const el = document.getElementById(prefix + '-mk-' + i);
+    const mk = el ? Number(el.value) : (l.markup != null ? Number(l.markup) : 35);
+    return Object.assign({}, l, { markup: String(isNaN(mk) ? 0 : mk) });
+  });
+}
+function markupSetAll(prefix) {
+  const all = document.getElementById(prefix + '-mk-all');
+  const pct = all ? Number(all.value) : 35;
+  const n = prefix === 'npw' ? ((_npw.lines || []).length) : ((_sqParsedLines || []).length);
+  for (let i = 0; i < n; i++) {
+    const el = document.getElementById(prefix + '-mk-' + i);
+    if (el) el.value = String(pct);
+  }
+  if (prefix === 'npw') npwMarkupLive();
+  else sqMarkupLive();
+}
+function npwMarkupLive() {
+  (_npw.lines || []).forEach((l, i) => {
+    const el = document.getElementById('npw-mk-' + i);
+    const sell = document.getElementById('npw-sell-' + i);
+    if (!el || !sell) return;
+    const qty = Number(l.qty) || 1;
+    const cost = Number(l.cost) || 0;
+    const mk = Number(el.value) || 0;
+    sell.textContent = '$' + (qty * cost * (1 + mk / 100)).toFixed(2);
+  });
+}
+function sqMarkupLive() {
+  (_sqParsedLines || []).forEach((l, i) => {
+    const el = document.getElementById('sq-mk-' + i);
+    const sell = document.getElementById('sq-sell-' + i);
+    if (!el || !sell) return;
+    const qty = Number(l.qty) || 1;
+    const cost = Number(l.cost) || 0;
+    const mk = Number(el.value) || 0;
+    sell.textContent = '$' + (qty * cost * (1 + mk / 100)).toFixed(2);
+  });
+}
+async function npwHandlePdf(event) {
+  const file = event.target.files && event.target.files[0];
+  const status = document.getElementById('npw-pdf-status');
+  if (!file) return;
+  if (status) status.textContent = 'Reading ' + file.name + '…';
+  try {
+    await sqProcessFile(file);
+    const lines = (_sqParsedLines || []).filter(it => it && (!window.wcIsRealSku || wcIsRealSku(it.serial) || it.cost));
+    if (!lines.length) {
+      if (status) status.textContent = 'No cabinet SKU lines in that PDF.';
+      return;
+    }
+    _npw.lines = lines.map(l => ({ desc: l.desc, serial: l.serial, qty: l.qty, cost: l.cost, markup: 35 }));
+    _npw.step = 'markup';
+    renderNewProjectWizard();
+  } catch (e) {
+    if (status) status.textContent = 'Could not read PDF: ' + (e.message || e);
+  }
+}
+function npwFinishSingle() {
+  const lines = markupReadLines(_npw.lines || [], 'npw');
+  closeNewProjectWizard();
+  newQuote(true);
+  const target = quoteData[activeQuoteId];
+  if (!target) return;
+  target.cabinets = lines.map(l => ({
+    desc: l.desc,
+    qty: l.qty,
+    cost: String(l.cost),
+    markup: String(l.markup != null ? l.markup : 0),
+    serial: l.serial || '',
+    id: 'r' + Math.random().toString(36).substr(2, 10)
+  }));
+  saveQuoteData(activeQuoteId);
+  loadQuote(activeQuoteId);
+  recalc();
+  switchTab('quote');
 }
 function createBuilderOrderFromWizard() {
   const houses = _npw.houses || [];
