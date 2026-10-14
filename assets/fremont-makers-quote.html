@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v1013e</title>
+<title>Fremont Makers — Project Builder v1013f</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20261013e-pay-next -->
+<!-- FM-BUILD-v20261013f-co-sheet -->
 <script>
 (function(){
   try {
@@ -704,7 +704,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1013e</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1013f</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <span class="status-label">Status:</span>
@@ -3093,6 +3093,10 @@ function renderInvoices() {
 
 function openInvoiceSheet(id, n) {
   const url = FM_PACKET_URL + '?id=' + encodeURIComponent(id) + '&invoice=' + n;
+  window.open(url, '_blank');
+}
+function openChangeOrderSheet(id, n) {
+  const url = FM_PACKET_URL + '?id=' + encodeURIComponent(id) + '&co=' + n;
   window.open(url, '_blank');
 }
 
@@ -5508,13 +5512,18 @@ async function coRequestSignatures() {
   const q = quoteData[c.id] || {};
   const emailEl = document.getElementById('co-sign-email');
   const email = (emailEl && emailEl.value) || fmBuyerEmail(q);
+  const list = q.changeOrders || [];
+  const last = list[list.length - 1];
+  const n = last && last.n ? last.n : list.length;
+  const sheet = 'https://tools.fremontmakers.com/contract?id=' + encodeURIComponent(c.id) + '&co=' + n;
   const oldT = c.oldTotal, newT = c.newTotal;
   const body = [
-    'CHANGE ORDER · ' + (q.jobCode || ''),
+    'CHANGE ORDER ' + n + ' · ' + (q.jobCode || ''),
     'Buyer: ' + (q.customer || '') + ' · ' + (q.signerName || ''),
     'Why: ' + (c.reason || ''),
     'Cabinets: ' + fmt(oldT) + ' → ' + fmt(newT),
     'Payment: ' + (c.payChoice === 'keep' ? 'Keep contracted remaining' : c.payChoice === 'pass' ? 'Pass new cabinet total through unpaid invoices' : 'Custom unpaid split'),
+    'Printable sheet: ' + sheet,
     '',
     'Sign to acknowledge this change. Paid invoices are not rewritten.'
   ].join('\n');
@@ -5587,15 +5596,29 @@ function saveChangeOrder(keepOpen) {
     if (dueEl) q.ar['d' + n + 'Due'] = dueEl.value;
   }
   const list = q.changeOrders || [];
-  list.push({
-    n: list.length + 1,
+  const n = list.length + 1;
+  const rec = {
+    n,
     at: Date.now(),
     kind: c.kind,
     reason: (document.getElementById('co-reason') || {}).value || '',
+    payChoice: c.payChoice || '',
     oldTotal: oldTotal,
     newTotal: newTotal,
-    signatures: 'pending'
-  });
+    billTotal: c.billTotal != null ? c.billTotal : (c.payChoice === 'keep' ? oldTotal : newTotal),
+    signatures: 'pending',
+    diff: c.diff || null,
+    cabinets: JSON.parse(JSON.stringify(c.cabinets || q.cabinets || [])),
+    oldCabinets: JSON.parse(JSON.stringify(c.oldCabinets || [])),
+    schedule: {}
+  };
+  const maxNSave = plan === '50-50' ? 2 : 3;
+  for (let i = 1; i <= maxNSave; i++) {
+    rec.schedule['d' + i + 'Amt'] = q.ar['d' + i + 'Amt'];
+    rec.schedule['d' + i + 'Due'] = q.ar['d' + i + 'Due'];
+    rec.schedule['d' + i + 'Paid'] = !!q.ar['d' + i + 'Paid'];
+  }
+  list.push(rec);
   q.changeOrders = list;
   quoteData[c.id] = q;
   saveQuoteData(c.id);
@@ -5637,7 +5660,7 @@ function renderProjectSummary(id) {
   });
   cos.forEach(co => {
     const when = co.at ? new Date(co.at).toLocaleDateString('en-US') : '';
-    html += '<tr><td>' + when + '</td><td>Change order ' + co.n + '</td><td>' + (co.kind || '') + (co.reason ? ' · ' + co.reason : '') + '</td><td class="r">' + fmt(co.oldTotal || 0) + ' → ' + fmt(co.newTotal || 0) + '</td></tr>';
+    html += '<tr><td>' + when + '</td><td><a href="#" onclick="event.preventDefault();openChangeOrderSheet(\'' + packetId + '\', ' + co.n + ');">Change order ' + co.n + '</a></td><td>' + (co.kind || '') + (co.reason ? ' · ' + co.reason : '') + '</td><td class="r">' + fmt(co.oldTotal || 0) + ' → ' + fmt(co.newTotal || 0) + '</td></tr>';
   });
   for (let n = 1; n <= maxN; n++) {
     const amt = ar['d' + n + 'Paid'] ? paidInvoiceAmt(ar, n, ar['d' + n + 'Amt']) : ar['d' + n + 'Amt'];
