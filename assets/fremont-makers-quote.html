@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v1014f</title>
+<title>Fremont Makers — Project Builder v1014g</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20261014f-cogs-hard -->
+<!-- FM-BUILD-v20261014g-pnl-fmt -->
 <script>
 (function(){
   try {
@@ -710,7 +710,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1014f</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1014g</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <span class="status-label">Status:</span>
@@ -1334,6 +1334,30 @@
     </div>
 
   </div><!-- /company-pnl-view -->
+
+<div class="modal-overlay" id="cogs-report-modal">
+  <div class="modal" style="max-width:760px;width:95%;text-align:left;">
+    <h3>Cabinet hard cost — what pulls into COGS</h3>
+    <p id="cogs-report-lede" style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.45;">Qty × unit cost from Wholesale Cabinets uploads, before markup. Labor is overhead, not COGS.</p>
+    <div style="overflow:auto;max-height:55vh;">
+      <table class="quote-table">
+        <thead>
+          <tr>
+            <th>Job</th>
+            <th>Customer</th>
+            <th>Date</th>
+            <th style="text-align:right">Hard cost</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="cogs-report-tbody"></tbody>
+      </table>
+    </div>
+    <div class="modal-btns" style="margin-top:12px;">
+      <button class="modal-btn" type="button" onclick="closeCogsReport()">Close</button>
+    </div>
+  </div>
+</div>
 
   <!-- BALANCE SHEET VIEW -->
   <div id="balance-sheet-view" style="display:none; padding: 20px; max-width: 900px;">
@@ -7083,24 +7107,32 @@ function renderCpnl() {
   thead += '</tr>';
 
   // HELPERS
+  const money2 = v => {
+    const n = Number(v) || 0;
+    return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
   const fv = (v, neg) => {
-    if (v === 0) return '<span style="color:var(--muted);">—</span>';
-    const clr = neg ? '#f87171' : v >= 0 ? '#4ade80' : '#f87171';
-    const txt = neg
-      ? `($${Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})})`
-      : `$${v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+    const n = Number(v) || 0;
+    const clr = neg ? '#f87171' : n >= 0 ? '#4ade80' : '#f87171';
+    const txt = neg ? '(' + money2(Math.abs(n)) + ')' : money2(n);
     return `<span style="color:${clr};">${txt}</span>`;
   };
-  const fp = v => `<span style="color:${v>=0?'#4ade80':'#f87171'};">${v.toFixed(1)}%</span>`;
+  const fp = v => `<span style="color:${(Number(v)||0)>=0?'#4ade80':'#f87171'};">${(Number(v)||0).toFixed(1)}%</span>`;
   const totSum = key => calcs.reduce((s,c)=>s+c.calc[key],0);
   const totAvg = key => calcs.reduce((s,c)=>s+c.calc[key],0)/calcs.length;
 
-  const boldRow = (label, key, neg, big) => {
+  const boldRow = (label, key, neg, big, link) => {
     const fs = big ? 'font-size:14px;font-weight:800;' : 'font-size:12px;font-weight:700;';
     let tr = `<tr style="border-top:1px solid var(--border);background:var(--surface2);">`;
     tr += `<td style="padding:8px 12px;${fs}">${label}</td>`;
-    calcs.forEach(c => { tr += `<td style="text-align:right;padding:8px 12px;${fs}">${fv(c.calc[key],neg)}</td>`; });
-    if (multiCol) tr += `<td style="text-align:right;padding:8px 12px;${fs}">${fv(totSum(key),neg)}</td>`;
+    calcs.forEach(c => {
+      const cell = fv(c.calc[key], neg);
+      tr += `<td style="text-align:right;padding:8px 12px;${fs}">` + (link ? `<a href="#" onclick="event.preventDefault();openCogsReport('${c.ym}');">${cell}</a>` : cell) + `</td>`;
+    });
+    if (multiCol) {
+      const cell = fv(totSum(key), neg);
+      tr += `<td style="text-align:right;padding:8px 12px;${fs}">` + (link ? `<a href="#" onclick="event.preventDefault();openCogsReport();">${cell}</a>` : cell) + `</td>`;
+    }
     return tr + '</tr>';
   };
   const pctRow = (label, key) => {
@@ -7110,10 +7142,16 @@ function renderCpnl() {
     if (multiCol) tr += `<td style="text-align:right;padding:2px 12px 8px;font-size:11px;">${fp(totAvg(key))}</td>`;
     return tr + '</tr>';
   };
-  const autoRow = (label, key) => {
+  const autoRow = (label, key, link) => {
     let tr = `<tr><td style="padding:5px 12px;font-size:12px;color:var(--muted);">${label} <span style="font-size:9px;">(auto)</span></td>`;
-    calcs.forEach(c => { const v=c.calc[key]; tr += `<td style="text-align:right;padding:5px 12px;font-size:12px;color:var(--muted);">${v>0?'$'+v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'—'}</td>`; });
-    if (multiCol) { const t=totSum(key); tr += `<td style="text-align:right;padding:5px 12px;font-size:12px;color:var(--muted);">$${t.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>`; }
+    calcs.forEach(c => {
+      const cell = money2(c.calc[key]);
+      tr += `<td style="text-align:right;padding:5px 12px;font-size:12px;color:var(--muted);">` + (link ? `<a href="#" onclick="event.preventDefault();openCogsReport('${c.ym}');">${cell}</a>` : cell) + `</td>`;
+    });
+    if (multiCol) {
+      const cell = money2(totSum(key));
+      tr += `<td style="text-align:right;padding:5px 12px;font-size:12px;color:var(--muted);">` + (link ? `<a href="#" onclick="event.preventDefault();openCogsReport();">${cell}</a>` : cell) + `</td>`;
+    }
     return tr + '</tr>';
   };
   const inputRow = (field, label, note) => {
@@ -7122,14 +7160,14 @@ function renderCpnl() {
       const editable = !cpnlIsPast(ym) || _cpnlUnlocked;
       const val = cpnlGetVal(ym, field);
       if (editable) {
-        tr += `<td style="text-align:right;padding:4px 8px;"><input type="number" step="0.01" class="pnl-input cpnl-col-input" data-ym="${ym}" data-field="${field}" value="${val}" style="width:100%;max-width:130px;text-align:right;" oninput="cpnlInputChanged(this)" /></td>`;
+        tr += `<td style="text-align:right;padding:4px 8px;"><input type="number" step="0.01" class="pnl-input cpnl-col-input" data-ym="${ym}" data-field="${field}" value="${(Number(val)||0).toFixed(2)}" style="width:100%;max-width:130px;text-align:right;" oninput="cpnlInputChanged(this)" /></td>`;
       } else {
-        tr += `<td style="text-align:right;padding:5px 12px;font-size:12px;color:var(--muted);">$${val.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>`;
+        tr += `<td style="text-align:right;padding:5px 12px;font-size:12px;color:var(--muted);">${money2(val)}</td>`;
       }
     });
     if (multiCol) {
       const tot = cols.reduce((s,ym)=>s+cpnlGetVal(ym,field),0);
-      tr += `<td style="text-align:right;padding:5px 12px;font-size:12px;color:var(--muted);">$${tot.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>`;
+      tr += `<td style="text-align:right;padding:5px 12px;font-size:12px;color:var(--muted);">${money2(tot)}</td>`;
     }
     return tr + '</tr>';
   };
@@ -7149,9 +7187,9 @@ function renderCpnl() {
   tbody += boldRow('Total Revenue', 'totalRev', false, true);
 
   tbody += secLabel('Cost of Goods Sold');
-  tbody += autoRow('Cabinet Cost (hard cost from PDF)', 'cabCost');
+  tbody += autoRow('Cabinet Cost (hard cost from PDF)', 'cabCost', true);
   tbody += inputRow('freight', 'Freight / Delivery');
-  tbody += boldRow('Total COGS', 'totalCOGS', true, false);
+  tbody += boldRow('Total COGS', 'totalCOGS', true, false, true);
 
   tbody += boldRow('GROSS PROFIT', 'grossProfit', false, true);
   tbody += pctRow('Gross Margin %', 'grossMargin');
@@ -7187,16 +7225,17 @@ function renderCpnl() {
 
   // METRICS
   const metricsData = [
-    { label:'Revenue',      val: calcs[0]?.calc.totalRev,    fmt: v=>'$'+Math.round(v).toLocaleString() },
-    { label:'Gross Margin', val: calcs[0]?.calc.grossMargin, fmt: v=>v.toFixed(1)+'%' },
-    { label:'Net Income',   val: calcs[0]?.calc.netIncome,   fmt: v=>'$'+Math.round(v).toLocaleString() },
-    { label:'Total OpEx',   val: calcs[0]?.calc.totalOpex,   fmt: v=>'$'+Math.round(v).toLocaleString() },
+    { label:'Revenue',      val: calcs[0]?.calc.totalRev,    money: true },
+    { label:'Gross Margin', val: calcs[0]?.calc.grossMargin, pct: true },
+    { label:'Net Income',   val: calcs[0]?.calc.netIncome,   money: true },
+    { label:'Total OpEx',   val: calcs[0]?.calc.totalOpex,   money: true },
   ];
   const metricsEl = document.getElementById('cpnl-metrics');
   if (metricsEl) metricsEl.innerHTML = metricsData.map(m => {
-    const v = m.val || 0;
+    const v = Number(m.val) || 0;
     const clr = v >= 0 ? '#4ade80' : '#f87171';
-    return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 18px;min-width:140px;"><div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px;">${m.label}</div><div style="font-size:18px;font-weight:800;color:${clr};">${m.fmt(v)}</div></div>`;
+    const shown = m.pct ? v.toFixed(1)+'%' : money2(v);
+    return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 18px;min-width:140px;"><div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px;">${m.label}</div><div style="font-size:18px;font-weight:800;color:${clr};">${shown}</div></div>`;
   }).join('');
 
   // PIPELINE
@@ -7211,7 +7250,7 @@ function renderCpnl() {
     const tot = contractTotalOf(qd, quoteGrandFromData(qd) || 0);
     if (st === 'contract' || st === 'completed') {
       contractedRevenue += tot;
-      jobsHtml += `<tr><td>${q.jobCode||'—'}</td><td>${q.customer||'—'}</td><td>${q.project||'—'}</td><td style="text-align:right">$${tot.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td></tr>`;
+      jobsHtml += `<tr><td>${q.jobCode||'—'}</td><td>${q.customer||'—'}</td><td>${q.project||'—'}</td><td style="text-align:right">${fmt(tot)}</td></tr>`;
     } else if (st === 'proposed') { proposedPipeline += tot; proposedCabCost += cc; }
     else if (st === 'approved') { approvedPipeline += tot; }
   });
@@ -7220,10 +7259,10 @@ function renderCpnl() {
   const propGP = proposedPipeline - proposedCabCost;
   const propGPPct = proposedPipeline > 0 ? (propGP/proposedPipeline*100).toFixed(1)+'%' : '—';
   const se = id => document.getElementById(id);
-  if(se('cpnl-pipeline-proposed'))       se('cpnl-pipeline-proposed').textContent       = '$'+proposedPipeline.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-  if(se('cpnl-pipeline-proposed-margin')) se('cpnl-pipeline-proposed-margin').textContent= `$${propGP.toFixed(2)} (${propGPPct})`;
-  if(se('cpnl-pipeline-approved'))       se('cpnl-pipeline-approved').textContent       = '$'+approvedPipeline.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-  if(se('cpnl-pipeline-total'))          se('cpnl-pipeline-total').textContent          = '$'+(proposedPipeline+approvedPipeline+contractedRevenue).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  if(se('cpnl-pipeline-proposed'))       se('cpnl-pipeline-proposed').textContent       = fmt(proposedPipeline);
+  if(se('cpnl-pipeline-proposed-margin')) se('cpnl-pipeline-proposed-margin').textContent= `${fmt(propGP)} (${propGPPct})`;
+  if(se('cpnl-pipeline-approved'))       se('cpnl-pipeline-approved').textContent       = fmt(approvedPipeline);
+  if(se('cpnl-pipeline-total'))          se('cpnl-pipeline-total').textContent          = fmt(proposedPipeline+approvedPipeline+contractedRevenue);
 
   cpnlApplyLockState();
 }
@@ -7260,6 +7299,44 @@ function cpnlToggleLock() {
     _cpnlUnlocked = false;
   }
   renderCpnl();
+}
+
+function openCogsReport(ym) {
+  const months = ym ? [ym] : (typeof cpnlGetColumns === 'function' ? cpnlGetColumns() : []);
+  const rows = [];
+  quotesIndex.forEach(q => {
+    const qd = quoteData[q.id] || q;
+    const k = quoteKind(qd);
+    if (k === 'child' || k === 'template') return;
+    const st = pipeStatus(qd);
+    if (st !== 'contract' && st !== 'completed') return;
+    const dStr = qd.date || q.date || '';
+    if (months.length) {
+      const hit = months.some(m => dStr.indexOf(m) === 0);
+      if (!hit) return;
+    }
+    const hard = jobHardCostOf(q);
+    if (hard <= 0) return;
+    rows.push({ id: q.id, jobCode: q.jobCode || qd.jobCode || '—', customer: q.customer || qd.customer || '—', date: dStr, hard });
+  });
+  rows.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  const total = rows.reduce((s, r) => s + r.hard, 0);
+  const lede = document.getElementById('cogs-report-lede');
+  if (lede) lede.textContent = (ym ? cpnlMonthLabel(ym) + ' · ' : 'This P&L view · ')
+    + rows.length + ' job' + (rows.length === 1 ? '' : 's')
+    + ' · cabinet hard cost ' + fmt(total)
+    + '. Qty × unit cost from Wholesale Cabinets, before markup. Labor is overhead.';
+  const tb = document.getElementById('cogs-report-tbody');
+  if (tb) {
+    tb.innerHTML = rows.map(r => '<tr><td>' + r.jobCode + '</td><td>' + r.customer + '</td><td>' + fmtMDY(r.date) + '</td><td style="text-align:right">' + fmt(r.hard) + '</td><td><button type="button" class="modal-btn" onclick="closeCogsReport();loadQuoteAndSwitchTab(\'' + r.id + '\')">Open</button></td></tr>').join('')
+      + (rows.length ? '<tr><td colspan="3"><strong>Total</strong></td><td style="text-align:right"><strong>' + fmt(total) + '</strong></td><td></td></tr>' : '<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:16px;">No cabinet hard cost in this window.</td></tr>');
+  }
+  const el = document.getElementById('cogs-report-modal');
+  if (el) el.classList.add('open');
+}
+function closeCogsReport() {
+  const el = document.getElementById('cogs-report-modal');
+  if (el) el.classList.remove('open');
 }
 
 // Legacy alias
