@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
-  <title>Fremont Makers — Contract Packet v1013l</title>
-  <!-- FM-PACKET-v1013l-co-removed -->
+  <title>Fremont Makers — Contract Packet v1013m</title>
+  <!-- FM-PACKET-v1013m-co-qty -->
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Pinyon+Script&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     :root { --ink:#1a1a1a; --muted:#666; --line:#d8d4cc; --gold:#c9a84c; --paper:#fff; --screen:#111; }
@@ -66,7 +66,7 @@
 </head>
 <body>
   <div class="bar">
-    <strong>Fremont Makers · Contract packet <span style="opacity:.45;letter-spacing:0;">v1013l</span></strong>
+    <strong>Fremont Makers · Contract packet <span style="opacity:.45;letter-spacing:0;">v1013m</span></strong>
     <div class="actions">
       <span class="save-ok" id="save-msg"></span>
       <button type="button" onclick="window.print()">Print</button>
@@ -417,13 +417,13 @@ function pageChangeOrder(q, nums, n) {
   Object.keys(Object.assign({}, bagA, bagB)).forEach(k => {
     const o = bagA[k] ? bagA[k].qty : 0;
     const n = bagB[k] ? bagB[k].qty : 0;
-    if (n > o) added.push(Object.assign({}, bagB[k] || bagA[k], { qty: n - o }));
-    if (o > n) removed.push(Object.assign({}, bagA[k] || bagB[k], { qty: o - n }));
+    if (n > o) added.push(Object.assign({}, bagB[k] || bagA[k], { qty: n - o, oldQty: o, newQty: n }));
+    if (o > n) removed.push(Object.assign({}, bagA[k] || bagB[k], { qty: o - n, oldQty: o, newQty: n }));
   });
-  const skuRow = (label, r, qty) => '<tr><td>' + label + '</td><td>' + esc(r.desc || r.key || '') + '</td><td>' + esc(r.serial || r.key || '') + '</td><td class="r">' + (qty != null ? qty : (r.qty || '')) + '</td></tr>';
+  const skuRow = (label, r) => '<tr><td>' + label + '</td><td>' + esc(r.desc || r.key || '') + '</td><td>' + esc(r.serial || r.key || '') + '</td><td class="r">' + (r.oldQty != null ? r.oldQty + ' → ' + r.newQty : (r.qty || '')) + '</td></tr>';
   const diffRows = []
-    .concat(added.map(r => skuRow('Added', r, r.qty)))
-    .concat(removed.map(r => skuRow('Removed', r, r.qty)))
+    .concat(added.map(r => skuRow('Added', r)))
+    .concat(removed.map(r => skuRow('Removed', r)))
     .join('');
   const lockedNums = Object.assign({}, nums, { unit: contracted });
   let html = '<div class="page" data-initials="1">'
@@ -447,8 +447,7 @@ function pageChangeOrder(q, nums, n) {
     html += '<h2>Payment after this change</h2>'
       + '<p class="note">Contracted total is now ' + money(Number(co.billTotal) || contracted) + '.</p>';
   }
-  html += '<p class="note">Paid invoices stay frozen at the check that cleared.</p>'
-    + '<div class="sig"><div>'
+  html += '<div class="sig"><div>'
     + '<div class="sig-line">Buyer signature</div>'
     + '<div class="sig-line">Printed name' + (q.signerName ? ' · ' + esc(q.signerName) : '') + '</div>'
     + '<div class="sig-line">Date</div>'

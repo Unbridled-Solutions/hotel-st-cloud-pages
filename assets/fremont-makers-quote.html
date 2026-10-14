@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v1013l</title>
+<title>Fremont Makers — Project Builder v1013m</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20261013l-co-removed -->
+<!-- FM-BUILD-v20261013m-co-qty-zero -->
 <script>
 (function(){
   try {
@@ -704,7 +704,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1013l</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1013m</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <span class="status-label">Status:</span>
@@ -5596,8 +5596,8 @@ function coDiffSkus(oldRows, newRows) {
   keys.forEach(k => {
     const o = a[k], n = b[k];
     const oq = o ? o.qty : 0, nq = n ? n.qty : 0;
-    if (nq > oq) added.push(Object.assign({}, n || o, { qty: nq - oq }));
-    if (oq > nq) removed.push(Object.assign({}, o || n, { qty: oq - nq }));
+    if (nq > oq) added.push(Object.assign({}, n || o, { qty: nq - oq, oldQty: oq, newQty: nq }));
+    if (oq > nq) removed.push(Object.assign({}, o || n, { qty: oq - nq, oldQty: oq, newQty: nq }));
     if (o && n && (o.qty !== n.qty || Math.abs((o.cost||0)-(n.cost||0)) > 0.009)) changed.push({ key: k, desc: n.desc, oldQty: o.qty, newQty: n.qty, oldCost: o.cost, newCost: n.cost });
     else if (o && n) same.push(n);
   });
@@ -5608,8 +5608,8 @@ function coRenderDiff(diff) {
   if (!el) return;
   if (!diff) { el.innerHTML = ''; return; }
   let html = '';
-  if (diff.added.length) html += '<p><strong>Added</strong></p><ul>' + diff.added.map(r => '<li>' + (r.desc||r.key) + ' × ' + r.qty + '</li>').join('') + '</ul>';
-  if (diff.removed.length) html += '<p><strong>Removed</strong></p><ul>' + diff.removed.map(r => '<li>' + (r.desc||r.key) + ' × ' + r.qty + '</li>').join('') + '</ul>';
+  if (diff.added.length) html += '<p><strong>Added</strong></p><ul>' + diff.added.map(r => '<li>' + (r.desc||r.key) + ' qty ' + (r.oldQty != null ? r.oldQty + ' → ' + r.newQty : r.qty) + '</li>').join('') + '</ul>';
+  if (diff.removed.length) html += '<p><strong>Removed</strong></p><ul>' + diff.removed.map(r => '<li>' + (r.desc||r.key) + ' qty ' + (r.oldQty != null ? r.oldQty + ' → ' + r.newQty : r.qty) + '</li>').join('') + '</ul>';
   if (diff.changed.length) html += '<p><strong>Changed</strong></p><ul>' + diff.changed.map(r => '<li>' + (r.desc||r.key) + ' qty ' + r.oldQty + ' → ' + r.newQty + '</li>').join('') + '</ul>';
   if (!diff.added.length && !diff.removed.length && !diff.changed.length) html = '<p>No SKU differences yet. Upload a PDF or edit lines.</p>';
   el.innerHTML = html;
@@ -5810,6 +5810,7 @@ function saveChangeOrder(keepOpen) {
         return r;
       });
     }
+    rows = (rows || []).filter(r => (Number(r.qty) || 0) > 0);
     c.cabinets = rows;
     q.cabinets = rows;
     c.diff = coDiffSkus(c.oldCabinets || q.originalCabinets || [], rows);
