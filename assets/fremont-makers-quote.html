@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v1014c</title>
+<title>Fremont Makers — Project Builder v1014f</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20261014c-sku-delta -->
+<!-- FM-BUILD-v20261014f-cogs-hard -->
 <script>
 (function(){
   try {
@@ -710,7 +710,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1014c</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1014f</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <span class="status-label">Status:</span>
@@ -1327,7 +1327,7 @@
       </div>
       <div class="totals-block" style="max-width:500px;margin-left:0;padding:15px 20px;">
         <div class="totals-row"><label>Proposed Pipeline</label><span class="totals-value" id="cpnl-pipeline-proposed">$0.00</span></div>
-        <div class="totals-row"><label>Proposed Gross Profit <span style="font-size:10px;color:var(--muted);font-weight:400">(revenue minus cabinet cost)</span></label><span class="totals-value" id="cpnl-pipeline-proposed-margin">—</span></div>
+        <div class="totals-row"><label>Proposed Gross Profit <span style="font-size:10px;color:var(--muted);font-weight:400">(revenue minus cabinet hard cost)</span></label><span class="totals-value" id="cpnl-pipeline-proposed-margin">—</span></div>
         <div class="totals-row"><label>Approved (pending contract)</label><span class="totals-value" id="cpnl-pipeline-approved">$0.00</span></div>
         <div class="totals-row grand"><label>Total Pipeline</label><span class="totals-value big" id="cpnl-pipeline-total">$0.00</span></div>
       </div>
@@ -3814,6 +3814,30 @@ function quoteKind(q) {
   if (q.kind === 'template' || q.isTemplate) return 'template';
   if (q.parentOrderId) return 'child';
   return 'job';
+}
+function cabinetHardCostOf(qd) {
+  return (qd && qd.cabinets || []).reduce((s, c) => s + (parseFloat(c.qty) || 0) * (parseFloat(c.cost) || 0), 0);
+}
+function laborCostOf(qd) {
+  return (qd && qd.labor || []).reduce((s, l) => s + (parseFloat(l.rate) || 0) * (parseFloat(l.hours) || 0), 0);
+}
+function jobHardCostOf(q) {
+  const qd = quoteData[q.id] || q;
+  const k = quoteKind(qd);
+  if (k === 'template' || k === 'child') return 0;
+  if (k === 'order') {
+    return childrenOfOrder(q.id).reduce((s, ch) => s + cabinetHardCostOf(quoteData[ch.id] || ch), 0);
+  }
+  return cabinetHardCostOf(qd);
+}
+function jobLaborCostOf(q) {
+  const qd = quoteData[q.id] || q;
+  const k = quoteKind(qd);
+  if (k === 'template' || k === 'child') return 0;
+  if (k === 'order') {
+    return childrenOfOrder(q.id).reduce((s, ch) => s + laborCostOf(quoteData[ch.id] || ch), 0);
+  }
+  return laborCostOf(qd);
 }
 function dashVisibleQuotes() {
   return quotesIndex.filter(q => {
@@ -6997,17 +7021,20 @@ function cpnlGetColumns() {
 
 function cpnlCalcMonth(ym) {
   const [yr, mo] = ym.split('-').map(Number);
-  let contractedRevenue = 0, cabCost = 0;
+  let contractedRevenue = 0, cabCost = 0, laborCost = 0;
   quotesIndex.forEach(q => {
-    if (q.status !== 'contract') return;
-    if (!q.date) return;
-    const d = new Date(q.date + 'T00:00:00');
+    const qd = quoteData[q.id] || q;
+    const k = quoteKind(qd);
+    if (k === 'child' || k === 'template') return;
+    const st = pipeStatus(qd);
+    if (st !== 'contract' && st !== 'completed') return;
+    const dStr = qd.date || q.date;
+    if (!dStr) return;
+    const d = new Date(dStr + 'T00:00:00');
     if (d.getFullYear() === yr && d.getMonth()+1 === mo) {
-      contractedRevenue += (q.total || 0);
-      const qd = quoteData[q.id];
-      if (qd && qd.cabinets) {
-        cabCost += qd.cabinets.reduce((s,c) => s + (parseFloat(c.qty)||0)*(parseFloat(c.cost)||0), 0);
-      }
+      contractedRevenue += contractTotalOf(qd, quoteGrandFromData(qd) || 0);
+      cabCost += jobHardCostOf(q);
+      laborCost += jobLaborCostOf(q);
     }
   });
   const get = f => cpnlGetVal(ym, f);
@@ -7021,12 +7048,12 @@ function cpnlCalcMonth(ym) {
   const vehicle = get('vehicle'), fuel = get('fuel'), insurance = get('insurance');
   const tools = get('tools'), tech = get('tech'), marketing = get('marketing');
   const professional = get('professional'), office = get('office'), misc = get('misc');
-  const totalOpex = salaries + ownerDraw + rent + vehicle + fuel + insurance + tools + tech + marketing + professional + office + misc;
+  const totalOpex = salaries + ownerDraw + rent + vehicle + fuel + insurance + tools + tech + marketing + professional + office + misc + laborCost;
   const ebitda = grossProfit - totalOpex;
   const depreciation = get('depreciation'), interest = get('interest'), principal = get('principal');
   const netIncome = ebitda - depreciation - interest - principal;
   const netMargin = totalRev > 0 ? (netIncome / totalRev * 100) : 0;
-  return { contractedRevenue, otherRev, totalRev, cabCost, freight, totalCOGS, grossProfit, grossMargin,
+  return { contractedRevenue, otherRev, totalRev, cabCost, freight, totalCOGS, laborCost, grossProfit, grossMargin,
     salaries, ownerDraw, rent, vehicle, fuel, insurance, tools, tech, marketing, professional, office, misc, totalOpex,
     ebitda, depreciation, interest, principal, netIncome, netMargin };
 }
@@ -7122,7 +7149,7 @@ function renderCpnl() {
   tbody += boldRow('Total Revenue', 'totalRev', false, true);
 
   tbody += secLabel('Cost of Goods Sold');
-  tbody += autoRow('Cabinet Cost (materials)', 'cabCost');
+  tbody += autoRow('Cabinet Cost (hard cost from PDF)', 'cabCost');
   tbody += inputRow('freight', 'Freight / Delivery');
   tbody += boldRow('Total COGS', 'totalCOGS', true, false);
 
@@ -7130,6 +7157,7 @@ function renderCpnl() {
   tbody += pctRow('Gross Margin %', 'grossMargin');
 
   tbody += secLabel('Operating Expenses');
+  tbody += autoRow('Assembly labor (from jobs)', 'laborCost');
   tbody += inputRow('salaries',     'Guaranteed Payments (K1)', 'Tim $85K/yr + Kristey');
   tbody += inputRow('owner-draw',   'Contract Labor (1099)',    'Tayler');
   tbody += payrollRow();
@@ -7175,13 +7203,17 @@ function renderCpnl() {
   let contractedRevenue=0, proposedPipeline=0, approvedPipeline=0, proposedCabCost=0;
   let jobsHtml='';
   quotesIndex.forEach(q => {
-    const qd = quoteData[q.id];
-    const cc = qd && qd.cabinets ? qd.cabinets.reduce((s,c)=>s+(parseFloat(c.qty)||0)*(parseFloat(c.cost)||0),0) : 0;
-    if (q.status==='contract') {
-      contractedRevenue += (q.total||0);
-      jobsHtml += `<tr><td>${q.jobCode||'—'}</td><td>${q.customer||'—'}</td><td>${q.project||'—'}</td><td style="text-align:right">$${(q.total||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td></tr>`;
-    } else if (q.status==='proposed') { proposedPipeline+=(q.total||0); proposedCabCost+=cc; }
-    else if (q.status==='approved' || q.status==='completed') { approvedPipeline+=(q.total||0); }
+    const qd = quoteData[q.id] || q;
+    const k = quoteKind(qd);
+    if (k === 'child' || k === 'template') return;
+    const cc = jobHardCostOf(q);
+    const st = pipeStatus(qd);
+    const tot = contractTotalOf(qd, quoteGrandFromData(qd) || 0);
+    if (st === 'contract' || st === 'completed') {
+      contractedRevenue += tot;
+      jobsHtml += `<tr><td>${q.jobCode||'—'}</td><td>${q.customer||'—'}</td><td>${q.project||'—'}</td><td style="text-align:right">$${tot.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td></tr>`;
+    } else if (st === 'proposed') { proposedPipeline += tot; proposedCabCost += cc; }
+    else if (st === 'approved') { approvedPipeline += tot; }
   });
   const tb2 = document.getElementById('cpnl-contracted-jobs-tbody');
   if (tb2) tb2.innerHTML = jobsHtml || '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px;">No contracted jobs yet.</td></tr>';
