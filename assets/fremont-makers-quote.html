@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v1014a</title>
+<title>Fremont Makers — Project Builder v1014b</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20261014a-price-change -->
+<!-- FM-BUILD-v20261014b-pass-delta -->
 <script>
 (function(){
   try {
@@ -704,7 +704,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1014a</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1014b</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <span class="status-label">Status:</span>
@@ -5414,10 +5414,13 @@ function coBackFromReview() {
   if (c.kind === 'skus') coGo(2);
   else coGo(3);
 }
+function coSkuSellOf(rows, q) {
+  const draft = Object.assign({}, q || {}, { cabinets: rows || [], contractTotal: null, status: 'proposed' });
+  return Math.round((quoteGrandFromData(draft) * modelQtyOf(draft)) * 100) / 100;
+}
 function coSkuTotal(c) {
   const q = quoteData[c.id] || {};
-  const draft = Object.assign({}, q, { cabinets: c.cabinets || q.cabinets || [] });
-  return contractTotalOf(draft, quoteGrandFromData(draft) || 0);
+  return coSkuSellOf(c.cabinets || q.cabinets || [], q);
 }
 function coReadSkus() {
   const rows = [];
@@ -5504,15 +5507,16 @@ function coPaintSched() {
   coSchedLive();
 }
 function coPayTarget(c, q) {
-  const oldT = c.oldTotal != null ? c.oldTotal : contractTotalOf(q, quoteGrandFromData(q) || 0);
-  const newT = c.newTotal != null ? c.newTotal : oldT;
-  const delta = Math.round((newT - oldT) * 100) / 100;
-  if (c.payChoice === 'keep') { c.changeAmount = 0; return oldT; }
-  if (c.payChoice === 'pass') { c.changeAmount = delta; return newT; }
+  const oldContract = c.oldTotal != null ? c.oldTotal : contractTotalOf(q, quoteGrandFromData(q) || 0);
+  const oldSku = c.oldSkuTotal != null ? c.oldSkuTotal : coSkuSellOf(c.oldCabinets || [], q);
+  const newSku = c.newTotal != null ? c.newTotal : coSkuSellOf(c.cabinets || [], q);
+  const delta = Math.round((newSku - oldSku) * 100) / 100;
+  if (c.payChoice === 'keep') { c.changeAmount = 0; return oldContract; }
+  if (c.payChoice === 'pass') { c.changeAmount = delta; return Math.round((oldContract + delta) * 100) / 100; }
   const typed = Number(c.changeAmount);
   const amt = (typed === typed) ? typed : delta;
   c.changeAmount = amt;
-  return Math.round((oldT + amt) * 100) / 100;
+  return Math.round((oldContract + amt) * 100) / 100;
 }
 function coNextFromPay() {
   if (!coSchedLive()) {
@@ -5614,9 +5618,9 @@ function coDiffSkus(oldRows, newRows) {
   keys.forEach(k => {
     const o = a[k], n = b[k];
     const oq = o ? o.qty : 0, nq = n ? n.qty : 0;
-    if (nq > oq) added.push(Object.assign({}, n || o, { qty: nq - oq, oldQty: oq, newQty: nq }));
-    if (oq > nq) removed.push(Object.assign({}, o || n, { qty: oq - nq, oldQty: oq, newQty: nq }));
-    if (o && n && (o.qty !== n.qty || Math.abs((o.cost||0)-(n.cost||0)) > 0.009)) changed.push({ key: k, desc: n.desc, oldQty: o.qty, newQty: n.qty, oldCost: o.cost, newCost: n.cost });
+    if (oq === 0 && nq > 0) added.push(Object.assign({}, n, { qty: nq, oldQty: 0, newQty: nq }));
+    else if (nq === 0 && oq > 0) removed.push(Object.assign({}, o, { qty: oq, oldQty: oq, newQty: 0 }));
+    else if (o && n && (o.qty !== n.qty || Math.abs((o.cost||0)-(n.cost||0)) > 0.009)) changed.push({ key: k, desc: n.desc, serial: n.serial || k, oldQty: o.qty, newQty: n.qty, oldCost: o.cost, newCost: n.cost });
     else if (o && n) same.push(n);
   });
   return { added, removed, changed, same };
@@ -5682,23 +5686,24 @@ function coPaintPayOptions() {
   const c = window._co;
   if (!host || !c) return;
   const q = quoteData[c.id] || {};
-  const oldT = c.oldTotal != null ? c.oldTotal : contractTotalOf(q, quoteGrandFromData(q) || 0);
-  const newT = c.newTotal != null ? c.newTotal : oldT;
-  const delta = Math.round((newT - oldT) * 100) / 100;
-  const ar = scheduleOf(q, oldT);
+  const oldContract = c.oldTotal != null ? c.oldTotal : contractTotalOf(q, quoteGrandFromData(q) || 0);
+  const oldSku = c.oldSkuTotal != null ? c.oldSkuTotal : coSkuSellOf(c.oldCabinets || [], q);
+  const newSku = c.newTotal != null ? c.newTotal : coSkuSellOf(c.cabinets || [], q);
+  const delta = Math.round((newSku - oldSku) * 100) / 100;
+  const ar = scheduleOf(q, oldContract);
   const plan = payPlanOf(q);
   const maxN = plan === '50-50' ? 2 : 3;
   let cash = 0;
   for (let n = 1; n <= maxN; n++) if (ar['d' + n + 'Paid']) cash += paidInvoiceAmt(ar, n, ar['d' + n + 'Amt']);
-  const remainOld = Math.round((oldT - cash) * 100) / 100;
-  const remainNew = Math.round((newT - cash) * 100) / 100;
+  const remainOld = Math.round((oldContract - cash) * 100) / 100;
+  const remainNew = Math.round((oldContract + delta - cash) * 100) / 100;
   if (!c.payChoice) c.payChoice = 'keep';
   const opt = (id, title, blurb) => '<label class="co-pay-opt">'
     + '<input type="radio" name="co-pay" value="' + id + '" ' + (c.payChoice === id ? 'checked' : '') + ' onchange="coSetPayChoice(\'' + id + '\')" />'
     + '<span class="co-pay-copy"><strong>' + title + '</strong><span>' + blurb + '</span></span></label>';
-  let html = '<p style="font-size:13px;margin:0 0 10px;text-align:left;">SKU sell was ' + fmt(oldT) + ' · now ' + fmt(newT) + ' · suggested delta ' + fmt(delta) + '. Cash received ' + fmt(cash) + ' stays.</p>';
-  html += opt('keep', 'Courtesy — this change $0', (q.jobCode || 'This job') + ' stays ' + fmt(oldT) + '. Shop eats the SKU delta. Buyer sheet lists SKUs with no extra charge.');
-  html += opt('pass', 'Pass the SKU delta', 'This change is ' + fmt(delta) + '. New contracted total ' + fmt(newT) + '. Remaining unpaid becomes ' + fmt(remainNew) + '.');
+  let html = '<p style="font-size:13px;margin:0 0 10px;text-align:left;">SKU sell was ' + fmt(oldSku) + ' · now ' + fmt(newSku) + ' · suggested delta ' + fmt(delta) + '. Contracted total is ' + fmt(oldContract) + '. Cash received ' + fmt(cash) + ' stays.</p>';
+  html += opt('keep', 'Courtesy — this change $0', (q.jobCode || 'This job') + ' stays ' + fmt(oldContract) + '. Shop eats the SKU delta. Buyer sheet lists SKUs with no extra charge.');
+  html += opt('pass', 'Pass the SKU delta', 'This change is ' + fmt(delta) + '. New contracted total ' + fmt(oldContract + delta) + '. Remaining unpaid becomes ' + fmt(remainNew) + '.');
   html += opt('custom', 'This change is a custom amount', 'Labor, urgency, or a courtesy that is not $0. Type the amount this change should add (can be more or less than the SKU delta).');
   html += '<div id="co-custom-amt-wrap" style="display:' + (c.payChoice === 'custom' ? 'block' : 'none') + ';margin:8px 0 12px;max-width:280px;">'
     + '<label style="font-size:11px;color:var(--muted);text-transform:uppercase;">This change $</label>'
@@ -5800,7 +5805,8 @@ function openChangeOrder() {
     return;
   }
   const total = contractTotalOf(q, quoteGrandFromData(q) || 0);
-  window._co = { id: id, kind: 'skus', cabinets: JSON.parse(JSON.stringify(q.cabinets || [])), oldCabinets: JSON.parse(JSON.stringify(q.cabinets || [])), oldTotal: total, newTotal: total, payChoice: 'keep' };
+  const skuNow = coSkuSellOf(q.cabinets || [], q);
+  window._co = { id: id, kind: 'skus', cabinets: JSON.parse(JSON.stringify(q.cabinets || [])), oldCabinets: JSON.parse(JSON.stringify(q.cabinets || [])), oldTotal: total, oldSkuTotal: skuNow, newTotal: skuNow, payChoice: 'keep' };
   coSetKind('skus');
   const reason = document.getElementById('co-reason');
   if (reason) reason.value = '';
@@ -5841,7 +5847,7 @@ function saveChangeOrder(keepOpen) {
       recalc();
     }
   }
-  const skuTotal = contractTotalOf(Object.assign({}, q, { contractTotal: null }), quoteGrandFromData(q) || 0);
+  const skuTotal = coSkuSellOf(q.cabinets || [], q);
   const billTotal = coPayTarget(c, Object.assign({}, q, { contractTotal: oldTotal }));
   q.contractTotal = billTotal;
   if (!q.ar || typeof q.ar !== 'object') q.ar = {};

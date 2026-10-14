@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
-  <title>Fremont Makers — Contract Packet v1014a</title>
-  <!-- FM-PACKET-v1014a-price-change -->
+  <title>Fremont Makers — Contract Packet v1014b</title>
+  <!-- FM-PACKET-v1014b-pass-delta -->
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Pinyon+Script&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     :root { --ink:#1a1a1a; --muted:#666; --line:#d8d4cc; --gold:#c9a84c; --paper:#fff; --screen:#111; }
@@ -66,7 +66,7 @@
 </head>
 <body>
   <div class="bar">
-    <strong>Fremont Makers · Contract packet <span style="opacity:.45;letter-spacing:0;">v1014a</span></strong>
+    <strong>Fremont Makers · Contract packet <span style="opacity:.45;letter-spacing:0;">v1014b</span></strong>
     <div class="actions">
       <span class="save-ok" id="save-msg"></span>
       <button type="button" onclick="window.print()">Print</button>
@@ -415,17 +415,20 @@ function pageChangeOrder(q, nums, n) {
   const oldRows = co.oldCabinets && co.oldCabinets.length ? co.oldCabinets : (q.originalCabinets || []);
   const newRows = co.cabinets && co.cabinets.length ? co.cabinets : (q.cabinets || []);
   const bagA = skuBag(oldRows), bagB = skuBag(newRows);
-  const added = [], removed = [];
+  const added = [], removed = [], changed = [];
   Object.keys(Object.assign({}, bagA, bagB)).forEach(k => {
     const o = bagA[k] ? bagA[k].qty : 0;
     const n = bagB[k] ? bagB[k].qty : 0;
-    if (n > o) added.push(Object.assign({}, bagB[k] || bagA[k], { qty: n - o, oldQty: o, newQty: n }));
-    if (o > n) removed.push(Object.assign({}, bagA[k] || bagB[k], { qty: o - n, oldQty: o, newQty: n }));
+    const src = n ? (bagB[k] || bagA[k]) : (bagA[k] || bagB[k]);
+    if (o === 0 && n > 0) added.push(Object.assign({}, src, { qty: n, oldQty: 0, newQty: n }));
+    else if (n === 0 && o > 0) removed.push(Object.assign({}, src, { qty: o, oldQty: o, newQty: 0 }));
+    else if (o !== n) changed.push(Object.assign({}, src, { qty: Math.abs(n - o), oldQty: o, newQty: n }));
   });
   const skuRow = (label, r) => '<tr><td>' + label + '</td><td>' + esc(r.desc || r.key || '') + '</td><td>' + esc(r.serial || r.key || '') + '</td><td class="r">' + (r.oldQty != null ? r.oldQty + ' → ' + r.newQty : (r.qty || '')) + '</td></tr>';
   const diffRows = []
     .concat(added.map(r => skuRow('Added', r)))
     .concat(removed.map(r => skuRow('Removed', r)))
+    .concat(changed.map(r => skuRow('Changed', r)))
     .join('');
   const lockedNums = Object.assign({}, nums, { unit: contracted });
   let html = '<div class="page" data-initials="1">'
