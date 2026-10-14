@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v1013j</title>
+<title>Fremont Makers — Project Builder v1013k</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20261013j-keep-zero -->
+<!-- FM-BUILD-v20261013k-cloud-flush -->
 <script>
 (function(){
   try {
@@ -704,7 +704,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1013j</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1013k</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <span class="status-label">Status:</span>
@@ -1706,6 +1706,12 @@ function fmCloudPushDebounced() {
   if (!_fmReady) return; // never push during init
   clearTimeout(_fmPushTimer);
   _fmPushTimer = setTimeout(fmCloudPush, 1500);
+}
+function fmCloudFlush() {
+  if (!_fmReady) return;
+  clearTimeout(_fmPushTimer);
+  _fmPushTimer = null;
+  return fmCloudPush();
 }
 
 async function fmCloudPullForce() {
@@ -3617,6 +3623,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     spellingDirty.forEach(id => saveQuoteData(id));
     saveQuotesIndex();
   }
+  window.addEventListener('pagehide', () => { try { fmCloudFlush(); } catch (e) {} });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') { try { fmCloudFlush(); } catch (e) {} }
+  });
 });
 
 function fmSetTheme(theme) {
@@ -5850,7 +5860,7 @@ function saveChangeOrder(keepOpen) {
   quoteData[c.id] = q;
   saveQuoteData(c.id);
   updateQuoteIndexEntry(c.id, q.status, billTotal, q.customer, q.project, q.date);
-  fmCloudPushDebounced();
+  fmCloudFlush();
   if (activeQuoteId === c.id) {
     loadQuote(c.id);
   } else {
@@ -5956,6 +5966,7 @@ function confirmContract() {
     locked.contractTotal = contractTotalOf(Object.assign({}, locked, { contractTotal: null }), quoteGrandFromData(locked) || 0);
     if (!locked.originalCabinets) locked.originalCabinets = JSON.parse(JSON.stringify(locked.cabinets || []));
     saveQuoteData(activeQuoteId);
+    fmCloudFlush();
   }
   if (quoteKind(locked) === 'order') {
     childrenOfOrder(activeQuoteId).forEach(ch => {
