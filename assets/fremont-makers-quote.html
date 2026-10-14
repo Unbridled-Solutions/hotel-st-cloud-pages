@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v1013f</title>
+<title>Fremont Makers — Project Builder v1013g</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20261013f-co-sheet -->
+<!-- FM-BUILD-v20261013g-summary-dates -->
 <script>
 (function(){
   try {
@@ -704,7 +704,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1013f</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1013g</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <span class="status-label">Status:</span>
@@ -4842,6 +4842,21 @@ function recalcPnl() {}
 function fmt(n) {
   return '$' + (Math.round(n * 100) / 100).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 }
+function fmtMDY(raw) {
+  if (raw == null || raw === '') return '';
+  if (typeof raw === 'number' && raw > 1e11) {
+    const d = new Date(raw);
+    if (!isNaN(d)) return (d.getMonth() + 1) + '/' + d.getDate() + '/' + d.getFullYear();
+  }
+  const s = String(raw).trim();
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return Number(iso[2]) + '/' + Number(iso[3]) + '/' + iso[1];
+  const mdy = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (mdy) return Number(mdy[1]) + '/' + Number(mdy[2]) + '/' + mdy[3];
+  const d = new Date(s);
+  if (!isNaN(d.getTime())) return (d.getMonth() + 1) + '/' + d.getDate() + '/' + d.getFullYear();
+  return s;
+}
 
 function parseAmount(id) {
   const el = document.getElementById(id);
@@ -5656,17 +5671,17 @@ function renderProjectSummary(id) {
   let html = '<p style="font-size:13px;margin-bottom:8px;"><strong>' + (q.jobCode || '') + '</strong> · ' + totalCell + '</p>';
   html += '<table><thead><tr><th>When</th><th>What</th><th>Note</th><th class="r">Amount</th></tr></thead><tbody>';
   versions.forEach(v => {
-    html += '<tr><td>' + (v.date || '') + '</td><td>Quote ' + v.n + '</td><td>Saved version</td><td class="r">' + fmt(v.total || 0) + '</td></tr>';
+    html += '<tr><td>' + fmtMDY(v.date) + '</td><td>Quote ' + v.n + '</td><td>Saved version</td><td class="r">' + fmt(v.total || 0) + '</td></tr>';
   });
   cos.forEach(co => {
-    const when = co.at ? new Date(co.at).toLocaleDateString('en-US') : '';
+    const when = fmtMDY(co.at || co.date);
     html += '<tr><td>' + when + '</td><td><a href="#" onclick="event.preventDefault();openChangeOrderSheet(\'' + packetId + '\', ' + co.n + ');">Change order ' + co.n + '</a></td><td>' + (co.kind || '') + (co.reason ? ' · ' + co.reason : '') + '</td><td class="r">' + fmt(co.oldTotal || 0) + ' → ' + fmt(co.newTotal || 0) + '</td></tr>';
   });
   for (let n = 1; n <= maxN; n++) {
     const amt = ar['d' + n + 'Paid'] ? paidInvoiceAmt(ar, n, ar['d' + n + 'Amt']) : ar['d' + n + 'Amt'];
     if (amt == null && !ar['d' + n + 'Due']) continue;
     const invLabel = 'Invoice ' + n + (ar['d' + n + 'Paid'] ? ' · PAID' : '');
-    html += '<tr><td>' + (ar['d' + n + 'Due'] || '') + '</td><td><a href="#" onclick="event.preventDefault();openInvoiceSheet(\'' + packetId + '\', ' + n + ');">' + invLabel + '</a></td><td>' + (ar['d' + n + 'Check'] ? 'Check ' + ar['d' + n + 'Check'] : '') + '</td><td class="r">' + fmt(amt || 0) + '</td></tr>';
+    html += '<tr><td>' + fmtMDY(ar['d' + n + 'Due']) + '</td><td><a href="#" onclick="event.preventDefault();openInvoiceSheet(\'' + packetId + '\', ' + n + ');">' + invLabel + '</a></td><td>' + (ar['d' + n + 'Check'] ? 'Check ' + ar['d' + n + 'Check'] : '') + '</td><td class="r">' + fmt(amt || 0) + '</td></tr>';
   }
   if (!versions.length && !cos.length) {
     html += '<tr><td colspan="4">No saved quotes or change orders yet. Invoice rows still show below when the job is contracted.</td></tr>';
