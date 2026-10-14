@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v1013d</title>
+<title>Fremont Makers — Project Builder v1013e</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20261013d-replace-optin -->
+<!-- FM-BUILD-v20261013e-pay-next -->
 <script>
 (function(){
   try {
@@ -252,6 +252,23 @@
   .project-summary .empty { font-size: 13px; color: var(--muted); }
   .project-summary a { color: var(--accent); text-decoration: none; }
   .project-summary a:hover { text-decoration: underline; }
+  .co-pay-opt {
+    display: flex; align-items: flex-start; gap: 12px;
+    text-align: left; width: 100%; max-width: 720px;
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 14px; margin: 0 0 8px; cursor: pointer;
+    background: var(--surface);
+  }
+  .co-pay-opt:hover { border-color: var(--accent); background: var(--surface2); }
+  .co-pay-opt input[type="radio"] {
+    flex: 0 0 auto; width: 18px; height: 18px; margin: 3px 0 0;
+    accent-color: var(--accent); cursor: pointer;
+  }
+  .co-pay-opt .co-pay-copy { flex: 1; min-width: 0; text-align: left; }
+  .co-pay-opt .co-pay-copy strong { display: block; font-size: 14px; font-weight: 600; }
+  .co-pay-opt .co-pay-copy span { display: block; font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+  #co-pay-options { text-align: left; }
+  .modal-btn:disabled { opacity: 0.45; cursor: not-allowed; }
   .status-radios { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
   .status-radios label {
     display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text);
@@ -687,7 +704,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1013d</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1013e</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <span class="status-label">Status:</span>
@@ -1640,7 +1657,7 @@
       <p id="co-sched-err" style="font-size:13px;color:var(--red);min-height:18px;"></p>
       <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">
         <button class="modal-btn" type="button" onclick="coBackFromSched()">Back</button>
-        <button class="modal-btn confirm" type="button" id="co-sched-next" onclick="coGo(4)">Next</button>
+        <button class="modal-btn confirm" type="button" id="co-sched-next" onclick="coNextFromPay()">Next</button>
       </div>
     </div>
     <div id="co-step-4" class="co-step">
@@ -5252,6 +5269,21 @@ function coPaintSched() {
   coApplyPayChoice();
   coSchedLive();
 }
+function coPayTarget(c, q) {
+  const oldT = c.oldTotal != null ? c.oldTotal : contractTotalOf(q, quoteGrandFromData(q) || 0);
+  const newT = c.newTotal != null ? c.newTotal : oldT;
+  if (c.payChoice === 'keep') return oldT;
+  if (c.payChoice === 'pass') return newT;
+  return (c.billTotal != null ? c.billTotal : newT);
+}
+function coNextFromPay() {
+  if (!coSchedLive()) {
+    const err = document.getElementById('co-sched-err');
+    if (err && !err.textContent) err.textContent = 'Pick keep remaining or pass the new total, then Next.';
+    return;
+  }
+  coGo(4);
+}
 function coSchedLive() {
   const c = window._co;
   const live = document.getElementById('co-sched-live');
@@ -5259,8 +5291,9 @@ function coSchedLive() {
   const next = document.getElementById('co-sched-next');
   if (!c || !live) return true;
   const q = quoteData[c.id] || {};
-  const total = c.newTotal != null ? c.newTotal : contractTotalOf(q, quoteGrandFromData(q) || 0);
-  const ar = scheduleOf(q, total);
+  const total = coPayTarget(c, q);
+  c.billTotal = total;
+  const ar = scheduleOf(q, c.oldTotal != null ? c.oldTotal : total);
   const plan = payPlanOf(q);
   const maxN = plan === '50-50' ? 2 : 3;
   let cash = 0, unpaid = 0;
@@ -5273,7 +5306,10 @@ function coSchedLive() {
   }
   const remain = Math.round((total - cash) * 100) / 100;
   const ok = Math.abs(unpaid - remain) < 0.02;
-  live.textContent = 'Contract ' + fmt(total) + ' − cash ' + fmt(cash) + ' = remaining ' + fmt(remain) + '. Unpaid now ' + fmt(unpaid) + '.';
+  const cab = c.newTotal != null ? c.newTotal : total;
+  live.textContent = (c.payChoice === 'keep' ? 'Keeping contracted remaining. ' : '')
+    + 'Bill target ' + fmt(total) + (c.payChoice === 'keep' && cab !== total ? ' (cabinets now ' + fmt(cab) + ')' : '')
+    + ' − cash ' + fmt(cash) + ' = remaining ' + fmt(remain) + '. Unpaid now ' + fmt(unpaid) + '.';
   if (err) err.textContent = ok ? '' : 'Unpaid invoices must add to ' + fmt(remain) + '.';
   if (next) next.disabled = !ok;
   return ok;
@@ -5413,14 +5449,14 @@ function coPaintPayOptions() {
   for (let n = 1; n <= maxN; n++) if (ar['d' + n + 'Paid']) cash += paidInvoiceAmt(ar, n, ar['d' + n + 'Amt']);
   const remainOld = Math.round((oldT - cash) * 100) / 100;
   const remainNew = Math.round((newT - cash) * 100) / 100;
-  if (!c.payChoice) c.payChoice = delta === 0 ? 'keep' : (delta < 0 ? 'pass' : 'collect');
-  const opt = (id, title, blurb) => '<label style="display:block;border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:8px;cursor:pointer;">'
-    + '<input type="radio" name="co-pay" value="' + id + '" ' + (c.payChoice === id ? 'checked' : '') + ' onchange="coSetPayChoice(\'' + id + '\')" /> <strong>' + title + '</strong>'
-    + '<div style="font-size:12px;color:var(--muted);margin-top:4px;">' + blurb + '</div></label>';
-  let html = '<p style="font-size:13px;margin-bottom:8px;">Was ' + fmt(oldT) + ' · cabinets now ' + fmt(newT) + ' · delta ' + fmt(delta) + '. Cash received ' + fmt(cash) + ' stays.</p>';
-  html += opt('keep', 'Keep contracted remaining', 'Unpaid invoices still add to ' + fmt(remainOld) + '. Cabinet change is on the paper trail; client does not get a dollar change on remaining invoices.');
-  html += opt('pass', 'Pass the new cabinet total through', 'Remaining unpaid becomes ' + fmt(remainNew) + ' (new total minus cash). Savings or extra cost lands on future invoices. Typical when the factory bill changed and you want the contract to match.');
-  html += opt('custom', 'Custom split', 'You type unpaid amounts. They must still add to whichever remaining you choose below.');
+  if (!c.payChoice) c.payChoice = 'keep';
+  const opt = (id, title, blurb) => '<label class="co-pay-opt">'
+    + '<input type="radio" name="co-pay" value="' + id + '" ' + (c.payChoice === id ? 'checked' : '') + ' onchange="coSetPayChoice(\'' + id + '\')" />'
+    + '<span class="co-pay-copy"><strong>' + title + '</strong><span>' + blurb + '</span></span></label>';
+  let html = '<p style="font-size:13px;margin:0 0 10px;text-align:left;">Cabinets were ' + fmt(oldT) + ' · now ' + fmt(newT) + ' · delta ' + fmt(delta) + '. Cash received ' + fmt(cash) + ' stays.</p>';
+  html += opt('keep', 'Keep contracted remaining', 'Unpaid invoices still add to ' + fmt(remainOld) + '. SKU change is on the paper trail only.');
+  html += opt('pass', 'Pass the new cabinet total through', 'Remaining unpaid becomes ' + fmt(remainNew) + ' (new total minus cash). Savings or extra cost lands on future invoices.');
+  html += opt('custom', 'Custom split', 'Type unpaid amounts. They must add to the remaining you choose.');
   host.innerHTML = html;
 }
 function coSetPayChoice(id) {
