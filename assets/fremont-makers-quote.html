@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v1013k</title>
+<title>Fremont Makers — Project Builder v1013l</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20261013k-cloud-flush -->
+<!-- FM-BUILD-v20261013l-co-removed -->
 <script>
 (function(){
   try {
@@ -704,7 +704,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1013k</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1013l</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <span class="status-label">Status:</span>
@@ -1655,7 +1655,7 @@
       </div>
     </div>
     <div id="co-step-3" class="co-step">
-      <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">Paid checks never move. If the customer’s contracted total stays the same, pick that. New SKUs still go on the quote at $0.</p>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">Paid checks never move. If this job’s contracted total stays the same, pick that. New SKUs still go on the quote at $0.</p>
       <div id="co-pay-options" style="margin-bottom:12px;"></div>
       <div id="co-sched-fields"></div>
       <p id="co-sched-live" style="font-size:13px;margin:8px 0;"></p>
@@ -5545,7 +5545,7 @@ function coPaintReview() {
   c.reason = reason;
   let html = '<p><strong>Why:</strong> ' + (reason || '—') + '</p>';
   if (c.payChoice === 'keep') {
-    html += '<p><strong>No contracted change.</strong> Customer still pays ' + fmt(oldT) + '. New SKUs list at $0.</p>';
+    html += '<p><strong>No contracted change.</strong> ' + (q.jobCode || 'This job') + ' contracted total stays ' + fmt(oldT) + '. New SKUs list at $0.</p>';
   } else if (c.kind !== 'schedule') {
     html += '<p><strong>Cabinets:</strong> ' + fmt(oldT) + ' → ' + fmt(c.newTotal) + '</p>';
     html += '<p><strong>Payment:</strong> ' + (c.payChoice === 'pass' ? 'Change the contracted total' : 'Custom unpaid split') + '</p>';
@@ -5589,16 +5589,17 @@ function coSkuKey(row) {
 }
 function coDiffSkus(oldRows, newRows) {
   const a = {}, b = {};
-  (oldRows || []).forEach(r => { const k = coSkuKey(r); if (!k) return; if (!a[k]) a[k] = { key: k, qty: 0, cost: 0, desc: r.desc || r.serial || k }; a[k].qty += Number(r.qty)||0; a[k].cost = Number(r.cost)||a[k].cost; });
-  (newRows || []).forEach(r => { const k = coSkuKey(r); if (!k) return; if (!b[k]) b[k] = { key: k, qty: 0, cost: 0, desc: r.desc || r.serial || k }; b[k].qty += Number(r.qty)||0; b[k].cost = Number(r.cost)||b[k].cost; });
+  (oldRows || []).forEach(r => { const k = coSkuKey(r); if (!k) return; if (!a[k]) a[k] = { key: k, serial: r.serial || k, qty: 0, cost: 0, desc: r.desc || r.serial || k }; a[k].qty += Number(r.qty)||0; a[k].cost = Number(r.cost)||a[k].cost; });
+  (newRows || []).forEach(r => { const k = coSkuKey(r); if (!k) return; if (!b[k]) b[k] = { key: k, serial: r.serial || k, qty: 0, cost: 0, desc: r.desc || r.serial || k }; b[k].qty += Number(r.qty)||0; b[k].cost = Number(r.cost)||b[k].cost; });
   const keys = Array.from(new Set([...Object.keys(a), ...Object.keys(b)])).sort();
   const added = [], removed = [], changed = [], same = [];
   keys.forEach(k => {
     const o = a[k], n = b[k];
-    if (!o) added.push(n);
-    else if (!n) removed.push(o);
-    else if (o.qty !== n.qty || Math.abs((o.cost||0)-(n.cost||0)) > 0.009) changed.push({ key: k, desc: n.desc, oldQty: o.qty, newQty: n.qty, oldCost: o.cost, newCost: n.cost });
-    else same.push(n);
+    const oq = o ? o.qty : 0, nq = n ? n.qty : 0;
+    if (nq > oq) added.push(Object.assign({}, n || o, { qty: nq - oq }));
+    if (oq > nq) removed.push(Object.assign({}, o || n, { qty: oq - nq }));
+    if (o && n && (o.qty !== n.qty || Math.abs((o.cost||0)-(n.cost||0)) > 0.009)) changed.push({ key: k, desc: n.desc, oldQty: o.qty, newQty: n.qty, oldCost: o.cost, newCost: n.cost });
+    else if (o && n) same.push(n);
   });
   return { added, removed, changed, same };
 }
@@ -5678,8 +5679,8 @@ function coPaintPayOptions() {
     + '<input type="radio" name="co-pay" value="' + id + '" ' + (c.payChoice === id ? 'checked' : '') + ' onchange="coSetPayChoice(\'' + id + '\')" />'
     + '<span class="co-pay-copy"><strong>' + title + '</strong><span>' + blurb + '</span></span></label>';
   let html = '<p style="font-size:13px;margin:0 0 10px;text-align:left;">Cabinets were ' + fmt(oldT) + ' · now ' + fmt(newT) + ' · delta ' + fmt(delta) + '. Cash received ' + fmt(cash) + ' stays.</p>';
-  html += opt('keep', 'No contracted change', 'Customer still pays ' + fmt(oldT) + '. New SKUs go on the quote at $0. Invoices do not move.');
-  html += opt('pass', 'Change the contracted total', 'Remaining unpaid becomes ' + fmt(remainNew) + ' (new cabinet total minus cash). Use this only if the customer’s bill should change.');
+  html += opt('keep', 'No contracted change', (q.jobCode || 'This job') + ' still ' + fmt(oldT) + '. New SKUs go on the quote at $0. Invoices do not move.');
+  html += opt('pass', 'Change the contracted total', 'Remaining unpaid becomes ' + fmt(remainNew) + ' (new cabinet total minus cash). Use this only if the contracted total should change.');
   html += opt('custom', 'Custom split', 'Type unpaid amounts. They must add to the remaining you choose.');
   host.innerHTML = html;
 }
@@ -5811,6 +5812,7 @@ function saveChangeOrder(keepOpen) {
     }
     c.cabinets = rows;
     q.cabinets = rows;
+    c.diff = coDiffSkus(c.oldCabinets || q.originalCabinets || [], rows);
     if (activeQuoteId === c.id) {
       document.getElementById('cabinet-tbody').innerHTML = '';
       (q.cabinets || []).forEach(row => addCabinetRow(row.desc, row.qty, row.cost, row.markup, row.serial, row.id));

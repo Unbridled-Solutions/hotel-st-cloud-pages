@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
-  <title>Fremont Makers — Contract Packet v1013j</title>
-  <!-- FM-PACKET-v1013j-co-keep -->
+  <title>Fremont Makers — Contract Packet v1013l</title>
+  <!-- FM-PACKET-v1013l-co-removed -->
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Pinyon+Script&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     :root { --ink:#1a1a1a; --muted:#666; --line:#d8d4cc; --gold:#c9a84c; --paper:#fff; --screen:#111; }
@@ -66,7 +66,7 @@
 </head>
 <body>
   <div class="bar">
-    <strong>Fremont Makers · Contract packet <span style="opacity:.45;letter-spacing:0;">v1013j</span></strong>
+    <strong>Fremont Makers · Contract packet <span style="opacity:.45;letter-spacing:0;">v1013l</span></strong>
     <div class="actions">
       <span class="save-ok" id="save-msg"></span>
       <button type="button" onclick="window.print()">Print</button>
@@ -399,14 +399,31 @@ function pageChangeOrder(q, nums, n) {
   const keep = co.payChoice === 'keep';
   const contracted = Number(q.contractTotal) || Number(co.billTotal) || Number(co.oldTotal) || (nums.unit * modelQty(q));
   const when = co.at ? new Date(co.at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '—';
-  const added = (co.diff && co.diff.added) || [];
-  const removed = (co.diff && co.diff.removed) || [];
-  const changed = (co.diff && co.diff.changed) || [];
-  const skuRow = (label, r, qty) => '<tr><td>' + label + '</td><td>' + esc(r.desc || r.key || '') + '</td><td>' + esc(r.key || r.serial || '') + '</td><td class="r">' + (qty != null ? qty : (r.qty || '')) + '</td></tr>';
+  const job = q.jobCode || 'This job';
+  function skuBag(rows) {
+    const a = {};
+    (rows || []).forEach(r => {
+      const k = String(r.serial || r.key || r.desc || '').trim().toUpperCase();
+      if (!k) return;
+      if (!a[k]) a[k] = { key: k, serial: r.serial || k, desc: r.desc || r.key || k, qty: 0 };
+      a[k].qty += Number(r.qty) || 0;
+    });
+    return a;
+  }
+  const oldRows = co.oldCabinets && co.oldCabinets.length ? co.oldCabinets : (q.originalCabinets || []);
+  const newRows = co.cabinets && co.cabinets.length ? co.cabinets : (q.cabinets || []);
+  const bagA = skuBag(oldRows), bagB = skuBag(newRows);
+  const added = [], removed = [];
+  Object.keys(Object.assign({}, bagA, bagB)).forEach(k => {
+    const o = bagA[k] ? bagA[k].qty : 0;
+    const n = bagB[k] ? bagB[k].qty : 0;
+    if (n > o) added.push(Object.assign({}, bagB[k] || bagA[k], { qty: n - o }));
+    if (o > n) removed.push(Object.assign({}, bagA[k] || bagB[k], { qty: o - n }));
+  });
+  const skuRow = (label, r, qty) => '<tr><td>' + label + '</td><td>' + esc(r.desc || r.key || '') + '</td><td>' + esc(r.serial || r.key || '') + '</td><td class="r">' + (qty != null ? qty : (r.qty || '')) + '</td></tr>';
   const diffRows = []
     .concat(added.map(r => skuRow('Added', r, r.qty)))
     .concat(removed.map(r => skuRow('Removed', r, r.qty)))
-    .concat(changed.map(r => skuRow('Changed', r, (r.oldQty || '') + ' → ' + (r.newQty || ''))))
     .join('');
   const lockedNums = Object.assign({}, nums, { unit: contracted });
   let html = '<div class="page" data-initials="1">'
@@ -415,11 +432,12 @@ function pageChangeOrder(q, nums, n) {
     + jobMeta(q, lockedNums)
     + '<div class="meta">'
     + '<div><b>Change date</b>' + esc(when) + '</div>'
+    + '<div><b>Job</b>' + esc(job) + '</div>'
     + '<div><b>Why</b>' + esc(co.reason || '—') + '</div>'
     + '<div><b>Contracted total</b>' + money(contracted) + '</div>'
     + '</div>';
   if (keep) {
-    html += '<p><strong>No contracted change.</strong> The customer’s end total is still ' + money(contracted) + '. SKUs below are substitutions or extras listed at no additional charge.</p>';
+    html += '<p><strong>No contracted change.</strong> ' + esc(job) + ' end total is still ' + money(contracted) + '. SKUs below are substitutions or extras listed at no additional charge.</p>';
   }
   html += '<h2>SKUs added and removed</h2>'
     + '<table><thead><tr><th></th><th>Description</th><th>SKU</th><th class="r">Qty</th></tr></thead><tbody>'
