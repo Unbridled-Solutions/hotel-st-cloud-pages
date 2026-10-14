@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
-  <title>Fremont Makers — Contract Packet v1014b</title>
-  <!-- FM-PACKET-v1014b-pass-delta -->
+  <title>Fremont Makers — Contract Packet v1014d</title>
+  <!-- FM-PACKET-v1014d-sig-keep -->
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Pinyon+Script&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     :root { --ink:#1a1a1a; --muted:#666; --line:#d8d4cc; --gold:#c9a84c; --paper:#fff; --screen:#111; }
@@ -41,8 +41,10 @@
     .tot { width:280px; margin-left:auto; margin-top:12px; }
     .tot td { border:none; padding:4px 0; }
     .tot tr:last-child td { font-weight:700; font-size:15px; border-top:1px solid var(--ink); padding-top:8px; }
-    .sig { display:grid; grid-template-columns:1fr 1fr; gap:28px; margin-top:28px; }
-    .sig-line { border-bottom:1px solid #bbb; padding-top:34px; font-size:11px; color:#888; }
+    .sig { display:grid; grid-template-columns:1fr 1fr; gap:28px; margin-top:28px;
+      break-inside: avoid; page-break-inside: avoid; -webkit-column-break-inside: avoid; }
+    .sig-line { border-bottom:1px solid #bbb; padding-top:34px; font-size:11px; color:#888;
+      break-inside: avoid; page-break-inside: avoid; }
     .page-initials {
       position: absolute; left: 40px; right: 40px; bottom: 22px;
       display: flex; align-items: flex-end; gap: 8px;
@@ -59,14 +61,15 @@
       .bar { display:none !important; }
       body { background:#fff; color:#111; }
       .wrap { padding:0; max-width:none; }
-      .page { box-shadow:none; margin:0; border-radius:0; min-height:10.4in; padding-bottom:78px; }
+      .page { box-shadow:none; margin:0; border-radius:0; min-height:0; padding-bottom:78px; overflow: visible; }
+      .sig { break-inside: avoid; page-break-inside: avoid; }
       .err { display:none; }
     }
   </style>
 </head>
 <body>
   <div class="bar">
-    <strong>Fremont Makers · Contract packet <span style="opacity:.45;letter-spacing:0;">v1014b</span></strong>
+    <strong>Fremont Makers · Contract packet <span style="opacity:.45;letter-spacing:0;">v1014d</span></strong>
     <div class="actions">
       <span class="save-ok" id="save-msg"></span>
       <button type="button" onclick="window.print()">Print</button>
@@ -279,15 +282,8 @@ function pageAgreement(q, nums) {
     + '<h2>Warranty</h2>'
     + '<p>Seller warrants the goods for one year from purchase. Claims go to Fremont Makers. This is Seller’s warranty, not a pass-through to the manufacturer or a home builder.</p>'
     + '<p class="fine">Colorado law. Binding arbitration in Fremont County, one arbitrator. Small claims if the amount fits. If arbitration is unavailable, venue is the state courts of Fremont County.</p>'
-    + '<div class="sig"><div>'
-    + '<div class="sig-line">Buyer signature</div>'
-    + '<div class="sig-line">Printed name' + (signer ? ' · ' + esc(signer) : '') + '</div>'
-    + '<div class="sig-line">Date</div>'
-    + '</div><div>'
-    + '<div class="sig-line">Fremont Makers LLC · signature</div>'
-    + '<div class="sig-line">Printed name</div>'
-    + '<div class="sig-line">Date</div>'
-    + '</div></div></div>';
+    + sigBlock(q)
+    + '</div>';
 }
 function pageSchedule(q, nums) {
   const total = nums.unit * modelQty(q);
@@ -392,6 +388,17 @@ function pageQuote(q, nums) {
   }
   return parts.join('');
 }
+function sigBlock(q) {
+  return '<div class="sig"><div>'
+    + '<div class="sig-line">Buyer signature</div>'
+    + '<div class="sig-line">Printed name' + (q.signerName ? ' · ' + esc(q.signerName) : '') + '</div>'
+    + '<div class="sig-line">Date</div>'
+    + '</div><div>'
+    + '<div class="sig-line">Fremont Makers LLC · signature</div>'
+    + '<div class="sig-line">Printed name</div>'
+    + '<div class="sig-line">Date</div>'
+    + '</div></div>';
+}
 function pageChangeOrder(q, nums, n) {
   const list = q.changeOrders || [];
   const co = list.find(x => Number(x.n) === Number(n)) || list[Number(n) - 1];
@@ -451,15 +458,18 @@ function pageChangeOrder(q, nums, n) {
     + '<table><thead><tr><th></th><th>Description</th><th>SKU</th><th class="r">Qty</th></tr></thead><tbody>'
     + (diffRows || '<tr><td colspan="4">No SKU differences recorded.</td></tr>')
     + '</tbody></table>';
-  html += '<div class="sig"><div>'
-    + '<div class="sig-line">Buyer signature</div>'
-    + '<div class="sig-line">Printed name' + (q.signerName ? ' · ' + esc(q.signerName) : '') + '</div>'
-    + '<div class="sig-line">Date</div>'
-    + '</div><div>'
-    + '<div class="sig-line">Fremont Makers LLC · signature</div>'
-    + '<div class="sig-line">Printed name</div>'
-    + '<div class="sig-line">Date</div>'
-    + '</div></div></div>';
+  const skuCount = added.length + removed.length + changed.length;
+  if (skuCount >= 4) {
+    html += '</div><div class="page" data-initials="1">'
+      + head('Change Order ' + n + ' · signatures')
+      + '<h1>Change Order ' + n + '</h1><div class="tag">making freedom</div>'
+      + jobMeta(q, lockedNums)
+      + '<p>Signatures for this change order. SKU list is on the prior page.</p>'
+      + sigBlock(q)
+      + '</div>';
+  } else {
+    html += sigBlock(q) + '</div>';
+  }
   return html;
 }
 function render(q, data) {
