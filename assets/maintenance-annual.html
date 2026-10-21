@@ -30,6 +30,7 @@
       --warning: #ffb347;
       --success: #3de8c8;
       --yellow: #ffd166;
+      --gold: #c9aa7c;
       --font: 'Inter', system-ui, sans-serif;
       --active-bg: #4a9eff;
       --active-fg: #0f1117;
@@ -46,31 +47,60 @@
       --warning: #c05621;
       --success: #2f7d55;
       --yellow: #a8883a;
+      --gold: #8a6d20;
       --active-bg: #1b2744;
       --active-fg: #ffffff;
     }
+    html { -webkit-font-smoothing: antialiased; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; min-height: 100vh; }
     .theme-toggle { display: flex; gap: 4px; }
+    .theme-toggle button, .btn, .save-btn, .drawer-close, .status-opt, .lane, .stat-pill, .dd-btn {
+      transform: scale(1);
+      transition-property: transform, opacity, background-color, color, border-color;
+      transition-duration: 120ms;
+      transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+    }
+    .theme-toggle button:active, .btn:active, .save-btn:active, .drawer-close:active, .status-opt:active, .lane:active, .dd-btn:active { transform: scale(0.96); }
+    @media (prefers-reduced-motion: reduce) {
+      .theme-toggle button, .btn, .save-btn, .drawer-close, .status-opt, .lane, .stat-pill, .dd-btn { transition: none; }
+      .theme-toggle button:active, .btn:active, .save-btn:active, .drawer-close:active, .status-opt:active, .lane:active, .dd-btn:active { transform: none; }
+    }
     .theme-toggle button {
       padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border);
       background: transparent; color: var(--muted); font-size: 12px; cursor: pointer;
-      font-family: var(--font); font-weight: 600;
+      font-family: var(--font); font-weight: 600; min-height: 40px; min-width: 40px;
     }
     .theme-toggle button.on { background: var(--active-bg); color: var(--active-fg); border-color: var(--active-bg); }
-    body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; min-height: 100vh; }
+    @media (pointer: coarse) {
+      .theme-toggle button, .btn, .dd-btn, .lane { min-height: 44px; }
+    }
     .header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 18px 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-    .header-logo { font-size: 18px; font-weight: 700; }
+    .header-logo { font-size: 18px; font-weight: 700; text-wrap: balance; }
     .header-logo span { color: var(--accent); }
-    .header-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .header-sub { font-size: 12px; color: var(--muted); margin-top: 2px; text-wrap: pretty; }
     .header-right { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-    .tabs { display: flex; gap: 1px; background: var(--border); border-bottom: 1px solid var(--border); }
-    .tab { flex: 0 0 auto; background: var(--surface); padding: 12px 22px; font-size: 13px; font-weight: 600; color: var(--muted); text-decoration: none; }
+    .tabs { display: flex; gap: 1px; background: var(--border); border-bottom: 1px solid var(--border); overflow-x: auto; }
+    .tab { flex: 0 0 auto; background: var(--surface); padding: 12px 22px; font-size: 13px; font-weight: 600; color: var(--muted); text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
     .tab:hover { color: var(--text); background: var(--surface2); }
     .tab.active { color: var(--text); border-bottom: 2px solid var(--accent); background: var(--surface2); }
-    .stats-bar { display: flex; gap: 1px; background: var(--border); border-bottom: 1px solid var(--border); overflow-x: auto; }
-    .stat-pill { flex: 1; min-width: 90px; background: var(--surface); padding: 14px 16px; text-align: center; cursor: pointer; }
+    .lanes { display: flex; gap: 8px; padding: 12px 24px 0; flex-wrap: wrap; align-items: center; }
+    .lane {
+      border: 1px solid var(--border); background: var(--surface); color: var(--muted);
+      border-radius: 999px; padding: 8px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
+      font-family: var(--font); min-height: 40px;
+    }
+    .lane.on { background: var(--active-bg); color: var(--active-fg); border-color: var(--active-bg); }
+    .kitchen-banner {
+      margin: 12px 24px 0; padding: 12px 14px; border: 1px solid var(--border); background: var(--surface);
+      font-size: 13px; color: var(--muted); line-height: 1.45; display: none; text-wrap: pretty;
+    }
+    .kitchen-banner.show { display: block; }
+    .kitchen-banner a { color: var(--accent); font-weight: 600; }
+    .stats-bar { display: flex; gap: 1px; background: var(--border); border-bottom: 1px solid var(--border); overflow-x: auto; margin-top: 12px; }
+    .stat-pill { flex: 1; min-width: 90px; background: var(--surface); padding: 14px 16px; text-align: center; cursor: pointer; min-height: 40px; }
     .stat-pill:hover, .stat-pill.active { background: var(--surface2); }
     .stat-pill.active { border-bottom: 2px solid var(--accent); }
-    .stat-count { font-size: 22px; font-weight: 700; line-height: 1; }
+    .stat-count { font-size: 22px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
     .stat-label { font-size: 11px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; margin-top: 4px; font-weight: 500; }
     .stat-pill[data-filter="due"] .stat-count { color: var(--danger); }
     .stat-pill[data-filter="upcoming"] .stat-count { color: var(--accent); }
@@ -78,26 +108,39 @@
     .stat-pill[data-filter="done"] .stat-count { color: var(--success); }
     .stat-pill[data-filter="off"] .stat-count { color: var(--muted); }
     .toolbar { padding: 16px 24px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; border-bottom: 1px solid var(--border); }
-    .toolbar-search, .filter-select, .field {
+    .toolbar-search, .field {
       background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
       color: var(--text); font-family: var(--font); font-size: 13px; padding: 8px 12px; outline: none;
     }
-    .toolbar-search { flex: 1; min-width: 180px; }
-    .toolbar-search:focus, .filter-select:focus, .field:focus { border-color: var(--accent); }
-    .filter-select { appearance: none; padding-right: 32px; cursor: pointer;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238b90a8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-      background-repeat: no-repeat; background-position: right 10px center;
+    .toolbar-search { flex: 1; min-width: 180px; min-height: 40px; }
+    .toolbar-search:focus, .field:focus { border-color: var(--accent); }
+    .dd { position: relative; display: inline-block; }
+    .dd-btn {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); font-family: var(--font); font-size: 13px; padding: 8px 32px 8px 12px;
+      cursor: pointer; min-height: 40px; text-align: left;
     }
-    .filter-select option { background: #1a1d27; }
+    .dd-btn::after { content: ' ▾'; font-size: 10px; color: var(--muted); }
+    .dd-menu {
+      display: none; position: fixed; z-index: 9999; min-width: 180px; max-height: min(320px, 50vh);
+      overflow: auto; background: #ffffff; border: 1px solid #ccc; border-radius: 4px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    }
+    .dd-menu.open { display: block; }
+    .dd-item { padding: 8px 12px; color: #1a2e3b; font-size: 13px; cursor: pointer; }
+    .dd-item:hover { background: #e8f0f8; }
+    .dd-item.active { font-weight: 700; background: #ddeeff; }
     .table-wrap { overflow-x: auto; padding: 0 24px 48px; }
     table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-    thead th { text-align: left; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 10px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; cursor: pointer; user-select: none; }
-    thead th:hover { color: var(--text); }
+    thead th { text-align: left; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 10px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; user-select: none; }
+    thead th[data-col] { cursor: pointer; min-height: 40px; }
+    thead th[data-col]:hover, thead th[data-col].on { color: var(--gold); }
     tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; }
     tbody tr:hover { background: var(--surface); }
     tbody td { padding: 12px; vertical-align: middle; font-size: 13px; }
-    .td-muted { color: var(--muted); font-size: 12px; }
+    .td-muted { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
     .td-task { font-weight: 600; }
+    .td-money { font-variant-numeric: tabular-nums; white-space: nowrap; }
     .badge { display: inline-flex; font-size: 11px; font-weight: 600; border-radius: 20px; padding: 3px 10px; white-space: nowrap; }
     .freq-annual { background: rgba(74,158,255,.15); color: var(--accent); }
     .freq-semi { background: rgba(192,132,252,.15); color: #c084fc; }
@@ -109,41 +152,53 @@
     .st-due { background: rgba(255,77,77,.15); color: #ff6b6b; }
     .st-in_progress { background: rgba(255,179,71,.15); color: var(--warning); }
     .st-done { background: rgba(61,232,200,.15); color: var(--success); }
+    .must-must { background: rgba(255,77,77,.14); color: var(--danger); }
+    .must-watch { background: rgba(255,179,71,.15); color: var(--warning); }
+    .must-optional { background: rgba(139,144,168,.12); color: var(--muted); }
+    .kind-kitchen { background: rgba(201,170,124,.16); color: var(--gold); }
+    .kind-contract { background: rgba(74,158,255,.12); color: var(--accent); }
+    .kind-life_safety { background: rgba(255,77,77,.1); color: #ff8a8a; }
+    .kind-envelope { background: rgba(61,232,200,.12); color: var(--success); }
+    .kind-mechanical { background: rgba(255,209,102,.12); color: var(--yellow); }
+    html[data-theme="paper"] .kind-life_safety { color: var(--danger); }
     .due-soon { color: var(--warning); font-weight: 600; }
     .due-late { color: var(--danger); font-weight: 700; }
     .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
     .drawer-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 100; }
     .drawer-backdrop.open { display: block; }
-    .drawer { position: fixed; top: 0; right: -520px; width: 480px; max-width: 100vw; height: 100vh; background: var(--surface); border-left: 1px solid var(--border); z-index: 101; overflow-y: auto; transition: right .25s ease; padding: 28px 28px 48px; }
+    .drawer { position: fixed; top: 0; right: -560px; width: 520px; max-width: 100vw; height: 100vh; background: var(--surface); border-left: 1px solid var(--border); z-index: 101; overflow-y: auto; transition: right .25s ease; padding: 28px 28px 48px; }
     .drawer.open { right: 0; }
-    .drawer-close { position: absolute; top: 20px; right: 20px; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); width: 32px; height: 32px; border-radius: 6px; cursor: pointer; }
+    .drawer-close { position: absolute; top: 16px; right: 16px; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); width: 40px; height: 40px; border-radius: 6px; cursor: pointer; }
     .drawer-tag { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
-    .drawer-title { font-size: 18px; font-weight: 700; margin-bottom: 18px; }
+    .drawer-title { font-size: 18px; font-weight: 700; margin-bottom: 18px; text-wrap: balance; }
     .drawer-section { margin-bottom: 18px; }
     .drawer-section-label { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
     label.lbl { display: block; font-size: 11px; color: var(--muted); margin: 10px 0 4px; }
     .field { width: 100%; }
     textarea.field { min-height: 90px; resize: vertical; }
     .status-select-group { display: flex; flex-wrap: wrap; gap: 8px; }
-    .status-opt { padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: 2px solid transparent; opacity: .55; }
+    .status-opt { padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: 2px solid transparent; opacity: .55; min-height: 40px; }
     .status-opt.active { opacity: 1; }
     .status-opt[data-s="off"] { background: rgba(139,144,168,.12); color: var(--muted); border-color: var(--muted); }
     .status-opt[data-s="upcoming"] { background: rgba(74,158,255,.15); color: var(--accent); border-color: var(--accent); }
     .status-opt[data-s="due"] { background: rgba(255,77,77,.15); color: #ff6b6b; border-color: #ff6b6b; }
     .status-opt[data-s="in_progress"] { background: rgba(255,179,71,.15); color: var(--warning); border-color: var(--warning); }
     .status-opt[data-s="done"] { background: rgba(61,232,200,.15); color: var(--success); border-color: var(--success); }
-    .save-btn, .btn { padding: 10px 16px; border-radius: 8px; font-family: var(--font); font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--surface2); color: var(--text); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
-    .save-btn { width: 100%; background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; margin-top: 12px; }
-    .save-btn:hover { background: #6ab4ff; }
+    .save-btn, .btn { padding: 10px 16px; border-radius: 8px; font-family: var(--font); font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--surface2); color: var(--text); text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; }
+    .save-btn { width: 100%; background: var(--gold); border-color: var(--gold); color: #0f1923; font-weight: 700; margin-top: 12px; }
+    .save-btn:hover { opacity: .92; }
     .btn:hover { background: var(--border); }
     .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
     .saved-msg { text-align: center; font-size: 12px; color: var(--success); margin-top: 8px; height: 18px; }
-    .note { font-size: 12px; color: var(--muted); padding: 10px 24px 0; line-height: 1.5; }
+    .note { font-size: 12px; color: var(--muted); padding: 10px 24px 0; line-height: 1.5; text-wrap: pretty; }
     .spinner { text-align: center; padding: 60px; color: var(--muted); }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     @media (max-width: 640px) {
-      .header, .toolbar { padding: 12px 16px; }
+      .header, .toolbar, .lanes { padding-left: 16px; padding-right: 16px; }
       .table-wrap { padding: 0 16px 40px; }
       .drawer { width: 100vw; }
+      .two { grid-template-columns: 1fr; }
+      .kitchen-banner { margin-left: 16px; margin-right: 16px; }
     }
   </style>
 </head>
@@ -151,7 +206,7 @@
 <div class="header">
   <div>
     <div class="header-logo">Unbridled <span>Properties</span></div>
-    <div class="header-sub">Recurring / preventative. Not incoming tickets.</div>
+    <div class="header-sub">Preventative calendar for Cañon + Grand Lake. Kitchen has its own lane. Daily close stays on the print sheet.</div>
   </div>
   <div class="header-right">
     <div class="theme-toggle">
@@ -167,6 +222,19 @@
   <a class="tab active" href="https://tools.fremontmakers.com/maintenance-annual">Recurring</a>
   <a class="tab" href="https://tools.fremontmakers.com/maintenance-paint">HW leftover</a>
 </div>
+<div class="lanes" id="lanes">
+  <button type="button" class="lane on" data-lane="all">All</button>
+  <button type="button" class="lane" data-lane="kitchen">Kitchen</button>
+  <button type="button" class="lane" data-lane="life_safety">Life safety</button>
+  <button type="button" class="lane" data-lane="envelope">Roofs / envelope</button>
+  <button type="button" class="lane" data-lane="mechanical">Mechanical</button>
+  <button type="button" class="lane" data-lane="contract">Contracts</button>
+</div>
+<div class="kitchen-banner" id="kitchenBanner">
+  <b>Kitchen lane.</b> Daily and weekly close for 1887 / Public House is the printable sheet — not this table.
+  <a href="https://tools.hotelstcloud.com/kitchen-pm-checklist" target="_blank" rel="noopener">Open kitchen PM checklist →</a>
+  This board keeps the slower jobs (hood, Ansul, grease trap, ice machine, yearly tech) so Tim still sees them on the global calendar. Fremont Provisions kitchen pack is a placeholder until Lindsay drops an equipment list.
+</div>
 <div class="stats-bar" id="statsBar">
   <div class="stat-pill active" data-filter="all"><div class="stat-count" id="cnt-all">—</div><div class="stat-label">All</div></div>
   <div class="stat-pill" data-filter="due"><div class="stat-count" id="cnt-due">—</div><div class="stat-label">Due / overdue</div></div>
@@ -175,34 +243,32 @@
   <div class="stat-pill" data-filter="done"><div class="stat-count" id="cnt-done">—</div><div class="stat-label">Done this cycle</div></div>
   <div class="stat-pill" data-filter="off"><div class="stat-count" id="cnt-off">—</div><div class="stat-label">Off / paused</div></div>
 </div>
-<p class="note">Shell for Tim. Dates are starting guesses, not a bill. Toggle Off when a seasonal item is not in season. Cloud-saved for the team.</p>
+<p class="note">Cañon City + Eagles Landing / Grand Lake. Not Chesterfield. Centerline roof PMAs are proposed (Bradley Hosler, 26 Sep 2026) — flip status when signed. 721 Main on those PDFs is 719 (Fremont Makers / Holdings X). Merge only — we do not wipe Tim’s notes.</p>
 <div class="toolbar">
   <input class="toolbar-search" id="searchInput" placeholder="Search task, vendor, notes…" />
-  <select class="filter-select" id="buildingFilter"><option value="">All buildings</option></select>
-  <select class="filter-select" id="freqFilter">
-    <option value="">All frequencies</option>
-    <option>Monthly</option>
-    <option>Quarterly</option>
-    <option>Seasonal</option>
-    <option>Semi-annual</option>
-    <option>Annual</option>
-  </select>
+  <div class="dd" id="ddBuilding"></div>
+  <div class="dd" id="ddFreq"></div>
+  <div class="dd" id="ddMust"></div>
 </div>
 <div class="table-wrap"><div id="tableContainer"><div class="spinner">Loading annual list…</div></div></div>
 <div class="drawer-backdrop" id="drawerBackdrop"></div>
 <div class="drawer" id="drawer">
-  <button class="drawer-close" id="drawerClose">✕</button>
+  <button class="drawer-close" id="drawerClose" type="button">✕</button>
   <div id="drawerContent"></div>
 </div>
 <script>
 const NS = 'maint-pm';
+const SORT_STORE = 'table-sort:maint-pm';
 const BUILDINGS = [
   '414-416 Main',
   'Abstract — 709 Main',
   'Annex — 507 Main',
   'Apex — 425-431 Main',
   'Chapel — 707 N 7th',
+  'Eagles Landing — 225 GCR 465',
   'Fremont Makers — 719 Main',
+  'Grand Lake — 194 GCR 472',
+  'Grand Lake — 276 GCR 480',
   'Harrison — 609-617 Main',
   'Hotel St. Cloud — 631 Main',
   'Office Building — 110 N 7th',
@@ -210,55 +276,209 @@ const BUILDINGS = [
   'Scholastica — 615 Pike',
   'Standard Oil — 701 Main'
 ];
+const CANON = BUILDINGS.filter(b => !/GCR|Eagles/.test(b));
 const FREQS = ['Monthly','Quarterly','Seasonal','Semi-annual','Annual'];
 const STATUSES = ['off','upcoming','due','in_progress','done'];
 const STATUS_LABEL = { off:'Off / paused', upcoming:'Upcoming', due:'Due', in_progress:'In progress', done:'Done this cycle' };
+const KINDS = ['life_safety','envelope','mechanical','kitchen','contract'];
+const KIND_LABEL = { life_safety:'Life safety', envelope:'Envelope', mechanical:'Mechanical', kitchen:'Kitchen', contract:'Contract' };
+const MUSTS = ['must','watch','optional'];
+const MUST_LABEL = { must:'Must', watch:'Watch', optional:'Optional' };
 
 function uid() { return 'pm-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,6); }
 function row(partial) {
   return Object.assign({
     id: uid(), task: '', building: BUILDINGS[0], frequency: 'Annual', next_due: '',
     status: 'upcoming', owner: '', vendor: '', notes: '', source: 'shell',
+    kind: 'life_safety', must: 'must', asset: '', contract_amount: '', proof_url: '',
     updated_at: new Date().toISOString()
   }, partial);
 }
+function fp(r) { return (r.building || '') + '|' + (r.task || ''); }
+function money(n) {
+  if (n === '' || n == null) return '';
+  const x = Number(String(n).replace(/[^0-9.]/g,''));
+  if (!isFinite(x)) return String(n);
+  return '$' + x.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
 
-function buildSeed() {
+function lifeSafetyFor(b) {
+  return [
+    { task: 'Fire extinguisher — annual professional service (NFPA 10)', frequency: 'Annual', next_due: '2027-01-15', kind: 'life_safety', must: 'must', notes: 'Certified tech. Monthly visual is separate (staff).' },
+    { task: 'Fire extinguisher — monthly visual walk', frequency: 'Monthly', next_due: '2026-10-01', kind: 'life_safety', must: 'must', notes: 'Staff. Gauge, pin, access. Tag the card.' },
+    { task: 'Emergency / exit lighting test', frequency: 'Annual', next_due: '2027-03-01', kind: 'life_safety', must: 'must', notes: '90-minute discharge where required. Confirm devices on this building.' },
+    { task: 'Backflow preventer test', frequency: 'Annual', next_due: '2027-06-01', kind: 'mechanical', must: 'must', notes: 'Colorado typically annual. Confirm devices per building.' },
+    { task: 'HVAC / furnace service before heat season', frequency: 'Annual', next_due: '2026-10-15', kind: 'mechanical', must: 'must', notes: 'Filters, heat ready. Hotel HVAC vendor is Vision (hotel only).' },
+    { task: 'Roof and gutter walk (staff / after storm)', frequency: 'Semi-annual', next_due: '2026-10-31', kind: 'envelope', must: 'must', notes: 'Spring and fall plus after hail. Not a substitute for a roof PMA.' },
+    { task: 'Fire alarm inspection', frequency: 'Annual', next_due: '2027-02-01', kind: 'life_safety', must: 'must', notes: 'Confirm which buildings have a panel. Semi-annual reports are common.' }
+  ].map(t => row(Object.assign({}, t, { building: b })));
+}
+
+function catalogExtras() {
   const out = [];
-  const all = [
-    { task: 'Fire extinguisher — annual professional service (NFPA 10)', frequency: 'Annual', next_due: '2027-01-15', notes: 'Certified tech. Monthly visual is separate (staff).' },
-    { task: 'Fire extinguisher — monthly visual walk', frequency: 'Monthly', next_due: '2026-10-01', notes: 'Staff. Gauge, pin, access. Tag the card.' },
-    { task: 'Emergency / exit lighting test', frequency: 'Annual', next_due: '2027-03-01', notes: '90-minute discharge where required.' },
-    { task: 'Backflow preventer test', frequency: 'Annual', next_due: '2027-06-01', notes: 'Colorado typically annual. Confirm devices per building.' },
-    { task: 'HVAC / furnace service before heat season', frequency: 'Annual', next_due: '2026-10-15', notes: 'Filters, heat ready. Hotel HVAC vendor is Vision (hotel only).' },
-    { task: 'Roof and gutter walk', frequency: 'Semi-annual', next_due: '2026-10-31', notes: 'Spring and fall. Snow / ice after storms as needed.' },
-    { task: 'Fire alarm inspection', frequency: 'Annual', next_due: '2027-02-01', notes: 'Confirm which buildings have a panel. Semi-annual reports are common.' }
+  const centerline = [
+    { building: '414-416 Main', task: 'Centerline roof PMA (2 inspections / year)', contract_amount: '375', next_due: '2026-10-01', notes: 'Proposed 26 Sep 2026. Year-1 $375 for both. 416 already under Centerline warranty (~7 mo). 414 upper: cold welds $2,750 before PMA activates. Term tied to signing a Centerline re-roof. Extra work $150/man-hr, typically 2 men.' },
+    { building: '414-416 Main', task: '414 Main cold-weld repairs (PMA prerequisite)', contract_amount: '2750', frequency: 'Annual', kind: 'envelope', must: 'must', next_due: '2026-10-01', notes: 'Seams, t-patches, curbs on upper roof. $2,750. PMA is void until this is done. Must, not nice.' },
+    { building: 'Apex — 425-431 Main', task: 'Centerline roof PMA (2 inspections / year)', contract_amount: '575', next_due: '2026-10-01', notes: 'Use the combined 425 & 431 PDF ($575), not the duplicate 425-only PDF at the same fee. Prerequisite reseal/vents/AC slip sheets $3,975 on first visit. Re-roof condition on the term.' },
+    { building: 'Apex — 425-431 Main', task: '425 Main reseal / slip sheets (PMA prerequisite)', contract_amount: '3975', frequency: 'Annual', kind: 'envelope', must: 'must', next_due: '2026-10-01', notes: 'Corners and t-patches, one-way vents and pipe boots, slip sheets under AC pads. $3,975. Do not sign both 425 PDFs.' },
+    { building: 'Annex — 507 Main', task: 'Centerline roof PMA (2 inspections / year)', contract_amount: '475', next_due: '2026-10-01', notes: 'No prereq dollar. Aluminum coating on mod-bit is cracking — replacement watch in coming year(s). PMA does not fix an aging membrane.' },
+    { building: 'Annex — 507 Main', task: '507 Main roof replacement watch', contract_amount: '', frequency: 'Annual', kind: 'envelope', must: 'watch', next_due: '2027-04-01', notes: 'Centerline: coating cracks accelerate UV on mod-bit. Watch, not a tomorrow bid. Keep PMA in the meantime.' },
+    { building: 'Hotel St. Cloud — 631 Main', task: 'Centerline roof PMA (2 inspections / year)', contract_amount: '525', next_due: '2026-10-01', notes: 'Upper EPDM + lower TPO. Prereq $1,513 (pipe jacks, clamp rings, caulk, debris). Oil collection on/near TPO is excluded — petroleum eats TPO. Kitchen grease path is a must conversation.' },
+    { building: 'Hotel St. Cloud — 631 Main', task: '631 Main EPDM/TPO prereq repairs', contract_amount: '1513', frequency: 'Annual', kind: 'envelope', must: 'must', next_due: '2026-10-01', notes: 'Upper: reseal pipe jacks with silicone, clamp rings. Lower TPO: counterflashing caulk, small boots, debris. $1,513.' },
+    { building: 'Hotel St. Cloud — 631 Main', task: '631 roof — keep oil / grease off TPO', contract_amount: '', frequency: 'Monthly', kind: 'envelope', must: 'must', next_due: '2026-11-01', notes: 'Centerline will not cover TPO damage from petroleum. Confirm whether this is hood grease cups, a drum, or exhaust. Kitchen + roof together.' },
+    { building: 'Abstract — 709 Main', task: 'Centerline roof PMA (2 inspections / year)', contract_amount: '450', next_due: '2026-10-01', notes: 'Cleanest of the Sep 26 set. No prereq. Still unsigned / proposed until flipped.' },
+    { building: 'Fremont Makers — 719 Main', task: 'Centerline roof PMA (2 inspections / year)', contract_amount: '450', next_due: '2026-10-01', notes: 'PDF labeled 721 Main — Lindsay: that is 719, FM HQ, Holdings X. Prereq: reseal 5 skylights $2,512 before PMA starts.' },
+    { building: 'Fremont Makers — 719 Main', task: '719 Main reseal 5 skylights (PMA prerequisite)', contract_amount: '2512', frequency: 'Annual', kind: 'envelope', must: 'must', next_due: '2026-10-01', notes: 'Failed/deteriorating seals, water risk. $2,512. Must before Centerline PMA.' }
   ];
-  BUILDINGS.forEach(b => all.forEach(t => out.push(row(Object.assign({}, t, { building: b })))));
+  centerline.forEach(t => out.push(row(Object.assign({
+    frequency: t.frequency || 'Semi-annual',
+    vendor: 'Centerline Roofing',
+    kind: t.kind || 'contract',
+    must: t.must || 'must',
+    source: 'centerline-2026-09-26',
+    status: 'upcoming',
+    asset: 'Low-slope roof'
+  }, t))));
 
-  const kitchen = [
-    { task: 'Kitchen hood inspection / cleaning (NFPA 96)', frequency: 'Quarterly', next_due: '2026-12-01', notes: 'Interval follows cooking volume. Confirm with hood vendor.' },
-    { task: 'Hood fire-suppression inspection (Ansul / Class K)', frequency: 'Semi-annual', next_due: '2026-11-15', notes: 'Suppression test is not the same as grease cleaning.' },
-    { task: 'Grease interceptor / trap service', frequency: 'Quarterly', next_due: '2026-11-01', notes: '' }
+  const noPma = ['Chapel — 707 N 7th','Harrison — 609-617 Main','Office Building — 110 N 7th','Post Office — 505 Macon','Scholastica — 615 Pike','Standard Oil — 701 Main'];
+  noPma.forEach(b => out.push(row({
+    building: b, task: 'Roof PMA — none on file', frequency: 'Annual', next_due: '2027-04-01',
+    kind: 'envelope', must: 'watch', vendor: '', source: 'gap',
+    notes: 'Not in the 26 Sep Centerline folder. Harrison is Holdings X with 719. Watch until Tim names a vendor.'
+  })));
+
+  const kitchenHotel = [
+    { task: 'Kitchen hood inspection / cleaning (NFPA 96)', frequency: 'Quarterly', next_due: '2026-12-01', must: 'must', notes: 'Vendor. Interval follows cooking volume. Daily filter wash is on the print sheet, not here.', asset: 'CaptiveAire #300 / #301', proof_url: 'https://tools.hotelstcloud.com/kitchen-pm-checklist' },
+    { task: 'Hood fire-suppression inspection (Ansul / Class K)', frequency: 'Semi-annual', next_due: '2026-11-15', must: 'must', notes: 'Licensed. Not the same as grease cleaning. CaptiveAire TANK-SP-1 / Ansul AI-01.', asset: '#302' },
+    { task: 'Grease interceptor / trap service', frequency: 'Quarterly', next_due: '2026-11-01', must: 'must', notes: 'Hotel kitchen. Keep receipts on the drawer.' },
+    { task: 'Manitowoc ice machine — full clean / sanitize', frequency: 'Semi-annual', next_due: '2026-12-01', must: 'must', notes: 'IYT1200A. Nickel-safe cleaner then sanitizer. Daily scoop/bin is on the print sheet.', asset: '#105' },
+    { task: 'Pitco fryers — authorized yearly inspection', frequency: 'Annual', next_due: '2027-02-01', must: 'must', notes: 'Not a line-cook job. Daily filter + weekly pull stay on the print sheet.', asset: '#315 / #316' },
+    { task: 'Gas appliances — yearly licensed tech', frequency: 'Annual', next_due: '2027-02-01', must: 'must', notes: 'Montague, Vulcan, Garland: ignition, gas pressure, flue.', asset: '#210 / #212 / #310–313' },
+    { task: 'Hobart mixer — yearly factory lube', frequency: 'Annual', next_due: '2027-03-01', must: 'watch', notes: 'HL120-1. Do not open the gear case on the floor.', asset: '#208' },
+    { task: 'CaptiveAire fans / MUA — tech service', frequency: 'Semi-annual', next_due: '2026-12-01', must: 'must', notes: 'Motors, bearings, exhaust wheel degrease. Fire hazard if caked.', asset: 'Roof fans' }
   ];
-  ['Hotel St. Cloud — 631 Main', 'Annex — 507 Main'].forEach(b => kitchen.forEach(t => out.push(row(Object.assign({}, t, { building: b })))));
+  kitchenHotel.forEach(t => out.push(row(Object.assign({
+    building: 'Hotel St. Cloud — 631 Main', kind: 'kitchen', vendor: '', source: 'kitchen-pm-1887'
+  }, t))));
 
-  out.push(row({ building: 'Hotel St. Cloud — 631 Main', task: 'Elevator inspection / certificate', frequency: 'Annual', next_due: '2026-11-01', vendor: 'MEI Dispatch', notes: '720-639-8767. Never Billy on this line.' }));
-  out.push(row({ building: 'Hotel St. Cloud — 631 Main', task: 'Fire sprinkler inspection', frequency: 'Quarterly', next_due: '2026-12-01', notes: 'Confirm system is present and which vendor holds the contract.' }));
+  out.push(row({
+    building: 'Annex — 507 Main',
+    task: 'Fremont Provisions kitchen PM pack — PLACEHOLDER',
+    frequency: 'Monthly', next_due: '2026-12-01', kind: 'kitchen', must: 'watch',
+    source: 'placeholder', status: 'off',
+    notes: 'Lindsay will pull an equipment list. Do not clone the 1887 Pitco sheet onto Provisions. Hood / trap rows already exist on this building. Leave this Off until the list lands, then add daily print + monthly vendor jobs.'
+  }));
+  out.push(row({
+    building: 'Annex — 507 Main',
+    task: 'Kitchen hood inspection / cleaning (NFPA 96)',
+    frequency: 'Quarterly', next_due: '2026-12-01', kind: 'kitchen', must: 'must',
+    notes: 'Provisions kitchen. Confirm hood vendor and interval. Daily sheet TBD with equipment list.'
+  }));
+  out.push(row({
+    building: 'Annex — 507 Main',
+    task: 'Hood fire-suppression inspection (Ansul / Class K)',
+    frequency: 'Semi-annual', next_due: '2026-11-15', kind: 'kitchen', must: 'must',
+    notes: 'Suppression test is not grease cleaning.'
+  }));
+  out.push(row({
+    building: 'Annex — 507 Main',
+    task: 'Grease interceptor / trap service',
+    frequency: 'Quarterly', next_due: '2026-11-01', kind: 'kitchen', must: 'must', notes: ''
+  }));
+  out.push(row({
+    building: 'Annex — 507 Main',
+    task: 'Swamp coolers — turn ON for cooling season',
+    frequency: 'Seasonal', next_due: '2027-04-15', kind: 'mechanical', must: 'must',
+    notes: 'Fremont Provisions. Pads, water, covers off. Confirm date with Tim.'
+  }));
+  out.push(row({
+    building: 'Annex — 507 Main',
+    task: 'Swamp coolers — turn OFF / winterize',
+    frequency: 'Seasonal', next_due: '2026-10-15', kind: 'mechanical', must: 'must',
+    notes: 'Fremont Provisions. Drain, covers on before freeze.'
+  }));
 
-  out.push(row({ building: 'Annex — 507 Main', task: 'Swamp coolers — turn ON for cooling season', frequency: 'Seasonal', next_due: '2027-04-15', notes: 'Fremont Provisions. Pads, water, covers off. Confirm exact date with Tim.' }));
-  out.push(row({ building: 'Annex — 507 Main', task: 'Swamp coolers — turn OFF / winterize', frequency: 'Seasonal', next_due: '2026-10-15', notes: 'Fremont Provisions. Drain, covers on before freeze.' }));
+  out.push(row({
+    building: 'Hotel St. Cloud — 631 Main', task: 'Elevator inspection / certificate',
+    frequency: 'Annual', next_due: '2026-11-01', vendor: 'MEI Dispatch', kind: 'life_safety', must: 'must',
+    notes: '720-639-8767. Never Billy on this line.'
+  }));
+  out.push(row({
+    building: 'Hotel St. Cloud — 631 Main', task: 'Fire sprinkler inspection',
+    frequency: 'Quarterly', next_due: '2026-12-01', kind: 'life_safety', must: 'must',
+    notes: 'Confirm system is present and which vendor holds the contract.'
+  }));
+
+  ['Eagles Landing — 225 GCR 465','Grand Lake — 194 GCR 472','Grand Lake — 276 GCR 480'].forEach(b => {
+    lifeSafetyFor(b).forEach(r => {
+      if (b !== 'Eagles Landing — 225 GCR 465') {
+        r.status = 'off';
+        r.must = 'watch';
+        r.notes = (r.notes || '') + ' Parcel is not a staffed Cañon building. Off until occupancy / Tim names what is actually there.';
+      } else {
+        r.notes = (r.notes || '') + ' Grand County snow / freeze. Confirm well, septic, generator with Tim — do not invent.';
+      }
+      out.push(r);
+    });
+  });
+  out.push(row({
+    building: 'Eagles Landing — 225 GCR 465',
+    task: 'Snow / ice roof and access after storms',
+    frequency: 'Seasonal', next_due: '2026-11-15', kind: 'envelope', must: 'must',
+    notes: 'Mountain. Staff or GC. Not in the Centerline Cañon folder.'
+  }));
 
   return out;
 }
 
+function buildSeed() {
+  const out = [];
+  CANON.forEach(b => lifeSafetyFor(b).forEach(r => out.push(r)));
+  catalogExtras().forEach(r => out.push(r));
+  return out;
+}
+
+function mergeCatalog(existing) {
+  const by = {};
+  existing.forEach(r => { by[fp(r)] = r; });
+  let added = 0;
+  buildSeed().forEach(c => {
+    const key = fp(c);
+    const e = by[key];
+    if (!e) {
+      existing.push(c);
+      by[key] = c;
+      added++;
+      return;
+    }
+    ['kind','must','vendor','contract_amount','proof_url','asset'].forEach(k => {
+      if ((e[k] == null || e[k] === '') && c[k]) e[k] = c[k];
+    });
+  });
+  existing.forEach(r => {
+    if (!r.kind) {
+      const t = (r.task || '').toLowerCase();
+      if (/hood|ansul|grease|pitco|fryer|ice|hobart|kitchen/.test(t)) r.kind = 'kitchen';
+      else if (/roof|gutter|centerline|skylight/.test(t)) r.kind = /pma|centerline/.test(t) ? 'contract' : 'envelope';
+      else if (/hvac|backflow|swamp|furnace/.test(t)) r.kind = 'mechanical';
+      else r.kind = 'life_safety';
+    }
+    if (!r.must) r.must = 'must';
+    if (/Roof and gutter walk/.test(r.task || '') && !/after storm/i.test(r.task || '')) {
+      r.task = 'Roof and gutter walk (staff / after storm)';
+    }
+  });
+  return added;
+}
+
 let rows = [];
 let activeFilter = 'all';
+let activeLane = 'all';
 let sortCol = 'next_due';
 let sortDir = 1;
 let activeId = null;
 let saveTimer = null;
-let seededThisLoad = false;
+const ddState = { building: '', freq: '', must: '' };
 
 async function kvGetBundle() {
   const r = await fetch('/api/planner/bundle?ns=' + encodeURIComponent(NS));
@@ -278,21 +498,13 @@ function scheduleSave() {
   saveTimer = setTimeout(saveNow, 700);
 }
 async function saveNow() {
-  await kvPutBundle({ rows: rows, updated_at: new Date().toISOString() });
-}
-
-function fillBuildingSelect() {
-  const sel = document.getElementById('buildingFilter');
-  BUILDINGS.forEach(b => {
-    const o = document.createElement('option');
-    o.value = b; o.textContent = b;
-    sel.appendChild(o);
-  });
+  await kvPutBundle({ rows: rows, updated_at: new Date().toISOString(), schema: 'holdings-pm-v2' });
 }
 
 function todayISO() {
   const d = new Date();
-  return d.toISOString().slice(0,10);
+  const z = new Date(d.getTime() - d.getTimezoneOffset()*60000);
+  return z.toISOString().slice(0,10);
 }
 function dueClass(iso, status) {
   if (!iso || status === 'done' || status === 'off') return '';
@@ -309,117 +521,232 @@ function freqClass(f) {
   return 'freq-month';
 }
 
+function closeMenus() {
+  document.querySelectorAll('.dd-menu.open').forEach(m => m.classList.remove('open'));
+}
+function pinMenu(menu, btn) {
+  const r = btn.getBoundingClientRect();
+  const w = Math.max(180, menu.offsetWidth || 180, r.width);
+  let left = r.left;
+  if (left + w > window.innerWidth - 12) left = Math.max(12, window.innerWidth - w - 12);
+  let top = r.bottom + 4;
+  const h = Math.min(menu.scrollHeight || 200, window.innerHeight * 0.5);
+  if (top + h > window.innerHeight - 8) top = Math.max(8, r.top - h - 4);
+  menu.style.left = left + 'px';
+  menu.style.top = top + 'px';
+  menu.style.minWidth = w + 'px';
+}
+function makeDd(hostId, key, labelEmpty, options) {
+  const host = document.getElementById(hostId);
+  const btnId = hostId + 'Btn';
+  const menuId = hostId + 'Menu';
+  host.innerHTML = `<button type="button" class="dd-btn" id="${btnId}"></button><div class="dd-menu" id="${menuId}"></div>`;
+  const btn = document.getElementById(btnId);
+  const menu = document.getElementById(menuId);
+  function paint() {
+    const cur = ddState[key];
+    const found = options.find(o => o.v === cur);
+    btn.textContent = found ? found.l : labelEmpty;
+    menu.innerHTML = options.map(o => `<div class="dd-item ${o.v===cur?'active':''}" data-v="${o.v}">${o.l}</div>`).join('');
+    menu.querySelectorAll('.dd-item').forEach(el => {
+      el.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        ddState[key] = el.getAttribute('data-v') || '';
+        closeMenus();
+        paint();
+        render();
+      });
+    });
+  }
+  btn.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    const open = menu.classList.contains('open');
+    closeMenus();
+    if (open) return;
+    menu.classList.add('open');
+    pinMenu(menu, btn);
+  });
+  paint();
+  host._paint = paint;
+}
+
 function getFiltered() {
   const q = document.getElementById('searchInput').value.toLowerCase();
-  const bldg = document.getElementById('buildingFilter').value;
-  const freq = document.getElementById('freqFilter').value;
   return rows.filter(r => {
     if (activeFilter !== 'all' && r.status !== activeFilter) return false;
-    if (bldg && r.building !== bldg) return false;
-    if (freq && r.frequency !== freq) return false;
+    if (activeLane !== 'all' && r.kind !== activeLane) return false;
+    if (ddState.building && r.building !== ddState.building) return false;
+    if (ddState.freq && r.frequency !== ddState.freq) return false;
+    if (ddState.must && r.must !== ddState.must) return false;
     if (q) {
-      const hay = [r.task, r.building, r.owner, r.vendor, r.notes].filter(Boolean).join(' ').toLowerCase();
+      const hay = [r.task, r.building, r.owner, r.vendor, r.notes, r.asset].filter(Boolean).join(' ').toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
   });
 }
 function getSorted(list) {
+  const dir = sortDir;
   return [...list].sort((a,b) => {
-    const av = a[sortCol] || '';
-    const bv = b[sortCol] || '';
-    if (av < bv) return -sortDir;
-    if (av > bv) return sortDir;
-    return 0;
+    let av = a[sortCol] || '';
+    let bv = b[sortCol] || '';
+    if (sortCol === 'contract_amount') {
+      av = Number(String(av).replace(/[^0-9.]/g,'')) || 0;
+      bv = Number(String(bv).replace(/[^0-9.]/g,'')) || 0;
+    } else {
+      av = String(av).toLowerCase();
+      bv = String(bv).toLowerCase();
+    }
+    const aEmpty = av === '' || av == null;
+    const bEmpty = bv === '' || bv == null;
+    if (aEmpty && !bEmpty) return 1;
+    if (!aEmpty && bEmpty) return -1;
+    if (av < bv) return -dir;
+    if (av > bv) return dir;
+    return String(a.task||'').localeCompare(String(b.task||''));
   });
 }
 function updateStats() {
-  const c = { all: rows.length, due: 0, upcoming: 0, in_progress: 0, done: 0, off: 0 };
-  rows.forEach(r => { if (c[r.status] !== undefined) c[r.status]++; });
+  const pool = rows.filter(r => activeLane === 'all' || r.kind === activeLane);
+  const c = { all: pool.length, due: 0, upcoming: 0, in_progress: 0, done: 0, off: 0 };
+  pool.forEach(r => { if (c[r.status] !== undefined) c[r.status]++; });
   Object.keys(c).forEach(k => {
     const el = document.getElementById('cnt-' + k);
     if (el) el.textContent = c[k];
   });
 }
+function paintSortHeaders() {
+  document.querySelectorAll('thead th[data-col]').forEach(th => {
+    const on = th.dataset.col === sortCol;
+    th.classList.toggle('on', on);
+    let arrow = th.querySelector('.arrow');
+    if (!arrow) {
+      arrow = document.createElement('span');
+      arrow.className = 'arrow';
+      th.appendChild(arrow);
+    }
+    arrow.textContent = on ? (sortDir === 1 ? ' ▲' : ' ▼') : '';
+  });
+}
 function render() {
   updateStats();
+  document.getElementById('kitchenBanner').classList.toggle('show', activeLane === 'kitchen');
   const list = getSorted(getFiltered());
   const box = document.getElementById('tableContainer');
   if (!list.length) {
-    box.innerHTML = '<div class="empty-state"><div class="es-title">Nothing in this view</div><div>Change filters, or add an item Tim named.</div></div>';
+    box.innerHTML = '<div class="empty-state"><div class="es-title">Nothing in this view</div><div>Change lane or filters, or add an item Tim named.</div></div>';
     return;
   }
   const cols = [
     { key: 'next_due', label: 'Next due' },
+    { key: 'must', label: 'Need' },
     { key: 'building', label: 'Building' },
     { key: 'task', label: 'Task' },
+    { key: 'kind', label: 'Type' },
     { key: 'frequency', label: 'Frequency' },
     { key: 'status', label: 'Status' },
-    { key: 'owner', label: 'Who' }
+    { key: 'vendor', label: 'Vendor / who' },
+    { key: 'contract_amount', label: 'Contract $' }
   ];
-  const thead = cols.map(c => {
-    const arrow = sortCol === c.key ? (sortDir === 1 ? '↑' : '↓') : '↕';
-    return `<th data-col="${c.key}">${c.label} <span style="opacity:.5">${arrow}</span></th>`;
-  }).join('');
+  const thead = cols.map(c => `<th data-col="${c.key}">${c.label}</th>`).join('');
   const tbody = list.map(r => `
     <tr data-id="${r.id}">
       <td class="td-muted ${dueClass(r.next_due, r.status)}">${r.next_due || '—'}</td>
+      <td><span class="badge must-${r.must||'must'}">${MUST_LABEL[r.must] || 'Must'}</span></td>
       <td>${r.building || '—'}</td>
       <td class="td-task">${r.task || '—'}</td>
+      <td><span class="badge kind-${r.kind||'life_safety'}">${KIND_LABEL[r.kind] || r.kind || '—'}</span></td>
       <td><span class="badge ${freqClass(r.frequency)}">${r.frequency || '—'}</span></td>
       <td><span class="badge st-${r.status}">${STATUS_LABEL[r.status] || r.status}</span></td>
-      <td class="td-muted">${r.owner || r.vendor || '—'}</td>
+      <td class="td-muted">${r.vendor || r.owner || '—'}</td>
+      <td class="td-money">${r.contract_amount ? money(r.contract_amount) : '—'}</td>
     </tr>`).join('');
   box.innerHTML = `<table><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table>`;
-  box.querySelectorAll('thead th').forEach(th => {
+  paintSortHeaders();
+  box.querySelectorAll('thead th[data-col]').forEach(th => {
     th.addEventListener('click', () => {
       const col = th.dataset.col;
       if (sortCol === col) sortDir *= -1;
-      else { sortCol = col; sortDir = 1; }
+      else { sortCol = col; sortDir = (col === 'next_due' || col === 'contract_amount') ? 1 : 1; }
+      try { localStorage.setItem(SORT_STORE, JSON.stringify({ key: sortCol, dir: sortDir })); } catch (e) {}
       render();
     });
   });
   box.querySelectorAll('tbody tr').forEach(tr => tr.addEventListener('click', () => openDrawer(tr.dataset.id)));
 }
 
+function esc(s) {
+  const amp = String.fromCharCode(38);
+  return String(s || '').replace(/[&<>"]/g, function (ch) {
+    if (ch === '&') return amp + 'amp;';
+    if (ch === '<') return amp + 'lt;';
+    if (ch === '>') return amp + 'gt;';
+    return amp + 'quot;';
+  });
+}
+
 function openDrawer(id) {
   const r = rows.find(x => x.id === id);
   if (!r) return;
   activeId = id;
-  const bOpts = BUILDINGS.map(b => `<option ${r.building===b?'selected':''}>${b}</option>`).join('');
-  const fOpts = FREQS.map(f => `<option ${r.frequency===f?'selected':''}>${f}</option>`).join('');
   const sOpts = STATUSES.map(s => `<div class="status-opt ${r.status===s?'active':''}" data-s="${s}">${STATUS_LABEL[s]}</div>`).join('');
+  const bOpts = BUILDINGS.map(b => `<option ${r.building===b?'selected':''}>${esc(b)}</option>`).join('');
+  const fOpts = FREQS.map(f => `<option ${r.frequency===f?'selected':''}>${f}</option>`).join('');
+  const kOpts = KINDS.map(k => `<option value="${k}" ${r.kind===k?'selected':''}>${KIND_LABEL[k]}</option>`).join('');
+  const mOpts = MUSTS.map(k => `<option value="${k}" ${r.must===k?'selected':''}>${MUST_LABEL[k]}</option>`).join('');
   document.getElementById('drawerContent').innerHTML = `
-    <div class="drawer-tag">Recurring · ${r.source === 'shell' ? 'shell starter' : 'team item'}</div>
-    <div class="drawer-title">${r.task || 'New item'}</div>
+    <div class="drawer-tag">Recurring · ${r.source === 'shell' ? 'shell starter' : (r.source || 'team item')}</div>
+    <div class="drawer-title">${esc(r.task) || 'New item'}</div>
     <div class="drawer-section">
       <div class="drawer-section-label">What / where</div>
       <label class="lbl">Task</label>
-      <input class="field" id="fTask" value="${(r.task||'').replace(/"/g,'&quot;')}" />
+      <input class="field" id="fTask" value="${esc(r.task)}" />
       <label class="lbl">Building</label>
-      <select class="filter-select field" id="fBuilding">${bOpts}</select>
-      <label class="lbl">Frequency</label>
-      <select class="filter-select field" id="fFreq">${fOpts}</select>
-      <label class="lbl">Next due</label>
-      <input class="field" id="fDue" type="date" value="${r.next_due||''}" />
+      <select class="field" id="fBuilding">${bOpts}</select>
+      <div class="two">
+        <div>
+          <label class="lbl">Type</label>
+          <select class="field" id="fKind">${kOpts}</select>
+        </div>
+        <div>
+          <label class="lbl">Need</label>
+          <select class="field" id="fMust">${mOpts}</select>
+        </div>
+      </div>
+      <div class="two">
+        <div>
+          <label class="lbl">Frequency</label>
+          <select class="field" id="fFreq">${fOpts}</select>
+        </div>
+        <div>
+          <label class="lbl">Next due</label>
+          <input class="field" id="fDue" type="date" value="${esc(r.next_due)}" />
+        </div>
+      </div>
+      <label class="lbl">Asset (hood #, elevator, roof section)</label>
+      <input class="field" id="fAsset" value="${esc(r.asset)}" />
     </div>
     <div class="drawer-section">
       <div class="drawer-section-label">Status</div>
       <div class="status-select-group">${sOpts}</div>
     </div>
     <div class="drawer-section">
-      <div class="drawer-section-label">Who is on it</div>
-      <label class="lbl">Owner (Tim, Lindsay, vendor…)</label>
-      <input class="field" id="fOwner" value="${(r.owner||'').replace(/"/g,'&quot;')}" />
+      <div class="drawer-section-label">Who / contract</div>
+      <label class="lbl">Owner (Tim, Lindsay, chef…)</label>
+      <input class="field" id="fOwner" value="${esc(r.owner)}" />
       <label class="lbl">Vendor</label>
-      <input class="field" id="fVendor" value="${(r.vendor||'').replace(/"/g,'&quot;')}" />
+      <input class="field" id="fVendor" value="${esc(r.vendor)}" />
+      <label class="lbl">Contract $ (annual or this job)</label>
+      <input class="field" id="fAmt" inputmode="decimal" value="${esc(r.contract_amount)}" />
+      <label class="lbl">Proof / sheet URL</label>
+      <input class="field" id="fProof" value="${esc(r.proof_url)}" placeholder="https://…" />
       <label class="lbl">Notes</label>
-      <textarea class="field" id="fNotes">${r.notes||''}</textarea>
-      <button class="save-btn" id="saveBtn">Save</button>
+      <textarea class="field" id="fNotes">${esc(r.notes).replace(/&quot;/g,'"')}</textarea>
+      <button class="save-btn" id="saveBtn" type="button">Save</button>
       <div class="saved-msg" id="savedMsg"></div>
     </div>
     <div class="drawer-section">
-      <button id="deleteBtn" style="width:100%;padding:10px;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;border:1px solid rgba(255,77,77,.3);background:rgba(255,77,77,.07);color:var(--danger);">Delete this item</button>
+      <button id="deleteBtn" type="button" style="width:100%;padding:10px;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;border:1px solid rgba(255,77,77,.3);background:rgba(255,77,77,.07);color:var(--danger);min-height:40px;">Delete this item</button>
     </div>`;
   document.querySelectorAll('.status-opt').forEach(el => {
     el.addEventListener('click', () => {
@@ -440,13 +767,19 @@ async function saveDrawer(id) {
   btn.disabled = true; btn.textContent = 'Saving…';
   r.task = document.getElementById('fTask').value.trim();
   r.building = document.getElementById('fBuilding').value;
+  r.kind = document.getElementById('fKind').value;
+  r.must = document.getElementById('fMust').value;
   r.frequency = document.getElementById('fFreq').value;
   r.next_due = document.getElementById('fDue').value;
+  r.asset = document.getElementById('fAsset').value.trim();
   r.status = document.querySelector('.status-opt.active')?.dataset.s || r.status;
   r.owner = document.getElementById('fOwner').value.trim();
   r.vendor = document.getElementById('fVendor').value.trim();
+  r.contract_amount = document.getElementById('fAmt').value.trim().replace(/[^0-9.]/g,'');
+  r.proof_url = document.getElementById('fProof').value.trim();
   r.notes = document.getElementById('fNotes').value;
   r.updated_at = new Date().toISOString();
+  if (r.source === 'shell') r.source = 'team';
   await saveNow();
   render();
   btn.disabled = false; btn.textContent = 'Save';
@@ -475,20 +808,30 @@ function closeDrawer() {
 }
 
 function addItem() {
-  const r = row({ task: '', status: 'upcoming', source: 'team', next_due: todayISO() });
+  const r = row({
+    task: '', status: 'upcoming', source: 'team', next_due: todayISO(),
+    kind: activeLane === 'all' ? 'life_safety' : activeLane, must: 'must'
+  });
   rows.unshift(r);
   render();
   openDrawer(r.id);
 }
 
 async function boot() {
-  fillBuildingSelect();
+  makeDd('ddBuilding', 'building', 'All buildings', [{v:'', l:'All buildings'}].concat(BUILDINGS.map(b => ({v:b, l:b}))));
+  makeDd('ddFreq', 'freq', 'All frequencies', [{v:'', l:'All frequencies'}].concat(FREQS.map(f => ({v:f, l:f}))));
+  makeDd('ddMust', 'must', 'Must / watch / optional', [{v:'', l:'Must / watch / optional'}].concat(MUSTS.map(m => ({v:m, l:MUST_LABEL[m]}))));
+  try {
+    const s = JSON.parse(localStorage.getItem(SORT_STORE) || '{}');
+    if (s.key) { sortCol = s.key; sortDir = s.dir === -1 || s.dir === 'desc' ? -1 : 1; }
+  } catch (e) {}
   const data = await kvGetBundle();
   if (Array.isArray(data.rows) && data.rows.length) {
     rows = data.rows;
+    const added = mergeCatalog(rows);
+    if (added) await saveNow();
   } else {
     rows = buildSeed();
-    seededThisLoad = true;
     await saveNow();
   }
   render();
@@ -497,8 +840,6 @@ async function boot() {
 document.getElementById('drawerClose').addEventListener('click', closeDrawer);
 document.getElementById('drawerBackdrop').addEventListener('click', closeDrawer);
 document.getElementById('searchInput').addEventListener('input', render);
-document.getElementById('buildingFilter').addEventListener('change', render);
-document.getElementById('freqFilter').addEventListener('change', render);
 document.getElementById('addBtn').addEventListener('click', addItem);
 document.querySelectorAll('.stat-pill').forEach(pill => {
   pill.addEventListener('click', () => {
@@ -508,6 +849,16 @@ document.querySelectorAll('.stat-pill').forEach(pill => {
     render();
   });
 });
+document.querySelectorAll('.lane').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.lane').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    activeLane = btn.dataset.lane;
+    render();
+  });
+});
+document.addEventListener('click', closeMenus);
+window.addEventListener('scroll', closeMenus, true);
 
 function uhgSetTheme(theme) {
   const t = theme === 'paper' ? 'paper' : 'dark';
@@ -528,7 +879,6 @@ function uhgSyncThemeToggle() {
 document.getElementById('theme-paper-btn').addEventListener('click', () => uhgSetTheme('paper'));
 document.getElementById('theme-dark-btn').addEventListener('click', () => uhgSetTheme('dark'));
 uhgSyncThemeToggle();
-
 boot();
 </script>
 </body>
