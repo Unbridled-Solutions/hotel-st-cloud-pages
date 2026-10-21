@@ -608,6 +608,47 @@ def build_dashboard(data):
       letter-spacing: 0.5px;
     }}
     footer span {{ color: var(--gold); opacity: 0.6; }}
+
+    /* ── AD PREVIEWS ── */
+    .ad-links {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }}
+    a.ad-chip {{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--gold);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      transform: scale(1);
+      transition-property: transform, opacity, background-color, border-color, color;
+      transition-duration: 120ms;
+      transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+    }}
+    a.ad-chip:hover {{ border-color: var(--gold); background: #1a2e3b; }}
+    a.ad-chip:focus-visible {{ outline: 2px solid var(--gold); outline-offset: 2px; }}
+    a.ad-chip:active {{ transform: scale(0.96); }}
+    a.cc-ad {{
+      margin-top: 12px;
+      font-size: 12px;
+      min-height: 40px;
+      width: 100%;
+    }}
+    @media (pointer: coarse) {{
+      a.ad-chip {{ min-height: 44px; min-width: 44px; }}
+    }}
+    @media (prefers-reduced-motion: reduce) {{
+      a.ad-chip {{ transition: none; }}
+      a.ad-chip:active {{ transform: none; }}
+    }}
   </style>
 </head>
 <body>
@@ -645,6 +686,21 @@ def build_dashboard(data):
         <div class="value">{int(p['conversions'])}</div>
         <div class="sub">All campaigns</div>
       </div>
+    </div>
+  </section>
+
+  <!-- ── AD PREVIEWS (keep on every 6am rebuild) ── -->
+  <section>
+    <div class="section-title">Ad Previews</div>
+    <div class="ad-links">
+      <a class="ad-chip" href="https://offers.hotelstcloud.com/assets/ad-headlines-preview" target="_blank" rel="noopener">All 15 headlines</a>
+      <a class="ad-chip" href="https://offers.hotelstcloud.com/assets/bars-bathrooms-ad-preview" target="_blank" rel="noopener">Local Proximity ads</a>
+      <a class="ad-chip" href="https://offers.hotelstcloud.com/assets/basecamp-ad-preview" target="_blank" rel="noopener">Basecamp ads</a>
+      <a class="ad-chip" href="https://offers.hotelstcloud.com/assets/fp-sports-ad-preview" target="_blank" rel="noopener">FP Sports ads</a>
+      <a class="ad-chip" href="https://offers.hotelstcloud.com/assets/standard-oil-ad-preview" target="_blank" rel="noopener">Standard Oil ads</a>
+      <a class="ad-chip" href="https://offers.hotelstcloud.com/assets/standard-oil-hiring-preview" target="_blank" rel="noopener">SO hiring ads</a>
+      <a class="ad-chip" href="https://offers.hotelstcloud.com/stay" target="_blank" rel="noopener">Stay landing</a>
+      <a class="ad-chip" href="https://offers.hotelstcloud.com/1887-dining-offer" target="_blank" rel="noopener">1887 dining offer</a>
     </div>
   </section>
 
@@ -695,6 +751,7 @@ def build_dashboard(data):
           <span class="tag">Highway 50</span>
           <span class="tag">Drive Market</span>
         </div>
+        <a class="ad-chip cc-ad" href="https://offers.hotelstcloud.com/assets/bars-bathrooms-ad-preview" target="_blank" rel="noopener">Open ads</a>
       </div>
 
       <!-- FP Sports Bar | Fremont Provisions -->
@@ -739,6 +796,7 @@ def build_dashboard(data):
           <span class="tag">Game Day</span>
           <span class="tag">Canon City</span>
         </div>
+        <a class="ad-chip cc-ad" href="https://offers.hotelstcloud.com/assets/fp-sports-ad-preview" target="_blank" rel="noopener">Open ads</a>
       </div>
 
       <!-- Hotel St. Cloud | Royal Gorge Basecamp -->
@@ -783,6 +841,7 @@ def build_dashboard(data):
           <span class="tag">Royal Gorge</span>
           <span class="tag">Adventure</span>
         </div>
+        <a class="ad-chip cc-ad" href="https://offers.hotelstcloud.com/assets/basecamp-ad-preview" target="_blank" rel="noopener">Open ads</a>
       </div>
 
       <!-- Standard Oil Coffee Co -->
@@ -827,6 +886,7 @@ def build_dashboard(data):
           <span class="tag">Main Street</span>
           <span class="tag">Cafe</span>
         </div>
+        <a class="ad-chip cc-ad" href="https://offers.hotelstcloud.com/assets/standard-oil-ad-preview" target="_blank" rel="noopener">Open ads</a>
       </div>
     </div>
   </section>
