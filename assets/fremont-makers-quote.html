@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v1014h</title>
+<title>Fremont Makers — Project Builder v1014i</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20261014h-markup-scroll -->
+<!-- FM-BUILD-v20261014i-co-qty-house -->
 <script>
 (function(){
   try {
@@ -746,7 +746,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1014h</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1014i</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <span class="status-label">Status:</span>
@@ -1695,6 +1695,11 @@
   <div class="modal" style="max-width:min(1240px,96vw);width:96vw;text-align:left;max-height:96vh;overflow:auto;">
     <h3 id="co-title">Change order</h3>
     <p id="co-sub" style="font-size:13px;color:var(--muted);margin-bottom:12px;"></p>
+    <div id="co-scope-wrap" style="display:none;margin-bottom:12px;text-align:left;">
+      <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Where this change order lives</label>
+      <select id="co-scope" onchange="coSetScope(this.value)" style="width:100%;max-width:560px;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;"></select>
+      <p style="font-size:12px;color:var(--muted);margin-top:6px;">Whole order keeps SKUs off any one house. Pick a house to put the boxes on that house only.</p>
+    </div>
     <div id="co-step-1" class="co-step on">
       <p style="font-size:14px;margin-bottom:8px;">What is changing on this contracted job?</p>
       <div class="co-pills">
@@ -2152,10 +2157,16 @@ function sqParseText(text) {
     const parsed = parseWholesaleCabinetsQuote(text);
     const harvested = wcOcrHarvestSkus(text);
     const by = {};
-    (parsed.items || []).concat(harvested).forEach(it => {
+    (parsed.items || []).forEach(it => {
       if (!it || !wcIsRealSku(it.serial)) return;
       if (wcIsBillNoise(it)) return;
       by[String(it.serial).toUpperCase()] = it;
+    });
+    harvested.forEach(it => {
+      if (!it || !wcIsRealSku(it.serial)) return;
+      if (wcIsBillNoise(it)) return;
+      const k = String(it.serial).toUpperCase();
+      if (!by[k]) by[k] = it;
     });
     const items = Object.values(by);
     _sqBillCheck = parsed.bill || null;
@@ -2228,6 +2239,22 @@ function wcIsBillNoise(it) {
 function wcStripBillFooter(text) {
   return String(text || '').split(/\n\s*(?:Order\s*Total|Invoice\s*Total|Quote\s*Total|Grand\s*Total)\b/i)[0];
 }
+function wcHarvestQty(after) {
+  const blob = String(after || '');
+  const m = blob.match(/(?:RTA\s*Cabinets?|Cabinets?)\s*\n?\s*([1-9]\d{0,2})\b/i)
+    || blob.match(/\bQty(?:uity)?\s*[:\s]*([1-9]\d{0,2})\b/i);
+  if (m) {
+    const n = parseInt(m[1], 10);
+    if (n >= 1 && n <= 200) return n;
+  }
+  const cleaned = blob.replace(/\$\s*[\d,]+(?:\.\d{2})?/g, ' ');
+  const qtyM = cleaned.match(/\b([1-9]\d{0,2})\b/);
+  if (qtyM) {
+    const n = parseInt(qtyM[1], 10);
+    if (n >= 1 && n <= 200) return n;
+  }
+  return 1;
+}
 function wcOcrHarvestSkus(text) {
   const blob = wcStripBillFooter(text);
   const re = /\b([A-Z]{1,8}\d[A-Z0-9.()]{0,16}-[A-Z]{2,4})\b/g;
@@ -2241,9 +2268,7 @@ function wcOcrHarvestSkus(text) {
     if (!wcLooksLikeSerial(serial) || seen.has(serial)) continue;
     seen.add(serial);
     const after = blob.slice(m.index + m[0].length, m.index + m[0].length + 320);
-    let qty = 1;
-    const qtyM = after.match(/\b([1-9]\d?)\b/);
-    if (qtyM) qty = parseInt(qtyM[1], 10);
+    const qty = wcHarvestQty(after);
     const prices = [];
     const pr = /\$?\s*([\d,]+\.\d{2})/g;
     let p;
@@ -2987,7 +3012,9 @@ function renderDashboard() {
 
   function dashActions(quote, st, isChild) {
     const packet = '';
-    const sched = (st === 'contract' && !isChild) ? `<button class="modal-btn" onclick="event.stopPropagation();window._adjId='${quote.id}';openChangeOrder()">Create change order</button>` : '';
+    const sched = (st === 'contract' && !isChild) ? `<button class="modal-btn" onclick="event.stopPropagation();window._adjId='${quote.id}';openChangeOrder('${quote.id}')">Create change order</button>` : '';
+    const houseCo = (isChild && (st === 'contract' || pipeStatus(quoteData[(quoteData[quote.id]||quote).parentOrderId] || {}) === 'contract'))
+      ? `<button class="modal-btn" onclick="event.stopPropagation();openChangeOrder('${quote.id}')">Change order this house</button>` : '';
     const loadLbl = isChild ? 'Open house' : (quoteKind(quoteData[quote.id] || quote) === 'order' ? 'Open order' : 'Load');
     const dup = (!isChild && quoteKind(quoteData[quote.id] || quote) !== 'order')
       ? `<button class="modal-btn" onclick="duplicateQuote('${quote.id}')">Duplicate</button>` : '';
@@ -2997,6 +3024,7 @@ function renderDashboard() {
             ${isChild ? `<button class="modal-btn" onclick="event.stopPropagation();openHouseElevation('${quote.id}')">Elevation</button>` : ''}
             ${isChild ? `<button class="modal-btn" onclick="event.stopPropagation();clearHouseManufacturerUpload('${quote.id}')">Clear PDF</button>` : ''}
             ${sched}
+            ${houseCo}
             <button class="modal-btn del" onclick="event.stopPropagation();deleteQuote('${quote.id}')">${isChild ? 'Remove house' : 'Delete'}</button>
             ${packet}
           </div>`;
@@ -3991,6 +4019,7 @@ function renderOrderSummary(orderId) {
         + '<button class="modal-btn" type="button" onclick="loadQuoteAndSwitchTab(\'' + ch.id + '\')">Open house</button>'
         + '<button class="modal-btn" type="button" onclick="openHouseElevation(\'' + ch.id + '\')">Elevation</button>'
         + '<button class="modal-btn" type="button" onclick="event.stopPropagation();importPdfIntoHouse(\'' + ch.id + '\')">Import PDF</button>'
+        + '<button class="modal-btn" type="button" onclick="event.stopPropagation();openChangeOrder(\'' + ch.id + '\')">Change order this house</button>'
         + '<button class="modal-btn" type="button" onclick="event.stopPropagation();clearHouseManufacturerUpload(\'' + ch.id + '\')">Clear PDF</button>'
         + '<button class="modal-btn del" type="button" onclick="event.stopPropagation();deleteQuote(\'' + ch.id + '\')">Remove house</button>'
         + '</div></td></tr>';
@@ -6008,26 +6037,76 @@ async function coRequestSignatures() {
   if (msg) msg.textContent = out.ok ? 'Sent to ' + email + '.' : (out.error || 'Send failed.');
 }
 
-function openChangeOrder() {
-  const id = scheduleTargetId(window._adjId);
+function openChangeOrder(idArg) {
+  const start = idArg || window._adjId || activeQuoteId;
+  const startQ = quoteData[start] || {};
+  const parentId = (quoteKind(startQ) === 'child' && startQ.parentOrderId) ? startQ.parentOrderId : ((quoteKind(startQ) === 'order') ? start : start);
+  const parent = quoteData[parentId] || startQ;
+  const kids = quoteKind(parent) === 'order' ? childrenOfOrder(parentId) : [];
+  let id = start;
+  if (quoteKind(startQ) === 'order') id = parentId;
   const q = quoteData[id] || {};
-  if (pipeStatus(q) !== 'contract') {
+  const parentContracted = pipeStatus(parent) === 'contract' || pipeStatus(q) === 'contract';
+  if (!parentContracted && pipeStatus(q) !== 'contract') {
     alert('Change orders are for contracted jobs.');
     return;
   }
-  const total = contractTotalOf(q, quoteGrandFromData(q) || 0);
-  const skuNow = coSkuSellOf(q.cabinets || [], q);
-  window._co = { id: id, kind: 'skus', cabinets: JSON.parse(JSON.stringify(q.cabinets || [])), oldCabinets: JSON.parse(JSON.stringify(q.cabinets || [])), oldTotal: total, oldSkuTotal: skuNow, newTotal: skuNow, payChoice: 'keep' };
+  coLoadTarget(id, parentId, kids);
   coSetKind('skus');
   const reason = document.getElementById('co-reason');
   if (reason) reason.value = '';
-  const sub = document.getElementById('co-sub');
-  if (sub) sub.textContent = (q.customer || '') + ' · ' + (q.jobCode || '') + ' · contracted total ' + fmt(total);
   const em = document.getElementById('co-sign-email');
-  if (em) em.value = q.customerEmail || document.getElementById('customer-email')?.value || '';
+  if (em) em.value = q.customerEmail || parent.customerEmail || document.getElementById('customer-email')?.value || '';
+  coPaintScope();
   coGo(1);
   const el = document.getElementById('change-order-modal');
   if (el) el.classList.add('open');
+}
+function coLoadTarget(id, parentId, kids) {
+  const q = quoteData[id] || {};
+  const total = contractTotalOf(q, quoteGrandFromData(q) || 0);
+  const skuNow = coSkuSellOf(q.cabinets || [], q);
+  window._co = {
+    id: id,
+    parentId: parentId || id,
+    kind: 'skus',
+    cabinets: JSON.parse(JSON.stringify(q.cabinets || [])),
+    oldCabinets: JSON.parse(JSON.stringify(q.cabinets || [])),
+    oldTotal: total,
+    oldSkuTotal: skuNow,
+    newTotal: skuNow,
+    payChoice: 'keep'
+  };
+  const sub = document.getElementById('co-sub');
+  if (sub) {
+    const house = quoteKind(q) === 'child' ? ((q.modelName || 'House') + (q.unitIndex ? ' ' + q.unitIndex : '') + ' · ') : (quoteKind(q) === 'order' ? 'Whole order · ' : '');
+    sub.textContent = house + (q.customer || '') + ' · ' + (q.jobCode || '') + ' · contracted total ' + fmt(total);
+  }
+}
+function coPaintScope() {
+  const wrap = document.getElementById('co-scope-wrap');
+  const sel = document.getElementById('co-scope');
+  const c = window._co;
+  if (!wrap || !sel || !c) return;
+  const parent = quoteData[c.parentId] || {};
+  const kids = quoteKind(parent) === 'order' ? childrenOfOrder(c.parentId) : [];
+  if (!kids.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  let html = '<option value="' + c.parentId + '">Whole order — extras not on a house</option>';
+  kids.forEach(k => {
+    const qd = quoteData[k.id] || k;
+    const label = (qd.jobCode || '') + ' · ' + (qd.modelName || 'House') + (qd.unitIndex ? ' ' + qd.unitIndex : '') + (qd.address ? ' · ' + qd.address : '');
+    html += '<option value="' + k.id + '">' + label + '</option>';
+  });
+  sel.innerHTML = html;
+  sel.value = c.id;
+}
+function coSetScope(id) {
+  const c = window._co;
+  if (!c || !id) return;
+  coLoadTarget(id, c.parentId);
+  coPaintScope();
+  if (document.getElementById('co-step-2')?.classList.contains('on')) coPaintSkus();
 }
 function saveChangeOrder(keepOpen) {
   const c = window._co;
@@ -6085,6 +6164,9 @@ function saveChangeOrder(keepOpen) {
     oldSkuTotal: c.oldSkuTotal != null ? c.oldSkuTotal : coSkuSellOf(c.oldCabinets || [], q),
     newTotal: skuTotal,
     billTotal: billTotal,
+    scope: quoteKind(q) === 'child' ? 'house' : (quoteKind(q) === 'order' ? 'order' : 'job'),
+    houseId: quoteKind(q) === 'child' ? c.id : '',
+    parentOrderId: quoteKind(q) === 'child' ? (q.parentOrderId || c.parentId) : (quoteKind(q) === 'order' ? c.id : ''),
     signatures: 'pending',
     diff: c.diff || null,
     cabinets: JSON.parse(JSON.stringify(c.cabinets || q.cabinets || [])),
