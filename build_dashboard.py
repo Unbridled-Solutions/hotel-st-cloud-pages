@@ -100,17 +100,19 @@ def build_dashboard(data):
     branded_clicks = sum(t['clicks'] for t in branded_terms)
     branded_spend = sum(t['spend'] for t in branded_terms)
 
-    # Build MC commentary
+    # Build MC commentary — date-driven, no leftover month names
     lp_comment = (
-        f"<strong>Local Proximity &amp; Through Traffic: {fmt_num(lp['impressions'])} impr, "
+        f"<strong>Local Proximity & Through Traffic: {fmt_num(lp['impressions'])} impr, "
         f"{fmt_num(lp['clicks'])} clicks, {fmt_pct(lp['ctr'])} CTR, "
         f"{int(lp['conversions'])} conversions, {fmt_dollars(lp['spend'])}.</strong> "
         f"The bread-and-butter campaign keeps delivering. "
         f"CTR at {fmt_pct(lp['ctr'])} — well above industry average. "
-        f"Spend ticked up slightly with Aug 2 coming in at {fmt_dollars(lp_spend_daily[-1])} on {lp_clicks_daily[-1]} clicks. "
+        f"{end_lbl} came in at {fmt_dollars(lp_spend_daily[-1])} on {lp_clicks_daily[-1]} clicks. "
     )
     if lp['conversions'] > 0:
         lp_comment += f"{int(lp['conversions'])} conversions at {fmt_dollars(lp_conv_cpa)} each. "
+    else:
+        lp_comment += "Zero conversions this window — high CTR, no tracked bookings. "
     lp_comment += "LP is the portfolio anchor. Budget holds."
 
     fp_comment = (
@@ -118,40 +120,50 @@ def build_dashboard(data):
         f"{fmt_num(fp['clicks'])} clicks, {fmt_pct(fp['ctr'])} CTR, "
         f"{int(fp['conversions'])} conversion{'s' if fp['conversions'] != 1 else ''}, {fmt_dollars(fp['spend'])}.</strong> "
         f"Volume machine — high impressions, high clicks, thin CTR. "
-        f"\"Restaurants near me\" and \"food near me\" dominating. "
-        f"Aug 1 spike held into Aug 2 ({fp_clicks_daily[-1]} clicks). "
+        f"&quot;Restaurants near me&quot; and &quot;food near me&quot; dominating. "
+        f"{end_lbl} closed at {fp_clicks_daily[-1]} clicks. "
     )
     if fp['conversions'] == 0:
         fp_comment += "Zero conversions again. Click volume without landing page conversion is a wheel spinning. The conversion mechanism needs attention."
     else:
         fp_comment += f"{int(fp['conversions'])} conversion{'s' if fp['conversions'] != 1 else ''} at {fmt_dollars(fp_conv_cpa)} CPA."
 
+    bc_avg_impr = bc['impressions'] // 7 if bc['impressions'] > 0 else 0
     bc_comment = (
         f"<strong>Hotel St. Cloud | Royal Gorge Basecamp: {fmt_num(bc['impressions'])} impr, "
         f"{fmt_num(bc['clicks'])} clicks, {fmt_pct(bc['ctr'])} CTR, "
         f"{int(bc['conversions'])} conversion{'s' if bc['conversions'] != 1 else ''}, {fmt_dollars(bc['spend'])}.</strong> "
-        f"Solid mid-week recovery with Aug 2 posting {bc_clicks_daily[-1]} clicks on {bc['impressions'] // 7 if bc['impressions'] > 0 else 'N/A'} avg daily impressions. "
-        f"Spend bumped on Jul 28 and Aug 2 — consistent with higher-intent days. "
+        f"{end_lbl} posted {bc_clicks_daily[-1]} clicks on ~{bc_avg_impr} avg daily impressions. "
     )
     if bc['conversions'] > 0:
-        bc_comment += f"{int(bc['conversions'])} conversion at {fmt_dollars(bc_conv_cpa)}. Basecamp is steady — watch for trend continuation."
+        bc_comment += f"{int(bc['conversions'])} conversion{'s' if bc['conversions'] != 1 else ''} at {fmt_dollars(bc_conv_cpa)} CPA. Basecamp is the conversion engine this window — watch for trend continuation."
     else:
         bc_comment += "No conversions this window. Pattern worth monitoring."
 
-    so_comment = (
-        f"<strong>Standard Oil Coffee Co: {fmt_num(so['impressions'])} impr, "
-        f"{fmt_num(so['clicks'])} clicks, {fmt_pct(so['ctr'])} CTR, "
-        f"{int(so['conversions'])} conversions, {fmt_dollars(so['spend'])}.</strong> "
-        f"Flat. CTR at {fmt_pct(so['ctr'])} with zero conversions — again. "
-        f"Aug 2 showed {so_clicks_daily[-1]} clicks and {fmt_dollars(so_spend_daily[-1])} spend, the only blip of life. "
-        f"Conversion tracking is broken or the funnel is. Either way, spending without return. "
-        f"This campaign needs a decision, not more budget."
-    )
+    if so['impressions'] == 0 and so['clicks'] == 0 and so['spend'] == 0:
+        so_comment = (
+            f"<strong>Standard Oil Coffee Co: {fmt_num(so['impressions'])} impr, "
+            f"{fmt_num(so['clicks'])} clicks, {fmt_pct(so['ctr'])} CTR, "
+            f"{int(so['conversions'])} conversions, {fmt_dollars(so['spend'])}.</strong> "
+            f"No delivery this window — zero impressions, zero spend. "
+            f"Live in name only. Check ad-group status, budget, and disapprovals. This campaign needs a decision, not more budget."
+        )
+    else:
+        so_comment = (
+            f"<strong>Standard Oil Coffee Co: {fmt_num(so['impressions'])} impr, "
+            f"{fmt_num(so['clicks'])} clicks, {fmt_pct(so['ctr'])} CTR, "
+            f"{int(so['conversions'])} conversions, {fmt_dollars(so['spend'])}.</strong> "
+            f"CTR at {fmt_pct(so['ctr'])}. "
+            f"{end_lbl} showed {so_clicks_daily[-1]} clicks and {fmt_dollars(so_spend_daily[-1])} spend. "
+        )
+        if so['conversions'] == 0:
+            so_comment += "Zero conversions. Conversion tracking is broken or the funnel is. This campaign needs a decision, not more budget."
+        else:
+            so_comment += f"{int(so['conversions'])} conversions. Keep watching."
 
     port_comment = (
         f"<strong>Portfolio: {fmt_dollars(p['spend'])} spend, {fmt_num(p['clicks'])} clicks, "
         f"{fmt_num(p['impressions'])} impressions, {int(p['conversions'])} conversions.</strong> "
-        f"Spend crossed $1,000 this window — up from $993.85 last week. "
     )
     if branded_clicks > 0:
         port_comment += (
