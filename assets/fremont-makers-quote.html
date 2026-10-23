@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v1014g</title>
+<title>Fremont Makers — Project Builder v1014h</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20261014g-pnl-fmt -->
+<!-- FM-BUILD-v20261014h-markup-scroll -->
 <script>
 (function(){
   try {
@@ -360,13 +360,49 @@
   #dashboard-view .quote-table tbody tr.row-order td { font-weight: 600; }
   .npw-choice { display:flex; flex-direction:column; gap:8px; margin:12px 0 16px; }
   .npw-choice button { text-align:left; padding:12px 14px; }
-  #npw-modal .modal { max-width: 720px; }
-  #npw-step .quote-table { table-layout: fixed; }
+  #npw-modal.modal-overlay,
+  #import-modal.modal-overlay {
+    overflow: auto;
+    align-items: flex-start;
+    padding: 12px 0;
+  }
+  #npw-modal .modal,
+  #import-modal .modal {
+    max-width: min(960px, 96vw);
+    width: 96vw;
+    max-height: 92vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    text-align: left;
+    margin: auto;
+  }
+  #npw-step,
+  #sq-panel-import {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+  }
+  #npw-modal .modal-btns,
+  #import-modal .modal-btns-row {
+    flex-shrink: 0;
+  }
+  .markup-grid-scroll {
+    overflow: auto;
+    max-height: min(62vh, calc(92vh - 210px));
+    min-height: 140px;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .markup-grid-scroll .quote-table { min-width: 640px; table-layout: auto; }
+  .markup-grid-scroll thead th {
+    position: sticky; top: 0; background: var(--surface); z-index: 1;
+  }
+  #npw-step .quote-table { table-layout: auto; }
   #npw-step .quote-table thead th { text-align: left; }
-  #npw-step .quote-table tbody td { white-space: nowrap; overflow: hidden; }
-  #npw-step .quote-table tbody td:first-child { width: 150px; white-space: nowrap; }
-  #npw-step .quote-table tbody td:nth-child(2) { overflow: visible; }
-  #npw-step .quote-table tbody td:last-child { text-align: left; width: 220px; }
+  #npw-step .quote-table tbody td { white-space: normal; overflow: visible; }
+  #npw-step .quote-table tbody td:last-child { text-align: right; }
   #dashboard-view .quote-table tbody tr.row-proposed { background: var(--row-proposed); }
   #dashboard-view .quote-table tbody tr.row-contract { background: var(--row-contract); }
   #dashboard-view .quote-table tbody tr.row-completed { background: var(--row-completed); }
@@ -710,7 +746,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1014g</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1014h</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <span class="status-label">Status:</span>
@@ -1521,7 +1557,7 @@
 
 <!-- NEW PROJECT WIZARD -->
 <div class="modal-overlay" id="npw-modal">
-  <div class="modal" style="max-width:760px;width:95%;text-align:left;">
+  <div class="modal" style="max-width:min(960px,96vw);width:96%;text-align:left;">
     <h3 id="npw-title">New Project</h3>
     <p id="npw-lede" style="color:var(--muted);font-size:13px;margin-bottom:8px;">Cabinets first. Framing and woodshop wait.</p>
     <div id="npw-step"></div>
@@ -1534,7 +1570,7 @@
 
 <!-- IMPORT SUPPLIER QUOTE MODAL -->
 <div class="modal-overlay" id="import-modal">
-  <div class="modal" style="max-width:580px;width:95%">
+  <div class="modal" style="max-width:min(960px,96vw);width:96%;text-align:left;">
     <h3>📥 Supplier Quotes</h3>
     <!-- Tab bar -->
     <div style="display:flex;gap:0;margin-bottom:16px;border-bottom:1px solid var(--border);">
@@ -1587,12 +1623,12 @@
         <p style="font-size:11px;color:var(--muted);margin-top:8px;">Cabinet costs must match the Wholesale Cabinets bill (subtotal, tax, total). Next you set markup per line — some items can be 0%.</p>
       </div>
       <div id="sq-markup-wrap" style="display:none;margin-top:12px;"></div>
-      <div style="display:flex;gap:8px;margin-top:14px;">
+      <div style="display:flex;gap:8px;margin-top:14px;" class="modal-btns-row">
         <button class="modal-btn" id="sq-import-confirm-btn" onclick="sqConfirmImport()" style="display:none;border-color:#4ade80;color:#4ade80;font-weight:700;">Next: set markup</button>
         <button class="modal-btn confirm" id="sq-markup-apply-btn" onclick="sqApplyMarkupImport()" style="display:none;">Load into quote</button>
       </div>
     </div>
-    <div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end;">
+    <div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end;" class="modal-btns-row">
       <button class="modal-btn" onclick="closeImportModal()">Cancel</button>
     </div>
   </div>
@@ -2765,6 +2801,8 @@ function sqConfirmImport() {
     alert('Scan does not match the Wholesale Cabinets bill. Fix the import before loading.');
     return;
   }
+  const preview = document.getElementById('sq-import-preview');
+  if (preview) preview.style.display = 'none';
   const wrap = document.getElementById('sq-markup-wrap');
   const applyBtn = document.getElementById('sq-markup-apply-btn');
   const confirmBtn = document.getElementById('sq-import-confirm-btn');
@@ -4195,7 +4233,7 @@ function markupGridHtml(lines, prefix) {
     + '<span style="font-size:13px;color:var(--muted);">%</span>'
     + '<button type="button" class="modal-btn" onclick="markupSetAll(\'' + prefix + '\')">Apply to all</button>'
     + '</div>'
-    + '<div style="overflow:auto;max-height:48vh;"><table class="quote-table" style="min-width:640px;"><thead><tr><th>Description</th><th>SKU</th><th class="r">Qty</th><th class="r">Cost</th><th>Markup</th><th class="r">Sell</th></tr></thead><tbody>'
+    + '<div class="markup-grid-scroll"><table class="quote-table"><thead><tr><th>Description</th><th>SKU</th><th class="r">Qty</th><th class="r">Cost</th><th>Markup</th><th class="r">Sell</th></tr></thead><tbody>'
     + (rows || '<tr><td colspan="6">No lines</td></tr>')
     + '</tbody></table></div>';
 }
