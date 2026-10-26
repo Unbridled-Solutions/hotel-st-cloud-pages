@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
-  <title>Fremont Makers — Contract Packet v1014j</title>
-  <!-- FM-PACKET-v1014j-contracted -->
+  <title>Fremont Makers — Contract Packet v1014l</title>
+  <!-- FM-PACKET-v1014l-co-inv -->
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Pinyon+Script&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     :root { --ink:#1a1a1a; --muted:#666; --line:#d8d4cc; --gold:#c9a84c; --paper:#fff; --screen:#111; }
@@ -69,7 +69,7 @@
 </head>
 <body>
   <div class="bar">
-    <strong>Fremont Makers · Contract packet <span style="opacity:.45;letter-spacing:0;">v1014j</span></strong>
+    <strong>Fremont Makers · Contract packet <span style="opacity:.45;letter-spacing:0;">v1014l</span></strong>
     <div class="actions">
       <span class="save-ok" id="save-msg"></span>
       <button type="button" onclick="window.print()">Print</button>
@@ -91,7 +91,8 @@ function qs() {
     id: p.get('id') || '',
     invoice: parseInt(p.get('invoice') || '0', 10) || 0,
     receipt: (p.get('receipt') || '').toLowerCase(),
-    co: parseInt(p.get('co') || '0', 10) || 0
+    co: parseInt(p.get('co') || '0', 10) || 0,
+    coinv: p.get('coinv') === '1' || p.get('coinv') === 'true'
   };
 }
 function money(n) {
@@ -423,6 +424,29 @@ function sigBlock(q) {
     + '<div class="sig-line">Date</div>'
     + '</div></div>';
 }
+function pageCoInvoice(q, nums, n) {
+  const list = q.changeOrders || [];
+  const co = list.find(x => Number(x.n) === Number(n)) || list[Number(n) - 1];
+  if (!co || !co.extraInvoice) return '<div class="page"><p>No separate invoice on change order ' + n + '.</p></div>';
+  const inv = co.extraInvoice;
+  const amt = Number(inv.amt) || 0;
+  const contracted = Number(q.contractTotal) || Number(co.oldTotal) || billTotal(q, nums);
+  return '<div class="page" data-initials="1">' + (inv.paid ? '<div class="paid">PAID</div>' : '')
+    + head('Change Order ' + n + ' Invoice')
+    + '<h1>Change Order ' + n + ' Invoice</h1><div class="tag">making freedom</div>'
+    + jobMeta(q, Object.assign({}, nums, { contracted: contracted, unit: contracted }))
+    + '<table><tbody>'
+    + '<tr><td>Original contracted total</td><td class="r">' + money(contracted) + '</td></tr>'
+    + '<tr><td>This change (separate invoice)</td><td class="r">' + money(amt) + '</td></tr>'
+    + '<tr><td>Due</td><td class="r">' + esc(prettyDate(inv.due)) + '</td></tr>'
+    + (inv.paid ? '<tr><td>Paid</td><td class="r">' + esc(prettyDate(inv.paidAt) || 'Yes') + '</td></tr>' : '')
+    + '<tr><td><strong>Amount due this invoice</strong></td><td class="r"><strong>' + money(inv.paid ? 0 : amt) + '</strong></td></tr>'
+    + '</tbody></table>'
+    + '<p class="note">' + esc(inv.reason || co.reason || 'This invoice is for the change order only. It does not replace the original payment schedule.') + '</p>'
+    + '<p class="fine">Please make payment to Fremont Makers LLC. Job ' + esc(q.jobCode || '') + ' · Change order ' + n + '.</p>'
+    + sigBlock(q)
+    + '</div>';
+}
 function pageChangeOrder(q, nums, n) {
   const list = q.changeOrders || [];
   const co = list.find(x => Number(x.n) === Number(n)) || list[Number(n) - 1];
@@ -508,7 +532,8 @@ function render(q, data) {
   const rec = MODE.receipt;
   const coN = MODE.co;
   let html = '';
-  if (coN) html = pageChangeOrder(q, nums, coN);
+  if (coN && MODE.coinv) html = pageCoInvoice(q, nums, coN);
+  else if (coN) html = pageChangeOrder(q, nums, coN);
   else if (rec === 'd1' || inv === 1) html = pageInvoice(q, nums, 1);
   else if (rec === 'd2' || inv === 2) html = pageInvoice(q, nums, 2);
   else if (rec === 'd3' || inv === 3) html = pageInvoice(q, nums, 3);
@@ -531,7 +556,7 @@ function render(q, data) {
 
 async function boot() {
   const params = qs();
-  MODE = { invoice: params.invoice, receipt: params.receipt, co: params.co };
+  MODE = { invoice: params.invoice, receipt: params.receipt, co: params.co, coinv: params.coinv };
   const msg = document.getElementById('load-msg');
   if (!params.id) {
     msg.className = 'err';

@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v1014k</title>
+<title>Fremont Makers — Project Builder v1014l</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20261014k-co-fees -->
+<!-- FM-BUILD-v20261014l-co-inv -->
 <script>
 (function(){
   try {
@@ -746,7 +746,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1014k</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1014l</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <span class="status-label">Status:</span>
@@ -1778,6 +1778,17 @@
     <div id="co-step-5" class="co-step">
       <p style="font-size:14px;margin-bottom:8px;">Review. Save writes the paper trail. Send for signature emails the buyer — you stay here.</p>
       <div id="co-review" style="font-size:13px;line-height:1.5;margin-bottom:12px;"></div>
+      <div id="co-bill-how-wrap" style="display:none;margin:0 0 14px;text-align:left;">
+        <p style="font-size:13px;margin:0 0 8px;"><strong>How to bill this custom amount</strong></p>
+        <label class="co-pay-opt">
+          <input type="radio" name="co-bill-how" value="schedule" checked onchange="coSetBillHow('schedule')" />
+          <span class="co-pay-copy"><strong>Insert into payment schedule</strong><span>Add this change to the unpaid 50 / 30 / 20 invoices.</span></span>
+        </label>
+        <label class="co-pay-opt">
+          <input type="radio" name="co-bill-how" value="separate" onchange="coSetBillHow('separate')" />
+          <span class="co-pay-copy"><strong>Create separate invoice</strong><span>Leave the original invoices. This change gets its own change-order invoice.</span></span>
+        </label>
+      </div>
       <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Buyer email</label>
       <input type="email" id="co-sign-email" style="width:100%;margin-bottom:10px;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />
       <p id="co-sign-msg" style="font-size:13px;min-height:18px;margin-bottom:8px;"></p>
@@ -3256,6 +3267,10 @@ function renderInvoices() {
 
 function openInvoiceSheet(id, n) {
   const url = FM_PACKET_URL + '?id=' + encodeURIComponent(id) + '&invoice=' + n;
+  window.open(url, '_blank');
+}
+function openCoInvoiceSheet(id, n) {
+  const url = FM_PACKET_URL + '?id=' + encodeURIComponent(id) + '&co=' + n + '&coinv=1';
   window.open(url, '_blank');
 }
 function openChangeOrderSheet(id, n) {
@@ -5944,6 +5959,19 @@ function coPaintReview() {
       + ' · bulk ' + (c.bulkDiscPct || 0) + '% · G&A ' + (c.gnaPct || 0) + '% · tax ' + (c.taxPct || 0) + '%</p>';
   }
   box.innerHTML = html;
+  const howWrap = document.getElementById('co-bill-how-wrap');
+  if (howWrap) {
+    const show = c.payChoice === 'custom' && (Number(c.changeAmount) || 0) !== 0;
+    howWrap.style.display = show ? '' : 'none';
+    if (show && !c.billHow) c.billHow = 'schedule';
+    howWrap.querySelectorAll('input[name="co-bill-how"]').forEach(el => {
+      el.checked = el.value === (c.billHow || 'schedule');
+    });
+  }
+}
+function coSetBillHow(how) {
+  if (!window._co) return;
+  window._co.billHow = how === 'separate' ? 'separate' : 'schedule';
 }
 function fmBuyerEmail(q) {
   return (document.getElementById('customer-email')?.value
@@ -6245,9 +6273,11 @@ function saveChangeOrder(keepOpen) {
     coReadFees();
     c.newTotal = coSkuTotal(c);
   }
-  if (!coSchedLive()) {
-    alert('Fix unpaid invoices so they add to remaining.');
-    return;
+  if (!(c.payChoice === 'custom' && c.billHow === 'separate')) {
+    if (!coSchedLive()) {
+      alert('Fix unpaid invoices so they add to remaining.');
+      return;
+    }
   }
   const oldTotal = (c.oldTotal != null && c.oldTotal > 0) ? c.oldTotal : contractTotalOf(q, quoteGrandFromData(q) || 0);
   if (!q.originalCabinets && (c.oldCabinets || []).length) {
@@ -6278,18 +6308,24 @@ function saveChangeOrder(keepOpen) {
     }
   }
   const skuTotal = coSkuSellOf(q.cabinets || [], q);
-  const billTotal = coPayTarget(c, Object.assign({}, q, { contractTotal: oldTotal }));
+  const separate = c.payChoice === 'custom' && c.billHow === 'separate';
+  const changeAmt = Number(c.changeAmount);
+  const billTotal = separate
+    ? oldTotal
+    : coPayTarget(c, Object.assign({}, q, { contractTotal: oldTotal }));
   q.contractTotal = billTotal;
   if (!q.ar || typeof q.ar !== 'object') q.ar = {};
   const plan = payPlanOf(q);
   const maxN = plan === '50-50' ? 2 : 3;
-  const sched = scheduleOf(q, billTotal);
-  for (let n = 1; n <= maxN; n++) {
-    if (sched['d' + n + 'Paid']) continue;
-    const amtEl = document.getElementById('co-d' + n + '-amt');
-    const dueEl = document.getElementById('co-d' + n + '-due');
-    if (amtEl) q.ar['d' + n + 'Amt'] = Number(amtEl.value || 0);
-    if (dueEl) q.ar['d' + n + 'Due'] = dueEl.value;
+  if (!separate) {
+    const sched = scheduleOf(q, billTotal);
+    for (let n = 1; n <= maxN; n++) {
+      if (sched['d' + n + 'Paid']) continue;
+      const amtEl = document.getElementById('co-d' + n + '-amt');
+      const dueEl = document.getElementById('co-d' + n + '-due');
+      if (amtEl) q.ar['d' + n + 'Amt'] = Number(amtEl.value || 0);
+      if (dueEl) q.ar['d' + n + 'Due'] = dueEl.value;
+    }
   }
   const list = q.changeOrders || [];
   const n = list.length + 1;
@@ -6319,6 +6355,14 @@ function saveChangeOrder(keepOpen) {
     taxPct: c.taxPct,
     materialsNet: c.materialsNet,
     cabinetsSell: c.cabinetsSell,
+    billHow: separate ? 'separate' : (c.payChoice === 'custom' ? 'schedule' : ''),
+    extraInvoice: separate ? {
+      n: n,
+      amt: changeAmt === changeAmt ? changeAmt : 0,
+      due: new Date().toISOString().slice(0, 10),
+      paid: false,
+      reason: (document.getElementById('co-reason') || {}).value || ''
+    } : null,
     schedule: {}
   };
   const maxNSave = plan === '50-50' ? 2 : 3;
@@ -6385,6 +6429,10 @@ function renderProjectSummary(id) {
     const when = fmtMDY(co.at || co.date);
     const note = coAgreementNote(co);
     html += '<tr><td>' + when + '</td><td><a href="#" onclick="event.preventDefault();openChangeOrderSheet(\'' + packetId + '\', ' + co.n + ');">Change order ' + co.n + '</a></td><td>' + note.short + '<div class="co-ledger">' + note.long + '</div></td></tr>';
+    if (co.extraInvoice && co.extraInvoice.amt) {
+      const inv = co.extraInvoice;
+      html += '<tr><td>' + fmtMDY(inv.due) + '</td><td><a href="#" onclick="event.preventDefault();openCoInvoiceSheet(\'' + packetId + '\', ' + co.n + ');">Change order ' + co.n + ' invoice' + (inv.paid ? ' · PAID' : '') + '</a></td><td>' + fmt(inv.amt) + ' · separate from 50/30/20</td></tr>';
+    }
   });
   for (let n = 1; n <= maxN; n++) {
     const amt = ar['d' + n + 'Paid'] ? paidInvoiceAmt(ar, n, ar['d' + n + 'Amt']) : ar['d' + n + 'Amt'];
