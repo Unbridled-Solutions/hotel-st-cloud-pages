@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v1014i</title>
+<title>Fremont Makers — Project Builder v1014k</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20261014i-co-qty-house -->
+<!-- FM-BUILD-v20261014k-co-fees -->
 <script>
 (function(){
   try {
@@ -746,7 +746,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1014i</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1014k</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <span class="status-label">Status:</span>
@@ -1715,7 +1715,7 @@
       </div>
     </div>
     <div id="co-step-2" class="co-step">
-      <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">Upload a Wholesale Cabinets PDF of the changed boxes. We take SKU lines only — not tax, not order total. Payment is the next step.</p>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">Upload a Wholesale Cabinets PDF of the changed boxes. We take SKU lines only — not tax, not order total. Next is labor, discount, G&A, and tax.</p>
       <input type="file" id="co-pdf-file" accept=".pdf,.csv,.txt,.docx" style="display:none" onchange="coHandlePdf(event)" />
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
         <button type="button" class="modal-btn" onclick="document.getElementById('co-pdf-file').click()">Upload new cabinet PDF</button>
@@ -1727,13 +1727,44 @@
       <p id="co-pdf-status" style="font-size:13px;color:var(--muted);margin-bottom:8px;"></p>
       <div id="co-sku-diff" style="font-size:13px;margin-bottom:10px;max-height:18vh;overflow:auto;"></div>
       <div id="co-sku-wrap" style="overflow:auto;max-height:52vh;margin-bottom:10px;"></div>
-      <p id="co-sku-live" style="font-size:13px;margin-bottom:12px;"></p>
+      <p id="co-sku-live" style="font-size:13px;margin-bottom:8px;"></p>
+      <div id="co-sku-totals" style="max-width:360px;margin:0 0 12px auto;text-align:right;font-size:13px;line-height:1.55;"></div>
       <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">
         <button class="modal-btn" type="button" onclick="coGo(1)">Back</button>
-        <button class="modal-btn confirm" type="button" onclick="coAfterSkus()">Approve SKU change</button>
+        <button class="modal-btn confirm" type="button" onclick="coAfterSkus()">Next: labor and fees</button>
       </div>
     </div>
     <div id="co-step-3" class="co-step">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">Same fields as the Quote tab. Defaults are what is already on this job. Change them here if this order needs different labor, a bulk discount, G&A, or tax.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:12px;text-align:left;">
+        <div>
+          <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Assembly labor rate $</label>
+          <input type="number" id="co-labor-rate" step="0.5" min="0" oninput="coFeesLive()" style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />
+        </div>
+        <div>
+          <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Hours</label>
+          <input type="number" id="co-labor-hours" step="0.5" min="0" oninput="coFeesLive()" style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />
+        </div>
+        <div>
+          <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Mfr. bulk discount %</label>
+          <input type="number" id="co-bulk-pct" step="0.5" min="0" max="100" oninput="coFeesLive()" style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />
+        </div>
+        <div>
+          <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">G&A fee %</label>
+          <select id="co-gna-pct" onchange="coFeesLive()" style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;"></select>
+        </div>
+        <div>
+          <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Tax % (product only)</label>
+          <input type="number" id="co-tax-pct" step="0.1" min="0" oninput="coFeesLive()" style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />
+        </div>
+      </div>
+      <p id="co-fees-live" style="font-size:13px;margin-bottom:12px;"></p>
+      <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">
+        <button class="modal-btn" type="button" onclick="coGo(2)">Back</button>
+        <button class="modal-btn confirm" type="button" onclick="coAfterFees()">Next: price this change</button>
+      </div>
+    </div>
+    <div id="co-step-4" class="co-step">
       <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">SKUs keep their real cost. You decide what this change costs the job — $0 courtesy, pass the SKU delta, or type an amount.</p>
       <div id="co-pay-options" style="margin-bottom:12px;"></div>
       <div id="co-sched-fields"></div>
@@ -1744,7 +1775,7 @@
         <button class="modal-btn confirm" type="button" id="co-sched-next" onclick="coNextFromPay()">Next</button>
       </div>
     </div>
-    <div id="co-step-4" class="co-step">
+    <div id="co-step-5" class="co-step">
       <p style="font-size:14px;margin-bottom:8px;">Review. Save writes the paper trail. Send for signature emails the buyer — you stay here.</p>
       <div id="co-review" style="font-size:13px;line-height:1.5;margin-bottom:12px;"></div>
       <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Buyer email</label>
@@ -5628,34 +5659,117 @@ function coSetKind(kind) {
   });
 }
 function coGo(n) {
-  if (n === 2 && window._co && window._co.kind === 'schedule') n = 3;
-  [1,2,3,4].forEach(i => {
+  if (n === 2 && window._co && window._co.kind === 'schedule') n = 4;
+  if (n === 3 && window._co && window._co.kind === 'schedule') n = 4;
+  [1,2,3,4,5].forEach(i => {
     const s = document.getElementById('co-step-' + i);
     if (s) s.classList.toggle('on', i === n);
   });
   if (n === 2) coPaintSkus();
-  if (n === 3) { coPaintPayOptions(); coPaintSched(); }
-  if (n === 4) coPaintReview();
+  if (n === 3) coPaintFees();
+  if (n === 4) { coPaintPayOptions(); coPaintSched(); }
+  if (n === 5) coPaintReview();
 }
 function coAfterSkus() {
   const c = window._co;
   if (!c) return;
   c.cabinets = coReadSkus();
-  c.newTotal = coSkuTotal(c);
   coGo(3);
+}
+function coAfterFees() {
+  const c = window._co;
+  if (!c) return;
+  coReadFees();
+  c.newTotal = coSkuTotal(c);
+  coGo(4);
 }
 function coBackFromSched() {
   const c = window._co;
-  coGo(c && c.kind === 'schedule' ? 1 : 2);
-}
-function coBackFromReview() {
-  const c = window._co;
-  if (!c) return;
-  if (c.kind === 'skus') coGo(2);
+  if (c && c.kind === 'schedule') coGo(1);
   else coGo(3);
 }
-function coSkuSellOf(rows, q) {
-  const draft = Object.assign({}, q || {}, { cabinets: rows || [], contractTotal: null, status: 'proposed' });
+function coBackFromReview() {
+  coGo(4);
+}
+function coAssemblyLabor(q) {
+  const rows = (q && q.labor) || [];
+  const first = rows[0] || {};
+  return {
+    rate: parseFloat(first.rate) || 40,
+    hours: rows.reduce((s, l) => s + (parseFloat(l.hours) || 0), 0)
+  };
+}
+function coReadFees() {
+  const c = window._co;
+  if (!c) return;
+  const q = quoteData[c.id] || {};
+  const existing = coAssemblyLabor(q);
+  const rateEl = document.getElementById('co-labor-rate');
+  const hrsEl = document.getElementById('co-labor-hours');
+  const bulkEl = document.getElementById('co-bulk-pct');
+  const gnaEl = document.getElementById('co-gna-pct');
+  const taxEl = document.getElementById('co-tax-pct');
+  c.laborRate = rateEl ? Number(rateEl.value) : (c.laborRate != null ? c.laborRate : existing.rate);
+  c.laborHours = hrsEl ? Number(hrsEl.value) : (c.laborHours != null ? c.laborHours : existing.hours);
+  c.bulkDiscPct = bulkEl ? Number(bulkEl.value) : (c.bulkDiscPct != null ? c.bulkDiscPct : (parseFloat(q.bulkDiscPct) || 0));
+  c.gnaPct = gnaEl ? Number(gnaEl.value) : (c.gnaPct != null ? c.gnaPct : (parseFloat(q.gnaPct) || 10));
+  c.taxPct = taxEl ? Number(taxEl.value) : (c.taxPct != null ? c.taxPct : (parseFloat(q.taxPct) || 8.7));
+  c.labor = [{ name: 'Assembly', rate: c.laborRate, hours: c.laborHours }];
+}
+function coPaintFees() {
+  const c = window._co;
+  if (!c) return;
+  const q = quoteData[c.id] || {};
+  const existing = coAssemblyLabor(q);
+  const gnaEl = document.getElementById('co-gna-pct');
+  if (gnaEl && !gnaEl.options.length) {
+    for (let i = 0; i <= 30; i++) {
+      const opt = document.createElement('option');
+      opt.value = i; opt.textContent = i + '%';
+      gnaEl.appendChild(opt);
+    }
+  }
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+  set('co-labor-rate', c.laborRate != null ? c.laborRate : existing.rate);
+  set('co-labor-hours', c.laborHours != null ? c.laborHours : existing.hours);
+  set('co-bulk-pct', c.bulkDiscPct != null ? c.bulkDiscPct : (parseFloat(q.bulkDiscPct) || 0));
+  set('co-gna-pct', c.gnaPct != null ? c.gnaPct : (parseFloat(q.gnaPct) || 10));
+  set('co-tax-pct', c.taxPct != null ? c.taxPct : (parseFloat(q.taxPct) || 8.7));
+  coFeesLive();
+}
+function coFeesLive() {
+  const c = window._co;
+  const live = document.getElementById('co-fees-live');
+  if (!c || !live) return;
+  coReadFees();
+  c.newTotal = coSkuTotal(c);
+  const q = quoteData[c.id] || {};
+  const labor = (Number(c.laborRate) || 0) * (Number(c.laborHours) || 0);
+  live.textContent = 'Labor ' + fmt(labor) + ' · SKU sell with fees ' + fmt(c.newTotal) + ' · contracted ' + fmt(contractTotalOf(q, quoteGrandFromData(q) || 0));
+}
+function coSkuMaterials(rows) {
+  let net = 0, sell = 0;
+  (rows || []).forEach(r => {
+    const qty = Number(r.qty) || 0;
+    const cost = Number(r.cost) || 0;
+    const mk = Number(r.markup) || 0;
+    net += qty * cost;
+    sell += qty * cost * (1 + mk / 100);
+  });
+  return { net: Math.round(net * 100) / 100, sell: Math.round(sell * 100) / 100 };
+}
+function coSkuSellOf(rows, q, fees) {
+  const f = fees || window._co || {};
+  const labor = f.labor || [{ name: 'Assembly', rate: f.laborRate, hours: f.laborHours }];
+  const draft = Object.assign({}, q || {}, {
+    cabinets: rows || [],
+    labor: (labor && labor.length) ? labor : (q && q.labor) || [],
+    bulkDiscPct: f.bulkDiscPct != null ? f.bulkDiscPct : (q && q.bulkDiscPct),
+    gnaPct: f.gnaPct != null ? f.gnaPct : (q && q.gnaPct),
+    taxPct: f.taxPct != null ? f.taxPct : (q && q.taxPct),
+    contractTotal: null,
+    status: 'proposed'
+  });
   return Math.round((quoteGrandFromData(draft) * modelQtyOf(draft)) * 100) / 100;
 }
 function coSkuTotal(c) {
@@ -5714,10 +5828,15 @@ function coSkuLive() {
   const live = document.getElementById('co-sku-live');
   if (!c || !live) return;
   c.cabinets = coReadSkus();
-  c.newTotal = coSkuTotal(c);
-  const q = quoteData[c.id] || {};
-  const oldT = contractTotalOf(q, quoteGrandFromData(q) || 0);
-  live.textContent = 'Was ' + fmt(oldT) + ' · now ' + fmt(c.newTotal) + ' · delta ' + fmt(c.newTotal - oldT);
+  const mats = coSkuMaterials(c.cabinets);
+  c.materialsNet = mats.net;
+  c.cabinetsSell = mats.sell;
+  live.textContent = 'SKU lines only — labor and fees are next.';
+  const box = document.getElementById('co-sku-totals');
+  if (box) {
+    box.innerHTML = '<div>Materials (hard cost) <strong>' + fmt(mats.net) + '</strong></div>'
+      + '<div>Customer total after markup <strong>' + fmt(mats.sell) + '</strong></div>';
+  }
   if (c.oldCabinets) { c.diff = coDiffSkus(c.oldCabinets, c.cabinets); coRenderDiff(c.diff); }
 }
 function coPaintSched() {
@@ -5764,7 +5883,7 @@ function coNextFromPay() {
     if (err && !err.textContent) err.textContent = 'Pick keep remaining or pass the new total, then Next.';
     return;
   }
-  coGo(4);
+  coGo(5);
 }
 function coSchedLive() {
   const c = window._co;
@@ -5815,7 +5934,14 @@ function coPaintReview() {
     html += '<p><strong>Cabinet total stays</strong> ' + fmt(oldT) + '</p>';
   }
   if (c.diff) {
-    html += '<p><strong>SKUs:</strong> +' + c.diff.added.length + ' added / −' + c.diff.removed.length + ' removed</p>';
+    html += '<p><strong>SKUs:</strong> +' + c.diff.added.length + ' added / −' + c.diff.removed.length + ' removed / ' + c.diff.changed.length + ' changed</p>';
+  }
+  const mats = coSkuMaterials(c.cabinets || []);
+  html += '<p>Materials (hard cost) ' + fmt(mats.net) + ' · after markup ' + fmt(mats.sell) + '</p>';
+  if (c.kind !== 'schedule') {
+    const labor = (Number(c.laborRate) || 0) * (Number(c.laborHours) || 0);
+    html += '<p>Assembly ' + fmt(c.laborRate || 0) + '/hr × ' + (c.laborHours || 0) + ' hr = ' + fmt(labor)
+      + ' · bulk ' + (c.bulkDiscPct || 0) + '% · G&A ' + (c.gnaPct || 0) + '% · tax ' + (c.taxPct || 0) + '%</p>';
   }
   box.innerHTML = html;
 }
@@ -6114,7 +6240,9 @@ function saveChangeOrder(keepOpen) {
   const q = quoteData[c.id];
   if (!q) return;
   if (c.kind !== 'schedule') {
-    c.cabinets = coReadSkus();
+    const liveRows = coReadSkus();
+    if (liveRows.length) c.cabinets = liveRows;
+    coReadFees();
     c.newTotal = coSkuTotal(c);
   }
   if (!coSchedLive()) {
@@ -6130,10 +6258,22 @@ function saveChangeOrder(keepOpen) {
     rows = (rows || []).filter(r => (Number(r.qty) || 0) > 0);
     c.cabinets = rows;
     q.cabinets = rows;
+    if (c.labor) q.labor = JSON.parse(JSON.stringify(c.labor));
+    if (c.bulkDiscPct != null) q.bulkDiscPct = String(c.bulkDiscPct);
+    if (c.gnaPct != null) q.gnaPct = String(c.gnaPct);
+    if (c.taxPct != null) q.taxPct = String(c.taxPct);
     c.diff = coDiffSkus(c.oldCabinets || q.originalCabinets || [], rows);
     if (activeQuoteId === c.id) {
       document.getElementById('cabinet-tbody').innerHTML = '';
       (q.cabinets || []).forEach(row => addCabinetRow(row.desc, row.qty, row.cost, row.markup, row.serial, row.id));
+      document.getElementById('labor-tbody').innerHTML = '';
+      (q.labor || []).forEach(l => addLaborRow(l.name || 'Assembly', l.rate, l.hours));
+      const bulkEl = document.getElementById('bulk-discount-pct');
+      const gnaEl = document.getElementById('gna-pct');
+      const taxEl = document.getElementById('tax-pct');
+      if (bulkEl) bulkEl.value = q.bulkDiscPct || 0;
+      if (gnaEl) gnaEl.value = q.gnaPct || 10;
+      if (taxEl) taxEl.value = q.taxPct || 8.7;
       recalc();
     }
   }
@@ -6171,6 +6311,14 @@ function saveChangeOrder(keepOpen) {
     diff: c.diff || null,
     cabinets: JSON.parse(JSON.stringify(c.cabinets || q.cabinets || [])),
     oldCabinets: JSON.parse(JSON.stringify(c.oldCabinets || [])),
+    labor: JSON.parse(JSON.stringify(c.labor || q.labor || [])),
+    laborRate: c.laborRate,
+    laborHours: c.laborHours,
+    bulkDiscPct: c.bulkDiscPct,
+    gnaPct: c.gnaPct,
+    taxPct: c.taxPct,
+    materialsNet: c.materialsNet,
+    cabinetsSell: c.cabinetsSell,
     schedule: {}
   };
   const maxNSave = plan === '50-50' ? 2 : 3;
