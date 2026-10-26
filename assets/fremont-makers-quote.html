@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v1014r</title>
+<title>Fremont Makers — Project Builder v1014s</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20261026r-summary-top -->
+<!-- FM-BUILD-v20261026s-revise-sched -->
 <script>
 (function(){
   try {
@@ -776,7 +776,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1014r</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1014s</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <span class="status-label">Status:</span>
@@ -789,7 +789,7 @@
     </div>
     <button type="button" class="status-btn" id="btn-clear-house-pdf" onclick="clearHouseManufacturerUpload(activeQuoteId)" style="display:none;">Clear manufacturer PDF</button>
     <button type="button" class="status-btn" id="btn-issue-contract" onclick="openIssueContract()" style="border-color:var(--accent);color:var(--accent);font-weight:700;">Next: Issue Contract & Invoices</button>
-    <button type="button" class="status-btn" id="btn-adjust-schedule" onclick="openAdjustSchedule()" style="display:none;">Adjust payment schedule</button>
+    <button type="button" class="status-btn" id="btn-adjust-schedule" onclick="openAdjustSchedule()" style="display:none;">Revise payment schedule</button>
     <button type="button" class="status-btn" id="btn-change-order" onclick="openChangeOrder()" style="display:none;">Create change order</button>
     <button type="button" class="status-btn" id="btn-mark-completed" onclick="markQuoteCompleted()" style="display:none;border-color:var(--green);color:var(--green);font-weight:700;">Next: Mark as Completed</button>
     <button type="button" class="status-btn" id="btn-open-packet" onclick="openContractPacket(activeQuoteId)" style="display:none;">Open contract packet</button>
@@ -946,7 +946,7 @@
           <tr><td colspan="9" style="text-align:center;color:var(--muted);padding:20px;">No invoices yet. Issue a contract to generate Invoice 1, 2, and 3.</td></tr>
         </tbody>
       </table>
-      <p style="font-size:13px;color:var(--muted);margin-top:12px;">Mark paid, check copy, and revise remaining live on this tab. Quote tab still owns line items. Remaining invoices must still add up to contract total minus cash already received.</p>
+      <p style="font-size:13px;color:var(--muted);margin-top:12px;">Mark paid and check copy live on this tab. <strong>Revise payment schedule</strong> can change unpaid due dates and how remaining dollars split. Those amounts must add to the contracted total minus cash already received. A new job total goes through Create change order.</p>
     </div>
   </div>
 <div class="modal-overlay" id="inv-pay-modal">
@@ -1043,7 +1043,7 @@
         <span class="section-title">Builder order</span>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
           <button type="button" class="modal-btn" onclick="openIssueContract()" style="border-color:var(--accent);color:var(--accent);font-weight:700;">Next: Issue Contract & Invoices</button>
-          <button type="button" class="modal-btn" id="btn-order-adjust" onclick="openAdjustSchedule()" style="display:none;">Adjust payment schedule</button>
+          <button type="button" class="modal-btn" id="btn-order-adjust" onclick="openAdjustSchedule()" style="display:none;">Revise payment schedule</button>
           <button type="button" class="modal-btn" id="btn-order-change" onclick="openChangeOrder()" style="display:none;">Create change order</button>
         </div>
       </div>
@@ -1705,18 +1705,18 @@
 
 <div class="modal-overlay" id="adjust-schedule-modal">
   <div class="modal" style="max-width:520px;text-align:left;">
-    <h3>Adjust payment schedule</h3>
+    <h3>Revise payment schedule</h3>
     <p id="adj-sub" style="font-size:13px;color:var(--muted);margin-bottom:12px;"></p>
     <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Install / delivery date</label>
     <input type="date" id="adj-install" style="width:100%;margin-bottom:12px;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />
     <div id="adj-fields"></div>
     <p id="adj-live" style="font-size:13px;margin-bottom:8px;"></p>
     <p id="adj-err" style="font-size:13px;color:var(--red);min-height:18px;"></p>
-    <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Paid invoices stay frozen at the check that cleared. You only edit unpaid due dates and how remaining dollars split. Unpaid must add to contracted total minus cash received. Reprint the packet after you save.</p>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Paid invoices stay frozen at the check that cleared. You may change unpaid due dates and unpaid amounts. Unpaid invoices must add to the contracted total minus cash received — Save stays off until they do. A new contracted total is a change order, not this screen. Reprint the packet after you save.</p>
     <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">
       <button class="modal-btn" type="button" onclick="closeAdjustSchedule()">Cancel</button>
-      <button class="modal-btn" type="button" onclick="closeAdjustSchedule();openChangeOrder()">Create change order</button>
-      <button class="modal-btn confirm" type="button" onclick="saveAdjustSchedule()">Save schedule</button>
+      <button class="modal-btn" type="button" onclick="closeAdjustSchedule();openChangeOrder()">Need a new total? Change order</button>
+      <button class="modal-btn confirm" type="button" id="adj-save-btn" onclick="saveAdjustSchedule()">Save schedule</button>
     </div>
   </div>
 </div>
@@ -3283,7 +3283,7 @@ function renderInvoices() {
         ${r.paid
           ? `<button class="modal-btn" onclick="openPaidReceipt('${r.id}', ${r.n})">Receipt</button>`
           : `<button class="modal-btn" onclick="openInvPay('${r.id}', ${r.n})" style="border-color:var(--green);color:var(--green);">Mark paid</button>`}
-        ${r.n === 1 ? `<button class="modal-btn" onclick="openInvRevise('${r.id}')">Revise remaining</button>` : ''}
+        ${r.n === 1 ? `<button class="modal-btn" onclick="openAdjustSchedule('${r.id}')">Revise payment schedule</button>` : ''}
       </div>
     </td>
   </tr>`).join('');
@@ -3374,23 +3374,7 @@ async function saveInvPaid() {
 }
 
 function openInvRevise(id) {
-  const qd = quoteData[id] || {};
-  const total = contractTotalOf(qd, quoteGrandFromData(qd) || 0);
-  const ar = scheduleOf(qd, total);
-  _invRevId = id;
-  const received = ar.received;
-  const remain = invMoney(total - received);
-  document.getElementById('inv-rev-sub').textContent =
-    (qd.customer || '') + ' · contract ' + fmt(total) + ' · received ' + fmt(received) + ' · remaining must equal ' + fmt(remain);
-  const fields = [];
-  [1,2,3].forEach(n => {
-    if (ar['d' + n + 'Paid']) return;
-    fields.push('<label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Invoice ' + n + '</label>'
-      + '<input class="tbl-input money-input" type="text" inputmode="decimal" id="inv-rev-d' + n + '" value="' + fmt(ar['d' + n + 'Amt']) + '" style="width:100%;margin-bottom:10px;text-align:right;" onfocus="moneyFocus(this)" onblur="moneyBlur(this)" />');
-  });
-  document.getElementById('inv-rev-fields').innerHTML = fields.join('') || '<p style="color:var(--muted);">Nothing left to revise. Job is paid in full.</p>';
-  document.getElementById('inv-rev-err').textContent = '';
-  document.getElementById('inv-rev-modal').classList.add('open');
+  openAdjustSchedule(id);
 }
 
 function saveInvRevise() {
@@ -5578,7 +5562,7 @@ function closeAdjustSchedule() {
 function adjLiveCheck() {
   const live = document.getElementById('adj-live');
   const err = document.getElementById('adj-err');
-  const saveBtn = document.querySelector('#adjust-schedule-modal .modal-btn.confirm');
+  const saveBtn = document.getElementById('adj-save-btn');
   const id = window._adjId;
   const q = quoteData[id];
   if (!q || !live) return true;
@@ -5596,7 +5580,7 @@ function adjLiveCheck() {
   const ok = Math.abs(remainSum - remainNeed) < 0.02;
   live.textContent = 'Contracted total ' + fmt(total) + ' (locked) · unpaid invoices ' + fmt(remainSum) + ' · must equal remaining ' + fmt(remainNeed);
   live.style.color = ok ? 'var(--green)' : 'var(--red)';
-  if (err) err.textContent = ok ? '' : 'Cannot save. Unpaid invoices must add to ' + fmt(remainNeed) + '. To change the contracted total, use Create change order.';
+  if (err) err.textContent = ok ? '' : 'Cannot save. Unpaid invoices must add to ' + fmt(remainNeed) + ' (contracted total minus cash). A new job total is a change order.';
   if (saveBtn) saveBtn.disabled = !ok;
   return ok;
 }
@@ -5604,7 +5588,7 @@ function openAdjustSchedule(idArg) {
   const id = scheduleTargetId(idArg);
   const q = quoteData[id] || {};
   if (pipeStatus(q) !== 'contract') {
-    alert('Adjust payment schedule is for contracted jobs. Issue Contract first.');
+    alert('Revise payment schedule is for contracted jobs. Issue Contract first.');
     return;
   }
   window._adjId = id;
