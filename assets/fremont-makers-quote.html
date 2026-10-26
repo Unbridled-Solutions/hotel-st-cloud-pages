@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v1014m</title>
+<title>Fremont Makers — Project Builder v1014n</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20261014m-co-sku-ui -->
+<!-- FM-BUILD-v20261014n-co-inv-show -->
 <script>
 (function(){
   try {
@@ -88,9 +88,10 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); min-height: 100vh; font-family: Aptos, 'Segoe UI', system-ui, sans-serif; }
   input, select, textarea, button { font-family: inherit; }
-  input[type="number"], input[type="date"] {
+  input[type="number"], input[type="date"], input.money-input, input.tbl-input {
     font-family: Aptos, 'Segoe UI', system-ui, sans-serif;
-    font-variant-numeric: lining-nums;
+    font-variant-numeric: lining-nums tabular-nums;
+    letter-spacing: 0;
   }
 
   /* ── HEADER ── */
@@ -369,7 +370,7 @@
   .quote-table { width: 100%; border-collapse: separate; border-spacing: 0 3px; }
   .quote-table thead th {
     text-align: left; font-size: 10px; color: var(--muted);
-    text-transform: uppercase; letter-spacing: .07em;
+    text-transform: uppercase; letter-spacing: .04em;
     padding: 4px 8px 8px;
   }
   .quote-table thead th:last-child { text-align: right; }
@@ -439,7 +440,10 @@
   .tbl-input {
     background: var(--input-bg); border: 1px solid var(--border);
     color: var(--text); border-radius: 4px; padding: 5px 8px; font-size: 13px;
-    width: 100%;
+    width: 100%; letter-spacing: 0;
+  }
+  .tbl-input.money-input, input.money-input {
+    text-align: right; font-variant-numeric: lining-nums tabular-nums;
   }
   .tbl-input:focus { outline: none; border-color: var(--accent); }
   .tbl-input.locked, .job-field input.locked, .job-field select.locked {
@@ -617,10 +621,16 @@
   .modal p  { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
   .modal input:not([type="checkbox"]):not([type="radio"]):not([type="file"]) {
     background: var(--input-bg); border: 1px solid var(--border);
-    color: var(--text); border-radius: 5px; padding: 8px 14px;
-    font-size: 16px; text-align: left; width: 100%; letter-spacing: 0; margin-bottom: 14px;
+    color: var(--text); border-radius: 4px; padding: 5px 8px;
+    font-size: 13px; text-align: left; width: 100%; letter-spacing: 0; margin-bottom: 0;
   }
   .modal input:focus { outline: none; border-color: var(--accent); }
+  #change-order-modal .quote-table tbody td { padding: 4px 6px; }
+  #change-order-modal .quote-table { border-spacing: 0 2px; }
+  #change-order-modal .tbl-input { margin-bottom: 0; width: 100%; }
+  #change-order-modal .cab-qty { width: 64px; text-align: center; }
+  #change-order-modal .cab-cost { width: 110px; }
+  #change-order-modal .markup-select { width: 72px; }
   .modal-btns { display: flex; gap: 10px; justify-content: center; }
   .modal-btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 6px;
@@ -766,7 +776,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1014m</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1014n</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <span class="status-label">Status:</span>
@@ -948,7 +958,7 @@
     <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Check #</label>
     <input type="text" id="inv-pay-check" placeholder="Optional" style="width:100%;margin-bottom:10px;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />
     <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Amount received</label>
-    <input type="number" id="inv-pay-amt" step="0.01" min="0" style="width:100%;margin-bottom:10px;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;text-align:right;" />
+    <input class="tbl-input money-input" type="text" inputmode="decimal" id="inv-pay-amt" style="width:100%;margin-bottom:10px;text-align:right;" onfocus="moneyFocus(this)" onblur="moneyBlur(this)" />
     <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Check copy</label>
     <input type="file" id="inv-pay-file" accept="image/*,.pdf" style="width:100%;margin-bottom:14px;" />
     <div style="display:flex;gap:8px;justify-content:flex-end;">
@@ -1761,7 +1771,7 @@
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:12px;text-align:left;">
         <div>
           <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Assembly labor rate $</label>
-          <input type="number" id="co-labor-rate" step="0.5" min="0" oninput="coFeesLive()" style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />
+          <input class="tbl-input money-input" type="text" inputmode="decimal" id="co-labor-rate" oninput="coFeesLive()" onfocus="moneyFocus(this)" onblur="moneyBlur(this);coFeesLive()" />
         </div>
         <div>
           <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Hours</label>
@@ -1800,15 +1810,15 @@
     <div id="co-step-5" class="co-step">
       <p style="font-size:14px;margin-bottom:8px;">Review. Save writes the paper trail. Send for signature emails the buyer — you stay here.</p>
       <div id="co-review" style="font-size:13px;line-height:1.5;margin-bottom:12px;"></div>
-      <div id="co-bill-how-wrap" style="display:none;margin:0 0 14px;text-align:left;">
-        <p style="font-size:13px;margin:0 0 8px;"><strong>How to bill this custom amount</strong></p>
-        <label class="co-pay-opt">
-          <input type="radio" name="co-bill-how" value="schedule" checked onchange="coSetBillHow('schedule')" />
-          <span class="co-pay-copy"><strong>Insert into payment schedule</strong><span>Add this change to the unpaid 50 / 30 / 20 invoices.</span></span>
+      <div id="co-bill-how-wrap" style="display:none;margin:16px 0 18px;text-align:left;max-width:720px;">
+        <p class="co-field-label" style="margin-bottom:8px;">How do you want to bill this change?</p>
+        <label class="co-pay-opt" for="co-bill-schedule">
+          <input type="radio" id="co-bill-schedule" name="co-bill-how" value="schedule" checked onchange="coSetBillHow('schedule')" />
+          <span class="co-pay-copy"><strong>Insert into payment schedule</strong><span>Add this amount to the unpaid 50 / 30 / 20 invoices.</span></span>
         </label>
-        <label class="co-pay-opt">
-          <input type="radio" name="co-bill-how" value="separate" onchange="coSetBillHow('separate')" />
-          <span class="co-pay-copy"><strong>Create separate invoice</strong><span>Leave the original invoices. This change gets its own change-order invoice.</span></span>
+        <label class="co-pay-opt" for="co-bill-separate">
+          <input type="radio" id="co-bill-separate" name="co-bill-how" value="separate" onchange="coSetBillHow('separate')" />
+          <span class="co-pay-copy"><strong>Use a separate invoice</strong><span>Leave the original invoices. This change gets its own change-order invoice.</span></span>
         </label>
       </div>
       <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Buyer email</label>
@@ -2689,8 +2699,8 @@ function parseWholesaleCabinetsPDF(text) {
 }
 
 function sqBillRow(label, scanned, printed, ok) {
-  const s = scanned == null ? '—' : '$' + Number(scanned).toFixed(2);
-  const p = printed == null ? 'not on bill' : '$' + Number(printed).toFixed(2);
+  const s = scanned == null ? '—' : fmt(scanned);
+  const p = printed == null ? 'not on bill' : fmt(printed);
   const mark = printed == null ? '·' : (ok ? '✓' : '✗');
   const color = printed == null ? 'var(--muted)' : (ok ? '#4ade80' : '#f87171');
   return `<div style="display:flex;justify-content:space-between;gap:10px;color:${color}"><span>${mark} ${label}</span><span>scan ${s}  ·  bill ${p}</span></div>`;
@@ -2810,7 +2820,7 @@ function sqShowPreview() {
   if (countEl) countEl.textContent = _sqParsedLines.length;
   if (listEl) listEl.innerHTML = _sqParsedLines.map(l => {
     const ext = (l.ext != null) ? l.ext : (parseFloat(l.qty) || 1) * (parseFloat(l.cost) || 0);
-    return `${String(l.qty).padStart(2)}x  ${l.desc}  @ $${parseFloat(l.cost).toFixed(2)}  =  $${Number(ext).toFixed(2)}`;
+    return `${String(l.qty).padStart(2)}x  ${l.desc}  @ ${fmt(l.cost)}  =  ${fmt(ext)}`;
   }).join('<br>');
   sqRenderCrossCheck();
   if (confirmBtn) {
@@ -3329,7 +3339,7 @@ function openInvPay(id, n) {
   document.getElementById('inv-pay-sub').textContent = (qd.customer || '') + ' · ' + (qd.jobCode || '') + ' · billed ' + fmt(ar['d' + n + 'Amt']);
   document.getElementById('inv-pay-date').value = today();
   document.getElementById('inv-pay-check').value = ar['d' + n + 'Check'] || '';
-  document.getElementById('inv-pay-amt').value = ar['d' + n + 'Amt'].toFixed(2);
+  document.getElementById('inv-pay-amt').value = fmt(ar['d' + n + 'Amt']);
   const file = document.getElementById('inv-pay-file');
   if (file) file.value = '';
   document.getElementById('inv-pay-modal').classList.add('open');
@@ -3384,7 +3394,7 @@ function openInvRevise(id) {
   [1,2,3].forEach(n => {
     if (ar['d' + n + 'Paid']) return;
     fields.push('<label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Invoice ' + n + '</label>'
-      + '<input type="number" id="inv-rev-d' + n + '" step="0.01" min="0" value="' + ar['d' + n + 'Amt'].toFixed(2) + '" style="width:100%;margin-bottom:10px;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;text-align:right;" />');
+      + '<input class="tbl-input money-input" type="text" inputmode="decimal" id="inv-rev-d' + n + '" value="' + fmt(ar['d' + n + 'Amt']) + '" style="width:100%;margin-bottom:10px;text-align:right;" onfocus="moneyFocus(this)" onblur="moneyBlur(this)" />');
   });
   document.getElementById('inv-rev-fields').innerHTML = fields.join('') || '<p style="color:var(--muted);">Nothing left to revise. Job is paid in full.</p>';
   document.getElementById('inv-rev-err').textContent = '';
@@ -4319,9 +4329,9 @@ function markupGridHtml(lines, prefix) {
       + '<td>' + String(l.desc || '').replace(/&/g,'&').replace(/</g,'<') + '</td>'
       + '<td>' + String(l.serial || '').replace(/&/g,'&').replace(/</g,'<') + '</td>'
       + '<td class="r">' + qty + '</td>'
-      + '<td class="r">$' + cost.toFixed(2) + '</td>'
+      + '<td class="r">' + fmt(cost) + '</td>'
       + '<td><select id="' + prefix + '-mk-' + i + '" onchange="' + (prefix === 'npw' ? 'npwMarkupLive()' : 'sqMarkupLive()') + '">' + markupOptions(mk) + '</select></td>'
-      + '<td class="r" id="' + prefix + '-sell-' + i + '">$' + (qty * cost * (1 + mk / 100)).toFixed(2) + '</td>'
+      + '<td class="r" id="' + prefix + '-sell-' + i + '">' + fmt(qty * cost * (1 + mk / 100)) + '</td>'
       + '</tr>';
   }).join('');
   return '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">'
@@ -4360,7 +4370,7 @@ function npwMarkupLive() {
     const qty = Number(l.qty) || 1;
     const cost = Number(l.cost) || 0;
     const mk = Number(el.value) || 0;
-    sell.textContent = '$' + (qty * cost * (1 + mk / 100)).toFixed(2);
+    sell.textContent = fmt(qty * cost * (1 + mk / 100));
   });
 }
 function sqMarkupLive() {
@@ -4371,7 +4381,7 @@ function sqMarkupLive() {
     const qty = Number(l.qty) || 1;
     const cost = Number(l.cost) || 0;
     const mk = Number(el.value) || 0;
-    sell.textContent = '$' + (qty * cost * (1 + mk / 100)).toFixed(2);
+    sell.textContent = fmt(qty * cost * (1 + mk / 100));
   });
 }
 async function npwHandlePdf(event) {
@@ -4791,7 +4801,7 @@ function paintSkuDeltas(oldRows, newRows, co, q) {
   document.querySelectorAll('#cabinet-tbody tr').forEach(tr => {
     const serial = (tr.querySelectorAll('input[type=text]')[1]?.value || '').trim().toUpperCase();
     const qty = parseInt(tr.querySelector('.qty-display')?.textContent) || 0;
-    const cost = parseFloat(tr.querySelectorAll('input[type=number]')[0]?.value) || 0;
+    const cost = moneyVal(tr.querySelector('.cab-cost'));
     const markup = parseFloat(tr.querySelector('.markup-select')?.value) || 0;
     const nowSell = qty * cost * (1 + markup / 100);
     const wasSell = oldBag[serial] ? oldBag[serial].sell : 0;
@@ -5015,7 +5025,7 @@ function collectData() {
     cabinets.push({
       desc:   tr.querySelector('input[type=text]')?.value || '',
       qty:    parseInt(tr.querySelector('.qty-display')?.textContent) || 1,
-      cost:   tr.querySelectorAll('input[type=number]')[0]?.value || '',
+      cost:   String(moneyVal(tr.querySelector('.cab-cost') || tr.querySelectorAll('input.money-input')[0] || tr.querySelectorAll('input[type=number]')[0])),
       markup: tr.querySelector('.markup-select')?.value || '35',
       serial: tr.querySelectorAll('input[type=text]')[1]?.value || '',
       id:     tr.dataset.id,
@@ -5026,8 +5036,8 @@ function collectData() {
   document.querySelectorAll('#labor-tbody tr').forEach(tr => {
     labor.push({
       name:  tr.querySelector('input[type=text]')?.value || '',
-      rate:  tr.querySelectorAll('input[type=number]')[0]?.value || '',
-      hours: tr.querySelectorAll('input[type=number]')[1]?.value || '',
+      rate:  String(moneyVal(tr.querySelector('.lab-rate') || tr.querySelectorAll('input.money-input')[0] || tr.querySelectorAll('input[type=number]')[0])),
+      hours: tr.querySelector('.lab-hours')?.value || '',
     });
   });
 
@@ -5216,7 +5226,7 @@ function addCabinetRow(desc='', qty=1, cost='', markup=35, serial='', id = null)
         <button class="qty-btn" onclick="changeQty(this,1)">+</button>
       </div>
     </td>
-    <td><input class="tbl-input" type="number" placeholder="0.00" value="${cost}" step="0.01" min="0" oninput="rowCalc(this)" /></td>
+    <td><input class="tbl-input money-input cab-cost" type="text" inputmode="decimal" placeholder="$0.00" value="${cost === '' || cost == null ? '' : fmt(cost)}" oninput="rowCalc(this)" onfocus="moneyFocus(this)" onblur="moneyBlur(this);rowCalc(this)" /></td>
     <td style="text-align:right;color:var(--muted)"><span class="net-cost">$0.00</span></td>
     <td>
       <select class="markup-select" onchange="rowCalc(this)">
@@ -5242,7 +5252,7 @@ function changeQty(btn, delta) {
 function rowCalc(el) {
   const tr = el.closest('tr');
   const qty    = parseInt(tr.querySelector('.qty-display').textContent) || 1;
-  const cost   = parseFloat(tr.querySelectorAll('input[type=number]')[0]?.value) || 0;
+  const cost   = moneyVal(tr.querySelector('.cab-cost'));
   const markup = parseFloat(tr.querySelector('.markup-select')?.value) || 0;
   const netCost = qty * cost;
   const total   = netCost * (1 + markup/100);
@@ -5257,8 +5267,8 @@ function addLaborRow(name='Assembly', rate=40, hours='') {
   const tr = document.createElement('tr');
   tr.innerHTML = `
     <td><input class="tbl-input" type="text" placeholder="Name or Role" value="${name}" oninput="laborCalc(this)" /></td>
-    <td><input class="tbl-input" type="number" placeholder="20.00" value="${rate||''}" step="0.5" min="0" oninput="laborCalc(this)" /></td>
-    <td><input class="tbl-input" type="number" placeholder="0" value="${hours||''}" step="0.5" min="0" oninput="laborCalc(this)" /></td>
+    <td><input class="tbl-input money-input lab-rate" type="text" inputmode="decimal" placeholder="$0.00" value="${rate===''||rate==null?'':fmt(rate)}" oninput="laborCalc(this)" onfocus="moneyFocus(this)" onblur="moneyBlur(this);laborCalc(this)" /></td>
+    <td><input class="tbl-input lab-hours" type="number" placeholder="0" value="${hours||''}" step="0.5" min="0" oninput="laborCalc(this)" /></td>
     <td><span class="line-total">$0.00</span></td>
     <td><button class="del-btn" onclick="deleteRow(this,'labor-tbody')">✕</button></td>
   `;
@@ -5268,8 +5278,8 @@ function addLaborRow(name='Assembly', rate=40, hours='') {
 
 function laborCalc(el) {
   const tr   = el.closest('tr');
-  const rate = parseFloat(tr.querySelectorAll('input[type=number]')[0]?.value) || 0;
-  const hrs  = parseFloat(tr.querySelectorAll('input[type=number]')[1]?.value) || 0;
+  const rate = moneyVal(tr.querySelector('.lab-rate'));
+  const hrs  = parseFloat(tr.querySelector('.lab-hours')?.value) || 0;
   tr.querySelector('.line-total').textContent = fmt(rate * hrs);
   recalc();
   saveLocal();
@@ -5294,7 +5304,7 @@ function recalc() {
   document.querySelectorAll('#cabinet-tbody tr').forEach(tr => {
     if (tr.classList.contains('sku-removed-row')) return;
     const qty    = parseInt(tr.querySelector('.qty-display')?.textContent) || 1;
-    const cost   = parseFloat(tr.querySelectorAll('input[type=number]')[0]?.value) || 0;
+    const cost   = moneyVal(tr.querySelector('.cab-cost'));
     const markup = parseFloat(tr.querySelector('.markup-select')?.value) || 0;
     cabCost  += qty * cost;
     cabTotal += qty * cost * (1 + markup/100);
@@ -5303,8 +5313,8 @@ function recalc() {
   // Labor
   let laborTotal = 0;
   document.querySelectorAll('#labor-tbody tr').forEach(tr => {
-    const rate = parseFloat(tr.querySelectorAll('input[type=number]')[0]?.value) || 0;
-    const hrs  = parseFloat(tr.querySelectorAll('input[type=number]')[1]?.value) || 0;
+    const rate = moneyVal(tr.querySelector('.lab-rate'));
+    const hrs  = parseFloat(tr.querySelector('.lab-hours')?.value) || 0;
     laborTotal += rate * hrs;
   });
 
@@ -5362,8 +5372,28 @@ function recalc() {
 // recalcPnl removed — per-job P&L tab retired July 2026
 function recalcPnl() {}
 
+function parseMoney(v) {
+  if (v == null || v === '') return 0;
+  if (typeof v === 'number') return isFinite(v) ? v : 0;
+  const n = parseFloat(String(v).replace(/[$,\s]/g, ''));
+  return isFinite(n) ? n : 0;
+}
+function moneyVal(el) { return parseMoney(el && el.value); }
 function fmt(n) {
-  return '$' + (Math.round(n * 100) / 100).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  const x = parseMoney(n);
+  const neg = x < 0;
+  const body = '$' + Math.abs(Math.round(x * 100) / 100).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  return neg ? '-' + body : body;
+}
+function moneyFocus(el) {
+  if (!el) return;
+  const n = parseMoney(el.value);
+  el.value = (Math.round(n * 100) / 100).toFixed(2);
+  el.select();
+}
+function moneyBlur(el) {
+  if (!el) return;
+  el.value = fmt(el.value);
 }
 function fmtMDY(raw) {
   if (raw == null || raw === '') return '';
@@ -5620,7 +5650,7 @@ function openAdjustSchedule(idArg) {
       + '<div><label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">' + labels[n] + ' due</label>'
       + '<input type="date" id="adj-d' + n + '-due" value="' + due + '" style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" /></div>'
       + '<div><label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Amount (unpaid)</label>'
-      + '<input type="number" id="adj-d' + n + '-amt" step="0.01" min="0" value="' + (amt != null ? Number(amt).toFixed(2) : '') + '" oninput="adjLiveCheck()" style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;text-align:right;" /></div>'
+      + '<input class="tbl-input money-input" type="text" inputmode="decimal" id="adj-d' + n + '-amt" value="' + (amt != null ? fmt(amt) : '') + '" oninput="adjLiveCheck()" onfocus="moneyFocus(this)" onblur="moneyBlur(this);adjLiveCheck()" /></div>'
       + '</div></div>';
   }).join('');
   document.getElementById('adj-fields').innerHTML = fields;
@@ -5746,7 +5776,7 @@ function coReadFees() {
   const bulkEl = document.getElementById('co-bulk-pct');
   const gnaEl = document.getElementById('co-gna-pct');
   const taxEl = document.getElementById('co-tax-pct');
-  c.laborRate = rateEl ? Number(rateEl.value) : (c.laborRate != null ? c.laborRate : existing.rate);
+  c.laborRate = rateEl ? moneyVal(rateEl) : (c.laborRate != null ? c.laborRate : existing.rate);
   c.laborHours = hrsEl ? Number(hrsEl.value) : (c.laborHours != null ? c.laborHours : existing.hours);
   c.bulkDiscPct = bulkEl ? Number(bulkEl.value) : (c.bulkDiscPct != null ? c.bulkDiscPct : (parseFloat(q.bulkDiscPct) || 0));
   c.gnaPct = gnaEl ? Number(gnaEl.value) : (c.gnaPct != null ? c.gnaPct : (parseFloat(q.gnaPct) || 10));
@@ -5767,7 +5797,7 @@ function coPaintFees() {
     }
   }
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
-  set('co-labor-rate', c.laborRate != null ? c.laborRate : existing.rate);
+  set('co-labor-rate', fmt(c.laborRate != null ? c.laborRate : existing.rate));
   set('co-labor-hours', c.laborHours != null ? c.laborHours : existing.hours);
   set('co-bulk-pct', c.bulkDiscPct != null ? c.bulkDiscPct : (parseFloat(q.bulkDiscPct) || 0));
   set('co-gna-pct', c.gnaPct != null ? c.gnaPct : (parseFloat(q.gnaPct) || 10));
@@ -5816,17 +5846,31 @@ function coSkuTotal(c) {
 function coReadSkus() {
   const rows = [];
   document.querySelectorAll('#co-sku-body tr').forEach(tr => {
-    const inp = tr.querySelectorAll('input');
     rows.push({
-      desc: inp[0] ? inp[0].value : '',
-      serial: inp[1] ? inp[1].value : '',
-      qty: inp[2] ? inp[2].value : '0',
-      cost: inp[3] ? inp[3].value : '0',
-      markup: inp[4] ? inp[4].value : '0',
+      desc: tr.querySelector('.cab-desc')?.value || '',
+      serial: tr.querySelector('.cab-serial')?.value || '',
+      qty: tr.querySelector('.cab-qty')?.value || '0',
+      cost: String(moneyVal(tr.querySelector('.cab-cost'))),
+      markup: tr.querySelector('.markup-select')?.value || '0',
       id: tr.dataset.id || ''
     });
   });
   return rows;
+}
+function coSkuRowHtml(row) {
+  const desc = String((row && row.desc) || '').replace(/"/g,'&quot;');
+  const serial = String((row && row.serial) || '').replace(/"/g,'&quot;');
+  const qty = (row && row.qty != null) ? row.qty : 1;
+  const cost = (row && row.cost != null && row.cost !== '') ? fmt(row.cost) : fmt(0);
+  const mk = (row && row.markup != null) ? Number(row.markup) : 35;
+  const id = (row && row.id) || '';
+  return '<tr data-id="' + id + '">'
+    + '<td><input class="tbl-input cab-desc" type="text" value="' + desc + '" oninput="coSkuLive()" /></td>'
+    + '<td><input class="tbl-input serial cab-serial" type="text" value="' + serial + '" oninput="coSkuLive()" /></td>'
+    + '<td><input class="tbl-input cab-qty" type="number" step="1" min="0" value="' + qty + '" oninput="coSkuLive()" /></td>'
+    + '<td><input class="tbl-input money-input cab-cost" type="text" inputmode="decimal" value="' + cost + '" oninput="coSkuLive()" onfocus="moneyFocus(this)" onblur="moneyBlur(this);coSkuLive()" /></td>'
+    + '<td><select class="markup-select" onchange="coSkuLive()">' + markupOptions(mk) + '</select></td>'
+    + '<td><button type="button" class="modal-btn" onclick="this.closest(\'tr\').remove();coSkuLive()">Remove</button></td></tr>';
 }
 function coPaintSkus() {
   const c = window._co;
@@ -5835,15 +5879,7 @@ function coPaintSkus() {
   const q = quoteData[c.id] || {};
   const cabs = (c.cabinets && c.cabinets.length) ? c.cabinets : (q.cabinets || []);
   let html = '<table class="quote-table" style="min-width:980px;"><thead><tr><th style="min-width:320px">Description</th><th style="min-width:160px">SKU</th><th>Qty</th><th>Cost</th><th>Mk%</th><th></th></tr></thead><tbody id="co-sku-body">';
-  cabs.forEach((row, i) => {
-    html += '<tr data-id="' + (row.id || '') + '">'
-      + '<td><input type="text" value="' + String(row.desc || '').replace(/"/g,'&quot;') + '" oninput="coSkuLive()" style="width:100%;min-width:300px;" /></td>'
-      + '<td><input type="text" value="' + String(row.serial || '').replace(/"/g,'&quot;') + '" oninput="coSkuLive()" style="width:100%;min-width:150px;" /></td>'
-      + '<td><input type="number" step="1" min="0" value="' + (row.qty || 0) + '" oninput="coSkuLive()" style="width:72px;" /></td>'
-      + '<td><input type="number" step="0.01" min="0" value="' + (row.cost || 0) + '" oninput="coSkuLive()" style="width:96px;" /></td>'
-      + '<td><input type="number" step="1" min="0" value="' + (row.markup || 0) + '" oninput="coSkuLive()" style="width:64px;" /></td>'
-      + '<td><button type="button" class="modal-btn" onclick="this.closest(\'tr\').remove();coSkuLive()">Remove</button></td></tr>';
-  });
+  cabs.forEach(row => { html += coSkuRowHtml(row); });
   html += '</tbody></table><button type="button" class="modal-btn" style="margin-top:8px;" onclick="coAddSku()">Add line</button>';
   wrap.innerHTML = html;
   coSkuLive();
@@ -5856,7 +5892,7 @@ function coAddSku() {
   const body = document.getElementById('co-sku-body');
   if (!body) return;
   const tr = document.createElement('tr');
-  tr.innerHTML = '<td><input type="text" oninput="coSkuLive()" /></td><td><input type="text" oninput="coSkuLive()" /></td><td><input type="number" step="1" min="0" value="1" oninput="coSkuLive()" style="width:64px;" /></td><td><input type="number" step="0.01" min="0" value="0" oninput="coSkuLive()" style="width:88px;" /></td><td><input type="number" step="1" min="0" value="35" oninput="coSkuLive()" style="width:64px;" /></td><td><button type="button" class="modal-btn" onclick="this.closest(\'tr\').remove();coSkuLive()">×</button></td>';
+  tr.innerHTML = coSkuRowHtml({ desc: '', serial: '', qty: 1, cost: 0, markup: 35, id: '' }).replace(/^<tr[^>]*>/, '').replace(/<\/tr>$/, '');
   body.appendChild(tr);
   coSkuLive();
 }
@@ -5893,7 +5929,7 @@ function coPaintSched() {
     const due = ar['d' + n + 'Due'] || '';
     html += '<div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:8px;margin-bottom:8px;align-items:end;">'
       + '<div><label style="font-size:11px;color:var(--muted);">Invoice ' + n + (paid ? ' · paid — locked' : '') + '</label>'
-      + '<input type="number" id="co-d' + n + '-amt" step="0.01" min="0" value="' + (amt != null ? Number(amt).toFixed(2) : '') + '" ' + (paid ? 'disabled' : 'oninput="coSchedLive()"') + ' style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;text-align:right;" /></div>'
+      + '<input class="tbl-input money-input" type="text" inputmode="decimal" id="co-d' + n + '-amt" value="' + (amt != null ? fmt(amt) : '') + '" ' + (paid ? 'disabled' : 'oninput="coSchedLive()" onfocus="moneyFocus(this)" onblur="moneyBlur(this);coSchedLive()"') + ' /></div>'
       + '<div><label style="font-size:11px;color:var(--muted);">Due</label>'
       + '<input type="date" id="co-d' + n + '-due" value="' + due + '" ' + (paid ? 'disabled' : '') + ' style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" /></div>'
       + '<div style="font-size:12px;color:var(--muted);padding-bottom:8px;">' + (paid ? 'Check stays.' : 'Unpaid') + '</div></div>';
@@ -5983,12 +6019,17 @@ function coPaintReview() {
   box.innerHTML = html;
   const howWrap = document.getElementById('co-bill-how-wrap');
   if (howWrap) {
-    const show = c.payChoice === 'custom' && (Number(c.changeAmount) || 0) !== 0;
-    howWrap.style.display = show ? '' : 'none';
+    const amt = Number(c.changeAmount);
+    const billed = c.payChoice === 'pass' || c.payChoice === 'custom';
+    const show = billed && amt === amt && amt !== 0 && c.kind !== 'schedule';
+    howWrap.style.display = show ? 'block' : 'none';
     if (show && !c.billHow) c.billHow = 'schedule';
     howWrap.querySelectorAll('input[name="co-bill-how"]').forEach(el => {
       el.checked = el.value === (c.billHow || 'schedule');
     });
+    if (show) {
+      try { howWrap.scrollIntoView({ block: 'nearest' }); } catch (e) {}
+    }
   }
 }
 function coSetBillHow(how) {
@@ -6123,14 +6164,14 @@ function coPaintPayOptions() {
   html += opt('custom', 'This change is a custom amount', 'Labor, urgency, or a courtesy that is not $0. Type the amount this change should add (can be more or less than the SKU delta).');
   html += '<div id="co-custom-amt-wrap" style="display:' + (c.payChoice === 'custom' ? 'block' : 'none') + ';margin:8px 0 12px;max-width:280px;">'
     + '<label style="font-size:11px;color:var(--muted);text-transform:uppercase;">This change $</label>'
-    + '<input type="number" id="co-change-amt" step="0.01" value="' + (c.changeAmount != null ? Number(c.changeAmount).toFixed(2) : delta.toFixed(2)) + '" oninput="coSetCustomAmt(this.value)" style="width:100%;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />'
+    + '<input class="tbl-input money-input" type="text" inputmode="decimal" id="co-change-amt" value="' + fmt(c.changeAmount != null ? c.changeAmount : delta) + '" oninput="coSetCustomAmt(this.value)" onfocus="moneyFocus(this)" onblur="moneyBlur(this);coSetCustomAmt(this.value)" />'
     + '</div>';
   host.innerHTML = html;
 }
 function coSetCustomAmt(v) {
   if (!window._co) return;
   window._co.payChoice = 'custom';
-  window._co.changeAmount = Number(v) || 0;
+  window._co.changeAmount = parseMoney(v);
   coApplyPayChoice();
   coSchedLive();
 }
@@ -6295,7 +6336,7 @@ function saveChangeOrder(keepOpen) {
     coReadFees();
     c.newTotal = coSkuTotal(c);
   }
-  if (!(c.payChoice === 'custom' && c.billHow === 'separate')) {
+  if (!((c.payChoice === 'custom' || c.payChoice === 'pass') && c.billHow === 'separate')) {
     if (!coSchedLive()) {
       alert('Fix unpaid invoices so they add to remaining.');
       return;
@@ -6330,7 +6371,7 @@ function saveChangeOrder(keepOpen) {
     }
   }
   const skuTotal = coSkuSellOf(q.cabinets || [], q);
-  const separate = c.payChoice === 'custom' && c.billHow === 'separate';
+  const separate = (c.payChoice === 'custom' || c.payChoice === 'pass') && c.billHow === 'separate';
   const changeAmt = Number(c.changeAmount);
   const billTotal = separate
     ? oldTotal
@@ -6377,7 +6418,7 @@ function saveChangeOrder(keepOpen) {
     taxPct: c.taxPct,
     materialsNet: c.materialsNet,
     cabinetsSell: c.cabinetsSell,
-    billHow: separate ? 'separate' : (c.payChoice === 'custom' ? 'schedule' : ''),
+    billHow: separate ? 'separate' : ((c.payChoice === 'custom' || c.payChoice === 'pass') ? 'schedule' : ''),
     extraInvoice: separate ? {
       n: n,
       amt: changeAmt === changeAmt ? changeAmt : 0,
@@ -6571,7 +6612,7 @@ function nextDeposit(qd, total) {
   if (plan !== '50-50' && !ar.d3Paid) return { n: 3, label: '3rd deposit 20%', due: ar.d3Due, amt: ar.d3Amt };
   return { n: 0, label: 'Paid in full', due: '', amt: 0 };
 }
-function invMoney(n) { return Math.round((Number(n) || 0) * 100) / 100; }
+function invMoney(n) { return Math.round(parseMoney(n) * 100) / 100; }
 function paidInvoiceAmt(ar, n, fallback) {
   const paidAmt = ar['d' + n + 'PaidAmt'];
   if (ar['d' + n + 'Paid'] && paidAmt != null && paidAmt !== '') return invMoney(paidAmt);
@@ -6774,7 +6815,7 @@ function buildInvoice() {
   document.querySelectorAll('#cabinet-tbody tr').forEach(tr => {
     const desc   = tr.querySelector('input[type=text]')?.value || '—';
     const qty    = tr.querySelector('.qty-display')?.textContent || '1';
-    const cost   = parseFloat(tr.querySelectorAll('input[type=number]')[0]?.value) || 0;
+    const cost   = moneyVal(tr.querySelector('.cab-cost'));
     const markup = parseFloat(tr.querySelector('.markup-select')?.value) || 0;
     const serial = tr.querySelectorAll('input[type=text]')[1]?.value || '';
     const unit   = cost * (1 + markup/100);
@@ -6789,8 +6830,8 @@ function buildInvoice() {
   const labHtml = [];
   document.querySelectorAll('#labor-tbody tr').forEach(tr => {
     const name = tr.querySelector('input[type=text]')?.value || 'Labor';
-    const rate = parseFloat(tr.querySelectorAll('input[type=number]')[0]?.value) || 0;
-    const hrs  = parseFloat(tr.querySelectorAll('input[type=number]')[1]?.value) || 0;
+    const rate = moneyVal(tr.querySelector('.lab-rate'));
+    const hrs  = parseFloat(tr.querySelector('.lab-hours')?.value) || 0;
     if (hrs > 0) {
       labHtml.push(`<tr><td>${name}</td><td>${hrs} hrs</td><td>—</td><td>${fmt(rate)}/hr</td><td>${fmt(rate*hrs)}</td></tr>`);
     }
