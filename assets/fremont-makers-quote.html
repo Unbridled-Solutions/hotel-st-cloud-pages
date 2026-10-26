@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v1014p</title>
+<title>Fremont Makers — Project Builder v1014q</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20261026p-bill-how -->
+<!-- FM-BUILD-v20261026q-inv-next -->
 <script>
 (function(){
   try {
@@ -776,7 +776,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1014p</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1014q</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <span class="status-label">Status:</span>
@@ -1810,24 +1810,24 @@
           <span class="co-pay-copy"><strong>Create new invoice for this change order</strong><span>Leave the original invoices. This change gets its own invoice.</span></span>
         </label>
       </div>
-      <div id="co-sched-fields"></div>
-      <p id="co-sched-live" style="font-size:13px;margin:8px 0;"></p>
-      <p id="co-sched-err" style="font-size:13px;color:var(--red);min-height:18px;"></p>
       <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">
         <button class="modal-btn" type="button" onclick="coBackFromSched()">Back</button>
         <button class="modal-btn confirm" type="button" id="co-sched-next" onclick="coNextFromPay()">Next</button>
       </div>
     </div>
     <div id="co-step-5" class="co-step">
-      <p style="font-size:14px;margin-bottom:8px;">Review. Save writes the paper trail. Send for signature emails the buyer — you stay here.</p>
+      <p style="font-size:14px;margin-bottom:8px;">Review. Paid and unpaid invoices are here. Save writes the paper trail.</p>
       <div id="co-review" style="font-size:13px;line-height:1.5;margin-bottom:12px;"></div>
+      <div id="co-sched-fields"></div>
+      <p id="co-sched-live" style="font-size:13px;margin:8px 0;"></p>
+      <p id="co-sched-err" style="font-size:13px;color:var(--red);min-height:18px;"></p>
       <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Buyer email</label>
       <input type="email" id="co-sign-email" style="width:100%;margin-bottom:10px;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />
       <p id="co-sign-msg" style="font-size:13px;min-height:18px;margin-bottom:8px;"></p>
       <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">
         <button class="modal-btn" type="button" onclick="coBackFromReview()">Back</button>
         <button class="modal-btn" type="button" onclick="coRequestSignatures()">Send for signature</button>
-        <button class="modal-btn confirm" type="button" onclick="saveChangeOrder()">Save change order</button>
+        <button class="modal-btn confirm" type="button" id="co-save-btn" onclick="saveChangeOrder()">Save change order</button>
       </div>
     </div>
   </div>
@@ -5718,16 +5718,15 @@ function coSetKind(kind) {
   });
 }
 function coGo(n) {
-  if (n === 2 && window._co && window._co.kind === 'schedule') n = 4;
-  if (n === 3 && window._co && window._co.kind === 'schedule') n = 4;
+  if (window._co && window._co.kind === 'schedule' && (n === 2 || n === 3 || n === 4)) n = 5;
   [1,2,3,4,5].forEach(i => {
     const s = document.getElementById('co-step-' + i);
     if (s) s.classList.toggle('on', i === n);
   });
   if (n === 2) coPaintSkus();
   if (n === 3) coPaintFees();
-  if (n === 4) { coPaintPayOptions(); coPaintSched(); coPaintBillHow(); }
-  if (n === 5) coPaintReview();
+  if (n === 4) { coPaintPayOptions(); coPaintBillHow(); }
+  if (n === 5) { coPaintReview(); coPaintSched(); coPaintBillHow(); }
 }
 function coAfterSkus() {
   const c = window._co;
@@ -5748,7 +5747,9 @@ function coBackFromSched() {
   else coGo(3);
 }
 function coBackFromReview() {
-  coGo(4);
+  const c = window._co;
+  if (c && c.kind === 'schedule') coGo(1);
+  else coGo(4);
 }
 function coAssemblyLabor(q) {
   const rows = (q && q.labor) || [];
@@ -5943,11 +5944,9 @@ function coPayTarget(c, q) {
   return Math.round((oldContract + amt) * 100) / 100;
 }
 function coNextFromPay() {
-  if (!coSchedLive()) {
-    const err = document.getElementById('co-sched-err');
-    if (err && !err.textContent) err.textContent = 'Pick keep remaining or pass the new total, then Next.';
-    return;
-  }
+  const c = window._co;
+  if (!c) return;
+  coPayTarget(c, quoteData[c.id] || {});
   coGo(5);
 }
 function coSchedLive() {
@@ -5955,11 +5954,13 @@ function coSchedLive() {
   const live = document.getElementById('co-sched-live');
   const err = document.getElementById('co-sched-err');
   const next = document.getElementById('co-sched-next');
+  const saveBtn = document.getElementById('co-save-btn');
   if (!c || !live) return true;
   if ((c.payChoice === 'custom' || c.payChoice === 'pass') && c.billHow === 'separate') {
     live.textContent = 'This change ' + fmt(c.changeAmount || 0) + ' on a new change-order invoice. Original invoices stay.';
     if (err) err.textContent = '';
     if (next) next.disabled = false;
+    if (saveBtn) saveBtn.disabled = false;
     return true;
   }
   const q = quoteData[c.id] || {};
@@ -5984,6 +5985,7 @@ function coSchedLive() {
     + ' − cash ' + fmt(cash) + ' = remaining ' + fmt(remain) + '. Unpaid now ' + fmt(unpaid) + '.';
   if (err) err.textContent = ok ? '' : 'Unpaid invoices must add to ' + fmt(remain) + '.';
   if (next) next.disabled = !ok;
+  if (saveBtn) saveBtn.disabled = !ok;
   return ok;
 }
 function coPaintReview() {
@@ -6025,17 +6027,25 @@ function coSetBillHow(how) {
 function coPaintBillHow() {
   const c = window._co;
   const howWrap = document.getElementById('co-bill-how-wrap');
-  if (!c || !howWrap) return;
+  if (!c) return;
   const amt = Number(c.changeAmount);
   const billed = c.payChoice === 'pass' || c.payChoice === 'custom';
   const show = billed && amt === amt && amt !== 0 && c.kind !== 'schedule';
-  howWrap.style.display = show ? 'block' : 'none';
-  if (show && !c.billHow) c.billHow = 'schedule';
-  howWrap.querySelectorAll('input[name="co-bill-how"]').forEach(el => {
-    el.checked = el.value === (c.billHow || 'schedule');
-  });
+  if (howWrap) {
+    howWrap.style.display = show ? 'block' : 'none';
+    if (show && !c.billHow) c.billHow = 'schedule';
+    howWrap.querySelectorAll('input[name="co-bill-how"]').forEach(el => {
+      el.checked = el.value === (c.billHow || 'schedule');
+    });
+  }
   const sched = document.getElementById('co-sched-fields');
-  if (sched) sched.style.display = (show && c.billHow === 'separate') ? 'none' : '';
+  const live = document.getElementById('co-sched-live');
+  const err = document.getElementById('co-sched-err');
+  const onReview = document.getElementById('co-step-5')?.classList.contains('on');
+  const hideInv = !onReview || (show && c.billHow === 'separate');
+  if (sched) sched.style.display = hideInv ? 'none' : '';
+  if (live) live.style.display = hideInv ? 'none' : '';
+  if (err) err.style.display = hideInv ? 'none' : '';
 }
 function fmBuyerEmail(q) {
   return (document.getElementById('customer-email')?.value
