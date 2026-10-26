@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v1014l</title>
+<title>Fremont Makers — Project Builder v1014m</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20261014l-co-inv -->
+<!-- FM-BUILD-v20261014m-co-sku-ui -->
 <script>
 (function(){
   try {
@@ -273,6 +273,26 @@
   .co-pay-opt .co-pay-copy { flex: 1; min-width: 0; text-align: left; }
   .co-pay-opt .co-pay-copy strong { display: block; font-size: 14px; font-weight: 600; }
   .co-pay-opt .co-pay-copy span { display: block; font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+  .co-check {
+    display: flex; align-items: flex-start; gap: 12px;
+    width: 100%; max-width: 720px; text-align: left;
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 14px; margin: 10px 0 0; cursor: pointer;
+    background: var(--surface);
+  }
+  .co-check:hover { border-color: var(--accent); background: var(--surface2); }
+  .co-check input[type="checkbox"] {
+    flex: 0 0 auto; width: 18px; height: 18px; margin: 2px 0 0;
+    accent-color: var(--accent); cursor: pointer;
+  }
+  .co-check .co-check-copy { flex: 1; min-width: 0; }
+  .co-check .co-check-copy strong { display: block; font-size: 14px; font-weight: 600; }
+  .co-check .co-check-copy span { display: block; font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+  .co-upload-row { margin: 0 0 8px; }
+  #co-scope-wrap label, .co-field-label {
+    display: block; font-size: 11px; color: var(--muted); text-transform: uppercase;
+    letter-spacing: .06em; margin-bottom: 4px;
+  }
   #co-pay-options { text-align: left; }
   .modal-btn:disabled { opacity: 0.45; cursor: not-allowed; }
   .status-radios { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
@@ -595,10 +615,10 @@
   }
   .modal h3 { font-size: 16px; margin-bottom: 8px; }
   .modal p  { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
-  .modal input {
+  .modal input:not([type="checkbox"]):not([type="radio"]):not([type="file"]) {
     background: var(--input-bg); border: 1px solid var(--border);
     color: var(--text); border-radius: 5px; padding: 8px 14px;
-    font-size: 16px; text-align: center; width: 100%; letter-spacing: .2em; margin-bottom: 14px;
+    font-size: 16px; text-align: left; width: 100%; letter-spacing: 0; margin-bottom: 14px;
   }
   .modal input:focus { outline: none; border-color: var(--accent); }
   .modal-btns { display: flex; gap: 10px; justify-content: center; }
@@ -746,7 +766,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1014l</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1014m</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <span class="status-label">Status:</span>
@@ -1695,10 +1715,9 @@
   <div class="modal" style="max-width:min(1240px,96vw);width:96vw;text-align:left;max-height:96vh;overflow:auto;">
     <h3 id="co-title">Change order</h3>
     <p id="co-sub" style="font-size:13px;color:var(--muted);margin-bottom:12px;"></p>
-    <div id="co-scope-wrap" style="display:none;margin-bottom:12px;text-align:left;">
-      <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Where this change order lives</label>
+    <div id="co-scope-wrap" style="display:none;margin-bottom:14px;text-align:left;">
+      <label for="co-scope">Apply this change to</label>
       <select id="co-scope" onchange="coSetScope(this.value)" style="width:100%;max-width:560px;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;"></select>
-      <p style="font-size:12px;color:var(--muted);margin-top:6px;">Whole order keeps SKUs off any one house. Pick a house to put the boxes on that house only.</p>
     </div>
     <div id="co-step-1" class="co-step on">
       <p style="font-size:14px;margin-bottom:8px;">What is changing on this contracted job?</p>
@@ -1715,16 +1734,19 @@
       </div>
     </div>
     <div id="co-step-2" class="co-step">
-      <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">Upload a Wholesale Cabinets PDF of the changed boxes. We take SKU lines only — not tax, not order total. Next is labor, discount, G&A, and tax.</p>
+      <p style="font-size:14px;margin-bottom:10px;">Add or change cabinets. Upload a Wholesale Cabinets PDF, or edit the list below.</p>
       <input type="file" id="co-pdf-file" accept=".pdf,.csv,.txt,.docx" style="display:none" onchange="coHandlePdf(event)" />
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
-        <button type="button" class="modal-btn" onclick="document.getElementById('co-pdf-file').click()">Upload new cabinet PDF</button>
-        <label style="font-size:13px;display:flex;align-items:flex-start;gap:8px;cursor:pointer;max-width:440px;line-height:1.35;">
-          <input type="checkbox" id="co-pdf-replace" style="margin-top:3px;" />
-          <span><strong>Clear existing list and replace with this PDF</strong><br><span style="color:var(--muted);font-size:12px;">Leave unchecked to add or update lines on the current order. Check only if you want to wipe the list and start from this PDF.</span></span>
-        </label>
+      <div class="co-upload-row">
+        <button type="button" class="modal-btn" onclick="document.getElementById('co-pdf-file').click()">Upload cabinet PDF</button>
       </div>
-      <p id="co-pdf-status" style="font-size:13px;color:var(--muted);margin-bottom:8px;"></p>
+      <label class="co-check" for="co-pdf-replace">
+        <input type="checkbox" id="co-pdf-replace" />
+        <span class="co-check-copy">
+          <strong>Replace the current list</strong>
+          <span>Off (default): add these SKUs to what’s already here. On: wipe the list and use only this PDF.</span>
+        </span>
+      </label>
+      <p id="co-pdf-status" style="font-size:13px;color:var(--muted);margin:10px 0 8px;"></p>
       <div id="co-sku-diff" style="font-size:13px;margin-bottom:10px;max-height:18vh;overflow:auto;"></div>
       <div id="co-sku-wrap" style="overflow:auto;max-height:52vh;margin-bottom:10px;"></div>
       <p id="co-sku-live" style="font-size:13px;margin-bottom:8px;"></p>
@@ -6246,7 +6268,7 @@ function coPaintScope() {
   const kids = quoteKind(parent) === 'order' ? childrenOfOrder(c.parentId) : [];
   if (!kids.length) { wrap.style.display = 'none'; return; }
   wrap.style.display = '';
-  let html = '<option value="' + c.parentId + '">Whole order — extras not on a house</option>';
+  let html = '<option value="' + c.parentId + '">Whole order (not a specific house)</option>';
   kids.forEach(k => {
     const qd = quoteData[k.id] || k;
     const label = (qd.jobCode || '') + ' · ' + (qd.modelName || 'House') + (qd.unitIndex ? ' ' + qd.unitIndex : '') + (qd.address ? ' · ' + qd.address : '');
