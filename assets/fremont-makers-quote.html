@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v1014o</title>
+<title>Fremont Makers — Project Builder v1014p</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20261026o-money-fields -->
+<!-- FM-BUILD-v20261026p-bill-how -->
 <script>
 (function(){
   try {
@@ -630,7 +630,7 @@
   #change-order-modal .tbl-input { margin-bottom: 0; width: 100%; }
   #change-order-modal .cab-qty { width: 64px; text-align: center; }
   #change-order-modal .cab-cost { width: 110px; }
-  #change-order-modal .markup-select { width: 72px; }
+  #change-order-modal .markup-select { width: 72px; text-align: right; }
   .modal-btns { display: flex; gap: 10px; justify-content: center; }
   .modal-btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 6px;
@@ -776,7 +776,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1014o</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1014p</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <span class="status-label">Status:</span>
@@ -1799,6 +1799,17 @@
     <div id="co-step-4" class="co-step">
       <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">SKUs keep their real cost. You decide what this change costs the job — $0 courtesy, pass the SKU delta, or type an amount.</p>
       <div id="co-pay-options" style="margin-bottom:12px;"></div>
+      <div id="co-bill-how-wrap" style="display:none;margin:0 0 16px;text-align:left;max-width:720px;">
+        <p class="co-field-label" style="margin-bottom:8px;">How do you want to bill this change?</p>
+        <label class="co-pay-opt" for="co-bill-schedule">
+          <input type="radio" id="co-bill-schedule" name="co-bill-how" value="schedule" checked onchange="coSetBillHow('schedule')" />
+          <span class="co-pay-copy"><strong>Keep in payment schedule</strong><span>Add this amount to the unpaid invoices (50/30/20 or 50/50).</span></span>
+        </label>
+        <label class="co-pay-opt" for="co-bill-separate">
+          <input type="radio" id="co-bill-separate" name="co-bill-how" value="separate" onchange="coSetBillHow('separate')" />
+          <span class="co-pay-copy"><strong>Create new invoice for this change order</strong><span>Leave the original invoices. This change gets its own invoice.</span></span>
+        </label>
+      </div>
       <div id="co-sched-fields"></div>
       <p id="co-sched-live" style="font-size:13px;margin:8px 0;"></p>
       <p id="co-sched-err" style="font-size:13px;color:var(--red);min-height:18px;"></p>
@@ -1810,17 +1821,6 @@
     <div id="co-step-5" class="co-step">
       <p style="font-size:14px;margin-bottom:8px;">Review. Save writes the paper trail. Send for signature emails the buyer — you stay here.</p>
       <div id="co-review" style="font-size:13px;line-height:1.5;margin-bottom:12px;"></div>
-      <div id="co-bill-how-wrap" style="display:none;margin:16px 0 18px;text-align:left;max-width:720px;">
-        <p class="co-field-label" style="margin-bottom:8px;">How do you want to bill this change?</p>
-        <label class="co-pay-opt" for="co-bill-schedule">
-          <input type="radio" id="co-bill-schedule" name="co-bill-how" value="schedule" checked onchange="coSetBillHow('schedule')" />
-          <span class="co-pay-copy"><strong>Insert into payment schedule</strong><span>Add this amount to the unpaid 50 / 30 / 20 invoices.</span></span>
-        </label>
-        <label class="co-pay-opt" for="co-bill-separate">
-          <input type="radio" id="co-bill-separate" name="co-bill-how" value="separate" onchange="coSetBillHow('separate')" />
-          <span class="co-pay-copy"><strong>Use a separate invoice</strong><span>Leave the original invoices. This change gets its own change-order invoice.</span></span>
-        </label>
-      </div>
       <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Buyer email</label>
       <input type="email" id="co-sign-email" style="width:100%;margin-bottom:10px;padding:8px;background:var(--input-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;" />
       <p id="co-sign-msg" style="font-size:13px;min-height:18px;margin-bottom:8px;"></p>
@@ -2839,15 +2839,7 @@ function applyBulkMarkup() {
   // Update all markup selects in the cabinet table
   const markupSelects = document.querySelectorAll('#cabinet-tbody .markup-select');
   markupSelects.forEach(el => {
-    // Find closest option or set value directly
     el.value = pct;
-    // If exact option doesn't exist, add it temporarily
-    if (el.value != pct) {
-      const opt = document.createElement('option');
-      opt.value = pct; opt.textContent = pct + '%';
-      el.appendChild(opt);
-      el.value = pct;
-    }
   });
   // Update in-memory quoteData and recalc
   if (activeQuoteId && quoteData[activeQuoteId]) {
@@ -4330,7 +4322,7 @@ function markupGridHtml(lines, prefix) {
       + '<td>' + String(l.serial || '').replace(/&/g,'&').replace(/</g,'<') + '</td>'
       + '<td class="r">' + qty + '</td>'
       + '<td class="r">' + fmt(cost) + '</td>'
-      + '<td><select id="' + prefix + '-mk-' + i + '" onchange="' + (prefix === 'npw' ? 'npwMarkupLive()' : 'sqMarkupLive()') + '">' + markupOptions(mk) + '</select></td>'
+      + '<td><input class="markup-select" type="number" min="0" max="100" step="0.5" id="' + prefix + '-mk-' + i + '" value="' + mk + '" oninput="' + (prefix === 'npw' ? 'npwMarkupLive()' : 'sqMarkupLive()') + '" /></td>'
       + '<td class="r" id="' + prefix + '-sell-' + i + '">' + fmt(qty * cost * (1 + mk / 100)) + '</td>'
       + '</tr>';
   }).join('');
@@ -5229,9 +5221,7 @@ function addCabinetRow(desc='', qty=1, cost='', markup=35, serial='', id = null)
     <td><input class="tbl-input money-input cab-cost" type="text" inputmode="decimal" placeholder="$0.00" value="${cost === '' || cost == null ? '' : fmt(cost)}" oninput="rowCalc(this)" onfocus="moneyFocus(this)" onblur="moneyBlur(this);rowCalc(this)" /></td>
     <td style="text-align:right;color:var(--muted)"><span class="net-cost">$0.00</span></td>
     <td>
-      <select class="markup-select" onchange="rowCalc(this)">
-        ${markupOptions(markup)}
-      </select>
+      <input class="markup-select" type="number" min="0" max="100" step="0.5" value="${markup}" oninput="rowCalc(this)" />
     </td>
     <td style="text-align:right"><span class="line-total">$0.00</span></td>
     <td class="sku-delta-col"><span class="sku-delta">—</span></td>
@@ -5736,7 +5726,7 @@ function coGo(n) {
   });
   if (n === 2) coPaintSkus();
   if (n === 3) coPaintFees();
-  if (n === 4) { coPaintPayOptions(); coPaintSched(); }
+  if (n === 4) { coPaintPayOptions(); coPaintSched(); coPaintBillHow(); }
   if (n === 5) coPaintReview();
 }
 function coAfterSkus() {
@@ -5871,7 +5861,7 @@ function coSkuRowHtml(row) {
     + '<td><input class="tbl-input serial cab-serial" type="text" value="' + serial + '" oninput="coSkuLive()" /></td>'
     + '<td><input class="tbl-input cab-qty" type="number" step="1" min="0" value="' + qty + '" oninput="coSkuLive()" /></td>'
     + '<td><input class="tbl-input money-input cab-cost" type="text" inputmode="decimal" value="' + cost + '" oninput="coSkuLive()" onfocus="moneyFocus(this)" onblur="moneyBlur(this);coSkuLive()" /></td>'
-    + '<td><select class="markup-select" onchange="coSkuLive()">' + markupOptions(mk) + '</select></td>'
+    + '<td><input class="markup-select" type="number" min="0" max="100" step="0.5" value="' + mk + '" oninput="coSkuLive()" /></td>'
     + '<td><button type="button" class="modal-btn" onclick="this.closest(\'tr\').remove();coSkuLive()">Remove</button></td></tr>';
 }
 function coPaintSkus() {
@@ -5966,6 +5956,12 @@ function coSchedLive() {
   const err = document.getElementById('co-sched-err');
   const next = document.getElementById('co-sched-next');
   if (!c || !live) return true;
+  if ((c.payChoice === 'custom' || c.payChoice === 'pass') && c.billHow === 'separate') {
+    live.textContent = 'This change ' + fmt(c.changeAmount || 0) + ' on a new change-order invoice. Original invoices stay.';
+    if (err) err.textContent = '';
+    if (next) next.disabled = false;
+    return true;
+  }
   const q = quoteData[c.id] || {};
   const total = coPayTarget(c, q);
   c.billTotal = total;
@@ -6019,24 +6015,27 @@ function coPaintReview() {
       + ' · bulk ' + (c.bulkDiscPct || 0) + '% · G&A ' + (c.gnaPct || 0) + '% · tax ' + (c.taxPct || 0) + '%</p>';
   }
   box.innerHTML = html;
-  const howWrap = document.getElementById('co-bill-how-wrap');
-  if (howWrap) {
-    const amt = Number(c.changeAmount);
-    const billed = c.payChoice === 'pass' || c.payChoice === 'custom';
-    const show = billed && amt === amt && amt !== 0 && c.kind !== 'schedule';
-    howWrap.style.display = show ? 'block' : 'none';
-    if (show && !c.billHow) c.billHow = 'schedule';
-    howWrap.querySelectorAll('input[name="co-bill-how"]').forEach(el => {
-      el.checked = el.value === (c.billHow || 'schedule');
-    });
-    if (show) {
-      try { howWrap.scrollIntoView({ block: 'nearest' }); } catch (e) {}
-    }
-  }
 }
 function coSetBillHow(how) {
   if (!window._co) return;
   window._co.billHow = how === 'separate' ? 'separate' : 'schedule';
+  coPaintBillHow();
+  coSchedLive();
+}
+function coPaintBillHow() {
+  const c = window._co;
+  const howWrap = document.getElementById('co-bill-how-wrap');
+  if (!c || !howWrap) return;
+  const amt = Number(c.changeAmount);
+  const billed = c.payChoice === 'pass' || c.payChoice === 'custom';
+  const show = billed && amt === amt && amt !== 0 && c.kind !== 'schedule';
+  howWrap.style.display = show ? 'block' : 'none';
+  if (show && !c.billHow) c.billHow = 'schedule';
+  howWrap.querySelectorAll('input[name="co-bill-how"]').forEach(el => {
+    el.checked = el.value === (c.billHow || 'schedule');
+  });
+  const sched = document.getElementById('co-sched-fields');
+  if (sched) sched.style.display = (show && c.billHow === 'separate') ? 'none' : '';
 }
 function fmBuyerEmail(q) {
   return (document.getElementById('customer-email')?.value
@@ -6166,15 +6165,17 @@ function coPaintPayOptions() {
   html += opt('custom', 'This change is a custom amount', 'Labor, urgency, or a courtesy that is not $0. Type the amount this change should add (can be more or less than the SKU delta).');
   html += '<div id="co-custom-amt-wrap" style="display:' + (c.payChoice === 'custom' ? 'block' : 'none') + ';margin:8px 0 12px;max-width:280px;">'
     + '<label style="font-size:11px;color:var(--muted);text-transform:uppercase;">This change $</label>'
-    + '<input class="tbl-input money-input" type="text" inputmode="decimal" id="co-change-amt" value="' + fmt(c.changeAmount != null ? c.changeAmount : delta) + '" oninput="coSetCustomAmt(this.value)" onfocus="moneyFocus(this)" onblur="moneyBlur(this);coSetCustomAmt(this.value)" />'
+    + '<input class="tbl-input money-input" type="text" inputmode="decimal" id="co-change-amt" value="' + fmt(c.payChoice === 'custom' && c.changeAmount != null ? c.changeAmount : delta) + '" oninput="coSetCustomAmt(this.value)" onfocus="moneyFocus(this)" onblur="moneyBlur(this);coSetCustomAmt(this.value)" />'
     + '</div>';
   host.innerHTML = html;
+  coPaintBillHow();
 }
 function coSetCustomAmt(v) {
   if (!window._co) return;
   window._co.payChoice = 'custom';
   window._co.changeAmount = parseMoney(v);
   coApplyPayChoice();
+  coPaintBillHow();
   coSchedLive();
 }
 function coSetPayChoice(id) {
@@ -6182,7 +6183,17 @@ function coSetPayChoice(id) {
   window._co.payChoice = id;
   const wrap = document.getElementById('co-custom-amt-wrap');
   if (wrap) wrap.style.display = id === 'custom' ? 'block' : 'none';
+  if (id === 'custom') {
+    const q = quoteData[window._co.id] || {};
+    const oldSku = window._co.oldSkuTotal != null ? window._co.oldSkuTotal : coSkuSellOf(window._co.oldCabinets || [], q);
+    const newSku = window._co.newTotal != null ? window._co.newTotal : coSkuSellOf(window._co.cabinets || [], q);
+    const delta = Math.round((newSku - oldSku) * 100) / 100;
+    if (window._co.changeAmount == null || Number(window._co.changeAmount) === 0) window._co.changeAmount = delta;
+    const amtEl = document.getElementById('co-change-amt');
+    if (amtEl) amtEl.value = fmt(window._co.changeAmount);
+  }
   coApplyPayChoice();
+  coPaintBillHow();
   coSchedLive();
 }
 function coApplyPayChoice() {
