@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
-  <title>Fremont Makers — Contract Packet v1014e</title>
-  <!-- FM-PACKET-v1014e-sig-page -->
+  <title>Fremont Makers — Contract Packet v1014j</title>
+  <!-- FM-PACKET-v1014j-contracted -->
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Pinyon+Script&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     :root { --ink:#1a1a1a; --muted:#666; --line:#d8d4cc; --gold:#c9a84c; --paper:#fff; --screen:#111; }
@@ -69,7 +69,7 @@
 </head>
 <body>
   <div class="bar">
-    <strong>Fremont Makers · Contract packet <span style="opacity:.45;letter-spacing:0;">v1014e</span></strong>
+    <strong>Fremont Makers · Contract packet <span style="opacity:.45;letter-spacing:0;">v1014j</span></strong>
     <div class="actions">
       <span class="save-ok" id="save-msg"></span>
       <button type="button" onclick="window.print()">Print</button>
@@ -115,7 +115,7 @@ function parseQ(raw) {
   return typeof raw === 'object' ? raw : null;
 }
 function quoteGrand(qd) {
-  if (!qd) return 0;
+  if (!qd) return { cabSell: 0, cabNet: 0, cabAfterDisc: 0, laborCost: 0, gna: 0, tax: 0, unit: 0, gnaPct: 0, taxPct: 0, bulkDisc: 0 };
   const cabSell = (qd.cabinets || []).reduce((s, c) => s + (parseFloat(c.qty)||0) * (parseFloat(c.cost)||0) * (1 + (parseFloat(c.markup)||0)/100), 0);
   const cabNet  = (qd.cabinets || []).reduce((s, c) => s + (parseFloat(c.qty)||0) * (parseFloat(c.cost)||0), 0);
   const laborCost = (qd.labor || []).reduce((s, l) => s + (parseFloat(l.rate)||0) * (parseFloat(l.hours)||0), 0);
@@ -130,6 +130,22 @@ function quoteGrand(qd) {
     unit: cabAfterDisc + laborCost + gna + tax,
     gnaPct, taxPct, bulkDisc
   };
+}
+function pipeStatus(q) {
+  const s = String((q && q.status) || '').toLowerCase();
+  if (s === 'contracted' || s === 'contract') return 'contract';
+  if (s === 'completed' || s === 'complete' || s === 'done') return 'completed';
+  return s || 'proposed';
+}
+function skuSellOf(qd) {
+  return quoteGrand(qd).unit * modelQty(qd);
+}
+function contractedOf(q, kids) {
+  const locked = Number(q && q.contractTotal);
+  const st = pipeStatus(q);
+  if ((st === 'contract' || st === 'completed') && locked > 0) return locked;
+  if (q && (q.kind === 'order' || q.isOrder)) return orderTotal(q, kids || []);
+  return skuSellOf(q);
 }
 function payPlanOf(q) {
   if (!q) return '50-30-20';
@@ -247,6 +263,7 @@ function stampPageInitials() {
 }
 function jobMeta(q, nums) {
   const qty = modelQty(q);
+  const contracted = nums.contracted != null ? nums.contracted : (nums.unit * qty);
   return '<div class="meta">'
     + '<div><b>Buyer</b>' + esc(q.customer || '') + (q.signerName ? '<div class="fine">' + esc(q.signerName) + '</div>' : '') + '</div>'
     + '<div><b>Project</b>' + esc(q.project || '') + '</div>'
@@ -255,11 +272,16 @@ function jobMeta(q, nums) {
     + '<div><b>Install / delivery</b>' + esc(prettyDate(q.installDate)) + '</div>'
     + '<div><b>Site</b>' + esc(q.address || '—') + '</div>'
     + (q.colorName ? '<div><b>Color</b>' + esc(q.colorName) + '</div>' : '')
-    + (qty > 1 ? '<div><b>Quantity</b>' + qty + ' of this model · unit ' + money(nums.unit) + '</div><div><b>Contract total</b>' + money(nums.unit * qty) + '</div>' : '<div><b>Contract total</b>' + money(nums.unit * qty) + '</div>')
+    + (qty > 1 ? '<div><b>Quantity</b>' + qty + ' of this model</div>' : '')
+    + '<div><b>Contract total</b>' + money(contracted) + '</div>'
     + '</div>';
 }
+function billTotal(q, nums) {
+  if (nums && nums.contracted != null) return nums.contracted;
+  return (nums && nums.unit || 0) * modelQty(q);
+}
 function pageAgreement(q, nums) {
-  const total = nums.unit * modelQty(q);
+  const total = billTotal(q, nums);
   const signer = q.signerName || q.customer || '';
   return '<div class="page">' + head('Customer Sales Agreement')
     + '<h1>Fremont Makers</h1><div class="tag">making freedom</div>'
@@ -286,7 +308,7 @@ function pageAgreement(q, nums) {
     + '</div>';
 }
 function pageSchedule(q, nums) {
-  const total = nums.unit * modelQty(q);
+  const total = billTotal(q, nums);
   const ar = q.ar || {};
   const plan = payPlanOf(q);
   const a1 = invAmt(ar, total, 1, 0.5);
@@ -314,7 +336,7 @@ function pageSchedule(q, nums) {
     + '</div>';
 }
 function pageInvoice(q, nums, n) {
-  const total = nums.unit * modelQty(q);
+  const total = billTotal(q, nums);
   const ar = q.ar || {};
   const plan = payPlanOf(q);
   const specs = plan === '50-50'
@@ -364,9 +386,11 @@ function pageQuote(q, nums) {
     + '<tr><td>Assembly labor</td><td class="r">' + money(nums.laborCost) + '</td></tr>'
     + '<tr><td>G&A (' + nums.gnaPct + '%)</td><td class="r">' + money(nums.gna) + '</td></tr>'
     + '<tr><td>Tax (' + nums.taxPct + '% on product)</td><td class="r">' + money(nums.tax) + '</td></tr>'
-    + '<tr><td>Job total' + (qtyM > 1 ? ' · ' + qtyM + ' houses' : '') + '</td><td class="r">' + money(nums.unit * qtyM) + '</td></tr>'
+    + '<tr><td>Contracted total' + (qtyM > 1 ? ' · ' + qtyM + ' houses' : '') + '</td><td class="r">' + money(nums.contracted != null ? nums.contracted : (nums.unit * qtyM)) + '</td></tr>'
     + '</tbody></table>'
-    + '<p class="note">G&A prints before tax. Tax is on product only and does not stack on G&A. Assembly is included.</p>';
+    + ((nums.skuSell != null && nums.contracted != null && Math.abs(nums.skuSell - nums.contracted) > 0.02)
+      ? '<p class="note">Contracted total is the agreed amount. SKU lines above are shop sell and may not add to that number.</p>'
+      : '<p class="note">G&A prints before tax. Tax is on product only and does not stack on G&A. Assembly is included.</p>');
   const CHUNK = 22;
   const rows = cabRows.length ? cabRows : ['<tr><td colspan="5">No cabinets</td></tr>'];
   const parts = [];
@@ -473,8 +497,9 @@ function pageChangeOrder(q, nums, n) {
 function render(q, data) {
   const kids = childrenOf(q, data || {});
   const isOrder = q.kind === 'order' || q.isOrder;
-  const total = isOrder ? orderTotal(q, kids) : (quoteGrand(q).unit * modelQty(q));
-  const nums = isOrder ? Object.assign({}, quoteGrand(q), { unit: total }) : quoteGrand(q);
+  const sku = isOrder ? orderTotal(q, kids) : skuSellOf(q);
+  const contracted = contractedOf(q, kids);
+  const nums = Object.assign({}, quoteGrand(q), { unit: contracted, skuSell: sku, contracted: contracted });
   if (isOrder) {
     q = Object.assign({}, q, { project: mixLabel(kids), modelQty: 1 });
   }
@@ -488,7 +513,7 @@ function render(q, data) {
   else if (rec === 'd2' || inv === 2) html = pageInvoice(q, nums, 2);
   else if (rec === 'd3' || inv === 3) html = pageInvoice(q, nums, 3);
   else if (isOrder) {
-    html = pageOrderCover(q, kids, total)
+    html = pageOrderCover(q, kids, contracted)
       + pageAgreement(q, nums) + pageSchedule(q, nums)
       + pageInvoice(q, nums, 1) + pageInvoice(q, nums, 2)
       + (payPlanOf(q) === '50-50' ? '' : pageInvoice(q, nums, 3))
