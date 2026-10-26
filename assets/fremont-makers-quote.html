@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v1014s</title>
+<title>Fremont Makers — Project Builder v1014t</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20261026s-revise-sched -->
+<!-- FM-BUILD-v20261026t-co-inv-ar -->
 <script>
 (function(){
   try {
@@ -776,7 +776,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1014s</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1014t</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <span class="status-label">Status:</span>
@@ -1022,7 +1022,7 @@
       <thead>
         <tr>
           <th>Customer</th><th>Project</th><th>Install</th>
-          <th>1st 50%</th><th>2nd 30%</th><th>3rd 20%</th>
+          <th>Invoice 1</th><th>Invoice 2</th><th>Invoice 3 / extras</th>
           <th style="text-align:right">Open</th><th></th>
         </tr>
       </thead>
@@ -3215,6 +3215,36 @@ function invSort(key) {
   renderInvoices();
 }
 
+function extraInvoicesOf(qd) {
+  const out = [];
+  const walk = (q, packetId) => {
+    (q && q.changeOrders || []).forEach(co => {
+      const inv = co && co.extraInvoice;
+      if (!inv || !(Number(inv.amt) > 0)) return;
+      out.push({
+        packetId: packetId,
+        quoteId: q.id,
+        coN: co.n,
+        amt: Number(inv.amt) || 0,
+        due: inv.due || '',
+        paid: !!inv.paid,
+        paidAt: inv.paidAt || '',
+        check: inv.check || '',
+        reason: inv.reason || co.reason || ''
+      });
+    });
+  };
+  if (!qd) return out;
+  const packetId = (quoteKind(qd) === 'child' && qd.parentOrderId) ? qd.parentOrderId : qd.id;
+  walk(qd, packetId);
+  if (quoteKind(qd) === 'order' && typeof childrenOfOrder === 'function') {
+    childrenOfOrder(qd.id).forEach(ch => walk(quoteData[ch.id] || ch, packetId));
+  }
+  return out;
+}
+function extraInvoiceOpenOf(qd) {
+  return extraInvoicesOf(qd).reduce((s, inv) => s + (inv.paid ? 0 : (inv.amt || 0)), 0);
+}
 function renderInvoices() {
   const tbody = document.getElementById('invoices-table-body');
   if (!tbody) return;
@@ -3245,6 +3275,25 @@ function renderInvoices() {
         amt: Number(ar['d' + n + 'Amt']) || 0,
         paid,
         label: (plan === '50-50' ? labels50[n] : labels[n])
+      });
+    });
+    extraInvoicesOf(qd).forEach(inv => {
+      rows.push({
+        id: inv.packetId || quote.id,
+        quoteId: inv.quoteId,
+        n: 90 + (inv.coN || 0),
+        coN: inv.coN,
+        invoice: inv.coN,
+        job: quote.jobCode || '—',
+        customer: quote.customer || '—',
+        project: quote.project || '—',
+        due: inv.due || '',
+        status: inv.paid ? ('Paid' + (inv.paidAt ? ' ' + inv.paidAt : '')) : 'Due',
+        check: inv.check || '',
+        amt: inv.amt,
+        paid: inv.paid,
+        kind: 'co',
+        label: 'Change order ' + inv.coN + ' invoice'
       });
     });
   });
@@ -3279,11 +3328,11 @@ function renderInvoices() {
     <td style="text-align:right">${fmt(r.amt)}</td>
     <td>
       <div class="dash-actions">
-        <button class="modal-btn" onclick="openInvoiceSheet('${r.id}', ${r.n})">Open invoice</button>
+        <button class="modal-btn" onclick="${r.kind === 'co' ? `openCoInvoiceSheet('${r.id}', ${r.coN})` : `openInvoiceSheet('${r.id}', ${r.n})`}">${r.kind === 'co' ? 'Open CO invoice' : 'Open invoice'}</button>
         ${r.paid
-          ? `<button class="modal-btn" onclick="openPaidReceipt('${r.id}', ${r.n})">Receipt</button>`
-          : `<button class="modal-btn" onclick="openInvPay('${r.id}', ${r.n})" style="border-color:var(--green);color:var(--green);">Mark paid</button>`}
-        ${r.n === 1 ? `<button class="modal-btn" onclick="openAdjustSchedule('${r.id}')">Revise payment schedule</button>` : ''}
+          ? `<button class="modal-btn" onclick="${r.kind === 'co' ? `openCoInvoiceSheet('${r.id}', ${r.coN})` : `openPaidReceipt('${r.id}', ${r.n})`}">Receipt</button>`
+          : `<button class="modal-btn" onclick="${r.kind === 'co' ? `openInvPayCo('${r.quoteId || r.id}', ${r.coN})` : `openInvPay('${r.id}', ${r.n})`}" style="border-color:var(--green);color:var(--green);">Mark paid</button>`}
+        ${r.kind !== 'co' && r.n === 1 ? `<button class="modal-btn" onclick="openAdjustSchedule('${r.id}')">Revise payment schedule</button>` : ''}
       </div>
     </td>
   </tr>`).join('');
@@ -3337,9 +3386,45 @@ function openInvPay(id, n) {
   document.getElementById('inv-pay-modal').classList.add('open');
 }
 
+function openInvPayCo(id, coN) {
+  const qd = quoteData[id] || {};
+  const co = (qd.changeOrders || []).find(x => Number(x.n) === Number(coN));
+  const inv = co && co.extraInvoice;
+  if (!inv) return;
+  _invPay = { id, n: coN, kind: 'co' };
+  document.getElementById('inv-pay-title').textContent = 'Mark Change order ' + coN + ' invoice paid';
+  document.getElementById('inv-pay-sub').textContent = (qd.customer || '') + ' · ' + (qd.jobCode || '') + ' · billed ' + fmt(inv.amt);
+  document.getElementById('inv-pay-date').value = today();
+  document.getElementById('inv-pay-check').value = inv.check || '';
+  document.getElementById('inv-pay-amt').value = fmt(inv.amt);
+  const file = document.getElementById('inv-pay-file');
+  if (file) file.value = '';
+  document.getElementById('inv-pay-modal').classList.add('open');
+}
+
 async function saveInvPaid() {
-  const { id, n } = _invPay;
+  const { id, n, kind } = _invPay;
   if (!id || !n) return;
+  if (kind === 'co') {
+    const qd = quoteData[id];
+    if (!qd) return;
+    const co = (qd.changeOrders || []).find(x => Number(x.n) === Number(n));
+    if (!co || !co.extraInvoice) return;
+    const received = invMoney(document.getElementById('inv-pay-amt').value);
+    co.extraInvoice.paid = true;
+    co.extraInvoice.paidAt = document.getElementById('inv-pay-date').value || today();
+    co.extraInvoice.check = (document.getElementById('inv-pay-check').value || '').trim();
+    co.extraInvoice.paidAmt = received;
+    quoteData[id].saved_at = Date.now();
+    saveQuoteData(id);
+    fmCloudFlush();
+    closeInvPayModal();
+    renderInvoices();
+    renderPipeline();
+    renderAr();
+    if (activeQuoteId === id) renderProjectSummary(id);
+    return;
+  }
   const ar = ensureAr(id);
   const qd = quoteData[id];
   const total = contractTotalOf(qd, quoteGrandFromData(qd) || 0);
@@ -3671,32 +3756,37 @@ function renderAr() {
     const q = quoteData[row.id] || row;
     const total = contractTotalOf(q, quoteGrandFromData(q) || 0);
     const ar = scheduleOf(q, total);
-    open += ar.open;
-    const bits = [
-      [ar.d1Paid, ar.d1Due, ar.d1Amt],
-      [ar.d2Paid, ar.d2Due, ar.d2Amt],
-      [ar.d3Paid, ar.d3Due, ar.d3Amt]
-    ];
-    bits.forEach(b => {
-      if (b[0] || !b[2]) return;
-      const key = arMonthKey(b[1]);
-      if (!key || key < firstKey) { past += b[2]; return; }
+    const extraOpen = extraInvoiceOpenOf(q);
+    open += ar.open + extraOpen;
+    extraInvoicesOf(q).forEach(inv => {
+      if (inv.paid || !inv.amt) return;
+      const key = arMonthKey(inv.due);
+      if (!key || key < firstKey) { past += inv.amt; return; }
       const slot = months.find(m => m.key === key);
-      if (slot) slot.amt += b[2];
-      else if (key > lastKey) later += b[2];
-      else past += b[2];
+      if (slot) slot.amt += inv.amt;
+      else if (key > lastKey) later += inv.amt;
+      else past += inv.amt;
     });
+    const extraBits = extraInvoicesOf(q).map(inv =>
+      (inv.paid ? 'CO' + inv.coN + ' received' : 'CO' + inv.coN + ' ' + fmt(inv.amt) + (inv.due ? ' · ' + inv.due : ''))
+    ).join('<br>');
     const cell = (paid, due, amt) => paid
       ? '<span style="color:var(--green)">Received</span>'
       : (due || '—') + '<div style="font-size:11px;color:var(--muted)">' + fmt(amt) + '</div>';
+    const plan = payPlanOf(q);
+    const a1 = ar.d1Amt != null ? ar.d1Amt : total * 0.5;
+    const a2 = ar.d2Amt != null ? ar.d2Amt : (plan === '50-50' ? total * 0.5 : total * 0.3);
+    const a3 = plan === '50-50' ? 0 : (ar.d3Amt != null ? ar.d3Amt : total * 0.2);
     tb.innerHTML += '<tr>'
       + '<td>' + (q.customer || row.customer || '—') + '</td>'
       + '<td>' + (q.project || row.project || '—') + '</td>'
       + '<td>' + (q.installDate || '—') + '</td>'
-      + '<td>' + cell(ar.d1Paid, ar.d1Due, total*0.5) + '</td>'
-      + '<td>' + cell(ar.d2Paid, ar.d2Due, total*0.3) + '</td>'
-      + '<td>' + cell(ar.d3Paid, ar.d3Due, total*0.2) + '</td>'
-      + '<td style="text-align:right">' + fmt(ar.open) + '</td>'
+      + '<td>' + cell(ar.d1Paid, ar.d1Due, a1) + '</td>'
+      + '<td>' + cell(ar.d2Paid, ar.d2Due, a2) + '</td>'
+      + '<td>' + (plan === '50-50'
+        ? (extraBits || '<span style="color:var(--muted)">—</span>')
+        : cell(ar.d3Paid, ar.d3Due, a3) + (extraBits ? '<div style="font-size:11px;margin-top:4px;">' + extraBits + '</div>' : '')) + '</td>'
+      + '<td style="text-align:right">' + fmt(ar.open + extraOpen) + '</td>'
       + '</tr>';
   });
   const next11 = months.slice(1).reduce((s, m) => s + m.amt, 0) + later;
