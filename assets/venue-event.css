@@ -36,9 +36,21 @@ img { max-width: 100%; height: auto; display: block; }
 .bar nav { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
 .bar nav a { color: var(--cream); text-decoration: none; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; opacity: .88; }
 .btn {
-  display: inline-block; background: var(--gold); color: var(--navy); text-decoration: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--gold); color: var(--navy); text-decoration: none;
   font-weight: 700; letter-spacing: .08em; text-transform: uppercase; font-size: 13px;
-  padding: 12px 18px; border: 0; cursor: pointer; font-family: inherit; min-height: 44px;
+  padding: 12px 18px; border: 0; cursor: pointer; font-family: inherit;
+  min-height: 44px; min-width: 44px;
+  transform: scale(1);
+  transition-property: transform, background-color, color, border-color, opacity;
+  transition-duration: 120ms; transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+.btn:hover { background: #d4b27a; }
+.btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.btn:active { transform: scale(0.96); }
+@media (prefers-reduced-motion: reduce) {
+  .btn { transition: none; }
+  .btn:active { transform: none; }
 }
 .btn.ghost { background: transparent; color: var(--navy); border: 1px solid rgba(28,40,56,.28); }
 .btn.light { background: transparent; color: var(--cream); border: 1px solid rgba(244,239,230,.4); }
@@ -49,7 +61,48 @@ img { max-width: 100%; height: auto; display: block; }
 .eyebrow { font-size: 12px; letter-spacing: .22em; text-transform: uppercase; color: var(--gold); font-weight: 600; }
 .hero h1, h1, h2, h3 { font-family: "Cormorant Garamond", serif; font-weight: 600; line-height: 1.08; text-wrap: pretty; }
 .hero h1 { font-size: clamp(40px, 7vw, 76px); margin: 10px 0 14px; }
-.lede { font-size: clamp(17px, 2.1vw, 22px); max-width: 42rem; }
+.lede { font-size: clamp(17px, 2.1vw, 22px); max-width: 42rem; text-wrap: pretty; }
+/* Copy over a full-width card row spans the same width as the cards.
+   Sibling :has(+ grid) is not enough — story pages put several <p>s before .facts.
+   Split-column wraps (lede beside a photo) do not match :has(> .facts) and stay short. */
+.wrap:has(> .facts) > .lede,
+.wrap:has(> .facts) > p,
+.wrap:has(> .sets) > .lede,
+.wrap:has(> .sets) > p,
+.wrap:has(> .menu-card) > .lede,
+.wrap:has(> .menu-card) > p,
+.wrap:has(> .rates) > .lede,
+.wrap:has(> .rates) > p,
+.wrap:has(> .holds) > .lede,
+.wrap:has(> .holds) > p,
+.wrap:has(> .gallery) > .lede,
+.wrap:has(> .gallery) > p,
+.wrap:has(> .mosaic) > .lede,
+.wrap:has(> .mosaic) > p {
+  max-width: none;
+}
+.wrap > .lede:has(+ .facts),
+.wrap > .lede:has(+ .sets),
+.wrap > .lede:has(+ .menu-card),
+.wrap > .lede:has(+ .rates),
+.wrap > .lede:has(+ .holds),
+.wrap > p:has(+ .facts),
+.wrap > p:has(+ .sets),
+.wrap > p:has(+ .menu-card),
+.wrap > p:has(+ .rates),
+.wrap > p:has(+ .holds) {
+  margin-bottom: 18px;
+}
+.wrap > .lede + .facts,
+.wrap > .lede + .sets,
+.wrap > .lede + .menu-card,
+.wrap > .lede + .rates,
+.wrap > .lede + .holds,
+.wrap > p + .facts,
+.wrap > p + .sets,
+.wrap > p + .menu-card,
+.wrap > p + .rates,
+.wrap > p + .holds { margin-top: 0; }
 .block { padding: clamp(2.2rem, 6vw, 4.6rem) clamp(16px, 4vw, 40px); }
 .wrap { width: 100%; max-width: 1120px; margin: 0 auto; }
 .block h2 { font-size: clamp(28px, 4.4vw, 46px); margin: 8px 0 14px; }
