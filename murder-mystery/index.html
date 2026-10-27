@@ -149,6 +149,7 @@
     .menu-list strong { display:block; color: var(--cream); font-weight: 600; }
     .menu-list span { display:block; font-size: 0.92rem; opacity: 0.88; }
     .ticket-form .err { color:#ffb4a8; font-size:0.88rem; min-height:1.2em; margin-top:8px; }
+    .visually-hidden { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
     .ticket-form .check { display:flex; gap:8px; align-items:flex-start; margin:14px 0; font-size:0.92rem; letter-spacing:0; text-transform:none; color:var(--cream); }
     .ticket-form .check input { width:auto; margin-top:4px; }
     .split { display: grid; grid-template-columns: 1fr 1fr; min-height: 420px; }
@@ -244,9 +245,10 @@
       </div>
       <aside class="book-card">
         <p class="kicker">Tickets</p>
-        <h3 id="ticket-heading">Reserve your seat</h3>
-        <p id="price-line">Tickets are $99 through October 23 and $114 beginning October 24. Gratuity is included in your ticket price; tax will be calculated at checkout.</p>
-        <div id="soldout-panel" hidden>
+        <h3 id="ticket-heading">The last ticket already got punched</h3>
+        <span class="visually-hidden">Reserve your seat</span>
+        <p id="price-line" hidden>Tickets are $99 through October 23 and $114 beginning October 24. Gratuity is included in your ticket price; tax will be calculated at checkout.</p>
+        <div id="soldout-panel">
           <p id="soldout-lede">The last ticket in Buffalo Chip already got punched. The saloon is packed, the suspects are seated, and Friday is spoken for.</p>
           <p>Want to be invited next time we stage a mystery in these walls? Leave your name. We will write when the next case opens.</p>
           <form class="ticket-form" id="waitlist-form">
@@ -261,7 +263,7 @@
           </form>
           <p class="fine" id="wl-thanks" hidden>You're on the list. If another mystery rides into town, you'll hear from us first.</p>
         </div>
-        <form class="ticket-form" id="ticket-form">
+        <form class="ticket-form" id="ticket-form" hidden>
           <label for="name">Name</label>
           <input id="name" name="name" required autocomplete="name" />
           <label for="email">Email</label>
@@ -291,7 +293,7 @@
           <p class="err" id="form-err"></p>
           <button class="btn-primary" type="submit" id="pay-btn">Pay with card · $99 each</button>
         </form>
-        <p class="fine" id="ticket-fine">Each ticket includes one dinner entrée and admission to the murder mystery experience. Additional beverages may be purchased during the event and will be added to your tab at checkout. Looking to make a night of it? Accommodations are not included with ticket purchase, but our reservations team would be happy to help arrange an overnight stay at Hotel St. Cloud. If you indicate interest in a stay, our concierge team will give you a call.</p>
+        <p class="fine" id="ticket-fine" hidden>Each ticket includes one dinner entrée and admission to the murder mystery experience. Additional beverages may be purchased during the event and will be added to your tab at checkout. Looking to make a night of it? Accommodations are not included with ticket purchase, but our reservations team would be happy to help arrange an overnight stay at Hotel St. Cloud. If you indicate interest in a stay, our concierge team will give you a call.</p>
         <a class="alt" id="ticket-call" href="tel:7196023469">Or call (719) 602-3469</a>
       </aside>
     </div>
@@ -375,20 +377,25 @@
       if (price) price.hidden = !!soldOut;
       if (hero) hero.textContent = soldOut ? 'Next time' : 'Buy tickets';
       if (finalBuy) finalBuy.textContent = soldOut ? 'Want in next time?' : 'Buy Tickets';
-      if (headerCta && soldOut) {
-        headerCta.removeAttribute('onclick');
-        headerCta.href = '#the-night';
-        headerCta.textContent = 'Next mystery';
+      if (headerCta) {
+        if (soldOut) {
+          headerCta.removeAttribute('onclick');
+          headerCta.href = '#the-night';
+          headerCta.textContent = 'Next mystery';
+        } else {
+          headerCta.href = 'tel:7196023469';
+          headerCta.setAttribute('onclick', "return gtag_phone_call('tel:7196023469')");
+          headerCta.textContent = 'Call for tickets';
+        }
       }
       const fine = document.getElementById('ticket-fine');
-      const call = document.getElementById('ticket-call');
       if (fine) fine.hidden = !!soldOut;
-      if (call) call.textContent = soldOut ? 'Or call (719) 602-3469' : 'Or call (719) 602-3469';
     }
+    setSoldOutUi(true);
     fetch('/api/events/availability?event=murder-mystery', { cache: 'no-store' })
       .then(r => r.json())
-      .then(d => { if (d && d.soldOut) setSoldOutUi(true); })
-      .catch(() => {});
+      .then(d => { setSoldOutUi(!!(d && d.soldOut)); })
+      .catch(() => { setSoldOutUi(true); });
 
     const wlForm = document.getElementById('waitlist-form');
     if (wlForm) {
