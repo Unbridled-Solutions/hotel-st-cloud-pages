@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
-  <title>Fremont Makers — Contract Packet v1014u</title>
-  <!-- FM-PACKET-v1014u-co-copy -->
+  <title>Fremont Makers — Contract Packet v1014v</title>
+  <!-- FM-PACKET-v1014v-co-detail -->
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Pinyon+Script&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     :root { --ink:#1a1a1a; --muted:#666; --line:#d8d4cc; --gold:#c9a84c; --paper:#fff; --screen:#111; }
@@ -69,7 +69,7 @@
 </head>
 <body>
   <div class="bar">
-    <strong>Fremont Makers · Contract packet <span style="opacity:.45;letter-spacing:0;">v1014u</span></strong>
+    <strong>Fremont Makers · Contract packet <span style="opacity:.45;letter-spacing:0;">v1014v</span></strong>
     <div class="actions">
       <span class="save-ok" id="save-msg"></span>
       <button type="button" onclick="window.print()">Print</button>
@@ -431,21 +431,62 @@ function pageCoInvoice(q, nums, n) {
   const inv = co.extraInvoice;
   const amt = Number(inv.amt) || 0;
   const contracted = Number(q.contractTotal) || Number(co.oldTotal) || billTotal(q, nums);
-  return '<div class="page">' + (inv.paid ? '<div class="paid">PAID</div>' : '')
-    + head('Change Order ' + n + ' Invoice')
-    + '<h1>Change Order ' + n + ' Invoice</h1><div class="tag">making freedom</div>'
-    + jobMeta(q, Object.assign({}, nums, { contracted: contracted, unit: contracted }))
-    + '<table><tbody>'
-    + '<tr><td>Original contracted total</td><td class="r">' + money(contracted) + '</td></tr>'
+  const labor = (co.labor && co.labor.length)
+    ? co.labor
+    : [{ name: 'Assembly', rate: co.laborRate, hours: co.laborHours }];
+  const draft = {
+    cabinets: co.cabinets || [],
+    labor: labor,
+    bulkDiscPct: co.bulkDiscPct != null ? co.bulkDiscPct : q.bulkDiscPct,
+    gnaPct: co.gnaPct != null ? co.gnaPct : q.gnaPct,
+    taxPct: co.taxPct != null ? co.taxPct : q.taxPct
+  };
+  const d = quoteGrand(draft);
+  const cabRows = (draft.cabinets || []).filter(c => (parseFloat(c.cost)||0) > 0 || (c.desc || '').trim())
+    .map(c => {
+      const qty = parseFloat(c.qty) || 0;
+      const cost = parseFloat(c.cost) || 0;
+      const markup = parseFloat(c.markup) || 0;
+      const unit = cost * (1 + markup/100);
+      return '<tr><td>' + esc(c.desc || '') + '</td><td>' + esc(c.serial || '') + '</td><td class="r">' + qty + '</td><td class="r">' + money(unit) + '</td><td class="r">' + money(qty * unit) + '</td></tr>';
+    });
+  const bulkRow = d.bulkDisc > 0
+    ? '<tr><td>Mfr. bulk discount (' + d.bulkDisc + '%)</td><td class="r">−' + money(d.cabNet * d.bulkDisc/100) + '</td></tr>'
+    : '';
+  const totals = '<table class="tot"><tbody>'
+    + '<tr><td>Cabinets</td><td class="r">' + money(d.cabSell) + '</td></tr>'
+    + bulkRow
+    + '<tr><td>Assembly labor</td><td class="r">' + money(d.laborCost) + '</td></tr>'
+    + '<tr><td>G&A (' + d.gnaPct + '%)</td><td class="r">' + money(d.gna) + '</td></tr>'
+    + '<tr><td>Tax (' + d.taxPct + '% on product)</td><td class="r">' + money(d.tax) + '</td></tr>'
     + '<tr><td>This Change — Change Order Invoice #' + n + '</td><td class="r">' + money(amt) + '</td></tr>'
     + '<tr><td>Due</td><td class="r">' + esc(prettyDate(inv.due)) + '</td></tr>'
     + (inv.paid ? '<tr><td>Paid</td><td class="r">' + esc(prettyDate(inv.paidAt) || 'Yes') + '</td></tr>' : '')
     + '<tr><td><strong>Amount due this invoice</strong></td><td class="r"><strong>' + money(inv.paid ? 0 : amt) + '</strong></td></tr>'
     + '</tbody></table>'
-    + '<p class="note">' + esc(inv.reason || co.reason || 'This invoice is for the change order only. It does not replace the original payment schedule.') + '</p>'
-    + '<p class="fine">Please make payment to Fremont Makers LLC. Job ' + esc(q.jobCode || '') + ' · Change order ' + n + '.</p>'
-    + sigBlock(q)
-    + '</div>';
+    + '<p class="note">Original contracted total ' + money(contracted) + ' stays. This invoice is the change only — cabinets, manufacturer discount, assembly labor, G&A, and tax. It does not replace the original payment schedule.</p>'
+    + '<p class="fine">Please make payment to Fremont Makers LLC. Job ' + esc(q.jobCode || '') + ' · Change order ' + n + '.</p>';
+  const CHUNK = 18;
+  const rows = cabRows.length ? cabRows : ['<tr><td colspan="5">No cabinets on this change.</td></tr>'];
+  const parts = [];
+  for (let i = 0; i < rows.length; i += CHUNK) {
+    const chunk = rows.slice(i, i + CHUNK);
+    const last = i + CHUNK >= rows.length;
+    const cont = i > 0 ? ' <span class="fine">(continued)</span>' : '';
+    parts.push(
+      '<div class="page">' + (inv.paid && i === 0 ? '<div class="paid">PAID</div>' : '')
+      + head('Change Order ' + n + ' Invoice')
+      + '<h1>Change Order ' + n + ' Invoice</h1><div class="tag">making freedom</div>'
+      + (i === 0 ? jobMeta(q, Object.assign({}, nums, { contracted: contracted, unit: contracted })) : '')
+      + '<h2>Cabinets' + cont + '</h2>'
+      + '<table><thead><tr><th>Description</th><th>SKU</th><th class="r">Qty</th><th class="r">Unit</th><th class="r">Total</th></tr></thead><tbody>'
+      + chunk.join('')
+      + '</tbody></table>'
+      + (last ? totals + sigBlock(q) : '<p class="note">Continued on next page.</p>')
+      + '</div>'
+    );
+  }
+  return parts.join('');
 }
 function pageChangeOrder(q, nums, n) {
   const list = q.changeOrders || [];
