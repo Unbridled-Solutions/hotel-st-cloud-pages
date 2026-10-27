@@ -418,9 +418,109 @@ async function notifyOrder(env, order) {
   return order;
 }
 
+function waitlistId() {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) return "wl_" + crypto.randomUUID();
+  return "wl_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10);
+}
+
+function normalizeEmail(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+async function loadWaitlistIndex(env) {
+  try {
+    return (await env.PLANNER_DATA.get("events:waitlist-index", { type: "json" })) || [];
+  } catch {
+    return [];
+  }
+}
+
+async function saveWaitlist(env, row) {
+  await env.PLANNER_DATA.put("events:waitlist:" + row.id, JSON.stringify(row));
+  let index = await loadWaitlistIndex(env);
+  if (!index.includes(row.id)) {
+    index.unshift(row.id);
+    if (index.length > 2000) index = index.slice(0, 2000);
+    await env.PLANNER_DATA.put("events:waitlist-index", JSON.stringify(index));
+  }
+}
+
+async function findWaitlistByEmail(env, event, email) {
+  const index = await loadWaitlistIndex(env);
+  for (const id of index.slice(0, 500)) {
+    const row = await env.PLANNER_DATA.get("events:waitlist:" + id, { type: "json" });
+    if (!row) continue;
+    if (row.event === event && normalizeEmail(row.email) === email) return row;
+  }
+  return null;
+}
+
 export async function handleEventCheckout(request, env) {
   const url = new URL(request.url);
   const path = url.pathname;
+
+  if (path === "/api/events/availability" && request.method === "GET") {
+    const event = url.searchParams.get("event") || "";
+    if (event !== "murder-mystery") return json({ error: "Unknown event" }, 400);
+    const sold = await murderTicketsSold(env);
+    const left = Math.max(0, MM_CAP - sold);
+    return json({ event, cap: MM_CAP, sold, left, soldOut: left <= 0 });
+  }
+
+  if (path === "/api/events/waitlist" && request.method === "POST") {
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return json({ error: "Invalid JSON" }, 400);
+    }
+    const event = String(body.event || "murder-mystery").trim();
+    if (!EVENTS[event]) return json({ error: "Unknown event" }, 400);
+    const email = normalizeEmail(body.email);
+    const name = String(body.name || "").trim().slice(0, 120);
+    const phone = String(body.phone || "").trim().slice(0, 40);
+    if (!email || !email.includes("@") || email.length > 180) {
+      return json({ error: "A real email is required." }, 400);
+    }
+    const existing = await findWaitlistByEmail(env, event, email);
+    if (existing) {
+      existing.name = name || existing.name;
+      existing.phone = phone || existing.phone;
+      existing.lastSeen = Date.now();
+      await saveWaitlist(env, existing);
+      return json({ ok: true, already: true, id: existing.id, optedIn: existing.optedIn });
+    }
+    const now = Date.now();
+    const row = {
+      id: waitlistId(),
+      kind: "waitlist",
+      event,
+      eventName: EVENTS[event].name,
+      name,
+      email,
+      phone,
+      optedIn: now,
+      optedInIso: new Date(now).toISOString(),
+      lastSeen: now,
+      source: String(body.source || "lander").slice(0, 80),
+      status: "waitlist",
+    };
+    await saveWaitlist(env, row);
+    return json({ ok: true, already: false, id: row.id, optedIn: row.optedIn });
+  }
+
+  if (path === "/api/events/waitlist" && request.method === "GET") {
+    const event = url.searchParams.get("event") || "";
+    const index = await loadWaitlistIndex(env);
+    const rows = [];
+    for (const id of index.slice(0, 500)) {
+      const row = await env.PLANNER_DATA.get("events:waitlist:" + id, { type: "json" });
+      if (!row) continue;
+      if (event && row.event !== event) continue;
+      rows.push(row);
+    }
+    return json({ waitlist: rows });
+  }
 
   if (!env.STRIPE_SECRET_KEY) {
     return json({ error: "Stripe is not configured on this Worker yet." }, 503);
@@ -466,7 +566,7 @@ export async function handleEventCheckout(request, env) {
       const sold = await murderTicketsSold(env);
       const left = MM_CAP - sold;
       if (left <= 0) {
-        return json({ error: "This night is sold out. Call (719) 602-3469 if you need to be on a waitlist." }, 409);
+        return json({ error: "The last ticket in Buffalo Chip already got punched. Leave your name if you want the next invitation." }, 409);
       }
       if (tickets > left) {
         return json({ error: "Only " + left + " ticket" + (left === 1 ? "" : "s") + " left for this night." }, 409);
@@ -565,14 +665,6 @@ export async function handleEventCheckout(request, env) {
       }
     }
     return json({ received: true });
-  }
-
-  if (path === "/api/events/availability" && request.method === "GET") {
-    const event = url.searchParams.get("event") || "";
-    if (event !== "murder-mystery") return json({ error: "Unknown event" }, 400);
-    const sold = await murderTicketsSold(env);
-    const left = Math.max(0, MM_CAP - sold);
-    return json({ event, cap: MM_CAP, sold, left, soldOut: left <= 0 });
   }
 
   if (path === "/api/events/orders" && request.method === "GET") {

@@ -75,6 +75,23 @@
       padding: 12px 22px;
     }
     .header-cta:hover, .btn-primary:hover { background: #a88848; }
+    .header-cta, .btn-primary, .btn-ghost {
+      min-height: 40px; min-width: 40px;
+      transform: scale(1);
+      transition-property: transform, background-color, color, border-color, opacity;
+      transition-duration: 120ms; transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+    }
+    .header-cta:active, .btn-primary:active, .btn-ghost:active { transform: scale(0.96); }
+    .header-cta:focus-visible, .btn-primary:focus-visible, .btn-ghost:focus-visible {
+      outline: 2px solid var(--gold); outline-offset: 2px;
+    }
+    @media (pointer: coarse) {
+      .header-cta, .btn-primary, .btn-ghost { min-height: 44px; min-width: 44px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .header-cta, .btn-primary, .btn-ghost { transition: none; }
+      .header-cta:active, .btn-primary:active, .btn-ghost:active { transform: none; }
+    }
     .hero {
       position: relative; min-height: 88vh; display: flex; align-items: flex-end; color: var(--cream);
       background: #0c0707 url('/assets/murder-mystery/hero.jpg') center 35%/cover no-repeat;
@@ -165,6 +182,8 @@
     Never restore: Buy online · Appetite, alibi · Family-friendly felony
     · Get your ticket. Someone is going to punch theirs.
     Form only: 1–8 tickets, four plates including veg (entreeVeg). No remaining-seat counts.
+    Sold out (60 paid): hide checkout. Do not print remaining seats. Waitlist copy is the
+    exception to the lock — keep locked headings and The Night copy.
   -->
   <header class="site-header">
     <div class="header-inner">
@@ -179,7 +198,7 @@
       <h1 class="hero-headline">Someone in Buffalo Chip is about to punch their ticket.</h1>
       <p class="hero-sub">Step into the Old West for an evening of mystery, laughter, and memorable characters. Hotel St. Cloud and Red Herring Productions present an all-new murder mystery dinner experience featuring a brand-new script, a new cast, and plenty of twists along the way.</p>
       <div class="hero-actions">
-        <a class="btn-primary" href="#the-night">Buy tickets</a>
+        <a class="btn-primary" id="hero-buy" href="#the-night">Buy tickets</a>
         <a class="btn-ghost" href="tel:7196023469" onclick="return gtag_phone_call('tel:7196023469')">Call (719) 602-3469</a>
       </div>
     </div>
@@ -225,8 +244,23 @@
       </div>
       <aside class="book-card">
         <p class="kicker">Tickets</p>
-        <h3>Reserve your seat</h3>
+        <h3 id="ticket-heading">Reserve your seat</h3>
         <p id="price-line">Tickets are $99 through October 23 and $114 beginning October 24. Gratuity is included in your ticket price; tax will be calculated at checkout.</p>
+        <div id="soldout-panel" hidden>
+          <p id="soldout-lede">The last ticket in Buffalo Chip already got punched. The saloon is packed, the suspects are seated, and Friday is spoken for.</p>
+          <p>Want to be invited next time we stage a mystery in these walls? Leave your name. We will write when the next case opens.</p>
+          <form class="ticket-form" id="waitlist-form">
+            <label for="wl-name">Name</label>
+            <input id="wl-name" name="name" autocomplete="name" />
+            <label for="wl-email">Email</label>
+            <input id="wl-email" name="email" type="email" required autocomplete="email" />
+            <label for="wl-phone">Phone <span style="opacity:.7;letter-spacing:0;text-transform:none">(optional)</span></label>
+            <input id="wl-phone" name="phone" type="tel" autocomplete="tel" />
+            <p class="err" id="wl-err"></p>
+            <button class="btn-primary" type="submit" id="wl-btn">Keep me in the loop</button>
+          </form>
+          <p class="fine" id="wl-thanks" hidden>You're on the list. If another mystery rides into town, you'll hear from us first.</p>
+        </div>
         <form class="ticket-form" id="ticket-form">
           <label for="name">Name</label>
           <input id="name" name="name" required autocomplete="name" />
@@ -257,8 +291,8 @@
           <p class="err" id="form-err"></p>
           <button class="btn-primary" type="submit" id="pay-btn">Pay with card · $99 each</button>
         </form>
-        <p class="fine">Each ticket includes one dinner entrée and admission to the murder mystery experience. Additional beverages may be purchased during the event and will be added to your tab at checkout. Looking to make a night of it? Accommodations are not included with ticket purchase, but our reservations team would be happy to help arrange an overnight stay at Hotel St. Cloud. If you indicate interest in a stay, our concierge team will give you a call.</p>
-        <a class="alt" href="tel:7196023469">Or call (719) 602-3469</a>
+        <p class="fine" id="ticket-fine">Each ticket includes one dinner entrée and admission to the murder mystery experience. Additional beverages may be purchased during the event and will be added to your tab at checkout. Looking to make a night of it? Accommodations are not included with ticket purchase, but our reservations team would be happy to help arrange an overnight stay at Hotel St. Cloud. If you indicate interest in a stay, our concierge team will give you a call.</p>
+        <a class="alt" id="ticket-call" href="tel:7196023469">Or call (719) 602-3469</a>
       </aside>
     </div>
   </section>
@@ -299,7 +333,7 @@
   <section class="final-cta">
     <h2 class="section-title">Reserve Your Seat Before the Mystery Is Solved</h2>
     <p>Friday, October 30 | Hotel St. Cloud, Cañon City | An unforgettable evening of dining, intrigue, and Old West mischief.</p>
-    <a class="btn-primary" href="#the-night">Buy Tickets</a>
+    <a class="btn-primary" id="final-buy" href="#the-night">Buy Tickets</a>
   </section>
 
   <footer class="site-footer">
@@ -326,6 +360,66 @@
     const ticketsEl = document.getElementById('adults');
     const platesEl = document.getElementById('plates');
     if (payBtn) payBtn.textContent = 'Pay with card · $' + PRICE + ' each';
+
+    function setSoldOutUi(soldOut) {
+      const form = document.getElementById('ticket-form');
+      const panel = document.getElementById('soldout-panel');
+      const heading = document.getElementById('ticket-heading');
+      const price = document.getElementById('price-line');
+      const hero = document.getElementById('hero-buy');
+      const finalBuy = document.getElementById('final-buy');
+      const headerCta = document.querySelector('.header-cta');
+      if (form) form.hidden = !!soldOut;
+      if (panel) panel.hidden = !soldOut;
+      if (heading) heading.textContent = soldOut ? 'The last ticket already got punched' : 'Reserve your seat';
+      if (price) price.hidden = !!soldOut;
+      if (hero) hero.textContent = soldOut ? 'Next time' : 'Buy tickets';
+      if (finalBuy) finalBuy.textContent = soldOut ? 'Want in next time?' : 'Buy Tickets';
+      if (headerCta && soldOut) {
+        headerCta.removeAttribute('onclick');
+        headerCta.href = '#the-night';
+        headerCta.textContent = 'Next mystery';
+      }
+      const fine = document.getElementById('ticket-fine');
+      const call = document.getElementById('ticket-call');
+      if (fine) fine.hidden = !!soldOut;
+      if (call) call.textContent = soldOut ? 'Or call (719) 602-3469' : 'Or call (719) 602-3469';
+    }
+    fetch('/api/events/availability?event=murder-mystery', { cache: 'no-store' })
+      .then(r => r.json())
+      .then(d => { if (d && d.soldOut) setSoldOutUi(true); })
+      .catch(() => {});
+
+    const wlForm = document.getElementById('waitlist-form');
+    if (wlForm) {
+      wlForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const err = document.getElementById('wl-err');
+        const btn = document.getElementById('wl-btn');
+        err.textContent = '';
+        btn.disabled = true;
+        try {
+          const res = await fetch('/api/events/waitlist', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              event: 'murder-mystery',
+              name: document.getElementById('wl-name').value.trim(),
+              email: document.getElementById('wl-email').value.trim(),
+              phone: document.getElementById('wl-phone').value.trim(),
+              source: 'murder-mystery-lander'
+            })
+          });
+          const data = await res.json();
+          if (!res.ok || !data.ok) throw new Error(data.error || 'Could not save that.');
+          wlForm.hidden = true;
+          document.getElementById('wl-thanks').hidden = false;
+        } catch (ex) {
+          err.textContent = ex.message || 'Could not save that.';
+          btn.disabled = false;
+        }
+      });
+    }
 
     function ticketCount() {
       let n = parseInt(ticketsEl.value, 10);
