@@ -1,0 +1,90 @@
+/*
+ * Fremont Makers · Phase 1 · Final Job Quote print layout
+ * -------------------------------------------------------
+ * One house per US-letter sheet. Scoped to `.fm-p1-doc`; the only global rule
+ * is `@page`, so load this file ONLY on Phase 1 packet/print pages, never on
+ * pages of the existing Project Builder.
+ *
+ * Why the current packet prints 27 sheets for 15 pages: each house quote's
+ * table runs a few rows past the page, so the totals spill onto a second,
+ * mostly blank sheet. Here rows are compact (≈0.23in), the header is one
+ * row, and the totals block may not split from the table.
+ * Capacity (measured in Chrome at 96 dpi): 26 SKU lines fit on one sheet
+ * with the totals; plan on 25 to allow for a wrapped description.
+ * Willow Creek's longest house (Sangre Vista, 19 lines) uses 9.15in of 11in.
+ * Longer quotes continue on a second sheet with the column headings repeated.
+ *
+ * The document is paper: fixed light colors regardless of app theme.
+ */
+
+@page { size: letter; margin: 0; }
+
+.fm-p1-doc {
+  --doc-ink: #1E2B25; --doc-ink-2: #4A5650; --doc-ink-3: #5E675F;
+  --doc-line: #D8CDB8; --doc-accent: #7A5634; --doc-alert: #8A4F38;
+  box-sizing: border-box;
+  width: 8.5in; min-height: 11in;
+  padding: 0.45in 0.55in 0.4in;
+  background: #FFFFFF; color: var(--doc-ink);
+  font-family: "Inter", -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 9.5pt; line-height: 1.3;
+  display: flex; flex-direction: column;
+  color-scheme: light;
+}
+.fm-p1-doc *, .fm-p1-doc *::before, .fm-p1-doc *::after { box-sizing: border-box; }
+.fm-p1-doc + .fm-p1-doc { break-before: page; page-break-before: always; }
+
+.fm-p1-doc .doc-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12pt; padding-bottom: 6pt; margin-bottom: 0.12in; border-bottom: 1pt solid var(--doc-ink); }
+.fm-p1-doc .doc-logo { display: flex; align-items: center; gap: 9pt; flex: none; }
+.fm-p1-doc .doc-lockup { display: block; height: 0.62in; width: auto; }
+.fm-p1-doc .doc-title { text-align: right; flex: 1 1 0; min-width: 0; padding-left: 12pt; }
+.fm-p1-doc .doc-title h1 { overflow-wrap: anywhere; text-wrap: balance; }
+.fm-p1-doc .doc-title--long h1 { font-size: 12.5pt; }
+.fm-p1-doc .doc-kicker { font-size: 7pt; letter-spacing: .16em; text-transform: uppercase; color: var(--doc-ink-3); }
+.fm-p1-doc h1 { font-family: "Playfair Display", Georgia, serif; font-weight: 600; font-size: 16pt; line-height: 1.15; margin: 1pt 0 0; color: var(--doc-ink); }
+
+.fm-p1-doc .doc-fields { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5pt 18pt; margin-bottom: 0.13in; }
+.fm-p1-doc .doc-fields > div { display: flex; flex-direction: column; min-width: 0; }
+.fm-p1-doc .doc-fields .k { font-size: 6.5pt; letter-spacing: .14em; text-transform: uppercase; color: var(--doc-ink-3); font-weight: 600; }
+.fm-p1-doc .doc-fields .v { font-size: 9.5pt; }
+.fm-p1-doc .doc-fields .sub { display: block; font-size: 8pt; color: var(--doc-ink-2); }
+.fm-p1-doc .missing { color: var(--doc-alert); font-weight: 600; }
+
+.fm-p1-doc table { width: 100%; border-collapse: collapse; }
+.fm-p1-doc thead { display: table-header-group; }
+.fm-p1-doc tr { break-inside: avoid; page-break-inside: avoid; }
+.fm-p1-doc th { text-align: left; font-size: 6.5pt; letter-spacing: .12em; text-transform: uppercase; color: var(--doc-ink-3); font-weight: 600; padding: 0 4pt 3pt; border-bottom: 0.75pt solid var(--doc-ink-3); }
+.fm-p1-doc td { padding: 2.4pt 4pt; border-bottom: 0.5pt solid var(--doc-line); vertical-align: top; line-height: 1.2; }
+.fm-p1-doc .r { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fm-p1-doc .sku { font-size: 8.5pt; color: var(--doc-ink-2); white-space: nowrap; }
+
+.fm-p1-doc .doc-bottom { break-inside: avoid; page-break-inside: avoid; break-before: avoid; margin-top: 6pt; }
+.fm-p1-doc .doc-sum { width: 3.4in; margin-left: auto; }
+.fm-p1-doc .doc-sum td { border-bottom: 0; padding: 1.4pt 4pt; }
+.fm-p1-doc .doc-sum tr.is-sub td { border-top: 0.5pt solid var(--doc-line); }
+.fm-p1-doc .doc-sum tr.is-total td { border-top: 1pt solid var(--doc-ink); font-weight: 700; font-size: 11pt; padding-top: 4pt; }
+.fm-p1-doc .doc-note { font-size: 7.5pt; color: var(--doc-ink-2); margin: 6pt 0 0; }
+.fm-p1-doc .doc-foot { display: flex; gap: 18pt; align-items: flex-end; margin-top: 26pt; font-size: 7.5pt; color: var(--doc-ink-2); }
+.fm-p1-doc .doc-foot i { display: inline-block; width: 0.9in; border-bottom: 0.5pt solid var(--doc-ink-3); margin-left: 4pt; }
+.fm-p1-doc .doc-foot i.wide { width: 1.8in; }
+.fm-p1-doc .doc-foot .pg { margin-left: auto; letter-spacing: .1em; text-transform: uppercase; }
+
+/* Invoices, payment schedule and contract packet (fm-phase1-docs.js) */
+.fm-p1-doc { position: relative; }
+.fm-p1-doc .doc-inv { width: 100%; margin: 4pt 0 10pt; }
+.fm-p1-doc .doc-inv td { padding: 5pt 4pt; font-size: 10pt; }
+.fm-p1-doc .doc-inv tr.is-total td { border-top: 1pt solid var(--doc-ink); border-bottom: 0; font-weight: 700; font-size: 11.5pt; padding-top: 6pt; }
+.fm-p1-doc .doc-lines tr.is-total td { border-top: 1pt solid var(--doc-ink); border-bottom: 0; font-weight: 700; }
+.fm-p1-doc .sub-inline { display: block; font-size: 8pt; color: var(--doc-ink-2); }
+.fm-p1-doc .doc-notes { margin-top: 4pt; }
+.fm-p1-doc .doc-stamp { position: absolute; top: 0.52in; left: 50%; transform: translateX(-50%) rotate(-8deg); border: 2.5pt solid #46553B; color: #46553B; border-radius: 4pt; padding: 3pt 12pt; font-weight: 800; font-size: 20pt; letter-spacing: .18em; text-transform: uppercase; }
+.fm-p1-doc .doc-foot--end { margin-top: auto; padding-top: 8pt; border-top: 0.5pt solid var(--doc-line); justify-content: space-between; }
+
+@media print {
+  .fm-p1-doc { box-shadow: none !important; margin: 0 !important; }
+}
+
+/* Elevation sheets (Phase 2) */
+.fm-p1-doc .doc-elev { margin: 10pt 0 8pt; }
+.fm-p1-doc .doc-elev svg { display: block; width: 100%; height: auto; max-height: 5.4in; }
+.fm-p1-doc .doc-elev--3d svg { max-height: 7.4in; }

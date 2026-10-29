@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>New Project Flow</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="../src/fm-phase1-theme.css">
+<style>
+/* Proposal page. Layout: a reading column for the findings, then a full-width prototype “app window”. */
+:root { --page: #EFE8DA; }
+body { margin: 0; background: var(--page); }
+#np { min-height: 100vh; padding-block: 28px 72px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 28px; }
+#np > * { width: 100%; max-width: 1160px; margin-inline: auto; }
+.fm-p1 .np-top { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; flex-wrap: wrap; border-bottom: 1px solid var(--fmp1-line); padding-bottom: 16px; }
+.fm-p1 .np-h1 { font-size: clamp(28px, 4.5vw, 40px); margin: 4px 0 6px; }
+.fm-p1 .np-lede { margin: 0; max-width: 68ch; color: var(--fmp1-ink-2); font-size: 15.5px; }
+.fm-p1 .np-sec { display: flex; flex-direction: column; gap: 14px; }
+.fm-p1 .np-h2 { font-size: 24px; }
+.fm-p1 .np-small { font-size: 12.5px; }
+.fm-p1 p { margin: 0; }
+
+/* today's flow */
+.fm-p1 .np-paths { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); gap: 14px; }
+.fm-p1 .np-path { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.fm-p1 .np-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.fm-p1 .np-steps li { font-size: 12.5px; padding: 5px 9px; border-radius: 6px; background: var(--fmp1-surface-2); }
+.fm-p1 .np-steps li.end { background: var(--fmp1-alert-soft); color: var(--fmp1-alert-ink); font-weight: 600; }
+.fm-p1 .np-steps .arr { background: none; padding: 0; color: var(--fmp1-ink-3); }
+.fm-p1 .np-pains { counter-reset: p; list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 10px; }
+.fm-p1 .np-pains li { counter-increment: p; padding: 12px 14px 12px 44px; position: relative; font-size: 13.5px; color: var(--fmp1-ink-2); }
+.fm-p1 .np-pains li::before { content: counter(p); position: absolute; left: 14px; top: 12px; width: 20px; height: 20px; border-radius: 50%; background: var(--fmp1-alert-soft); color: var(--fmp1-alert-ink); font-size: 11px; font-weight: 700; display: grid; place-items: center; }
+.fm-p1 .np-pains b { color: var(--fmp1-ink); display: block; margin-bottom: 2px; }
+
+/* proposed flow overview */
+.fm-p1 .np-flow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.fm-p1 .np-flow > div { padding: 12px; display: flex; flex-direction: column; gap: 4px; }
+.fm-p1 .np-flow .n { font-family: var(--fmp1-font-mono); font-size: 11px; color: var(--fmp1-accent-ink); font-weight: 600; }
+.fm-p1 .np-flow b { font-size: 14px; }
+.fm-p1 .np-flow span { font-size: 12.5px; color: var(--fmp1-ink-2); }
+.fm-p1 .np-fixes { font-size: 11.5px; color: var(--fmp1-good-ink); }
+
+/* prototype window */
+.fm-p1 .np-win { border: 1px solid var(--fmp1-line); border-radius: 12px; overflow: hidden; box-shadow: var(--fmp1-shadow); background: var(--fmp1-bg); }
+.fm-p1 .np-chrome { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 16px; background: var(--fmp1-surface); border-bottom: 1px solid var(--fmp1-line); flex-wrap: wrap; }
+.fm-p1 .np-chrome b { font-family: var(--fmp1-font-display); font-size: 17px; }
+.fm-p1 .np-draft { font-size: 12px; color: var(--fmp1-good-ink); display: inline-flex; gap: 6px; align-items: center; }
+.fm-p1 .np-draft::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--fmp1-good); }
+.fm-p1 .np-body { display: grid; grid-template-columns: 190px minmax(0, 1fr) 290px; min-height: 560px; }
+.fm-p1 .np-rail { border-right: 1px solid var(--fmp1-line); padding: 14px 10px; display: flex; flex-direction: column; gap: 4px; background: var(--fmp1-surface); }
+.fm-p1 .np-rail button { font: inherit; text-align: left; border: 0; background: transparent; border-radius: 8px; padding: 8px 10px; cursor: pointer; color: var(--fmp1-ink-2); display: flex; gap: 10px; align-items: center; font-size: 13.5px; }
+.fm-p1 .np-rail button i { font-style: normal; width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--fmp1-line); display: grid; place-items: center; font-size: 11px; font-weight: 700; flex: none; }
+.fm-p1 .np-rail button.done i { background: var(--fmp1-good); border-color: var(--fmp1-good); color: var(--fmp1-surface); }
+.fm-p1 .np-rail button[aria-current="step"] { background: var(--fmp1-accent-soft); color: var(--fmp1-ink); font-weight: 600; }
+.fm-p1 .np-rail button[aria-current="step"] i { border-color: var(--fmp1-accent); color: var(--fmp1-accent-ink); }
+.fm-p1 .np-rail button:focus-visible { outline: 2px solid var(--fmp1-focus); outline-offset: 1px; }
+.fm-p1 .np-main { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.fm-p1 .np-main h3 { margin: 0; font-family: var(--fmp1-font-display); font-size: 21px; font-weight: 600; }
+.fm-p1 .np-side { border-left: 1px solid var(--fmp1-line); padding: 16px; background: var(--fmp1-surface); display: flex; flex-direction: column; gap: 10px; }
+.fm-p1 .np-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.fm-p1 .np-grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+.fm-p1 .np-fld { display: flex; flex-direction: column; gap: 4px; }
+.fm-p1 .np-fld > span { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--fmp1-ink-3); font-weight: 600; }
+.fm-p1 .np-choice { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.fm-p1 .np-choice button { font: inherit; text-align: left; border: 1.5px solid var(--fmp1-line); background: var(--fmp1-surface); border-radius: 10px; padding: 12px 14px; cursor: pointer; color: var(--fmp1-ink); display: flex; flex-direction: column; gap: 3px; }
+.fm-p1 .np-choice button[aria-pressed="true"] { border-color: var(--fmp1-accent); background: var(--fmp1-accent-soft); }
+.fm-p1 .np-choice button small { color: var(--fmp1-ink-2); font-size: 12px; }
+.fm-p1 .np-settings { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+.fm-p1 .np-settings div { background: var(--fmp1-surface-2); border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; }
+.fm-p1 .np-settings span { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--fmp1-ink-3); font-weight: 600; }
+.fm-p1 .np-settings b { font-size: 15px; font-variant-numeric: tabular-nums; }
+.fm-p1 .np-drop { border: 1.5px dashed var(--fmp1-line); border-radius: 10px; padding: 14px; display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.fm-p1 .np-pdf { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--fmp1-line); border-radius: 8px; background: var(--fmp1-surface); }
+.fm-p1 .np-pdf .ic { flex: none; font-size: 9px; font-weight: 700; padding: 6px 5px; border-radius: 4px; background: var(--fmp1-alert-soft); color: var(--fmp1-alert-ink); }
+.fm-p1 .np-checks { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 2px; font-size: 12.5px; }
+.fm-p1 .np-checks li::before { content: "✓ "; color: var(--fmp1-good-ink); font-weight: 700; }
+.fm-p1 .np-checks li.warn::before { content: "! "; color: var(--fmp1-alert-ink); }
+.fm-p1 .np-qt td { white-space: nowrap; }
+.fm-p1 .np-qt td .fmp1-input { width: 56px; text-align: right; padding: 4px 6px; margin-right: 3px; }
+.fm-p1 .np-qt tr.atcost td { background: var(--fmp1-accent-soft); }
+.fm-p1 .np-qt tr.nc td { background: var(--fmp1-alert-soft); }
+.fm-p1 .np-sum { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-variant-numeric: tabular-nums; }
+.fm-p1 .np-sum div { display: flex; justify-content: space-between; gap: 8px; }
+.fm-p1 .np-sum .sub { border-top: 1px solid var(--fmp1-line); padding-top: 4px; }
+.fm-p1 .np-sum .tot { border-top: 2px solid var(--fmp1-ink); padding-top: 6px; font-weight: 700; font-size: 16px; }
+.fm-p1 .np-sum .adj { color: var(--fmp1-accent-ink); }
+.fm-p1 .np-big { font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.fm-p1 .np-foot { display: flex; justify-content: space-between; gap: 10px; border-top: 1px solid var(--fmp1-line); padding-top: 12px; margin-top: auto; }
+.fm-p1 .np-models { display: flex; flex-direction: column; gap: 6px; }
+.fm-p1 .np-model { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; background: var(--fmp1-surface); border: 1px solid var(--fmp1-line); font-size: 13.5px; }
+.fm-p1 .np-step { display: inline-flex; align-items: center; gap: 6px; }
+.fm-p1 .np-step button { width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--fmp1-line); background: var(--fmp1-surface); color: var(--fmp1-ink); cursor: pointer; font: inherit; }
+.fm-p1 .np-step b { min-width: 18px; text-align: center; font-variant-numeric: tabular-nums; }
+.fm-p1 .np-pay { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; }
+.fm-p1 .np-pay div { display: flex; justify-content: space-between; }
+.fm-p1 .np-note { font-size: 12px; color: var(--fmp1-ink-3); }
+@media (max-width: 1000px) { .fm-p1 .np-body { grid-template-columns: 1fr; } .fm-p1 .np-rail { flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--fmp1-line); } .fm-p1 .np-side { border-left: 0; border-top: 1px solid var(--fmp1-line); } .fm-p1 .np-flow { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<div id="np" class="fm-p1">
+  <header class="np-top">
+    <div><span class="fmp1-eyebrow">Fremont Makers · Project Builder · proposal · Oct 27, 2026</span>
+      <h1 class="fmp1-h np-h1">New Project flow</h1>
+      <p class="np-lede">What creating a project looks like today, based on the 11:20 AM recording, and a proposed replacement. The prototype at the bottom works: it prices the Braddy Penrose job live with the same quote code that's in the Phase 1 package.</p></div>
+    <div id="np-theme"></div>
+  </header>
+
+  <section class="np-sec">
+    <div><span class="fmp1-eyebrow">Today</span><h2 class="fmp1-h np-h2">Two paths, both in stacked pop-ups</h2></div>
+    <div class="np-paths">
+      <div class="fmp1-card np-path"><b>Builder order</b>
+        <ol class="np-steps"><li>Single or builder?</li><li class="arr">→</li><li>Which builder?</li><li class="arr">→</li><li>How many homes per model</li><li class="arr">→</li><li>Address + color per house</li><li class="arr">→</li><li class="end">Create order: houses have no cabinets yet</li></ol>
+        <p class="np-small fmp1-muted">Then each house needs its own supplier PDF import and pricing, from the All Projects list. Willow Creek meant 10 imports for 5 models.</p></div>
+      <div class="fmp1-card np-path"><b>Single house</b>
+        <ol class="np-steps"><li>Single or builder?</li><li class="arr">→</li><li>Upload PDF or blank</li><li class="arr">→</li><li>Find the file in Finder</li><li class="arr">→</li><li>Markup per line (35% everywhere)</li><li class="arr">→</li><li class="end">Create quote: no customer, no total seen</li></ol>
+        <p class="np-small fmp1-muted">Customer, signer, email, address and dates are typed afterwards on the quote screen.</p></div>
+    </div>
+    <ol class="np-pains">
+      <li class="fmp1-card"><b>Cancel throws everything away</b>Four pop-ups deep there's no Back button and no draft. In the recording, both paths ended with Cancel and nothing was kept.</li>
+      <li class="fmp1-card"><b>Single house never asks who it's for</b>The quote is created without a customer, so it sits in All Projects as "—" until someone fills in the header fields.</li>
+      <li class="fmp1-card"><b>No price before "Create"</b>The markup step shows line sell only. No discount, assembly, G&amp;A, tax or total, so you commit to a quote you haven't seen priced.</li>
+      <li class="fmp1-card"><b>35% default fits no real job</b>Willow Creek ran 18–72% by model, Braddy 30%. Items that go out at cost (TU, PWB18K, TUK, F342) have to be zeroed by hand every time.</li>
+      <li class="fmp1-card"><b>Identical houses priced one by one</b>Houses of the same model are identical line for line, but a builder order still needs one PDF import per house.</li>
+      <li class="fmp1-card"><b>Color is picked by hand</b>The SKU already says it: SBW = Bayview White, UMO = Moss Green, SWD = Bayview Wood, VDH = Dark Hickory. A hand-picked color can disagree with the cabinets.</li>
+      <li class="fmp1-card"><b>Pricing settings are hidden</b>Discount, G&amp;A, tax and assembly change from job to job (Penrose was 5% / 5% / 8.7%, Willow Creek 12% / 2% / 7.9%), but the flow never shows them. Only the payment plan appears, as grey text tied to the builder.</li>
+      <li class="fmp1-card"><b>No review, no draft, no record</b>The job code is assigned silently, nothing confirms what was created, and nothing records who created it.</li>
+    </ol>
+  </section>
+
+  <section class="np-sec">
+    <div><span class="fmp1-eyebrow">Proposed</span><h2 class="fmp1-h np-h2">One page, five steps, the price always visible</h2>
+      <p class="np-lede">A full page instead of pop-ups. It autosaves as a <b>Draft</b> from the first keystroke, so you can leave and come back. Single homes and builder orders use the same steps; "how many homes" is just a number.</p></div>
+    <div class="np-flow">
+      <div class="fmp1-card"><span class="n">1</span><b>Customer</b><span>Search or add. Contact, signer and email only. No pricing is carried over from the customer.</span><span class="np-fixes">Fixes 2</span></div>
+      <div class="fmp1-card"><span class="n">2</span><b>Homes</b><span>One home, or models × quantity for a builder order.</span><span class="np-fixes">Fixes 5</span></div>
+      <div class="fmp1-card"><span class="n">3</span><b>Cabinets</b><span>Drop the supplier PDF once per model. Lines, color and totals are checked.</span><span class="np-fixes">Fixes 5, 6</span></div>
+      <div class="fmp1-card"><span class="n">4</span><b>Price</b><span>Set this job's markup, discount, G&amp;A, tax, assembly and payment plan. Starts from company defaults, or copy a past job. Live total and margin.</span><span class="np-fixes">Fixes 3, 4, 7</span></div>
+      <div class="fmp1-card"><span class="n">5</span><b>Review</b><span>Homes, addresses, payment plan in dollars. Create, which is logged by name.</span><span class="np-fixes">Fixes 1, 8</span></div>
+    </div>
+  </section>
+
+  <section class="np-sec">
+    <div><span class="fmp1-eyebrow">Prototype · interactive</span><h2 class="fmp1-h np-h2">Try it with Braddy Penrose</h2>
+      <p class="np-lede">Real lines and costs from the Penrose contract and recording. On the Price step, set this job's markup, discount, G&amp;A, tax, assembly and payment plan. They start from company defaults; "Copy from a past job" fills in Penrose's signed settings. You can also edit single lines or switch on "priced by bid". The summary on the right recalculates with the Phase 1 quote math.</p></div>
+    <div class="np-win" id="np-proto" aria-live="polite"></div>
+    <p class="np-note">Prototype only: nothing is saved. Addresses, the builder-order model list and the company defaults are examples. Penrose lines, costs and its signed settings (in "Copy from a past job") are real.</p>
+  </section>
+</div>
+
+<script src="../src/fm-phase1-theme-toggle.js"></script>
+<script src="../src/fm-phase1-ledger.js"></script>
+<script src="../src/fm-phase1-quote.js"></script>
+<script src="../preview/braddy-penrose-order.js"></script>
+<script>
+(function () {
+  'use strict';
+  var FM = window.FMPhase1, Q = window.FMQuote, B = window.FM_BRADDY_ORDER;
+  var page = document.getElementById('np'), box = document.getElementById('np-proto');
+
+  // Paper / Dark, same switch as Phase 1
+  FMTheme.init(page);
+  var themeBox = document.getElementById('np-theme');
+  themeBox.innerHTML = FMTheme.toggleHTML(FMTheme.get(page));
+  FMTheme.bind(themeBox, page);
+
+  var STEPS = ['Customer', 'Homes', 'Cabinets', 'Price', 'Review'];
+  // Customers carry contact details only. Pricing settings belong to each job (owner decision, Oct 27).
+  var CUSTOMERS = [
+    { id: 'braddy', name: 'Braddy Builders', contact: 'Bernard Braddy', email: '', models: ['Penrose'] },
+    { id: 'willow', name: 'Willow Creek Estates', contact: 'Rod Stambaugh', email: '', models: ['Sangre Vista', 'Mesa Ridge', 'San Luis', 'Cimarron Peak', 'Pinyon Crest'] }
+  ];
+  // Starting values for every new job; all editable on the Price step.
+  var COMPANY_DEFAULTS = { markup: 35, disc: 12, ga: 2, tax: 7.9, assembly: '640.00', plan: [50, 50], atCostOn: true };
+  // Items usually sold at cost; zeroed only if the job's "at cost" box is ticked.
+  var AT_COST_ITEMS = ['PWB18K', 'TU', 'TUK', 'F342'];
+  // Optional shortcut: copy settings from a previous job (signed values).
+  var PAST_JOBS = [
+    { id: 'penrose', label: 'Penrose · Braddy · FM-2609-314', markup: 30, disc: 5, ga: 5, tax: 8.7, plan: [50, 30, 20] },
+    { id: 'willow', label: 'Willow Creek · FM-2609-276', markup: 35, disc: 12, ga: 2, tax: 7.9, plan: [50, 50] }
+  ];
+  var PLANS = [[50, 50], [50, 30, 20], [100]];
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var $f = FM.fmt;
+
+  function freshLines(markup, atCostOn) {
+    return B.model.lines.filter(function (l) { return !l.noCharge; }).map(function (l) {
+      var base = l.sku.replace(/-[A-Z]{3}$/, '');
+      var rule = atCostOn && AT_COST_ITEMS.indexOf(base) > -1;
+      return { sku: l.sku, description: l.desc, qty: l.qty, unitCostCents: FM.toCents(l.unitCost), markupPct: rule ? 0 : markup, rule: rule, edited: false, noCharge: false };
+    });
+  }
+  // Re-apply the job's default markup and at-cost box to every line not edited by hand.
+  function reapply() {
+    S.lines.forEach(function (l) {
+      if (l.edited) return;
+      var rule = S.atCostOn && AT_COST_ITEMS.indexOf(l.sku.replace(/-[A-Z]{3}$/, '')) > -1;
+      l.rule = rule; l.markupPct = rule ? 0 : S.markup;
+    });
+  }
+
+  var S;
+  function reset() {
+    var d = COMPANY_DEFAULTS;
+    S = { step: 0, maxStep: 0, cust: CUSTOMERS[0].id, project: 'Penrose', kind: 'single', counts: { 'Sangre Vista': 2, 'Mesa Ridge': 2, 'San Luis': 2, 'Cimarron Peak': 2, 'Pinyon Crest': 2 },
+      markup: d.markup, disc: d.disc, ga: d.ga, tax: d.tax, assembly: d.assembly, plan: d.plan.slice(), atCostOn: d.atCostOn, copiedFrom: '',
+      lines: freshLines(d.markup, d.atCostOn),
+      extra: false, bid: false, bidAmount: '10973.11', address: '', delivery: '2026-11-09', created: false };
+  }
+  function cust() { return CUSTOMERS.filter(function (c) { return c.id === S.cust; })[0]; }
+
+  function price() {
+    var lines = S.lines.slice();
+    if (S.extra) {
+      B.model.lines.filter(function (l) { return l.noCharge; }).forEach(function (l) {
+        lines.push({ sku: l.sku, description: l.desc, qty: l.qty, unitCostCents: FM.toCents(l.unitCost), markupPct: S.markup, noCharge: S.extraNoCharge });
+      });
+    }
+    var asm = 0; try { asm = FM.toCents(S.assembly); } catch (e) { asm = 0; }
+    var p = Q.priceHouse({ lines: lines, discountPctOfCost: S.disc, labor: asm ? [{ role: 'Assembly', rateCents: asm, hours: 1 }] : [], gaPct: S.ga, taxPct: S.tax });
+    if (p.ok && S.bid) {
+      var bid = 0; try { bid = FM.toCents(S.bidAmount); } catch (e) { bid = 0; }
+      if (bid > 0) {
+        var adj = bid - p.summary.totalCents, totalRow = p.rows.pop();
+        p.rows.push({ key: 'bid', label: 'Bid vs. itemized (internal only)', cents: adj });
+        totalRow.cents = bid; p.rows.push(totalRow); p.summary.totalCents = bid; p.bidAdj = adj;
+      }
+    }
+    return p;
+  }
+
+  function rail() {
+    return '<nav class="np-rail" aria-label="Steps">' + STEPS.map(function (s, i) {
+      return '<button type="button" data-go="' + i + '"' + (i === S.step ? ' aria-current="step"' : '') + ' class="' + (i < S.step || (S.created && i <= 4) ? 'done' : '') + '"' + (i > S.maxStep ? ' disabled' : '') + '><i>' + (i < S.step || S.created ? '✓' : i + 1) + '</i>' + s + '</button>';
+    }).join('') + '</nav>';
+  }
+
+  function side(p) {
+    var c = cust(), homes = S.kind === 'single' ? 1 : Object.keys(S.counts).reduce(function (t, k) { return t + S.counts[k]; }, 0);
+    var sum = p.rows.map(function (r) {
+      return '<div class="' + (r.total ? 'tot' : r.subtotal ? 'sub' : r.key === 'bid' ? 'adj' : '') + '"><span>' + esc(r.label) + '</span><span>' + $f(r.cents) + '</span></div>';
+    }).join('');
+    var plan = S.plan.map(function (pc, i) {
+      var amt = i === S.plan.length - 1 ? p.summary.totalCents - S.plan.slice(0, -1).reduce(function (t, x) { return t + Math.round(p.summary.totalCents * x / 100); }, 0) : Math.round(p.summary.totalCents * pc / 100);
+      return '<div><span>Invoice ' + (i + 1) + ' · ' + pc + '%</span><span class="fmp1-num">' + $f(amt) + '</span></div>';
+    }).join('');
+    var flags = [];
+    if (p.internal.atCostLines.length) flags.push(p.internal.atCostLines.length + ' line' + (p.internal.atCostLines.length > 1 ? 's' : '') + ' at cost');
+    if (p.internal.noChargeLines.length) flags.push(p.internal.noChargeLines.length + ' no-charge line' + (p.internal.noChargeLines.length > 1 ? 's' : '') + ' (' + $f(p.internal.noChargeCostCents) + ' of cost)');
+    if (S.bid && p.bidAdj) flags.push('Customer page: lump-sum bid, quantities only, no prices');
+    return '<aside class="np-side" aria-label="Live summary"><span class="fmp1-eyebrow">' + esc(c.name) + ' · ' + esc(S.project || 'New project') + '</span>' +
+      '<div><span class="np-note">' + (S.kind === 'single' ? 'Single home' : 'Builder order · ' + homes + ' homes') + ' · per home</span><div class="np-big">' + $f(p.summary.totalCents) + '</div></div>' +
+      '<div class="np-sum">' + sum + '</div>' +
+      '<div class="np-sum"><div><span class="fmp1-faint">Your cost (charged lines)</span><span>' + $f(p.internal.costCents) + '</span></div>' +
+      '<div><span class="fmp1-faint">Margin on product</span><span>' + p.internal.marginPct + '%</span></div></div>' +
+      (flags.length ? '<div class="fmp1-note fmp1-note--alert np-small"><span>' + flags.map(esc).join('<br>') + '</span></div>' : '') +
+      '<span class="fmp1-eyebrow" style="margin-top:4px">Payment plan</span><div class="np-pay">' + plan + '</div>' +
+      '<span class="np-draft">Draft saved</span></aside>';
+  }
+
+  function stepCustomer() {
+    var c = cust();
+    return '<h3>Who is this for?</h3>' +
+      '<div class="np-choice" role="group" aria-label="Customer">' + CUSTOMERS.map(function (x) {
+        return '<button type="button" data-cust="' + x.id + '" aria-pressed="' + (x.id === S.cust) + '"><b>' + esc(x.name) + '</b><small>' + esc(x.contact) + '</small></button>';
+      }).join('') + '<button type="button" disabled><b>+ New customer</b><small>Name, contact, email</small></button></div>' +
+      '<div class="np-grid2"><label class="np-fld"><span>Project name</span><input class="fmp1-input" id="np-proj" data-f="project" value="' + esc(S.project) + '"></label>' +
+      '<label class="np-fld"><span>Signer</span><input class="fmp1-input" id="np-signer" value="' + esc(c.contact) + '"></label>' +
+      '<label class="np-fld"><span>Buyer email (for e-signature)</span><input class="fmp1-input" id="np-email" placeholder="name@company.com"></label></div>' +
+      '<p class="np-note">Markup, discount, G&amp;A, tax, assembly and payment plan are set for each job on the Price step. Nothing is carried over from the customer.</p>';
+  }
+
+  function stepHomes() {
+    var c = cust();
+    var models = S.kind === 'builder' ? '<div class="np-models">' + CUSTOMERS[1].models.map(function (m) {
+      return '<div class="np-model"><span>' + esc(m) + '</span><span class="np-step"><button type="button" data-cnt="' + esc(m) + '" data-d="-1" aria-label="Fewer ' + esc(m) + '">−</button><b>' + S.counts[m] + '</b><button type="button" data-cnt="' + esc(m) + '" data-d="1" aria-label="More ' + esc(m) + '">+</button></span></div>';
+    }).join('') + '<p class="np-note">Houses of the same model share one cabinet list and one price. Each house still gets its own address, job code and color check.</p></div>' : '';
+    return '<h3>How many homes?</h3><div class="np-choice" role="group" aria-label="Job type">' +
+      '<button type="button" data-kind="single" aria-pressed="' + (S.kind === 'single') + '"><b>One home</b><small>One quote, one house</small></button>' +
+      '<button type="button" data-kind="builder" aria-pressed="' + (S.kind === 'builder') + '"><b>Builder order</b><small>Several models on one contract</small></button></div>' + models +
+      (S.kind === 'builder' && c.id === 'braddy' ? '<p class="np-note">Showing Willow Creek\'s five models as an example of a builder order.</p>' : '');
+  }
+
+  function stepCabinets() {
+    var n = S.lines.length;
+    return '<h3>Cabinets</h3>' +
+      '<div class="np-drop"><span><b>Drop the supplier PDF here</b><br><span class="np-small fmp1-muted">Or pick from recent Wholesale Cabinets PDFs. ' + (S.kind === 'builder' ? 'One per model, not per house.' : '') + '</span></span><button type="button" class="fmp1-btn" disabled>Choose file…</button></div>' +
+      '<div class="np-pdf"><span class="ic">PDF</span><div><b>Wholesale Cabinets quote · Penrose</b><br><span class="np-small fmp1-muted">' + n + ' lines read · example built from the signed Penrose quote</span>' +
+      '<ul class="np-checks"><li>Color from SKUs: <b>Dark Hickory Shaker</b> (every line ends in -VDH)</li><li>Lines add up to the PDF subtotal ' + $f(S.lines.reduce(function (t, l) { return t + l.unitCostCents * l.qty; }, 0)) + '</li><li>Usual at-cost items found: PWB18K, TU (you decide on the Price step)</li></ul></div></div>' +
+      '<label class="np-row np-small"><input type="checkbox" id="np-extra" data-extra' + (S.extra ? ' checked' : '') + '> Also add order #1000173203 (VDC42RS ×1, DC224 ×2, Oct 9)</label>' +
+      (S.extra ? '<label class="np-row np-small" style="padding-left:22px"><input type="checkbox" id="np-ncx" data-nc-extra' + (S.extraNoCharge ? ' checked' : '') + '> Give these at no charge (logged, and listed on the quote as "No charge")</label>' : '') +
+      '<p class="np-note">Today these two items went on the signed quote at $0.00 with no change order. Here, adding them to a job that\'s already contracted would start a change order instead.</p>';
+  }
+
+  function stepPrice(p) {
+    var rows = p.lines.map(function (l, i) {
+      var own = i < S.lines.length;
+      return '<tr class="' + (l.noCharge ? 'nc' : l.atCost ? 'atcost' : '') + '"><td>' + esc(l.sku) + (own && S.lines[i].rule ? ' <span class="fmp1-pill fmp1-pill--proposed">at cost</span>' : '') + (own && S.lines[i].edited ? ' <span class="fmp1-pill">edited</span>' : '') + (l.noCharge ? ' <span class="fmp1-pill fmp1-pill--alert">no charge</span>' : '') + '</td>' +
+        '<td class="r">' + l.qty + '</td><td class="r">' + $f(l.unitCostCents) + '</td>' +
+        '<td class="r">' + (own ? '<input class="fmp1-input" inputmode="decimal" aria-label="Markup for ' + esc(l.sku) + '" data-mk="' + i + '" value="' + S.lines[i].markupPct + '">%' : '—') + '</td>' +
+        '<td class="r">' + (l.noCharge ? 'No charge' : $f(l.unitCents)) + '</td><td class="r"><b>' + (l.noCharge ? '—' : $f(l.totalCents)) + '</b></td></tr>';
+    }).join('');
+    function num(id, key, val, suffix, w) {
+      return '<label class="np-fld"><span>' + id + '</span><span class="np-row" style="gap:4px;flex-wrap:nowrap"><input class="fmp1-input fmp1-num" inputmode="decimal" style="width:' + (w || 70) + 'px" id="np-' + key + '" data-set="' + key + '" value="' + esc(val) + '">' + (suffix ? '<span class="np-small fmp1-muted">' + suffix + '</span>' : '') + '</span></label>';
+    }
+    var planOpts = PLANS.map(function (pl) { var k = pl.join('/'); return '<option value="' + k + '"' + (S.plan.join('/') === k ? ' selected' : '') + '>' + k + '</option>'; }).join('');
+    var settings = '<div class="fmp1-card" style="padding:12px 14px;display:flex;flex-direction:column;gap:10px">' +
+      '<div class="np-row" style="justify-content:space-between"><span class="fmp1-eyebrow">This job\'s pricing</span>' +
+      '<label class="np-row np-small">Copy from a past job <select class="fmp1-input" id="np-copy" data-copy><option value="">Choose…</option>' +
+      PAST_JOBS.map(function (j) { return '<option value="' + j.id + '"' + (S.copiedFrom === j.id ? ' selected' : '') + '>' + esc(j.label) + '</option>'; }).join('') + '</select></label></div>' +
+      '<div class="np-row" style="align-items:flex-end;gap:14px">' +
+      num('Default markup', 'markup', S.markup, '%') + num('Mfr. discount', 'disc', S.disc, '% of cost') + num('G&amp;A', 'ga', S.ga, '%') + num('Tax', 'tax', S.tax, '% of product') +
+      num('Assembly', 'assembly', S.assembly, '$', 90) +
+      '<label class="np-fld"><span>Payment plan</span><select class="fmp1-input" id="np-plan" data-plan>' + planOpts + '</select></label></div>' +
+      '<label class="np-row np-small"><input type="checkbox" id="np-atcost" data-atcost' + (S.atCostOn ? ' checked' : '') + '> Sell common at-cost items at cost (' + AT_COST_ITEMS.join(', ') + ')</label>' +
+      '<p class="np-note">Starts from company defaults (35% · 12% · 2% · 7.9% · 50/50) on every new job. Changing the default markup updates every line you haven\'t edited by hand.</p></div>';
+    return '<h3>Price</h3>' + settings +
+      '<div class="np-row"><label class="np-row np-small"><input type="checkbox" id="np-bid" data-bid' + (S.bid ? ' checked' : '') + '> Priced by bid</label>' +
+      (S.bid ? '<label class="np-row np-small">Bid <input class="fmp1-input" style="width:100px" id="np-bidamt" data-bidamt value="' + esc(S.bidAmount) + '"></label>' : '') + '</div>' +
+      (S.bid ? '<p class="fmp1-note fmp1-note--info np-small">The customer gets a lump-sum bid page: every cabinet with its quantity, no prices, and one "Agreed bid price". The itemized pricing and the difference stay on this internal page (owner decision, Oct 27). Penrose\'s signed bid was $10,973.11.</p>' : '') +
+      '<div class="fmp1-table-wrap"><table class="fmp1-table np-qt"><thead><tr><th>SKU</th><th class="r">Qty</th><th class="r">Unit cost</th><th class="r">Markup</th><th class="r">Unit</th><th class="r">Total</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+  }
+
+  function stepReview(p) {
+    var c = cust(), homes = S.kind === 'single' ? [S.project + ' 1'] : [];
+    if (S.kind === 'builder') CUSTOMERS[1].models.forEach(function (m) { for (var i = 1; i <= S.counts[m]; i++) homes.push(m + ' ' + i); });
+    if (S.created) {
+      return '<h3>Created</h3><div class="fmp1-note fmp1-note--good"><span><b>FM-2610-' + (100 + Math.floor(p.summary.totalCents % 900)) + ' · ' + esc(c.name) + ' · ' + esc(S.project) + '</b> is saved as a Quote. Logged: "Project created by Linds".</span></div>' +
+        '<div class="np-row"><button type="button" class="fmp1-btn fmp1-btn--primary" disabled>Send quote for signature</button><button type="button" class="fmp1-btn" disabled>Open job</button><button type="button" class="fmp1-btn fmp1-btn--quiet" data-reset>Start over</button></div>';
+    }
+    var list = homes.slice(0, 12).map(function (h, i) {
+      return '<tr><td>' + esc(h) + '</td><td>' + (i === 0 ? '<input class="fmp1-input" id="np-addr" data-addr placeholder="Lot / street" value="' + esc(S.address) + '">' : '<span class="fmp1-faint">Lot / street</span>') + '</td><td>' + (S.kind === 'single' ? 'Dark Hickory Shaker ✓' : 'From PDF ✓') + '</td></tr>';
+    }).join('');
+    return '<h3>Review and create</h3>' +
+      '<div class="np-settings"><div><span>Customer</span><b>' + esc(c.name) + '</b></div><div><span>Homes</span><b>' + homes.length + '</b></div><div><span>Per home</span><b>' + $f(p.summary.totalCents) + '</b></div><div><span>Order total</span><b>' + $f(p.summary.totalCents * (S.kind === 'single' ? 1 : homes.length)) + '</b></div></div>' +
+      '<div class="fmp1-table-wrap"><table class="fmp1-table"><thead><tr><th>Home</th><th>Address</th><th>Color</th></tr></thead><tbody>' + list + '</tbody></table></div>' +
+      '<label class="np-fld" style="max-width:220px"><span>Delivery date</span><input class="fmp1-input" type="date" id="np-del" data-del value="' + S.delivery + '"></label>' +
+      (S.address ? '' : '<p class="fmp1-note fmp1-note--alert np-small">No address yet. You can create the quote now; the job will show "Needs attention" until it\'s added.</p>');
+  }
+
+  function render() {
+    var p = price();
+    var body = [stepCustomer, stepHomes, stepCabinets, stepPrice, stepReview][S.step](p);
+    var foot = S.created ? '' : '<div class="np-foot"><button type="button" class="fmp1-btn" data-back' + (S.step === 0 ? ' disabled' : '') + '>Back</button>' +
+      (S.step < 4 ? '<button type="button" class="fmp1-btn fmp1-btn--primary" data-next>Next: ' + STEPS[S.step + 1] + '</button>' : '<button type="button" class="fmp1-btn fmp1-btn--primary" data-create>Create quote</button>') + '</div>';
+    box.innerHTML = '<div class="np-chrome"><b>New project</b><span class="np-draft">Draft saved · you can leave and come back</span></div>' +
+      '<div class="np-body">' + rail() + '<div class="np-main">' + body + foot + '</div>' + side(p) + '</div>';
+  }
+
+  box.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b || b.disabled) return;
+    if (b.dataset.go) { S.step = +b.dataset.go; return render(); }
+    if (b.hasAttribute('data-next')) { S.step++; S.maxStep = Math.max(S.maxStep, S.step); return render(); }
+    if (b.hasAttribute('data-back')) { S.step--; return render(); }
+    if (b.hasAttribute('data-reset')) { reset(); return render(); }
+    if (b.hasAttribute('data-create')) { S.created = true; return render(); }
+    if (b.dataset.cust) {
+      // Changing the customer changes who the job is for, never its pricing.
+      var c = CUSTOMERS.filter(function (x) { return x.id === b.dataset.cust; })[0];
+      S.cust = c.id;
+      S.project = c.id === 'braddy' ? 'Penrose' : 'New Willow Creek order';
+      if (c.id === 'willow') S.kind = 'builder';
+      return render();
+    }
+    if (b.dataset.kind) { S.kind = b.dataset.kind; return render(); }
+    if (b.dataset.cnt) { var m = b.dataset.cnt; S.counts[m] = Math.max(0, Math.min(20, S.counts[m] + (+b.dataset.d))); return render(); }
+  });
+  box.addEventListener('change', function (e) {
+    var t = e.target;
+    if (t.dataset.mk !== undefined) { var v = parseFloat(t.value); if (v >= 0) { var ln = S.lines[+t.dataset.mk]; ln.markupPct = v; ln.rule = false; ln.edited = true; } return render(); }
+    if (t.dataset.set) {
+      var k = t.dataset.set;
+      if (k === 'assembly') { S.assembly = t.value; S.copiedFrom = ''; return render(); }
+      var n = parseFloat(t.value); if (!(n >= 0) || n > 500) return render();
+      S[k] = n; S.copiedFrom = '';
+      if (k === 'markup') reapply();
+      return render();
+    }
+    if (t.hasAttribute('data-plan')) { S.plan = t.value.split('/').map(Number); S.copiedFrom = ''; return render(); }
+    if (t.hasAttribute('data-atcost')) { S.atCostOn = t.checked; reapply(); return render(); }
+    if (t.hasAttribute('data-copy')) {
+      var j = PAST_JOBS.filter(function (x) { return x.id === t.value; })[0];
+      if (j) { S.markup = j.markup; S.disc = j.disc; S.ga = j.ga; S.tax = j.tax; S.plan = j.plan.slice(); S.copiedFrom = j.id; reapply(); }
+      return render();
+    }
+    if (t.hasAttribute('data-extra')) { S.extra = t.checked; S.extraNoCharge = false; return render(); }
+    if (t.hasAttribute('data-nc-extra')) { S.extraNoCharge = t.checked; return render(); }
+    if (t.hasAttribute('data-bid')) { S.bid = t.checked; return render(); }
+    if (t.hasAttribute('data-bidamt')) { S.bidAmount = t.value; return render(); }
+    if (t.hasAttribute('data-addr')) { S.address = t.value; return render(); }
+    if (t.hasAttribute('data-del')) { S.delivery = t.value; return; }
+    if (t.dataset.f === 'project') { S.project = t.value; return render(); }
+  });
+
+  reset(); render();
+})();
+</script>
+</body>
+</html>

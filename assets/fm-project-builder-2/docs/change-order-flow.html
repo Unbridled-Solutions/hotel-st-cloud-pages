@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Change Order Flow</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="../src/fm-phase1-theme.css">
+<style>
+/* Proposal page: findings, the proposed flow, then a working prototype. */
+:root { --page: #EFE8DA; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --page: #243A32; color-scheme: dark; } }
+:root[data-theme="dark"] { --page: #243A32; color-scheme: dark; }
+body { margin: 0; background: var(--page); }
+#co { min-height: 100vh; background: var(--fmp1-bg); padding-block: 28px 72px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 28px; }
+#co > * { width: 100%; max-width: 1160px; margin-inline: auto; }
+.fm-p1 p { margin: 0; }
+.fm-p1 .co-top { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; flex-wrap: wrap; border-bottom: 1px solid var(--fmp1-line); padding-bottom: 16px; }
+.fm-p1 .co-h1 { font-size: clamp(28px, 4.5vw, 40px); margin: 4px 0 6px; }
+.fm-p1 .co-lede { max-width: 70ch; color: var(--fmp1-ink-2); font-size: 15.5px; }
+.fm-p1 .co-sec { display: flex; flex-direction: column; gap: 14px; }
+.fm-p1 .co-h2 { font-size: 24px; }
+.fm-p1 .co-small { font-size: 12.5px; }
+.fm-p1 .co-pains { counter-reset: p; list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 10px; }
+.fm-p1 .co-pains li { counter-increment: p; padding: 12px 14px 12px 44px; position: relative; font-size: 13.5px; color: var(--fmp1-ink-2); }
+.fm-p1 .co-pains li::before { content: counter(p); position: absolute; left: 14px; top: 12px; width: 20px; height: 20px; border-radius: 50%; background: var(--fmp1-alert-soft); color: var(--fmp1-alert-ink); font-size: 11px; font-weight: 700; display: grid; place-items: center; }
+.fm-p1 .co-pains b { color: var(--fmp1-ink); display: block; margin-bottom: 2px; }
+.fm-p1 .co-flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.fm-p1 .co-flow > div { padding: 12px; display: flex; flex-direction: column; gap: 4px; }
+.fm-p1 .co-flow .n { font-family: var(--fmp1-font-mono); font-size: 11px; color: var(--fmp1-accent-ink); font-weight: 600; }
+.fm-p1 .co-flow b { font-size: 14px; }
+.fm-p1 .co-flow span { font-size: 12.5px; color: var(--fmp1-ink-2); }
+
+.fm-p1 .co-win { border: 1px solid var(--fmp1-line); border-radius: 12px; overflow: hidden; box-shadow: var(--fmp1-shadow); background: var(--fmp1-bg); }
+.fm-p1 .co-chrome { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 16px; background: var(--fmp1-surface); border-bottom: 1px solid var(--fmp1-line); flex-wrap: wrap; }
+.fm-p1 .co-chrome b { font-family: var(--fmp1-font-display); font-size: 17px; }
+.fm-p1 .co-body { display: grid; grid-template-columns: 168px minmax(0, 1fr) 250px; min-height: 560px; }
+.fm-p1 .co-rail { border-right: 1px solid var(--fmp1-line); padding: 14px 10px; display: flex; flex-direction: column; gap: 4px; background: var(--fmp1-surface); }
+.fm-p1 .co-rail button { font: inherit; text-align: left; border: 0; background: transparent; border-radius: 8px; padding: 8px 10px; cursor: pointer; color: var(--fmp1-ink-2); display: flex; gap: 10px; align-items: center; font-size: 13.5px; }
+.fm-p1 .co-rail button i { font-style: normal; width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--fmp1-line); display: grid; place-items: center; font-size: 11px; font-weight: 700; flex: none; }
+.fm-p1 .co-rail button.done i { background: var(--fmp1-good); border-color: var(--fmp1-good); color: var(--fmp1-surface); }
+.fm-p1 .co-rail button[aria-current="step"] { background: var(--fmp1-accent-soft); color: var(--fmp1-ink); font-weight: 600; }
+.fm-p1 .co-rail button:disabled { opacity: .5; cursor: default; }
+.fm-p1 .co-rail button:focus-visible, .fm-p1 .co-choice button:focus-visible { outline: 2px solid var(--fmp1-focus); outline-offset: 1px; }
+.fm-p1 .co-main { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.fm-p1 .co-main h3 { margin: 0; font-family: var(--fmp1-font-display); font-size: 20px; font-weight: 600; }
+.fm-p1 .co-side { border-left: 1px solid var(--fmp1-line); padding: 16px; background: var(--fmp1-surface); display: flex; flex-direction: column; gap: 10px; }
+.fm-p1 .co-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.fm-p1 .co-fld { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.fm-p1 .co-fld > span, .fm-p1 .co-label { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--fmp1-ink-3); font-weight: 600; }
+.fm-p1 .co-grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.fm-p1 .co-choice { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+.fm-p1 .co-choice button { font: inherit; text-align: left; border: 1.5px solid var(--fmp1-line); background: var(--fmp1-surface); border-radius: 10px; padding: 12px 14px; cursor: pointer; color: var(--fmp1-ink); display: flex; flex-direction: column; gap: 3px; }
+.fm-p1 .co-choice button span { font-size: 12.5px; color: var(--fmp1-ink-2); }
+.fm-p1 .co-choice button strong { font-variant-numeric: tabular-nums; font-size: 15px; }
+.fm-p1 .co-choice button[aria-pressed="true"] { border-color: var(--fmp1-accent); background: var(--fmp1-accent-soft); }
+.fm-p1 .co-choice button:disabled { opacity: .55; cursor: not-allowed; }
+.fm-p1 .co-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.fm-p1 .co-tbl th { text-align: left; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--fmp1-ink-3); font-weight: 600; padding: 6px 8px; border-bottom: 1px solid var(--fmp1-line); }
+.fm-p1 .co-tbl td { padding: 6px 8px; border-bottom: 1px solid var(--fmp1-line); font-variant-numeric: tabular-nums; vertical-align: middle; }
+.fm-p1 .co-tbl .r { text-align: right; }
+.fm-p1 .co-tbl tr.add td { background: var(--fmp1-good-soft); }
+.fm-p1 .co-tbl tr.rem td { background: var(--fmp1-alert-soft); text-decoration: line-through; text-decoration-color: var(--fmp1-alert-ink); }
+.fm-p1 .co-tbl tr.chg td { background: var(--fmp1-info-soft); }
+.fm-p1 .co-tbl tr.bad td:first-child { box-shadow: inset 3px 0 var(--fmp1-alert); }
+.fm-p1 .co-qty { display: inline-flex; gap: 4px; align-items: center; }
+.fm-p1 .co-qty button { font: inherit; width: 24px; height: 24px; border-radius: 6px; border: 1px solid var(--fmp1-line); background: var(--fmp1-surface); color: var(--fmp1-ink); cursor: pointer; }
+.fm-p1 .co-wrap { overflow-x: auto; }
+.fm-p1 .co-wrap .co-tbl { min-width: 420px; }
+.fm-p1 .co-tbl td.fmp1-code { overflow-wrap: anywhere; font-size: 11.5px; }
+.fm-p1 .co-kv { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; }
+.fm-p1 .co-kv b { font-variant-numeric: tabular-nums; }
+.fm-p1 .co-big { font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.fm-p1 .co-doc { background: #FBF8F2; color: #2A2A28; border: 1px solid var(--fmp1-line); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 8px; }
+.fm-p1 .co-doc h4 { margin: 0; font-family: var(--fmp1-font-display); font-size: 18px; }
+.fm-p1 .co-doc p { font-size: 12.5px; color: #55534E; }
+.fm-p1 .co-doc .co-tbl td, .fm-p1 .co-doc .co-tbl th { border-color: #E2DCCF; color: #2A2A28; }
+.fm-p1 .co-scen { display: flex; gap: 6px; flex-wrap: wrap; }
+.fm-p1 .co-scen button[aria-pressed="true"] { background: var(--fmp1-primary); color: var(--fmp1-on-primary); border-color: var(--fmp1-primary); }
+.fm-p1 .co-foot { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; border-top: 1px solid var(--fmp1-line); padding-top: 12px; margin-top: auto; }
+.fm-p1 .co-tl { list-style: none; margin: 0; padding: 0; font-size: 12.5px; display: flex; flex-direction: column; }
+.fm-p1 .co-tl li { padding: 6px 0; border-top: 1px solid var(--fmp1-line); overflow-wrap: anywhere; }
+@media (max-width: 960px) {
+  .fm-p1 .co-body { grid-template-columns: 1fr; }
+  .fm-p1 .co-rail { flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--fmp1-line); }
+  .fm-p1 .co-rail button { white-space: nowrap; }
+  .fm-p1 .co-side { border-left: 0; border-top: 1px solid var(--fmp1-line); }
+  .fm-p1 .co-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+</style>
+</head>
+<body>
+<div id="co" class="fm-p1">
+  <header class="co-top">
+    <div>
+      <p class="fmp1-eyebrow">Fremont Makers · Project Builder · proposal · Oct 27, 2026</p>
+      <h1 class="fmp1-h co-h1">Change orders</h1>
+      <p class="co-lede">How a change order is made today, based on the 8:57 PM recording, and a proposed replacement: one panel inside the job, four steps, priced with the job's own settings, and its own invoice. The prototype below runs on the same change order code that's in the package (<span class="fmp1-code">src/fm-phase2-changeorder.js</span>).</p>
+    </div>
+    <div id="co-theme"></div>
+  </header>
+
+  <section class="co-sec" aria-labelledby="h-today">
+    <p class="fmp1-eyebrow">Today</p>
+    <h2 class="fmp1-h co-h2" id="h-today">What happened in the recording</h2>
+    <ol class="co-pains">
+      <li class="fmp1-card"><b>A whole-order PDF went into one house</b>"Willow Creek Change order 10/23/26" has Bayview White, Bayview Wood and Moss Green cabinets for several houses. All 14 lines were added to Cimarron Peak 2 (Bayview White).</li>
+      <li class="fmp1-card"><b>The house was switched halfway, and the numbers didn't follow</b>The change was moved to Mesa Ridge 1 (Moss Green) on the price step, but it kept Cimarron Peak 2's cabinets and totals ("FM-2609-781 stays $7,153.81").</li>
+      <li class="fmp1-card"><b>"Add" lowered a quantity</b>Adding the PDF to the existing list changed SM8(SCR) from 3 to 1 instead of adding to it.</li>
+      <li class="fmp1-card"><b>The new lines ignored the job's markup</b>Existing lines were at 72%; the added lines came in at the 35% "All markup" default.</li>
+      <li class="fmp1-card"><b>"Courtesy $0" was selected by default</b>For a $7,466.38 change. One Next click would have given it away.</li>
+      <li class="fmp1-card"><b>A typed amount skipped tax and G&amp;A</b>$7,800 was typed in; the review showed "bulk 0% · G&amp;A 0% · tax 0%" and no reason beyond "skus updated".</li>
+      <li class="fmp1-card"><b>Billing defaulted to folding into the schedule</b>"Keep in payment schedule" was preselected. You've decided each change order gets its own invoice.</li>
+      <li class="fmp1-card"><b>It's a pop-up off All Projects</b>Started from the list, with no buyer email filled in, and an earlier change order is still sitting in All Projects as its own "project" (FM-2610-475, $8,740.71).</li>
+    </ol>
+  </section>
+
+  <section class="co-sec" aria-labelledby="h-prop">
+    <p class="fmp1-eyebrow">Proposed</p>
+    <h2 class="fmp1-h co-h2" id="h-prop">One panel in the job, four steps</h2>
+    <div class="co-flow">
+      <div class="fmp1-card"><span class="n">1</span><b>What and why</b><span>Started from the job, so the house can't drift. A whole-order PDF is split by color and assigned to houses. Pick a reason.</span></div>
+      <div class="fmp1-card"><span class="n">2</span><b>Cabinets</b><span>Drop the supplier PDF (same import as New Project). Adding never lowers a quantity. Wrong-color cabinets are flagged.</span></div>
+      <div class="fmp1-card"><span class="n">3</span><b>Price</b><span>Priced with the job's own markup, discount, G&amp;A and tax. Charge it, courtesy, or an agreed amount with a reason. Nothing preselected.</span></div>
+      <div class="fmp1-card"><span class="n">4</span><b>Invoice and send</b><span>Its own invoice, due on signing. Customer page preview, then Dropbox Sign or paper. The job total moves when it's signed.</span></div>
+    </div>
+  </section>
+
+  <section class="co-sec" aria-labelledby="h-proto">
+    <p class="fmp1-eyebrow">Prototype · interactive</p>
+    <h2 class="fmp1-h co-h2" id="h-proto">Try it on Penrose</h2>
+    <p class="co-small fmp1-muted">Nothing is saved or sent. Penrose's cabinets, costs and pricing settings are real. "Add a cabinet" and "Wrong-color PDF" are examples; "Penrose CO 1" is the real courtesy swap from Oct 14.</p>
+    <div class="co-win" id="co-app"></div>
+  </section>
+</div>
+
+<script src="../src/fm-phase1-theme-toggle.js"></script>
+<script src="../src/fm-phase1-ledger.js"></script>
+<script src="../src/fm-phase1-quote.js"></script>
+<script src="../src/fm-phase2-changeorder.js"></script>
+<script src="../preview/braddy-penrose-order.js"></script>
+<script>
+(function () {
+  var page = document.getElementById('co');
+  FMTheme.init(page);
+  var themeBox = document.getElementById('co-theme');
+  themeBox.innerHTML = FMTheme.toggleHTML(FMTheme.get(page));
+  FMTheme.bind(themeBox, page);
+
+  var CO = window.FMChangeOrder, B = window.FM_BRADDY_ORDER, TODAY = '2026-10-27';
+  var SETTINGS = { markupPct: B.pricing.defaultMarkupPct, discountPctOfCost: B.pricing.mfrDiscountPct, gaPct: B.pricing.gaPct, taxPct: B.pricing.taxPct };
+  var HOUSE_SUFFIX = 'VDH', CONTRACT = 1097311;
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function $f(c) { return CO.money(c); }
+  function cents(n) { return Math.round(n * 100); }
+
+  // Penrose's cabinets with cost and the markup they were sold at.
+  function soldLines() {
+    return B.model.lines.filter(function (l) { return !l.noCharge; }).map(function (l) {
+      return { sku: l.sku, desc: l.desc, qty: l.qty, unitCostCents: cents(l.unitCost), markupPct: l.markupPct };
+    });
+  }
+  var CO1 = B.changeOrders[0];
+  var SCEN = {
+    add: { label: 'Add a cabinet', reason: 'customer_request', note: 'Builder asked for one more BC24 and one fewer WF342.',
+      pdf: { name: 'Wholesale Cabinets quote · BC24 (example).pdf', lines: [{ sku: 'BC24-VDH', desc: 'Dark Hickory Shaker BC24', qty: 1, unitCostCents: 33196 }] },
+      hand: { 'WF342-VDH': -1 } },
+    courtesy: { label: 'Penrose CO 1 (courtesy)', reason: 'backorder', note: 'DC324 and VDC12 were backordered; swapped for in-stock VDC42RS and DC224.',
+      before: [{ sku: 'DC324-VDH', desc: 'Dark Hickory Shaker DC324', qty: 2, unitCostCents: null, markupPct: 30 }, { sku: 'VDC12-VDH', desc: 'Dark Hickory Shaker VDC12', qty: 1, unitCostCents: null, markupPct: 30 }],
+      pdf: { name: 'Wholesale Cabinets order #1000173203.pdf', lines: CO1.added.map(function (l) { return { sku: l.sku, desc: l.desc, qty: l.qty, unitCostCents: cents(l.unitCost) }; }) },
+      hand: { 'DC324-VDH': -2, 'VDC12-VDH': -1 }, supplierPaidCents: 165270 },
+    color: { label: 'Wrong-color PDF', reason: 'customer_request', note: 'Extra wall cabinets.',
+      pdf: { name: 'Willow Creek Change order 10:23:26.pdf (example lines)', lines: [{ sku: 'W3024-SBW', desc: 'Bayview White Shaker W3024', qty: 4, unitCostCents: 15837 }, { sku: 'W3024-VDH', desc: 'Dark Hickory Shaker W3024', qty: 1, unitCostCents: 22800 }] },
+      hand: {} }
+  };
+  var STEPS = ['What and why', 'Cabinets', 'Price', 'Invoice and send'];
+  var S;
+
+  function reset(id) {
+    var sc = SCEN[id], base = soldLines().concat(sc.before || []);
+    S = { id: id, step: 0, reason: sc.reason, note: sc.note, base: base, current: JSON.parse(JSON.stringify(base)),
+          pdfLoaded: false, choice: null, customAmt: '', customNote: '', colorOk: false, sent: false, log: [] };
+    render();
+  }
+  function diff() {
+    var after = S.current.filter(function (l) { return l.qty > 0; });
+    var before = {}; S.base.forEach(function (l) { before[l.sku] = l; });
+    var added = [], removed = [], changed = [];
+    after.forEach(function (l) { var b = before[l.sku]; if (!b) added.push(l); else if (b.qty !== l.qty) (l.qty > b.qty ? added : removed).push({ sku: l.sku, desc: l.desc, qty: Math.abs(l.qty - b.qty), unitCostCents: l.unitCostCents, markupPct: l.markupPct, from: b.qty, to: l.qty }); });
+    S.base.forEach(function (b) { if (!after.some(function (l) { return l.sku === b.sku; })) removed.push({ sku: b.sku, desc: b.desc, qty: b.qty, unitCostCents: b.unitCostCents, markupPct: b.markupPct, from: b.qty, to: 0 }); });
+    return { added: added, removed: removed };
+  }
+  function priced() {
+    var d = diff();
+    var known = { added: d.added.filter(function (l) { return l.unitCostCents != null; }), removed: d.removed.filter(function (l) { return l.unitCostCents != null; }) };
+    var p = CO.priceChange(known, SETTINGS);
+    p.missingCost = d.added.concat(d.removed).filter(function (l) { return l.unitCostCents == null; }).map(function (l) { return l.sku; });
+    return p;
+  }
+  function amount() {
+    var p = priced();
+    if (S.choice === 'courtesy') return 0;
+    if (S.choice === 'charge') return p.ok ? p.deltaCents : null;
+    if (S.choice === 'custom') { var n = parseFloat(String(S.customAmt).replace(/[$,]/g, '')); return isNaN(n) ? null : cents(n); }
+    return null;
+  }
+  function stepDone(i) {
+    if (i === 0) return !!S.reason && !!String(S.note).trim();
+    if (i === 1) { var d = diff(); return (d.added.length + d.removed.length) > 0 && (CO.colorCheck(S.current, HOUSE_SUFFIX).length === 0 || S.colorOk); }
+    if (i === 2) { var c = CO.choosePrice(S.choice, priced(), { amountCents: amount(), note: S.customNote }); return c.ok; }
+    return S.sent;
+  }
+
+  function stepWhat() {
+    return '<h3>What\'s changing, and why?</h3>' +
+      '<p class="co-small fmp1-muted">Started from Penrose\'s Change orders tab, so this change can only apply to FM-2609-314. On a builder order you\'d pick the houses here; a whole-order PDF is split by color and each color goes to the houses that use it.</p>' +
+      '<div class="co-grid2"><label class="co-fld"><span>Reason</span><select class="fmp1-input" data-f="reason">' +
+      Object.keys(CO.CHANGE_REASONS).map(function (k) { return '<option value="' + k + '"' + (S.reason === k ? ' selected' : '') + '>' + CO.CHANGE_REASONS[k] + '</option>'; }).join('') +
+      '</select></label></div>' +
+      '<label class="co-fld"><span>Note for the paper trail</span><textarea class="fmp1-input" rows="2" data-f="note">' + esc(S.note) + '</textarea></label>';
+  }
+
+  function stepCabinets() {
+    var sc = SCEN[S.id], d = diff(), bad = CO.colorCheck(S.current, HOUSE_SUFFIX), badSkus = bad.map(function (b) { return b.sku; });
+    var before = {}; S.base.forEach(function (l) { before[l.sku] = l.qty; });
+    var rows = S.current.map(function (l, i) {
+      var b = before[l.sku] || 0, cls = !b ? 'add' : (l.qty === 0 ? 'rem' : (l.qty !== b ? 'chg' : ''));
+      if (!cls && S.current.length > 8) return '';
+      return '<tr class="' + cls + (badSkus.indexOf(l.sku) >= 0 ? ' bad' : '') + '"><td>' + esc(l.desc) + '</td><td class="fmp1-code">' + esc(l.sku) + '</td>' +
+        '<td><span class="co-qty"><button data-q="' + i + '" data-d="-1" aria-label="One fewer ' + esc(l.sku) + '">−</button>' + l.qty + '<button data-q="' + i + '" data-d="1" aria-label="One more ' + esc(l.sku) + '">+</button></span></td>' +
+        '<td class="r">' + (b !== l.qty ? b + ' → ' + l.qty : '') + '</td><td class="r">' + (l.unitCostCents == null ? '<span class="fmp1-muted">cost not recorded</span>' : $f(l.unitCostCents)) + '</td></tr>';
+    }).join('');
+    return '<h3>Cabinets</h3>' +
+      '<div class="co-row"><button class="fmp1-btn' + (S.pdfLoaded ? '' : ' fmp1-btn--primary') + '" data-act="pdf"' + (S.pdfLoaded ? ' disabled' : '') + '>' + (S.pdfLoaded ? 'Added: ' : 'Add supplier PDF: ') + esc(sc.pdf.name) + '</button>' +
+      '<span class="co-small fmp1-muted">Adds to the list. Never lowers a quantity. Use − to take cabinets off.</span></div>' +
+      (S.pdfLoaded && Object.keys(sc.hand).length ? '<div class="co-row"><button class="fmp1-btn" data-act="hand">Apply the hand edits for this example (' + Object.keys(sc.hand).map(function (k) { return k + ' ' + sc.hand[k]; }).join(', ') + ')</button></div>' : '') +
+      (bad.length ? '<div class="fmp1-note fmp1-note--alert" role="alert">' + bad.length + ' cabinet' + (bad.length > 1 ? 's don\'t' : ' doesn\'t') + ' match this house\'s color (Dark Hickory, VDH): ' + bad.map(function (b) { return esc(b.sku) + ' ×' + b.qty; }).join(', ') + '. Take ' + (bad.length > 1 ? 'them' : 'it') + ' off, or <label class="co-row" style="display:inline-flex;gap:6px"><input type="checkbox" data-f="colorOk"' + (S.colorOk ? ' checked' : '') + '> keep anyway (logged)</label></div>' : '') +
+      '<div class="co-wrap"><table class="co-tbl"><thead><tr><th>Cabinet</th><th>SKU</th><th>Qty</th><th class="r">Change</th><th class="r">Unit cost</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      '<p class="co-small fmp1-muted">' + (S.current.length > 8 ? 'Unchanged cabinets are hidden. ' : '') + 'Green: added. Red: removed. Blue: quantity changed.</p>';
+  }
+
+  function stepPrice() {
+    var p = priced(), sc = SCEN[S.id], d = diff();
+    var court = CO.courtesy({ number: 2, date: TODAY, reason: S.reason === 'backorder' ? 'backorder' : (S.reason === 'our_mistake' ? 'shop_error' : 'goodwill'), note: S.note, requestedBy: 'Linds',
+      removed: d.removed, added: d.added, supplierOrder: sc.supplierPaidCents ? { number: '1000173203', paidCents: sc.supplierPaidCents } : null, supplierCreditCents: null }, { today: TODAY });
+    var opts = [
+      { id: 'charge', t: 'Charge it', off: p.missingCost.length > 0, amt: p.missingCost.length ? 'Can\'t price' : (p.ok ? $f(p.deltaCents) : '—'), d: p.missingCost.length ? 'Some removed cabinets have no recorded cost, so the change can\'t be priced exactly. Use an agreed amount instead.' : 'Priced with Penrose\'s settings: ' + SETTINGS.markupPct + '% markup, ' + SETTINGS.discountPctOfCost + '% discount, ' + SETTINGS.gaPct + '% G&A, ' + SETTINGS.taxPct + '% tax.' },
+      { id: 'courtesy', t: 'Courtesy', amt: '$0.00', d: 'No charge. Shop absorbs ' + $f(court.co.absorbedCents) + (court.co.absorbedIsEstimate ? ' (before any supplier credit)' : '') + '. Owner approves.' },
+      { id: 'custom', t: 'Agreed amount', amt: 'You enter it', d: 'A different price you agreed with the buyer. Needs a reason.' }
+    ];
+    return '<h3>What does this change cost the buyer?</h3>' +
+      (p.missingCost.length ? '<p class="co-small fmp1-muted">Not priced: ' + p.missingCost.join(', ') + ' (cost wasn\'t recorded on the original quote).</p>' : '') +
+      '<div class="co-choice" role="group" aria-label="Price">' + opts.map(function (o) {
+        return '<button data-choice="' + o.id + '" aria-pressed="' + (S.choice === o.id) + '"' + (o.off ? ' disabled' : '') + '><b>' + o.t + '</b><strong>' + o.amt + '</strong><span>' + o.d + '</span></button>';
+      }).join('') + '</div>' +
+      (S.choice ? '' : '<p class="co-small fmp1-muted">Nothing is selected until you choose.</p>') +
+      (S.choice === 'custom' ? '<div class="co-grid2"><label class="co-fld"><span>Agreed amount ($)</span><input class="fmp1-input" inputmode="decimal" data-f="customAmt" value="' + esc(S.customAmt) + '"></label>' +
+        '<label class="co-fld"><span>Why it differs from ' + (p.ok ? $f(p.deltaCents) : 'the priced change') + '</span><input class="fmp1-input" data-f="customNote" value="' + esc(S.customNote) + '"></label></div>' : '') +
+      (S.choice === 'courtesy' && court.warnings.length ? '<p class="co-small fmp1-muted">' + esc(court.warnings[0]) + '</p>' : '');
+  }
+
+  function stepSend() {
+    var amt = amount(), d = diff(), inv = CO.invoiceFor({ number: 2, amountCents: amt || 0 }, { today: TODAY });
+    var docRows = d.removed.map(function (l) { return '<tr><td>Removed</td><td>' + esc(l.desc) + '</td><td class="r">' + l.from + ' → ' + l.to + '</td></tr>'; })
+      .concat(d.added.map(function (l) { return '<tr><td>Added</td><td>' + esc(l.desc) + '</td><td class="r">' + (l.from != null ? l.from + ' → ' + l.to : '0 → ' + l.qty) + (S.choice === 'courtesy' ? ' · No charge' : '') + '</td></tr>'; })).join('');
+    return '<h3>Invoice and send</h3>' +
+      (inv ? '<div class="fmp1-card" style="padding:12px 14px;display:flex;flex-direction:column;gap:6px"><p class="co-label">Its own invoice</p>' +
+        '<div class="co-kv"><span>' + esc(inv.label) + '</span><b>' + $f(inv.amountCents) + '</b></div><div class="co-kv"><span>Due</span><b>On signing (' + TODAY + ')</b></div>' +
+        '<p class="co-small fmp1-muted">' + esc(inv.note) + ' Invoices 1–3 stay as they are.</p></div>'
+           : '<div class="fmp1-note fmp1-note--good">No invoice: this change is a courtesy. It still goes to the buyer for the paper trail.</div>') +
+      '<div class="co-doc"><h4>Change Order 2' + (S.choice === 'courtesy' ? ' · Courtesy' : '') + '</h4>' +
+      '<p>Braddy Builders · Penrose · FM-2609-314 · ' + esc(CO.CHANGE_REASONS[S.reason]) + ': ' + esc(S.note) + '</p>' +
+      '<table class="co-tbl"><tbody>' + docRows + '</tbody></table>' +
+      '<p><b>' + (S.choice === 'courtesy' ? 'No charge to you. Your contract total stays ' + $f(CONTRACT) + '.' : 'This change: ' + $f(amt) + '. New contract total once signed: ' + $f(CONTRACT + amt) + '.') + '</b></p></div>' +
+      (S.sent ? '<div class="fmp1-note fmp1-note--info">Sent to Bernard Braddy for signature. The job total and the invoice switch on when it\'s signed.</div>'
+              : '<div class="co-row"><button class="fmp1-btn fmp1-btn--primary" data-act="send">Send for signature</button><button class="fmp1-btn" data-act="send">Print for signing</button><span class="co-small fmp1-muted">Same Dropbox Sign flow as contracts.</span></div>');
+  }
+
+  function render() {
+    var amt = amount(), p = priced(), d = diff();
+    var body = [stepWhat, stepCabinets, stepPrice, stepSend][S.step]();
+    var canNext = stepDone(S.step);
+    document.getElementById('co-app').innerHTML =
+      '<div class="co-chrome"><div class="co-row"><b>Change order 2</b><span class="fmp1-muted co-small">Braddy Builders · Penrose · FM-2609-314</span></div>' +
+      '<div class="co-scen" role="group" aria-label="Example">' + Object.keys(SCEN).map(function (k) { return '<button class="fmp1-btn" data-scen="' + k + '" aria-pressed="' + (S.id === k) + '">' + SCEN[k].label + '</button>'; }).join('') + '</div></div>' +
+      '<div class="co-body"><nav class="co-rail" aria-label="Steps">' + STEPS.map(function (t, i) {
+        var reach = i === 0 || [0, 1, 2].slice(0, i).every(stepDone);
+        return '<button data-step="' + i + '"' + (S.step === i ? ' aria-current="step"' : '') + (stepDone(i) ? ' class="done"' : '') + (reach ? '' : ' disabled') + '><i>' + (stepDone(i) ? '✓' : i + 1) + '</i>' + t + '</button>';
+      }).join('') + '</nav>' +
+      '<div class="co-main">' + body +
+        '<div class="co-foot"><button class="fmp1-btn fmp1-btn--quiet" data-act="back"' + (S.step === 0 ? ' disabled' : '') + '>Back</button>' +
+        (S.step < 3 ? '<button class="fmp1-btn fmp1-btn--primary" data-act="next"' + (canNext ? '' : ' disabled') + '>Next</button>' : '') + '</div></div>' +
+      '<aside class="co-side" aria-label="Summary"><p class="co-label">This change</p>' +
+        '<div class="co-big">' + (amt == null ? '—' : $f(amt)) + '</div>' +
+        '<div class="co-kv"><span>Added</span><b>' + d.added.length + ' line' + (d.added.length === 1 ? '' : 's') + '</b></div>' +
+        '<div class="co-kv"><span>Removed</span><b>' + d.removed.length + ' line' + (d.removed.length === 1 ? '' : 's') + '</b></div>' +
+        (p.ok ? '<div class="co-kv"><span>Priced change</span><b>' + $f(p.deltaCents) + '</b></div>' : '') +
+        '<div class="co-kv"><span>Contract now</span><b>' + $f(CONTRACT) + '</b></div>' +
+        '<div class="co-kv"><span>Once signed</span><b>' + (amt == null ? '—' : $f(CONTRACT + amt)) + '</b></div>' +
+        '<p class="co-small fmp1-muted">Pricing: ' + SETTINGS.markupPct + '% · ' + SETTINGS.discountPctOfCost + '% · ' + SETTINGS.gaPct + '% · ' + SETTINGS.taxPct + '% (this job\'s settings)</p>' +
+        (S.log.length ? '<p class="co-label">Activity</p><ul class="co-tl">' + S.log.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>' : '') +
+      '</aside></div>';
+  }
+
+  var app = document.getElementById('co-app');
+  app.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b || b.disabled) return;
+    if (b.dataset.scen) return reset(b.dataset.scen);
+    if (b.dataset.step) { S.step = +b.dataset.step; return render(); }
+    if (b.dataset.choice) { S.choice = b.dataset.choice; return render(); }
+    if (b.dataset.q) { var l = S.current[+b.dataset.q]; l.qty = Math.max(0, l.qty + (+b.dataset.d)); return render(); }
+    var a = b.dataset.act, sc = SCEN[S.id];
+    if (a === 'next' && S.step < 3) S.step++;
+    if (a === 'back' && S.step > 0) S.step--;
+    if (a === 'pdf') { S.current = CO.mergeLines(S.current, sc.pdf.lines, 'add').lines; S.pdfLoaded = true; S.log.unshift('Added ' + sc.pdf.name + ' (Linds).'); }
+    if (a === 'hand') { Object.keys(sc.hand).forEach(function (k) { S.current.forEach(function (l) { if (l.sku === k) l.qty = Math.max(0, l.qty + sc.hand[k]); }); }); }
+    if (a === 'send') { S.sent = true; S.log.unshift('Change order 2 sent for signature by Linds' + (S.choice === 'courtesy' ? ' (courtesy, owner approved)' : '') + '.'); }
+    render();
+  });
+  app.addEventListener('input', function (e) {
+    var f = e.target.dataset.f; if (!f || f === 'colorOk' || f === 'reason') return;
+    S[f] = e.target.value;
+    var rail = app.querySelector('.co-rail'), next = app.querySelector('[data-act="next"]');
+    if (next) next.disabled = !stepDone(S.step);
+    var big = app.querySelector('.co-big'); var amt = amount(); if (big) big.textContent = amt == null ? '—' : $f(amt);
+  });
+  app.addEventListener('change', function (e) {
+    var f = e.target.dataset.f;
+    if (f === 'reason') { S.reason = e.target.value; render(); }
+    if (f === 'colorOk') { S.colorOk = e.target.checked; if (S.colorOk) S.log.unshift('Kept wrong-color cabinets anyway (Linds).'); render(); }
+    if (f === 'customAmt' || f === 'customNote' || f === 'note') render();
+  });
+  reset('add');
+}());
+</script>
+</body>
+</html>

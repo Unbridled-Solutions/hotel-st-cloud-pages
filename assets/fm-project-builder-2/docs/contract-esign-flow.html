@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Contract and E-Sign</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="../src/fm-phase1-theme.css">
+<style>
+/* Proposal page: findings, the proposed flow, then a working prototype. */
+:root { --page: #EFE8DA; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --page: #243A32; color-scheme: dark; } }
+:root[data-theme="dark"] { --page: #243A32; color-scheme: dark; }
+body { margin: 0; background: var(--page); }
+#ct { min-height: 100vh; background: var(--fmp1-bg); padding-block: 28px 72px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 28px; }
+#ct > * { width: 100%; max-width: 1160px; margin-inline: auto; }
+.fm-p1 p { margin: 0; }
+.fm-p1 .ct-top { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; flex-wrap: wrap; border-bottom: 1px solid var(--fmp1-line); padding-bottom: 16px; }
+.fm-p1 .ct-h1 { font-size: clamp(28px, 4.5vw, 40px); margin: 4px 0 6px; }
+.fm-p1 .ct-lede { max-width: 70ch; color: var(--fmp1-ink-2); font-size: 15.5px; }
+.fm-p1 .ct-sec { display: flex; flex-direction: column; gap: 14px; }
+.fm-p1 .ct-h2 { font-size: 24px; }
+.fm-p1 .ct-small { font-size: 12.5px; }
+
+.fm-p1 .ct-pains { counter-reset: p; list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 10px; }
+.fm-p1 .ct-pains li { counter-increment: p; padding: 12px 14px 12px 44px; position: relative; font-size: 13.5px; color: var(--fmp1-ink-2); }
+.fm-p1 .ct-pains li::before { content: counter(p); position: absolute; left: 14px; top: 12px; width: 20px; height: 20px; border-radius: 50%; background: var(--fmp1-alert-soft); color: var(--fmp1-alert-ink); font-size: 11px; font-weight: 700; display: grid; place-items: center; }
+.fm-p1 .ct-pains b { color: var(--fmp1-ink); display: block; margin-bottom: 2px; }
+
+.fm-p1 .ct-flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.fm-p1 .ct-flow > div { padding: 12px; display: flex; flex-direction: column; gap: 4px; }
+.fm-p1 .ct-flow .n { font-family: var(--fmp1-font-mono); font-size: 11px; color: var(--fmp1-accent-ink); font-weight: 600; }
+.fm-p1 .ct-flow b { font-size: 14px; }
+.fm-p1 .ct-flow span { font-size: 12.5px; color: var(--fmp1-ink-2); }
+.fm-p1 .ct-states { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12.5px; }
+.fm-p1 .ct-states .arr { color: var(--fmp1-ink-3); }
+
+.fm-p1 .ct-win { border: 1px solid var(--fmp1-line); border-radius: 12px; overflow: hidden; box-shadow: var(--fmp1-shadow); background: var(--fmp1-bg); }
+.fm-p1 .ct-chrome { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 16px; background: var(--fmp1-surface); border-bottom: 1px solid var(--fmp1-line); flex-wrap: wrap; }
+.fm-p1 .ct-chrome b { font-family: var(--fmp1-font-display); font-size: 17px; }
+.fm-p1 .ct-body { display: grid; grid-template-columns: minmax(0, 1fr) 300px; min-height: 560px; }
+.fm-p1 .ct-main { padding: 18px 20px; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.fm-p1 .ct-main h3 { margin: 0; font-family: var(--fmp1-font-display); font-size: 20px; font-weight: 600; }
+.fm-p1 .ct-side { border-left: 1px solid var(--fmp1-line); padding: 16px; background: var(--fmp1-surface); display: flex; flex-direction: column; gap: 12px; }
+.fm-p1 .ct-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.fm-p1 .ct-checks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; }
+.fm-p1 .ct-checks li { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; gap: 8px; align-items: start; padding: 8px 10px; border-radius: 8px; background: var(--fmp1-surface); border: 1px solid var(--fmp1-line); }
+.fm-p1 .ct-checks .ic { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; }
+.fm-p1 .ct-checks .b .ic { background: var(--fmp1-alert-soft); color: var(--fmp1-alert-ink); }
+.fm-p1 .ct-checks .w .ic { background: var(--fmp1-info-soft); color: var(--fmp1-info-ink); }
+.fm-p1 .ct-checks .g .ic { background: var(--fmp1-good-soft); color: var(--fmp1-good-ink); }
+.fm-p1 .ct-checks .go { font-size: 12px; color: var(--fmp1-accent-ink); white-space: nowrap; }
+.fm-p1 .ct-sched { width: 100%; border-collapse: collapse; font-size: 13px; }
+.fm-p1 .ct-sched th { text-align: left; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--fmp1-ink-3); font-weight: 600; padding: 6px 8px; border-bottom: 1px solid var(--fmp1-line); }
+.fm-p1 .ct-sched td { padding: 7px 8px; border-bottom: 1px solid var(--fmp1-line); font-variant-numeric: tabular-nums; }
+.fm-p1 .ct-sched td.r, .fm-p1 .ct-sched th.r { text-align: right; }
+.fm-p1 .ct-choice { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; }
+.fm-p1 .ct-choice button { font: inherit; text-align: left; border: 1.5px solid var(--fmp1-line); background: var(--fmp1-surface); border-radius: 10px; padding: 12px 14px; cursor: pointer; color: var(--fmp1-ink); display: flex; flex-direction: column; gap: 3px; }
+.fm-p1 .ct-choice button span { font-size: 12.5px; color: var(--fmp1-ink-2); }
+.fm-p1 .ct-choice button em { font-style: normal; font-size: 11px; color: var(--fmp1-ink-3); font-family: var(--fmp1-font-mono);  overflow-wrap: anywhere; }
+.fm-p1 .ct-choice button[aria-pressed="true"] { border-color: var(--fmp1-accent); background: var(--fmp1-accent-soft); }
+.fm-p1 .ct-choice button:focus-visible, .fm-p1 .ct-sim button:focus-visible { outline: 2px solid var(--fmp1-focus); outline-offset: 1px; }
+.fm-p1 .ct-frame { border: 1.5px dashed var(--fmp1-line); border-radius: 10px; background: var(--fmp1-surface); display: flex; flex-direction: column; overflow: hidden; }
+.fm-p1 .ct-frame-bar { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--fmp1-line); font-size: 12px; color: var(--fmp1-ink-3); flex-wrap: wrap; }
+.fm-p1 .ct-frame-doc { padding: 18px; display: flex; flex-direction: column; gap: 10px; background: #FBF8F2; color: #2A2A28; min-height: 220px; }
+.fm-p1 .ct-frame-doc h4 { margin: 0; font-family: var(--fmp1-font-display); font-size: 18px; }
+.fm-p1 .ct-frame-doc p { font-size: 12.5px; color: #55534E; }
+.fm-p1 .ct-sigs { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-top: 6px; }
+.fm-p1 .ct-sig { border-bottom: 1px solid #8D8A82; padding: 10px 2px 4px; font-size: 12px; color: #6B6862; min-height: 34px; display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; }
+.fm-p1 .ct-sig.tag { background: #FFF2C4; border-radius: 4px 4px 0 0; color: #5A4A10; font-weight: 600; }
+.fm-p1 .ct-sig.done { font-family: 'Playfair Display', serif; font-style: italic; font-size: 17px; color: #1E2F4F; }
+.fm-p1 .ct-tl { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; font-size: 12.5px; }
+.fm-p1 .ct-tl li { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 8px; padding: 7px 0; border-top: 1px solid var(--fmp1-line);  overflow-wrap: anywhere; }
+.fm-p1 .ct-tl li span:first-child { color: var(--fmp1-ink-3); font-variant-numeric: tabular-nums; }
+.fm-p1 .ct-sim { display: flex; flex-wrap: wrap; gap: 6px; }
+.fm-p1 .ct-kv { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; }
+.fm-p1 .ct-kv b { font-variant-numeric: tabular-nums; }
+.fm-p1 .ct-label { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--fmp1-ink-3); font-weight: 600; }
+.fm-p1 .ct-chk { display: inline-flex; gap: 6px; align-items: center; font-size: 12.5px; color: var(--fmp1-ink-2); }
+.fm-p1 .ct-jobs { display: flex; gap: 6px; flex-wrap: wrap; }
+.fm-p1 .ct-jobs button[aria-pressed="true"] { background: var(--fmp1-primary); color: var(--fmp1-on-primary); border-color: var(--fmp1-primary); }
+.fm-p1 .ct-paper { border: 1px solid var(--fmp1-line); border-radius: 10px; background: var(--fmp1-surface); }
+.fm-p1 .ct-paper summary { cursor: pointer; padding: 12px 14px; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.fm-p1 .ct-paper summary:focus-visible { outline: 2px solid var(--fmp1-focus); outline-offset: 1px; border-radius: 10px; }
+.fm-p1 .ct-paper-body { padding: 0 14px 14px; display: flex; flex-direction: column; gap: 10px; }
+.fm-p1 .ct-grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.fm-p1 .ct-fld { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.fm-p1 .ct-fld > span { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--fmp1-ink-3); font-weight: 600; }
+.fm-p1 .ct-fld input { min-width: 0; max-width: 100%; }
+.fm-p1 .ct-errs { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 2px; }
+.fm-p1 .ct-doc { display: flex; flex-direction: column; gap: 2px; font-size: 12.5px; padding: 8px 10px; border: 1px solid var(--fmp1-line); border-radius: 8px; overflow-wrap: anywhere; }
+.fm-p1 .ct-doc span { color: var(--fmp1-ink-2); }
+@media (max-width: 900px) {
+  .fm-p1 .ct-body { grid-template-columns: 1fr; }
+  .fm-p1 .ct-side { border-left: 0; border-top: 1px solid var(--fmp1-line); }
+  .fm-p1 .ct-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+</style>
+</head>
+<body>
+<div id="ct" class="fm-p1">
+  <header class="ct-top">
+    <div>
+      <p class="fmp1-eyebrow">Fremont Makers · Project Builder · proposal · Oct 27, 2026</p>
+      <h1 class="fmp1-h ct-h1">Contract and e-sign</h1>
+      <p class="ct-lede">How a quote becomes a signed contract today, based on the 1:47 PM recording, and a proposed replacement in which Dropbox Sign (HelloSign) opens in a frame inside the job. The prototype at the bottom runs on the same contract code that's in the package (<span class="fmp1-code">src/fm-phase2-contract.js</span>). Dropbox Sign is simulated.</p>
+    </div>
+    <div id="ct-theme"></div>
+  </header>
+
+  <section class="ct-sec" aria-labelledby="h-today">
+    <p class="fmp1-eyebrow">Today</p>
+    <h2 class="fmp1-h ct-h2" id="h-today">What happened in the recording</h2>
+    <ol class="ct-pains">
+      <li class="fmp1-card"><b>A $0 contract was issued</b>"Next: Issue Contract" locked an empty quote: no customer, no signer, no project, no cabinets. The packet printed "Contract total $0.00" on every page.</li>
+      <li class="fmp1-card"><b>The lock code is printed in the dialog</b>The instructions show the 4-digit password in plain text, so it protects nothing. Anyone who opens the dialog can read it.</li>
+      <li class="fmp1-card"><b>Dropbox Sign failed after the job was locked</b>The request was refused ("upgrade to a paid API plan or use test_mode") in a browser alert. The job was already Contracted, nothing was sent, and nothing recorded that.</li>
+      <li class="fmp1-card"><b>The deposit schedule counts back from install</b>Deposits are set 90 and 45 days before install. With install typed as Nov 2028, the "50% today" deposit moved to Aug 2028. With an install two weeks out, the deposit would land in the past.</li>
+      <li class="fmp1-card"><b>The packet opens in a separate tab</b>It has print-only signature lines and no e-sign fields. The status changes to Contracted before anyone signs.</li>
+      <li class="fmp1-card"><b>Buyer email is typed twice</b>Once in the job header, once in the dialog. The signer name isn't sent to Dropbox Sign at all, and Fremont Makers never countersigns.</li>
+      <li class="fmp1-card"><b>The summary lags behind</b>Right after locking, Project Summary still said "proposed · $0.00" until the page was reloaded.</li>
+    </ol>
+  </section>
+
+  <section class="ct-sec" aria-labelledby="h-prop">
+    <p class="fmp1-eyebrow">Proposed</p>
+    <h2 class="fmp1-h ct-h2" id="h-prop">Check, review, send, track: in one Contract tab on the job</h2>
+    <div class="ct-flow">
+      <div class="fmp1-card"><span class="n">1</span><b>Ready check</b><span>Customer, signer, email, address, cabinets, a total above $0, clean quote math and a sensible schedule. Blockers link to the step that fixes them.</span></div>
+      <div class="fmp1-card"><span class="n">2</span><b>Review</b><span>Packet preview in the page, with the schedule in dollars. Deposit due on signing, last payment at install.</span></div>
+      <div class="fmp1-card"><span class="n">3</span><b>Send</b><span>Email it, check it in a Dropbox Sign frame first, or sign in person in the frame. Pricing freezes while it's out.</span></div>
+      <div class="fmp1-card"><span class="n">4</span><b>Track</b><span>Opened, signed by the buyer, then countersigned by Fremont Makers. The job becomes Contracted when everyone has signed, in Dropbox Sign or on paper (upload the wet-signed copy). The signed copy is attached.</span></div>
+    </div>
+    <div class="fmp1-card" style="padding:12px 14px;display:flex;flex-direction:column;gap:8px">
+      <p class="ct-label">Job status</p>
+      <div class="ct-states">
+        <span class="fmp1-pill fmp1-pill--proposed">Proposed</span><span class="arr">→</span>
+        <span class="fmp1-pill">Ready to contract</span><span class="arr">→</span>
+        <span class="fmp1-pill">Out for signature</span><span class="arr">→</span>
+        <span class="fmp1-pill">Buyer signed</span><span class="arr">→</span>
+        <span class="fmp1-pill fmp1-pill--contracted">Contracted</span>
+      </div>
+      <p class="ct-small fmp1-muted">Contracted only happens when everyone has signed: all signatures in Dropbox Sign, or a wet-signed copy uploaded (owner decision, Oct 27). Declined or canceled goes back to Proposed with the quote unlocked. If Dropbox Sign refuses a request, the job stays Ready to contract and the error is shown in the page and logged.</p>
+    </div>
+  </section>
+
+  <section class="ct-sec" aria-labelledby="h-proto">
+    <p class="fmp1-eyebrow">Prototype · interactive</p>
+    <h2 class="fmp1-h ct-h2" id="h-proto">Try it</h2>
+    <p class="ct-small fmp1-muted">Nothing is saved or sent. Penrose uses its real total and plan, shown as if it hadn't been signed yet; the buyer email and address are examples. "Blank job" is the job issued in the recording.</p>
+    <div class="ct-win" id="ct-app"></div>
+  </section>
+</div>
+
+<script src="../src/fm-phase1-theme-toggle.js"></script>
+<script src="../src/fm-phase2-contract.js"></script>
+<script>
+(function () {
+  var page = document.getElementById('ct');
+  FMTheme.init(page);
+  var themeBox = document.getElementById('ct-theme');
+  themeBox.innerHTML = FMTheme.toggleHTML(FMTheme.get(page));
+  FMTheme.bind(themeBox, page);
+
+  var K = window.FMContract, TODAY = '2026-10-27';
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function $f(c) { return '$' + (c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function nice(iso) { if (!iso) return '—'; var d = new Date(iso + 'T12:00:00'); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+
+  var JOBS = {
+    penrose: { jobCode: 'FM-2609-314', status: 'proposed', customer: 'Braddy Builders', signer: 'Bernard Braddy', buyerEmail: 'bernard@example.com',
+      project: 'Penrose', installAddress: '1410 Example Rd, Cañon City CO', installDate: '2026-11-09', totalCents: 1097311, lineCount: 18,
+      paymentPlan: [50, 30, 20], quoteProblems: 0 },
+    blank: { jobCode: 'FM-2610-604', status: 'proposed', customer: '', signer: '', buyerEmail: 'lwyss@unbridled.com', project: '',
+      installAddress: '123 Main St, Canon City CO', installDate: '2028-11-02', totalCents: 0, lineCount: 0, paymentPlan: [50, 30, 20],
+      quoteProblems: 0, dueDates: ['2028-08-04', '2028-09-18', '2028-11-02'] }
+  };
+  // People who may sign for Fremont Makers (a company setting the owner manages). Examples only.
+  var SIGNERS = [{ name: 'Linds', email: 'linds@example.com' }, { name: 'Employee B (example)', email: 'b@example.com' }, { name: 'Employee C (example)', email: 'c@example.com' }];
+  function fmName() { return S.job.fmSigner ? S.job.fmSigner.name : 'Fremont Makers'; }
+  var STEP_NAME = { customer: 'Customer', homes: 'Homes', cabinets: 'Cabinets', price: 'Price', schedule: 'Schedule', job: 'Job', contract: 'Contract' };
+  var MODES = [
+    { id: 'email', t: 'Email for signature', d: 'Dropbox Sign emails the buyer. No frame.', api: 'signature_request/send' },
+    { id: 'review', t: 'Check, then send', d: 'Opens Dropbox Sign in a frame here so you can check fields and message, then send.', api: 'unclaimed_draft/create_embedded' },
+    { id: 'in_person', t: 'Sign here now', d: 'The buyer signs in a frame on this screen (office or tablet).', api: 'signature_request/create_embedded' }
+  ];
+  var S;
+  function reset(id) {
+    var j = JSON.parse(JSON.stringify(JOBS[id]));
+    if (!j.dueDates) j.dueDates = K.defaultDueDates(TODAY, j.installDate, j.paymentPlan);
+    S = { id: id, job: j, mode: 'email', countersign: true, failPlan: false,
+          es: { requestId: null, state: 'none', jobStatus: 'proposed', seen: [] }, frame: null, error: '', log: [], t: 0,
+          paperOpen: false, paper: { file: null, signedDate: TODAY, buyerSignedAll: false, fmSigned: false }, paperErrors: [], docs: [] };
+    render();
+  }
+  function stamp() { S.t += 1; var m = 9 * 60 + 14 + S.t * 3; return Math.floor(m / 60) + ':' + ('0' + (m % 60)).slice(-2); }
+  function log(text) { if (text) S.log.unshift({ when: stamp(), text: text }); }
+  function fire(type, who) {
+    var sigs = who ? who.map(function (e) { return { signer_email_address: e, status_code: 'signed' }; }) : [];
+    var r = K.applyEvent(S.es, { event: { event_type: type, event_time: String(1761570000 + S.t) }, signature_request: { signature_request_id: S.es.requestId, signatures: sigs } });
+    S.es = r.state; S.es.jobStatus = r.jobStatus; log(r.log);
+  }
+
+  function statusPill() {
+    var st = S.es.state, js = S.es.jobStatus, r = K.readiness(S.job, { today: TODAY, authorizedSigners: SIGNERS });
+    if (js === 'contracted') return '<span class="fmp1-pill fmp1-pill--contracted">Contracted' + (st === 'signed_on_paper' ? ' · signed on paper' : '') + '</span>';
+    if (st === 'buyer_signed') return '<span class="fmp1-pill">Buyer signed · waiting on Fremont Makers</span>';
+    if (st === 'sending') return '<span class="fmp1-pill">Being checked · not sent yet</span>';
+    if (st === 'out_for_signature') return '<span class="fmp1-pill">Out for signature</span>';
+    if (st === 'declined') return '<span class="fmp1-pill fmp1-pill--alert">Declined · Proposed</span>';
+    return r.ready ? '<span class="fmp1-pill fmp1-pill--good">Ready to contract</span>' : '<span class="fmp1-pill fmp1-pill--proposed">Proposed</span>';
+  }
+
+  /* Who signs for Fremont Makers on this job: picked per job; locked once the contract is out or signed. */
+  function signerHTML() {
+    var cur = S.job.fmSigner, locked = K.isQuoteFrozen(S.es.state) || S.es.jobStatus === 'contracted';
+    if (locked) return '<p class="ct-small">Signs for Fremont Makers: <b>' + esc(cur ? cur.name : '—') + '</b> <span class="fmp1-muted">(locked while the contract is out or signed; cancel the request to change it)</span></p>';
+    return '<label class="ct-fld" style="max-width:360px"><span>Signs for Fremont Makers on this job</span><select class="fmp1-input" data-act="fmsigner"><option value="">Choose…</option>' +
+      SIGNERS.map(function (p, i) { return '<option value="' + i + '"' + (cur && cur.email === p.email ? ' selected' : '') + '>' + esc(p.name) + '</option>'; }).join('') + '</select></label>';
+  }
+
+  function checksHTML(r) {
+    var rows = r.blockers.map(function (b) { return '<li class="b"><span class="ic" aria-hidden="true">!</span><span>' + esc(b.message) + '</span><span class="go">Fix in ' + STEP_NAME[b.step] + ' →</span></li>'; })
+      .concat(r.warnings.map(function (w) { return '<li class="w"><span class="ic" aria-hidden="true">i</span><span>' + esc(w.message) + '</span><span class="go">' + STEP_NAME[w.step] + '</span></li>'; }));
+    if (!rows.length) rows.push('<li class="g"><span class="ic" aria-hidden="true">✓</span><span>Customer, signer, email, address, cabinets, total, quote math and schedule all check out.</span><span></span></li>');
+    return '<ul class="ct-checks">' + rows.join('') + '</ul>';
+  }
+
+  function schedHTML() {
+    var j = S.job, amts = K.invoiceAmounts(j.totalCents, j.paymentPlan);
+    var names = ['Deposit · due on signing', 'Progress', 'At pickup or delivery'];
+    return '<table class="ct-sched"><thead><tr><th>Invoice</th><th>Due</th><th class="r">Amount</th></tr></thead><tbody>' +
+      j.paymentPlan.map(function (p, i) {
+        var n = i === 0 ? names[0] : (i === j.paymentPlan.length - 1 ? names[2] : names[1]);
+        return '<tr><td>' + (i + 1) + ' · ' + p + '% ' + esc(n.toLowerCase()) + '</td><td>' + nice(j.dueDates[i]) + '</td><td class="r">' + $f(amts[i]) + '</td></tr>';
+      }).join('') + '<tr><td><b>Contract total</b></td><td></td><td class="r"><b>' + $f(j.totalCents) + '</b></td></tr></tbody></table>';
+  }
+
+  function frameHTML() {
+    if (!S.frame) return '';
+    var j = S.job, st = S.es.state, buyerDone = ['buyer_signed', 'signed', 'signed_pdf_ready'].indexOf(st) >= 0, fmDone = st === 'signed' || st === 'signed_pdf_ready';
+    var head = S.frame === 'review' ? 'Check fields and message, then send' : 'Signing for ' + esc(j.signer);
+    var actions = S.frame === 'review'
+      ? '<button class="fmp1-btn fmp1-btn--primary" data-act="claim-send">Send for signature</button><button class="fmp1-btn fmp1-btn--quiet" data-act="close-frame">Close</button>'
+      : (!buyerDone ? '<button class="fmp1-btn fmp1-btn--primary" data-act="frame-sign">Buyer: sign</button><button class="fmp1-btn fmp1-btn--quiet" data-act="close-frame">Not now</button>'
+                    : '<button class="fmp1-btn fmp1-btn--quiet" data-act="close-frame">Close</button>');
+    return '<div class="ct-frame" role="region" aria-label="Dropbox Sign frame (simulated)">' +
+      '<div class="ct-frame-bar"><span>Dropbox Sign frame · simulated · opens from <span class="fmp1-code">' + (S.frame === 'review' ? 'claim_url' : 'sign_url') + '</span></span><span>' + head + '</span></div>' +
+      '<div class="ct-frame-doc"><h4>Customer Sales Agreement</h4><p>' + esc(j.customer) + ' · ' + esc(j.project) + ' · ' + esc(j.jobCode) + ' · Contract total ' + $f(j.totalCents) + ' · page 1 of 6</p>' +
+      '<p>Seller is Fremont Makers LLC, a Colorado limited liability company. Payment is ' + j.paymentPlan.join(' / ') + ' of the contract total…</p>' +
+      '<div class="ct-sigs">' +
+        '<div class="ct-sig ' + (buyerDone ? 'done' : (S.frame === 'review' ? 'tag' : 'tag')) + '">' + (buyerDone ? esc(j.signer) : 'Buyer signature') + '<span>signer 1</span></div>' +
+        '<div class="ct-sig ' + (fmDone ? 'done' : (S.countersign ? 'tag' : '')) + '">' + (fmDone ? esc(fmName()) + ' for Fremont Makers' : 'Fremont Makers LLC · ' + esc(fmName())) + '<span>' + (S.countersign ? 'signer 2' : 'not used') + '</span></div>' +
+      '</div><p style="font-size:11.5px">Highlighted boxes come from the hidden text tags in our PDF, so nobody places fields by hand.</p>' +
+      '<div class="ct-row">' + actions + '</div></div></div>';
+  }
+
+  function sendHTML(r) {
+    var st = S.es.state, frozen = K.isQuoteFrozen(st);
+    if (S.es.jobStatus === 'contracted') return '';
+    if (frozen && !S.frame) return '<div class="fmp1-note fmp1-note--info">Out for signature. Pricing is frozen until it is signed, declined or canceled. ' +
+      '<button class="fmp1-btn fmp1-btn--quiet" data-act="cancel">Cancel request</button></div>';
+    if (frozen) return '';
+    return '<div class="ct-sec" style="gap:10px"><h3>How should it be signed?</h3>' +
+      '<div class="ct-choice" role="group" aria-label="Signing method">' + MODES.map(function (m) {
+        return '<button data-mode="' + m.id + '" aria-pressed="' + (S.mode === m.id) + '"><b>' + m.t + '</b><span>' + m.d + '</span><em>' + m.api + '</em></button>';
+      }).join('') + '</div>' +
+      '<div class="ct-row"><span class="ct-small fmp1-muted">Fremont Makers countersigns every contract after the buyer' + (S.job.fmSigner ? ', signed by ' + esc(fmName()) + ' on this job.' : '. Choose who signs for Fremont Makers above.') + '</span>' +
+      '<label class="ct-chk"><input type="checkbox" data-act="failplan"' + (S.failPlan ? ' checked' : '') + '> Simulate today\'s free API plan</label></div>' +
+      (S.error ? '<div class="fmp1-note fmp1-note--alert" role="alert">' + esc(S.error) + '</div>' : '') +
+      '<div class="ct-row"><button class="fmp1-btn fmp1-btn--primary" data-act="send"' + (r.ready ? '' : ' disabled aria-disabled="true"') + '>' +
+        (S.mode === 'email' ? 'Send for signature' : S.mode === 'review' ? 'Open in Dropbox Sign' : 'Start signing here') + '</button>' +
+        (r.ready ? '<span class="ct-small fmp1-muted">Sends to ' + esc(S.job.buyerEmail) + ' as ' + esc(S.job.signer) + '</span>' : '<span class="ct-small fmp1-muted">Fix the blockers above first.</span>') + '</div></div>';
+  }
+
+  /* Signed on paper: print the packet, get it wet-signed, upload the signed copy. */
+  function paperHTML(r) {
+    if (S.es.jobStatus === 'contracted' || S.frame) return '';
+    var P = S.paper, out = ['sending', 'out_for_signature', 'buyer_signed'].indexOf(S.es.state) >= 0;
+    var f = P.file ? '<span class="ct-small">' + esc(P.file.name) + ' · ' + (P.file.bytes / 1024).toFixed(0) + ' KB · <span class="fmp1-code">sha256 ' + esc(P.file.sha256.slice(0, 12)) + '…</span></span>'
+                   : '<span class="ct-small fmp1-muted">PDF or photo, up to 25 MB</span>';
+    return '<details class="ct-paper"' + (S.paperOpen ? ' open' : '') + '><summary><b>Signed on paper instead?</b> <span class="fmp1-muted ct-small">Upload the wet-signed copy</span></summary>' +
+      '<div class="ct-paper-body">' +
+      '<p class="ct-small fmp1-muted">Print the packet, have it signed in person, then upload a scan or photo. The upload makes the job Contracted, the same as an e-signature.' +
+        (out ? ' The Dropbox Sign request that\'s out will be canceled so the buyer can\'t sign twice.' : '') + '</p>' +
+      '<div class="ct-row"><button class="fmp1-btn" data-act="print"' + (r.ready ? '' : ' disabled') + '>Print packet for signing</button></div>' +
+      '<div class="ct-grid2">' +
+        '<label class="ct-fld"><span>Signed copy</span><input class="fmp1-input" type="file" accept=".pdf,image/jpeg,image/png,image/heic,.heic" data-act="paperfile"></label>' +
+        '<label class="ct-fld"><span>Date signed</span><input class="fmp1-input" type="date" max="' + TODAY + '" value="' + esc(P.signedDate) + '" data-act="paperdate"></label>' +
+      '</div>' +
+      '<div class="ct-row">' + f + ' <button class="fmp1-btn fmp1-btn--quiet" data-act="samplefile">Use a sample scan</button></div>' +
+      '<label class="ct-chk"><input type="checkbox" data-act="paperbuyer"' + (P.buyerSignedAll ? ' checked' : '') + '> ' + esc(S.job.signer || 'The buyer') + ' signed and dated every signature line</label>' +
+      (S.countersign ? '<label class="ct-chk"><input type="checkbox" data-act="paperfm"' + (P.fmSigned ? ' checked' : '') + '> ' + esc(fmName()) + ' countersigned for Fremont Makers</label>' : '') +
+      (S.paperErrors.length ? '<div class="fmp1-note fmp1-note--alert" role="alert"><ul class="ct-errs">' + S.paperErrors.map(function (e) { return '<li>' + esc(e) + '</li>'; }).join('') + '</ul></div>' : '') +
+      '<div class="ct-row"><button class="fmp1-btn fmp1-btn--primary" data-act="paperrecord">Record signed copy</button><span class="ct-small fmp1-muted">Logged under your name with the file\'s checksum.</span></div>' +
+      '</div></details>';
+  }
+
+  function recordPaper() {
+    var P = S.paper, f = P.file || {};
+    var res = K.recordPaperSigned(S.es, { fileName: f.name, bytes: f.bytes, sha256: f.sha256, signedDate: P.signedDate, uploadedBy: 'Linds',
+      buyerSignedAll: P.buyerSignedAll, fmSigned: P.fmSigned, fmSignerName: S.job.fmSigner ? S.job.fmSigner.name : '' }, { today: TODAY, requireCountersign: S.countersign, ready: K.readiness(S.job, { today: TODAY, authorizedSigners: SIGNERS }).ready });
+    S.paperErrors = res.errors;
+    if (res.ok) { S.es = res.state; S.docs.unshift(res.document); log(res.log); S.paperOpen = false; }
+    render();
+  }
+
+  async function hashFile(file) {
+    var buf = await file.arrayBuffer(), h = await crypto.subtle.digest('SHA-256', buf);
+    return Array.from(new Uint8Array(h)).map(function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+  }
+
+  function render() {
+    var j = S.job, r = K.readiness(j, { today: TODAY, authorizedSigners: SIGNERS }), st = S.es.state;
+    var simBtns = '';
+    if (S.frame) simBtns = '';
+    else if (st === 'out_for_signature') simBtns = '<button class="fmp1-btn" data-sim="viewed">Buyer opens email</button><button class="fmp1-btn" data-sim="signed">Buyer signs</button><button class="fmp1-btn" data-sim="declined">Buyer declines</button>';
+    else if (st === 'buyer_signed') simBtns = S.countersign ? '<button class="fmp1-btn fmp1-btn--primary" data-sim="fm">Countersign as ' + esc(fmName()) + ' (frame)</button>' : '';
+    else if (st === 'signed') simBtns = '<button class="fmp1-btn" data-sim="pdf">Signed PDF arrives</button>';
+
+    document.getElementById('ct-app').innerHTML =
+      '<div class="ct-chrome"><div class="ct-row"><b>' + esc(j.jobCode) + '</b><span class="fmp1-muted ct-small">' + esc(j.customer || 'No customer') + ' · ' + esc(j.project || 'No project') + '</span>' + statusPill() + '</div>' +
+      '<div class="ct-jobs" role="group" aria-label="Example job"><button class="fmp1-btn" data-job="penrose" aria-pressed="' + (S.id === 'penrose') + '">Penrose</button><button class="fmp1-btn" data-job="blank" aria-pressed="' + (S.id === 'blank') + '">Blank job (recording)</button></div></div>' +
+      '<div class="ct-body"><div class="ct-main">' +
+        '<div class="ct-sec" style="gap:10px"><h3>Ready to contract?</h3>' + signerHTML() + checksHTML(r) + '</div>' +
+        '<div class="ct-sec" style="gap:10px"><h3>Payment schedule</h3>' + schedHTML() + '</div>' +
+        sendHTML(r) + frameHTML() + paperHTML(r) +
+      '</div><aside class="ct-side" aria-label="Signature status">' +
+        '<p class="ct-label">Contract</p>' +
+        '<div class="ct-kv"><span>Total</span><b>' + $f(j.totalCents) + '</b></div>' +
+        '<div class="ct-kv"><span>Buyer</span><b>' + esc(j.signer || '—') + '</b></div>' +
+        '<div class="ct-kv"><span>Countersigns</span><b>' + (S.job.fmSigner ? esc(S.job.fmSigner.name) : 'Not chosen') + '</b></div>' +
+        '<div class="ct-kv"><span>Install</span><b>' + nice(j.installDate) + '</b></div>' +
+        '<div class="ct-kv"><span>Pricing</span><b>' + (K.isQuoteFrozen(st) ? 'Frozen' : 'Editable') + '</b></div>' +
+        (S.es.requestId ? '<div class="ct-kv"><span>Request</span><b class="fmp1-code">' + esc(S.es.requestId) + '</b></div>' : '') +
+        (S.docs.length ? '<p class="ct-label">Documents</p>' + S.docs.map(function (d) {
+          return '<div class="ct-doc"><b>' + esc(d.fileName) + '</b><span>' + (d.source === 'paper' ? 'Signed on paper · dated ' + nice(d.signedDate) : 'Signed in Dropbox Sign') +
+            ' · ' + esc(d.uploadedBy) + '</span><span class="fmp1-code">sha256 ' + esc(d.sha256.slice(0, 16)) + '…</span></div>';
+        }).join('') : '') +
+        (simBtns ? '<p class="ct-label">Simulate Dropbox Sign</p><div class="ct-sim">' + simBtns + '</div>' : '') +
+        '<p class="ct-label">Activity</p>' +
+        (S.log.length ? '<ul class="ct-tl">' + S.log.map(function (e) { return '<li><span>' + e.when + '</span><span>' + esc(e.text) + '</span></li>'; }).join('') + '</ul>'
+                      : '<p class="ct-small fmp1-muted">Nothing yet. Each step is logged with who did it.</p>') +
+      '</aside></div>';
+  }
+
+  function send() {
+    var j = S.job;
+    if (S.failPlan) {
+      S.error = 'Dropbox Sign didn\'t accept the request: the account is on the free API plan, which only allows test requests. Nothing was sent and the job is still Ready to contract. Ask the owner to upgrade the API plan, then try again.';
+      log('Send failed: Dropbox Sign API plan (Linds). Job unchanged.'); render(); return;
+    }
+    S.error = '';
+    var opts = { mode: S.mode, clientId: 'demo-client-id', requesterEmail: 'office@example.com', testMode: true };
+    var req = K.signatureRequest(j, opts);
+    S.es = { requestId: 'sr_' + j.jobCode.slice(-3) + 'a1', state: 'sending', jobStatus: 'proposed', seen: [] };
+    log('Contract v1 frozen and sent to the server (' + req.url.replace(K.API + '/', '') + ') by Linds.');
+    if (S.mode === 'email') { fire('signature_request_sent'); }
+    else if (S.mode === 'in_person') { fire('signature_request_sent'); S.frame = 'sign'; log('Signing frame opened for ' + j.signer + '.'); }
+    else { S.frame = 'review'; log('Dropbox Sign frame opened to check the request.'); }
+    render();
+  }
+
+  document.getElementById('ct-app').addEventListener('click', function (e) {
+    var b = e.target.closest('button, input'); if (!b) return;
+    if (b.dataset.job) return reset(b.dataset.job);
+    if (b.dataset.mode) { S.mode = b.dataset.mode; S.error = ''; return render(); }
+    var a = b.dataset.act, sim = b.dataset.sim;
+    if (a === 'countersign') { S.countersign = b.checked; return render(); }
+    if (a === 'failplan') { S.failPlan = b.checked; S.error = ''; return render(); }
+    if (a === 'send') return send();
+    if (a === 'paperfile' || a === 'paperdate') return;   // handled on change
+    if (a === 'paperbuyer') { S.paper.buyerSignedAll = b.checked; return; }
+    if (a === 'paperfm') { S.paper.fmSigned = b.checked; return; }
+    if (a === 'samplefile') { S.paper.file = { name: S.job.jobCode + ' signed contract.pdf', bytes: 1843200, sha256: '9c4e1f0a7b2d3c5e6f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6' }; return render(); }
+    if (a === 'paperrecord') return recordPaper();
+    if (a === 'print') { log('Contract packet v1 printed for wet signature by Linds.'); return render(); }
+    if (a === 'claim-send') { S.frame = null; fire('signature_request_sent'); return render(); }
+    if (a === 'close-frame') { if (S.frame === 'review' && S.es.state === 'sending') { S.es.state = 'none'; log('Closed without sending.'); } S.frame = null; return render(); }
+    if (a === 'frame-sign') {
+      fire('signature_request_signed', [S.job.buyerEmail]);
+      if (!S.countersign) fire('signature_request_all_signed');
+      return render();
+    }
+    if (a === 'cancel') { fire('signature_request_canceled'); return render(); }
+    if (sim === 'viewed') fire('signature_request_viewed');
+    if (sim === 'signed') { fire('signature_request_signed', [S.job.buyerEmail]); if (!S.countersign) fire('signature_request_all_signed'); }
+    if (sim === 'declined') fire('signature_request_declined');
+    if (sim === 'fm') { S.frame = null; fire('signature_request_signed', [S.job.buyerEmail, S.job.fmSigner.email]); fire('signature_request_all_signed'); }
+    if (sim === 'pdf') {
+      fire('signature_request_downloadable');
+      S.docs.unshift({ fileName: S.job.jobCode + ' signed (Dropbox Sign).pdf', source: 'esign', uploadedBy: 'Dropbox Sign', sha256: '5be0a4c1d29e8f7360b1a2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f607' });
+    }
+    render();
+  });
+  document.getElementById('ct-app').addEventListener('change', async function (e) {
+    var a = e.target.dataset.act;
+    if (a === 'paperdate') { S.paper.signedDate = e.target.value; return; }
+    if (a === 'fmsigner') { var p = SIGNERS[+e.target.value]; S.job.fmSigner = p ? { name: p.name, email: p.email } : undefined; S.paperErrors = []; return render(); }
+    if (a === 'paperfile' && e.target.files[0]) {
+      var file = e.target.files[0], sha = '';
+      try { sha = await hashFile(file); } catch (err) { sha = ''; }
+      S.paper.file = { name: file.name, bytes: file.size, sha256: sha }; render();
+    }
+  });
+  document.getElementById('ct-app').addEventListener('toggle', function (e) {
+    if (e.target.classList && e.target.classList.contains('ct-paper')) S.paperOpen = e.target.open;
+  }, true);
+
+  reset('penrose');
+}());
+</script>
+</body>
+</html>
