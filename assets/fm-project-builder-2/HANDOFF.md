@@ -1,6 +1,6 @@
 # Handoff to Hermes: Project Builder Phase 1 + 2
 
-**From:** Fremont Makers (Linds) via Claude · **Date:** 2026-10-29 · **Package version:** 2.6.0
+**From:** Fremont Makers (Linds) via Claude · **Date:** 2026-10-29 · **Package version:** 2.7.1
 
 > **Start here: `HERMES-LAUNCH.md`.** Nothing is live yet (owner, Oct 28): Phase 1 and Phase 2 launch together, beside the existing tool. The launch guide lists the order of work.
 >
@@ -922,3 +922,72 @@ Definitions: **revenue** = contract total − sales tax; **cost** = supplier pri
 - [ ] Back on the job: the comparison shows Sink wall −1/2″, Range wall ✓, Hall bath +1/4″. **Use field measurements**: Sink wall becomes 10′ 5 1/2″ and its runs say "1/2″ over"; the drain shows on the drawing; Undo puts it back. The printed sheet says "Field measured … confirmed by the buyer, …".
 - [ ] Field measure → Start a site visit → For a lead "Garcia family", one wall `12' 3` → **Start a project from this visit**: New Project has the customer and address, and creating it gives a job with that room drawn (147″ wall).
 - [ ] At phone width (375 px) the visit page shows only the project links in the menu, inputs are at least 44 px tall, and nothing scrolls sideways.
+
+---
+
+## 25. Customers, templates and finance exports (2.7.0)
+
+**Status: built in the Phase 2 preview, ready for the server.** The owner asked (Oct 29) for a customer area with profiles and templates for repeat homes and multi-house setups like Willow Creek, and for report exports for finance.
+
+### Customers (sidebar → Projects → Customers)
+- **List** (`#/customers`): every customer with kind (builder, homeowner, other), who signs and their email (or "no email"), projects and how many are active, open balance, and templates. Search by customer or contact. **+ Add customer**.
+- **Profile** (`#/customers/<id>`):
+  - **Contacts:** name, role (signs contracts, gets invoices, on site / superintendent, other), email, phone, and a "Signs contracts" box.
+  - **Addresses:** job sites and billing, each with a label ("Willow Creek, phase 2").
+  - **Notes.**
+  - **Their projects:** stage, total and balance; the header shows projects, total contracted and open balance.
+  - **Checks:** a duplicate name, an email that doesn't look right, and a signer with no email (Dropbox Sign needs one).
+  - **New project for this customer** starts New Project with the signer, email and site filled in.
+- **Profiles start from the jobs** (`FMCustomers.fromJobs`): each customer on a job gets a profile, and the job's signer and site are added once. Change orders filed as projects are skipped. Only real email addresses are taken (the Willow Creek record holds a note there, not an address). A name with Builders, Homes, Construction, Estates and the like starts as a builder.
+- **Hermes:** make customers a server table with an id. Link jobs by `customerId` (new jobs already carry it) rather than by name. Keep `name` on the job for the old records. In the preview, a customer with projects can't be renamed, because projects are matched by name there.
+
+### Templates
+- **What a template holds:** one home, or a builder order with several models. Each model has its usual house count, its cabinet lines (after change orders, with supplier cost as of the day it was saved) and its drawings (`FMCustomers.templateFromSets`).
+- **Never pricing.** Markup, discount, G&A, tax, assembly and the payment plan stay per job (owner rule). New projects from a template start at the company defaults; "Copy from a past job" on the Price step brings over a customer's usual numbers.
+- **Save one:** **Save as template** on any job's header, or **Save as a template** on the customer's profile (pick one of their projects). The name defaults to the project's name, or the customer's when the project name is just house counts. Templates can be renamed or deleted (tap twice to delete).
+- **Use one:** **New project from this** on the profile, or pick the customer in New Project and choose one of their templates on the Customer step.
+  - The draft gets the customer, the signer and email from the first contact who signs, the first site address, the homes or each model with its house count, the cabinets and the drawings (keyed to the new models).
+  - A note says where it came from and that pricing is at the defaults. Supplier costs can be refreshed by adding or replacing a supplier PDF on the Cabinets step.
+  - The new job logs "Started from a customer template" and carries `fromTemplate`.
+- **Sample:** the preview makes a starting template from Willow Creek, "Willow Creek Estates · 5 models": San Luis, Mesa Ridge, Sangre Vista, Pinyon Crest and Cimarron Peak, 2 houses each, 77 cabinet lines.
+
+### Reports & exports (sidebar → Company books → Reports & exports, `#/books/exports`)
+- **Period:** this month, last month, this quarter, last quarter, year to date, last year, or custom dates.
+- **Five reports** (`FMReports`). Each shows its row count and totals, can be opened on screen (first 50 rows), and downloads as CSV. **Download all** gets every non-empty one.
+  1. **Jobs:** contract, change orders, current contract, sales tax, revenue before tax, invoiced, paid, balance, cabinet cost, courtesy absorbed, gross profit and margin. Signed jobs only; a box adds open and lost quotes.
+  2. **Invoices:** amount, paid, open, status (Paid, Open, Overdue, Void) and days overdue.
+  3. **Payments received** in the period: date, method, check number or reference, amount, and the sales tax inside it (the job's tax over its contract total).
+  4. **Sales tax** by job: tax on contracts signed in the period, and tax inside payments received in the period. The accountant decides which basis to file on.
+  5. **Change orders:** removed and added SKUs, what was charged, what the shop absorbed, and whether that is an estimate or final.
+- **The files:** CSV with a byte-order mark (so Excel reads "Cañon City"). Money is plain dollars (`10500.00`) so spreadsheets can add it up, and each file ends with a Total row. Cells that start with `=`, `+`, `-` or `@` are quoted so a spreadsheet won't run them as formulas. File names look like `fremont-makers-payments-2026-10-01-to-2026-10-31.csv`.
+- **Sample check:** year to date, the two signed jobs total $91,861.16 (Willow $80,888.05 + Penrose $10,973.11), $44,093.70 has been paid, and $1,652.70 was absorbed. These match Company Books.
+- **Hermes:** run the same functions on the server data. The download is a plain file. If finance later wants a direct QuickBooks or Xero connection, the Payments and Invoices reports are the starting point.
+
+### Files
+`src/fm-phase2-customers.js` (FMCustomers), `src/fm-phase2-reports.js` (FMReports), with **8 tests** in `tests/reports.test.js`; screens in `preview/phase2-customers.js` and `preview/phase2-reports.js`; New Project changes in `preview/phase2-flows.js` (`fromTemplate`, template choice on the Customer step, signer and site filled in from the profile).
+
+### Acceptance
+- [ ] `node tests/reports.test.js` → 8 passed.
+- [ ] Customers lists Braddy Builders (builder), Sample quote, Stonewall Holdings and Willow Creek Estates (builder). Willow's signer Rod Stambaugh shows "no email", and the profile says he needs one for Dropbox Sign.
+- [ ] Add his email and a site "Lots 11-20, Willow Creek Dr…": the warning goes away. **New project from this** on "Willow Creek Estates · 5 models": New Project has Willow Creek, Rod and his email, the new site, a builder order with the 5 models × 2 houses and 77 lines, and pricing at the defaults.
+- [ ] Penrose job → **Save as template**: Braddy Builders gets "Penrose template · One home · 18 cabinet lines".
+- [ ] New Project → pick Willow Creek Estates: signer, email and site fill in, and the template button shows.
+- [ ] Reports & exports, Year to date: Jobs 2 rows, $91,861.16; Invoices 6 rows, open $47,767.46; Payments 3 rows, $44,093.70 with $2,690.43 tax; Change orders 2 rows, $8,740.71 charged and $1,652.70 absorbed. Download CSV gives files that open in Excel with the Total row.
+
+---
+
+## 26. Hosting the preview: stored files, "not live" bar (2.7.1)
+
+The owner put `phase2.html` on the site (Oct 29). It ran as the preview, with sample data in the browser and the stored PDFs not opening. That's expected until the server work in §22 is done. Three small changes make the hosted preview honest and useful in the meantime:
+- **"Preview, not the live tool" bar** at the top of every page: sample data, saved only in this browser, nothing shared, backed up or sent; don't enter real jobs. It goes away when `FM_CONFIG.live` is `true` (set in the small settings block at the top of `phase2.html`). Set it only once the server database and sign-in are connected.
+- **Stored originals open from a `files` folder.** Until the server's file storage is in place (§22, item 4), Open on a signed contract or supplier order looks in `FM_CONFIG.filesBase` (default `files/`, next to `phase2.html`).
+  - **Names:** the file can have its exact name (`FM-2609-314 · Braddy Builders.pdf`) or a plain version of it (`FM-2609-314-Braddy-Builders.pdf`; some hosts are fussy about spaces and "·").
+  - **The check:** the browser works out the file's SHA-256 and shows the PDF only if it matches the one recorded at signing ("✓ Same file as the signed original"), with Open in a new tab and Download. A different file under that name is refused ("This isn't the signed copy"). A missing file gets instructions.
+  - **Privacy:** nothing is uploaded anywhere. The check needs https, which the site has; on plain http it shows the file marked unchecked.
+- **The three files** and their plain names:
+  - `FM-2609-314-Braddy-Builders.pdf`
+  - `Updated-Braddy-WholesaleCabinets-1000173203-2.pdf`
+  - `Willow-Creek-Full-House-Order.pdf`
+- **Keep the `files` folder out of public reach.** These are signed customer documents. Until staff sign-in exists, put the hosted preview and its `files` folder behind the site's password protection, or take them down.
+- **Paper / Dark toggle** in the sidebar: the two halves now fill the box (no empty strip beside Dark).
+- **Hermes:** at launch, Open reads the same files from server storage (keep the SHA-256 check), and `FM_CONFIG.live` becomes `true`. Remove the `files` folder from the web root.

@@ -104,7 +104,29 @@
     return t;
   }
   function customers(c) {
-    var seen = {}; return c.store.jobs().map(function (j) { return j.customer; }).filter(function (n) { if (seen[n] || /change order/i.test(n)) return false; seen[n] = 1; return true; });
+    var seen = {}, names = c.store.jobs().map(function (j) { return j.customer; }).concat(window.P2Customers ? window.P2Customers.names(c) : []);
+    return names.filter(function (n) { var k = String(n).trim().toLowerCase(); if (!n || seen[k] || /change order/i.test(n)) return false; seen[k] = 1; return true; }).sort(function (a, b) { return a.localeCompare(b); });
+  }
+  /* New Project from a customer's profile, with or without one of their templates (homes, models and house counts, cabinets, drawings).
+     Pricing is not part of a template: the draft starts at the company defaults (owner rule: pricing is set per job). */
+  function fromTemplate(c, cust, tpl) {
+    var CU = window.FMCustomers, EL = window.FMElev, d = blankDraft(c), sg = CU.signer(cust), site = (cust.addresses || []).filter(function (a) { return a.kind === 'site' && a.line; })[0];
+    d.customer = customers(c).indexOf(cust.name) > -1 ? cust.name : '__new'; if (d.customer === '__new') d.newCustomer = cust.name;
+    d.signer = sg ? sg.name : ''; d.email = sg ? (sg.email || '') : ''; d.address = site ? site.line : ''; d.customerId = cust.id;
+    if (tpl) {
+      var rooms = [];
+      d.kind = tpl.kind; d.project = tpl.name; d.fromTemplate = tpl.id;
+      d.models = tpl.models.map(function (m, i) {
+        var id = 'm' + (i + 1);
+        if (m.rooms && m.rooms.length && EL) rooms = rooms.concat(EL.copyRooms(m.rooms, m.lines, { set: id }).rooms);
+        return { id: id, name: tpl.kind === 'builder' ? m.name : '', qty: m.qty, pdf: '', lines: m.lines.map(function (l) { return { sku: l.sku, desc: l.desc || '', qty: l.qty, unitCostCents: l.unitCostCents, markupPct: d.pricing.markupPct, edited: false }; }) };
+      });
+      if (rooms.length) d.elevations = { rooms: rooms, sizes: {} };
+      reapply(d);
+      d.note = 'From the template "' + tpl.name + '" for ' + cust.name + ': ' + CU.summary(tpl) + '. Signer, email and site come from their profile. Pricing starts at the company defaults; to use this customer\'s usual numbers, pick one of their jobs in "Copy from a past job" on the Price step.' +
+        (tpl.costsAsOf ? ' Supplier costs are as of ' + c.longDate(tpl.costsAsOf) + '; add or replace a supplier PDF on the Cabinets step to refresh them.' : '');
+    } else d.note = 'New project for ' + cust.name + ': signer, email and site come from their profile.';
+    c.ui.draft = d; saveDraft(c);
   }
   function stepErrors(c, d, i) {
     var e = [];
@@ -141,7 +163,8 @@
       (d.step < 4 ? '<button class="fmp1-btn fmp1-btn--primary" data-npnext>Next</button>' : '<button class="fmp1-btn fmp1-btn--primary" data-npcreate>Create project</button>') + '</div>';
     var side = '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Live total</span><span class="fmp1-h" style="font-size:24px">' + (t.ok ? $f(t.total) : '—') + '</span>' +
       '<span class="p2-small fmp1-faint">' + (d.kind === 'single' ? 'One home' : t.homes + ' homes') + (d.bid ? ' · agreed bid' : '') + ' · draft saves as you go</span></div>';
-    return '<div class="p2-between"><div><h1 class="fmp1-h p2-h1">New project</h1><p class="p2-sub">Five steps on one page. Leave any time; the draft is kept.</p></div>' + side + '</div>' + rail + errs +
+    var note = d.note ? '<div class="fmp1-note fmp1-note--info p2-small p2-between" style="align-items:flex-start"><span>' + esc(d.note) + '</span><button class="p2-linkbtn p2-small" data-npnoteclose aria-label="Close this note">✕</button></div>' : '';
+    return '<div class="p2-between"><div><h1 class="fmp1-h p2-h1">New project</h1><p class="p2-sub">Five steps on one page. Leave any time; the draft is kept.</p></div>' + side + '</div>' + rail + note + errs +
       '<div class="fmp1-card p2-pad">' + body + '</div>' + foot;
   }
   function fld(label, attrs, val, type) { return '<label class="p2-fld"><span>' + label + '</span><input class="fmp1-input" ' + attrs + (type ? ' type="' + type + '"' : '') + ' value="' + String(val == null ? '' : val).replace(/"/g, '&quot;') + '"></label>'; }
@@ -150,9 +173,15 @@
     return '<h2 class="fmp1-h" style="font-size:20px">Who is this for?</h2><div class="p2-grid">' +
       '<label class="p2-fld"><span>Customer</span><select class="fmp1-input" data-np="customer"><option value="">Choose…</option>' +
       customers(c).map(function (n) { return '<option' + (d.customer === n ? ' selected' : '') + '>' + esc(n) + '</option>'; }).join('') + '<option value="__new"' + (d.customer === '__new' ? ' selected' : '') + '>+ New customer</option></select></label>' +
-      (d.customer === '__new' ? fld('New customer name', 'data-np="newCustomer"', d.newCustomer) : '') +
+      (d.customer === '__new' ? fld('New customer name', 'data-np="newCustomer"', d.newCustomer) : '') + tplChips(c, d) +
       fld('Project name', 'data-np="project"', d.project) + fld('Signer', 'data-np="signer"', d.signer) + fld('Signer email (for e-signature)', 'data-np="email"', d.email, 'email') +
       '</div><p class="p2-note">The customer holds contact details only. Pricing is set on this job in the Price step.</p>';
+  }
+  function tplChips(c, d) {
+    var cust = window.P2Customers && d.customer && d.customer !== '__new' ? window.P2Customers.byName(c, d.customer) : null;
+    if (!cust || !cust.templates.length) return '';
+    return '<div class="p2-fld" style="grid-column:1/-1"><span>Start from one of ' + c.esc(cust.name) + '\'s templates</span><div class="p2-row">' + cust.templates.map(function (t) {
+      return '<button class="fmp1-btn' + (d.fromTemplate === t.id ? ' fmp1-btn--primary' : '') + '" data-nptpl="' + c.esc(t.id) + '" title="' + c.esc(window.FMCustomers.summary(t)) + '">' + c.esc(t.name) + '</button>'; }).join('') + '</div></div>';
   }
   function npHomes(c, d) {
     var esc = c.esc;
@@ -167,7 +196,7 @@
   }
   function npCabinets(c, d) {
     var esc = c.esc, $f = c.money, pdfs = samplePdfs();
-    return '<h2 class="fmp1-h" style="font-size:20px">Cabinets</h2>' + (d.note ? '<div class="fmp1-note fmp1-note--info p2-small">' + esc(d.note) + '</div>' : '') +
+    return '<h2 class="fmp1-h" style="font-size:20px">Cabinets</h2>' +
       (d.elevations && d.elevations.rooms.length ? '<p class="p2-small fmp1-muted">Drawings come along: ' + d.elevations.rooms.length + ' room' + (d.elevations.rooms.length === 1 ? '' : 's') + '. Cabinets you add here show as "to place" on the Elevations tab.</p>' : '') + d.models.map(function (m, i) {
       var colors = {}; m.lines.forEach(function (l) { colors[suffix(l.sku)] = 1; }); var cs = Object.keys(colors);
       return '<div class="p2-form" style="flex-direction:column;align-items:stretch"><div class="p2-between"><b>' + esc(d.kind === 'single' ? (d.project || 'The home') : (m.name || 'Model ' + (i + 1)) + ' × ' + m.qty) + '</b>' +
@@ -235,6 +264,8 @@
       models: d.models.map(function (m) { return { name: d.kind === 'single' ? d.project.trim() : m.name.trim(), qty: d.kind === 'single' ? 1 : m.qty, lines: JSON.parse(JSON.stringify(m.lines)) }; }),
       bid: d.bid ? { bidCents: toCents(d.bidAmount), itemizedCents: t.itemized } : null };
     if (d.duplicatedFrom) job.duplicatedFrom = d.duplicatedFrom;
+    if (d.customerId) job.customerId = d.customerId;
+    if (d.fromTemplate) job.fromTemplate = d.fromTemplate;
     if (d.elevations && d.elevations.rooms.length) {
       var keyFor = {}; d.models.forEach(function (m, i) { keyFor[m.id] = job.models[i].name || 'Model ' + (i + 1); });
       var rs = d.elevations.rooms.filter(function (r) { return keyFor[r.set]; }).map(function (r) { r = JSON.parse(JSON.stringify(r)); r.set = keyFor[r.set]; return r; });
@@ -435,6 +466,13 @@
       if (t.hasAttribute('data-npnext')) { var e = stepErrors(c, d, d.step); d.errors = e; if (!e.length) d.step++; saveDraft(c); c.render(); return true; }
       if (t.hasAttribute('data-npback')) { d.step = Math.max(0, d.step - 1); d.errors = []; saveDraft(c); c.render(); return true; }
       if (t.hasAttribute('data-npdiscard')) { clearDraft(c); c.render(); return true; }
+      if (t.hasAttribute('data-npnoteclose')) { d.note = ''; saveDraft(c); c.render(); return true; }
+      if (t.dataset.nptpl && window.P2Customers) {
+        var tc = window.P2Customers.byName(c, d.customer), tp = tc && tc.templates.filter(function (x) { return x.id === t.dataset.nptpl; })[0];
+        if (tp) { var keep = { project: d.project, signer: d.signer, email: d.email, address: d.address }; fromTemplate(c, tc, tp); var nd = c.ui.draft;
+          Object.keys(keep).forEach(function (k) { if (keep[k]) nd[k] = keep[k]; }); saveDraft(c); }
+        c.render(); return true;
+      }
       if (t.dataset.npkind) { d.kind = t.dataset.npkind; if (d.kind === 'single') d.models = d.models.slice(0, 1); saveDraft(c); c.render(); return true; }
       if (t.hasAttribute('data-npaddmodel')) { d.models.push({ id: 'm' + (d.models.length + 1), name: '', qty: 1, lines: [], pdf: '' }); saveDraft(c); c.render(); return true; }
       if (t.dataset.npdelmodel) { d.models.splice(+t.dataset.npdelmodel, 1); saveDraft(c); c.render(); return true; }
@@ -447,6 +485,8 @@
           if (fv) { fv.jobCode = res.job.jobCode; fv.broughtInto = (fv.broughtInto || []).concat([{ jobCode: res.job.jobCode, on: c.TODAY, by: c.me().name }]); try { var all = JSON.parse(window.localStorage.getItem('fm_phase2_visits') || '[]').map(function (z) { return z.id === fv.id ? fv : z; }); window.localStorage.setItem('fm_phase2_visits', JSON.stringify(all)); } catch (e) { /* in memory */ } }
           c.store.update(res.job.jobCode, function (x) { return x; }, 'Started from the site visit on ' + (fv ? c.longDate(fv.measuredOn) : 'file') + ' (field measurements).', c.me().name);
         }
+        if (d.fromTemplate) c.store.update(res.job.jobCode, function (x) { return x; }, 'Started from a customer template' + (d.project ? ' ("' + d.project + '")' : '') + '.', c.me().name);
+        if (window.P2Customers) window.P2Customers.refresh(c);
         if (d.duplicatedFrom) c.store.update(res.job.jobCode, function (x) { return x; }, 'Duplicated from ' + d.duplicatedFrom + ' (customer, cabinets, pricing' + (res.job.elevations ? ', drawings' : '') + ').', c.me().name);
         clearDraft(c); c.go('#/job/' + encodeURIComponent(res.job.jobCode) + '/overview'); return true;
       }
@@ -520,7 +560,13 @@
   function refreshLater(c) { clearTimeout(timer); timer = setTimeout(function () { var a = document.activeElement, key = a && (a.dataset.npp || a.dataset.npline || a.dataset.np), sel = a && a.selectionStart; c.render(); if (key) { var n = document.querySelector('[data-npp="' + key + '"],[data-npline="' + key + '"],[data-np="' + key + '"]'); if (n) { n.focus(); try { n.setSelectionRange(sel, sel); } catch (x) { /* number inputs */ } } } }, 450); }
   function change(c, e) {
     var el = e.target, d;
-    if (el.dataset.np === 'customer') { d = loadDraft(c); d.customer = el.value; saveDraft(c); c.render(); return; }
+    if (el.dataset.np === 'customer') {
+      d = loadDraft(c); d.customer = el.value;
+      var pc = window.P2Customers && el.value !== '__new' ? window.P2Customers.byName(c, el.value) : null;
+      if (pc) { var sg = window.FMCustomers.signer(pc), site = pc.addresses.filter(function (a) { return a.kind === 'site' && a.line; })[0];
+        if (sg && !d.signer) d.signer = sg.name; if (sg && sg.email && !d.email) d.email = sg.email; if (site && !d.address) d.address = site.line; d.customerId = pc.id; }
+      saveDraft(c); c.render(); return;
+    }
     if (el.dataset.nppdf !== undefined) { d = loadDraft(c); var m = d.models[+el.dataset.nppdf], pdf = pdfById(el.value); m.pdf = el.value; m.lines = pdf ? pdf.lines.map(function (l) { return { sku: l.sku, desc: l.desc, qty: l.qty, unitCostCents: l.unitCostCents, markupPct: d.pricing.markupPct, edited: false }; }) : []; reapply(d); saveDraft(c); c.render(); return; }
     if (el.dataset.npaddpdf !== undefined) {
       d = loadDraft(c); var m2 = d.models[+el.dataset.npaddpdf], pdf2 = pdfById(el.value); if (!m2 || !pdf2) return;
@@ -551,6 +597,6 @@
   }
 
   window.P2NewProject = { render: renderNew };
-  window.P2Flows = { changes: renderChanges, contract: renderContract, click: click, input: input, change: change, quotesFor: quotesFor, signers: signers, dupConfirm: dupConfirm };
+  window.P2Flows = { changes: renderChanges, contract: renderContract, click: click, input: input, change: change, quotesFor: quotesFor, signers: signers, dupConfirm: dupConfirm, fromTemplate: fromTemplate };
   if (window.P2) window.P2.render();
 })();

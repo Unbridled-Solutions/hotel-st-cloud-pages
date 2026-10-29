@@ -98,17 +98,23 @@
       'Payment schedule');
   }
 
-  /* A job priced by bid: quantities only, one agreed price (owner decision, HANDOFF.md §18). */
+  /* A job priced by bid: SKU quantities only; totals break out mfr discount, labor, G&A; tax is one cabinetry line (Lindsay 29 Oct 2026). */
   function renderBidQuoteDoc(priced, bidCents, meta) {
     meta = meta || {};
-    var rows = priced.lines.map(function (l) { return '<tr><td>' + esc(l.description) + '</td><td class="sku">' + esc(l.sku) + '</td><td class="r">' + l.qty + '</td></tr>'; }).join('');
+    var BID = (typeof window !== 'undefined' && window.FMBid) ? window.FMBid : (typeof require === 'function' ? require('./fm-phase2-bid.js') : null);
+    var page = BID ? BID.bidPage(priced, bidCents, meta) : { customer: { rows: [], totals: [], includes: '', totalLabel: 'Agreed bid price', totalCents: bidCents } };
+    var rows = page.customer.rows.map(function (l) { return '<tr><td>' + esc(l.description) + '</td><td class="sku">' + esc(l.sku) + '</td><td class="r">' + l.qty + '</td></tr>'; }).join('');
+    var sumRows = (page.customer.totals || []).map(function (t) {
+      return '<tr><td>' + esc(t.label) + '</td><td class="r">' + FM.fmt(t.cents) + '</td></tr>';
+    }).join('');
     return sheet('Final Job Quote ' + (meta.house || ''),
       head('Final Job Quote · agreed bid', meta.house || '', meta) +
       '<section class="doc-fields">' + field('Buyer', esc(meta.buyer)) + field('Job', esc(meta.jobCode)) + field('Quote date', longDate(meta.quoteDate)) +
         field('Install / delivery', longDate(meta.deliveryDate)) + field('Color', esc(meta.color || '—')) + '</section>' +
       '<table class="doc-lines"><thead><tr><th>Description</th><th>SKU</th><th class="r">Qty</th></tr></thead><tbody>' + rows + '</tbody></table>' +
-      '<div class="doc-bottom"><table class="doc-sum"><tbody><tr class="is-total"><td>Agreed bid price</td><td class="r">' + FM.fmt(bidCents) + '</td></tr></tbody></table>' +
-      '<p class="doc-note">Includes the cabinets and hardware listed, assembly, and Colorado sales tax. Installation into the building is not included.</p></div>',
+      '<div class="doc-bottom"><table class="doc-sum"><tbody>' + sumRows +
+      '<tr class="is-total"><td>' + esc(page.customer.totalLabel) + '</td><td class="r">' + FM.fmt(page.customer.totalCents) + '</td></tr></tbody></table>' +
+      '<p class="doc-note">' + esc(page.customer.includes) + '</p></div>',
       meta.pageLabel || '');
   }
 

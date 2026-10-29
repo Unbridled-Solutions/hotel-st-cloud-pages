@@ -29,6 +29,8 @@ body { margin: 0; background: var(--page); }
 .fm-p1 .p2-nav a:focus-visible, .fm-p1 .p2-tabs a:focus-visible { outline: 2px solid var(--fmp1-focus); outline-offset: 1px; }
 .fm-p1 .p2-nav .count { font-size: 11px; font-weight: 700; background: var(--fmp1-alert-soft); color: var(--fmp1-alert-ink); border-radius: 999px; padding: 1px 7px; }
 .fm-p1 .p2-side-foot { margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--fmp1-line); display: flex; flex-direction: column; gap: 8px; font-size: 12px; }
+.fm-p1 .p2-side-foot .fmp1-theme { display: flex; }
+.fm-p1 .p2-side-foot .fmp1-theme button { flex: 1 1 0; padding: 7px 12px; }   /* the two halves fill the box: no empty strip beside Dark */
 #p2 { background: linear-gradient(to right, var(--fmp1-surface) 236px, var(--fmp1-bg) 236px); }
 .fm-p1 .p2-newbtn { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 12px; border-radius: 9px; background: var(--fmp1-primary); color: var(--fmp1-on-primary); font-weight: 600; font-size: 14px; text-decoration: none; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
 .fm-p1 .p2-newbtn:hover { filter: brightness(1.08); }
@@ -102,6 +104,17 @@ body { margin: 0; background: var(--page); }
 .fm-p1 .p2-ms-jobpanel[open] > *:not(summary) { margin-top: 8px; }
 .fm-p1 tr.p2-ms-diff td { background: var(--fmp1-alert-soft, #F6E3DC); }
 .fm-p1 .p2-ms-jobbar { justify-content: space-between; }
+.fm-p1 .p2-previewbar { background: #F3E3B5; color: #4A3A12; border: 1px solid #D9C27A; border-radius: 10px; padding: 8px 12px; font-size: 13px; line-height: 1.4; margin-bottom: 12px; }
+.fm-p1 .pv-pdf { width: 100%; height: calc(100vh - 150px); min-height: 480px; border: 1px solid var(--fmp1-line); border-radius: 8px; background: #fff; }
+.fm-p1 .pv-pdfwrap { width: 100%; max-width: 1100px; margin: 0 auto; }
+.fm-p1 .pv-pdfok { margin: 0 0 8px; color: var(--fmp1-good-ink, #2E6B45); }
+/* customers and reports */
+.fm-p1 .p2-cu { display: flex; flex-direction: column; gap: 14px; }
+.fm-p1 .p2-cu-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; align-items: end; padding: 10px 0; border-bottom: 1px solid var(--fmp1-line); }
+.fm-p1 .p2-cu-row .p2-cu-wide { grid-column: span 2; }
+.fm-p1 .p2-cu-tpl { flex-direction: column; align-items: stretch; gap: 4px; }
+.fm-p1 .p2-rp-table td, .fm-p1 .p2-rp-table th { white-space: nowrap; }
+.fm-p1 .p2-cu-list th, .fm-p1 .p2-cu-list td { padding-left: 8px; padding-right: 8px; }
 @media (max-width: 860px) { .fm-p1.is-measure .p2-side > nav:not(:first-of-type), .fm-p1.is-measure .p2-side-foot, .fm-p1.is-measure .p2-newbtn { display: none; } }
 .fm-p1 .p2-chips { display: flex; gap: 6px; flex-wrap: wrap; }
 .fm-p1 .p2-chips button[aria-pressed="true"] { background: var(--fmp1-primary); color: var(--fmp1-on-primary); border-color: var(--fmp1-primary); }
@@ -217,6 +230,11 @@ body { margin: 0; background: var(--page); }
 </head>
 <body>
 <div id="p2" class="fm-p1" aria-live="polite"></div>
+<script>
+  /* Settings for this page. live: true once the server is connected (hides the "Preview, not the live tool" bar).
+     filesBase: where Open looks for stored originals (signed contracts, supplier orders) until the server's file storage is in place. */
+  window.FM_CONFIG = window.FM_CONFIG || { live: false, filesBase: '/assets/fm-project-builder-2/files/' };
+</script>
 <script src="/assets/fm-project-builder-2/src/fm-phase1-theme-toggle.js"></script>
 <script src="/assets/fm-project-builder-2/src/fm-phase1-ledger.js"></script>
 <script src="/assets/fm-project-builder-2/src/fm-phase1-quote.js"></script>
@@ -228,6 +246,8 @@ body { margin: 0; background: var(--page); }
 <script src="/assets/fm-project-builder-2/src/fm-phase2-bid.js"></script>
 <script src="/assets/fm-project-builder-2/src/fm-phase2-elevations.js"></script>
 <script src="/assets/fm-project-builder-2/src/fm-phase2-measure.js"></script>
+<script src="/assets/fm-project-builder-2/src/fm-phase2-reports.js"></script>
+<script src="/assets/fm-project-builder-2/src/fm-phase2-customers.js"></script>
 <script src="/assets/fm-project-builder-2/preview/willow-creek-full-order.js"></script>
 <script src="/assets/fm-project-builder-2/preview/braddy-penrose-order.js"></script>
 <script src="/assets/fm-project-builder-2/src/fm-phase1-adapter.js"></script>

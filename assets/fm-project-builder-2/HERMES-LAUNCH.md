@@ -1,6 +1,6 @@
 # Hermes: launch guide for the Project Builder (Phase 1 + 2)
 
-**From:** Fremont Makers (Linds) via Claude · **Date:** 2026-10-29 · **Package:** `fm-project-builder-phase1.zip`, version **2.6.0**
+**From:** Fremont Makers (Linds) via Claude · **Date:** 2026-10-29 · **Package:** `fm-project-builder-phase1.zip`, version **2.7.1**
 
 **Nothing is live yet.** Phase 1 and Phase 2 launch together as one new Project Builder that runs **beside** the existing tool at tools.fremontmakers.com. This guide is the order of work; `HANDOFF.md` has the detail (section numbers below, §).
 
@@ -28,6 +28,7 @@ If a step seems to need any change to the existing tool, stop and ask the owner.
 | `node tests/docs.test.js` | `9 passed, 0 failed` |
 | `node tests/elevations.test.js` | `20 passed, 0 failed` |
 | `node tests/measure.test.js` | `5 passed, 0 failed` |
+| `node tests/reports.test.js` | `8 passed, 0 failed` |
 | `node tests/theme.test.js` | `5 passed, 0 failed` |
 | `node tests/braddy.test.js` | `9 passed, 0 failed` |
 | `node tests/contract.test.js` | `22 passed, 0 failed` |
@@ -48,9 +49,11 @@ These are simulated in the preview and must be real before launch:
 6. **Dropbox Sign:** paid API plan (the owner approved it), an API app for `fremontmakers.com` with approval for in-frame signing, the server calls and the callback handler (§16).
 
 ## 3. Screens (match `phase2.html`)
-- **Sidebar:** a filled "+ New project" button first, then Projects (All projects), Company books (Dashboard, Pipeline, Deposits due, Reconcile, P&L, Balance sheet) and Company (Users), with Field measure under Projects; Paper / Dark switch; the "FREMONT MAKERS / making freedom" logo (§13, §20, §22, §23).
+- **Sidebar:** a filled "+ New project" button first, then Projects (All projects), Company books (Dashboard, Pipeline, Deposits due, Reconcile, P&L, Balance sheet) and Company (Users), with Customers and Field measure under Projects and Reports & exports under Company books; Paper / Dark switch; the "FREMONT MAKERS / making freedom" logo (§13, §20, §22, §23).
 - **All projects** with search, filters, balance and next step; builder-order houses folded in (§22).
 - **Job page** with the header on every tab and the tabs Overview, Cabinets, **Elevations**, Change orders, Contract, Invoices, Documents, Activity (§21, §22, §23).
+- **Customers** (§25): profiles with contacts (who signs, who gets invoices, who's on site), addresses, notes, their projects, and **templates** for repeat homes and builder orders (models, house counts, cabinets, drawings; never pricing). New projects start from a profile or a template. Needs a customers table linked to jobs by id.
+- **Reports & exports** (§25), under Company books: jobs, invoices, payments, sales tax and change orders for a period, as CSV for finance.
 - **Field measure** (§24): site visits on a phone (rooms, walls, openings, outlets and plumbing, photos, who measured, buyer's confirmation), compared with and applied to a job's drawings, or starting a project for a lead. Needs server storage for visits and photos, and offline use with sync.
 - **Elevations** (§23): rooms, walls and islands drawn from the quote's SKUs with sizes read from the codes (or the supplier PDF), corner cabinets, drag cabinets along a wall, crown and trim check, staggered uppers, floor plan, checks, measurements, 3D room, versions, print; locked with the price; the sheets go into the contract packet.
 - **New Project** (§15), **Contract and e-sign** (§16), **Change orders** including courtesy (§17, §19), **bid pages and grandfathered prices** (§18).
@@ -74,7 +77,10 @@ These are simulated in the preview and must be real before launch:
 ---
 
 ## Owner decisions in effect
-Pricing is set per job, never per customer; company defaults are 35% markup · 12% discount off cost · 2% G&A · 7.9% tax · $640 assembly · 50/50. Invoice shares are measured against the current total. Each change order gets its own invoice, due on signing. A job is Contracted only when everyone has signed, in Dropbox Sign or as an uploaded wet-signed copy. Fremont Makers countersigns, and the signer is picked per job from the four approved signers (Kristy, Tayler, Lindsay, Tim). The deposit is due on signing, with the last payment at install. Factory order and delivery dates are estimates, with nothing automated off them. New quotes use the corrected math. Bid jobs print a lump-sum page. Reprints of signed quotes show a rounding line. Supplier import only appears in New Project and change orders. Documents use only the "making freedom" logo. Everyone with Full access can void or override a contract and reopen a lost project (question 3). Elevations are drawn while quoting and the agreed ones go into the contract packet; after signing, a change order that changes cabinets gets a numbered drawing revision. Dark Hickory codes that aren't in a supplier catalog (DC224, DC324, PWB18K, VDC42RS, FP9624-1.5) stay marked "check size" (owner, Oct 29). Full list: `HANDOFF.md` §8 and §15–§24.
+Pricing is set per job, never per customer; company defaults are 35% markup · 12% discount off cost · 2% G&A · 7.9% tax · $640 assembly · 50/50. Invoice shares are measured against the current total. Each change order gets its own invoice, due on signing. A job is Contracted only when everyone has signed, in Dropbox Sign or as an uploaded wet-signed copy. Fremont Makers countersigns, and the signer is picked per job from the four approved signers (Kristy, Tayler, Lindsay, Tim). The deposit is due on signing, with the last payment at install. Factory order and delivery dates are estimates, with nothing automated off them. New quotes use the corrected math. Bid jobs print a lump-sum page. Reprints of signed quotes show a rounding line. Supplier import only appears in New Project and change orders. Documents use only the "making freedom" logo. Everyone with Full access can void or override a contract and reopen a lost project (question 3). Elevations are drawn while quoting and the agreed ones go into the contract packet; after signing, a change order that changes cabinets gets a numbered drawing revision. Dark Hickory codes that aren't in a supplier catalog (DC224, DC324, PWB18K, VDC42RS, FP9624-1.5) stay marked "check size" (owner, Oct 29). Customer profiles and templates never hold pricing. Full list: `HANDOFF.md` §8 and §15–§25.
+
+## The hosted preview is not the live tool
+It runs on sample data saved in each browser, with a "Preview, not the live tool" bar on every page. Set `FM_CONFIG.live = true` in `phase2.html` only after the shared database and sign-in from step 2 are connected (§26).
 
 ## Still needed from the owner (don't guess)
 - Tayler's email address (Kristy: kslaugh@unbridled.com; Lindsay: lwyss@unbridled.com; Tim: tslaugh@unbridled.com). All four sign for Fremont Makers; each needs an email before they can be picked as the signer.
@@ -86,4 +92,4 @@ Pricing is set per job, never per customer; company defaults are 35% markup · 1
 - `Updated Braddy WholesaleCabinets-1000173203 (2).pdf`
 - `Willow Creek Full House Order.pdf`
 
-Their checksums are in `preview/braddy-penrose-order.js` → `documents`.
+Their checksums are in `preview/braddy-penrose-order.js` → `documents`. Until server file storage exists, the hosted preview opens them from a `files/` folder next to `phase2.html`, under their exact names or plain ones (`FM-2609-314-Braddy-Builders.pdf`, `Updated-Braddy-WholesaleCabinets-1000173203-2.pdf`, `Willow-Creek-Full-House-Order.pdf`), and checks each SHA-256 before showing it (§26). Keep that folder behind password protection; they are signed customer documents.

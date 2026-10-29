@@ -21,13 +21,20 @@ function eq(a, b, msg) {
 function ok(v, msg) { if (!v) throw new Error(msg || 'expected truthy'); }
 function penrose() { return Q.priceHouse(Q.inputFromOrderModel(B.model, B.pricing)); }
 
-test('bid page: every cabinet with quantity, one agreed price, and no prices anywhere', function () {
+test('bid page: every cabinet with quantity, no SKU prices; totals break out labor, G&A, discount, and one tax line', function () {
   var p = BID.bidPage(penrose(), 1097311);
   eq(p.customer.rows.length, 18);
   eq(p.customer.rows[1], { description: 'Dark Hickory Shaker SM8', sku: 'SM8-VDH', qty: 5 });
   eq([p.customer.totalLabel, p.customer.totalCents], ['Agreed bid price', 1097311]);
-  var page = JSON.stringify(p.customer);
-  ok(!/Cents"|unit|cost|markup|8785|2188/i.test(page.replace('totalCents', '')), 'customer page has no prices or margin: ' + page.slice(0, 200));
+  eq(p.customer.totals, [
+    { label: 'Cabinets', cents: 742387 },
+    { label: 'Mfr. bulk discount', cents: -28835 },
+    { label: 'Assembly labor', cents: 64000 },
+    { label: 'G&A', cents: 38878 },
+    { label: 'Sales tax (cabinetry)', cents: 62079 }
+  ]);
+  var skuPage = JSON.stringify(p.customer.rows);
+  ok(!/unit|cost|markup|8785/i.test(skuPage), 'SKU rows have no prices: ' + skuPage.slice(0, 200));
 });
 
 test('bid page keeps the itemized price and the difference internally', function () {

@@ -111,14 +111,14 @@
       '<div class="p2-brand"><span class="fmp1-logo fmp1-logo--tagline" role="img" aria-label="Fremont Makers, making freedom"></span><span class="fmp1-faint p2-small">Project Builder</span></div>' +
       '<a class="p2-newbtn" href="#/new"' + (r.area === 'new' ? ' aria-current="page"' : '') + '><span aria-hidden="true">+</span> New project</a>' +
       '<nav class="p2-nav" aria-label="Projects"><h2>Projects</h2>' +
-        link('#/projects', 'All projects', r.area === 'projects' || r.area === 'job') + link('#/measure', 'Field measure', r.area === 'measure') + '</nav>' +
+        link('#/projects', 'All projects', r.area === 'projects' || r.area === 'job') + link('#/customers', 'Customers', r.area === 'customers') + link('#/measure', 'Field measure', r.area === 'measure') + '</nav>' +
       '<nav class="p2-nav" aria-label="Company books"><h2>Company books</h2>' +
         link('#/books/dashboard', 'Dashboard', r.area === 'books' && r.a === 'dashboard') +
         link('#/books/pipeline', 'Pipeline', r.a === 'pipeline') +
         link('#/books/deposits', 'Deposits due', r.a === 'deposits', overdue) +
         link('#/books/reconcile', 'Reconcile', r.a === 'reconcile', issues) +
         link('#/books/pnl', 'P&amp;L', r.a === 'pnl') +
-        link('#/books/balance', 'Balance sheet', r.a === 'balance') + '</nav>' +
+        link('#/books/balance', 'Balance sheet', r.a === 'balance') + link('#/books/exports', 'Reports &amp; exports', r.a === 'exports') + '</nav>' +
       '<nav class="p2-nav" aria-label="Company"><h2>Company</h2>' + link('#/users', 'Users', r.area === 'users') + '</nav>' +
       '<div class="p2-side-foot">' + FMTheme.toggleHTML(FMTheme.get(root)) +
         '<label class="p2-fld"><span>Signed in as</span><select class="fmp1-input" data-actor>' +
@@ -132,10 +132,12 @@
     if (r.area === 'projects') body = viewProjects();
     else if (r.area === 'job') body = viewJob(store.job(r.a), r.b || 'overview');
     else if (r.area === 'users') body = viewUsers();
+    else if (r.area === 'customers') body = window.P2Customers ? (r.a ? window.P2Customers.profile(ctx(), r.a) : window.P2Customers.list(ctx())) : '<p>Customers are loading…</p>';
     else if (r.area === 'measure') body = window.P2Measure ? (r.a ? window.P2Measure.page(ctx(), r.a) : window.P2Measure.list(ctx())) : '<p>Field measure is loading…</p>';
     else if (r.area === 'new') body = window.P2NewProject ? window.P2NewProject.render(ctx()) : '<p>New project is loading…</p>';
     else body = viewBooks(r.a || 'dashboard');
-    root.innerHTML = nav(r) + '<main class="p2-main" id="p2-main">' + body + viewerHTML() + '</main>';
+    var notLive = window.FM_CONFIG && window.FM_CONFIG.live ? '' : '<div class="p2-previewbar" role="note"><b>Preview, not the live tool.</b> Sample data, saved only in this browser: nothing here is shared with anyone, backed up, or sent. Don\'t enter real jobs until the server is connected.</div>';
+    root.innerHTML = nav(r) + '<main class="p2-main" id="p2-main">' + notLive + body + viewerHTML() + '</main>';
     root.classList.toggle('is-measure', r.area === 'measure');   // on a phone, field measure keeps the menu short
     var vc = root.querySelector('[data-close-viewer]'); if (vc) { vc.focus(); fitViewer(); }
     var f = root.querySelector('[data-autofocus]'); if (f && !vc) f.focus({ preventScroll: true });
@@ -195,7 +197,7 @@
       '<div class="fmp1-money"><div><span class="k">Contract</span><span class="v">' + $f(s.currentCents) + '</span>' + (s.changeOrderCount ? '<span class="p2-small fmp1-faint">incl. ' + s.changeOrderCount + ' change order' + (s.changeOrderCount > 1 ? 's' : '') + '</span>' : '') + '</div>' +
         '<div><span class="k">Paid</span><span class="v">' + $f(s.paidCents) + '</span></div><div><span class="k">Balance</span><span class="v">' + $f(s.balanceCents) + '</span></div>' +
         '<div><span class="k">Next due</span><span class="v">' + (nd ? $f(nd.amountCents - FM.invoicePaidCents(nd)) : '—') + '</span>' + (nd ? '<span class="p2-small fmp1-faint">' + esc(nd.label) + ' · ' + longDate(nd.dueDate) + '</span>' : '') + '</div></div>') +
-      '<div class="p2-row">' + acts + '<button class="fmp1-btn fmp1-btn--quiet" data-dup title="Start a new project from this one: customer, cabinets, pricing and drawings">Duplicate project</button></div>' +
+      '<div class="p2-row">' + acts + '<button class="fmp1-btn fmp1-btn--quiet" data-cutpljob title="Save the homes, cabinets and drawings of this project as a template on its customer">Save as template</button><button class="fmp1-btn fmp1-btn--quiet" data-dup title="Start a new project from this one: customer, cabinets, pricing and drawings">Duplicate project</button></div>' +
       (window.P2Flows && window.P2Flows.dupConfirm ? window.P2Flows.dupConfirm(ctx(), j) : '') + form + '</div>';
     var tabs = '<nav class="p2-tabs" aria-label="Project sections">' + Object.keys(TABS).map(function (k) {
       return '<a href="#/job/' + encodeURIComponent(j.jobCode) + '/' + k + '"' + (k === tab ? ' aria-current="page"' : '') + '>' + TABS[k] + '</a>';
@@ -354,6 +356,7 @@
     if (key === 'reconcile') return booksReconcile(jobs);
     if (key === 'pnl') return booksPnl(jobs);
     if (key === 'balance') return booksBalance(jobs);
+    if (key === 'exports') return window.P2Reports ? window.P2Reports.render(ctx()) : '<p>Reports are loading…</p>';
     return booksDashboard(jobs);
   }
   function jobLink(code, text) { return '<a href="#/job/' + encodeURIComponent(code) + '/overview">' + esc(text) + '</a>'; }
@@ -501,14 +504,51 @@
       ui.viewer = { title: 'Contract packet · ' + j.jobCode + ' · ' + j.customer, html: D.renderPacket(j, { today: TODAY, quotes: quotesFor(j), elevations: window.P2Elev ? window.P2Elev.docPages(ctx(), j) : '', agreementOnFile: (j.documents || []).some(function (d) { return d.kind === 'contract'; }) }), from: '[data-open-packet]' };
     } else if (kind === 'file') {
       var d = (j.documents || []).filter(function (x) { return x.file === key; })[0];
-      ui.viewer = { title: d.title + ' · ' + j.jobCode, from: '[data-open-file="' + key + '"]',
-        html: '<div class="fmp1-card p2-pad pv-filenote"><span class="fmp1-eyebrow">Signed original · ' + esc(d.kind) + '</span><b>' + esc(d.file) + '</b><span class="p2-small fmp1-muted">' + d.pages + ' pages · ' + (d.bytes / 1e6).toFixed(1) + ' MB · ' + esc(d.contains) + '</span>' +
-          '<span class="p2-small">SHA-256 <span class="fmp1-code">' + esc(d.sha256) + '</span></span><div class="fmp1-note fmp1-note--info p2-small">In the live tool, Open shows this stored PDF exactly as signed. The preview doesn\'t include the file.</div></div>' };
+      ui.viewer = { title: d.title + ' · ' + j.jobCode, from: '[data-open-file="' + key + '"]', stored: d.file, html: fileCard(d, '<div class="fmp1-note fmp1-note--info p2-small" role="status">Looking for the stored file…</div>') };
+      loadStored(d);
     }
+  }
+
+  /* ---------- stored originals (signed contracts, supplier orders) ----------
+     Until the server's file storage is in place (HANDOFF §22, item 4), Open looks for the PDF in a "files" folder next to this page
+     (FM_CONFIG.filesBase), under its exact name or a plain version of it, and shows it only if its SHA-256 matches the one recorded
+     when it was signed. Nothing is uploaded anywhere; the browser reads the file and checks it. */
+  var FILES = (window.FM_CONFIG && window.FM_CONFIG.filesBase) || 'files/';
+  function plainName(n) { return String(n).normalize('NFKD').replace(/[^\w.\-]+/g, '-').replace(/-+/g, '-').replace(/^-|-(?=\.pdf$)/gi, ''); }
+  function fileCard(d, note) {
+    return '<div class="fmp1-card p2-pad pv-filenote"><span class="fmp1-eyebrow">Signed original · ' + esc(d.kind) + '</span><b>' + esc(d.file) + '</b><span class="p2-small fmp1-muted">' + d.pages + ' pages · ' + (d.bytes / 1e6).toFixed(1) + ' MB · ' + esc(d.contains) + '</span>' +
+      '<span class="p2-small">SHA-256 <span class="fmp1-code">' + esc(d.sha256) + '</span></span>' + note + '</div>';
+  }
+  function hex(buf) { return Array.prototype.map.call(new Uint8Array(buf), function (b) { return ('0' + b.toString(16)).slice(-2); }).join(''); }
+  function loadStored(d) {
+    var tries = [d.file, plainName(d.file)].filter(function (n, i, a) { return a.indexOf(n) === i; });
+    function still() { return ui.viewer && ui.viewer.stored === d.file; }
+    function show(html, url) { if (!still()) { if (url) URL.revokeObjectURL(url); return; } ui.viewer.html = html; ui.viewer.pdfUrl = url || null; render(); }
+    function missing() {
+      show(fileCard(d, '<div class="fmp1-note fmp1-note--info p2-small"><span>The stored file isn\'t here yet. Put it in the <b>' + esc(FILES) + '</b> folder next to this page, named <span class="fmp1-code">' + esc(d.file) + '</span>' +
+        (tries[1] ? ' or <span class="fmp1-code">' + esc(tries[1]) + '</span>' : '') + ', and Open shows it after checking it\'s the signed copy. In the live tool it comes from the server\'s file storage.</span></div>'));
+    }
+    (function next(i) {
+      if (i >= tries.length) return missing();
+      fetch(FILES + encodeURIComponent(tries[i]), { cache: 'no-store' }).then(function (r) {
+        if (!r.ok) return next(i + 1);
+        return r.arrayBuffer().then(function (buf) {
+          var url = URL.createObjectURL(new Blob([buf], { type: 'application/pdf' }));
+          var frame = '<iframe class="pv-pdf" src="' + url + '" title="' + esc(d.title) + '"></iframe><p class="p2-small fmp1-faint" style="margin:6px 0 0">PDF not showing? Use <b>Open in a new tab</b> or <b>Download</b> above.</p>';
+          if (!(window.crypto && window.crypto.subtle)) return show('<div class="fmp1-note fmp1-note--alert p2-small"><span>This page isn\'t on https, so the browser can\'t check the file\'s fingerprint. Showing it unchecked.</span></div>' + frame, url);
+          return window.crypto.subtle.digest('SHA-256', buf).then(function (h) {
+            if (hex(h) === String(d.sha256).toLowerCase()) return show('<div class="fmp1-card p2-pad pv-pdfwrap"><p class="p2-small pv-pdfok">✓ Same file as the signed original (SHA-256 matches). ' + esc(tries[i]) + ' · ' + (buf.byteLength / 1e6).toFixed(1) + ' MB</p>' + frame + '</div>', url);
+            URL.revokeObjectURL(url);
+            show(fileCard(d, '<div class="fmp1-note fmp1-note--alert p2-small" role="alert"><span><b>This isn\'t the signed copy.</b> A file named ' + esc(tries[i]) + ' is in the files folder, but its fingerprint is ' + esc(hex(h).slice(0, 16)) + '…, not the one recorded at signing. It isn\'t shown. Replace it with the original.</span></div>'));
+          });
+        });
+      }).catch(function () { next(i + 1); });
+    })(0);
   }
   function viewerHTML() {
     var v = ui.viewer; if (!v) return '';
-    return '<div class="pv-viewer" role="dialog" aria-modal="true" aria-labelledby="pv-viewer-title"><div class="pv-viewer-bar"><b id="pv-viewer-title">' + esc(v.title) + '</b><span class="p2-row"><button class="fmp1-btn" data-print>Print or save PDF</button>' + (v.printBlocked ? '<button class="fmp1-btn fmp1-btn--primary" data-printdl>Download to print</button>' : '') + '<button class="fmp1-btn' + (v.printBlocked ? '' : ' fmp1-btn--primary') + '" data-close-viewer>Close</button></span>' +
+    var tools = v.stored ? (v.pdfUrl ? '<a class="fmp1-btn" href="' + v.pdfUrl + '" target="_blank" rel="noopener">Open in a new tab</a><a class="fmp1-btn" href="' + v.pdfUrl + '" download="' + esc(v.stored) + '">Download</a>' : '') : '<button class="fmp1-btn" data-print>Print or save PDF</button>';
+    return '<div class="pv-viewer" role="dialog" aria-modal="true" aria-labelledby="pv-viewer-title"><div class="pv-viewer-bar"><b id="pv-viewer-title">' + esc(v.title) + '</b><span class="p2-row">' + tools + (v.printBlocked ? '<button class="fmp1-btn fmp1-btn--primary" data-printdl>Download to print</button>' : '') + '<button class="fmp1-btn' + (v.printBlocked ? '' : ' fmp1-btn--primary') + '" data-close-viewer>Close</button></span>' +
       (v.printBlocked ? '<p class="p2-small" role="status" style="flex-basis:100%;margin:0">' + esc(v.printBlocked) + '</p>' : '') + '</div><div class="pv-viewer-body">' + v.html + '</div></div>';
   }
   /* Print the open document. Some hosts (the claude.ai preview frame) block the print window; then offer the pages as one file
@@ -579,7 +619,7 @@
     if (t.dataset.openInv && j) { openDoc('inv', t.dataset.openInv, j); return render(); }
     if (t.hasAttribute('data-open-packet') && j) { openDoc('packet', null, j); return render(); }
     if (t.dataset.openFile && j) { openDoc('file', t.dataset.openFile, j); return render(); }
-    if (t.hasAttribute('data-close-viewer')) { var back = ui.viewer && ui.viewer.from; ui.viewer = null; render(); var bk = back && root.querySelector(back); if (bk) bk.focus(); return; }
+    if (t.hasAttribute('data-close-viewer')) { var back = ui.viewer && ui.viewer.from; if (ui.viewer && ui.viewer.pdfUrl) URL.revokeObjectURL(ui.viewer.pdfUrl); ui.viewer = null; render(); var bk = back && root.querySelector(back); if (bk) bk.focus(); return; }
     if (t.hasAttribute('data-print')) { printViewer(); return; }
     if (t.hasAttribute('data-printdl')) { downloadViewer(); return; }
     if (t.dataset.gopay) { ui.pendingPay = { inv: t.dataset.inv }; ui.paidNote = null; return go('#/job/' + encodeURIComponent(t.dataset.gopay) + '/invoices'); }
@@ -605,6 +645,8 @@
       ui.act = null; return render();
     }
     if (t.dataset.useradd != null || t.dataset.userrm) return usersClick(t);
+    if (window.P2Reports && window.P2Reports.click(ctx(), t)) return;
+    if (window.P2Customers && window.P2Customers.click(ctx(), t, j)) return;
     if (window.P2Measure && window.P2Measure.click(ctx(), t, e)) return;
     if (window.P2Measure && j && window.P2Measure.jobClick(ctx(), t, j)) return;
     if (window.P2Elev && window.P2Elev.click(ctx(), t, e)) return;
@@ -612,12 +654,15 @@
   });
   root.addEventListener('input', function (e) {
     if (e.target.hasAttribute('data-q')) { ui.q = e.target.value; var pos = e.target.selectionStart; render(); var s = root.querySelector('[data-q]'); s.focus(); s.setSelectionRange(pos, pos); }
+    if (window.P2Customers && window.P2Customers.input(ctx(), e)) return;
     if (window.P2Elev && window.P2Elev.input(ctx(), e)) return;
     if (window.P2Flows && window.P2Flows.input) window.P2Flows.input(ctx(), e);
   });
   root.addEventListener('change', function (e) {
     if (e.target.hasAttribute('data-actor')) { ui.actor = e.target.value; try { window.localStorage.setItem('fm_phase2_actor', ui.actor); } catch (x) { /* ignore */ } return render(); }
     if (e.target.dataset.userf) return usersChange(e.target);
+    if (window.P2Reports && window.P2Reports.change(ctx(), e)) return;
+    if (window.P2Customers && window.P2Customers.change(ctx(), e)) return;
     if (window.P2Measure && window.P2Measure.change(ctx(), e)) return;
     if (window.P2Elev && window.P2Elev.change(ctx(), e)) return;
     if (window.P2Flows && window.P2Flows.change) window.P2Flows.change(ctx(), e);
