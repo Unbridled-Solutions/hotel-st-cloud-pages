@@ -367,8 +367,13 @@
     var kpis = '<div class="p2-kpis">' + d.kpis.map(function (k) {
       return '<div class="fmp1-card p2-kpi"><span class="k">' + esc(k.label) + '</span><span class="v">' + (k.pct !== undefined ? k.pct + '%' : $f(k.cents)) + '</span>' + (k.note ? '<span class="p2-small fmp1-faint">' + esc(k.note) + '</span>' : '') + '</div>';
     }).join('') + '</div>';
-    var att = d.attention.length ? '<ul class="p2-list">' + d.attention.map(function (a) {
-      return '<li style="justify-content:flex-start"><span class="p2-dot' + (a.tone === 'alert' ? ' alert' : '') + '" aria-hidden="true"></span><span>' + jobLink(a.jobCode, a.text) + '</span></li>'; }).join('') + '</ul>' : '<p class="p2-ok">Nothing needs attention.</p>';
+    // a task list: status label, what and who, the amount, and one button that goes where it gets fixed (no sentences as links)
+    var att = d.attention.length ? '<ul class="p2-tasks">' + d.attention.map(function (a) {
+      var href = '#/job/' + encodeURIComponent(a.jobCode) + '/' + (a.tab || 'overview');
+      return '<li class="p2-task is-' + (a.tone === 'alert' ? 'alert' : 'check') + '"><span class="p2-task-status">' + esc(a.status || (a.tone === 'alert' ? 'Overdue' : 'Check')) + '</span>' +
+        '<span class="p2-task-main"><b>' + esc(a.title || a.text) + '</b><span class="p2-task-who">' + esc(a.customer || '') + (a.jobCode ? ' · ' + esc(a.jobCode) : '') + '</span>' + (a.detail ? '<span class="p2-task-detail">' + esc(a.detail) + '</span>' : '') + '</span>' +
+        (a.amountCents ? '<span class="p2-task-amt">' + $f(a.amountCents) + '</span>' : '<span></span>') +
+        '<a class="fmp1-btn fmp1-btn--primary p2-task-btn" href="' + href + '">' + esc(a.action || 'Open') + '</a></li>'; }).join('') + '</ul>' : '<p class="p2-ok">Nothing needs attention.</p>';
     var del = d.deliveries.length ? '<ul class="p2-list">' + d.deliveries.map(function (x) {
       return '<li><span>' + jobLink(x.jobCode, x.customer) + '<br><span class="fmp1-faint p2-small">' + esc(x.project || '') + '</span></span><span class="r">' + longDate(x.deliveryDate) + '<br><span class="p2-small fmp1-faint">' + $f(x.balanceCents) + ' still owed</span></span></li>'; }).join('') + '</ul>' : '<p class="p2-empty">No deliveries in the next 30 days.</p>';
     return head('Dashboard', 'Money in, money owed, and what needs doing. Sample data as of ' + longDate(TODAY) + '.') + kpis +

@@ -1,6 +1,6 @@
 # Hermes: launch guide for the Project Builder (Phase 1 + 2)
 
-**From:** Fremont Makers (Linds) via Claude · **Date:** 2026-10-29 · **Package:** `fm-project-builder-phase1.zip`, version **2.7.1**
+**From:** Fremont Makers (Linds) via Claude · **Date:** 2026-10-29 · **Package:** `fm-project-builder-phase1.zip`, version **2.7.2**
 
 **Nothing is live yet.** Phase 1 and Phase 2 launch together as one new Project Builder that runs **beside** the existing tool at tools.fremontmakers.com. This guide is the order of work; `HANDOFF.md` has the detail (section numbers below, §).
 

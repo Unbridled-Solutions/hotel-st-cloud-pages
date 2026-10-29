@@ -88,6 +88,7 @@ test('dashboard: key numbers, to-dos and upcoming deliveries', function () {
   eq(k, { contractedYtd: 1200000, collected30: 0, receivable: 700000, due14: 200000, quoted: 400000, margin: 53.2 });
   eq(d.attention.length, 4);
   ok(/A prog is 8 days overdue/.test(d.attention[0].text), d.attention[0].text);
+  eq([d.attention[0].kind, d.attention[0].status, d.attention[0].title, d.attention[0].action, d.attention[0].tab], ['overdue', 'Overdue', 'Invoice overdue', 'Record payment', 'invoices']);
   eq(d.deliveries, [{ jobCode: 'A', customer: 'Alpha', project: 'A1', deliveryDate: '2026-11-09', balanceCents: 500000 }]);
 });
 

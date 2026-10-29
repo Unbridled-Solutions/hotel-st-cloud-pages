@@ -128,6 +128,7 @@
   }
 
   /* ---------- reconcile ---------- */
+  function longDay(iso) { var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][+m[2] - 1] + ' ' + (+m[3]) + ', ' + m[1] : (iso || ''); }
   function reconcile(jobs) {
     var rows = jobs.filter(isContracted).map(function (j) {
       var inv = live(j), invoiced = sum(inv.map(function (i) { return i.amountCents; })), got = sum(inv.map(paid)), issues = [];
@@ -136,7 +137,7 @@
       inv.forEach(function (i) {
         if (paid(i) > i.amountCents) issues.push({ kind: 'overpaid', cents: paid(i) - i.amountCents, text: i.label + ' was overpaid by ' + money(paid(i) - i.amountCents) + '.' });
         (i.payments || []).forEach(function (p) {
-          if ((p.method === 'check' || p.method === 'unknown') && !p.reference) issues.push({ kind: 'reference', cents: p.amountCents, text: i.label + ': payment of ' + money(p.amountCents) + ' on ' + p.date + ' has no check number.' });
+          if ((p.method === 'check' || p.method === 'unknown') && !p.reference) issues.push({ kind: 'reference', cents: p.amountCents, text: i.label + ': payment of ' + money(p.amountCents) + ' on ' + longDay(p.date) + ' has no check number.' });
         });
       });
       if (j.costCents == null) issues.push({ kind: 'cost', cents: 0, text: 'No supplier cost on file, so profit can\'t be checked.' });
@@ -194,9 +195,23 @@
     var due = depositsDue(jobs, today), bs = balanceSheet(jobs, today), pipe = pipeline(jobs, today), rec = reconcile(jobs);
     var next14 = sum(due.groups[1].items.concat(due.groups[2].items).filter(function (x) { return x.daysUntil <= 14; }).map(function (x) { return x.outstandingCents; }));
     var attention = [];
-    due.groups[0].items.forEach(function (x) { attention.push({ tone: 'alert', jobCode: x.jobCode, text: x.customer + ': ' + x.label + ' is ' + (-x.daysUntil) + (x.daysUntil === -1 ? ' day' : ' days') + ' overdue (' + money(x.outstandingCents) + ').' }); });
-    due.factoryHolds.forEach(function (x) { attention.push({ tone: 'alert', jobCode: x.jobCode, text: x.customer + ': factory order waits on the deposit (' + money(x.outstandingCents) + ').' }); });
-    rec.rows.forEach(function (r) { r.issues.forEach(function (i) { if (i.kind !== 'cost') attention.push({ tone: 'info', jobCode: r.jobCode, text: r.customer + ': ' + i.text }); }); });
+    /* Each item is a task: a status label, a short title, what it's about, the amount, and one action that goes where it's fixed.
+       `text` keeps the one-line sentence for anything that still reads it. */
+    var ACT = {
+      overdue:   { status: 'Overdue', title: 'Invoice overdue', action: 'Record payment', tab: 'invoices' },
+      deposit:   { status: 'Waiting', title: 'Deposit needed before the factory order', action: 'Collect deposit', tab: 'invoices' },
+      invoices:  { status: 'Check', title: 'Invoices don\'t match the contract', action: 'Review invoices', tab: 'invoices' },
+      overpaid:  { status: 'Check', title: 'Invoice overpaid', action: 'Review payments', tab: 'invoices' },
+      reference: { status: 'Check', title: 'Check number missing', action: 'Add check number', tab: 'invoices' },
+      balance:   { status: 'Check', title: 'Finished job still owes money', action: 'Review payments', tab: 'invoices' }
+    };
+    function task(kind, tone, x, detail, cents, text) {
+      var a = ACT[kind]; attention.push({ kind: kind, tone: tone, jobCode: x.jobCode, customer: x.customer, project: x.project || '', status: a.status, title: a.title, detail: detail, amountCents: cents, action: a.action, tab: a.tab, text: text });
+    }
+    due.groups[0].items.forEach(function (x) { var late = -x.daysUntil + (x.daysUntil === -1 ? ' day' : ' days');
+      task('overdue', 'alert', x, x.label + ' · ' + late + ' late', x.outstandingCents, x.customer + ': ' + x.label + ' is ' + late + ' overdue (' + money(x.outstandingCents) + ').'); });
+    due.factoryHolds.forEach(function (x) { task('deposit', 'alert', x, 'The factory order can\'t be placed until the deposit is in.', x.outstandingCents, x.customer + ': factory order waits on the deposit (' + money(x.outstandingCents) + ').'); });
+    rec.rows.forEach(function (r) { r.issues.forEach(function (i) { if (i.kind !== 'cost' && ACT[i.kind]) task(i.kind, 'info', r, i.text, i.cents, r.customer + ': ' + i.text); }); });
     var deliveries = jobs.filter(function (j) { return isContracted(j) && j.deliveryDate && days(today, j.deliveryDate) >= 0 && days(today, j.deliveryDate) <= 30; })
       .map(function (j) { return { jobCode: j.jobCode, customer: j.customer, project: j.project, deliveryDate: j.deliveryDate, balanceCents: sum(live(j).map(open)) }; })
       .sort(function (a, b) { return a.deliveryDate < b.deliveryDate ? -1 : 1; });

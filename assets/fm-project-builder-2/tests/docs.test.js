@@ -85,17 +85,12 @@ test('a builder-order packet is titled with the customer; long titles get the sm
   has(p, 'doc-title doc-title--long'); has(p, '<h1>Penrose Lot 14 with the long name &amp; garage</h1>'); hasNot(p, '&amp;amp;');
 });
 
-test('a bid-priced quote prints quantities, one tax line, and labor / G&A / mfr discount — no SKU prices', function () {
+test('a bid-priced quote prints quantities and one agreed price, and no cost or line prices', function () {
   var priced = Q.priceHouse(Q.inputFromOrderModel(B.model, B.pricing));
   var html = D.renderBidQuoteDoc(priced, 1097311, { house: 'Penrose' });
   eq(count(html, '<td class="sku">'), 18);
   has(html, 'Agreed bid price</td><td class="r">$10,973.11');
-  has(html, 'Mfr. bulk discount');
-  has(html, 'Assembly labor');
-  has(html, 'G&amp;A');
-  has(html, 'Sales tax (cabinetry)');
-  hasNot(html, 'cost');
-  hasNot(html, 'markup');
+  eq((html.match(/\$[0-9,]+\.\d\d/g) || []), ['$10,973.11']);
 });
 
 console.log('docs.test.js\n' + results.join('\n'));

@@ -1,6 +1,6 @@
 # Handoff to Hermes: Project Builder Phase 1 + 2
 
-**From:** Fremont Makers (Linds) via Claude · **Date:** 2026-10-29 · **Package version:** 2.7.1
+**From:** Fremont Makers (Linds) via Claude · **Date:** 2026-10-29 · **Package version:** 2.7.2
 
 > **Start here: `HERMES-LAUNCH.md`.** Nothing is live yet (owner, Oct 28): Phase 1 and Phase 2 launch together, beside the existing tool. The launch guide lists the order of work.
 >
@@ -991,3 +991,13 @@ The owner put `phase2.html` on the site (Oct 29). It ran as the preview, with sa
 - **Keep the `files` folder out of public reach.** These are signed customer documents. Until staff sign-in exists, put the hosted preview and its `files` folder behind the site's password protection, or take them down.
 - **Paper / Dark toggle** in the sidebar: the two halves now fill the box (no empty strip beside Dark).
 - **Hermes:** at launch, Open reads the same files from server storage (keep the SHA-256 check), and `FM_CONFIG.live` becomes `true`. Remove the `files` folder from the web root.
+
+---
+
+## 27. Needs attention as task rows; link styling (2.7.2)
+
+Owner, Oct 29: the Dashboard's "Needs attention" items were whole sentences styled as links, in the browser's visited purple. They now follow the pattern business tools use for things to do (Shopify Home's to-do list, "action required" lists): one row per task, with the action as a button, not a link.
+- **Each row** has a status label (Overdue, Waiting, Check), a short title ("Invoice overdue", "Deposit needed before the factory order", "Invoices don't match the contract", "Invoice overpaid", "Check number missing", "Finished job still owes money"), the customer and job code, one line of detail, the amount, and one button that goes where it gets fixed ("Record payment", "Collect deposit", "Review invoices", "Add check number", "Review payments"; each opens the job's Invoices tab). Every action button has the same filled style (owner, Oct 29).
+- **On a phone**, the label sits above the title, and the amount and button share the last line.
+- `FMBooks.dashboard().attention[]` items now carry `kind`, `status`, `title`, `customer`, `detail`, `amountCents`, `action` and `tab`, besides the old `text`. Dates in the detail read "Sep 16, 2026".
+- **Links across the app** use the ink color with a soft underline (stronger on hover), never browser blue or visited purple. Buttons drawn as links have no underline, and the sidebar and tabs have none.
