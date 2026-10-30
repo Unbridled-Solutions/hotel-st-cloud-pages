@@ -147,10 +147,13 @@
   }
 
   /* ---------- All projects ---------- */
-  var FILTERS = { all: 'All', quote: 'Open quotes', active: 'In progress', complete: 'Complete', lost: 'Lost' };
+  var FILTERS = { all: 'All', quote: 'Open quotes', active: 'In progress', complete: 'Complete', lost: 'Lost', void: 'Test / void' };
+  /* the stage pill, or "Test / void" for a project that's left out of everything */
+  function jobPill(j) { return j.testVoid ? '<span class="fmp1-pill p2-pill-void">Test / void</span>' : stagePill(j.stage); }
   function viewProjects() {
-    var q = ui.q.toLowerCase();
-    var rows = store.jobs().filter(function (j) {
+    var q = ui.q.toLowerCase(), nVoid = store.jobs({ all: true }).filter(function (j) { return j.testVoid; }).length;
+    var rows = store.jobs(ui.filter === 'void' ? { all: true } : null).filter(function (j) {
+      if (ui.filter === 'void') return j.testVoid && (!q || (j.jobCode + ' ' + j.customer + ' ' + j.projectName).toLowerCase().indexOf(q) >= 0);
       var f = ui.filter, ok = f === 'all' || (f === 'quote' && j.stage === 'quote') || (f === 'lost' && j.stage === 'lost') ||
         (f === 'complete' && j.stage === 'complete') || (f === 'active' && ['quote', 'lost', 'complete'].indexOf(j.stage) < 0);
       return ok && (!q || (j.jobCode + ' ' + j.customer + ' ' + j.projectName).toLowerCase().indexOf(q) >= 0);
@@ -158,15 +161,15 @@
       var s = FM.contractSummary(j), houses = j.houses && j.houses.length > 1, open = ui.open[j.jobCode];
       var row = '<tr><td><span class="fmp1-code">' + esc(j.jobCode) + '</span></td><td><b>' + esc(j.customer) + '</b><br><span class="fmp1-faint p2-small">' + esc(houses ? j.houses.length + ' houses · builder order' : (j.projectName || '—')) + '</span>' +
         (houses ? '<br><button class="p2-tog" data-houses="' + esc(j.jobCode) + '" aria-expanded="' + !!open + '">' + (open ? '▾ Hide houses' : '▸ Show houses') + '</button>' : '') + '</td>' +
-        '<td>' + stagePill(j.stage) + '</td><td class="r">' + $f(s.currentCents) + '</td><td class="r">' + (j.stage === 'quote' || j.stage === 'lost' ? '—' : $f(balance(j))) + '</td>' +
-        '<td class="p2-small">' + esc(nextStep(j)) + '</td><td class="r p2-act"><a class="fmp1-btn" href="#/job/' + encodeURIComponent(j.jobCode) + '/overview">Open</a></td></tr>';
+        '<td>' + jobPill(j) + '</td><td class="r">' + $f(s.currentCents) + '</td><td class="r">' + (j.stage === 'quote' || j.stage === 'lost' || j.testVoid ? '—' : $f(balance(j))) + '</td>' +
+        '<td class="p2-small">' + esc(j.testVoid ? 'Not counted: ' + j.testVoid.reason : nextStep(j)) + '</td><td class="r p2-act"><a class="fmp1-btn" href="#/job/' + encodeURIComponent(j.jobCode) + '/overview">Open</a></td></tr>';
       if (houses && open) row += j.houses.map(function (h) { return '<tr class="p2-houses"><td class="fmp1-code">' + esc(h.jobCode) + '</td><td colspan="2">' + esc(h.name) + ' · ' + esc(h.color) + '</td><td class="r">' + $f(h.totalCents) + '</td><td colspan="3"></td></tr>'; }).join('');
       return row;
     }).join('');
     return '<div class="p2-between"><div><h1 class="fmp1-h p2-h1">All projects</h1><p class="p2-sub">Every job, its stage, what\'s owed and the next step. Builder orders keep their houses folded inside the job.</p></div>' +
       '<a class="fmp1-btn fmp1-btn--primary" href="#/new">New project</a></div>' +
       '<div class="p2-row"><input class="fmp1-input p2-search" type="search" placeholder="Search customer, project or job code" aria-label="Search projects" data-q value="' + esc(ui.q) + '">' +
-      '<div class="p2-chips" role="group" aria-label="Filter">' + Object.keys(FILTERS).map(function (k) { return '<button class="fmp1-btn" data-filter="' + k + '" aria-pressed="' + (ui.filter === k) + '">' + FILTERS[k] + '</button>'; }).join('') + '</div></div>' +
+      '<div class="p2-chips" role="group" aria-label="Filter">' + Object.keys(FILTERS).filter(function (k) { return k !== 'void' || nVoid || ui.filter === 'void'; }).map(function (k) { return '<button class="fmp1-btn" data-filter="' + k + '" aria-pressed="' + (ui.filter === k) + '">' + FILTERS[k] + (k === 'void' ? ' · ' + nVoid : '') + '</button>'; }).join('') + '</div></div>' +
       '<div class="fmp1-card fmp1-table-wrap"><table class="fmp1-table p2-table"><thead><tr><th>Job</th><th>Customer</th><th>Stage</th><th class="r">Contract</th><th class="r">Balance</th><th>Next step</th><th><span class="fmp1-faint">Open</span></th></tr></thead><tbody>' +
       (rows || '<tr><td colspan="7" class="p2-empty">No projects match.</td></tr>') + '</tbody></table></div>';
   }
@@ -192,14 +195,14 @@
         (ui.act.error ? '<span class="p2-small" role="alert" style="color:var(--fmp1-alert-ink)">' + esc(ui.act.error) + '</span>' : '') + '</div>';
     }
     var head = '<div class="fmp1-card p2-jobhead"><div class="p2-between"><div><span class="fmp1-code">' + esc(j.jobCode) + '</span><h1 class="fmp1-h p2-h1">' + esc(j.customer) + '</h1>' +
-      '<span class="fmp1-muted">' + esc(j.projectName || '') + (j.quoteDate ? ' · quoted ' + longDate(j.quoteDate) : '') + (j.deliveryDate ? ' · delivery ' + longDate(j.deliveryDate) + ' (estimate)' : '') + '</span></div>' + stagePill(j.stage) + '</div>' +
+      '<span class="fmp1-muted">' + esc(j.projectName || '') + (j.quoteDate ? ' · quoted ' + longDate(j.quoteDate) : '') + (j.deliveryDate ? ' · delivery ' + longDate(j.deliveryDate) + ' (estimate)' : '') + '</span></div>' + jobPill(j) + '</div>' + voidBanner(j) +
       (j.stage !== 'lost' ? stages : '') +
       (j.stage === 'quote' || j.stage === 'lost' ? '<div class="fmp1-money"><div><span class="k">' + (j.stage === 'lost' ? 'Quoted (lost)' : 'Quote total') + '</span><span class="v">' + $f(s.currentCents) + '</span></div></div>' :
       '<div class="fmp1-money"><div><span class="k">Contract</span><span class="v">' + $f(s.currentCents) + '</span>' + (s.changeOrderCount ? '<span class="p2-small fmp1-faint">incl. ' + s.changeOrderCount + ' change order' + (s.changeOrderCount > 1 ? 's' : '') + '</span>' : '') + '</div>' +
         '<div><span class="k">Paid</span><span class="v">' + $f(s.paidCents) + '</span></div><div><span class="k">Balance</span><span class="v">' + $f(s.balanceCents) + '</span></div>' +
         '<div><span class="k">Next due</span><span class="v">' + (nd ? $f(nd.amountCents - FM.invoicePaidCents(nd)) : '—') + '</span>' + (nd ? '<span class="p2-small fmp1-faint">' + esc(nd.label) + ' · ' + longDate(nd.dueDate) + '</span>' : '') + '</div></div>') +
-      '<div class="p2-row">' + acts + '<button class="fmp1-btn fmp1-btn--quiet" data-cutpljob title="Save the homes, cabinets and drawings of this project as a template on its customer">Save as template</button><button class="fmp1-btn fmp1-btn--quiet" data-dup title="Start a new project from this one: customer, cabinets, pricing and drawings">Duplicate project</button></div>' +
-      (window.P2Flows && window.P2Flows.dupConfirm ? window.P2Flows.dupConfirm(ctx(), j) : '') + form + '</div>';
+      '<div class="p2-row">' + acts + '<button class="fmp1-btn fmp1-btn--quiet" data-cutpljob title="Save the homes, cabinets and drawings of this project as a template on its customer">Save as template</button><button class="fmp1-btn fmp1-btn--quiet" data-dup title="Start a new project from this one: customer, cabinets, pricing and drawings">Duplicate project</button>' + (me().access === 'full' && !j.testVoid ? '<button class="fmp1-btn fmp1-btn--quiet" data-tv title="For test projects and mistakes: left out of every total and list. Can be restored.">Mark Test / Void</button>' : '') + '</div>' +
+      (window.P2Flows && window.P2Flows.dupConfirm ? window.P2Flows.dupConfirm(ctx(), j) : '') + form + voidForm(j) + '</div>';
     var tabs = '<nav class="p2-tabs" aria-label="Project sections">' + Object.keys(TABS).map(function (k) {
       return '<a href="#/job/' + encodeURIComponent(j.jobCode) + '/' + k + '"' + (k === tab ? ' aria-current="page"' : '') + '>' + TABS[k] + '</a>';
     }).join('') + '</nav>';
@@ -207,6 +210,22 @@
     return head + tabs + bodyFn(j);
   }
 
+  /* ---------- Test / Void (HANDOFF §29): Full access only; the project leaves every total, list and report ---------- */
+  function voidBanner(j) {
+    if (!j.testVoid) return '';
+    var v = j.testVoid;
+    return '<div class="fmp1-note fmp1-note--info p2-small p2-between" role="status" style="align-items:center;margin-top:10px"><span><b>Test / void.</b> Marked by ' + esc(v.by) + ' on ' + longDate(v.on) + ': ' + esc(v.reason) +
+      '. Not counted in any total, list, report or export. It\'s kept here so nothing is lost.</span>' + (me().access === 'full' ? '<button class="fmp1-btn" data-tvrestore>Restore</button>' : '') + '</div>';
+  }
+  function voidForm(j) {
+    if (!ui.tv || ui.tv.job !== j.jobCode || j.testVoid) return '';
+    var paid = j.invoices.reduce(function (t, i) { return t + FM.invoicePaidCents(i); }, 0);
+    return '<div class="p2-form"><b>Mark as Test / Void</b><label class="p2-fld" style="min-width:260px"><span>Why</span><input class="fmp1-input" data-tvreason placeholder="" data-autofocus></label>' +
+      '<button class="fmp1-btn fmp1-btn--primary" data-tvsave>Mark Test / Void</button><button class="fmp1-btn fmp1-btn--quiet" data-tvcancel>Cancel</button>' +
+      '<span class="p2-small fmp1-faint" style="flex-basis:100%">It leaves every total, list, report and export. You can restore it any time.' + (paid ? ' Its ' + $f(paid) + ' of recorded payments will stop counting too.' : '') +
+      (j.stage !== 'quote' && j.stage !== 'lost' ? ' To cancel a signed contract, void the contract instead; that\'s separate.' : '') + '</span>' +
+      (ui.tv.error ? '<span class="p2-small" role="alert" style="color:var(--fmp1-alert-ink)">' + esc(ui.tv.error) + '</span>' : '') + '</div>';
+  }
   function tabOverview(j) {
     var warn = FM.jobWarnings(j).filter(function (w) { return !((j.stage === 'quote' || j.stage === 'lost') && w.key === 'billing'); }).map(function (w) { return '<li><span>' + esc(w.text) + '</span></li>'; }).join('');
     var p = j.pricing;
@@ -260,7 +279,7 @@
   }
   function tabElevations(j) { return window.P2Elev ? window.P2Elev.tab(ctx(), j) : '<div class="fmp1-card p2-pad"><p class="p2-empty">Elevations are loading…</p></div>'; }
   function tabContract(j) {
-    if (window.P2Flows && window.P2Flows.contract) return (window.P2Elev ? window.P2Elev.contractNote(ctx(), j) : '') + window.P2Flows.contract(ctx(), j);
+    if (window.P2Flows && window.P2Flows.contract) return window.P2Flows.contract(ctx(), j);
     return '<div class="fmp1-card p2-pad"><p class="p2-empty">Contract is loading…</p></div>';
   }
 
@@ -284,7 +303,56 @@
       '<div class="fmp1-table-wrap"><table class="fmp1-table p2-table p2-invtable"><thead><tr><th>Invoice</th><th>Status</th><th class="r">Share</th><th class="r">Amount</th><th>Payments</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
       (s.invoicesMatchContract ? '<div class="fmp1-note fmp1-note--good p2-small">✓ Invoices add up to the contract total of ' + $f(s.currentCents) + '.</div>'
         : '<div class="fmp1-note fmp1-note--alert p2-small">Invoices total ' + $f(s.invoicedCents) + '; the contract is ' + $f(s.currentCents) + '.</div>') +
-      docRows(j, { kind: '__none', packetSub: 'All invoices together, with the payment schedule and quote' }) + '</div>';
+      schedPanel(j) + docRows(j, { kind: '__none', packetSub: 'All invoices together, with the payment schedule and quote' }) + '</div>';
+  }
+  /* ---------- Adjust the payment schedule after signing (HANDOFF §29, FMSchedule) ---------- */
+  function schedPanel(j) {
+    var SC = window.FMSchedule; if (!SC || j.stage === 'quote' || j.stage === 'lost' || j.testVoid) return '';
+    var revs = j.scheduleRevisions || [], last = revs[revs.length - 1];
+    var note = last ? '<p class="p2-small fmp1-faint" style="margin:6px 0 0">Schedule revised ' + longDate(last.on) + ' by ' + esc(last.by) + ' (asked by ' + esc(last.askedName) + '): ' + esc(last.reason) + '.</p>' : '';
+    if (!ui.sched || ui.sched.job !== j.jobCode) return '<div class="p2-row" style="margin-top:10px"><button class="fmp1-btn" data-schedopen>Adjust schedule</button><span class="p2-small fmp1-faint">Move a due date, move money between invoices, or split one. Paid invoices and change-order invoices stay as they are.</span></div>' + note;
+    var S = ui.sched, chk = SC.check(j, S.draft, { today: TODAY });
+    var rows = S.draft.map(function (r, i) {
+      var locked = r.paidCents > 0, dis = locked ? ' disabled' : '';
+      return '<tr><td>' + (r.id ? esc(r.label) + (locked ? ' <span class="fmp1-pill fmp1-pill--good">paid · locked</span>' : '') : '<input class="fmp1-input p2-lbl" data-schedf="' + i + ':label" value="' + esc(r.label) + '" aria-label="Name of the new invoice">') + '</td>' +
+        '<td><input class="fmp1-input" type="date" data-schedf="' + i + ':dueDate" value="' + esc(r.dueDate || '') + '" aria-label="Due date"' + dis + '></td>' +
+        '<td class="r"><input class="fmp1-input p2-amt" inputmode="decimal" data-schedf="' + i + ':amount" value="' + (r.amountCents / 100).toFixed(2) + '" aria-label="Amount"' + dis + '></td>' +
+        '<td class="r p2-act">' + (locked ? '' : '<button class="fmp1-btn fmp1-btn--quiet" data-schedsplit="' + i + '">Split</button>' + (S.draft.length > 1 ? '<button class="fmp1-btn fmp1-btn--quiet" data-schedrm="' + i + '">Remove</button>' : '')) + '</td></tr>';
+    }).join('');
+    var bal = chk.draftCents === chk.totalCents ? '<b class="p2-ok">✓ Adds up to ' + $f(chk.totalCents) + '</b>' : '<b style="color:var(--fmp1-alert-ink)">Adds up to ' + $f(chk.draftCents) + ' of ' + $f(chk.totalCents) + '</b>';
+    var errs = S.errors && S.errors.length ? '<div class="fmp1-note fmp1-note--alert p2-small" role="alert"><ul class="p2-errs">' + S.errors.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>' : '';
+    return '<div class="fmp1-card p2-pad" style="margin-top:12px" data-schedform><div class="p2-between"><b>Adjust the payment schedule</b><span class="p2-small fmp1-faint">Change-order invoices aren\'t part of this</span></div>' + errs +
+      '<div class="fmp1-table-wrap"><table class="fmp1-table p2-sched-ed"><thead><tr><th>Invoice</th><th>Due</th><th class="r">Amount</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      '<div class="p2-between p2-small">' + bal + '<span class="fmp1-faint">' + (chk.moved ? 'Moves money: needs Full access.' : 'Dates only: anyone can save it.') + '</span></div>' +
+      '<div class="p2-ctgrid" style="margin-top:10px"><label class="p2-fld"><span>Who asked</span><select class="fmp1-input" data-schedq="askedBy"><option value="customer"' + (S.askedBy !== 'us' ? ' selected' : '') + '>The customer</option><option value="us"' + (S.askedBy === 'us' ? ' selected' : '') + '>Fremont Makers</option></select></label>' +
+      '<label class="p2-fld"><span>Name</span><input class="fmp1-input" data-schedq="askedName" value="' + esc(S.askedName || '') + '"></label>' +
+      '<label class="p2-fld" style="grid-column:span 2"><span>Why</span><input class="fmp1-input" data-schedq="reason" value="' + esc(S.reason || '') + '"></label></div>' +
+      '<div class="p2-row" style="margin-top:10px"><button class="fmp1-btn fmp1-btn--primary" data-schedsave>Save schedule</button><button class="fmp1-btn fmp1-btn--quiet" data-schedcancel>Cancel</button></div></div>';
+  }
+  function schedClick(t, j) {
+    var SC = window.FMSchedule, S = ui.sched;
+    if (t.hasAttribute('data-schedopen')) { ui.sched = { job: j.jobCode, draft: SC.draftFrom(j), askedBy: 'customer', askedName: (j.contacts && j.contacts.signer) || '', reason: '', errors: [] }; render(); return true; }
+    if (!S || S.job !== j.jobCode) return false;
+    if (t.hasAttribute('data-schedcancel')) { ui.sched = null; render(); return true; }
+    if (t.dataset.schedsplit) { S.draft = SC.split(S.draft, +t.dataset.schedsplit); render(); var ins = root.querySelectorAll('[data-schedf$=":label"]'); if (ins.length) ins[ins.length - 1].focus(); return true; }
+    if (t.dataset.schedrm) { S.draft.splice(+t.dataset.schedrm, 1); render(); return true; }
+    if (t.hasAttribute('data-schedsave')) {
+      var r = SC.apply(j, S.draft, me(), { askedBy: S.askedBy, askedName: S.askedName, reason: S.reason }, { today: TODAY });
+      if (!r.ok) { S.errors = r.errors; render(); return true; }
+      store.update(j.jobCode, function () { return r.job; }, r.log, me().name);
+      ui.sched = null; ui.paidNote = 'Payment schedule saved. The contract packet shows it as revised.'; render(); return true;
+    }
+    return false;
+  }
+  function schedInput(el) {
+    var S = ui.sched; if (!S) return false;
+    if (el.dataset.schedq) { S[el.dataset.schedq] = el.value; return true; }
+    if (el.dataset.schedf) {
+      var p = el.dataset.schedf.split(':'), r = S.draft[+p[0]];
+      if (p[1] === 'amount') { var n = parseFloat(String(el.value).replace(/[$,\s]/g, '')); r.amountCents = isNaN(n) ? 0 : Math.round(n * 100); } else r[p[1]] = el.value;
+      return true;
+    }
+    return false;
   }
   function payForm(inv) {
     var owed = inv.amountCents - FM.invoicePaidCents(inv), v = ui.pay.values || {};
@@ -504,12 +572,22 @@
     if (j.models && window.P2Flows) out = out.concat(window.P2Flows.quotesFor(j));
     return out;
   }
+  /* What the contract packet needs to know about this job (agreement wording, builder order page, elevations) */
+  function packetOpts(j) {
+    var p = j.pricing || {}, signed = (j.documents || []).filter(function (d) { return d.kind === 'contract'; })[0], models = [], byM = {};
+    (j.houses || []).forEach(function (h) { var k = h.model || h.name; if (!byM[k]) { byM[k] = { name: k, houses: 0, cents: 0 }; models.push(byM[k]); } byM[k].houses++; byM[k].cents += h.totalCents || 0; });
+    return { today: TODAY, quotes: quotesFor(j), elevations: window.P2Elev ? window.P2Elev.docPages(ctx(), j) : '', elevationsFlag: window.P2Elev && j.stage === 'quote' ? window.P2Elev.prelim(ctx(), j) : '',
+      stages: p.plan && window.P2Flows ? window.P2Flows.planStages(p) : null, bid: !!(j.bid || j.grandfathered),
+      assembly: p.assemblyHours != null ? !!(+p.assemblyHours) : true,
+      dates: j.invoices.filter(function (i) { return !i.changeOrderId && i.role !== 'change_order'; }).map(function (i) { return i.dueDate; }),
+      fmSignerName: j.fmSigner ? j.fmSigner.name : '', models: models, signedAgreementFile: signed ? signed.file : '' };
+  }
   function openDoc(kind, key, j) {
     if (kind === 'inv') {
       var live = j.invoices.filter(function (i) { return i.status !== 'void'; }), inv = live.filter(function (i) { return i.id === key; })[0];
       ui.viewer = { title: inv.label + ' · ' + j.jobCode, html: D.renderInvoiceDoc(j, inv, { today: TODAY, index: live.indexOf(inv), count: live.length }), from: '[data-open-inv="' + key + '"]' };
     } else if (kind === 'packet') {
-      ui.viewer = { title: 'Contract packet · ' + j.jobCode + ' · ' + j.customer, html: D.renderPacket(j, { today: TODAY, quotes: quotesFor(j), elevations: window.P2Elev ? window.P2Elev.docPages(ctx(), j) : '', agreementOnFile: (j.documents || []).some(function (d) { return d.kind === 'contract'; }) }), from: '[data-open-packet]' };
+      ui.viewer = { title: 'Contract packet · ' + j.jobCode + ' · ' + j.customer, html: D.renderPacket(j, packetOpts(j)), from: '[data-open-packet]' };
     } else if (kind === 'file') {
       var d = (j.documents || []).filter(function (x) { return x.file === key; })[0];
       ui.viewer = { title: d.title + ' · ' + j.jobCode, from: '[data-open-file="' + key + '"]', stored: d.file, html: fileCard(d, '<div class="fmp1-note fmp1-note--info p2-small" role="status">Looking for the stored file…</div>') };
@@ -618,7 +696,7 @@
 
   /* ---------- events ---------- */
   root.addEventListener('click', function (e) {
-    var t = e.target.closest('button, a[data-npstep], a[data-costep]'); if (!t) return;
+    var t = e.target.closest('button, a[data-npstep], a[data-costep], a[data-ctfix], a[data-coreset]'); if (!t) return;
     if (t.tagName === 'A') e.preventDefault();   // the step tabs of New Project and change orders are links: switch steps, don't navigate
     var r = route(), j = r.area === 'job' ? store.job(r.a) : null;
     if (t.hasAttribute('data-reset')) { store.reset(); ui.pay = ui.act = ui.viewer = ui.el = null; return render(); }
@@ -643,6 +721,15 @@
       ui.paidNote = 'Payment of ' + $f(amt) + ' recorded on ' + (paidInv ? paidInv.label : 'the invoice') + '. It now shows in Payments, the job balance and Company books.';
       ui.pay = null; return render();
     }
+    if (j && (t.hasAttribute('data-schedopen') || ui.sched) && schedClick(t, j)) return;
+    if (t.hasAttribute('data-tv') && j) { ui.tv = { job: j.jobCode }; return render(); }
+    if (t.hasAttribute('data-tvcancel')) { ui.tv = null; return render(); }
+    if (t.hasAttribute('data-tvsave') && j) {
+      var tv = store.markTestVoid(j.jobCode, (root.querySelector('[data-tvreason]') || {}).value, me(), TODAY + new Date().toISOString().slice(10));
+      if (!tv.ok) { ui.tv.error = tv.error; return render(); }
+      ui.tv = null; return render();
+    }
+    if (t.hasAttribute('data-tvrestore') && j) { store.restore(j.jobCode, me()); return render(); }
     if (t.dataset.act && j) { ui.act = { job: j.jobCode, id: t.dataset.act }; return render(); }
     if (t.hasAttribute('data-actcancel')) { ui.act = null; return render(); }
     if (t.hasAttribute('data-actsave') && j) {
@@ -662,12 +749,14 @@
     if (window.P2Flows && window.P2Flows.click && window.P2Flows.click(ctx(), t, e) !== false) return;
   });
   root.addEventListener('input', function (e) {
+    if ((e.target.dataset.schedf || e.target.dataset.schedq) && schedInput(e.target)) return;
     if (e.target.hasAttribute('data-q')) { ui.q = e.target.value; var pos = e.target.selectionStart; render(); var s = root.querySelector('[data-q]'); s.focus(); s.setSelectionRange(pos, pos); }
     if (window.P2Customers && window.P2Customers.input(ctx(), e)) return;
     if (window.P2Elev && window.P2Elev.input(ctx(), e)) return;
     if (window.P2Flows && window.P2Flows.input) window.P2Flows.input(ctx(), e);
   });
   root.addEventListener('change', function (e) {
+    if (e.target.dataset.schedf || e.target.dataset.schedq) { schedInput(e.target); if (e.target.dataset.schedf) render(); return; }   // re-total once a box is left
     if (e.target.hasAttribute('data-actor')) { ui.actor = e.target.value; try { window.localStorage.setItem('fm_phase2_actor', ui.actor); } catch (x) { /* ignore */ } return render(); }
     if (e.target.dataset.userf) return usersChange(e.target);
     if (window.P2Reports && window.P2Reports.change(ctx(), e)) return;

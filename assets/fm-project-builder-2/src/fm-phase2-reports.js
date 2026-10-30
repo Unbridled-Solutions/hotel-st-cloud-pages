@@ -170,5 +170,7 @@
     ];
   }
 
-  return { VERSION: VERSION, jobs: jobs, invoices: invoices, payments: payments, salesTax: salesTax, changeOrders: changeOrders, all: all, toCSV: toCSV, fileName: fileName, periods: periods };
+  /* Jobs marked Test / Void never go into a report or export (HANDOFF §29). */
+  function counted(fn) { return function (jobsIn) { var a = [].slice.call(arguments); a[0] = (jobsIn || []).filter(function (j) { return !j.testVoid; }); return fn.apply(null, a); }; }
+  return { VERSION: VERSION, jobs: counted(jobs), invoices: counted(invoices), payments: counted(payments), salesTax: counted(salesTax), changeOrders: counted(changeOrders), all: counted(all), toCSV: toCSV, fileName: fileName, periods: periods };
 }));

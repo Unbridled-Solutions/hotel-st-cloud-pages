@@ -21,7 +21,7 @@
   else root.FMContract = factory();
 }(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
-  var VERSION = '0.4.0-phase2';
+  var VERSION = '0.5.0-phase2';
   var API = 'https://api.hellosign.com/v3';
   var CALLBACK_ACK = 'Hello API Event Received';
 
@@ -42,6 +42,8 @@
   function blank(s) { return s == null || String(s).trim() === ''; }
   function day(iso) { var p = String(iso).split('-'); return Date.UTC(+p[0], +p[1] - 1, +p[2]) / 864e5; }
   function iso(d) { return new Date(d * 864e5).toISOString().slice(0, 10); }
+  var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  function nice(s) { var p = String(s).split('-'); return p.length === 3 ? MON[+p[1] - 1] + ' ' + (+p[2]) + ', ' + p[0] : String(s); }
   function isISO(s) { return typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s); }
 
   /* Placeholder text from today's form that sometimes ends up saved as a real value. */
@@ -86,18 +88,20 @@
     if (!isISO(job.installDate)) block('installDate', 'schedule', 'Set the install / delivery date.');
     else if (today) {
       var gap = day(job.installDate) - day(today);
-      if (gap < 0) block('installDate', 'schedule', 'The install date ' + job.installDate + ' is in the past.');
-      else if (gap > far) warn('installFar', 'schedule', 'Install is ' + Math.round(gap / 30.5) + ' months out (' + job.installDate + '). Check the year.');
+      if (gap < 0) block('installDate', 'schedule', 'The install date ' + nice(job.installDate) + ' is in the past.');
+      else if (gap > far) warn('installFar', 'schedule', 'Install is ' + Math.round(gap / 30.5) + ' months out (' + nice(job.installDate) + '). Check the year.');
     }
 
-    var due = job.dueDates || [];
-    if (due.length !== plan.length || due.some(function (d) { return !isISO(d); }))
+    /* The deposit is due on signing (owner decision, Oct 2026), so its stored date never blocks: a quote made last week
+       still has last week's date there, and signing moves it to the signing day. Only the later invoices' dates count. */
+    var due = (job.dueDates || []).slice();
+    if (due.length !== plan.length || due.some(function (d, i) { return !isISO(d) && !(i === 0 && today); }))
       block('dueDates', 'schedule', 'Every invoice needs a due date.');
     else {
-      for (var i = 1; i < due.length; i++) if (due[i] < due[i - 1]) { block('dueOrder', 'schedule', 'Invoice ' + (i + 1) + ' is due before invoice ' + i + '.'); break; }
-      if (today && due[0] < today) block('depositPast', 'schedule', 'The deposit would be due ' + due[0] + ', which is already past.');
-      if (today && due[0] > today && day(due[0]) - day(today) > 30)
-        warn('depositLate', 'schedule', 'The deposit isn\'t due until ' + due[0] + '. The factory order waits for it.');
+      if (today) due[0] = today;
+      var past = 0;
+      for (var p = 1; p < due.length; p++) if (today && due[p] < today) { block('duePast', 'schedule', 'Invoice ' + (p + 1) + ' is due ' + nice(due[p]) + ', which is already past. Pick a new date in the payment schedule.'); past++; break; }
+      if (!past) for (var i = 1; i < due.length; i++) if (due[i] < due[i - 1]) { block('dueOrder', 'schedule', 'Invoice ' + (i + 1) + ' is due before invoice ' + i + '. Fix the dates in the payment schedule.'); break; }
       if (isISO(job.installDate) && due[due.length - 1] > job.installDate)
         warn('finalAfterInstall', 'schedule', 'The last invoice is due after install.');
     }

@@ -309,7 +309,7 @@
   }
   function nextCode(c) {
     var yymm = c.TODAY.slice(2, 4) + c.TODAY.slice(5, 7), max = 0;
-    c.store.jobs().forEach(function (j) { var m = String(j.jobCode).match(new RegExp('^FM-' + yymm + '-(\\d{3})$')); if (m) max = Math.max(max, +m[1]); });
+    c.store.jobs({ all: true }).forEach(function (j) { var m = String(j.jobCode).match(new RegExp('^FM-' + yymm + '-(\\d{3})$')); if (m) max = Math.max(max, +m[1]); });
     return 'FM-' + yymm + '-' + ('00' + (max ? max + 1 : 101)).slice(-3);
   }
   function createJob(c, d) {
@@ -376,7 +376,7 @@
       if (src) cur.push({ sku: src.sku, desc: src.desc, qty: q.extra, unitCostCents: src.unitCostCents }); else unknown.push(q.code + ' ×' + q.extra);
     });
     c.ui.co = { job: j.jobCode, step: 1, reason: 'customer_request', note: 'Cabinets added on the elevations: ' + ex.map(function (q) { return q.code + ' ×' + q.extra; }).join(', ') + '.', house: house, base: bl, current: cur,
-      choice: null, customAmt: '', customNote: '', colorOk: false,
+      choice: null, customAmt: '', customNote: '', colorOk: false, pricing: coDefaults(j),
       errors: unknown.length ? [unknown.join(', ') + (unknown.length === 1 ? ' isn\'t' : ' aren\'t') + ' on the order or a supplier PDF yet. Add it from the supplier PDF below so it has a cost.'] : [] };
   }
 
@@ -404,21 +404,28 @@
     var p = j.pricing || {};
     return { markupPct: p.markupPct != null ? p.markupPct : 35, discountPctOfCost: p.discountPctOfCost || 0, gaPct: p.gaPct || 0, taxPct: p.taxPct || 0 };
   }
+  /* A change order's own pricing: starts as the job's, and any of it can be changed for this change order alone. */
+  function coDefaults(j) {
+    var s = settingsFor(j), p = j.pricing || {};
+    return { markupPct: String(s.markupPct), discountPctOfCost: String(s.discountPctOfCost), gaPct: String(s.gaPct), taxPct: String(s.taxPct),
+      asmHours: '', asmRate: p.assemblyRateCents ? (p.assemblyRateCents / 100).toFixed(2) : DEFAULTS.assemblyRate };
+  }
+  function coSettings(f) {
+    var p = f.pricing, h = num(p.asmHours), r = toCents(p.asmRate);
+    return { markupPct: num(p.markupPct), discountPctOfCost: num(p.discountPctOfCost), gaPct: num(p.gaPct), taxPct: num(p.taxPct),
+      labor: h > 0 && r > 0 ? [{ role: 'Assembly', rateCents: r, hours: h }] : [] };
+  }
+  function coPriced(f) { var d = coDiff(f); return CO.priceChange({ added: d.added, removed: d.removed }, coSettings(f)); }
+  function coDiffers(j, f) { var a = coDefaults(j), p = f.pricing; return ['markupPct', 'discountPctOfCost', 'gaPct', 'taxPct'].filter(function (k) { return num(a[k]) !== num(p[k]); }); }
   function coDiff(f) {
     var before = {}; f.base.forEach(function (l) { before[l.sku] = l; });
     var added = [], removed = [];
     f.current.forEach(function (l) {
       var b = before[l.sku];
-      if (!b && l.qty > 0) added.push(JSON.parse(JSON.stringify(l)));
-      else if (b && l.qty !== b.qty) (l.qty > b.qty ? added : removed).push({ sku: l.sku, desc: l.desc, qty: Math.abs(l.qty - b.qty), unitCostCents: l.unitCostCents, markupPct: l.markupPct, from: b.qty, to: l.qty });
+      if (!b && l.qty > 0) { var a = JSON.parse(JSON.stringify(l)); if (!l.mkEdited) delete a.markupPct; added.push(a); }   // a new line uses the change order's markup unless set by hand
+      else if (b && l.qty !== b.qty) (l.qty > b.qty ? added : removed).push({ sku: l.sku, desc: l.desc, qty: Math.abs(l.qty - b.qty), unitCostCents: l.unitCostCents, markupPct: l.qty > b.qty && l.mkEdited ? l.markupPct : b.markupPct, from: b.qty, to: l.qty });
     });
     return { added: added, removed: removed };
-  }
-  /* Sales tax and cabinet cost carried by a change order, so the books stay right once it's signed. */
-  function parts(lines, set) {
-    if (!lines.length) return { tax: 0, cost: 0, total: 0 };
-    var p = Q.priceHouse({ lines: lines.map(function (l) { return { description: l.desc, sku: l.sku, qty: l.qty, unitCostCents: l.unitCostCents, markupPct: l.markupPct != null ? l.markupPct : set.markupPct }; }), discountPctOfCost: set.discountPctOfCost, labor: [], gaPct: set.gaPct, taxPct: set.taxPct });
-    return p.ok ? { tax: p.summary.taxCents, cost: p.internal.costCents, total: p.summary.totalCents } : { tax: 0, cost: 0, total: 0 };
   }
   var CO_STEPS = ['What and why', 'Cabinets', 'Price', 'Review'];
   function renderChanges(c, j) {
@@ -429,8 +436,11 @@
       var actions = '';
       if (co.status === 'pending approval') actions = c.me().access === 'full' ? '<button class="fmp1-btn fmp1-btn--primary" data-coapprove="' + esc(co.id) + '">Approve courtesy</button>' : '<span class="p2-small fmp1-faint">Waiting for someone with full access to approve.</span>';
       if (co.status === 'sent') actions = '<button class="fmp1-btn fmp1-btn--primary" data-cosigned="' + esc(co.id) + '">Buyer signed (simulate)</button>';
+      if (co.priced && co.priced.lines && co.priced.lines.length) actions += '<button class="fmp1-btn' + (actions ? ' fmp1-btn--quiet' : '') + '" data-codoc="' + esc(co.id) + '">Open change order</button>';
+      var P = co.pricing, own = P ? num(P.discountPctOfCost) + '% discount · ' + num(P.gaPct) + '% G&amp;A · ' + num(P.taxPct) + '% tax' + (P.labor && P.labor[0] ? ' · assembly ' + P.labor[0].hours + ' h × ' + $f(P.labor[0].rateCents) : '') : '';
       return '<li style="flex-direction:column;align-items:stretch"><div class="p2-between"><b>Change order ' + co.number + (co.kind === 'courtesy' ? ' · courtesy' : '') + '</b><span class="p2-row"><span class="fmp1-pill ' + tone + '">' + esc(co.status) + '</span><b>' + $f(co.amountCents || 0) + '</b></span></div>' +
         '<span class="p2-small fmp1-muted">' + c.longDate(co.date) + ' · ' + esc(co.reason || '') + (co.note ? ': ' + esc(co.note) : '') + '</span>' + (lines ? '<span class="p2-small">' + lines + '</span>' : '') +
+        (own && co.kind === 'charge' ? '<span class="p2-small fmp1-faint">Priced with ' + own + (co.differsFromJob && co.differsFromJob.length || co.source ? ' (its own settings)' : '') + (co.priced && co.priced.printed ? '. Numbers as printed on the executed PDF.' : '') + '</span>' : '') +
         (window.P2Elev && window.P2Elev.coNote ? window.P2Elev.coNote(c, j, co) : '') + (co.kind === 'courtesy' ? '<span class="p2-small fmp1-faint">Internal: shop absorbed ' + $f(co.absorbedCents || 0) + (co.absorbedIsEstimate ? ' (before any supplier credit)' : '') + '</span>' : '') + (actions ? '<span class="p2-row">' + actions + '</span>' : '') + '</li>';
     }).join('');
     var canStart = j.stage !== 'quote' && j.stage !== 'lost';
@@ -457,17 +467,38 @@
           return '<tr' + (changed ? ' style="background:var(--fmp1-info-soft)"' : '') + '><td class="fmp1-code">' + esc(l.sku) + '</td><td><span class="p2-row"><button class="fmp1-btn" data-coqty="' + i + '" data-d="-1" aria-label="One fewer ' + esc(l.sku) + '">−</button>' + l.qty + '<button class="fmp1-btn" data-coqty="' + i + '" data-d="1" aria-label="One more ' + esc(l.sku) + '">+</button></span></td><td class="r">' + (changed ? b + ' → ' + l.qty : '') + '</td><td class="r">' + $f(l.unitCostCents) + '</td></tr>';
         }).join('') + '</tbody></table></div>';
     } else if (f.step === 2) {
-      var p = CO.priceChange({ added: d.added.map(function (a) { a.markupPct = a.markupPct != null ? a.markupPct : set.markupPct; return a; }), removed: d.removed }, set);
+      var p = coPriced(f), P = f.pricing, sm = p.ok ? p.summary : null, diff = coDiffers(j, f);
       f.priced = p;
-      body = '<div class="p2-chips" role="group" aria-label="Price">' + [['charge', 'Charge it', p.ok ? $f(p.deltaCents) : '—'], ['courtesy', 'Courtesy', '$0.00'], ['custom', 'Agreed amount', 'You enter it']].map(function (o) {
-        return '<button class="fmp1-btn" data-cochoice="' + o[0] + '" aria-pressed="' + (f.choice === o[0]) + '"><b>' + o[1] + '</b>&nbsp;' + o[2] + '</button>'; }).join('') + '</div>' +
-        '<p class="p2-note">Priced with this job\'s settings: ' + set.markupPct + '% markup on new lines, ' + set.discountPctOfCost + '% discount, ' + set.gaPct + '% G&amp;A, ' + set.taxPct + '% tax. Nothing is chosen until you pick.</p>' +
+      var box = '<div class="p2-np-boxes"><section class="p2-np-box p2-np-wide"><div class="p2-between"><b>Pricing for this change order</b>' +
+          (diff.length || P.asmHours ? '<a href="#" class="p2-small" data-coreset>Reset to job settings</a>' : '<span class="p2-small fmp1-faint">Same as the job</span>') + '</div><div class="p2-np-set">' +
+          fld('Markup % (new lines)', 'data-cop="markupPct" inputmode="decimal"', P.markupPct) + fld('Mfr. discount % (of cost)', 'data-cop="discountPctOfCost" inputmode="decimal"', P.discountPctOfCost) +
+          fld('G&amp;A %', 'data-cop="gaPct" inputmode="decimal"', P.gaPct) + fld('Sales tax %', 'data-cop="taxPct" inputmode="decimal"', P.taxPct) + '</div>' +
+          '<span class="p2-small fmp1-faint">Starts from this job\'s settings' + (diff.length ? '; changed here: ' + diff.map(function (k) { return { markupPct: 'markup', discountPctOfCost: 'discount', gaPct: 'G&A', taxPct: 'tax' }[k]; }).join(', ') : '') + '. The job itself doesn\'t change.</span></section>' +
+        '<section class="p2-np-box"><b>Assembly labor <span class="fmp1-faint p2-small">for this change</span></b><div class="p2-np-asm">' +
+          fld('Hours', 'data-cop="asmHours" inputmode="decimal"', P.asmHours) + '<span class="p2-np-op" aria-hidden="true">×</span>' + fld('Hourly rate ($)', 'data-cop="asmRate" inputmode="decimal"', P.asmRate) +
+          '<span class="p2-np-op" aria-hidden="true">=</span><div class="p2-fld"><span>Labor</span><b class="p2-np-asmtotal">' + $f(sm ? sm.laborCents : 0) + '</b></div></div>' +
+          '<span class="p2-small fmp1-faint">Leave hours blank if the change needs no assembly.</span></section></div>';
+      var rows = p.ok ? p.lines.map(function (l) {
+        var cur = f.current.filter(function (x) { return x.sku === l.sku; })[0], idx = f.current.indexOf(cur);
+        return '<tr' + (l.removed ? ' class="p2-co-rm"' : '') + '><td class="fmp1-code">' + esc(l.sku) + (cur && cur.mkEdited && !l.removed ? ' <span class="fmp1-pill">edited</span>' : '') + '</td><td class="p2-np-desc">' + esc(l.desc || '') + '</td><td class="r">' + (l.qty > 0 ? '+' : '−') + Math.abs(l.qty) + '</td><td class="r">' + $f(l.unitCostCents) + '</td>' +
+          '<td class="r">' + (l.removed ? '<span class="fmp1-faint" title="Credited at the markup it was sold at">' + l.markupPct + '</span>' : '<input class="fmp1-input p2-np-mk" inputmode="decimal" aria-label="Markup for ' + esc(l.sku) + '" data-coline="' + idx + '" value="' + l.markupPct + '">') + '</td><td class="r">' + $f(l.totalCents) + '</td></tr>';
+      }).join('') : '';
+      var sum = sm ? '<table class="fmp1-table p2-co-sum"><tbody>' + [['Cabinets', sm.cabinetsCents], sm.discountCents ? ['Mfr. bulk discount (' + num(P.discountPctOfCost) + '% of cost)', sm.discountCents] : null, sm.laborCents ? ['Assembly labor', sm.laborCents] : null,
+          sm.gaCents ? ['G&amp;A (' + num(P.gaPct) + '%)', sm.gaCents] : null, sm.taxCents ? ['Tax (' + num(P.taxPct) + '% on product)', sm.taxCents] : null].filter(Boolean).map(function (r) { return '<tr><td>' + r[0] + '</td><td class="r">' + $f(r[1]) + '</td></tr>'; }).join('') +
+          '<tr class="p2-co-total"><td>This change</td><td class="r">' + $f(sm.totalCents) + '</td></tr></tbody></table>' : '<div class="fmp1-note fmp1-note--alert p2-small" role="alert">' + esc(p.error) + '</div>';
+      body = box + '<div class="fmp1-table-wrap"><table class="fmp1-table p2-np-lines p2-np-price"><thead><tr><th>SKU</th><th>Description</th><th class="r">Change</th><th class="r">Unit cost</th><th class="r">Markup %</th><th class="r">Sell</th></tr></thead><tbody>' + rows + '</tbody></table></div>' + sum +
+        '<div class="p2-chips" role="group" aria-label="How it\'s billed">' + [['charge', 'Charge it', p.ok ? $f(p.deltaCents) : '—'], ['courtesy', 'Courtesy', '$0.00'], ['custom', 'Agreed amount', 'You enter it']].map(function (o) {
+          return '<button class="fmp1-btn" data-cochoice="' + o[0] + '" aria-pressed="' + (f.choice === o[0]) + '"><b>' + o[1] + '</b>&nbsp;' + o[2] + '</button>'; }).join('') + '</div>' +
+        '<p class="p2-note">Nothing is chosen until you pick. Tab moves line to line; type to replace a markup.</p>' +
         (f.choice === 'custom' ? '<div class="p2-form">' + fld('Agreed amount ($)', 'data-cof="customAmt" inputmode="decimal"', f.customAmt) + fld('Why it differs', 'data-cof="customNote"', f.customNote) + '</div>' : '') +
         (f.choice === 'courtesy' ? '<p class="p2-note">No charge to the customer. Someone with full access approves it, and the cost the shop absorbs is recorded.</p>' : '');
     } else {
+      f.priced = coPriced(f);
       var amt = f.choice === 'courtesy' ? 0 : f.choice === 'charge' ? (f.priced && f.priced.ok ? f.priced.deltaCents : 0) : toCents(f.customAmt);
       body = '<ul class="p2-list"><li><span>Reason</span><b>' + esc(CO.CHANGE_REASONS[f.reason]) + (f.note ? ': ' + esc(f.note) : '') + '</b></li>' +
         '<li><span>Cabinets</span><b>' + (d.added.length + d.removed.length ? d.removed.map(function (r) { return '−' + esc(r.sku) + ' ×' + r.qty; }).concat(d.added.map(function (a) { return '+' + esc(a.sku) + ' ×' + a.qty; })).join(', ') : 'No cabinet changes') + '</b></li>' +
+        (f.choice === 'charge' && f.priced && f.priced.ok ? '<li><span>Priced with</span><b>' + num(f.pricing.markupPct) + '% markup on new lines · ' + num(f.pricing.discountPctOfCost) + '% discount · ' + num(f.pricing.gaPct) + '% G&amp;A · ' + num(f.pricing.taxPct) + '% tax' +
+          (f.priced.summary.laborCents ? ' · assembly ' + num(f.pricing.asmHours) + ' h × ' + $f(toCents(f.pricing.asmRate)) : '') + '</b></li>' : '') +
         '<li><span>This change</span><b>' + $f(isNaN(amt) ? 0 : amt) + (f.choice === 'courtesy' ? ' (courtesy)' : '') + '</b></li>' +
         '<li><span>Billing</span><b>' + (amt > 0 ? 'Its own invoice, due on signing' : amt < 0 ? 'A credit on the next invoice' : 'No invoice') + '</b></li></ul>' +
         '<p class="p2-note">' + (f.choice === 'courtesy' ? 'Saves as a courtesy change order for someone with full access to approve, then goes to the buyer to acknowledge.' : 'Sends to the buyer for signature. The contract total and the invoice switch on when it\'s signed.') + '</p>';
@@ -483,7 +514,15 @@
       if (!d.added.length && !d.removed.length) e.push('Add or remove at least one cabinet.');
       if (CO.colorCheck(f.current.filter(function (l) { return l.qty > 0; }), houseSuffix(c, j, f.house)).length && !f.colorOk) e.push('Fix the wrong-color cabinets, or tick "keep anyway".');
     }
-    if (f.step === 2) { var ch = CO.choosePrice(f.choice, f.priced, { amountCents: toCents(f.customAmt), note: f.customNote }); if (!ch.ok) e.push(ch.error); }
+    if (f.step === 2) {
+      var P = f.pricing, names = { markupPct: 'Markup', discountPctOfCost: 'Discount', gaPct: 'G&A', taxPct: 'Sales tax' };
+      Object.keys(names).forEach(function (k) { if (!(num(P[k]) >= 0)) e.push(names[k] + ' must be a number, 0 or more.'); });
+      if (String(P.asmHours).trim() && !(num(P.asmHours) >= 0)) e.push('Assembly hours must be a number, 0 or more.');
+      if (num(P.asmHours) > 0 && !(toCents(P.asmRate) > 0)) e.push('Enter the hourly rate for the assembly.');
+      f.current.forEach(function (l) { if (l.mkEdited && !(num(l.markupPct) >= 0)) e.push(l.sku + ': markup must be 0% or more.'); });
+      f.priced = coPriced(f);
+      var ch = CO.choosePrice(f.choice, f.priced, { amountCents: toCents(f.customAmt), note: f.customNote }); if (!ch.ok) e.push(ch.error);
+    }
     return e;
   }
   function saveCO(c, j, f) {
@@ -496,10 +535,11 @@
       c.store.update(j.jobCode, function (x) { x.changeOrders = x.changeOrders.concat([co]); return x; }, 'Courtesy change order ' + n + ' saved for approval by ' + who + '. Shop would absorb ' + c.money(co.absorbedCents) + '.', who);
       return null;
     }
-    var amt = f.choice === 'charge' ? f.priced.deltaCents : toCents(f.customAmt);
-    var set = settingsFor(j), pa = parts(d.added, set), pr = parts(d.removed, set);
-    var taxC = f.choice === 'charge' ? pa.tax - pr.tax : Math.round(amt * (j.taxCents || 0) / Math.max(1, FM.contractSummary(j).currentCents));
-    var rec = { id: id, number: n, date: c.TODAY, kind: f.choice, status: 'sent', amountCents: amt, taxCents: taxC, costCents: pa.cost - pr.cost, reason: CO.CHANGE_REASONS[f.reason], note: f.note + (f.choice === 'custom' && f.customNote ? ' (agreed amount: ' + f.customNote + ')' : ''), removed: d.removed, added: d.added, house: f.house || null, lines: f.current };
+    var pz = coPriced(f); if (!pz.ok) return [pz.error];
+    var amt = f.choice === 'charge' ? pz.deltaCents : toCents(f.customAmt);
+    var taxC = f.choice === 'charge' ? pz.taxCents : Math.round(amt * (j.taxCents || 0) / Math.max(1, FM.contractSummary(j).currentCents));
+    var rec = { id: id, number: n, date: c.TODAY, kind: f.choice, status: 'sent', amountCents: amt, taxCents: taxC, costCents: pz.costCents, reason: CO.CHANGE_REASONS[f.reason], note: f.note + (f.choice === 'custom' && f.customNote ? ' (agreed amount: ' + f.customNote + ')' : ''), removed: d.removed, added: d.added, house: f.house || null, lines: f.current,
+      pricing: pz.settings, differsFromJob: coDiffers(j, f), priced: { lines: pz.lines, summary: pz.summary } };
     c.store.update(j.jobCode, function (x) { x.changeOrders = x.changeOrders.concat([rec]); return x; }, 'Change order ' + n + ' (' + c.money(amt) + ') sent for signature by ' + who + '.', who);
     return null;
   }
@@ -510,7 +550,42 @@
     return { status: 'proposed', customer: j.customer, signer: j.contacts && j.contacts.signer, buyerEmail: j.contacts && j.contacts.buyerEmail, project: j.projectName,
       installAddress: j.installAddress, installDate: j.deliveryDate, totalCents: s.currentCents, lineCount: (j.models || []).reduce(function (t, m) { return t + m.lines.length; }, 0),
       paymentPlan: (j.pricing && j.pricing.plan) || [],
-      dueDates: j.invoices.map(function (i) { return i.dueDate; }), quoteProblems: 0, fmSigner: j.fmSigner };
+      dueDates: j.invoices.filter(function (i) { return !i.changeOrderId; }).map(function (i) { return i.dueDate; }), quoteProblems: 0, fmSigner: j.fmSigner };
+  }
+  /* The contract rules (FMContract) plus the elevations check, which lives in the preview's elevations module */
+  function readyCheck(c, j) {
+    var r = K.readiness(readinessJob(j), { today: c.TODAY, authorizedSigners: signers().filter(function (p) { return p.email; }) });
+    var eb = window.P2Elev && window.P2Elev.contractBlocker ? window.P2Elev.contractBlocker(c, j) : null;
+    if (eb) { r.blockers.push(eb); r.ready = false; }
+    return r;
+  }
+  /* Where each readiness problem is fixed: a field on the Ready card, or another tab. */
+  var FIX = { customer: 'ct-customer', signer: 'ct-signer', buyerEmail: 'ct-email', project: 'ct-project', installAddress: 'ct-addr', installDate: 'ct-install',
+    dueDates: 'ct-sched', duePast: 'ct-sched', dueOrder: 'ct-sched', fmSigner: 'ct-fmsigner', elevations: 'ct-elack' };
+  function fixLink(c, j, b) {
+    if (FIX[b.id]) return '<a href="#" class="p2-fix" data-ctfix="' + FIX[b.id] + '">Fix</a>';
+    if (b.id === 'lines' || b.id === 'total' || b.id === 'quoteMath') return '<a class="p2-fix" href="#/job/' + encodeURIComponent(j.jobCode) + '/cabinets">Cabinets tab</a>';
+    return '';
+  }
+  /* Contract details and the payment schedule, editable until the contract goes out. The deposit is due on signing. */
+  function contractDetails(c, j, r, out) {
+    var esc = c.esc, $f = c.money, dis = out ? ' disabled' : '', k = j.contacts || {}, addr = j.installAddr || A.parse(j.installAddress || '');
+    var stages = j.pricing && j.pricing.plan ? planStages(j.pricing) : j.invoices.map(function (v) { return { name: v.label, pct: null }; });
+    var bad = {}; r.blockers.forEach(function (b) { bad[b.id] = true; });
+    var sched = '<div id="ct-sched" tabindex="-1"><span class="p2-fld"><span>Payment schedule</span></span><table class="fmp1-table p2-sched"><thead><tr><th>Invoice</th><th class="r">Amount</th><th>Due</th></tr></thead><tbody>' +
+      j.invoices.filter(function (v) { return !v.changeOrderId; }).map(function (v, i) {
+        var st = stages[i] || {};
+        return '<tr><td>' + esc(v.label || st.name) + '</td><td class="r">' + $f(v.amountCents) + '</td><td>' + (i === 0 ? '<b>On signing</b>' :
+          '<input class="fmp1-input" type="date" data-ctdue="' + i + '" min="' + c.TODAY + '" value="' + esc(v.dueDate || '') + '" aria-label="Due date for ' + esc(v.label) + '"' + dis + '>') + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
+    var f = function (id, label, attr, val, type) { return '<label class="p2-fld"><span>' + label + '</span><input class="fmp1-input" id="' + id + '" ' + attr + (type ? ' type="' + type + '"' : '') + ' value="' + esc(val || '') + '"' + dis + '></label>'; };
+    var openIt = Object.keys(bad).some(function (x) { return FIX[x] && x !== 'fmSigner'; }) || c.ui.ctOpen === j.jobCode;
+    return '<details class="p2-ctdet"' + (openIt ? ' open' : '') + '><summary><b>Contract details and payment schedule</b> <span class="p2-small fmp1-faint">' + (out ? 'locked while it\'s out for signature' : 'edit anything that\'s wrong here') + '</span></summary>' +
+      '<div class="p2-ctgrid">' + f('ct-customer', 'Customer', 'data-ctf="customer"', j.customer) + f('ct-project', 'Project name', 'data-ctf="projectName"', j.projectName) +
+      f('ct-signer', 'Who signs for the buyer', 'data-ctf="signer"', k.signer) + f('ct-email', 'Their email (Dropbox Sign sends here)', 'data-ctf="buyerEmail" autocomplete="off"', k.buyerEmail, 'email') + '</div>' +
+      '<div id="ct-addr" tabindex="-1">' + A.fieldsHTML(function (x) { return 'data-ctaddr="' + x + '"' + dis; }, addr, { legend: 'Install address' }) + '</div>' +
+      '<div class="p2-ctgrid">' + f('ct-install', 'Install / delivery date (estimate)', 'data-ctinstall min="' + c.TODAY + '"', j.deliveryDate, 'date') + '</div>' + sched +
+      '<p class="p2-note">The deposit is always due on signing. Changes here are logged with your name.</p></details>';
   }
   function renderContract(c, j) {
     var esc = c.esc, $f = c.money;
@@ -525,10 +600,11 @@
       return '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Contract</span><p class="p2-ok">✓ ' + (es.state === 'signed_on_paper' ? 'Signed on paper' : 'Signed by everyone in Dropbox Sign') + ' · Contracted ' + c.longDate(j.contractedOn) + '</p>' +
         '<p class="p2-small">Signed for Fremont Makers by ' + esc(j.fmSigner ? j.fmSigner.name : '—') + '.</p>' + c.docRows(j, { kind: 'contract' }) + '</div>';
     }
-    var r = K.readiness(readinessJob(j), { today: c.TODAY, authorizedSigners: signers().filter(function (p) { return p.email; }) });
-    var checks = r.blockers.map(function (b) { return '<li><span style="color:var(--fmp1-alert-ink)">! ' + esc(b.message) + '</span></li>'; }).concat(r.warnings.map(function (w) { return '<li><span>i ' + esc(w.message) + '</span></li>'; })).join('');
+    var r = readyCheck(c, j);
     var out = es.state === 'out_for_signature' || es.state === 'buyer_signed' || es.state === 'sending';
-    var signer = '<label class="p2-fld" style="max-width:340px"><span>Signs for Fremont Makers on this job</span><select class="fmp1-input" data-fmsigner' + (out ? ' disabled' : '') + '><option value="">Choose…</option>' +
+    var checks = r.blockers.map(function (b) { return '<li class="p2-block"><span>' + esc(b.message) + '</span>' + fixLink(c, j, b) + '</li>'; })
+      .concat(r.warnings.map(function (w) { return '<li class="p2-warn"><span>' + esc(w.message) + '</span></li>'; })).join('');
+    var signer = '<label class="p2-fld" style="max-width:340px"><span>Signs for Fremont Makers on this job</span><select class="fmp1-input" id="ct-fmsigner" data-fmsigner' + (out ? ' disabled' : '') + '><option value="">Choose…</option>' +
       signers().map(function (p, i) { return '<option value="' + i + '"' + (p.email ? '' : ' disabled') + (j.fmSigner && p.email && j.fmSigner.email === p.email ? ' selected' : '') + '>' + esc(p.name) + (p.email ? '' : ' (add an email on the Users page)') + '</option>'; }).join('') + '</select></label>';
     var send = out ? '<div class="fmp1-note fmp1-note--info p2-small">' + (es.state === 'buyer_signed' ? 'The buyer signed. Waiting on ' + esc(j.fmSigner.name) + ' to countersign.' : 'Out for signature. Pricing is frozen until it\'s signed, declined or canceled.') + '</div>' +
         '<div class="p2-row">' + (es.state === 'out_for_signature' ? '<button class="fmp1-btn" data-esim="signed">Buyer signs (simulate)</button><button class="fmp1-btn fmp1-btn--quiet" data-esim="declined">Buyer declines (simulate)</button>' : '') +
@@ -540,8 +616,36 @@
         '<label class="p2-row p2-small"><input type="checkbox" data-paperbuyer> Buyer signed every line</label><label class="p2-row p2-small"><input type="checkbox" data-paperfm> Fremont Makers countersigned</label>' +
         '<button class="fmp1-btn" data-paper' + (r.ready ? '' : ' disabled') + '>Record signed copy</button></div></details>';
     var errs = c.ui.esErr ? '<div class="fmp1-note fmp1-note--alert p2-small" role="alert">' + esc(c.ui.esErr) + '</div>' : '';
-    return '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Ready to contract?</span>' + (checks ? '<ul class="p2-list">' + checks + '</ul>' : '<p class="p2-ok">✓ Everything checks out.</p>') + signer + '</div>' +
+    return '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Ready to contract?</span>' + (checks ? '<ul class="p2-list p2-checks">' + checks + '</ul>' : '<p class="p2-ok">✓ Everything checks out.</p>') +
+      (window.P2Elev && window.P2Elev.contractAck ? window.P2Elev.contractAck(c, j, out) : '') + signer + contractDetails(c, j, r, out) + '</div>' +
       '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Send for signature</span>' + c.docRows(j, { kind: '__none', packetTitle: 'Contract packet (draft)', packetSub: 'What the buyer will sign: summary, schedule, invoices, quote' + (j.elevations && j.elevations.rooms && j.elevations.rooms.length ? ' and elevations' : '') }) + errs + send + '</div>';
+  }
+  function contractEdit(c, j, el) {
+    var who = c.me().name, v = el.value.trim(), text = '';
+    c.ui.ctOpen = j.jobCode;
+    c.store.update(j.jobCode, function (x) {
+      x.contacts = x.contacts || {};
+      if (el.dataset.ctf) {
+        var key = el.dataset.ctf, label = { customer: 'Customer', projectName: 'Project name', signer: 'Buyer signer', buyerEmail: 'Buyer email' }[key];
+        var was = key === 'signer' || key === 'buyerEmail' ? x.contacts[key] : x[key];
+        if (key === 'signer' || key === 'buyerEmail') x.contacts[key] = v; else x[key] = v;
+        text = label + ' changed' + (was ? ' from "' + was + '"' : '') + ' to "' + v + '" by ' + who + '.';
+      } else if (el.dataset.ctaddr) {
+        var a = x.installAddr || A.parse(x.installAddress || ''); a[el.dataset.ctaddr] = v; x.installAddr = a; x.installAddress = A.format(a);
+        text = 'Install address set to ' + x.installAddress + ' by ' + who + '.';
+      } else if (el.hasAttribute('data-ctinstall')) {
+        var old = x.deliveryDate, last = x.invoices.filter(function (i) { return !i.changeOrderId; }).slice(-1)[0];
+        x.deliveryDate = v;
+        if (last && x.invoices.length > 1 && (!last.dueDate || last.dueDate === old)) last.dueDate = v;   // the last payment stays at install
+        text = 'Install date changed' + (old ? ' from ' + c.longDate(old) : '') + ' to ' + c.longDate(v) + ' by ' + who + (last && last.dueDate === v ? '; ' + last.label + ' follows it.' : '.');
+      } else {
+        var inv = x.invoices.filter(function (i) { return !i.changeOrderId; })[+el.dataset.ctdue], prev = inv.dueDate; inv.dueDate = v;
+        text = inv.label + ' due date changed' + (prev ? ' from ' + c.longDate(prev) : '') + ' to ' + c.longDate(v) + ' by ' + who + '.';
+      }
+      return x;
+    }, null, who);
+    c.store.update(j.jobCode, function (x) { return x; }, text, who);
+    c.render();
   }
   function contracted(c, j, how) {
     var who = c.me().name;
@@ -550,7 +654,7 @@
       x.history = (x.history || []).concat([{ from: 'quote', to: 'contract_signed', date: c.TODAY, reason: how, by: who }]);
       if (x.invoices[0]) x.invoices[0].dueDate = c.TODAY;   // deposit due on signing
       var E = x.elevations;   // keep the drawings as signed; change orders add numbered revisions after this
-      if (E && E.rooms && E.rooms.length) { E.versions = E.versions || []; E.versions.push({ n: E.versions.length + 1, label: 'As signed', signed: true, at: new Date().toISOString(), by: who, rooms: JSON.parse(JSON.stringify(E.rooms)), sizes: JSON.parse(JSON.stringify(E.sizes || {})) }); }
+      if (E && E.rooms && E.rooms.length) { E.versions = E.versions || []; E.versions.push({ n: E.versions.length + 1, label: x.elevAck ? 'As signed · preliminary' : 'As signed', signed: true, at: new Date().toISOString(), by: who, rooms: JSON.parse(JSON.stringify(E.rooms)), sizes: JSON.parse(JSON.stringify(E.sizes || {})) }); }
       return x;
     }, 'Contract signed (' + how + '). Job is now Contracted; the deposit is due today.', who);
   }
@@ -601,7 +705,7 @@
     if (!j) return false;
     // Change orders
     if (t.hasAttribute('data-costart')) { var house = j.houses && j.houses.length > 1 ? j.houses[0].jobCode : null, bl = baseLines(c, j, house);
-      c.ui.co = { job: j.jobCode, step: 0, reason: 'customer_request', note: '', house: house, base: bl, current: JSON.parse(JSON.stringify(bl)), choice: null, customAmt: '', customNote: '', colorOk: false, errors: [] }; c.render(); return true; }
+      c.ui.co = { job: j.jobCode, step: 0, reason: 'customer_request', note: '', house: house, base: bl, current: JSON.parse(JSON.stringify(bl)), choice: null, customAmt: '', customNote: '', colorOk: false, errors: [], pricing: coDefaults(j) }; c.render(); return true; }
     var f = c.ui.co;
     if (f && f.job === j.jobCode) {
       if (t.hasAttribute('data-cocancel')) { c.ui.co = null; c.render(); return true; }
@@ -609,8 +713,16 @@
       if (t.hasAttribute('data-conext')) { f.errors = coStepErrors(c, j, f); if (!f.errors.length) f.step++; c.render(); return true; }
       if (t.hasAttribute('data-coback')) { f.step = Math.max(0, f.step - 1); f.errors = []; c.render(); return true; }
       if (t.dataset.coqty) { var l = f.current[+t.dataset.coqty]; l.qty = Math.max(0, l.qty + (+t.dataset.d)); c.render(); return true; }
+      if (t.hasAttribute('data-coreset')) { f.pricing = coDefaults(j); f.current.forEach(function (l) { if (l.mkEdited) { delete l.mkEdited; var b = f.base.filter(function (x) { return x.sku === l.sku; })[0]; if (b) l.markupPct = b.markupPct; else delete l.markupPct; } }); c.render(); return true; }
       if (t.dataset.cochoice) { f.choice = t.dataset.cochoice; f.errors = []; c.render(); return true; }
       if (t.hasAttribute('data-cosave')) { var pe = saveCO(c, j, f); if (pe) { f.errors = pe; c.render(); return true; } c.ui.co = null; c.render(); return true; }
+    }
+    if (t.dataset.codoc) {
+      var dco = j.changeOrders.filter(function (x) { return x.id === t.dataset.codoc; })[0], prev = FM.contractSummary(j).originalCents;
+      j.changeOrders.forEach(function (x) { if (x.number < dco.number && x.kind !== 'courtesy' && x.status !== 'sent') prev += x.amountCents || 0; });
+      c.ui.viewer = { title: 'Change order ' + dco.number + ' · ' + j.jobCode + ' · ' + j.customer, html: D.renderChangeOrderDoc(j, dco, { previousCents: prev,
+        printedNote: dco.priced.printed ? 'Reprinted from the executed change order. Sell prices as printed there.' : '' }), from: '[data-codoc="' + dco.id + '"]' };
+      c.render(); return true;
     }
     if (t.dataset.coapprove) {
       var co = j.changeOrders.filter(function (x) { return x.id === t.dataset.coapprove; })[0], ap = CO.approve(Object.assign({}, co, { status: 'draft' }), c.me().name, { owners: window.P2Users ? window.P2Users.approvers() : [], at: c.TODAY });
@@ -629,9 +741,14 @@
       c.render(); return true;
     }
     // Contract
+    if (t.dataset.ctfix) {
+      var tg = document.getElementById(t.dataset.ctfix), dt = tg && tg.closest('details'); if (dt) dt.open = true; c.ui.ctOpen = j.jobCode;
+      if (tg) { var fi = tg.matches('input,select') ? tg : tg.querySelector('input:not([disabled]),select:not([disabled])') || tg; tg.scrollIntoView({ block: 'center' }); fi.focus(); }
+      return true;
+    }
     if (t.dataset.esmode) { c.ui.esMode = t.dataset.esmode; c.render(); return true; }
     if (t.hasAttribute('data-essend')) {
-      if (!K.readiness(readinessJob(j), { today: c.TODAY, authorizedSigners: signers().filter(function (p) { return p.email; }) }).ready) { c.render(); return true; }   // the button is disabled too; this is the real check
+      if (!readyCheck(c, j).ready) { c.render(); return true; }   // the button is disabled too; this is the real check
       var req = K.signatureRequest(readinessJob(j), { mode: c.ui.esMode || 'email', clientId: 'demo-client-id', requesterEmail: 'office@example.com', testMode: true });
       var st = K.applyEvent({ requestId: 'sr_' + j.jobCode, state: 'sending', jobStatus: 'proposed', seen: [] }, { event: { event_type: 'signature_request_sent', event_time: '1' }, signature_request: { signature_request_id: 'sr_' + j.jobCode } });
       c.store.update(j.jobCode, function (x) { x.esign = st.state; return x; }, 'Contract sent for signature (' + req.url.split('/v3/')[1] + ') by ' + c.me().name + '. Signed for Fremont Makers by ' + j.fmSigner.name + '.', c.me().name);
@@ -665,9 +782,11 @@
     if (el.dataset.npp) { d = loadDraft(c); d.pricing[el.dataset.npp] = /^assembly/.test(el.dataset.npp) ? el.value : num(el.value); if (el.dataset.npp === 'markupPct') reapply(d); saveDraft(c); refreshLater(c); return; }
     if (el.dataset.npline) { d = loadDraft(c); var ix = el.dataset.npline.split(':'), ln = d.models[+ix[0]].lines[+ix[1]]; ln.markupPct = num(el.value); ln.edited = true; saveDraft(c); refreshLater(c); return; }
     if (el.dataset.cof && c.ui.co) { c.ui.co[el.dataset.cof] = el.value; return; }
+    if (el.dataset.cop && c.ui.co) { c.ui.co.pricing[el.dataset.cop] = el.value; refreshLater(c); return; }
+    if (el.dataset.coline && c.ui.co) { var cl = c.ui.co.current[+el.dataset.coline]; cl.markupPct = num(el.value); cl.mkEdited = true; refreshLater(c); return; }
   }
   var timer = null;
-  function refreshLater(c) { clearTimeout(timer); timer = setTimeout(function () { var a = document.activeElement, key = a && (a.dataset.npp || a.dataset.npline || a.dataset.np), sel = a && a.selectionStart, selEnd = a && a.selectionEnd; c.render(); if (key) { var n = document.querySelector('[data-npp="' + key + '"],[data-npline="' + key + '"],[data-np="' + key + '"]'); if (n) { n.focus(); try { n.setSelectionRange(sel, selEnd); } catch (x) { /* number inputs */ } } } }, 450); }
+  function refreshLater(c) { clearTimeout(timer); timer = setTimeout(function () { var a = document.activeElement, key = a && (a.dataset.npp || a.dataset.npline || a.dataset.np || a.dataset.cop || a.dataset.coline), sel = a && a.selectionStart, selEnd = a && a.selectionEnd; c.render(); if (key) { var n = document.querySelector('[data-npp="' + key + '"],[data-npline="' + key + '"],[data-np="' + key + '"],[data-cop="' + key + '"],[data-coline="' + key + '"]'); if (n) { n.focus(); try { n.setSelectionRange(sel, selEnd); } catch (x) { /* number inputs */ } } } }, 450); }
   function change(c, e) {
     var el = e.target, d;
     if (el.dataset.np === 'customer') {
@@ -710,6 +829,14 @@
     if (el.dataset.cof === 'reason' && c.ui.co) { c.ui.co.reason = el.value; return; }
     if (el.hasAttribute('data-copdf') && c.ui.co) { var pd = pdfById(el.value); if (pd) { c.ui.co.current = CO.mergeLines(c.ui.co.current, pd.lines.map(function (l) { return { sku: l.sku, desc: l.desc, qty: l.qty, unitCostCents: l.unitCostCents }; }), 'add').lines; } c.render(); return; }
     if (el.hasAttribute('data-cocolor') && c.ui.co) { c.ui.co.colorOk = el.checked; c.render(); return; }
+    if (el.hasAttribute('data-elack') && j.stage === 'quote') {
+      var who0 = c.me().name;
+      c.store.update(j.jobCode, function (x) { if (el.checked) x.elevAck = { by: who0, on: c.TODAY }; else delete x.elevAck; return x; },
+        el.checked ? 'Contract may go out without complete elevations (checked by ' + who0 + '). The packet marks the drawings as preliminary.' : 'Unchecked "send without complete elevations" (' + who0 + ').', who0);
+      c.render(); return;
+    }
+    // Contract details (Ready card): each change is saved and logged
+    if (j.stage === 'quote' && (el.dataset.ctf || el.dataset.ctaddr || el.hasAttribute('data-ctinstall') || el.dataset.ctdue)) { contractEdit(c, j, el); return; }
     if (el.hasAttribute('data-fmsigner')) { var s = signers()[+el.value]; if (s && !s.email) s = null; c.store.update(j.jobCode, function (x) { x.fmSigner = s ? { name: s.name, email: s.email } : null; return x; }, s ? s.name + ' will sign for Fremont Makers.' : null, c.me().name); c.render(); return; }
   }
 

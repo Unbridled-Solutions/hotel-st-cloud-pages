@@ -397,7 +397,8 @@
       });
     });
     if (!pages.length) return '';
-    return D.renderElevationDocs(j, pages, views, { status: version ? (version.label || 'Version ' + version.n) + ' · saved ' + String(version.at).slice(0, 10) + ' by ' + version.by : statusText(c, j) });
+    return D.renderElevationDocs(j, pages, views, { status: version ? (version.label || 'Version ' + version.n) + ' · saved ' + String(version.at).slice(0, 10) + ' by ' + version.by : statusText(c, j),
+      flag: version ? '' : prelimText(completeness(c, j)) });
   }
   function coNote(c, j, co) {
     if (!coChanges(j).some(function (q) { return q.id === co.id; })) return '';
@@ -408,15 +409,34 @@
     if (!(E.rooms && E.rooms.length)) return '';
     return '<span class="p2-small" style="color:var(--fmp1-alert-ink)">Elevations need a revision for this change. Open the ' + link + '.</span>';
   }
-  function contractNote(c, j) {
-    var sets = setsFor(c, j); if (!sets.length || j.stage !== 'quote') return '';
-    var E = j.elevations || blankE(), missing = 0, any = false;
-    sets.forEach(function (s) { var rs = roomsOfSet(E, s.key); if (rs.length) any = true; missing += EL.reconcile(s.lines, rs, readE(E, s).sizes).missing; });
-    var link = '<a href="#/job/' + encodeURIComponent(j.jobCode) + '/elevations">Elevations tab</a>';
-    if (!any) return '<div class="fmp1-note fmp1-note--info p2-small">No elevations yet. Draw them on the ' + link + ' so they go out with the contract.</div>';
-    if (missing) return '<div class="fmp1-note fmp1-note--alert p2-small">' + missing + ' quoted cabinet' + (missing === 1 ? ' isn\'t' : 's aren\'t') + ' on an elevation yet. See the ' + link + '.</div>';
-    return '<div class="fmp1-note fmp1-note--good p2-small">✓ Elevations match the quote. They go into the contract packet.</div>';
+  /* How complete the drawings are against the quote: { sets, any (rooms drawn), quoted, missing, complete } */
+  function completeness(c, j) {
+    var sets = setsFor(c, j), E = j.elevations || blankE(), missing = 0, quoted = 0, any = false;
+    sets.forEach(function (s) { var rs = roomsOfSet(E, s.key), r = EL.reconcile(s.lines, rs, readE(E, s).sizes); if (rs.length) any = true; missing += r.missing; r.rows.forEach(function (x) { quoted += x.quoted; }); });
+    return { sets: sets.length, any: any, quoted: quoted, missing: missing, complete: !!sets.length && any && missing === 0 };
   }
+  /* The flag printed on elevation pages (and the packet summary) when drawings are incomplete; '' when they match the quote. */
+  function prelimText(k) {
+    if (!k.sets || k.complete) return '';
+    if (!k.any) return 'Elevations to follow. No drawings are included yet; final elevations will be provided before ordering.';
+    return 'Preliminary drawings: ' + (k.quoted - k.missing) + ' of ' + k.quoted + ' quoted cabinets shown. Final elevations to follow before ordering.';
+  }
+  /* Ready card: incomplete drawings block the contract until someone ticks "send without complete elevations" (logged). */
+  function contractAck(c, j, out) {
+    var k = completeness(c, j), esc = c.esc; if (!k.sets || j.stage !== 'quote') return '';
+    var link = '<a href="#/job/' + encodeURIComponent(j.jobCode) + '/elevations">Elevations tab</a>';
+    if (k.complete) return '<p class="p2-small p2-ok" style="margin:10px 0 0">✓ Elevations match the quote. They go into the contract packet.</p>';
+    var ack = j.elevAck, what = !k.any ? 'No elevations are drawn yet.' : k.missing + ' of ' + k.quoted + ' quoted cabinet' + (k.quoted === 1 ? '' : 's') + (k.missing === 1 ? ' isn\'t' : ' aren\'t') + ' on an elevation yet.';
+    return '<div class="p2-elack" id="ct-elack" tabindex="-1"><label class="p2-row p2-small"><input type="checkbox" data-elack' + (ack ? ' checked' : '') + (out ? ' disabled' : '') + '> <b>Send without complete elevations</b>' +
+      (ack ? '' : ' <span class="fmp1-faint">— ' + esc(what) + ' The packet will mark the drawings as preliminary. Or finish them on the </span>' + link + '<span class="fmp1-faint">.</span>') + '</label>' +
+      (ack ? '<p class="p2-small fmp1-faint" style="margin:0">Checked by ' + esc(ack.by) + ' on ' + c.longDate(ack.on) + '. The packet says: "' + esc(prelimText(k)) + '"</p>' : '') + '</div>';
+  }
+  /* For the readiness list: null when fine, else a blocker */
+  function contractBlocker(c, j) {
+    var k = completeness(c, j); if (!k.sets || k.complete || j.elevAck) return null;
+    return { id: 'elevations', step: 'elevations', message: (!k.any ? 'No elevations are drawn yet.' : k.missing + ' quoted cabinet' + (k.missing === 1 ? ' isn\'t' : 's aren\'t') + ' on an elevation yet.') + ' Finish them, or tick "Send without complete elevations".' };
+  }
+
 
   /* ---------- events ---------- */
   function cur(c, j) {
@@ -788,7 +808,7 @@
       (body || '<tr><td colspan="5" class="p2-empty">No projects yet.</td></tr>') + '</tbody></table></div>';
   }
 
-  window.P2Elev = { tab: tab, index: index, click: click, change: change, input: input, bind: bind, docPages: docPages, contractNote: contractNote, coNote: coNote, setsFor: setsFor };
+  window.P2Elev = { tab: tab, index: index, click: click, change: change, input: input, bind: bind, docPages: docPages, contractAck: contractAck, contractBlocker: contractBlocker, prelim: function (c, j) { return prelimText(completeness(c, j)); }, coNote: coNote, setsFor: setsFor };
   // this file loads after the app: hook up the drawing and redraw the page that's showing
   var appRoot = document.getElementById('p2');
   if (appRoot && window.P2) { bind(appRoot, window.P2.ctx); window.P2.render(); }

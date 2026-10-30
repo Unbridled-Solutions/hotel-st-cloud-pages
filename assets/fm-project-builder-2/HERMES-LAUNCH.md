@@ -1,8 +1,8 @@
 # Hermes: launch guide for the Project Builder (Phase 1 + 2)
 
-**From:** Fremont Makers (Linds) via Claude · **Date:** 2026-10-29 · **Package:** `fm-project-builder-phase1.zip`, version **2.8.0**
+**From:** Fremont Makers (Linds) via Claude · **Date:** 2026-10-30 · **Package:** `fm-project-builder-phase1.zip`, version **2.9.0**
 
-> **Updating from 2.7.2?** Use `fm-project-builder-update-2.7.2-to-2.8.0.zip` and read `UPGRADE-2.7.2-to-2.8.0.md`: it lists only what changed. The full zip is for a fresh start.
+> **Updating from 2.8.0?** Use `fm-project-builder-update-2.8.0-to-2.9.0.zip` and read `UPGRADE-2.8.0-to-2.9.0.md`: it lists only what changed. The full zip is for a fresh start.
 
 **Nothing is live yet.** Phase 1 and Phase 2 launch together as one new Project Builder that runs **beside** the existing tool at tools.fremontmakers.com. This guide is the order of work; `HANDOFF.md` has the detail (section numbers below, §).
 
@@ -27,7 +27,7 @@ If a step seems to need any change to the existing tool, stop and ask the owner.
 | `node tests/activity.test.js` | `13 passed, 0 failed` |
 | `node tests/pricing.test.js` | `11 passed, 0 failed` |
 | `node tests/quote.test.js` | `15 passed, 0 failed` |
-| `node tests/docs.test.js` | `9 passed, 0 failed` |
+| `node tests/docs.test.js` | `10 passed, 0 failed` |
 | `node tests/elevations.test.js` | `20 passed, 0 failed` |
 | `node tests/measure.test.js` | `5 passed, 0 failed` |
 | `node tests/reports.test.js` | `8 passed, 0 failed` |
@@ -35,10 +35,11 @@ If a step seems to need any change to the existing tool, stop and ask the owner.
 | `node tests/theme.test.js` | `5 passed, 0 failed` |
 | `node tests/braddy.test.js` | `9 passed, 0 failed` |
 | `node tests/contract.test.js` | `22 passed, 0 failed` |
-| `node tests/changeorder.test.js` | `14 passed, 0 failed` |
+| `node tests/changeorder.test.js` | `15 passed, 0 failed` |
 | `node tests/bid.test.js` | `6 passed, 0 failed` |
 | `node tests/books.test.js` | `7 passed, 0 failed` |
-| `node tests/store.test.js` | `6 passed, 0 failed` |
+| `node tests/store.test.js` | `8 passed, 0 failed` |
+| `node tests/schedule.test.js` | `6 passed, 0 failed` |
 
 3. Open `phase2.html` through a static server from the package root and click through it. **That page is the screen reference** for everything below.
 
@@ -59,18 +60,19 @@ These are simulated in the preview and must be real before launch:
 - **Reports & exports** (§25), under Company books: jobs, invoices, payments, sales tax and change orders for a period, as CSV for finance.
 - **Field measure** (§24): site visits on a phone (rooms, walls, openings, outlets and plumbing, photos, who measured, buyer's confirmation), compared with and applied to a job's drawings, or starting a project for a lead. Needs server storage for visits and photos, and offline use with sync.
 - **Elevations** (§23): rooms, walls and islands drawn from the quote's SKUs with sizes read from the codes (or the supplier PDF), corner cabinets, drag cabinets along a wall, crown and trim check, staggered uppers, floor plan, checks, measurements, 3D room, versions, print; locked with the price; the sheets go into the contract packet.
+- **Contract tab** (§29): editable contract details and due dates on the Ready card, a Fix link on every problem, deposit due on signing, "Send without complete elevations". **Invoices tab:** Adjust schedule after signing. **Test / Void** (Full access) on the job page and an All projects filter.
 - **Addresses** (§28): Street, City, State (Colorado by default), ZIP everywhere an address is entered, stored as fields plus the joined line documents print.
 - **New Project** (§15, §28: line preview, assembly hours × rate, custom payment plans), **Contract and e-sign** (§16), **Change orders** including courtesy (§17, §19), **bid pages and grandfathered prices** (§18).
-- **Customer documents** open in the page with Print: invoices, payment schedule, contract packet, quote pages; only the "making freedom" logo, top left (§12, §20, §21).
+- **Customer documents** open in the page with Print: invoices, payment schedule, contract packet (builder order, **Customer Sales Agreement**, schedule, invoices, quotes, elevations), change orders, quote pages; only the "making freedom" logo, top left (§12, §20, §21, §29).
 - **Company Books**, designed fresh (§22). They cover jobs, invoices, payments and job costs; the accounting system keeps overhead, payroll and bank balances.
 
 ## 4. Bring the existing jobs over
 1. Run every real project through the adapter. Send the owner a **reconciliation report**: old total vs new total for each job, with the reason for every difference (§3 step 8).
 2. Known differences:
-   - Willow Creek is **$80,888.05** once its change order (filed as its own project) is attached (§2).
+   - Willow Creek is **$80,888.05** once its change order (filed as its own project) is attached (§2). Change order 1 carries its 14 lines and its own pricing (5% discount, 5 h × $20.50); its cost is worked back from the discount (§29).
    - Penrose keeps its signed **$10,973.11**; the $2,188.02 over the corrected itemized price is agreed (grandfathered) pricing (§18).
    - Penrose Change Order 1 is a **courtesy** swap, and the shop absorbed **$1,652.70**, final: no supplier credit (owner, Oct 29; §17).
-3. Attach the three signed PDFs (sent separately, below) to their jobs and check their checksums (§14).
+3. Attach the five PDFs (sent separately, below) to their jobs and check their checksums (§14, §29).
 
 ## 5. Check and launch
 1. Work through the acceptance lists in `HANDOFF.md` (§5, §12–§22) on staging. Key numbers are in §22's acceptance list.
@@ -81,6 +83,8 @@ These are simulated in the preview and must be real before launch:
 ---
 
 ## Owner decisions in effect
+Contract wording: approved by the owner Oct 30 (`docs/contract-language-review.md`). Test / Void is Full access only and separate from voiding a signed contract. Moving money between invoices after signing needs Full access.
+
 Pricing is set per job, never per customer; company defaults are 35% markup · 12% discount off cost · 2% G&A · 7.9% tax · 50/50 · assembly is **hours × hourly rate** per home, rate **$20.50**, hours entered on every job with no default (owner, Oct 29; jobs priced before keep their flat amount). Custom payment plans (named payments, totaling 100%) are allowed. Invoice shares are measured against the current total. Each change order gets its own invoice, due on signing. A job is Contracted only when everyone has signed, in Dropbox Sign or as an uploaded wet-signed copy. Fremont Makers countersigns, and the signer is picked per job from the four approved signers (Kristy, Tayler, Lindsay, Tim). The deposit is due on signing, with the last payment at install. Factory order and delivery dates are estimates, with nothing automated off them. New quotes use the corrected math. Bid jobs print a lump-sum page. Reprints of signed quotes show a rounding line. Supplier import only appears in New Project and change orders. Documents use only the "making freedom" logo. Everyone with Full access can void or override a contract and reopen a lost project (question 3). Elevations are drawn while quoting and the agreed ones go into the contract packet; after signing, a change order that changes cabinets gets a numbered drawing revision. Dark Hickory codes that aren't in a supplier catalog (DC224, DC324, PWB18K, VDC42RS, FP9624-1.5) stay marked "check size" (owner, Oct 29). Customer profiles and templates never hold pricing. Full list: `HANDOFF.md` §8 and §15–§25.
 
 ## The hosted preview is not the live tool
@@ -95,5 +99,7 @@ It runs on sample data saved in each browser, with a "Preview, not the live tool
 - `FM-2609-314 · Braddy Builders.pdf`
 - `Updated Braddy WholesaleCabinets-1000173203 (2).pdf`
 - `Willow Creek Full House Order.pdf`
+- `FM-2609-276 · Willow Creek Estates.pdf` (Willow Creek change order 1 with its lines; new in 2.9.0)
+- `COR FM-2609-276 · Willow Creek Estates.pdf` (its invoice; new in 2.9.0)
 
-Their checksums are in `preview/braddy-penrose-order.js` → `documents`. Until server file storage exists, the hosted preview opens them from a `files/` folder next to `phase2.html`, under their exact names or plain ones (`FM-2609-314-Braddy-Builders.pdf`, `Updated-Braddy-WholesaleCabinets-1000173203-2.pdf`, `Willow-Creek-Full-House-Order.pdf`), and checks each SHA-256 before showing it (§26). Keep that folder behind password protection; they are signed customer documents.
+Their checksums are in `preview/braddy-penrose-order.js` → `documents` (the two change order PDFs: `preview/willow-creek-full-order.js` → `changeOrders[0].documents`). Until server file storage exists, the hosted preview opens them from a `files/` folder next to `phase2.html`, under their exact names or plain ones (`FM-2609-314-Braddy-Builders.pdf`, `Updated-Braddy-WholesaleCabinets-1000173203-2.pdf`, `Willow-Creek-Full-House-Order.pdf`), and checks each SHA-256 before showing it (§26). Keep that folder behind password protection; they are signed customer documents.

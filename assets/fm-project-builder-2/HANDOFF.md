@@ -1,19 +1,32 @@
 # Handoff to Hermes: Project Builder Phase 1 + 2
 
-**From:** Fremont Makers (Linds) via Claude · **Date:** 2026-10-29 · **Package version:** 2.8.0
+**From:** Fremont Makers (Linds) via Claude · **Date:** 2026-10-30 · **Package version:** 2.9.0
 
-## Current state (2.8.0, Oct 29 2026)
+## Current state (2.9.0, Oct 30 2026)
 
 *Rewritten each release, so you don't need the history below. The numbered sections are the detail.*
 
 - **What this is:** a new Project Builder (Phase 1 quote and ledger math, Phase 2 app `phase2.html`) that launches **beside** the existing tool behind the `fm_phase1` flag. **Nothing is live.** Follow `HERMES-LAUNCH.md`.
-- **Screens:** sidebar (Projects: All projects, Elevations, Customers, Field measure · Company books: Dashboard, Pipeline, Deposits due, Reconcile, P&L, Balance sheet, Reports & exports · Company: Users); job page with tabs; New Project, change order and contract flows.
-- **Pricing:** set per job, never per customer. Defaults are 35% markup · 12% discount off cost · 2% G&A · 7.9% tax · 50/50 plan; assembly is hours × rate per home ($20.50/h, hours entered on each job). Custom payment plans are allowed.
-- **Addresses:** Street / City / State (CO default) / ZIP, stored as fields plus the joined line (§28).
+- **Screens:**
+  - **Sidebar:** Projects (All projects, Elevations, Customers, Field measure); Company books (Dashboard, Pipeline, Deposits due, Reconcile, P&L, Balance sheet, Reports & exports); Company (Users).
+  - **Job page** with tabs; New Project, change order and contract flows.
+- **Pricing:** set per job, never per customer.
+  - **Defaults:** 35% markup · 12% discount off cost · 2% G&A · 7.9% tax · 50/50 plan.
+  - **Assembly:** hours × rate per home ($20.50/h, hours entered on each job).
+  - Custom payment plans are allowed. A change order can use its own pricing (§29).
+- **Contracts:**
+  - Every packet prints the full **Customer Sales Agreement**, with the wording approved by the owner Oct 30 (`src/fm-phase2-agreement.js`, `docs/contract-language-review.md`).
+  - The deposit is due on signing.
+  - Contracts can go out with elevations marked preliminary.
+  - The schedule can be adjusted after signing (§29).
+- **Test / Void:** Full access only. These projects are left out of every total, list and report (§29).
 - **Server work still to do (yours):** sign-in and access levels, the shared database, file storage with SHA-256, the supplier PDF import, Dropbox Sign, and field-measure sync (`HERMES-LAUNCH.md` §2).
-- **Tests:** 16 files, 179 tests, all passing (`HERMES-LAUNCH.md` §1).
-- **Waiting on the owner:** Tayler's email; the accountant's answer on sales tax on lump-sum bid pages; confirming the field measure defaults (§24).
-- **Since 2.7.2:** see `UPGRADE-2.7.2-to-2.8.0.md` and §28.
+- **Tests:** 17 files, 189 tests, all passing (`HERMES-LAUNCH.md` §1).
+- **Waiting on the owner:**
+  - Tayler's email
+  - the accountant's answer on sales tax on lump-sum bid pages
+  - confirming the field measure defaults (§24)
+- **Since 2.8.0:** see `UPGRADE-2.8.0-to-2.9.0.md` and §29.
 
 > **Start here: `HERMES-LAUNCH.md`.** Nothing is live yet (owner, Oct 28): Phase 1 and Phase 2 launch together, beside the existing tool. The launch guide lists the order of work.
 >
@@ -1042,3 +1055,68 @@ Owner, Oct 29: the Dashboard's "Needs attention" items were whole sentences styl
 - **Cabinets placed beyond the quote** get a banner in "From the quote" with the SKUs and counts:
   - On a quote: **Add them to the quote** raises those quantities at the same cost and markup, and reprices the total and invoices. **Remove the extras** takes the most recently placed ones off.
   - On a signed job: **Start a change order for them** opens a change order at its Cabinets step with the extras added. Costs come from the order or a supplier PDF; anything without a cost is flagged.
+
+## 29. Owner feedback batch, Oct 30 (2.9.0)
+
+`UPGRADE-2.8.0-to-2.9.0.md` lists each changed file; this section is the reference.
+
+**Contract: Ready to contract card**
+- **The deposit is due on signing** (owner decision Oct 27), so its stored date never blocks. `FMContract.readiness` (0.5.0) treats invoice 1 as due today. Only later invoices block: `duePast` if a date is past, `dueOrder` if out of order. Messages print dates as "Oct 29, 2026". The `depositPast` and `depositLate` checks are gone.
+- **Contract details and payment schedule** sit on the card and can be edited until the contract goes out: customer, project, buyer signer and email, install address (FMAddress fields), install date, and invoices 2+ due dates. When the install date moves, the last invoice follows it if it was due on the old date. Each change is logged with who made it.
+- **Every problem has a Fix link** to the field that fixes it, or the Cabinets tab. The "!" and "i" text prefixes are gone; problems use an alert style.
+
+**Elevations sent incomplete, on purpose**
+- If the drawings don't match the quote (no rooms, or quoted cabinets not placed), the contract is blocked until someone ticks **Send without complete elevations**. That stores `job.elevAck {by, on}` and logs it.
+- The packet then flags the drawings on the summary and every elevation page: "Preliminary drawings: 9 of 12 quoted cabinets shown. Final elevations to follow before ordering." With no drawings it reads "Elevations to follow." The flag is computed live, so it disappears once a revision matches the quote. Drawings signed this way are saved as "As signed · preliminary".
+
+**Test / Void status (Full access only)**
+- **Mark Test / Void** on the job page needs a reason. It stores `job.testVoid {reason, by, on, paidCents}`, keeps the stage, and logs it. **Restore** clears it.
+- **Data:** `FMStore.jobs()` and `books()` leave these jobs out. `jobs({ all: true })` includes them; use that for job-code numbering. FMBooks and FMReports also drop `testVoid` jobs from every function, as a backstop. All projects has a "Test / void · n" filter.
+- **Separate from voiding a signed contract**, which is unchanged (owner, Oct 30).
+- **Server:** add the `testVoid` column (JSON). Every list, total, report and export query filters it out.
+
+**Change orders: pricing for each change order, and a document**
+- **Price step:** markup on new lines, discount, G&A and tax all start from the job's values but can be changed for this change order alone. **Assembly labor** is hours × rate. **Markup per line** uses Tab-to-overwrite boxes. **Reset to job settings** puts them back.
+- **Change order record:** stores `pricing` (with `labor`), `differsFromJob`, and `priced {lines, summary}`. Tax and cost come from the same numbers.
+- **`FMChangeOrder.priceChange`** (0.3.0) takes `settings.labor`, applied to the added side only. It returns `lines` (removed lines are negative) and `summary` {cabinets, discount, labor, G&A, tax, total}.
+- **`FMDocs.renderChangeOrderDoc`** prints the change order for the buyer to sign: lines, pricing rows, totals before and after, due date, and signature blocks. It is modeled on Willow Creek's executed change order. An **Open change order** button sits on each priced change order.
+
+**Willow Creek change order 1, applied (owner supplied both PDFs Oct 30)**
+- `FM_WILLOW_ORDER.changeOrders[0]` holds:
+  - 14 lines in all three colors, with printed unit and total
+  - its own pricing: **5% discount** (the job uses 12%), 2% G&A, 7.9% tax, **5 h × $20.50** assembly
+  - the printed totals: $8,127.63 cabinets, −$269.44, $102.50, $159.21, $620.80, **$8,740.71**
+- The seed attaches these to the existing change order 1 and adds its tax ($620.80) and cost to the job. Cost is **$5,388.80**, worked back from the discount, because the PDFs have no unit costs. Willow Creek's P&L gross profit is now $19,426.73; before, the change order counted as revenue with no cost or tax.
+- **Pennies:** the printed line totals add to $8,127.64 against the $8,127.63 Cabinets row, and the printed parts add to $8,740.70 against the $8,740.71 total. Both come from the old tool's rounding and are kept as printed.
+- **Two new originals for the `files/` folder** (SHA-256 in the data):
+  - `FM-2609-276 · Willow Creek Estates.pdf`: the change order with its lines, 2 pages
+  - `COR FM-2609-276 · Willow Creek Estates.pdf`: the change order invoice, 1 page
+  - Both are in Dropbox under 719 MAIN (FREMONT MAKERS)/Projects/Willow Creek/Change Orders.
+
+**Payment schedule after signing: `src/fm-phase2-schedule.js` (FMSchedule, new; tests/schedule.test.js, 6)**
+- **Adjust schedule** on the Invoices tab lets you:
+  - move due dates
+  - move money between invoices
+  - **split** an invoice into two (the new one is named)
+  - remove an unpaid invoice
+- **Locked:** paid or partly paid invoices. Change-order invoices are left out entirely.
+- **Rules:** the total can't change, dates stay in order, and new dates can't be in the past.
+- Who asked and why are required. **Moving money needs Full access.** Changes to dates only can be saved by anyone.
+- Labels that name a share follow the new amount ("Invoice 3 · 20%" holding 10.2% becomes "Invoice 3 · 10.2%").
+- Stores `job.scheduleRevisions[]`. The packet's schedule shows "Schedule: Revised <date>".
+- This is separate from the Phase 1 `proposeScheduleChange` (activity log), which can't add or split invoices.
+
+**Contract packet: full contract language: `src/fm-phase2-agreement.js` (FMAgreement, new)**
+- **Packet order** now matches the signed packets:
+  1. Builder order page (builder orders: models and houses)
+  2. **Customer Sales Agreement**
+  3. Payment schedule (each invoice has its one-line description again)
+  4. Invoices
+  5. Quotes
+  6. Elevations
+- The old "Contract summary" page and "terms are not reprinted here" note are gone.
+- **The agreement** is word for word from the Willow Creek and Penrose packets: 7 sections, the governing-law line, signatures. Where the tool works differently, the wording follows it. Each difference is listed in `FMAgreement.CHANGES` and in `docs/contract-language-review.md`. **The owner approved all of them on Oct 30.** The owner also changed Goods: "no design professional services, no field measuring" is removed, because those are offered as needed and neither assumed included nor excluded. The rest of that list still says plainly what is NOT included (`FMAgreement.GOODS`).
+- **`renderPacket` opts:** `stages`, `bid`, `assembly`, `dates`, `fmSignerName`, `models`, `signedAgreementFile`. The preview builds them in `packetOpts(j)`.
+- **Load order:** `fm-phase2-agreement.js` loads before `fm-phase1-docs.js` (phase2.html and preview.html).
+
+**Tests:** 17 files, 189 tests, all passing: contract 22, changeorder 15, docs 10, store 8, schedule 6 (new); the rest unchanged.

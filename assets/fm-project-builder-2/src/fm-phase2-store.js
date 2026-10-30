@@ -16,7 +16,7 @@
   if (isNode) module.exports = api; else root.FMStore = api;
 }(typeof globalThis !== 'undefined' ? globalThis : this, function (FM) {
   'use strict';
-  var VERSION = '0.1.0-phase2';
+  var VERSION = '0.2.0-phase2';
   function clone(o) { return JSON.parse(JSON.stringify(o)); }
 
   /*
@@ -37,7 +37,20 @@
         var tax = 0, cost = 0;
         W.houses.forEach(function (h) { var m = W.models[h.model].contract; tax += FM.toCents(m.tax); cost += FM.toCents(m.costTotal); });
         x.taxCents = tax; x.costCents = cost;
-        x.costNote = 'Change order 1 cost isn\'t recorded yet.';
+        x.costNote = null;
+        (W.changeOrders || []).forEach(function (wc) {   // the executed change order, with its lines and its own pricing
+          var co = x.changeOrders.filter(function (c) { return c.number === wc.number; })[0]; if (!co) return;
+          var pt = wc.printed, cents = FM.toCents;
+          co.kind = 'charge'; co.reason = wc.reason; co.due = wc.due;
+          co.added = wc.lines.map(function (l) { return { sku: l.sku, desc: l.desc, qty: l.qty }; }); co.removed = [];
+          co.pricing = { discountPctOfCost: wc.pricing.discountPctOfCost, gaPct: wc.pricing.gaPct, taxPct: wc.pricing.taxPct, labor: [{ role: 'Assembly', rateCents: cents(wc.pricing.assembly.rate), hours: wc.pricing.assembly.hours }] };
+          co.priced = { printed: true, lines: wc.lines.map(function (l) { return { sku: l.sku, desc: l.desc, qty: l.qty, unitCents: cents(l.unit), totalCents: cents(l.total) }; }),
+            summary: { cabinetsCents: cents(pt.cabinets), discountCents: -cents(pt.discount), laborCents: cents(pt.assembly), gaCents: cents(pt.ga), taxCents: cents(pt.tax), totalCents: cents(pt.total) } };
+          co.taxCents = cents(pt.tax); co.costCents = cents(wc.costTotal); co.costIsEstimate = !!wc.costIsEstimate;
+          x.taxCents += co.taxCents; x.costCents += co.costCents;
+          x.costNote = 'Change order ' + wc.number + ' cost is worked back from its ' + wc.pricing.discountPctOfCost + '% discount (the PDF has no unit costs).';
+          (wc.documents || []).forEach(function (d) { x.documents.push(Object.assign({ jobCode: x.jobCode, changeOrder: wc.number }, d)); });
+        });
         x.pricing = { markupPct: null, discountPctOfCost: W.pricing.mfrDiscountPct, gaPct: W.pricing.gaPct, taxPct: W.pricing.taxPct, note: 'Markup set per model (18–72%).' };
         x.contacts.signer = W.signer;
       }
@@ -61,11 +74,13 @@
         x.documents = (B.documents || []).filter(function (d) { return d.jobCode === x.jobCode; });
         x.grandfathered = { signedCents: FM.toCents(k.total) };
       }
-      if (B && W && x.jobCode === W.jobCode) x.documents = (B.documents || []).filter(function (d) { return d.jobCode === x.jobCode; });
+      if (B && W && x.jobCode === W.jobCode) x.documents = (B.documents || []).filter(function (d) { return d.jobCode === x.jobCode; }).concat(x.documents);
       return x;
     });
     return { version: VERSION, today: S.today, jobs: jobs, log: [], seq: 0 };
   }
+
+  function counts(j) { return !j.testVoid; }
 
   /* The shape Company Books (FMBooks) reads. */
   function toBooks(job) {
@@ -73,7 +88,7 @@
     return { jobCode: job.jobCode, customer: job.customer, project: job.projectName, stage: job.stage,
       contractedOn: job.contractedOn || null, quoteDate: job.quoteDate || null, deliveryDate: job.deliveryDate || null,
       contractCents: s.currentCents, taxCents: job.taxCents || 0, costCents: job.costCents == null ? null : job.costCents,
-      absorbedCents: job.absorbedCents || 0, invoices: job.invoices };
+      absorbedCents: job.absorbedCents || 0, invoices: job.invoices, testVoid: !!job.testVoid };
   }
 
   var METHODS = { check: 'Check', ach: 'ACH / bank transfer', card: 'Card', cash: 'Cash' };
@@ -91,9 +106,26 @@
     return {
       VERSION: VERSION, METHODS: METHODS,
       get state() { return state; },
-      jobs: function () { return state.jobs; },
+      /* Jobs that count. Jobs marked Test / Void are left out of every list, total and report; pass { all: true } to include them. */
+      jobs: function (o) { return o && o.all ? state.jobs : state.jobs.filter(counts); },
       job: job,
-      books: function () { return state.jobs.map(toBooks); },
+      books: function () { return state.jobs.filter(counts).map(toBooks); },
+      /* Test / Void (HANDOFF §29): Full access only, a reason, logged; the stage is kept so Restore puts it back exactly. */
+      markTestVoid: function (code, reason, user, at) {
+        var j = job(code); if (!j) return { ok: false, error: 'No job ' + code + '.' };
+        if (!user || user.access !== 'full') return { ok: false, error: 'Only someone with Full access can mark a project Test / Void.' };
+        if (j.testVoid) return { ok: false, error: 'This project is already marked Test / Void.' };
+        if (!String(reason || '').trim()) return { ok: false, error: 'Say why, for example "test project" or "entered twice".' };
+        var paid = j.invoices.reduce(function (t, i) { return t + FM.invoicePaidCents(i); }, 0);
+        return this.update(code, function (x) { x.testVoid = { reason: String(reason).trim(), by: user.name, on: (at || new Date().toISOString()).slice(0, 10), paidCents: paid }; return x; },
+          'Marked Test / Void by ' + user.name + ': ' + String(reason).trim() + '. Left out of every total, report and list.' + (paid ? ' Its ' + FM.fmt(paid) + ' of recorded payments no longer count.' : ''), user.name, at);
+      },
+      restore: function (code, user, at) {
+        var j = job(code); if (!j) return { ok: false, error: 'No job ' + code + '.' };
+        if (!user || user.access !== 'full') return { ok: false, error: 'Only someone with Full access can restore a project.' };
+        if (!j.testVoid) return { ok: false, error: 'This project isn\'t marked Test / Void.' };
+        return this.update(code, function (x) { delete x.testVoid; return x; }, 'Restored by ' + user.name + ' (was Test / Void). It counts again, at the stage it had.', user.name, at);
+      },
       log: function (jobCode) { return state.log.filter(function (e) { return !jobCode || e.jobCode === jobCode; }); },
       reset: function () { state = clone(opts.seed); save(); },
       /* Add a new job (from the New Project flow). Job codes must be unique. */
@@ -140,5 +172,5 @@
     };
   }
 
-  return { VERSION: VERSION, seed: seed, toBooks: toBooks, create: create, browserStorage: browserStorage, METHODS: METHODS };
+  return { VERSION: VERSION, seed: seed, toBooks: toBooks, counts: counts, create: create, browserStorage: browserStorage, METHODS: METHODS };
 }));

@@ -162,5 +162,45 @@
       ],
       contract: { costTotal: 3959.33, cabinets: 6765.70, discount: 475.12, assembly: 235.75, ga: 130.53, tax: 496.96, total: 7153.81 }
     }
-  }
+  },
+
+  /*
+   * Change order 1, executed Oct 2026 (owner supplied both PDFs, Oct 30 2026). It was filed in the existing tool as its own
+   * project, FM-2610-475 "Willow Creek Change Order 10/23/26", and is attached to this job.
+   * One change for the whole order: lines in all three colors, priced with its OWN settings: a 5% manufacturer discount
+   * (the job used 12%), 2% G&A, 7.9% tax on product, and 5 h of assembly at $20.50.
+   * The PDFs print sell prices only. Unit costs and markups aren't on them, so the lines keep the printed unit and total,
+   * and the cost is worked back from the discount: $269.44 ÷ 5% = $5,388.80 (to within 10¢).
+   * The printed line totals add to $8,127.64; the Cabinets row says $8,127.63 (the existing tool rounds the unrounded sum).
+   */
+  changeOrders: [
+    {
+      number: 1, legacyJobCode: 'FM-2610-475', quoteDate: '2026-10-23', date: '2026-10-26', due: '2026-10-26', reason: 'SKUs updated Oct 2026',
+      pricing: { discountPctOfCost: 5, gaPct: 2, taxPct: 7.9, assembly: { rate: 20.50, hours: 5 } },
+      lines: [
+        { sku: 'W3042-SBW',    desc: 'Bayview White Shaker W3042',    qty: 4, unit: 523.19, total: 2092.77 },
+        { sku: 'B30-SBW',      desc: 'Bayview White Shaker B30',      qty: 2, unit: 608.55, total: 1217.11 },
+        { sku: 'W3024-UMO',    desc: 'Moss Green Shaker W3024',       qty: 4, unit: 327.32, total: 1309.28 },
+        { sku: 'W3024-SWD',    desc: 'Bayview Wood Shaker W3024',     qty: 2, unit: 391.27, total: 782.53 },
+        { sku: 'W3024-SBW',    desc: 'Bayview White Shaker W3024',    qty: 4, unit: 324.60, total: 1298.39 },
+        { sku: 'OCM8-SWD',     desc: 'Bayview Wood Shaker OCM8',      qty: 1, unit: 37.36,  total: 37.36 },
+        { sku: 'SM8(SCR)-SWD', desc: 'Bayview Wood Shaker SM8(SCR)',  qty: 1, unit: 26.31,  total: 26.31 },
+        { sku: 'FPV4296-SWD',  desc: 'Bayview Wood Shaker FPV4296',   qty: 2, unit: 175.40, total: 350.80 },
+        { sku: 'SM8(SCR)-SBW', desc: 'Bayview White Shaker SM8(SCR)', qty: 1, unit: 26.96,  total: 26.96 },
+        { sku: 'OCM8-SBW',     desc: 'Bayview White Shaker OCM8',     qty: 1, unit: 32.47,  total: 32.47 },
+        { sku: 'FPV4296-SBW',  desc: 'Bayview White Shaker FPV4296',  qty: 3, unit: 146.82, total: 440.46 },
+        { sku: 'OCM-UMO',      desc: 'Moss Green Shaker OCM',         qty: 1, unit: 52.11,  total: 52.11 },
+        { sku: 'SCR-UMO',      desc: 'Moss Green Shaker SCR',         qty: 1, unit: 26.31,  total: 26.31 },
+        { sku: 'FPV4296-UMO',  desc: 'Moss Green Shaker FPV4296',     qty: 3, unit: 144.93, total: 434.78 }
+      ],
+      printed: { cabinets: 8127.63, discount: 269.44, assembly: 102.50, ga: 159.21, tax: 620.80, total: 8740.71 },
+      costTotal: 5388.80, costIsEstimate: true,
+      documents: [
+        { title: 'Change order 1 (cabinet lines and pricing)', file: 'FM-2609-276 · Willow Creek Estates.pdf', pages: 2, bytes: 757760,
+          sha256: '343434812cc15117eee49c831f1c553f4b644e997cb812c33bf7632531cc59ed', kind: 'change_order', contains: '14 lines, discount 5%, assembly, G&A, tax; $8,740.71 due Oct 26, 2026' },
+        { title: 'Change order 1 invoice', file: 'COR FM-2609-276 · Willow Creek Estates.pdf', pages: 1, bytes: 287104,
+          sha256: '93d8eb1a6299d9a3efa952734112d1c3b137a44cb711c82970aff195f5a16a38', kind: 'invoice', contains: 'Change Order Invoice #1, $8,740.71 due Oct 26, 2026' }
+      ]
+    }
+  ]
 }));

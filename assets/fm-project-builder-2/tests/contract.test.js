@@ -40,7 +40,7 @@ test('the blank job from the recording is blocked, with a reason for each gap', 
   var r = K.readiness(BLANK, { today: TODAY });
   eq(r.ready, false);
   eq(ids(r.blockers), ['customer', 'signer', 'project', 'fmSigner', 'installAddress', 'lines', 'total']);
-  eq(ids(r.warnings), ['installFar', 'depositLate']);
+  eq(ids(r.warnings), ['installFar']);   // the deposit is due on signing, so its stored date raises nothing
 });
 
 test('placeholders and bad emails count as missing', function () {
@@ -59,13 +59,16 @@ test('only a Proposed job can be contracted', function () {
   eq(ids(K.readiness(j, { today: TODAY }).blockers), ['status']);
 });
 
-test('plan must add to 100%, and dates must be present, in order and not past', function () {
+test('plan must add to 100%, and dates must be present, in order and not past (deposit is due on signing)', function () {
   var j = penrose(); j.paymentPlan = [50, 30, 10]; j.dueDates = ['2026-10-27', '2026-11-03', '2026-11-09'];
   eq(ids(K.readiness(j, { today: TODAY }).blockers), ['plan']);
   j = penrose(); j.dueDates = ['2026-10-27', '2026-11-12', '2026-11-09'];
   eq(ids(K.readiness(j, { today: TODAY }).blockers), ['dueOrder']);
   j = penrose(); j.dueDates = ['2026-08-11', '2026-09-25', '2026-11-09'];  // today's "90 days back from install"
-  eq(ids(K.readiness(j, { today: TODAY }).blockers), ['depositPast']);
+  eq(ids(K.readiness(j, { today: TODAY }).blockers), ['duePast']);
+  ok(/Invoice 2 is due Sep 25, 2026/.test(K.readiness(j, { today: TODAY }).blockers[0].message));
+  j = penrose(); j.dueDates = ['2026-10-20', '2026-11-03', '2026-11-09'];  // quote made a week ago: the deposit date is stale
+  eq(ids(K.readiness(j, { today: TODAY }).blockers), [], 'a stale deposit date never blocks: the deposit is due on signing');
   j = penrose(); j.installDate = '2026-10-01';
   ok(ids(K.readiness(j, { today: TODAY }).blockers).indexOf('installDate') >= 0);
 });

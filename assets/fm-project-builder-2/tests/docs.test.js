@@ -65,20 +65,43 @@ test('payment schedule lists every invoice and flags totals that don\'t match', 
   has(w, 'Invoices total $80,888.05; the contract total is $72,147.34.');   // the change order isn't attached yet
 });
 
-test('contract packet: summary, schedule, each invoice, then the quote pages', function () {
+test('contract packet: agreement, schedule, each invoice, then the quote pages', function () {
   var priced = Q.priceHouse(Q.inputFromOrderModel(B.model, B.pricing));
   var quote = D.renderBidQuoteDoc(priced, 1097311, { house: 'Penrose', buyer: 'Braddy Builders', jobCode: 'FM-2609-314' });
-  var html = D.renderPacket(PEN, { today: TODAY, quotes: [quote], agreementOnFile: true });
+  var stages = [{ name: 'Deposit', pct: 50 }, { name: 'Progress', pct: 30 }, { name: 'Final', pct: 20 }];
+  var html = D.renderPacket(PEN, { today: TODAY, quotes: [quote], stages: stages, bid: true, signedAgreementFile: 'FM-2609-314 · Braddy Builders.pdf' });
   eq(count(html, '<article class="fm-p1-doc'), 1 + 1 + 3 + 1);
-  has(html, 'aria-label="Contract summary"'); has(html, 'Contract total</td><td class="r">$10,973.11');
-  has(html, 'The signed Customer Sales Agreement is attached to this job');
-  ok(html.indexOf('aria-label="Payment schedule"') < html.indexOf('aria-label="Invoice 1') && html.indexOf('aria-label="Invoice 3') < html.indexOf('aria-label="Final Job Quote Penrose"'), 'page order');
-  has(D.renderPacket(PEN, { today: TODAY }), 'is not on file');
+  ok(html.indexOf('aria-label="Customer Sales Agreement"') < html.indexOf('aria-label="Payment schedule"') && html.indexOf('aria-label="Payment schedule"') < html.indexOf('aria-label="Invoice 1') &&
+     html.indexOf('aria-label="Invoice 3') < html.indexOf('aria-label="Final Job Quote Penrose"'), 'page order');
+  has(html, 'The signed copy of this agreement is on file: FM-2609-314 · Braddy Builders.pdf.');
+  has(html, 'Factory order is not placed until this invoice is paid in full.'); has(html, 'Due at pickup or delivery.');
 });
 
-test('a builder-order packet is titled with the customer; long titles get the smaller size', function () {
-  var html = D.renderPacket(WIL, { today: TODAY });
-  has(html, '<div class="doc-kicker">Contract packet · 10 houses</div><h1>Willow Creek Estates</h1>');
+test('the agreement prints every clause of the signed packets, with this job\'s details', function () {
+  var AG = isNode ? require('../src/fm-phase2-agreement.js') : globalThis.FMAgreement;
+  function h(s) { return s.replace(/&/g, '&amp;').replace(/[’']/g, function (c) { return c === "'" ? '&#39;' : c; }); }
+  var stages = [{ name: 'Deposit', pct: 50 }, { name: 'Progress', pct: 30 }, { name: 'Final', pct: 20 }];
+  var a = D.renderAgreementDoc(PEN, { stages: stages, bid: true, fmSignerName: 'Lindsay Wyss' });
+  ['Parties and entire agreement', 'Goods', 'Nature of seller', 'Payment terms', 'Measurements and elevations', 'Delivery, inspection, and assembly', 'Warranty'].forEach(function (x) { has(a, '<h2>' + x + '</h2>'); });
+  [AG.GOODS, AG.SIGNED.seller, AG.SIGNED.delivery, AG.SIGNED.assembly, AG.SIGNED.warranty, AG.LAW].forEach(function (s) { has(a, h(s)); });
+  hasNot(a, 'no design professional services'); hasNot(a, 'no field measuring'); has(a, 'Unless the Quote says otherwise in writing: no install into the building, no plumbing');
+  has(a, 'Buyer is Braddy Builders (Bernard Braddy).'); has(a, 'Pricing is by bid.');
+  has(a, 'Payment is 50 / 30 / 20 of the contract total of $10,973.11. Invoice 1 (50%) is the deposit, due on signing. The factory order is not placed until Invoice 1 is paid in full.');
+  has(a, 'Invoice 3 (20%) is due at pickup or delivery.'); has(a, 'Elevation drawings ship with the Quote.'); hasNot(a, 'Manufacturer elevation views');
+  has(a, 'Printed name · Lindsay Wyss'); has(a, 'Dropbox Sign or on paper');
+  var w = D.renderAgreementDoc(WIL, { stages: [{ name: 'Deposit', pct: 50 }, { name: 'At delivery', pct: 50 }], assembly: false, elevations: 'preliminary' });
+  hasNot(w, 'Pricing is by bid.'); has(w, 'Payment is 50 / 50 of the contract total of $72,147.34.'); has(w, 'Assembly is not included in this contract total.');
+  has(w, 'The elevations in this packet are preliminary.'); has(w, 'the elevation drawings, and any change orders both parties sign are the entire deal.');
+  var c = D.renderAgreementDoc(PEN, { stages: [{ name: 'Deposit', pct: 40 }, { name: 'Cabinets arrive', pct: 40 }, { name: 'Final', pct: 20 }] });
+  has(c, 'Invoice 2 (40%), Cabinets arrive, is a progress payment as the order proceeds.');
+  var f = D.renderAgreementDoc(PEN, {}); has(f, 'Payment is 50 / 30 / 20 of the contract total', 'no plan passed: read from the invoices'); hasNot(f, ', Payment,');
+});
+
+test('a builder-order packet starts with the builder order page; long titles get the smaller size', function () {
+  var html = D.renderPacket(WIL, { today: TODAY, models: [{ name: 'San Luis', houses: 2, cents: 1217193 }] });
+  has(html, '<div class="doc-kicker">Builder order</div><h1>Willow Creek Estates</h1>');
+  ok(html.indexOf('aria-label="Builder order"') < html.indexOf('aria-label="Customer Sales Agreement"'), 'builder order first');
+  has(html, 'Models on this order'); has(html, '<td>San Luis</td><td class="r">2</td><td class="r">$12,171.93</td>');
   hasNot(html, '<h1>2 Cimarron Peak');
   var long = JSON.parse(JSON.stringify(PEN)); long.projectName = 'Penrose Lot 14 with the long name & garage';
   var p = D.renderPacket(long, { today: TODAY });

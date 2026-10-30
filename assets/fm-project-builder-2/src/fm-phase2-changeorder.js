@@ -16,7 +16,7 @@
   else root.FMChangeOrder = factory();
 }(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
-  var VERSION = '0.2.0-phase2';
+  var VERSION = '0.3.0-phase2';
 
   var REASONS = {
     backorder: 'Backordered item substituted',
@@ -180,30 +180,44 @@
   }
 
   /*
-   * Price the change with THIS job's settings (per-job pricing, corrected math §12).
-   * change: { added:[{sku,desc,qty,unitCostCents,markupPct?}], removed:[…same, unitCostCents & markupPct as sold…] }
-   * settings: { markupPct, discountPctOfCost, gaPct, taxPct }
-   * Returns { ok, addedCents, removedCents, deltaCents } or { ok:false, error }.
+   * Price the change. Settings start from the job's, but every one can be set for this change order alone
+   * (owner, Oct 2026): markup on new lines, discount, G&A, tax, and assembly labor for the change.
+   * change:   { added:[{sku,desc,qty,unitCostCents,markupPct?}], removed:[…same, unitCostCents & markupPct as sold…] }
+   * settings: { markupPct, discountPctOfCost, gaPct, taxPct, labor: [{ role, rateCents, hours }] }   (labor is for the change, added side)
+   * Returns { ok, addedCents, removedCents, deltaCents, lines, summary, taxCents, costCents } or { ok:false, error }.
+   *   lines:   priced rows for the document; removed rows have negative qty and totals
+   *   summary: { cabinetsCents, discountCents, laborCents, gaCents, taxCents, totalCents } for the change (added − removed)
    */
   function priceChange(change, settings, Q) {
     Q = Q || (typeof require === 'function' && typeof module === 'object' ? require('./fm-phase1-quote.js') : globalThis.FMQuote);
-    function total(list) {
-      if (!list || !list.length) return 0;
-      var p = Q.priceHouse({ lines: list.map(function (l) {
+    function price(list, labor) {
+      if ((!list || !list.length) && !(labor && labor.length)) return null;
+      var p = Q.priceHouse({ lines: (list || []).map(function (l) {
         return { description: l.desc, sku: l.sku, qty: l.qty, unitCostCents: l.unitCostCents, markupPct: l.markupPct == null ? settings.markupPct : l.markupPct };
-      }), discountPctOfCost: settings.discountPctOfCost, labor: [], gaPct: settings.gaPct, taxPct: settings.taxPct });
+      }), discountPctOfCost: settings.discountPctOfCost, labor: labor || [], gaPct: settings.gaPct, taxPct: settings.taxPct });
       if (!p.ok) throw new Error(p.error);
-      return p.summary.totalCents;
+      return p;
+    }
+    function parts(p) {
+      if (!p) return { cabinetsCents: 0, discountCents: 0, laborCents: 0, gaCents: 0, taxCents: 0, totalCents: 0, costCents: 0 };
+      var s = p.summary;
+      return { cabinetsCents: s.cabinetsCents, discountCents: -s.discountCents, laborCents: s.laborCents, gaCents: s.gaCents, taxCents: s.taxCents, totalCents: s.totalCents, costCents: p.internal.costCents };
     }
     try {
-      var a = total(change.added), r = total(change.removed);
-      return { ok: true, addedCents: a, removedCents: r, deltaCents: a - r };
+      var labor = (settings.labor || []).filter(function (w) { return w.hours > 0 && w.rateCents > 0; });
+      var pa = price(change.added, labor), pr = price(change.removed, null), a = parts(pa), r = parts(pr), summary = {};
+      Object.keys(a).forEach(function (k) { summary[k] = a[k] - r[k]; });
+      var lines = (pa ? pa.lines.map(function (l) { return { sku: l.sku, desc: l.description, qty: l.qty, unitCostCents: l.unitCostCents, markupPct: l.markupPct, unitCents: l.unitCents, totalCents: l.totalCents }; }) : [])
+        .concat(pr ? pr.lines.map(function (l) { return { sku: l.sku, desc: l.description, qty: -l.qty, unitCostCents: l.unitCostCents, markupPct: l.markupPct, unitCents: l.unitCents, totalCents: -l.totalCents, removed: true }; }) : []);
+      return { ok: true, addedCents: a.totalCents, removedCents: r.totalCents, deltaCents: summary.totalCents, lines: lines, summary: summary,
+               taxCents: summary.taxCents, costCents: summary.costCents,
+               settings: { markupPct: settings.markupPct, discountPctOfCost: settings.discountPctOfCost, gaPct: settings.gaPct, taxPct: settings.taxPct, labor: labor } };
     } catch (e) { return { ok: false, error: e.message }; }
   }
 
   /*
    * Decide what the change costs the customer. There is NO default: the person must choose.
-   *   'charge'   – priced with the job's settings (priceChange).
+   *   'charge'   – priced with the change order's settings (priceChange; they start from the job's).
    *   'courtesy' – $0 to the customer, cost absorbed, owner approves (see courtesy()).
    *   'custom'   – an agreed amount; needs a note saying why it differs.
    */

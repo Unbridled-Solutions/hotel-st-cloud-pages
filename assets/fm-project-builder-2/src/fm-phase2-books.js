@@ -234,7 +234,9 @@
     return c < 0 ? '−' + s : s;
   }
 
+  /* Jobs marked Test / Void never count anywhere (HANDOFF §29). The store already leaves them out; this is the backstop. */
+  function counted(fn) { return function (jobs) { var a = [].slice.call(arguments); a[0] = (jobs || []).filter(function (j) { return !j.testVoid; }); return fn.apply(null, a); }; }
   return { VERSION: VERSION, STAGE_ORDER: STAGE_ORDER, STAGE_LABEL: STAGE_LABEL, money: money,
-           dashboard: dashboard, pipeline: pipeline, pipelineGroups: pipelineGroups, depositsDue: depositsDue, reconcile: reconcile,
-           profitAndLoss: profitAndLoss, balanceSheet: balanceSheet };
+           dashboard: counted(dashboard), pipeline: counted(pipeline), pipelineGroups: counted(pipelineGroups), depositsDue: counted(depositsDue), reconcile: counted(reconcile),
+           profitAndLoss: counted(profitAndLoss), balanceSheet: counted(balanceSheet) };
 }));

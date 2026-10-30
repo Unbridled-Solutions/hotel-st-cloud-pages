@@ -146,6 +146,19 @@ test('a change is priced with the job\'s own settings (Penrose: +1 BC24 = $471.8
   eq(CO.priceChange({ added: [{ sku: 'X-VDH', qty: 1.5, unitCostCents: 100 }] }, settings).ok, false);
 });
 
+test('a change order can use its own settings and assembly labor (Willow Creek CO 1: 5% discount, 5 h × $20.50)', function () {
+  var settings = { markupPct: 35, discountPctOfCost: 5, gaPct: 2, taxPct: 7.9, labor: [{ role: 'Assembly', rateCents: 2050, hours: 5 }] };
+  var line = { sku: 'B30-SBW', desc: 'Bayview White Shaker B30', qty: 2, unitCostCents: 40000, markupPct: 50 };
+  // unit 600.00 → cabinets 1,200.00; discount 5% of 800.00 = 40.00; product 1,160.00; labor 102.50; G&A 2% of 1,262.50 = 25.25; tax 7.9% of 1,160.00 = 91.64 → 1,379.39
+  var p = CO.priceChange({ added: [line], removed: [] }, settings);
+  eq([p.summary.cabinetsCents, p.summary.discountCents, p.summary.laborCents, p.summary.gaCents, p.summary.taxCents, p.deltaCents], [120000, -4000, 10250, 2525, 9164, 137939]);
+  eq(p.lines.map(function (l) { return [l.sku, l.qty, l.unitCents, l.totalCents]; }), [['B30-SBW', 2, 60000, 120000]]);
+  var swap = CO.priceChange({ added: [line], removed: [Object.assign({}, line, { qty: 1 })] }, settings);
+  eq(swap.lines.map(function (l) { return [l.qty, l.totalCents, !!l.removed]; }), [[2, 120000, false], [-1, -60000, true]]);
+  eq(swap.summary.laborCents, 10250, 'labor is charged on the added side only');
+  eq(CO.priceChange({ added: [line] }, { markupPct: 35, discountPctOfCost: 12, gaPct: 2, taxPct: 7.9 }).summary.discountCents, -9600, 'the job\'s 12% when not overridden');
+});
+
 test('there is no default price choice; an agreed amount needs a reason', function () {
   var priced = { ok: true, deltaCents: 746638 };
   eq(CO.choosePrice(undefined, priced).error, 'Choose how this change is priced: charge it, courtesy, or an agreed amount.');
