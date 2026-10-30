@@ -1,6 +1,19 @@
 # Handoff to Hermes: Project Builder Phase 1 + 2
 
-**From:** Fremont Makers (Linds) via Claude · **Date:** 2026-10-29 · **Package version:** 2.7.2
+**From:** Fremont Makers (Linds) via Claude · **Date:** 2026-10-29 · **Package version:** 2.8.0
+
+## Current state (2.8.0, Oct 29 2026)
+
+*Rewritten each release, so you don't need the history below. The numbered sections are the detail.*
+
+- **What this is:** a new Project Builder (Phase 1 quote and ledger math, Phase 2 app `phase2.html`) that launches **beside** the existing tool behind the `fm_phase1` flag. **Nothing is live.** Follow `HERMES-LAUNCH.md`.
+- **Screens:** sidebar (Projects: All projects, Elevations, Customers, Field measure · Company books: Dashboard, Pipeline, Deposits due, Reconcile, P&L, Balance sheet, Reports & exports · Company: Users); job page with tabs; New Project, change order and contract flows.
+- **Pricing:** set per job, never per customer. Defaults are 35% markup · 12% discount off cost · 2% G&A · 7.9% tax · 50/50 plan; assembly is hours × rate per home ($20.50/h, hours entered on each job). Custom payment plans are allowed.
+- **Addresses:** Street / City / State (CO default) / ZIP, stored as fields plus the joined line (§28).
+- **Server work still to do (yours):** sign-in and access levels, the shared database, file storage with SHA-256, the supplier PDF import, Dropbox Sign, and field-measure sync (`HERMES-LAUNCH.md` §2).
+- **Tests:** 16 files, 179 tests, all passing (`HERMES-LAUNCH.md` §1).
+- **Waiting on the owner:** Tayler's email; the accountant's answer on sales tax on lump-sum bid pages; confirming the field measure defaults (§24).
+- **Since 2.7.2:** see `UPGRADE-2.7.2-to-2.8.0.md` and §28.
 
 > **Start here: `HERMES-LAUNCH.md`.** Nothing is live yet (owner, Oct 28): Phase 1 and Phase 2 launch together, beside the existing tool. The launch guide lists the order of work.
 >
@@ -1001,3 +1014,31 @@ Owner, Oct 29: the Dashboard's "Needs attention" items were whole sentences styl
 - **On a phone**, the label sits above the title, and the amount and button share the last line.
 - `FMBooks.dashboard().attention[]` items now carry `kind`, `status`, `title`, `customer`, `detail`, `amountCents`, `action` and `tab`, besides the old `text`. Dates in the detail read "Sep 16, 2026".
 - **Links across the app** use the ink color with a soft underline (stronger on hover), never browser blue or visited purple. Buttons drawn as links have no underline, and the sidebar and tabs have none.
+
+## 28. Owner feedback batch, Oct 29 (2.8.0)
+
+`UPGRADE-2.7.2-to-2.8.0.md` lists each changed file; this section is the reference.
+
+**Navigation and tables**
+- Sidebar section headings (Projects, Company books, Company) are bolder, with a rule under each. **Elevations** is a new page under Projects (`#/elevations`): every project's drawing progress, layout checks and status, with projects still being drawn first. The drawing itself still happens in each job's Elevations tab.
+- Row buttons (Open, Show SKUs, Remove) sit in the middle of their row (`td.p2-act`). Phase 2 tables have a 680px minimum width, so the last column stays in view on a small laptop.
+
+**Addresses: `src/fm-phase2-address.js` (FMAddress, new; tests/address.test.js)**
+- Entered as Street, City, State, ZIP. State defaults to Colorado and can be changed (50 states and DC). Used in New Project, customer profile addresses and field measure leads.
+- Stored as fields, plus the joined line that contracts and documents print. Jobs: `installAddr {street, city, state, zip}` plus `installAddress` ("414 Miners Rd, Canon City, CO 81212"). Customer addresses and `visit.lead`: the same fields plus `line` / `address`. Older one-line records still read through `FMAddress.from()` / `parse()`.
+- **Server:** add the four columns where addresses are stored. Keep the joined line for documents. Validate with the same rules as `FMAddress.check()`.
+
+**New Project**
+- **Cabinets step:** a compact card per home or model. Once a supplier PDF is picked, its lines show at once (SKU, description, qty, unit cost, line cost) so they can be checked before Next.
+- **Price step:** Assembly and Payment plan come first, then Markup and tax, then a tighter cabinet table with descriptions.
+- **Assembly is hours × hourly rate per home.** The rate defaults to **$20.50** and the hours start blank on every job (owner, Oct 29); 0 means no assembly. Job pricing stores `assemblyHours`, `assemblyRateCents` and `assemblyCents` (the product). Quotes print it as assembly labor. Jobs priced before this keep their flat `assemblyCents`, and duplicating or copying from one leaves the hours blank, with a note.
+- **Payment plan:** 50/50, 50/30/20, 100, or **+ Custom payment plan** with named payments and percentages that must total 100%. Job pricing stores `plan` (percentages), `planNames` and `planMode`. A custom plan's invoices read "Invoice 2 · Cabinets delivered · 40%", and the contract's payment schedule, the invoices and the readiness check all follow the plan.
+- Number boxes (markup, hours, percentages) select their contents when tabbed or clicked into, so typing replaces the number.
+- The Live total uses the body font with tabular figures (it was the display serif).
+- The step tabs at the top of New Project and change orders now switch steps when clicked. They were links the app ignored.
+
+**Elevations**
+- **One click selects a cabinet** and outlines it. Before, the drag handling swallowed the click, so nothing was selected until a drag. A **Selected** bar under the drawing shows what it is and where, with ← → / Size… / **Remove**. **Delete** removes it (undo with ⌘Z) and **Esc** deselects.
+- **Cabinets placed beyond the quote** get a banner in "From the quote" with the SKUs and counts:
+  - On a quote: **Add them to the quote** raises those quantities at the same cost and markup, and reprices the total and invoices. **Remove the extras** takes the most recently placed ones off.
+  - On a signed job: **Start a change order for them** opens a change order at its Cabinets step with the extras added. Costs come from the order or a supplier PDF; anything without a cost is flagged.

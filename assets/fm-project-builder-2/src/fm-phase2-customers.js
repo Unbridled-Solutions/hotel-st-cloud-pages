@@ -9,7 +9,7 @@
  * Mesa Ridge, Sangre Vista, Pinyon Crest, Cimarron Peak), each with its usual house count, cabinet lines and drawings.
  *
  * customer: { id, name, kind: 'builder'|'homeowner'|'other', contacts: [{ id, name, role, email, phone, signs }],
- *             addresses: [{ id, label, kind: 'billing'|'site', line }], notes, templates: [template], createdAt }
+ *             addresses: [{ id, label, kind: 'billing'|'site', street, city, state, zip, line }],   (line = the joined form, FMAddress.format) notes, templates: [template], createdAt }
  * template: { id, name, kind: 'single'|'builder', models: [{ name, qty, lines: [{ sku, desc, qty, unitCostCents }], rooms: [elevation room] }],
  *             fromJob, costsAsOf, createdAt, createdBy }
  */
@@ -45,7 +45,11 @@
         c.contacts.push({ id: newId('ct'), name: signer, role: 'signer', email: email, phone: '', signs: true });
       else if (signer && email) c.contacts.forEach(function (x) { if (key(x.name) === key(signer) && !x.email) x.email = email; });
       var site = String(j.installAddress || '').trim();
-      if (site && !c.addresses.some(function (a) { return key(a.line) === key(site); })) c.addresses.push({ id: newId('ad'), label: j.projectName || 'Job site', kind: 'site', line: site });
+      if (site && !c.addresses.some(function (a) { return key(a.line) === key(site); })) {
+        var ad = { id: newId('ad'), label: j.projectName || 'Job site', kind: 'site', line: site };
+        if (j.installAddr) { ad.street = j.installAddr.street; ad.city = j.installAddr.city; ad.state = j.installAddr.state; ad.zip = j.installAddr.zip; }   // jobs from the new form keep the fields
+        c.addresses.push(ad);
+      }
     });
     return out;
   }

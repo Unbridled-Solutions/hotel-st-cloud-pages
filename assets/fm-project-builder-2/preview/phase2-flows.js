@@ -6,11 +6,33 @@
  */
 (function () {
   'use strict';
-  var FM = window.FMPhase1, Q = window.FMQuote, D = window.FMDocs, K = window.FMContract, CO = window.FMChangeOrder;
+  var FM = window.FMPhase1, Q = window.FMQuote, D = window.FMDocs, K = window.FMContract, CO = window.FMChangeOrder, A = window.FMAddress;
   var W = window.FM_WILLOW_ORDER, B = window.FM_BRADDY_ORDER;
-  var DEFAULTS = { markupPct: 35, discountPctOfCost: 12, gaPct: 2, taxPct: 7.9, assembly: '640.00', plan: [50, 50], atCost: true };
+  /* Company defaults for a new job. Assembly is hours × an hourly rate per home: the rate starts at $20.50, the hours are
+     entered on every job (owner, Oct 2026). */
+  var DEFAULTS = { markupPct: 35, discountPctOfCost: 12, gaPct: 2, taxPct: 7.9, assemblyRate: '20.50', assemblyHours: '', plan: [50, 50], planNames: ['Deposit', 'At delivery'], planMode: '0', atCost: true };
   var AT_COST = ['PWB18K', 'TU', 'TUK', 'F342'];
-  var PLANS = [[50, 50], [50, 30, 20], [100]];
+  var PLANS = [{ pct: [50, 50], names: ['Deposit', 'At delivery'] }, { pct: [50, 30, 20], names: ['Deposit', 'Progress', 'Final'] }, { pct: [100], names: ['Paid in full'] }];
+  function presetIndex(plan) { for (var i = 0; i < PLANS.length; i++) if (PLANS[i].pct.join() === (plan || []).join()) return String(i); return 'custom'; }
+  /* a job's or draft's payment plan as named stages; the invoices and the contract's payment schedule are built from it */
+  function planStages(p) {
+    var plan = (p && p.plan) || [], ix = presetIndex(plan), names = (p && p.planNames) || (ix !== 'custom' ? PLANS[+ix].names : []);
+    return plan.map(function (pct, i) { return { name: String(names[i] || '').trim() || 'Payment ' + (i + 1), pct: pct }; });
+  }
+  function invoiceLabel(p, i) {
+    var st = planStages(p)[i], custom = p && p.planMode === 'custom';
+    return 'Invoice ' + (i + 1) + ' · ' + (custom ? st.name + ' · ' : '') + st.pct + '%';
+  }
+  function copyAssembly(d, p) {
+    if (p.assemblyHours != null) { d.pricing.assemblyHours = String(p.assemblyHours); if (p.assemblyRateCents != null) d.pricing.assemblyRate = (p.assemblyRateCents / 100).toFixed(2); return true; }
+    return false;   // an older job with a flat assembly amount: the hours start blank
+  }
+  function copyPlan(d, p, src) {
+    var plan = p.plan ? p.plan.slice() : src && src.invoices && src.invoices.length === 3 ? [50, 30, 20] : null;
+    if (!plan) return;
+    d.pricing.plan = plan; d.pricing.planMode = p.planMode === 'custom' ? 'custom' : presetIndex(plan);
+    d.pricing.planNames = planStages({ plan: plan, planNames: p.planNames }).map(function (x) { return x.name; });
+  }
   /* Who can sign for Fremont Makers: the users marked "Signs contracts" on the Users page (window.P2Users). */
   function signers() { return window.P2Users ? window.P2Users.signers() : []; }
   var COLORS = { VDH: 'Dark Hickory Shaker', SBW: 'Bayview White Shaker', SWD: 'Bayview Wood Shaker', UMO: 'Moss Green Shaker' };
@@ -35,14 +57,24 @@
 
   /* ================= New Project ================= */
   function blankDraft(c) {
-    return { step: 0, customer: '', newCustomer: '', project: '', signer: '', email: '', kind: 'single', address: '',
+    return { step: 0, customer: '', newCustomer: '', project: '', signer: '', email: '', kind: 'single', address: '', addr: A.blank(),
       models: [{ id: 'm1', name: '', qty: 1, lines: [], pdf: '' }], pricing: JSON.parse(JSON.stringify(DEFAULTS)), copiedFrom: '',
       bid: false, bidAmount: '', install: '', errors: [] };
   }
   function loadDraft(c) {
     if (c.ui.draft) return c.ui.draft;
-    try { var s = window.localStorage.getItem(DRAFT_KEY); if (s) { c.ui.draft = JSON.parse(s); return c.ui.draft; } } catch (e) { /* none */ }
+    try { var s = window.localStorage.getItem(DRAFT_KEY); if (s) { c.ui.draft = migrate(JSON.parse(s)); return c.ui.draft; } } catch (e) { /* none */ }
     c.ui.draft = blankDraft(c); return c.ui.draft;
+  }
+  /* drafts saved before addresses had fields and assembly had hours */
+  function migrate(d) {
+    if (!d.addr) d.addr = A.parse(d.address);
+    var p = d.pricing = d.pricing || JSON.parse(JSON.stringify(DEFAULTS));
+    if (p.assemblyRate == null) { p.assemblyRate = DEFAULTS.assemblyRate; p.assemblyHours = ''; delete p.assembly; }
+    if (!p.plan) p.plan = DEFAULTS.plan.slice();
+    if (!p.planMode) p.planMode = presetIndex(p.plan);
+    if (!p.planNames) p.planNames = planStages(p).map(function (x) { return x.name; });
+    return d;
   }
   function saveDraft(c) { try { window.localStorage.setItem(DRAFT_KEY, JSON.stringify(c.ui.draft)); } catch (e) { /* keep in memory */ } }
   function clearDraft(c) { c.ui.draft = null; try { window.localStorage.removeItem(DRAFT_KEY); } catch (e) { /* ignore */ } }
@@ -58,7 +90,7 @@
     d.kind = builder ? 'builder' : 'single';
     var p = j.pricing;
     if (p) { ['markupPct', 'discountPctOfCost', 'gaPct', 'taxPct'].forEach(function (k) { if (p[k] != null) d.pricing[k] = p[k]; });   // per-model markup (Willow) keeps the default here; lines keep their own
-      if (p.assemblyCents != null) d.pricing.assembly = (p.assemblyCents / 100).toFixed(2); if (p.plan) d.pricing.plan = p.plan.slice(); else if (j.invoices && j.invoices.length === 3) d.pricing.plan = [50, 30, 20]; }
+      var flatAsm = !copyAssembly(d, p) && p.assemblyCents; copyPlan(d, p, j); }
     d.copiedFrom = j.jobCode; d.duplicatedFrom = j.jobCode;
     var E = j.elevations || {}, rooms = [], nRooms = 0;
     d.models = (sets.length ? sets : [{ key: '', lines: [] }]).map(function (st, i) {
@@ -76,7 +108,7 @@
     d.models.forEach(function (m) { m.lines.forEach(function (l) { if (l.srcMarkup != null && +l.srcMarkup !== l.markupPct) { l.markupPct = +l.srcMarkup; l.edited = true; } delete l.srcMarkup; }); });
     d.step = 2;
     d.note = 'Copied from ' + j.jobCode + ' · ' + j.customer + ': customer, ' + (builder ? d.models.length + ' models, ' : '') + d.models.reduce(function (t, m) { return t + m.lines.length; }, 0) + ' cabinet lines (with change orders), pricing' +
-      (nRooms ? ' and ' + nRooms + ' room' + (nRooms === 1 ? '' : 's') + ' of drawings' : '') + '. Add more cabinets from another supplier PDF below, then check every step. The address and install date start blank.' +
+      (nRooms ? ' and ' + nRooms + ' room' + (nRooms === 1 ? '' : 's') + ' of drawings' : '') + '. Add more cabinets from another supplier PDF below, then check every step. The address and install date start blank.' + (flatAsm ? ' The original used a flat assembly amount (' + c.money(p.assemblyCents) + ' per home); enter the assembly hours on the Price step.' : '') +
       (!j.source || j.source.system !== 'phase2' ? ' This job was priced in the old tool, so the new total uses today\'s corrected quote math and can differ from the original.' : '');
     c.ui.draft = d; saveDraft(c);
   }
@@ -88,12 +120,14 @@
   }
   function ruleAtCost(d, l) { return d.pricing.atCost && AT_COST.indexOf(base(l.sku)) > -1; }
   function reapply(d) { d.models.forEach(function (m) { m.lines.forEach(function (l) { if (!l.edited) l.markupPct = ruleAtCost(d, l) ? 0 : d.pricing.markupPct; }); }); }
-  function asmCents(d) { var a = toCents(d.pricing.assembly); return isNaN(a) ? 0 : a; }
+  function asmHours(d) { var h = num(d.pricing.assemblyHours); return h > 0 ? h : 0; }
+  function asmRate(d) { var r = toCents(d.pricing.assemblyRate); return r > 0 ? r : 0; }
+  function asmCents(d) { return Math.round(asmHours(d) * asmRate(d)); }
+  function asmLabor(d) { return asmHours(d) && asmRate(d) ? [{ role: 'Assembly', rateCents: asmRate(d), hours: asmHours(d) }] : []; }
   function priceModel(d, m) {
     if (!m.lines.length) return null;
-    var a = asmCents(d);
     return Q.priceHouse({ lines: m.lines.map(function (l) { return { description: l.desc, sku: l.sku, qty: l.qty, unitCostCents: l.unitCostCents, markupPct: l.markupPct }; }),
-      discountPctOfCost: d.pricing.discountPctOfCost, labor: a ? [{ role: 'Assembly', rateCents: a, hours: 1 }] : [], gaPct: d.pricing.gaPct, taxPct: d.pricing.taxPct });
+      discountPctOfCost: d.pricing.discountPctOfCost, labor: asmLabor(d), gaPct: d.pricing.gaPct, taxPct: d.pricing.taxPct });
   }
   function orderTotals(d) {
     var t = { itemized: 0, tax: 0, cost: 0, homes: 0, ok: true };
@@ -112,7 +146,7 @@
   function fromTemplate(c, cust, tpl) {
     var CU = window.FMCustomers, EL = window.FMElev, d = blankDraft(c), sg = CU.signer(cust), site = (cust.addresses || []).filter(function (a) { return a.kind === 'site' && a.line; })[0];
     d.customer = customers(c).indexOf(cust.name) > -1 ? cust.name : '__new'; if (d.customer === '__new') d.newCustomer = cust.name;
-    d.signer = sg ? sg.name : ''; d.email = sg ? (sg.email || '') : ''; d.address = site ? site.line : ''; d.customerId = cust.id;
+    d.signer = sg ? sg.name : ''; d.email = sg ? (sg.email || '') : ''; d.addr = site ? A.from(site) : A.blank(); d.address = A.format(d.addr); d.customerId = cust.id;
     if (tpl) {
       var rooms = [];
       d.kind = tpl.kind; d.project = tpl.name; d.fromTemplate = tpl.id;
@@ -137,13 +171,19 @@
       if (!K.isEmail(d.email)) e.push('Add the signer\'s email (Dropbox Sign sends the contract there).');
     }
     if (i === 1) {
-      if (!d.address.trim()) e.push(d.kind === 'single' ? 'Add the install address.' : 'Add the site address.');
+      e = e.concat(A.check(d.addr, d.kind === 'single' ? 'Install address' : 'Site address'));
       if (d.kind === 'builder') d.models.forEach(function (m, k) { if (!m.name.trim() || !(m.qty >= 1)) e.push('Model ' + (k + 1) + ' needs a name and at least 1 house.'); });
     }
     if (i === 2) d.models.forEach(function (m) { if (!m.lines.length) e.push((m.name || 'The home') + ' has no cabinets yet. Add the supplier PDF.'); });
     if (i === 3) {
       ['markupPct', 'discountPctOfCost', 'gaPct', 'taxPct'].forEach(function (k) { if (!(d.pricing[k] >= 0)) e.push('Pricing values must be 0 or more.'); });
-      if (isNaN(toCents(d.pricing.assembly)) || toCents(d.pricing.assembly) < 0) e.push('Assembly must be a dollar amount.');
+      var ah = String(d.pricing.assemblyHours == null ? '' : d.pricing.assemblyHours).trim();
+      if (!ah) e.push('Enter the assembly hours per home (0 if there\'s no assembly).'); else if (!(num(ah) >= 0)) e.push('Assembly hours must be a number.');
+      if (!(toCents(d.pricing.assemblyRate) >= 0)) e.push('Enter the hourly assembly rate.');
+      var pl = d.pricing.plan, sum = Math.round(pl.reduce(function (t, x) { return t + (+x || 0); }, 0) * 100) / 100;
+      if (!pl.length) e.push('Add at least one payment to the plan.');
+      else if (pl.some(function (x) { return !(+x > 0); })) e.push('Every payment in the plan needs a percentage above 0.');
+      else if (sum !== 100) e.push('The payment plan adds up to ' + sum + '%, not 100%.');
       if (d.bid && !(toCents(d.bidAmount) > 0)) e.push('Enter the agreed bid price.');
     }
     if (i === 4) { if (!/^\d{4}-\d{2}-\d{2}$/.test(d.install)) e.push('Set the install / delivery date (an estimate is fine).'); else if (d.install < c.TODAY) e.push('The install date can\'t be in the past.'); }
@@ -161,11 +201,11 @@
     var errs = d.errors && d.errors.length ? '<div class="fmp1-note fmp1-note--alert p2-small" role="alert"><ul class="p2-errs">' + d.errors.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>' : '';
     var foot = '<div class="p2-between"><span class="p2-row"><button class="fmp1-btn fmp1-btn--quiet" data-npback' + (d.step ? '' : ' disabled') + '>Back</button><button class="fmp1-btn fmp1-btn--quiet" data-npdiscard>Discard draft</button></span>' +
       (d.step < 4 ? '<button class="fmp1-btn fmp1-btn--primary" data-npnext>Next</button>' : '<button class="fmp1-btn fmp1-btn--primary" data-npcreate>Create project</button>') + '</div>';
-    var side = '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Live total</span><span class="fmp1-h" style="font-size:24px">' + (t.ok ? $f(t.total) : '—') + '</span>' +
+    var side = '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Live total</span><span class="p2-bignum">' + (t.ok ? $f(t.total) : '—') + '</span>' +
       '<span class="p2-small fmp1-faint">' + (d.kind === 'single' ? 'One home' : t.homes + ' homes') + (d.bid ? ' · agreed bid' : '') + ' · draft saves as you go</span></div>';
     var note = d.note ? '<div class="fmp1-note fmp1-note--info p2-small p2-between" style="align-items:flex-start"><span>' + esc(d.note) + '</span><button class="p2-linkbtn p2-small" data-npnoteclose aria-label="Close this note">✕</button></div>' : '';
-    return '<div class="p2-between"><div><h1 class="fmp1-h p2-h1">New project</h1><p class="p2-sub">Five steps on one page. Leave any time; the draft is kept.</p></div>' + side + '</div>' + rail + note + errs +
-      '<div class="fmp1-card p2-pad">' + body + '</div>' + foot;
+    return '<div class="p2-np"><div class="p2-between"><div><h1 class="fmp1-h p2-h1">New project</h1><p class="p2-sub">Five steps on one page. Leave any time; the draft is kept.</p></div>' + side + '</div>' + rail + note + errs +
+      '<div class="fmp1-card p2-pad">' + body + '</div>' + foot + '</div>';
   }
   function fld(label, attrs, val, type) { return '<label class="p2-fld"><span>' + label + '</span><input class="fmp1-input" ' + attrs + (type ? ' type="' + type + '"' : '') + ' value="' + String(val == null ? '' : val).replace(/"/g, '&quot;') + '"></label>'; }
   function npCustomer(c, d) {
@@ -191,47 +231,68 @@
     }).join('') + '</div><button class="fmp1-btn" data-npaddmodel>Add a model</button>' : '';
     return '<h2 class="fmp1-h" style="font-size:20px">How many homes?</h2><div class="p2-chips" role="group" aria-label="Kind">' +
       '<button class="fmp1-btn" data-npkind="single" aria-pressed="' + (d.kind === 'single') + '">One home</button><button class="fmp1-btn" data-npkind="builder" aria-pressed="' + (d.kind === 'builder') + '">Builder order (several models)</button></div>' +
-      fld(d.kind === 'single' ? 'Install address' : 'Site address', 'data-np="address"', d.address) + models +
+      A.fieldsHTML(function (f) { return 'data-npaddr="' + f + '"'; }, d.addr, { legend: d.kind === 'single' ? 'Install address' : 'Site address' }) + models +
       (d.kind === 'builder' ? '<p class="p2-note">Houses of the same model share one cabinet list, so each model needs one supplier PDF, not one per house.</p>' : '');
   }
   function npCabinets(c, d) {
     var esc = c.esc, $f = c.money, pdfs = samplePdfs();
+    function opts(sel) { return pdfs.map(function (p) { return '<option value="' + p.id + '"' + (sel === p.id ? ' selected' : '') + '>' + esc(p.name) + ' · ' + p.lines.length + ' line' + (p.lines.length === 1 ? '' : 's') + '</option>'; }).join(''); }
     return '<h2 class="fmp1-h" style="font-size:20px">Cabinets</h2>' +
       (d.elevations && d.elevations.rooms.length ? '<p class="p2-small fmp1-muted">Drawings come along: ' + d.elevations.rooms.length + ' room' + (d.elevations.rooms.length === 1 ? '' : 's') + '. Cabinets you add here show as "to place" on the Elevations tab.</p>' : '') + d.models.map(function (m, i) {
       var colors = {}; m.lines.forEach(function (l) { colors[suffix(l.sku)] = 1; }); var cs = Object.keys(colors);
-      return '<div class="p2-form" style="flex-direction:column;align-items:stretch"><div class="p2-between"><b>' + esc(d.kind === 'single' ? (d.project || 'The home') : (m.name || 'Model ' + (i + 1)) + ' × ' + m.qty) + '</b>' +
+      var cost = m.lines.reduce(function (t, l) { return t + l.unitCostCents * l.qty; }, 0), units = m.lines.reduce(function (t, l) { return t + (+l.qty || 0); }, 0);
+      var preview = m.lines.length ? '<div class="p2-np-preview"><div class="p2-between p2-small"><b>' + m.lines.length + ' line' + (m.lines.length === 1 ? '' : 's') + ' · ' + units + ' item' + (units === 1 ? '' : 's') + ' · cost ' + $f(cost) + '</b>' +
+          (m.added ? '<span class="fmp1-faint">' + esc(m.added) + '</span>' : '<span class="fmp1-faint">Check these before you go on</span>') + '</div>' +
+        '<div class="p2-np-scroll"><table class="fmp1-table p2-np-lines"><thead><tr><th>SKU</th><th>Description</th><th class="r">Qty</th><th class="r">Unit cost</th><th class="r">Line cost</th></tr></thead><tbody>' +
+        m.lines.map(function (l) { return '<tr><td class="fmp1-code">' + esc(l.sku) + '</td><td>' + esc(l.desc || '') + '</td><td class="r">' + l.qty + '</td><td class="r">' + $f(l.unitCostCents) + '</td><td class="r">' + $f(l.unitCostCents * l.qty) + '</td></tr>'; }).join('') +
+        '</tbody></table></div></div>' : '<p class="p2-small fmp1-faint">No cabinets yet. Pick the supplier PDF to see its lines here.</p>';
+      return '<section class="p2-np-model"><div class="p2-between"><b>' + esc(d.kind === 'single' ? (d.project || 'The home') : (m.name || 'Model ' + (i + 1)) + ' × ' + m.qty) + '</b>' +
         (cs.length ? '<span class="p2-small">' + (cs.length === 1 ? 'Color from the SKUs: <b>' + esc(COLORS[cs[0]] || cs[0]) + '</b>' : '<b style="color:var(--fmp1-alert-ink)">Mixed colors: ' + cs.map(function (x) { return esc(COLORS[x] || x); }).join(', ') + '</b>') + '</span>' : '') + '</div>' +
-        '<label class="p2-fld"><span>Supplier PDF (sample orders in this preview)</span><select class="fmp1-input" data-nppdf="' + i + '"><option value="">Choose a PDF…</option>' +
-        pdfs.map(function (p) { return '<option value="' + p.id + '"' + (m.pdf === p.id ? ' selected' : '') + '>' + esc(p.name) + ' (' + p.lines.length + ' lines)</option>'; }).join('') + '</select></label>' +
-        (m.lines.length ? '<span class="p2-small">' + m.lines.length + ' lines · cost ' + $f(m.lines.reduce(function (t, l) { return t + l.unitCostCents * l.qty; }, 0)) + (m.added ? ' · ' + esc(m.added) : '') + '</span>' +
-          '<label class="p2-fld"><span>Add cabinets from another supplier PDF (adds to the list; same SKUs add up)</span><select class="fmp1-input" data-npaddpdf="' + i + '"><option value="">Choose a PDF…</option>' +
-          pdfs.map(function (p) { return '<option value="' + p.id + '">' + esc(p.name) + ' (' + p.lines.length + ' lines)</option>'; }).join('') + '</select></label>' : '<span class="p2-small fmp1-faint">No cabinets yet.</span>') + '</div>';
-    }).join('');
+        '<div class="p2-np-pick"><label class="p2-fld"><span>Supplier PDF</span><select class="fmp1-input" data-nppdf="' + i + '"><option value="">Choose a PDF…</option>' + opts(m.pdf) + '</select></label>' +
+        (m.lines.length ? '<label class="p2-fld"><span>Add from another PDF <span class="fmp1-faint">(same SKUs add up)</span></span><select class="fmp1-input" data-npaddpdf="' + i + '"><option value="">Choose a PDF…</option>' + opts('') + '</select></label>' : '') + '</div>' +
+        preview + '</section>';
+    }).join('') + '<p class="p2-small fmp1-faint">Sample orders stand in for the supplier PDFs in this preview.</p>';
   }
   function npPrice(c, d) {
     var esc = c.esc, $f = c.money, p = d.pricing;
     var past = c.store.jobs().filter(function (j) { return j.pricing && j.pricing.markupPct != null; });
-    var settings = '<div class="p2-form"><b>This job\'s pricing</b>' +
+    var homes = d.kind === 'single' ? 1 : d.models.reduce(function (t, m) { return t + (m.qty || 0); }, 0);
+    var asm = '<section class="p2-np-box"><b>Assembly <span class="fmp1-faint p2-small">per home</span></b><div class="p2-np-asm">' +
+      fld('Hours', 'data-npp="assemblyHours" inputmode="decimal"', p.assemblyHours) + '<span class="p2-np-op" aria-hidden="true">×</span>' +
+      fld('Hourly rate ($)', 'data-npp="assemblyRate" inputmode="decimal"', p.assemblyRate) + '<span class="p2-np-op" aria-hidden="true">=</span>' +
+      '<div class="p2-fld"><span>Per home</span><b class="p2-np-asmtotal" data-npasm>' + $f(asmCents(d)) + '</b></div></div>' +
+      '<span class="p2-small fmp1-faint">' + (homes > 1 ? homes + ' homes · ' + $f(asmCents(d) * homes) + ' in all. ' : '') + 'Both change by project; enter 0 hours if there\'s no assembly.</span></section>';
+    var stages = planStages(p), sum = Math.round(p.plan.reduce(function (t, x) { return t + (+x || 0); }, 0) * 100) / 100;
+    var plan = '<section class="p2-np-box"><b>Payment plan</b><label class="p2-fld"><span>Plan</span><select class="fmp1-input" data-npplan>' +
+      PLANS.map(function (pl, i) { return '<option value="' + i + '"' + (p.planMode === String(i) ? ' selected' : '') + '>' + pl.pct.join(' / ') + ' · ' + pl.names.join(', ') + '</option>'; }).join('') +
+      '<option value="custom"' + (p.planMode === 'custom' ? ' selected' : '') + '>+ Custom payment plan…</option></select></label>' +
+      (p.planMode === 'custom' ? '<ol class="p2-np-plan">' + stages.map(function (st, i) {
+          return '<li><input class="fmp1-input" aria-label="Name of payment ' + (i + 1) + '" data-npplanname="' + i + '" value="' + esc(p.planNames[i] || '') + '" placeholder="Payment ' + (i + 1) + '">' +
+            '<span class="p2-np-pct"><input class="fmp1-input" inputmode="decimal" aria-label="Percent for payment ' + (i + 1) + '" data-npplanpct="' + i + '" value="' + st.pct + '">%</span>' +
+            (stages.length > 1 ? '<button class="fmp1-btn fmp1-btn--quiet" data-npplandel="' + i + '" aria-label="Remove payment ' + (i + 1) + '">Remove</button>' : '') + '</li>'; }).join('') + '</ol>' +
+        '<div class="p2-between p2-small"><button class="fmp1-btn fmp1-btn--quiet" data-npplanadd>+ Add a payment</button><b' + (sum === 100 ? ' class="p2-ok"' : ' style="color:var(--fmp1-alert-ink)"') + '>' + (sum === 100 ? '✓ Adds up to 100%' : 'Adds up to ' + sum + '%; needs 100%') + '</b></div>'
+        : '<span class="p2-small fmp1-faint">' + stages.map(function (st) { return esc(st.name) + ' ' + st.pct + '%'; }).join(' · ') + '</span>') +
+      '<span class="p2-small fmp1-faint">The invoices and the contract\'s payment schedule follow this plan.</span></section>';
+    var settings = '<section class="p2-np-box p2-np-wide"><b>Markup and tax</b><div class="p2-np-set">' +
       fld('Markup %', 'data-npp="markupPct" inputmode="decimal"', p.markupPct) + fld('Mfr. discount % (of cost)', 'data-npp="discountPctOfCost" inputmode="decimal"', p.discountPctOfCost) +
-      fld('G&amp;A %', 'data-npp="gaPct" inputmode="decimal"', p.gaPct) + fld('Sales tax %', 'data-npp="taxPct" inputmode="decimal"', p.taxPct) + fld('Assembly ($ per home)', 'data-npp="assembly" inputmode="decimal"', p.assembly) +
-      '<label class="p2-fld"><span>Payment plan</span><select class="fmp1-input" data-npplan>' + PLANS.map(function (pl, i) { return '<option value="' + i + '"' + (pl.join() === p.plan.join() ? ' selected' : '') + '>' + pl.join(' / ') + '</option>'; }).join('') + '</select></label>' +
-      '<label class="p2-fld"><span>Copy from a past job</span><select class="fmp1-input" data-npcopy><option value="">Choose…</option>' + past.map(function (j) { return '<option value="' + esc(j.jobCode) + '"' + (d.copiedFrom === j.jobCode ? ' selected' : '') + '>' + esc(j.customer + ' · ' + (j.projectName || j.jobCode)) + '</option>'; }).join('') + '</select></label>' +
-      '<label class="p2-row p2-small"><input type="checkbox" data-npatcost' + (p.atCost ? ' checked' : '') + '> Sell ' + AT_COST.join(', ') + ' at cost</label></div>';
+      fld('G&amp;A %', 'data-npp="gaPct" inputmode="decimal"', p.gaPct) + fld('Sales tax %', 'data-npp="taxPct" inputmode="decimal"', p.taxPct) +
+      '<label class="p2-fld"><span>Copy from a past job</span><select class="fmp1-input" data-npcopy><option value="">Choose…</option>' + past.map(function (j) { return '<option value="' + esc(j.jobCode) + '"' + (d.copiedFrom === j.jobCode ? ' selected' : '') + '>' + esc(j.customer + ' · ' + (j.projectName || j.jobCode)) + '</option>'; }).join('') + '</select></label></div>' +
+      '<label class="p2-row p2-small"><input type="checkbox" data-npatcost' + (p.atCost ? ' checked' : '') + '> Sell ' + AT_COST.join(', ') + ' at cost</label></section>';
     var tables = d.models.map(function (m, mi) {
       var pr = priceModel(d, m);
-      return '<div class="fmp1-table-wrap"><table class="fmp1-table p2-table"><caption class="p2-small" style="text-align:left;padding:6px 0">' + esc(d.kind === 'single' ? (d.project || 'The home') : m.name + ' × ' + m.qty) + (pr && pr.ok ? ' · per home ' + $f(pr.summary.totalCents) + ' · margin on product ' + pr.internal.marginPct + '%' : '') + '</caption>' +
-        '<thead><tr><th>SKU</th><th class="r">Qty</th><th class="r">Unit cost</th><th class="r">Markup %</th><th class="r">Sell</th></tr></thead><tbody>' +
+      return '<div class="p2-np-tablehead"><b>' + esc(d.kind === 'single' ? (d.project || 'The home') : m.name + ' × ' + m.qty) + '</b>' + (pr && pr.ok ? '<span class="p2-small">Per home <b>' + $f(pr.summary.totalCents) + '</b> · margin on product ' + pr.internal.marginPct + '%</span>' : '') + '</div>' +
+        '<div class="fmp1-table-wrap"><table class="fmp1-table p2-np-lines p2-np-price"><thead><tr><th>SKU</th><th>Description</th><th class="r">Qty</th><th class="r">Unit cost</th><th class="r">Markup %</th><th class="r">Sell</th></tr></thead><tbody>' +
         m.lines.map(function (l, li) {
           var sell = pr && pr.ok ? pr.lines[li].totalCents : 0;
-          return '<tr><td class="fmp1-code">' + esc(l.sku) + (l.edited ? ' <span class="fmp1-pill">edited</span>' : '') + (ruleAtCost(d, l) && !l.edited ? ' <span class="fmp1-pill fmp1-pill--alert">at cost</span>' : '') + '</td><td class="r">' + l.qty + '</td><td class="r">' + $f(l.unitCostCents) + '</td>' +
-            '<td class="r"><input class="fmp1-input" style="width:72px;text-align:right" inputmode="decimal" aria-label="Markup for ' + esc(l.sku) + '" data-npline="' + mi + ':' + li + '" value="' + l.markupPct + '"></td><td class="r">' + $f(sell) + '</td></tr>';
+          return '<tr><td class="fmp1-code">' + esc(l.sku) + (l.edited ? ' <span class="fmp1-pill">edited</span>' : '') + (ruleAtCost(d, l) && !l.edited ? ' <span class="fmp1-pill fmp1-pill--alert">at cost</span>' : '') + '</td><td class="p2-np-desc">' + esc(l.desc || '') + '</td><td class="r">' + l.qty + '</td><td class="r">' + $f(l.unitCostCents) + '</td>' +
+            '<td class="r"><input class="fmp1-input p2-np-mk" inputmode="decimal" aria-label="Markup for ' + esc(l.sku) + '" data-npline="' + mi + ':' + li + '" value="' + l.markupPct + '"></td><td class="r">' + $f(sell) + '</td></tr>';
         }).join('') + '</tbody></table></div>';
     }).join('');
     var t = orderTotals(d);
-    return '<h2 class="fmp1-h" style="font-size:20px">Price</h2>' + settings +
+    return '<h2 class="fmp1-h" style="font-size:20px">Price</h2><div class="p2-np-boxes">' + asm + plan + settings + '</div>' +
       '<label class="p2-row p2-small"><input type="checkbox" data-npbid' + (d.bid ? ' checked' : '') + '> Priced by bid</label>' +
       (d.bid ? fld('Agreed bid price ($)', 'data-np="bidAmount" inputmode="decimal"', d.bidAmount) + '<p class="p2-note">The customer gets a lump-sum page: cabinets and quantities, no prices, one agreed price. Itemized: ' + c.money(t.itemized) + (toCents(d.bidAmount) > 0 ? ' · bid is ' + c.money(Math.abs(toCents(d.bidAmount) - t.itemized)) + (toCents(d.bidAmount) >= t.itemized ? ' above' : ' below') : '') + '.</p>' : '') + tables +
-      '<p class="p2-note">Changing the job\'s markup or the at-cost box updates every line you haven\'t edited by hand.</p>';
+      '<p class="p2-note">Changing the job\'s markup or the at-cost box updates every line you haven\'t edited by hand. Tab moves line to line; type to replace the markup.</p>';
   }
   function npReview(c, d) {
     var esc = c.esc, $f = c.money, t = orderTotals(d), plan = d.pricing.plan;
@@ -239,10 +300,11 @@
     return '<h2 class="fmp1-h" style="font-size:20px">Review and create</h2><div class="p2-grid"><ul class="p2-list">' +
       '<li><span>Customer</span><b>' + esc(d.customer === '__new' ? d.newCustomer : d.customer) + '</b></li><li><span>Project</span><b>' + esc(d.project) + '</b></li>' +
       '<li><span>Signer</span><b>' + esc(d.signer) + ' · ' + esc(d.email) + '</b></li><li><span>Homes</span><b>' + t.homes + '</b></li><li><span>Address</span><b>' + esc(d.address) + '</b></li>' +
+      '<li><span>Assembly</span><b>' + (asmHours(d) ? asmHours(d) + ' h × ' + $f(asmRate(d)) + ' = ' + $f(asmCents(d)) + ' per home' : 'None') + '</b></li>' +
       '<li><span>Total</span><b>' + $f(t.total) + (d.bid ? ' (agreed bid)' : '') + '</b></li></ul>' +
       '<div class="p2-form" style="flex-direction:column;align-items:stretch">' + fld('Install / delivery date (estimate)', 'data-np="install" min="' + c.TODAY + '"', d.install, 'date') +
       '<table class="fmp1-table"><thead><tr><th>Invoice</th><th>Due</th><th class="r">Amount</th></tr></thead><tbody>' + plan.map(function (p, i) {
-        return '<tr><td>Invoice ' + (i + 1) + ' · ' + p + '%</td><td>' + (i === 0 ? 'On signing' : c.longDate(dues[i])) + '</td><td class="r">' + (amts[i] != null ? $f(amts[i]) : '—') + '</td></tr>'; }).join('') + '</tbody></table></div></div>' +
+        return '<tr><td>' + esc(invoiceLabel(d.pricing, i)) + '</td><td>' + (i === 0 ? 'On signing' : c.longDate(dues[i])) + '</td><td class="r">' + (amts[i] != null ? $f(amts[i]) : '—') + '</td></tr>'; }).join('') + '</tbody></table></div></div>' +
       '<p class="p2-note">Creating saves the project as a Quote, gives it a job code, and logs who created it. The contract is sent from the job\'s Contract tab.</p>';
   }
   function nextCode(c) {
@@ -254,13 +316,14 @@
     var t = orderTotals(d), code = nextCode(c), plan = d.pricing.plan, amts = K.invoiceAmounts(t.total, plan), dues = K.defaultDueDates(c.TODAY, d.install, plan);
     var cust = d.customer === '__new' ? d.newCustomer.trim() : d.customer;
     var houses = [];
-    if (d.kind === 'builder') d.models.forEach(function (m) { var p = priceModel(d, m); for (var k = 1; k <= m.qty; k++) houses.push({ jobCode: code + '-' + (houses.length + 1), name: m.name + ' ' + k, model: m.name, color: COLORS[suffix((m.lines[0] || {}).sku)] || '', lines: m.lines.length, totalCents: p.summary.totalCents, address: d.address }); });
+    if (d.kind === 'builder') d.models.forEach(function (m) { var p = priceModel(d, m); for (var k = 1; k <= m.qty; k++) houses.push({ jobCode: code + '-' + (houses.length + 1), name: m.name + ' ' + k, model: m.name, color: COLORS[suffix((m.lines[0] || {}).sku)] || '', lines: m.lines.length, totalCents: p.summary.totalCents, address: A.format(d.addr) }); });
     var job = { id: code, jobCode: code, customer: cust, projectName: d.project.trim(), kind: d.kind === 'builder' ? 'builder_order' : 'single',
       quoteDate: c.TODAY, deliveryDate: d.install, originalContractCents: t.total, houses: houses, history: [], changeOrders: [],
-      contacts: { signer: d.signer.trim(), buyerEmail: d.email.trim() }, source: { system: 'phase2' }, stage: 'quote', installAddress: d.address.trim(),
-      invoices: plan.map(function (p, i) { return { id: code + '-inv' + (i + 1), label: 'Invoice ' + (i + 1) + ' · ' + p + '%', role: i === 0 ? 'deposit' : 'progress', changeOrderId: null, dueDate: dues[i], amountCents: amts[i], status: 'open', payments: [] }; }),
+      contacts: { signer: d.signer.trim(), buyerEmail: d.email.trim() }, source: { system: 'phase2' }, stage: 'quote', installAddress: A.format(d.addr), installAddr: JSON.parse(JSON.stringify(d.addr)),
+      invoices: plan.map(function (p, i) { return { id: code + '-inv' + (i + 1), label: invoiceLabel(d.pricing, i), role: i === 0 ? 'deposit' : 'progress', changeOrderId: null, dueDate: dues[i], amountCents: amts[i], status: 'open', payments: [] }; }),
       taxCents: t.tax, costCents: t.cost, absorbedCents: 0, documents: [], fmSigner: null, esign: { state: 'none' }, contractedOn: null,
-      pricing: { markupPct: d.pricing.markupPct, discountPctOfCost: d.pricing.discountPctOfCost, gaPct: d.pricing.gaPct, taxPct: d.pricing.taxPct, assemblyCents: asmCents(d), plan: plan.slice(), copiedFrom: d.copiedFrom || null },
+      pricing: { markupPct: d.pricing.markupPct, discountPctOfCost: d.pricing.discountPctOfCost, gaPct: d.pricing.gaPct, taxPct: d.pricing.taxPct, assemblyCents: asmCents(d), assemblyHours: asmHours(d), assemblyRateCents: asmRate(d),
+        plan: plan.slice(), planNames: planStages(d.pricing).map(function (x) { return x.name; }), planMode: d.pricing.planMode === 'custom' ? 'custom' : 'preset', copiedFrom: d.copiedFrom || null },
       models: d.models.map(function (m) { return { name: d.kind === 'single' ? d.project.trim() : m.name.trim(), qty: d.kind === 'single' ? 1 : m.qty, lines: JSON.parse(JSON.stringify(m.lines)) }; }),
       bid: d.bid ? { bidCents: toCents(d.bidAmount), itemizedCents: t.itemized } : null };
     if (d.duplicatedFrom) job.duplicatedFrom = d.duplicatedFrom;
@@ -274,13 +337,55 @@
     return c.store.addJob(job, c.me().name);
   }
 
+  /* a saved job's assembly as quote labor: hours × rate, or (jobs from before Oct 2026) one flat amount per home */
+  function jobLabor(pr) {
+    if (pr.assemblyHours != null) return pr.assemblyHours && pr.assemblyRateCents ? [{ role: 'Assembly', rateCents: pr.assemblyRateCents, hours: pr.assemblyHours }] : [];
+    return pr.assemblyCents ? [{ role: 'Assembly', rateCents: pr.assemblyCents, hours: 1 }] : [];
+  }
+  function priceJobModel(j, m) {
+    var pr = j.pricing;
+    return Q.priceHouse({ lines: m.lines.map(function (l) { return { description: l.desc, sku: l.sku, qty: l.qty, unitCostCents: l.unitCostCents, markupPct: l.markupPct }; }),
+      discountPctOfCost: pr.discountPctOfCost, labor: jobLabor(pr), gaPct: pr.gaPct, taxPct: pr.taxPct });
+  }
+  /* Elevations → "Add them to the quote": cabinets placed beyond a quote's quantities raise those quantities (same unit cost and
+     markup), and the quote total and invoices are worked out again. Only for quotes not yet sent; ex: [{ sku, code, extra }]. */
+  function addToQuote(c, j, setKey, ex) {
+    var who = c.me().name, msg = '';
+    c.store.update(j.jobCode, function (x) {
+      var mi = -1; (x.models || []).forEach(function (m, i) { if ((m.name || 'Model ' + (i + 1)) === setKey) mi = i; }); if (mi < 0) mi = 0;
+      var m = x.models[mi], added = [];
+      ex.forEach(function (q) { var l = m.lines.filter(function (y) { return String(y.sku).toUpperCase() === String(q.sku).toUpperCase(); })[0]; if (l) { l.qty += q.extra; added.push(q.code + ' +' + q.extra); } });
+      var itemized = 0, tax = 0, cost = 0;
+      x.models.forEach(function (mm) { var p = priceJobModel(x, mm); if (!p.ok) return; var n = mm.qty || 1; itemized += p.summary.totalCents * n; tax += p.summary.taxCents * n; cost += p.internal.costCents * n; });
+      var total = x.bid ? x.bid.bidCents : itemized; if (x.bid) x.bid.itemizedCents = itemized;
+      var was = x.originalContractCents; x.originalContractCents = total; x.taxCents = tax; x.costCents = cost;
+      var amts = K.invoiceAmounts(total, x.pricing.plan); x.invoices.forEach(function (inv, i) { if (amts[i] != null) inv.amountCents = amts[i]; });
+      msg = 'Added to the quote: ' + added.join(', ') + '. ' + (x.bid ? 'The agreed bid stays ' + c.money(total) + '; itemized is now ' + c.money(itemized) + '.' : 'Quote total ' + c.money(was) + ' → ' + c.money(total) + '; the invoices follow.');
+      return x;
+    }, 'Quote quantities raised from the elevations by ' + who + '.', who);
+    return msg;
+  }
+  /* Elevations on a signed job → "Start a change order for them": opens a change order with the extra cabinets already added. */
+  function startCO(c, j, setKey, ex) {
+    var house = c.W && j.jobCode === c.W.jobCode ? ((j.houses || []).filter(function (h) { return h.model === setKey; })[0] || {}).jobCode || null : j.houses && j.houses.length > 1 ? j.houses[0].jobCode : null;
+    var bl = baseLines(c, j, house), cur = JSON.parse(JSON.stringify(bl)), unknown = [], pdfLines = [].concat.apply([], samplePdfs().map(function (p) { return p.lines; }));
+    ex.forEach(function (q) {
+      var k = String(q.sku).toUpperCase(), have = cur.filter(function (l) { return String(l.sku).toUpperCase() === k; })[0];
+      if (have) { have.qty += q.extra; return; }
+      var src = pdfLines.filter(function (l) { return String(l.sku).toUpperCase() === k; })[0];
+      if (src) cur.push({ sku: src.sku, desc: src.desc, qty: q.extra, unitCostCents: src.unitCostCents }); else unknown.push(q.code + ' ×' + q.extra);
+    });
+    c.ui.co = { job: j.jobCode, step: 1, reason: 'customer_request', note: 'Cabinets added on the elevations: ' + ex.map(function (q) { return q.code + ' ×' + q.extra; }).join(', ') + '.', house: house, base: bl, current: cur,
+      choice: null, customAmt: '', customNote: '', colorOk: false,
+      errors: unknown.length ? [unknown.join(', ') + (unknown.length === 1 ? ' isn\'t' : ' aren\'t') + ' on the order or a supplier PDF yet. Add it from the supplier PDF below so it has a cost.'] : [] };
+  }
+
   /* quote pages for the packet (new Phase 2 jobs) */
   function quotesFor(j) {
     if (!j.models) return [];
     var pr = j.pricing, out = [];
     j.models.forEach(function (m) {
-      var p = Q.priceHouse({ lines: m.lines.map(function (l) { return { description: l.desc, sku: l.sku, qty: l.qty, unitCostCents: l.unitCostCents, markupPct: l.markupPct }; }),
-        discountPctOfCost: pr.discountPctOfCost, labor: pr.assemblyCents ? [{ role: 'Assembly', rateCents: pr.assemblyCents, hours: 1 }] : [], gaPct: pr.gaPct, taxPct: pr.taxPct });
+      var p = priceJobModel(j, m);
       var meta = { house: m.name + (m.qty > 1 ? ' (× ' + m.qty + ')' : ''), jobCode: j.jobCode, buyer: j.customer, signer: j.contacts.signer, quoteDate: j.quoteDate, deliveryDate: j.deliveryDate, address: j.installAddress, color: COLORS[suffix((m.lines[0] || {}).sku)] || '' };
       out.push(j.bid ? D.renderBidQuoteDoc(p, j.models.length === 1 ? j.bid.bidCents : p.summary.totalCents, meta) : Q.renderHouseQuoteDoc(p, meta));
     });
@@ -469,11 +574,13 @@
       if (t.hasAttribute('data-npnoteclose')) { d.note = ''; saveDraft(c); c.render(); return true; }
       if (t.dataset.nptpl && window.P2Customers) {
         var tc = window.P2Customers.byName(c, d.customer), tp = tc && tc.templates.filter(function (x) { return x.id === t.dataset.nptpl; })[0];
-        if (tp) { var keep = { project: d.project, signer: d.signer, email: d.email, address: d.address }; fromTemplate(c, tc, tp); var nd = c.ui.draft;
-          Object.keys(keep).forEach(function (k) { if (keep[k]) nd[k] = keep[k]; }); saveDraft(c); }
+        if (tp) { var keep = { project: d.project, signer: d.signer, email: d.email }, keepAddr = A.isBlank(d.addr) ? null : d.addr; fromTemplate(c, tc, tp); var nd = c.ui.draft;
+          Object.keys(keep).forEach(function (k) { if (keep[k]) nd[k] = keep[k]; }); if (keepAddr) { nd.addr = keepAddr; nd.address = A.format(keepAddr); } saveDraft(c); }
         c.render(); return true;
       }
       if (t.dataset.npkind) { d.kind = t.dataset.npkind; if (d.kind === 'single') d.models = d.models.slice(0, 1); saveDraft(c); c.render(); return true; }
+      if (t.hasAttribute('data-npplanadd')) { d.pricing.plan.push(0); d.pricing.planNames.push(''); d.errors = []; saveDraft(c); c.render(); var ni = document.querySelector('[data-npplanname="' + (d.pricing.plan.length - 1) + '"]'); if (ni) ni.focus(); return true; }
+      if (t.dataset.npplandel) { var di = +t.dataset.npplandel; d.pricing.plan.splice(di, 1); d.pricing.planNames.splice(di, 1); saveDraft(c); c.render(); return true; }
       if (t.hasAttribute('data-npaddmodel')) { d.models.push({ id: 'm' + (d.models.length + 1), name: '', qty: 1, lines: [], pdf: '' }); saveDraft(c); c.render(); return true; }
       if (t.dataset.npdelmodel) { d.models.splice(+t.dataset.npdelmodel, 1); saveDraft(c); c.render(); return true; }
       if (t.hasAttribute('data-npcreate')) {
@@ -552,19 +659,22 @@
     var el = e.target, d;
     if (el.dataset.np) { d = loadDraft(c); d[el.dataset.np] = el.value; saveDraft(c); if (el.dataset.np === 'bidAmount') refreshLater(c); return; }
     if (el.dataset.npm) { d = loadDraft(c); var m = d.models[+el.dataset.i]; m[el.dataset.npm] = el.dataset.npm === 'qty' ? Math.max(0, parseInt(el.value, 10) || 0) : el.value; saveDraft(c); return; }
-    if (el.dataset.npp) { d = loadDraft(c); d.pricing[el.dataset.npp] = el.dataset.npp === 'assembly' ? el.value : num(el.value); if (el.dataset.npp === 'markupPct') reapply(d); saveDraft(c); refreshLater(c); return; }
+    if (el.dataset.npaddr) { d = loadDraft(c); d.addr[el.dataset.npaddr] = el.value; d.address = A.format(d.addr); saveDraft(c); return; }
+    if (el.dataset.npplanname) { d = loadDraft(c); d.pricing.planNames[+el.dataset.npplanname] = el.value; saveDraft(c); return; }
+    if (el.dataset.npplanpct) { d = loadDraft(c); d.pricing.plan[+el.dataset.npplanpct] = num(el.value) || 0; saveDraft(c); return; }
+    if (el.dataset.npp) { d = loadDraft(c); d.pricing[el.dataset.npp] = /^assembly/.test(el.dataset.npp) ? el.value : num(el.value); if (el.dataset.npp === 'markupPct') reapply(d); saveDraft(c); refreshLater(c); return; }
     if (el.dataset.npline) { d = loadDraft(c); var ix = el.dataset.npline.split(':'), ln = d.models[+ix[0]].lines[+ix[1]]; ln.markupPct = num(el.value); ln.edited = true; saveDraft(c); refreshLater(c); return; }
     if (el.dataset.cof && c.ui.co) { c.ui.co[el.dataset.cof] = el.value; return; }
   }
   var timer = null;
-  function refreshLater(c) { clearTimeout(timer); timer = setTimeout(function () { var a = document.activeElement, key = a && (a.dataset.npp || a.dataset.npline || a.dataset.np), sel = a && a.selectionStart; c.render(); if (key) { var n = document.querySelector('[data-npp="' + key + '"],[data-npline="' + key + '"],[data-np="' + key + '"]'); if (n) { n.focus(); try { n.setSelectionRange(sel, sel); } catch (x) { /* number inputs */ } } } }, 450); }
+  function refreshLater(c) { clearTimeout(timer); timer = setTimeout(function () { var a = document.activeElement, key = a && (a.dataset.npp || a.dataset.npline || a.dataset.np), sel = a && a.selectionStart, selEnd = a && a.selectionEnd; c.render(); if (key) { var n = document.querySelector('[data-npp="' + key + '"],[data-npline="' + key + '"],[data-np="' + key + '"]'); if (n) { n.focus(); try { n.setSelectionRange(sel, selEnd); } catch (x) { /* number inputs */ } } } }, 450); }
   function change(c, e) {
     var el = e.target, d;
     if (el.dataset.np === 'customer') {
       d = loadDraft(c); d.customer = el.value;
       var pc = window.P2Customers && el.value !== '__new' ? window.P2Customers.byName(c, el.value) : null;
       if (pc) { var sg = window.FMCustomers.signer(pc), site = pc.addresses.filter(function (a) { return a.kind === 'site' && a.line; })[0];
-        if (sg && !d.signer) d.signer = sg.name; if (sg && sg.email && !d.email) d.email = sg.email; if (site && !d.address) d.address = site.line; d.customerId = pc.id; }
+        if (sg && !d.signer) d.signer = sg.name; if (sg && sg.email && !d.email) d.email = sg.email; if (site && A.isBlank(d.addr)) { d.addr = A.from(site); d.address = A.format(d.addr); } d.customerId = pc.id; }
       saveDraft(c); c.render(); return;
     }
     if (el.dataset.nppdf !== undefined) { d = loadDraft(c); var m = d.models[+el.dataset.nppdf], pdf = pdfById(el.value); m.pdf = el.value; m.lines = pdf ? pdf.lines.map(function (l) { return { sku: l.sku, desc: l.desc, qty: l.qty, unitCostCents: l.unitCostCents, markupPct: d.pricing.markupPct, edited: false }; }) : []; reapply(d); saveDraft(c); c.render(); return; }
@@ -578,13 +688,20 @@
       m2.added = 'added from ' + pdf2.name + ': ' + newL + ' new line' + (newL === 1 ? '' : 's') + (upL ? ', ' + upL + ' quantit' + (upL === 1 ? 'y' : 'ies') + ' raised' : '');
       reapply(d); saveDraft(c); c.render(); return;
     }
-    if (el.hasAttribute('data-npplan')) { d = loadDraft(c); d.pricing.plan = PLANS[+el.value].slice(); saveDraft(c); c.render(); return; }
+    if (el.dataset.npaddr) { d = loadDraft(c); d.addr[el.dataset.npaddr] = el.value; d.address = A.format(d.addr); saveDraft(c); return; }
+    if (el.dataset.npplanpct !== undefined || el.dataset.npplanname !== undefined) { saveDraft(c); c.render(); return; }   // show the new sum once the box is left
+    if (el.hasAttribute('data-npplan')) {
+      d = loadDraft(c);
+      if (el.value === 'custom') { d.pricing.planNames = planStages(d.pricing).map(function (x) { return x.name; }); d.pricing.planMode = 'custom'; }
+      else { var pp = PLANS[+el.value]; d.pricing.plan = pp.pct.slice(); d.pricing.planNames = pp.names.slice(); d.pricing.planMode = el.value; }
+      saveDraft(c); c.render(); return;
+    }
     if (el.hasAttribute('data-npatcost')) { d = loadDraft(c); d.pricing.atCost = el.checked; reapply(d); saveDraft(c); c.render(); return; }
     if (el.hasAttribute('data-npbid')) { d = loadDraft(c); d.bid = el.checked; saveDraft(c); c.render(); return; }
     if (el.hasAttribute('data-npcopy')) {
       d = loadDraft(c); var src = c.store.job(el.value);
       if (src && src.pricing) { var p = src.pricing; d.pricing.markupPct = p.markupPct; d.pricing.discountPctOfCost = p.discountPctOfCost; d.pricing.gaPct = p.gaPct; d.pricing.taxPct = p.taxPct;
-        if (p.assemblyCents != null) d.pricing.assembly = (p.assemblyCents / 100).toFixed(2); if (p.plan) d.pricing.plan = p.plan.slice(); else if (src.invoices.length === 3) d.pricing.plan = [50, 30, 20]; d.copiedFrom = src.jobCode; reapply(d); }
+        copyAssembly(d, p); copyPlan(d, p, src); d.copiedFrom = src.jobCode; reapply(d); }
       saveDraft(c); c.render(); return;
     }
     var r = location.hash.replace(/^#\/?/, '').split('/'), j = r[0] === 'job' ? c.store.job(decodeURIComponent(r[1])) : null;
@@ -596,7 +713,7 @@
     if (el.hasAttribute('data-fmsigner')) { var s = signers()[+el.value]; if (s && !s.email) s = null; c.store.update(j.jobCode, function (x) { x.fmSigner = s ? { name: s.name, email: s.email } : null; return x; }, s ? s.name + ' will sign for Fremont Makers.' : null, c.me().name); c.render(); return; }
   }
 
-  window.P2NewProject = { render: renderNew };
-  window.P2Flows = { changes: renderChanges, contract: renderContract, click: click, input: input, change: change, quotesFor: quotesFor, signers: signers, dupConfirm: dupConfirm, fromTemplate: fromTemplate };
+  window.P2NewProject = { render: renderNew, blankDraft: blankDraft, migrate: migrate };
+  window.P2Flows = { planStages: planStages, addToQuote: addToQuote, startCO: startCO, changes: renderChanges, contract: renderContract, click: click, input: input, change: change, quotesFor: quotesFor, signers: signers, dupConfirm: dupConfirm, fromTemplate: fromTemplate };
   if (window.P2) window.P2.render();
 })();

@@ -1,8 +1,9 @@
 {
   "package": "fm-project-builder-phase1",
-  "version": "2.7.2",
+  "version": "2.8.0",
   "created": "2026-10-27",
   "changes": [
+    "2.8.0: Sidebar headings and an Elevations page; centered row buttons; customer page cleanup; addresses as Street/City/State (CO)/ZIP (FMAddress); New Project line preview and tighter layout; assembly = hours x rate ($20.50/h, no default hours); custom payment plans through to contract and invoices; select-on-focus number boxes; elevation click-to-select, Selected bar, Delete key, extras to quote or change order (HANDOFF.md 28, UPGRADE-2.7.2-to-2.8.0.md)",
     "2.7.2: Dashboard Needs attention as task rows (status label, title, who, amount, one action button); attention items carry kind/status/title/action/tab; app-wide link styling; every task button the same filled style (HANDOFF.md §27)",
     "2.7.1: Hosted preview: \"Preview, not the live tool\" bar (FM_CONFIG.live), stored originals open from a files/ folder after a SHA-256 check (FM_CONFIG.filesBase), Paper/Dark toggle fills its box (HANDOFF.md §26)",
     "2.7.0: Customers (profiles, contacts, addresses, projects) and templates for repeat homes and builder orders (FMCustomers); New Project from a template; Reports & exports for finance as CSV (FMReports: jobs, invoices, payments, sales tax, change orders) (+8 tests) (HANDOFF.md §25)",
@@ -45,67 +46,339 @@
   "overridesExistingTool": false,
   "featureFlag": "fm_phase1",
   "storage": "fm_phase1 store only; theme choice in localStorage key fm_phase1_theme; legacy data read-only",
-  "documentsSentSeparately": ["FM-2609-314 · Braddy Builders.pdf", "Updated Braddy WholesaleCabinets-1000173203 (2).pdf", "Willow Creek Full House Order.pdf"],
-  "tests": ["ledger 23", "activity 13", "pricing 11", "quote 15", "docs 9", "theme 5", "braddy 9", "contract 22 (Phase 2)", "changeorder 14 (Phase 2)", "bid 6 (Phase 2)", "books 7 (Phase 2)", "store 6 (Phase 2)", "elevations 20 (Phase 2)", "measure 5 (Phase 2)", "reports 8 (Phase 2)"],
+  "documentsSentSeparately": [
+    "FM-2609-314 · Braddy Builders.pdf",
+    "Updated Braddy WholesaleCabinets-1000173203 (2).pdf",
+    "Willow Creek Full House Order.pdf"
+  ],
+  "tests": [
+    "ledger 23",
+    "activity 13",
+    "pricing 11",
+    "quote 15",
+    "docs 9",
+    "theme 5",
+    "braddy 9",
+    "contract 22 (Phase 2)",
+    "changeorder 14 (Phase 2)",
+    "bid 6 (Phase 2)",
+    "books 7 (Phase 2)",
+    "store 6 (Phase 2)",
+    "elevations 20 (Phase 2)",
+    "measure 5 (Phase 2)",
+    "reports 8 (Phase 2)",
+    "address 6 (Phase 2)"
+  ],
   "files": [
-    { "path": "HANDOFF.md", "bytes": 127940, "sha256": "5210830977db7102e4bb6110f351d6a667d003e5f23e64b9ba7090dcf0a10abe" },
-    { "path": "HERMES-LAUNCH.md", "bytes": 9931, "sha256": "0284709252b6c84db30d25ce262b13f90da3c9a7fa392cc952e500dcb9cdd7a8" },
-    { "path": "assets/brand/fm-full-cream.png", "bytes": 61002, "sha256": "9233b870bc2937b5aed06b101981d52667f867170351196257a5fd215f06abf6" },
-    { "path": "assets/brand/fm-full-juniper.png", "bytes": 61887, "sha256": "fc1376ad9ecb46989724057f90dc8555f91dfe6ff28f19cf5c6f0fe02c6a26cc" },
-    { "path": "assets/brand/fm-mark-cream.png", "bytes": 5993, "sha256": "5d74b9fbc7ed3f06a3906370df4086a4488662007121369a1e5e22e083399d5b" },
-    { "path": "assets/brand/fm-mark-juniper.png", "bytes": 6102, "sha256": "7bed97d3c9d91bd50198784fe3426c9e56e01019835f9bc6f7a11a52cc7c6e93" },
-    { "path": "assets/brand/fm-tagline-cream.png", "bytes": 52653, "sha256": "be3233d7881dd0420cfcf0e0037864ebf0f4361e6c884bd4b7d963ce33fb7a9e" },
-    { "path": "assets/brand/fm-tagline-juniper.png", "bytes": 53815, "sha256": "7885f0b95d5a9d0b26c0bc2d39d8515684268015ec4251f6d3f6c6db6376cae6" },
-    { "path": "assets/brand/fm-wordmark-cream.png", "bytes": 32364, "sha256": "ebba3ed2c5a62c7e3147dfcd9d1fbb0e7c59f9755632c2b99b5dc6ed57161687" },
-    { "path": "assets/brand/fm-wordmark-juniper.png", "bytes": 33254, "sha256": "91704c656a57ba87d972529db8c7220cc27f54e429a32db993a544d0edfebf1a" },
-    { "path": "docs/change-order-flow.html", "bytes": 30643, "sha256": "c6e344a438080b8e6ce5acebd1d270e053ca5b9f5f2aafbbdc47297b5d7d6c83" },
-    { "path": "docs/contract-esign-flow.html", "bytes": 36970, "sha256": "58dbf9c61f5c649b23534bb3a8bf00937d8ec4924d63a5252547603c8ab7576a" },
-    { "path": "docs/new-project-flow.html", "bytes": 36870, "sha256": "af89f84326f593a75e73303c92f390a2fa4b1b1c0f818618ff512b1ac7febfef" },
-    { "path": "phase2.html", "bytes": 24538, "sha256": "eb762336228f48f9568be7e3fa440fd5e063af1adf3da5585e53327be35c799f" },
-    { "path": "preview.html", "bytes": 9424, "sha256": "28b545ae56137a98337ecd06ec38ce3ffdc85d806f8c204db459a7e62f93096b" },
-    { "path": "preview/app.js", "bytes": 52834, "sha256": "d4bedbd9125a699cbf727d7e3860c703388710eef71e8a2c2500a79f7c95491d" },
-    { "path": "preview/braddy-penrose-order.js", "bytes": 8309, "sha256": "1274c7782cca126aa5ffba0ccd83118ece9ee3cf42466f9a16d2af1d29df9205" },
-    { "path": "preview/phase2-app.js", "bytes": 71123, "sha256": "28e64fdea0d8c4691c6080823c8d9b5a18acf25299c04c763baf235e5f48f171" },
-    { "path": "preview/phase2-customers.js", "bytes": 20449, "sha256": "8041899cbcffa850a3e2c640d5d37ca9f82fe8f6ed388a6234fc2fbe4c3afcfd" },
-    { "path": "preview/phase2-reports.js", "bytes": 7711, "sha256": "0cb03625e5bcded5cae47b7674bb84ee4c280890792147372e19f627e847e0ed" },
-    { "path": "preview/phase2-measure.js", "bytes": 32210, "sha256": "540d10d0079b7277ad63bbc8b3ac75184c1324dac169b5e86dee4cc7f2ac4f02" },
-    { "path": "preview/phase2-elevations.js", "bytes": 62011, "sha256": "1000823080ec8b52323b457ee8dc848229ab4c18fba89addd9f32401d18d33db" },
-    { "path": "preview/phase2-flows.js", "bytes": 65583, "sha256": "18256c82a472d6f02dce846a2934a160f906f940a6f2dded05950bee854144ec" },
-    { "path": "preview/quote-preview.js", "bytes": 7051, "sha256": "aadd498fad1601ddc595e1d6f6de24eda6a094b3253525bc8cfb44f72ca32b47" },
-    { "path": "preview/sample-data.js", "bytes": 4218, "sha256": "8d56c42b4b10d2c2f7ed489ffc175dc287bea953526fa389747eca607f32fbc5" },
-    { "path": "preview/willow-creek-full-order.js", "bytes": 13816, "sha256": "05944fd9adf626d75a7897e4563721409429690c318c2f9200936d56a3122834" },
-    { "path": "quote-preview.html", "bytes": 3392, "sha256": "28d96d3ea05e69a079a63086b48e6ba4bfe0d272107e57bc6e866150171fa551" },
-    { "path": "src/fm-phase1-activity.js", "bytes": 22082, "sha256": "100854cc364d1c56058d9e0808fca91732fa85ad88dffac6d6cd7168098d5b20" },
-    { "path": "src/fm-phase1-docs.js", "bytes": 13483, "sha256": "70b69453da3cc2e988dcb6f758e71e3d2868c5262868e9b60205b827f07bb7b1" },
-    { "path": "src/fm-phase1-ledger.js", "bytes": 20411, "sha256": "536f1eeec97c42283cf8692fde55a3b316a94e32180316d068364eaf97b258ea" },
-    { "path": "src/fm-phase1-pricing.js", "bytes": 6793, "sha256": "5660b920d64fe859af77da445dd1f35684a7c1c4fbc4d0bb8c6de2dfe5d44d53" },
-    { "path": "src/fm-phase1-print.css", "bytes": 6007, "sha256": "37901d28a07cfb2acbd1793eaa4c883179adafb19042788ecd50ce2bf9063058" },
-    { "path": "src/fm-phase1-quote.js", "bytes": 15212, "sha256": "89008cc6dc95336db2b7532f870062e06196784b20d456d67d9efd442ab5028b" },
-    { "path": "src/fm-phase1-theme-toggle.js", "bytes": 3303, "sha256": "5e4a73ed9ef6b164a372f4ae05d931c865bda9e335521282426411537233f5c3" },
-    { "path": "src/fm-phase1-theme.css", "bytes": 11443, "sha256": "89cadf66c015e7bb6b6115a4ee6d913b5412283f6823e86577527a626ae0ccc2" },
-    { "path": "src/fm-phase2-bid.js", "bytes": 3556, "sha256": "7933152d87ae873429afbadadbb540a45c0ae1069d63b0f4dd227d073d4d4a9c" },
-    { "path": "src/fm-phase2-books.js", "bytes": 18452, "sha256": "32fe8ab0aa1e518583ad790fffa03638848e2a42fd18aa88d6916eadc50a3171" },
-    { "path": "src/fm-phase2-changeorder.js", "bytes": 14090, "sha256": "d4855a37709289bbe5a55160ec7394bc4b665065682db57a17c21e851eecc40a" },
-    { "path": "src/fm-phase2-contract.js", "bytes": 18736, "sha256": "e14d0f526d5a23106b1dd0f8f991ccb39bbbffe54e987071c648456adb0f01e1" },
-    { "path": "src/fm-phase2-customers.js", "bytes": 6722, "sha256": "f0b1468464d01c2224878b09947d0babf46f9098565bf3abaf33b9c3b0da3949" },
-    { "path": "src/fm-phase2-reports.js", "bytes": 14328, "sha256": "103ca1169e31fd6984b400b1d733d25165737c326c6dddc1525cac36ed1ad4fb" },
-    { "path": "src/fm-phase2-measure.js", "bytes": 10515, "sha256": "de1e8552579d51ce6e5a7948836312d26a360dbaad18c5089a7a4459f9ca3171" },
-    { "path": "src/fm-phase2-elevations.js", "bytes": 74725, "sha256": "6c25db64ad52dd58613b11bee1dbc1352d58efa27ee47bf378238d7797780718" },
-    { "path": "src/fm-phase2-store.js", "bytes": 9204, "sha256": "48aff6c6d1c306dd077d63fa96733cbc084d4f30566420ece5689e339c428a6b" },
-    { "path": "tests/activity.test.js", "bytes": 10756, "sha256": "d9dc91ce40d5e277e378d20ee9d96ca2168dfb9ac822fbdbe75b58a30dffaa6e" },
-    { "path": "tests/bid.test.js", "bytes": 3656, "sha256": "855b0b97f5936adb5a6a5cfa4b847d2340d26682388dbd9ef47d871e8daccafa" },
-    { "path": "tests/books.test.js", "bytes": 6385, "sha256": "8e7fda6a05c77688a0f5ff4312ee4409bc83a4b37af2904edc0a0237f58888a9" },
-    { "path": "tests/braddy.test.js", "bytes": 5123, "sha256": "b9b29194a6e36efa1b92a71df31b1af9cfa9eef325b5afbfbd7cd9b8f7db85af" },
-    { "path": "tests/changeorder.test.js", "bytes": 10667, "sha256": "8d9003e0fbd39f9678895ea5f137c5bfc948528dbad112c68dbf384181df4a8e" },
-    { "path": "tests/contract.test.js", "bytes": 13218, "sha256": "0ea0f4cb6d21e075fe59d243393d398e54b7a4b77632e0a933343a6834f5da8e" },
-    { "path": "tests/docs.test.js", "bytes": 5843, "sha256": "70612ef7969d1049229230c91440f1ed68185380207c5a12441569ea04a8eb38" },
-    { "path": "tests/reports.test.js", "bytes": 7612, "sha256": "74579f2f74ae0b95eb9b2751fdbbae8df46b176f604a66df99430a9018691aca" },
-    { "path": "tests/measure.test.js", "bytes": 4439, "sha256": "87f7f636338422e97ce983f40d54d655be840128d82d42228fc32986d08eabe0" },
-    { "path": "tests/elevations.test.js", "bytes": 18924, "sha256": "000455ea65af92304e7ad3063aca09ba88dbe87e210513912635db9becc7b1f6" },
-    { "path": "tests/ledger.test.js", "bytes": 9969, "sha256": "cc14c0254b9e7bb54e56dcf220c05ef3ef1b20f3f37f10c4ff59ea2ea7dfdcfc" },
-    { "path": "tests/pricing.test.js", "bytes": 5866, "sha256": "a758cc01073231fa491b067c1807bdf5c1a4d2ea38fa75b3274cbba7e2be2461" },
-    { "path": "tests/quote.test.js", "bytes": 8318, "sha256": "33798521991ebd4a6dc3a07cb113ef7d36d5d507ec97bf174ed4173bcff1fde3" },
-    { "path": "tests/store.test.js", "bytes": 4517, "sha256": "be0b71352dbfc6aec060c8a53793ac1f8de916c92fd5ecb69f28eb3c649ad412" },
-    { "path": "tests/theme.test.js", "bytes": 2653, "sha256": "29913d2a87eec230a80ba078834f6d7a6a721afb330683693c4a2fdf07fd4b4a" }
+    {
+      "path": "HANDOFF.md",
+      "bytes": 133077,
+      "sha256": "d7f02063a424bf233a180a591a017d8ad100632a1712ffef97dcdb7145c7ef14"
+    },
+    {
+      "path": "HERMES-LAUNCH.md",
+      "bytes": 10623,
+      "sha256": "985ed0da015617276280fd2fc678f3f7743af8ede8895591aa64b0318245f261"
+    },
+    {
+      "path": "UPGRADE-2.7.2-to-2.8.0.md",
+      "bytes": 5424,
+      "sha256": "cd1e4fe5562ad045356d3bace603730307f92c66af44fd73db0503d9809e6240"
+    },
+    {
+      "path": "assets/brand/fm-full-cream.png",
+      "bytes": 61002,
+      "sha256": "9233b870bc2937b5aed06b101981d52667f867170351196257a5fd215f06abf6"
+    },
+    {
+      "path": "assets/brand/fm-full-juniper.png",
+      "bytes": 61887,
+      "sha256": "fc1376ad9ecb46989724057f90dc8555f91dfe6ff28f19cf5c6f0fe02c6a26cc"
+    },
+    {
+      "path": "assets/brand/fm-mark-cream.png",
+      "bytes": 5993,
+      "sha256": "5d74b9fbc7ed3f06a3906370df4086a4488662007121369a1e5e22e083399d5b"
+    },
+    {
+      "path": "assets/brand/fm-mark-juniper.png",
+      "bytes": 6102,
+      "sha256": "7bed97d3c9d91bd50198784fe3426c9e56e01019835f9bc6f7a11a52cc7c6e93"
+    },
+    {
+      "path": "assets/brand/fm-tagline-cream.png",
+      "bytes": 52653,
+      "sha256": "be3233d7881dd0420cfcf0e0037864ebf0f4361e6c884bd4b7d963ce33fb7a9e"
+    },
+    {
+      "path": "assets/brand/fm-tagline-juniper.png",
+      "bytes": 53815,
+      "sha256": "7885f0b95d5a9d0b26c0bc2d39d8515684268015ec4251f6d3f6c6db6376cae6"
+    },
+    {
+      "path": "assets/brand/fm-wordmark-cream.png",
+      "bytes": 32364,
+      "sha256": "ebba3ed2c5a62c7e3147dfcd9d1fbb0e7c59f9755632c2b99b5dc6ed57161687"
+    },
+    {
+      "path": "assets/brand/fm-wordmark-juniper.png",
+      "bytes": 33254,
+      "sha256": "91704c656a57ba87d972529db8c7220cc27f54e429a32db993a544d0edfebf1a"
+    },
+    {
+      "path": "docs/change-order-flow.html",
+      "bytes": 30643,
+      "sha256": "c6e344a438080b8e6ce5acebd1d270e053ca5b9f5f2aafbbdc47297b5d7d6c83"
+    },
+    {
+      "path": "docs/contract-esign-flow.html",
+      "bytes": 36970,
+      "sha256": "58dbf9c61f5c649b23534bb3a8bf00937d8ec4924d63a5252547603c8ab7576a"
+    },
+    {
+      "path": "docs/new-project-flow.html",
+      "bytes": 36870,
+      "sha256": "af89f84326f593a75e73303c92f390a2fa4b1b1c0f818618ff512b1ac7febfef"
+    },
+    {
+      "path": "phase2.html",
+      "bytes": 32085,
+      "sha256": "69d7ec48d7b3a3b71384bba00608b88b6eff129d920bc72e6225cd27a4070d45"
+    },
+    {
+      "path": "preview.html",
+      "bytes": 9424,
+      "sha256": "28b545ae56137a98337ecd06ec38ce3ffdc85d806f8c204db459a7e62f93096b"
+    },
+    {
+      "path": "preview/app.js",
+      "bytes": 52834,
+      "sha256": "d4bedbd9125a699cbf727d7e3860c703388710eef71e8a2c2500a79f7c95491d"
+    },
+    {
+      "path": "preview/braddy-penrose-order.js",
+      "bytes": 8309,
+      "sha256": "1274c7782cca126aa5ffba0ccd83118ece9ee3cf42466f9a16d2af1d29df9205"
+    },
+    {
+      "path": "preview/phase2-app.js",
+      "bytes": 73136,
+      "sha256": "35cf7db2e56e3aa3e9269cc7c5bc69b1372f02862e14e8ec418aabec1dd2639d"
+    },
+    {
+      "path": "preview/phase2-customers.js",
+      "bytes": 22520,
+      "sha256": "bfbb15b4eb44a116c27a317326daba9f3ab54b301cc25532ccccc4d85b72e37c"
+    },
+    {
+      "path": "preview/phase2-elevations.js",
+      "bytes": 71247,
+      "sha256": "6cd8e5bf1c207a7b96739caeb8e074d5cc608e73f003a9c7d1d55aae2295c538"
+    },
+    {
+      "path": "preview/phase2-flows.js",
+      "bytes": 78204,
+      "sha256": "bbeeb137f4350ffd74b6946ae206e8e798a36bf97a9becb664aa584b110839b2"
+    },
+    {
+      "path": "preview/phase2-measure.js",
+      "bytes": 32625,
+      "sha256": "e9ecaf287ee77a496456e2ace856a0bb76f50116296d126d75ac4c236806f3a9"
+    },
+    {
+      "path": "preview/phase2-reports.js",
+      "bytes": 7711,
+      "sha256": "0cb03625e5bcded5cae47b7674bb84ee4c280890792147372e19f627e847e0ed"
+    },
+    {
+      "path": "preview/quote-preview.js",
+      "bytes": 7051,
+      "sha256": "aadd498fad1601ddc595e1d6f6de24eda6a094b3253525bc8cfb44f72ca32b47"
+    },
+    {
+      "path": "preview/sample-data.js",
+      "bytes": 4218,
+      "sha256": "8d56c42b4b10d2c2f7ed489ffc175dc287bea953526fa389747eca607f32fbc5"
+    },
+    {
+      "path": "preview/willow-creek-full-order.js",
+      "bytes": 13816,
+      "sha256": "05944fd9adf626d75a7897e4563721409429690c318c2f9200936d56a3122834"
+    },
+    {
+      "path": "quote-preview.html",
+      "bytes": 3392,
+      "sha256": "28d96d3ea05e69a079a63086b48e6ba4bfe0d272107e57bc6e866150171fa551"
+    },
+    {
+      "path": "src/fm-phase1-activity.js",
+      "bytes": 22082,
+      "sha256": "100854cc364d1c56058d9e0808fca91732fa85ad88dffac6d6cd7168098d5b20"
+    },
+    {
+      "path": "src/fm-phase1-docs.js",
+      "bytes": 13483,
+      "sha256": "70b69453da3cc2e988dcb6f758e71e3d2868c5262868e9b60205b827f07bb7b1"
+    },
+    {
+      "path": "src/fm-phase1-ledger.js",
+      "bytes": 20411,
+      "sha256": "536f1eeec97c42283cf8692fde55a3b316a94e32180316d068364eaf97b258ea"
+    },
+    {
+      "path": "src/fm-phase1-pricing.js",
+      "bytes": 6793,
+      "sha256": "5660b920d64fe859af77da445dd1f35684a7c1c4fbc4d0bb8c6de2dfe5d44d53"
+    },
+    {
+      "path": "src/fm-phase1-print.css",
+      "bytes": 6007,
+      "sha256": "37901d28a07cfb2acbd1793eaa4c883179adafb19042788ecd50ce2bf9063058"
+    },
+    {
+      "path": "src/fm-phase1-quote.js",
+      "bytes": 15212,
+      "sha256": "89008cc6dc95336db2b7532f870062e06196784b20d456d67d9efd442ab5028b"
+    },
+    {
+      "path": "src/fm-phase1-theme-toggle.js",
+      "bytes": 3303,
+      "sha256": "5e4a73ed9ef6b164a372f4ae05d931c865bda9e335521282426411537233f5c3"
+    },
+    {
+      "path": "src/fm-phase1-theme.css",
+      "bytes": 11443,
+      "sha256": "89cadf66c015e7bb6b6115a4ee6d913b5412283f6823e86577527a626ae0ccc2"
+    },
+    {
+      "path": "src/fm-phase2-address.js",
+      "bytes": 5480,
+      "sha256": "59ecf8f23e0e86a3c9427cc4a457f0e4d63bf12b7cb6b3a07a13d6acdba72d34"
+    },
+    {
+      "path": "src/fm-phase2-bid.js",
+      "bytes": 3556,
+      "sha256": "7933152d87ae873429afbadadbb540a45c0ae1069d63b0f4dd227d073d4d4a9c"
+    },
+    {
+      "path": "src/fm-phase2-books.js",
+      "bytes": 18452,
+      "sha256": "32fe8ab0aa1e518583ad790fffa03638848e2a42fd18aa88d6916eadc50a3171"
+    },
+    {
+      "path": "src/fm-phase2-changeorder.js",
+      "bytes": 14090,
+      "sha256": "d4855a37709289bbe5a55160ec7394bc4b665065682db57a17c21e851eecc40a"
+    },
+    {
+      "path": "src/fm-phase2-contract.js",
+      "bytes": 18736,
+      "sha256": "e14d0f526d5a23106b1dd0f8f991ccb39bbbffe54e987071c648456adb0f01e1"
+    },
+    {
+      "path": "src/fm-phase2-customers.js",
+      "bytes": 7031,
+      "sha256": "00135d90db12b5a8b54b2a5ee3ea24f6de51e1683c0bcab74dfc42dfd4d72778"
+    },
+    {
+      "path": "src/fm-phase2-elevations.js",
+      "bytes": 74725,
+      "sha256": "6c25db64ad52dd58613b11bee1dbc1352d58efa27ee47bf378238d7797780718"
+    },
+    {
+      "path": "src/fm-phase2-measure.js",
+      "bytes": 10515,
+      "sha256": "de1e8552579d51ce6e5a7948836312d26a360dbaad18c5089a7a4459f9ca3171"
+    },
+    {
+      "path": "src/fm-phase2-reports.js",
+      "bytes": 14328,
+      "sha256": "103ca1169e31fd6984b400b1d733d25165737c326c6dddc1525cac36ed1ad4fb"
+    },
+    {
+      "path": "src/fm-phase2-store.js",
+      "bytes": 9204,
+      "sha256": "48aff6c6d1c306dd077d63fa96733cbc084d4f30566420ece5689e339c428a6b"
+    },
+    {
+      "path": "tests/activity.test.js",
+      "bytes": 10756,
+      "sha256": "d9dc91ce40d5e277e378d20ee9d96ca2168dfb9ac822fbdbe75b58a30dffaa6e"
+    },
+    {
+      "path": "tests/address.test.js",
+      "bytes": 4112,
+      "sha256": "ab4831f48a63f8d087ebe4f5c62c96f5a18325cfb599ce4da8416af544e37d0e"
+    },
+    {
+      "path": "tests/bid.test.js",
+      "bytes": 3656,
+      "sha256": "855b0b97f5936adb5a6a5cfa4b847d2340d26682388dbd9ef47d871e8daccafa"
+    },
+    {
+      "path": "tests/books.test.js",
+      "bytes": 6385,
+      "sha256": "8e7fda6a05c77688a0f5ff4312ee4409bc83a4b37af2904edc0a0237f58888a9"
+    },
+    {
+      "path": "tests/braddy.test.js",
+      "bytes": 5123,
+      "sha256": "b9b29194a6e36efa1b92a71df31b1af9cfa9eef325b5afbfbd7cd9b8f7db85af"
+    },
+    {
+      "path": "tests/changeorder.test.js",
+      "bytes": 10667,
+      "sha256": "8d9003e0fbd39f9678895ea5f137c5bfc948528dbad112c68dbf384181df4a8e"
+    },
+    {
+      "path": "tests/contract.test.js",
+      "bytes": 13218,
+      "sha256": "0ea0f4cb6d21e075fe59d243393d398e54b7a4b77632e0a933343a6834f5da8e"
+    },
+    {
+      "path": "tests/docs.test.js",
+      "bytes": 5843,
+      "sha256": "70612ef7969d1049229230c91440f1ed68185380207c5a12441569ea04a8eb38"
+    },
+    {
+      "path": "tests/elevations.test.js",
+      "bytes": 18924,
+      "sha256": "000455ea65af92304e7ad3063aca09ba88dbe87e210513912635db9becc7b1f6"
+    },
+    {
+      "path": "tests/ledger.test.js",
+      "bytes": 9969,
+      "sha256": "cc14c0254b9e7bb54e56dcf220c05ef3ef1b20f3f37f10c4ff59ea2ea7dfdcfc"
+    },
+    {
+      "path": "tests/measure.test.js",
+      "bytes": 4439,
+      "sha256": "87f7f636338422e97ce983f40d54d655be840128d82d42228fc32986d08eabe0"
+    },
+    {
+      "path": "tests/pricing.test.js",
+      "bytes": 5866,
+      "sha256": "a758cc01073231fa491b067c1807bdf5c1a4d2ea38fa75b3274cbba7e2be2461"
+    },
+    {
+      "path": "tests/quote.test.js",
+      "bytes": 8318,
+      "sha256": "33798521991ebd4a6dc3a07cb113ef7d36d5d507ec97bf174ed4173bcff1fde3"
+    },
+    {
+      "path": "tests/reports.test.js",
+      "bytes": 7612,
+      "sha256": "74579f2f74ae0b95eb9b2751fdbbae8df46b176f604a66df99430a9018691aca"
+    },
+    {
+      "path": "tests/store.test.js",
+      "bytes": 4517,
+      "sha256": "be0b71352dbfc6aec060c8a53793ac1f8de916c92fd5ecb69f28eb3c649ad412"
+    },
+    {
+      "path": "tests/theme.test.js",
+      "bytes": 2653,
+      "sha256": "29913d2a87eec230a80ba078834f6d7a6a721afb330683693c4a2fdf07fd4b4a"
+    }
   ]
 }

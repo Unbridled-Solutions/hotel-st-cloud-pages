@@ -111,7 +111,7 @@
       '<div class="p2-brand"><span class="fmp1-logo fmp1-logo--tagline" role="img" aria-label="Fremont Makers, making freedom"></span><span class="fmp1-faint p2-small">Project Builder</span></div>' +
       '<a class="p2-newbtn" href="#/new"' + (r.area === 'new' ? ' aria-current="page"' : '') + '><span aria-hidden="true">+</span> New project</a>' +
       '<nav class="p2-nav" aria-label="Projects"><h2>Projects</h2>' +
-        link('#/projects', 'All projects', r.area === 'projects' || r.area === 'job') + link('#/customers', 'Customers', r.area === 'customers') + link('#/measure', 'Field measure', r.area === 'measure') + '</nav>' +
+        link('#/projects', 'All projects', r.area === 'projects' || (r.area === 'job' && r.b !== 'elevations')) + link('#/elevations', 'Elevations', r.area === 'elevations' || (r.area === 'job' && r.b === 'elevations')) + link('#/customers', 'Customers', r.area === 'customers') + link('#/measure', 'Field measure', r.area === 'measure') + '</nav>' +
       '<nav class="p2-nav" aria-label="Company books"><h2>Company books</h2>' +
         link('#/books/dashboard', 'Dashboard', r.area === 'books' && r.a === 'dashboard') +
         link('#/books/pipeline', 'Pipeline', r.a === 'pipeline') +
@@ -132,6 +132,7 @@
     if (r.area === 'projects') body = viewProjects();
     else if (r.area === 'job') body = viewJob(store.job(r.a), r.b || 'overview');
     else if (r.area === 'users') body = viewUsers();
+    else if (r.area === 'elevations') body = window.P2Elev ? window.P2Elev.index(ctx()) : '<p>Elevations are loading…</p>';
     else if (r.area === 'customers') body = window.P2Customers ? (r.a ? window.P2Customers.profile(ctx(), r.a) : window.P2Customers.list(ctx())) : '<p>Customers are loading…</p>';
     else if (r.area === 'measure') body = window.P2Measure ? (r.a ? window.P2Measure.page(ctx(), r.a) : window.P2Measure.list(ctx())) : '<p>Field measure is loading…</p>';
     else if (r.area === 'new') body = window.P2NewProject ? window.P2NewProject.render(ctx()) : '<p>New project is loading…</p>';
@@ -158,7 +159,7 @@
       var row = '<tr><td><span class="fmp1-code">' + esc(j.jobCode) + '</span></td><td><b>' + esc(j.customer) + '</b><br><span class="fmp1-faint p2-small">' + esc(houses ? j.houses.length + ' houses · builder order' : (j.projectName || '—')) + '</span>' +
         (houses ? '<br><button class="p2-tog" data-houses="' + esc(j.jobCode) + '" aria-expanded="' + !!open + '">' + (open ? '▾ Hide houses' : '▸ Show houses') + '</button>' : '') + '</td>' +
         '<td>' + stagePill(j.stage) + '</td><td class="r">' + $f(s.currentCents) + '</td><td class="r">' + (j.stage === 'quote' || j.stage === 'lost' ? '—' : $f(balance(j))) + '</td>' +
-        '<td class="p2-small">' + esc(nextStep(j)) + '</td><td class="r"><a class="fmp1-btn" href="#/job/' + encodeURIComponent(j.jobCode) + '/overview">Open</a></td></tr>';
+        '<td class="p2-small">' + esc(nextStep(j)) + '</td><td class="r p2-act"><a class="fmp1-btn" href="#/job/' + encodeURIComponent(j.jobCode) + '/overview">Open</a></td></tr>';
       if (houses && open) row += j.houses.map(function (h) { return '<tr class="p2-houses"><td class="fmp1-code">' + esc(h.jobCode) + '</td><td colspan="2">' + esc(h.name) + ' · ' + esc(h.color) + '</td><td class="r">' + $f(h.totalCents) + '</td><td colspan="3"></td></tr>'; }).join('');
       return row;
     }).join('');
@@ -212,7 +213,9 @@
     var pricing = p ? '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">This job\'s pricing</span><ul class="p2-list">' +
       (p.markupPct != null ? '<li><span>Markup</span><b>' + p.markupPct + '%</b></li>' : '<li><span>Markup</span><b>' + esc(p.note || 'Per line') + '</b></li>') +
       '<li><span>Mfr. discount (of cost)</span><b>' + p.discountPctOfCost + '%</b></li><li><span>G&amp;A</span><b>' + p.gaPct + '%</b></li><li><span>Sales tax (product)</span><b>' + p.taxPct + '%</b></li>' +
-      (p.assemblyCents != null ? '<li><span>Assembly</span><b>' + $f(p.assemblyCents) + '</b></li>' : '') + '</ul><p class="p2-note">Set on this job, never per customer.</p></div>' : '';
+      (p.assemblyHours != null ? '<li><span>Assembly (per home)</span><b>' + (p.assemblyHours ? p.assemblyHours + ' h × ' + $f(p.assemblyRateCents) + ' = ' + $f(p.assemblyCents) : 'None') + '</b></li>' :
+        p.assemblyCents != null ? '<li><span>Assembly (per home)</span><b>' + $f(p.assemblyCents) + ' flat</b></li>' : '') +
+      (p.plan && window.P2Flows ? '<li><span>Payment plan</span><b>' + window.P2Flows.planStages(p).map(function (st) { return esc(st.name) + ' ' + st.pct + '%'; }).join(' · ') + '</b></li>' : '') + '</ul><p class="p2-note">Set on this job, never per customer.</p></div>' : '';
     var log = store.log(j.jobCode).slice(0, 5).map(function (e) { return '<li><span>' + esc(e.text) + '</span><span class="fmp1-faint p2-small">' + esc(e.by) + '</span></li>'; }).join('');
     return '<div class="p2-grid"><div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Needs attention</span>' + (warn ? '<ul class="p2-list">' + warn + '</ul>' : '<p class="p2-ok">Nothing on this job needs attention.</p>') + '</div>' +
       pricing + '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Recent activity</span>' + (log ? '<ul class="p2-list">' + log + '</ul>' : '<p class="p2-empty">No activity recorded in this preview yet.</p>') + '</div></div>';
@@ -224,7 +227,7 @@
         j.houses.map(function (h) {
           var open = ui.open['h:' + h.jobCode], m = W.models[h.model];
           var row = '<tr><td><span class="fmp1-code">' + esc(h.jobCode) + '</span><br>' + esc(h.name) + '</td><td>' + esc(h.model) + '<br><span class="fmp1-faint p2-small">' + esc(h.color) + '</span></td><td class="r">' + m.lines.length + '</td><td class="r">' + $f(h.totalCents) + '</td>' +
-            '<td class="r"><button class="p2-tog" data-houses="h:' + esc(h.jobCode) + '" aria-expanded="' + !!open + '">' + (open ? '▾ Hide SKUs' : '▸ Show SKUs') + '</button></td></tr>';
+            '<td class="r p2-act"><button class="p2-tog" data-houses="h:' + esc(h.jobCode) + '" aria-expanded="' + !!open + '">' + (open ? '▾ Hide SKUs' : '▸ Show SKUs') + '</button></td></tr>';
           if (open) row += '<tr class="p2-houses"><td colspan="5">' + skuTable(m.lines, null) + '</td></tr>';
           return row;
         }).join('') + '</tbody></table></div><p class="p2-note">The change order from Oct 23 adds cabinets across several houses; its SKUs come in through the change order flow.</p>';
@@ -312,14 +315,14 @@
     var rows = users.map(function (u) {
       var lastFull = u.access === 'full' && fulls === 1;
       return '<tr><td><b>' + esc(u.name) + '</b>' + (u.id === mine ? ' <span class="fmp1-pill">you</span>' : '') + '</td>' +
-        '<td><input class="fmp1-input" type="email" style="min-width:200px" placeholder="name@fremontmakers.com" aria-label="Email for ' + esc(u.name) + '" data-userf="' + esc(u.id) + ':email" value="' + esc(u.email) + '"></td>' +
+        '<td><input class="fmp1-input" type="email" style="width:100%;min-width:170px" placeholder="name@fremontmakers.com" aria-label="Email for ' + esc(u.name) + '" data-userf="' + esc(u.id) + ':email" value="' + esc(u.email) + '"></td>' +
         '<td><select class="fmp1-input" aria-label="Access for ' + esc(u.name) + '" data-userf="' + esc(u.id) + ':access"><option value="full"' + (u.access === 'full' ? ' selected' : '') + '>Full access</option><option value="coordinator" disabled>Coordinator (not set up yet)</option></select></td>' +
         '<td><label class="p2-row p2-small"><input type="checkbox" data-userf="' + esc(u.id) + ':canSign"' + (u.canSign ? ' checked' : '') + '> Signs for Fremont Makers</label>' +
           (u.canSign && !u.email ? '<span class="p2-small" style="color:var(--fmp1-alert-ink)">Needs an email to sign</span>' : '') + '</td>' +
-        '<td class="r">' + (u.id === mine || lastFull ? '' : '<button class="fmp1-btn fmp1-btn--quiet" data-userrm="' + esc(u.id) + '">Remove</button>') + '</td></tr>';
+        '<td class="r p2-act">' + (u.id === mine || lastFull ? '' : '<button class="fmp1-btn fmp1-btn--quiet" data-userrm="' + esc(u.id) + '">Remove</button>') + '</td></tr>';
     }).join('');
     return head('Users', 'Who can sign in to the Project Builder and what they can do. Every change anyone makes is logged with their name.') +
-      '<div class="fmp1-card fmp1-table-wrap"><table class="fmp1-table p2-table"><thead><tr><th>Name</th><th>Email</th><th>Access</th><th>Contracts</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      '<div class="fmp1-card fmp1-table-wrap"><table class="fmp1-table p2-table p2-users"><thead><tr><th>Name</th><th>Email</th><th>Access</th><th>Contracts</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
       '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Add a user</span><div class="p2-form">' +
         '<label class="p2-fld"><span>Name</span><input class="fmp1-input" data-newuser="name"></label><label class="p2-fld"><span>Email</span><input class="fmp1-input" type="email" data-newuser="email"></label>' +
         '<label class="p2-fld"><span>Access</span><select class="fmp1-input" data-newuser="access"><option value="full">Full access</option><option value="coordinator" disabled>Coordinator (not set up yet)</option></select></label>' +
@@ -610,12 +613,13 @@
     });
     return rows.length ? '<ul class="p2-docs">' + rows.join('') + '</ul>' : '';
   }
-  function ctx() { return { store: store, ui: ui, me: me, TODAY: TODAY, esc: esc, money: $f, longDate: longDate, render: render, go: go, W: W, B: B, openDoc: openDoc, docRows: docRows }; }
+  function ctx() { return { store: store, ui: ui, me: me, TODAY: TODAY, esc: esc, money: $f, longDate: longDate, render: render, go: go, W: W, B: B, openDoc: openDoc, docRows: docRows, stagePill: stagePill }; }
   window.P2 = { ctx: ctx, render: render };
 
   /* ---------- events ---------- */
   root.addEventListener('click', function (e) {
-    var t = e.target.closest('button'); if (!t) return;
+    var t = e.target.closest('button, a[data-npstep], a[data-costep]'); if (!t) return;
+    if (t.tagName === 'A') e.preventDefault();   // the step tabs of New Project and change orders are links: switch steps, don't navigate
     var r = route(), j = r.area === 'job' ? store.job(r.a) : null;
     if (t.hasAttribute('data-reset')) { store.reset(); ui.pay = ui.act = ui.viewer = ui.el = null; return render(); }
     if (t.dataset.filter) { ui.filter = t.dataset.filter; return render(); }
@@ -672,6 +676,17 @@
     if (window.P2Elev && window.P2Elev.change(ctx(), e)) return;
     if (window.P2Flows && window.P2Flows.change) window.P2Flows.change(ctx(), e);
   });
+  /* Tabbing or clicking into a number box selects what's there, so typing replaces it (markup, hours, percentages…).
+     Only for the person's own Tab or click: a box refocused after a redraw keeps the cursor where it was. */
+  var lastNav = 0;
+  root.addEventListener('keydown', function (e) { if (e.key === 'Tab') lastNav = Date.now(); }, true);
+  root.addEventListener('pointerdown', function (e) { if (e.target.matches && e.target.matches('input')) lastNav = Date.now(); }, true);
+  root.addEventListener('focusin', function (e) {
+    var el = e.target;
+    if (!el.matches || !el.matches('input[inputmode="decimal"], input[inputmode="numeric"], input[type="number"]') || Date.now() - lastNav > 400) return;
+    setTimeout(function () { try { if (document.activeElement === el) el.select(); } catch (x) { /* not selectable */ } }, 0);
+  });
+  root.addEventListener('mouseup', function (e) { if (e.target.matches && e.target.matches('input[inputmode="decimal"], input[inputmode="numeric"]') && Date.now() - lastNav < 400) e.preventDefault(); });   // keep the selection the click just made
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && ui.viewer) { var c = root.querySelector('[data-close-viewer]'); if (c) c.click(); } });
   window.addEventListener('hashchange', function () { ui.pay = ui.pendingPay || null; ui.pendingPay = null; ui.act = null; ui.paidNote = null; ui.viewer = null; ui.esErr = null; window.scrollTo(0, 0); render(); });
   window.addEventListener('resize', fitViewer);

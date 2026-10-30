@@ -59,7 +59,7 @@
     }).join('');
     var start = '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Start a site visit</span>' +
       '<div class="p2-chips" role="group" aria-label="For"><button class="fmp1-btn" data-msfor="job" aria-pressed="' + (u.forWhat !== 'lead') + '">For a project</button><button class="fmp1-btn" data-msfor="lead" aria-pressed="' + (u.forWhat === 'lead') + '">For a lead (no project yet)</button></div>' +
-      (u.forWhat === 'lead' ? '<div class="p2-el-2"><label class="p2-fld"><span>Customer</span><input class="fmp1-input" data-msnew="customer" value="' + esc(u.customer || '') + '"></label><label class="p2-fld"><span>Address</span><input class="fmp1-input" data-msnew="address" value="' + esc(u.address || '') + '"></label></div>' :
+      (u.forWhat === 'lead' ? '<div class="p2-el-2"><label class="p2-fld"><span>Customer</span><input class="fmp1-input" data-msnew="customer" value="' + esc(u.customer || '') + '"></label></div>' + window.FMAddress.fieldsHTML(function (f) { return 'data-msaddr="' + f + '"'; }, u.addr, { legend: 'Address' }) :
         '<label class="p2-fld"><span>Project</span><select class="fmp1-input" data-msnew="job"><option value="">Choose…</option>' + jobs.map(function (j) { return '<option value="' + esc(j.jobCode) + '"' + (u.job === j.jobCode ? ' selected' : '') + '>' + esc(j.jobCode + ' · ' + j.customer + ' · ' + (j.projectName || '')) + '</option>'; }).join('') + '</select></label>') +
       (u.err ? '<p class="p2-small" role="alert" style="color:var(--fmp1-alert-ink)">' + esc(u.err) + '</p>' : '') +
       '<button class="fmp1-btn fmp1-btn--primary" data-msstart>Start measuring</button></div>';
@@ -163,13 +163,13 @@
       var by = c.me().name, v;
       if (u.forWhat === 'lead') {
         if (!String(u.customer || '').trim()) { u.err = 'Enter the customer\'s name.'; c.render(); return true; }
-        v = M.blankVisit({ by: by, today: c.TODAY, lead: { customer: u.customer.trim(), address: String(u.address || '').trim() } });
+        v = M.blankVisit({ by: by, today: c.TODAY, lead: { customer: u.customer.trim(), address: window.FMAddress.format(u.addr), addr: u.addr || window.FMAddress.blank() } });
       } else {
         var j = c.store.job(u.job || ''); if (!j) { u.err = 'Choose the project.'; c.render(); return true; }
         v = startForJob(c, j);
       }
       if (!v.rooms.length) { var r0 = M.blankRoom('Kitchen'); r0.walls.push(M.blankWall(r0)); v.rooms.push(r0); }
-      all().push(v); persist(); u.err = null; u.customer = ''; u.address = '';
+      all().push(v); persist(); u.err = null; u.customer = ''; u.addr = null;
       c.go('#/measure/' + encodeURIComponent(v.id)); return true;
     }
     var vv = x.v; if (!vv) return false;
@@ -206,7 +206,7 @@
     return false;
   }
   function startForJob(c, j) {
-    var v = M.blankVisit({ by: c.me().name, today: c.TODAY, jobCode: j.jobCode, lead: { customer: j.customer, address: j.installAddress || '' } });
+    var v = M.blankVisit({ by: c.me().name, today: c.TODAY, jobCode: j.jobCode, lead: { customer: j.customer, address: j.installAddress || '', addr: j.installAddr || window.FMAddress.parse(j.installAddress) } });
     // list the job's drawn rooms and walls (names and positions only; the numbers are measured fresh)
     ((j.elevations && j.elevations.rooms) || []).forEach(function (er) {
       if (v.rooms.some(function (r) { return r.name === er.name; })) return;
@@ -223,6 +223,8 @@
       models: [{ id: 'm1', name: '', qty: 1, lines: [], pdf: '' }], pricing: { markupPct: 35, discountPctOfCost: 12, gaPct: 2, taxPct: 7.9, assembly: '640.00', plan: [50, 50], atCost: true }, copiedFrom: '',
       bid: false, bidAmount: '', install: '', errors: [], elevations: { rooms: rooms, sizes: {} }, fromVisit: v.id,
       note: 'From the site visit on ' + c.longDate(v.measuredOn) + ' (' + who(v) + '): ' + rooms.length + ' room' + (rooms.length === 1 ? '' : 's') + ' of field measurements come along. Add the cabinets from the supplier PDF in step 3.' };
+    if (v.lead && v.lead.addr) d.addr = JSON.parse(JSON.stringify(v.lead.addr));
+    if (window.P2NewProject) d = window.P2NewProject.migrate(d);   // today's pricing defaults (assembly hours × rate) and address fields
     c.ui.draft = d; try { window.localStorage.setItem('fm_phase2_draft', JSON.stringify(d)); } catch (e) { /* in memory */ }
     c.go('#/new');
   }
@@ -233,6 +235,7 @@
     var x = cur(c); if (!x) return false;
     var el = e.target, d = el.dataset, u = c.ui.ms = c.ui.ms || {};
     if (d.msnew) { u[d.msnew] = el.value; u.err = null; if (d.msnew === 'job') c.render(); return true; }
+    if (d.msaddr) { u.addr = u.addr || window.FMAddress.blank(); u.addr[d.msaddr] = el.value; return true; }
     var v = x.v; if (!v) return false;
     var room = v.rooms.filter(function (r) { return r.id === u.room; })[0] || v.rooms[0];
     function bad() { u.msg = '"' + el.value + '" isn\'t a length. Try 126 1/2 or 10\' 6 1/2.'; c.render(); return true; }

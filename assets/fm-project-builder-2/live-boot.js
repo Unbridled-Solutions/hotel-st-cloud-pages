@@ -29,9 +29,9 @@
     root.innerHTML =
       '<div class="fmp1-card gate" style="grid-column:1/-1">' +
       '<div class="pv-brand" style="display:flex;gap:12px;align-items:center"><div class="pv-mark" style="width:34px;text-align:center;font-family:var(--fmp1-font-display);font-weight:700"><span>F</span><span>M</span></div>' +
-      '<div><span class="pv-word">FREMONT MAKERS</span><span class="fmp1-eyebrow">Project Builder 2.0 · v2.7.2</span></div></div>' +
+      '<div><span class="pv-word">FREMONT MAKERS</span><span class="fmp1-eyebrow">Project Builder 2.0 · v2.8.0</span></div></div>' +
       '<h1 class="fmp1-h p2-h1">This is the new book. The current builder is still the live one.</h1>' +
-      '<p class="fmp1-muted p2-sub">2.7.2 reads jobs from the current Project Builder and never writes them. Preview bar stays on until sign-in and a shared database exist. Current tool stays at /quote.</p>' +
+      '<p class="fmp1-muted p2-sub">2.8.0 reads jobs from the current Project Builder and never writes them. Preview bar stays on until sign-in and a shared database exist. Current tool stays at /quote.</p>' +
       '<div class="p2-row" style="margin-top:16px">' +
       '<a class="fmp1-btn fmp1-btn--primary" href="/project-builder-2?fm_phase1=on">Open 2.0</a>' +
       '<a class="fmp1-btn fmp1-btn--quiet" href="/quote">Current Project Builder</a>' +
@@ -60,7 +60,7 @@
 
   if (!flagged) { gate(); return; }
 
-  root.innerHTML = '<div class="fmp1-card p2-pad" style="grid-column:1/-1"><span class="fmp1-eyebrow">Project Builder 2.0 · v2.7.2</span><p class="fmp1-muted">Reading current jobs. Nothing is being written to the live builder.</p></div>';
+  root.innerHTML = '<div class="fmp1-card p2-pad" style="grid-column:1/-1"><span class="fmp1-eyebrow">Project Builder 2.0 · v2.8.0</span><p class="fmp1-muted">Reading current jobs. Nothing is being written to the live builder.</p></div>';
 
   fetch('/api/planner/bundle?ns=fm-quotes', { cache: 'no-store' })
     .then(function (r) {
@@ -77,6 +77,7 @@
         '/assets/fm-project-builder-2/src/fm-phase2-measure.js',
         '/assets/fm-project-builder-2/src/fm-phase2-reports.js',
         '/assets/fm-project-builder-2/src/fm-phase2-customers.js',
+        '/assets/fm-project-builder-2/src/fm-phase2-address.js',
         '/assets/fm-project-builder-2/preview/phase2-app.js',
         '/assets/fm-project-builder-2/preview/phase2-flows.js',
         '/assets/fm-project-builder-2/preview/phase2-elevations.js',

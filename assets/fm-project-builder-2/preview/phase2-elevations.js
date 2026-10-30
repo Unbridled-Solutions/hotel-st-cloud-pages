@@ -183,7 +183,8 @@
         '<label class="p2-row">Tilt <input type="range" min="8" max="60" value="' + u.pitch + '" data-elpitch aria-label="Tilt"></label><span class="fmp1-faint">Drag the view to turn it. For measurements, use the wall drawings.</span></div>';
     } else if (wall) {
       drawing = '<div class="p2-el-canvas' + (ed ? ' is-edit' : '') + '" data-elcanvas>' + EL.svgElevation(lay, { title: S.room.name + ' · ' + wall.name, color: S.set.color, uid: 'w', interactive: true, selected: u.sel }) + '<div class="p2-el-dragtip" hidden></div></div>' +
-        (ed ? '<p class="p2-small fmp1-faint">Drag a cabinet along the wall. Drop it in open space to put it there, or onto other cabinets to change the order.</p>' : '') + issuesHTML(c, lay, wall, E);
+        selBar(c, S, wall, lay, ed, E) +
+        (ed && !u.sel ? '<p class="p2-small fmp1-faint">Click a cabinet to select it. Drag it along the wall to move it: drop it in open space to put it there, or onto other cabinets to change the order.</p>' : '') + issuesHTML(c, lay, wall, E);
     } else drawing = '<p class="p2-empty">This room has no walls yet.' + (ed ? ' Add one to start.' : '') + '</p>';
 
     var center = '<div class="fmp1-card p2-pad p2-el-main">' + walls + drawing + '</div>';
@@ -224,6 +225,32 @@
     return EL.svg3D(R, { yaw: u.yaw, pitch: u.pitch, color: set.color, title: '3D view of ' + room.name });
   }
 
+  /* The selected cabinet, right under the drawing: what it is, where it sits, and the actions (Delete key removes it). */
+  function selBar(c, S, wall, lay, ed, E) {
+    var u = c.ui.el, f = u.sel ? findItem(wall, u.sel) : null; if (!f) return '';
+    var esc = c.esc, it = f.it, list = wall[f.run] || [], i = list.indexOf(it), p = lay[f.run][i], sp = it.appliance ? null : EL.parseSku(it.sku, E.sizes), id = esc(it.id);
+    return '<div class="p2-el-selbar" role="region" aria-label="Selected item"><div class="p2-el-selinfo"><span class="fmp1-eyebrow">Selected</span>' +
+      '<b>' + esc(itemName(it, E.sizes)) + '</b><span class="p2-small fmp1-muted">' + (sp ? esc(EL.describe(sp)) : esc((EL.APPLIANCES[it.appliance] || {}).label || '')) +
+      (p ? ' · ' + (f.run === 'upper' ? 'upper run' : 'base run') + ', ' + EL.inches(p.x) + ' from left' : '') + '</span></div>' +
+      '<div class="p2-row">' + (ed ? '<button class="fmp1-btn fmp1-btn--quiet" data-elmove="' + id + ':-1"' + (i === 0 ? ' disabled' : '') + '>← Left</button>' +
+        '<button class="fmp1-btn fmp1-btn--quiet" data-elmove="' + id + ':1"' + (i === list.length - 1 ? ' disabled' : '') + '>Right →</button>' +
+        (sp ? '<button class="fmp1-btn fmp1-btn--quiet" data-elsize="' + esc(sp.code) + '">Size…</button>' : '') +
+        '<button class="fmp1-btn p2-el-rmbtn" data-elrm="' + id + '" title="Or press Delete">Remove</button>' : '') +
+        '<button class="fmp1-btn fmp1-btn--quiet" data-elsel="' + id + '" aria-label="Deselect" title="Deselect (Esc)">✕</button></div></div>';
+  }
+  /* cabinets placed beyond the quote, per SKU: [{ sku, code, extra }] */
+  function extrasOf(rec) { return rec.rows.filter(function (r) { return r.placed > r.quoted; }).map(function (r) { return { sku: r.sku, code: EL.splitSku(r.sku).code, extra: r.placed - r.quoted, quoted: r.quoted }; }); }
+  function extrasBanner(c, j, S, rec, ed) {
+    var ex = extrasOf(rec); if (!ex.length) return '';
+    var n = ex.reduce(function (t, x) { return t + x.extra; }, 0), esc = c.esc, signed = j.stage !== 'quote' && j.stage !== 'lost';
+    var canAdd = j.stage === 'quote' && ed && ex.every(function (x) { return x.quoted > 0; }) && !(c.W && j.jobCode === c.W.jobCode) && !(c.B && j.jobCode === c.B.jobCode);
+    return '<div class="fmp1-note fmp1-note--alert p2-small p2-el-extras" role="status"><span><b>' + n + ' placed beyond the ' + (signed ? 'signed order' : 'quote') + ':</b> ' +
+      ex.map(function (x) { return esc(x.code) + ' ×' + x.extra + (x.quoted ? '' : ' (not on it)'); }).join(', ') + '.</span><span class="p2-row">' +
+      (signed && j.changeOrders && window.P2Flows && window.P2Flows.startCO ? '<button class="fmp1-btn fmp1-btn--primary" data-elco>Start a change order for them</button>' : '') +
+      (canAdd ? '<button class="fmp1-btn fmp1-btn--primary" data-eladdquote>Add them to the quote</button>' : '') +
+      (ed ? '<button class="fmp1-btn" data-elrmextra>Remove the extras</button>' : '') + '</span>' +
+      (j.stage === 'quote' && !canAdd && ed ? '<span class="fmp1-faint">To keep a cabinet that isn\'t on the quote, add its supplier PDF to the quote first.</span>' : '') + '</div>';
+  }
   function issuesHTML(c, lay, wall, E) {
     var esc = c.esc, sum = '<span>Base run ' + EL.inches(lay.used.base) + ' · ' + (lay.open.base >= 0 ? EL.inches(lay.open.base) + ' open' : EL.inches(-lay.open.base) + ' over') +
       '</span><span>Upper run ' + EL.inches(lay.used.upper) + ' · ' + (lay.open.upper >= 0 ? EL.inches(lay.open.upper) + ' open' : EL.inches(-lay.open.upper) + ' over') + '</span>';
@@ -315,8 +342,8 @@
       rec.notDrawn.map(function (x) { return '<li><span class="fmp1-code">' + esc(EL.splitSku(x.sku).code) + '</span><span>×' + x.qty + '</span></li>'; }).join('') + '</ul></details>' : '';
     // an extra size form for a SKU that is placed but not on the quote list, opened from the wall panel
     var orphan = u.size && !rec.rows.some(function (r) { return EL.splitSku(r.sku).code === u.size; }) ? sizeForm(c, u.size, E) : '';
-    return '<div class="fmp1-card p2-pad"><div class="p2-between"><span class="fmp1-eyebrow">From the quote</span><b class="p2-small">' + placed + ' of ' + total + ' placed</b></div>' +
-      (rec.allPlaced ? '<p class="p2-ok p2-small">✓ Every quoted cabinet is on a wall, once.</p>' : rec.missing ? '<p class="p2-small fmp1-muted">' + rec.missing + ' still to place' + (rec.extra ? ' · ' + rec.extra + ' placed but not on the quote' : '') + '.</p>' : rec.extra ? '<p class="p2-small" style="color:var(--fmp1-alert-ink)">' + rec.extra + ' placed but not on the quote.</p>' : '') +
+    return '<div class="fmp1-card p2-pad"><div class="p2-between"><span class="fmp1-eyebrow">From the quote</span><b class="p2-small">' + placed + ' of ' + total + ' placed</b></div>' + extrasBanner(c, j, S, rec, ed) +
+      (rec.allPlaced ? '<p class="p2-ok p2-small">✓ Every quoted cabinet is on a wall, once.</p>' : rec.missing ? '<p class="p2-small fmp1-muted">' + rec.missing + ' still to place.</p>' : '') +   // extras get their own banner above
       (canAdd && rec.missing ? '<button class="fmp1-btn fmp1-btn--primary" data-elauto>Place the rest on this wall</button>' : '') +
       orphan + '<ul class="p2-list">' + rows + '</ul>' + trimHTML(c, S.trim) + nd + '</div>';
   }
@@ -449,6 +476,10 @@
       u.msg = 'Saved revision ' + rv.n + '. It is now the current drawing set.' + (left ? ' ' + left + ' quoted cabinet' + (left === 1 ? ' is' : 's are') + ' still not on a wall.' : '');
       return done();
     }
+    if (t.hasAttribute('data-elco') && window.P2Flows) {   // signed jobs aren't editable here, but extras can still go to a change order
+      var exs = extrasOf(EL.reconcile(x.S.set.lines, x.S.rooms, x.E.sizes)); if (!exs.length) return done();
+      window.P2Flows.startCO(c, j, u.set, exs); c.go('#/job/' + encodeURIComponent(j.jobCode) + '/changes'); return true;
+    }
     if (!ed) return false;
     if (t.hasAttribute('data-elundo') || t.hasAttribute('data-elredo')) {
       var back = t.hasAttribute('data-elundo'), what = stepHistory(c, j, back);
@@ -522,6 +553,25 @@
         list.splice(i, 1); list.splice(k, 0, f.it);
       });
       return done();
+    }
+    if (t.hasAttribute('data-elrmextra') || t.hasAttribute('data-eladdquote')) {
+      var rec2 = EL.reconcile(x.S.set.lines, x.S.rooms, x.E.sizes), ex = extrasOf(rec2);
+      if (!ex.length) return done();
+      if (t.hasAttribute('data-elrmextra')) {
+        var left = {}; ex.forEach(function (q) { left[String(q.sku).toUpperCase()] = q.extra; });
+        save(c, j, 'removed ' + ex.map(function (q) { return q.code + ' ×' + q.extra; }).join(', ') + ' (placed beyond the quote).', function (E2) {
+          (E2.rooms || []).filter(function (r) { return r.set === u.set; }).slice().reverse().forEach(function (r) {   // the most recently placed go first
+            r.walls.slice().reverse().forEach(function (w) { ['upper', 'base'].forEach(function (run) {
+              w[run] = (w[run] || []).slice().reverse().filter(function (q) { var k = String(q.sku || '').toUpperCase(); if (left[k] > 0) { left[k]--; return false; } return true; }).reverse();
+            }); });
+          });
+        });
+        u.sel = null; u.msgPdf = null; u.msg = 'Removed the extras. Every cabinet on the drawings is on the quote now.'; return done();
+      }
+      if (t.hasAttribute('data-eladdquote')) {
+        var res3 = window.P2Flows.addToQuote(c, j, u.set, ex);
+        u.msgPdf = null; u.msg = res3; return done();
+      }
     }
     if (d.elrm && wall) {
       var f0 = findItem(wall, d.elrm);
@@ -627,6 +677,15 @@
       e.preventDefault();
       if (what) { c.ui.el.sel = null; c.ui.el.msgPdf = null; c.ui.el.msg = (back ? 'Undid: ' : 'Redid: ') + what; c.render(); }
     });
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Delete' && e.key !== 'Backspace' && e.key !== 'Escape') return;
+      var tg = e.target, tag = tg && tg.tagName; if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (tg && tg.isContentEditable)) return;
+      var c = getCtx(), j = jobOnTab(c); if (!j || !c.ui.el || !c.ui.el.sel) return;
+      if (e.key === 'Escape') { c.ui.el.sel = null; c.render(); return; }
+      if (!editable(j)) return;
+      var b = root.querySelector('.p2-el-selbar [data-elrm]'); if (!b) return;
+      e.preventDefault(); b.click();
+    });
     root.addEventListener('click', function (e) {
       if (swallowClick) { swallowClick = false; return; }
       var g = e.target.closest && e.target.closest('[data-elitem]'); if (!g) return;
@@ -665,7 +724,11 @@
     function endSlide(e, cancel) {
       if (!slide || (e && e.pointerId !== slide.pid)) return;
       var s = slide; slide = null;
-      if (!s.moved) return;
+      if (!s.moved) {   // a plain click: the pointer was captured, so the click event won't reach the cabinet. Select it here.
+        if (cancel) return;
+        swallowClick = true; setTimeout(function () { swallowClick = false; }, 0);
+        s.c.ui.el.sel = s.c.ui.el.sel === s.id ? null : s.id; s.c.render(); return;
+      }
       swallowClick = true; setTimeout(function () { swallowClick = false; }, 0);
       if (cancel || !s.res) { s.c.render(); return; }
       moveTo(s.c, s.j, s.x, s.id, s.from + (e.clientX - s.x0) * s.perPx);
@@ -691,7 +754,41 @@
     root.addEventListener('pointercancel', function () { drag = null; });
   }
 
-  window.P2Elev = { tab: tab, click: click, change: change, input: input, bind: bind, docPages: docPages, contractNote: contractNote, coNote: coNote, setsFor: setsFor };
+  /* Sidebar page: every project's drawings at a glance. Drawing still happens inside each job (Elevations tab). */
+  function index(c) {
+    var esc = c.esc;
+    var rows = c.store.jobs().filter(function (j) { return !j.parentJobCode; }).map(function (j) {
+      var sets = setsFor(c, j), E = j.elevations || blankE(), rooms = E.rooms || [], placed = 0, quoted = 0, flags = 0;
+      sets.forEach(function (s) {
+        var Es = readE(E, s), rs = roomsOfSet(E, s.key), rec = EL.reconcile(s.lines, rs, Es.sizes);
+        rec.rows.forEach(function (r) { quoted += r.quoted; placed += Math.min(r.placed, r.quoted); });
+        rs.forEach(function (r) { roomLayouts(r, s, Es).forEach(function (x) { flags += x.layout.issues.length + x.layout.checks.length; }); });
+      });
+      var walls = rooms.reduce(function (n, r) { return n + (r.walls || []).length; }, 0);
+      return { j: j, sets: sets, rooms: rooms.length, walls: walls, placed: placed, quoted: quoted, flags: flags,
+        todo: editable(j) || (sets.length && !rooms.length && j.stage !== 'lost') || pendingCOs(j).length > 0 };
+    }).sort(function (a, b) { return (b.todo - a.todo) || (a.j.jobCode < b.j.jobCode ? 1 : -1); });
+    var drawing = rows.filter(function (x) { return x.todo; }).length;
+    var body = rows.map(function (x) {
+      var j = x.j, href = '#/job/' + encodeURIComponent(j.jobCode) + '/elevations';
+      var sub = x.sets.length > 1 ? x.sets.length + ' models' + (j.houses && j.houses.length ? ' · ' + j.houses.length + ' houses' : '') : (j.projectName || '—');
+      var drawn = x.rooms ? x.rooms + ' room' + (x.rooms === 1 ? '' : 's') + ', ' + x.walls + ' wall' + (x.walls === 1 ? '' : 's') : 'Not started';
+      var prog = !x.sets.length ? '<span class="fmp1-faint">No cabinets yet</span>' :
+        '<span class="p2-collect" aria-hidden="true"><i style="width:' + (x.quoted ? Math.round(100 * x.placed / x.quoted) : 0) + '%"></i></span><b>' + x.placed + '</b> of ' + x.quoted + ' placed<br><span class="fmp1-faint">' + drawn + '</span>';
+      return '<tr><td><b>' + esc(j.customer) + '</b><br><span class="fmp1-faint p2-small">' + esc(sub) + ' · <span class="fmp1-code">' + esc(j.jobCode) + '</span></span></td>' +
+        '<td>' + c.stagePill(j.stage) + '</td>' +
+        '<td class="p2-small p2-nowrap">' + prog + '</td>' +
+        '<td class="p2-small">' + (x.flags ? '<b style="color:var(--fmp1-alert-ink)">' + x.flags + ' layout check' + (x.flags === 1 ? '' : 's') + '</b><br>' : '') + '<span class="fmp1-faint">' + esc(statusText(c, j)) + '</span></td>' +
+        '<td class="r p2-act"><a class="fmp1-btn' + (x.todo ? ' fmp1-btn--primary' : '') + '" href="' + href + '">' + (x.todo && editable(j) ? (x.rooms ? 'Keep drawing' : 'Start drawing') : 'Open') + '</a></td></tr>';
+    }).join('');
+    return '<div class="p2-between"><div><h1 class="fmp1-h p2-h1">Elevations</h1><p class="p2-sub">Cabinet drawings for every project. Each one is drawn inside its project from the quote\'s cabinets' +
+      (drawing ? '; ' + drawing + ' still being drawn or revised, shown first.' : '.') + '</p></div>' +
+      '<a class="fmp1-btn" href="#/measure">Field measure</a></div>' +
+      '<div class="fmp1-card fmp1-table-wrap"><table class="fmp1-table p2-table"><thead><tr><th>Project</th><th>Stage</th><th>Drawings</th><th>Status</th><th></th></tr></thead><tbody>' +
+      (body || '<tr><td colspan="5" class="p2-empty">No projects yet.</td></tr>') + '</tbody></table></div>';
+  }
+
+  window.P2Elev = { tab: tab, index: index, click: click, change: change, input: input, bind: bind, docPages: docPages, contractNote: contractNote, coNote: coNote, setsFor: setsFor };
   // this file loads after the app: hook up the drawing and redraw the page that's showing
   var appRoot = document.getElementById('p2');
   if (appRoot && window.P2) { bind(appRoot, window.P2.ctx); window.P2.render(); }

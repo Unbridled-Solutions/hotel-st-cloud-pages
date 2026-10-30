@@ -102,30 +102,46 @@
       var aid = esc(a.id);
       return '<div class="p2-cu-row"><label class="p2-fld"><span>Label</span><input class="fmp1-input" data-cua="' + aid + ':label" value="' + esc(a.label || '') + '" placeholder="Willow Creek, phase 2"></label>' +
         '<label class="p2-fld"><span>Kind</span><select class="fmp1-input" data-cua="' + aid + ':kind"><option value="site"' + (a.kind === 'site' ? ' selected' : '') + '>Job site</option><option value="billing"' + (a.kind === 'billing' ? ' selected' : '') + '>Billing</option></select></label>' +
-        '<label class="p2-fld p2-cu-wide"><span>Address</span><input class="fmp1-input" data-cua="' + aid + ':line" value="' + esc(a.line || '') + '"></label>' +
-        '<button class="p2-linkbtn p2-small" data-curma="' + aid + '" style="color:var(--fmp1-alert-ink)">Remove</button></div>';
+        '<button class="p2-linkbtn p2-small" data-curma="' + aid + '" style="color:var(--fmp1-alert-ink)">Remove</button>' +
+        '<div class="p2-cu-wide">' + window.FMAddress.fieldsHTML(function (f) { return 'data-cua="' + aid + ':' + f + '"'; }, window.FMAddress.from(a)) + '</div></div>';
     }).join('') : '<p class="p2-small fmp1-faint">No addresses yet.</p>') + '<button class="fmp1-btn fmp1-btn--quiet" data-cuadda>+ Address</button>' +
       '<label class="p2-fld"><span>Notes</span><textarea class="fmp1-input" rows="2" data-cuf="notes">' + esc(cust.notes || '') + '</textarea></label></div>';
 
-    var projects = '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Projects · ' + st.jobs.length + '</span>' + (st.jobs.length ? '<div class="fmp1-table-wrap"><table class="fmp1-table p2-table"><thead><tr><th>Job</th><th>Stage</th><th class="r">Total</th><th class="r">Balance</th></tr></thead><tbody>' +
-      st.jobs.map(function (j) { var s = FM.contractSummary(j); return '<tr><td><a href="#/job/' + encodeURIComponent(j.jobCode) + '/overview">' + esc(j.jobCode) + '</a><br><span class="p2-small fmp1-faint">' + esc(j.projectName || '') + '</span></td><td>' + esc((FM.STAGES.filter(function (x) { return x.key === j.stage; })[0] || {}).label || j.stage) + '</td><td class="r">' + money(c, s.currentCents) + '</td><td class="r">' + (j.stage === 'quote' || j.stage === 'lost' ? '—' : money(c, s.balanceCents)) + '</td></tr>'; }).join('') +
-      '</tbody></table></div>' : '<p class="p2-small fmp1-faint">No projects yet.</p>') + '</div>';
+    // Projects: one row per job (name and code, stage, total, balance); the whole row opens the job
+    var STAGE = {}; (FM.STAGES || []).forEach(function (x) { STAGE[x.key] = x.label; }); STAGE.lost = 'Lost';
+    var TONE = { quote: 'fmp1-pill--proposed', lost: 'fmp1-pill--alert', complete: 'fmp1-pill--good' };
+    var projects = '<div class="fmp1-card p2-pad"><div class="p2-between"><span class="fmp1-eyebrow">Projects · ' + st.jobs.length + '</span></div>' + (st.jobs.length ? '<ul class="p2-cu-jobs">' +
+      st.jobs.map(function (j) {
+        var s = FM.contractSummary(j), open = j.stage === 'quote' || j.stage === 'lost';
+        return '<li><a class="p2-cu-job" href="#/job/' + encodeURIComponent(j.jobCode) + '/overview"><span class="p2-cu-job-main"><b>' + esc(j.projectName || j.jobCode) + '</b><span class="p2-small fmp1-faint">' + esc(j.jobCode) + '</span></span>' +
+          '<span class="fmp1-pill ' + (TONE[j.stage] || '') + '">' + esc(STAGE[j.stage] || j.stage) + '</span>' +
+          '<span class="p2-cu-num"><span class="k">' + (open ? 'Quoted' : 'Total') + '</span>' + money(c, s.currentCents) + '</span>' +
+          '<span class="p2-cu-num"><span class="k">Balance</span>' + (open ? '—' : money(c, s.balanceCents)) + '</span><span class="p2-cu-chev" aria-hidden="true">›</span></a></li>';
+      }).join('') + '</ul>' : '<p class="p2-empty">No projects yet.</p>') + '</div>';
 
+    // Templates: a tile per template with one main action; saving a new one opens a small picker only when asked
     var tpls = cust.templates.map(function (t) {
-      var tid = esc(t.id), renaming = u.rename === t.id;
-      return '<li class="p2-cu-tpl"><div class="p2-between">' + (renaming ? '<span class="p2-row"><input class="fmp1-input" data-cutplname="' + tid + '" value="' + esc(t.name) + '" data-autofocus><button class="fmp1-btn" data-cutplren="' + tid + '">Save</button></span>' : '<b>' + esc(t.name) + '</b>') +
-        '<span class="p2-row"><button class="fmp1-btn fmp1-btn--primary" data-cutpluse="' + tid + '">New project from this</button>' + (renaming ? '' : '<button class="fmp1-btn fmp1-btn--quiet" data-cutplrename="' + tid + '">Rename</button>') +
-        '<button class="p2-linkbtn p2-small" data-cutpldel="' + tid + '" style="color:var(--fmp1-alert-ink)">' + (u.confirmDel === t.id ? 'Tap again to delete' : 'Delete') + '</button></span></div>' +
-        '<span class="p2-small fmp1-muted">' + esc(CU.summary(t)) + (t.fromJob ? ' · from ' + esc(t.fromJob) : '') + (t.costsAsOf ? ' · supplier costs as of ' + esc(c.longDate(t.costsAsOf)) : '') + '</span>' +
-        (t.kind === 'builder' ? '<span class="p2-small">' + t.models.map(function (m) { return esc(m.name) + ' × ' + m.qty; }).join(' · ') + '</span>' : '') + '</li>';
+      var tid = esc(t.id), renaming = u.rename === t.id, houses = t.models.reduce(function (n, m) { return n + m.qty; }, 0), lines = t.models.reduce(function (n, m) { return n + m.lines.length; }, 0),
+        rooms = t.models.reduce(function (n, m) { return n + m.rooms.length; }, 0);
+      var facts = (t.kind === 'builder' ? t.models.length + ' models · ' + houses + ' houses' : 'One home') + ' · ' + lines + ' cabinet lines' + (rooms ? ' · ' + rooms + ' room' + (rooms === 1 ? '' : 's') + ' drawn' : '');
+      return '<li class="p2-cu-tpl">' +
+        '<div class="p2-cu-tpl-main">' + (renaming ? '<span class="p2-row"><input class="fmp1-input" data-cutplname="' + tid + '" value="' + esc(t.name) + '" aria-label="Template name" data-autofocus><button class="fmp1-btn" data-cutplren="' + tid + '">Save</button><button class="fmp1-btn fmp1-btn--quiet" data-cutplrenx>Cancel</button></span>' : '<b class="p2-cu-tpl-name">' + esc(t.name) + '</b>') +
+          '<span class="p2-small">' + esc(facts) + '</span>' +
+          (t.kind === 'builder' ? '<span class="p2-cu-chips">' + t.models.map(function (m) { return '<span class="p2-cu-chip">' + esc(m.name) + ' × ' + m.qty + '</span>'; }).join('') + '</span>' : '') +
+          '<span class="p2-small fmp1-faint">' + (t.fromJob ? 'Saved from ' + esc(t.fromJob) : 'Saved') + (t.costsAsOf ? ' · supplier costs as of ' + esc(c.longDate(t.costsAsOf)) : '') + '</span></div>' +
+        '<div class="p2-cu-tpl-acts"><button class="fmp1-btn fmp1-btn--primary" data-cutpluse="' + tid + '">Start a project</button>' +
+          (renaming ? '' : '<span class="p2-row p2-small"><button class="p2-cu-quiet" data-cutplrename="' + tid + '">Rename</button><button class="p2-cu-quiet is-danger" data-cutpldel="' + tid + '">' + (u.confirmDel === t.id ? 'Tap again to delete' : 'Delete') + '</button></span>') + '</div></li>';
     }).join('');
     var fromJob = st.jobs.filter(function (j) { return window.P2Elev && window.P2Elev.setsFor(c, j).length; });
-    var templates = '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Templates · ' + cust.templates.length + '</span>' +
-      (tpls ? '<ul class="p2-list">' + tpls + '</ul>' : '<p class="p2-small fmp1-faint">No templates yet. Save one from a project: its homes (or models and house counts), cabinets after change orders, and drawings.</p>') +
-      (fromJob.length ? '<div class="p2-row"><select class="fmp1-input" data-cutplsrc aria-label="Project to save as a template">' + fromJob.map(function (j) { return '<option value="' + esc(j.jobCode) + '"' + (u.tplSrc === j.jobCode ? ' selected' : '') + '>' + esc(j.jobCode + ' · ' + (j.projectName || '')) + '</option>'; }).join('') + '</select>' +
-        '<button class="fmp1-btn" data-cutplsave>Save as a template</button></div>' : '') +
-      '<p class="p2-small fmp1-faint">A template never stores pricing: markup, discount, G&amp;A, tax, assembly and the payment plan are set on each new project. Supplier costs are as of the day it was saved; re-import the supplier PDF in New Project to refresh them.</p></div>';
-    var del = st.jobs.length ? '' : '<button class="p2-linkbtn p2-small" data-cudel style="color:var(--fmp1-alert-ink)">' + (u.confirmCust === cust.id ? 'Tap again to delete this customer' : 'Delete this customer') + '</button>';
+    var picker = u.tplPick && fromJob.length ? '<div class="p2-cu-pick"><label class="p2-fld" style="flex:1 1 280px"><span>Which project?</span><select class="fmp1-input" data-cutplsrc>' +
+        fromJob.map(function (j) { return '<option value="' + esc(j.jobCode) + '"' + (u.tplSrc === j.jobCode ? ' selected' : '') + '>' + esc((j.projectName || j.jobCode) + ' · ' + j.jobCode) + '</option>'; }).join('') + '</select></label>' +
+        '<button class="fmp1-btn fmp1-btn--primary" data-cutplsave>Save as template</button><button class="fmp1-btn fmp1-btn--quiet" data-cutplpick>Cancel</button>' +
+        '<p class="p2-small fmp1-faint" style="flex-basis:100%;margin:0">Saves its homes (or models and house counts), cabinets after change orders, and drawings.</p></div>' : '';
+    var templates = '<div class="fmp1-card p2-pad"><div class="p2-between"><span class="fmp1-eyebrow">Templates · ' + cust.templates.length + '</span>' +
+      (fromJob.length && !u.tplPick ? '<button class="fmp1-btn" data-cutplpick>+ Save a project as a template</button>' : '') + '</div>' + picker +
+      (tpls ? '<ul class="p2-cu-tpls">' + tpls + '</ul>' : '<p class="p2-empty">No templates yet. Save one from a project to reuse its homes, cabinets and drawings.</p>') +
+      '<p class="p2-small fmp1-faint" style="margin:0">Templates never include pricing; it\'s set on each new project.</p></div>';
+    var del = st.jobs.length ? '' : '<button class="p2-cu-quiet is-danger p2-small" data-cudel style="align-self:flex-start">' + (u.confirmCust === cust.id ? 'Tap again to delete this customer' : 'Delete this customer') + '</button>';
     return '<div class="p2-cu">' + head + '<div class="p2-grid">' + contacts + addresses + '</div>' + templates + projects + del + '</div>';
   }
 
@@ -158,9 +174,11 @@
     var cust = byId(c, r.id); if (!cust) return false;
     if (t.hasAttribute('data-cuaddc')) { edit(cust, function (x) { x.contacts.push({ id: CU.newId('ct'), name: '', role: x.contacts.length ? 'other' : 'signer', email: '', phone: '', signs: !x.contacts.length }); }); c.render(); return true; }
     if (d.curmc) { edit(cust, function (x) { x.contacts = x.contacts.filter(function (k) { return k.id !== d.curmc; }); }); c.render(); return true; }
-    if (t.hasAttribute('data-cuadda')) { edit(cust, function (x) { x.addresses.push({ id: CU.newId('ad'), label: '', kind: 'site', line: '' }); }); c.render(); return true; }
+    if (t.hasAttribute('data-cuadda')) { edit(cust, function (x) { x.addresses.push({ id: CU.newId('ad'), label: '', kind: 'site', line: '', street: '', city: '', state: window.FMAddress.DEFAULT_STATE, zip: '' }); }); c.render(); return true; }
     if (d.curma) { edit(cust, function (x) { x.addresses = x.addresses.filter(function (a) { return a.id !== d.curma; }); }); c.render(); return true; }
-    if (t.hasAttribute('data-cutplsave')) {
+    if (t.hasAttribute('data-cutplpick')) { u.tplPick = !u.tplPick; c.render(); return true; }
+    if (t.hasAttribute('data-cutplrenx')) { u.rename = null; c.render(); return true; }
+    if (t.hasAttribute('data-cutplsave')) { u.tplPick = false;
       var src = c.store.job(u.tplSrc || '') || CU.jobsFor(cust, c.store.jobs()).filter(function (x) { return window.P2Elev.setsFor(c, x).length; })[0];
       if (!src) return true;
       var t2 = saveTemplate(c, cust, src); u.msg = 'Saved "' + t2.name + '" (' + CU.summary(t2) + ').'; c.render(); return true;
@@ -206,7 +224,10 @@
       var p = d.cuc.split(':'); edit(cust, function (x) { x.contacts.forEach(function (k) { if (k.id === p[0]) k[p[1]] = el.type === 'checkbox' ? el.checked : el.value.trim(); }); });
       c.render(); return true;
     }
-    if (d.cua) { var q = d.cua.split(':'); edit(cust, function (x) { x.addresses.forEach(function (a) { if (a.id === q[0]) a[q[1]] = el.value.trim(); }); }); c.render(); return true; }
+    if (d.cua) { var q = d.cua.split(':'), AD = window.FMAddress; edit(cust, function (x) { x.addresses.forEach(function (a) {
+      if (a.id !== q[0]) return;
+      if (/^(street|city|state|zip)$/.test(q[1])) { var f = AD.from(a); f[q[1]] = el.value.trim(); a.street = f.street; a.city = f.city; a.state = f.state; a.zip = f.zip; a.line = AD.format(f); }
+      else a[q[1]] = el.value.trim(); }); }); c.render(); return true; }
     return false;
   }
   function input(c, e) {
