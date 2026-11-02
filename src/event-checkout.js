@@ -23,6 +23,9 @@ const MM_ENTREES = {
 };
 
 const MM_CAP = 60;
+/** Two extra seats after public sellout. Public lander stays sold out. */
+const MM_STAFF_HOLD = 2;
+const MM_STAFF_HOLD_KEY = "mmhold-oct30-2";
 
 function murderLookup() {
   return Date.now() < MM_EARLY_ENDS_MS ? "hsc-mm-early" : "hsc-mm-regular";
@@ -99,7 +102,7 @@ async function stripeGet(env, path) {
 async function priceIdForLookup(env, lookup) {
   const data = await stripeGet(env, "/prices?lookup_keys[]=" + encodeURIComponent(lookup) + "&active=true&limit=1");
   if (data.data && data.data[0] && data.data[0].id) return data.data[0].id;
-  return PRICES[lookup] || "";
+  return "";
 }
 
 function qty(v) {
@@ -322,10 +325,18 @@ async function sendHotelMail(env, payload) {
 
 function guestConfirmHtml(order) {
   const name = order.name || "there";
-  const hero = "https://offers.hotelstcloud.com/assets/murder-mystery/hero.jpg";
-  const logo = "https://offers.hotelstcloud.com/assets/murder-mystery/hsc-horizontal-cream.png";
-  const paid = money(order.amount) + (order.tax ? " (includes " + money(order.tax) + " tax)" : "");
+  const lights = order.event === "christmas-lights";
   const mm = order.event === "murder-mystery";
+  const hero = lights
+    ? "https://offers.hotelstcloud.com/assets/christmas-lights/hero.jpg"
+    : "https://offers.hotelstcloud.com/assets/murder-mystery/hero.jpg";
+  const logo = lights
+    ? "https://offers.hotelstcloud.com/assets/christmas-lights/hsc-horizontal-cream.png"
+    : "https://offers.hotelstcloud.com/assets/murder-mystery/hsc-horizontal-cream.png";
+  const heroAlt = lights ? "Hotel St. Cloud on Main Street in Christmas lights" : "Murder in Buffalo Chip";
+  const paid = money(order.amount) + (order.tax ? " (includes " + money(order.tax) + " tax)" : "");
+  const headerBg = lights ? "#121820" : "#140a0a";
+  const gold = lights ? "#ba8032" : "#c4a15a";
   const agenda = mm
     ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 18px;border-collapse:collapse">
         <tr><td style="padding:8px 0;border-bottom:1px solid #e6dcc4;font-size:15px;color:#2b1a14"><strong>6:30pm</strong> &nbsp; Cocktail Hour</td></tr>
@@ -334,17 +345,31 @@ function guestConfirmHtml(order) {
       </table>
       <p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:#2b1a14">Each plate comes with a side salad. If you chose a vegetarian or vegan entrée, we will ensure the kitchen is notified.</p>
       <p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:#2b1a14"><strong>Your menu:</strong> ${menuLine(order)}</p>`
+    : lights
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 18px;border-collapse:collapse">
+        <tr><td style="padding:8px 0;border-bottom:1px solid #e6dcc4;font-size:15px;color:#1f2b3f"><strong>Early Evening</strong> &nbsp; Climb On. Bundle up, find your seat, and settle in for holiday lights and Christmas music.</td></tr>
+        <tr><td style="padding:8px 0;border-bottom:1px solid #e6dcc4;font-size:15px;color:#1f2b3f"><strong>On the Route</strong> &nbsp; Take It All In. Cañon City's most festive neighborhoods from the bus.</td></tr>
+        <tr><td style="padding:8px 0;border-bottom:1px solid #e6dcc4;font-size:15px;color:#1f2b3f"><strong>Back at the Hotel</strong> &nbsp; Santa on Main Street. Hot cocoa, holiday treats, Santa, and a lobby dressed for the season.</td></tr>
+      </table>
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:#1f2b3f">Pick-up details will be sent with this ticket. Your ticket includes the lights tour and all activities at Hotel St. Cloud. Overnight accommodations are not included.</p>
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:#1f2b3f">Adult tickets include a hot toddy or seasonal beverage. Children 2 and under ride free on a parent's lap.</p>`
     : "";
+  const intro = lights
+    ? `<p style="margin:0 0 16px;font-size:15px;line-height:1.55">Come see the lights with us. We have your seats for <strong>${order.eventName}</strong>${order.eventDate ? " on " + order.eventDate : ""}.</p>
+            <p style="margin:0 0 16px;font-size:15px;line-height:1.55">We'll take you through Cañon City's most festive neighborhoods, then welcome you back to Hotel St. Cloud for hot cocoa, holiday treats, Santa, and a chance to enjoy the season together.</p>`
+    : `<p style="margin:0 0 16px;font-size:15px;line-height:1.55">We have your tickets for <strong>${order.eventName}</strong>${order.eventDate ? " on " + order.eventDate : ""}.</p>`;
   const room = order.wantRoom === "yes"
-    ? `<p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:#2b1a14">You asked about a room. Our reservations team will follow up.</p>`
+    ? `<p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:${lights ? "#1f2b3f" : "#2b1a14"}">You asked about a room. Our reservations team will follow up.</p>`
     : "";
   const notes = order.notes
-    ? `<p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:#2b1a14"><strong>Notes we have:</strong> ${order.notes}</p>`
+    ? `<p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:${lights ? "#1f2b3f" : "#2b1a14"}"><strong>Notes we have:</strong> ${order.notes}</p>`
     : "";
+  const ink = lights ? "#1f2b3f" : "#2b1a14";
+  const muted = lights ? "#5c6b73" : "#6b5346";
   return `<div style="margin:0;padding:0;background:#f4eee4">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4eee4;padding:24px 12px">
     <tr><td align="center">
-      <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#140a0a;border-collapse:collapse">
+      <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:${headerBg};border-collapse:collapse">
         <tr>
           <td style="padding:22px 24px 12px;text-align:center">
             <img src="${logo}" alt="Hotel St. Cloud" width="180" style="display:block;margin:0 auto;max-width:180px;height:auto;border:0" />
@@ -352,12 +377,12 @@ function guestConfirmHtml(order) {
         </tr>
         <tr>
           <td>
-            <img src="${hero}" alt="Murder in Buffalo Chip" width="560" style="display:block;width:100%;max-width:560px;height:auto;border:0" />
+            <img src="${hero}" alt="${heroAlt}" width="560" style="display:block;width:100%;max-width:560px;height:auto;border:0" />
           </td>
         </tr>
         <tr>
           <td style="padding:18px 24px 28px;text-align:center;color:#eadfc8;font-family:Georgia,'Times New Roman',serif">
-            <div style="font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#c4a15a;margin-bottom:8px">You're in</div>
+            <div style="font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:${gold};margin-bottom:8px">You're in</div>
             <div style="font-size:26px;line-height:1.2">${order.eventName}</div>
             ${order.eventDate ? `<div style="margin-top:8px;font-size:14px;font-family:Arial,sans-serif;letter-spacing:.04em">${order.eventDate}</div>` : ""}
           </td>
@@ -365,16 +390,16 @@ function guestConfirmHtml(order) {
       </table>
       <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#fffdf8;border-collapse:collapse">
         <tr>
-          <td style="padding:28px 28px 8px;font-family:Arial,Helvetica,sans-serif;color:#2b1a14">
+          <td style="padding:28px 28px 8px;font-family:Arial,Helvetica,sans-serif;color:${ink}">
             <p style="margin:0 0 16px;font-size:16px;line-height:1.55">Hi ${name},</p>
-            <p style="margin:0 0 16px;font-size:15px;line-height:1.55">We have your tickets for <strong>${order.eventName}</strong>${order.eventDate ? " on " + order.eventDate : ""}.</p>
+            ${intro}
             <p style="margin:0 0 18px;font-size:15px;line-height:1.55">${ticketLine(order)}<br>Paid ${paid}.</p>
             ${agenda}
             ${room}
             ${notes}
-            <p style="margin:24px 0 6px;font-size:15px;line-height:1.55">We cannot wait to host you.</p>
+            <p style="margin:24px 0 6px;font-size:15px;line-height:1.55">${lights ? "Gather your family. We cannot wait to host you." : "We cannot wait to host you."}</p>
             <p style="margin:0 0 4px;font-size:15px;line-height:1.55"><strong>Team Hotel St. Cloud</strong></p>
-            <p style="margin:0 0 8px;font-size:13px;line-height:1.55;color:#6b5346">631 Main Street, Cañon City<br>(719) 602-3469 · reservations@hotelstcloud.com</p>
+            <p style="margin:0 0 8px;font-size:13px;line-height:1.55;color:${muted}">631 Main Street, Cañon City<br>(719) 602-3469 · reservations@hotelstcloud.com</p>
           </td>
         </tr>
       </table>
@@ -544,9 +569,12 @@ export async function handleEventCheckout(request, env) {
     for (const it of items) {
       if (it.lookup) {
         const resolved = await priceIdForLookup(env, it.lookup);
-        if (resolved) it.price = resolved;
+        if (!resolved) {
+          return json({ error: "Ticket price is not set up in Stripe yet. Call (719) 602-3469." }, 500);
+        }
+        it.price = resolved;
       }
-      if (!it.price) return json({ error: "Ticket price is not set up in Stripe yet." }, 500);
+      if (!it.price) return json({ error: "Ticket price is not set up in Stripe yet. Call (719) 602-3469." }, 500);
     }
     let tenderloin = 0;
     let piccata = 0;
@@ -564,12 +592,26 @@ export async function handleEventCheckout(request, env) {
         return json({ error: "Tenderloin, chicken, salmon, and vegetarian counts need to add up to the number of tickets." }, 400);
       }
       const sold = await murderTicketsSold(env);
-      const left = MM_CAP - sold;
-      if (left <= 0) {
-        return json({ error: "The last ticket in Buffalo Chip already got punched. Leave your name if you want the next invitation." }, 409);
-      }
-      if (tickets > left) {
-        return json({ error: "Only " + left + " ticket" + (left === 1 ? "" : "s") + " left for this night." }, 409);
+      const staffOk = String(body.staffHoldKey || "") === MM_STAFF_HOLD_KEY;
+      if (staffOk) {
+        const extraLeft = Math.max(0, MM_CAP + MM_STAFF_HOLD - sold);
+        if (extraLeft <= 0) {
+          return json({ error: "Those two extra seats are already spoken for." }, 409);
+        }
+        if (tickets > MM_STAFF_HOLD) {
+          return json({ error: "This hold is two tickets." }, 400);
+        }
+        if (tickets > extraLeft) {
+          return json({ error: "Only " + extraLeft + " extra seat" + (extraLeft === 1 ? "" : "s") + " left on this hold." }, 409);
+        }
+      } else {
+        const left = MM_CAP - sold;
+        if (left <= 0) {
+          return json({ error: "The last ticket in Buffalo Chip already got punched. Leave your name if you want the next invitation." }, 409);
+        }
+        if (tickets > left) {
+          return json({ error: "Only " + left + " ticket" + (left === 1 ? "" : "s") + " left for this night." }, 409);
+        }
       }
       ticketLookup = items[0] ? items[0].lookup : murderLookup();
     }
@@ -656,9 +698,17 @@ export async function handleEventCheckout(request, env) {
     }
     if (event.type === "checkout.session.completed") {
       const session = event.data?.object;
+      const meta = session?.metadata || {};
+      // Main Street meeting rooms use the same Stripe account. Do not send Buffalo Chip / hotel ticket mail.
+      if (meta.product === "main-street-meet" || meta.spaceId) {
+        return json({ received: true, ignored: "main-street-meet" });
+      }
       if (session?.id) {
         const existing = await env.PLANNER_DATA.get("events:order:" + session.id, { type: "json" });
         const order = orderFromSession(session, existing || {});
+        if (!EVENTS[order.event]) {
+          return json({ received: true, ignored: "not-an-event" });
+        }
         await attachStripeFees(env, order);
         await saveOrder(env, order);
         await notifyOrder(env, order);
