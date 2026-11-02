@@ -37,7 +37,7 @@
       family: document.getElementById('family').value,
       under3: document.getElementById('under3').value,
       wantRoom: document.getElementById('wantRoom').value,
-      notes: document.getElementById('notes').value.trim()
+      notes: ''
     };
     try {
       var res = await fetch('/api/events/checkout', {

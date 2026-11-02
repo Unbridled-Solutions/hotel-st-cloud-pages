@@ -73,7 +73,14 @@ function originOf(request) {
   return url.origin;
 }
 
-async function stripePost(env, path, params) {
+function stripeKey(env, event, sessionId) {
+  const sid = String(sessionId || "");
+  if (sid.startsWith("cs_test_") && env.STRIPE_TEST_SECRET_KEY) return env.STRIPE_TEST_SECRET_KEY;
+  if (event === "christmas-lights" && env.STRIPE_TEST_SECRET_KEY) return env.STRIPE_TEST_SECRET_KEY;
+  return env.STRIPE_SECRET_KEY;
+}
+
+async function stripePost(env, path, params, key) {
   const body = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) {
     if (v === undefined || v === null || v === "") continue;
@@ -82,7 +89,7 @@ async function stripePost(env, path, params) {
   const res = await fetch("https://api.stripe.com/v1" + path, {
     method: "POST",
     headers: {
-      Authorization: "Bearer " + env.STRIPE_SECRET_KEY,
+      Authorization: "Bearer " + (key || env.STRIPE_SECRET_KEY),
       "Content-Type": "application/x-www-form-urlencoded",
     },
     body,
@@ -92,15 +99,15 @@ async function stripePost(env, path, params) {
   return data;
 }
 
-async function stripeGet(env, path) {
+async function stripeGet(env, path, key) {
   const res = await fetch("https://api.stripe.com/v1" + path, {
-    headers: { Authorization: "Bearer " + env.STRIPE_SECRET_KEY },
+    headers: { Authorization: "Bearer " + (key || env.STRIPE_SECRET_KEY) },
   });
   return res.json();
 }
 
-async function priceIdForLookup(env, lookup) {
-  const data = await stripeGet(env, "/prices?lookup_keys[]=" + encodeURIComponent(lookup) + "&active=true&limit=1");
+async function priceIdForLookup(env, lookup, key) {
+  const data = await stripeGet(env, "/prices?lookup_keys[]=" + encodeURIComponent(lookup) + "&active=true&limit=1", key);
   if (data.data && data.data[0] && data.data[0].id) return data.data[0].id;
   return "";
 }
@@ -237,7 +244,8 @@ async function attachStripeFees(env, order) {
   try {
     const expanded = await stripeGet(
       env,
-      "/checkout/sessions/" + order.id + "?expand[]=payment_intent.latest_charge.balance_transaction"
+      "/checkout/sessions/" + order.id + "?expand[]=payment_intent.latest_charge.balance_transaction",
+      stripeKey(env, order.event, order.id)
     );
     const pi = expanded.payment_intent;
     const charge = pi && typeof pi === "object" ? pi.latest_charge : null;
@@ -560,6 +568,8 @@ export async function handleEventCheckout(request, env) {
     }
     const event = body.event;
     if (!EVENTS[event]) return json({ error: "Unknown event" }, 400);
+    const key = stripeKey(env, event);
+    if (!key) return json({ error: "Stripe is not configured on this Worker yet." }, 503);
     const name = String(body.name || "").trim();
     const email = String(body.email || "").trim();
     const phone = String(body.phone || "").trim();
@@ -568,7 +578,7 @@ export async function handleEventCheckout(request, env) {
     if (!items.length) return json({ error: "Add at least one ticket." }, 400);
     for (const it of items) {
       if (it.lookup) {
-        const resolved = await priceIdForLookup(env, it.lookup);
+        const resolved = await priceIdForLookup(env, it.lookup, key);
         if (!resolved) {
           return json({ error: "Ticket price is not set up in Stripe yet. Call (719) 602-3469." }, 500);
         }
@@ -665,7 +675,7 @@ export async function handleEventCheckout(request, env) {
     delete params.phone_number_collection;
     params["phone_number_collection[enabled]"] = "true";
 
-    const session = await stripePost(env, "/checkout/sessions", params);
+    const session = await stripePost(env, "/checkout/sessions", params, key);
     if (!session.id || !session.url) {
       return json({ error: session.error?.message || "Could not start checkout." }, 400);
     }
@@ -675,7 +685,7 @@ export async function handleEventCheckout(request, env) {
   if (path === "/api/events/confirm" && request.method === "GET") {
     const sessionId = url.searchParams.get("session_id") || "";
     if (!sessionId.startsWith("cs_")) return json({ error: "Missing session" }, 400);
-    const session = await stripeGet(env, "/checkout/sessions/" + sessionId);
+    const session = await stripeGet(env, "/checkout/sessions/" + sessionId, stripeKey(env, "", sessionId));
     if (!session.id) return json({ error: "Session not found" }, 404);
     if (session.payment_status !== "paid" && session.status !== "complete") {
       return json({ ok: false, paymentStatus: session.payment_status || session.status });
