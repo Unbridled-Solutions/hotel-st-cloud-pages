@@ -271,6 +271,45 @@ async function attachStripeFees(env, order) {
   return order;
 }
 
+/** Stripe Tax "Automatic Taxes" product fees. Not card processing. Bank = Net − this. Mystery closed $31.37. */
+async function stripeTaxProductFees(env) {
+  const key = "events:stripe-tax-fees";
+  try {
+    const cached = await env.PLANNER_DATA.get(key, { type: "json" });
+    if (cached && cached.cents != null && Date.now() - Number(cached.at || 0) < 10 * 60 * 1000) {
+      return cached;
+    }
+  } catch (_) {}
+  const secret = env.STRIPE_SECRET_KEY;
+  if (!secret || !String(secret).startsWith("sk_live")) {
+    return { cents: 0, at: Date.now(), skipped: true };
+  }
+  let cents = 0;
+  let starting = "";
+  try {
+    for (let i = 0; i < 25; i++) {
+      const qs = "/balance_transactions?type=stripe_fee&limit=100" + (starting ? "&starting_after=" + starting : "");
+      const data = await stripeGet(env, qs, secret);
+      const rows = data.data || [];
+      for (const row of rows) {
+        const desc = String(row.description || "");
+        if (/Automatic Taxes/i.test(desc)) cents += Math.abs(Number(row.amount || 0));
+      }
+      if (!data.has_more || !rows.length) break;
+      starting = rows[rows.length - 1].id;
+    }
+  } catch (_) {
+    try {
+      const cached = await env.PLANNER_DATA.get(key, { type: "json" });
+      if (cached && cached.cents != null) return cached;
+    } catch (__) {}
+    return { cents: 0, at: Date.now(), error: true };
+  }
+  const pack = { cents, at: Date.now() };
+  try { await env.PLANNER_DATA.put(key, JSON.stringify(pack)); } catch (_) {}
+  return pack;
+}
+
 function money(cents) {
   return "$" + (Number(cents || 0) / 100).toFixed(2);
 }
@@ -732,7 +771,8 @@ export async function handleEventCheckout(request, env) {
       }
       orders.push(row);
     }
-    return json({ orders });
+    const taxFees = await stripeTaxProductFees(env);
+    return json({ orders, taxProductFees: taxFees.cents || 0, taxProductFeesAt: taxFees.at || 0 });
   }
 
   if (path === "/api/events/orders" && request.method === "PUT") {
