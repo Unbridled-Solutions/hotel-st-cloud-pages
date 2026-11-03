@@ -186,6 +186,31 @@ function mergePlannerBundle(existing, incoming, ns) {
       out[k] = v;
     }
   }
+  if (ns === "uhg-sourcing") {
+    const prevReq = existing && existing.requests && typeof existing.requests === "object" ? existing.requests : {};
+    const incReq = incoming && incoming.requests && typeof incoming.requests === "object" ? incoming.requests : {};
+    out.requests = Object.assign({}, prevReq, incReq);
+    const prevT = Date.parse((existing && existing.updated) || 0) || 0;
+    const incT = Date.parse((incoming && incoming.updated) || 0) || 0;
+    if (incT >= prevT && incoming && incoming.updated) out.updated = incoming.updated;
+    else if (existing && existing.updated) out.updated = existing.updated;
+    if (incoming && incoming.source) out.source = incoming.source;
+    return out;
+  }
+  if (ns === "uc-rooms") {
+    const prev = existing && existing.accessCodes && typeof existing.accessCodes === "object" ? existing.accessCodes : null;
+    const inc = incoming && incoming.accessCodes && typeof incoming.accessCodes === "object" ? incoming.accessCodes : null;
+    const incEmpty = !inc || !Object.keys(inc).length;
+    if (incEmpty && prev) {
+      out.accessCodes = prev;
+    } else if (inc && prev) {
+      const next = Object.assign({}, prev);
+      for (const [month, codes] of Object.entries(inc)) {
+        next[month] = Object.assign({}, prev[month] || {}, codes && typeof codes === "object" ? codes : {});
+      }
+      out.accessCodes = next;
+    }
+  }
   return out;
 }
 
@@ -342,6 +367,12 @@ export default {
       if (p === "/manager-vault" || p === "/manager-vault.html" || p === "/hsc-manager-vault" || p === "/hsc-manager-vault.html") {
         return serveAsset(env, request, "/assets/hsc-manager-vault.html");
       }
+      if (p === "/kitchen-pm-checklist" || p === "/kitchen-pm-checklist.html") {
+        return serveAsset(env, request, "/assets/kitchen-pm-checklist.html");
+      }
+      if (p === "/kitchen-pm-checklist.pdf") {
+        return serveAsset(env, request, "/assets/kitchen-pm-checklist.pdf");
+      }
     }
 
     // brief.fremontmakers.com — public website mockups for review (not production).
@@ -417,6 +448,21 @@ export default {
     // Old offers URLs for FM quote-to-cash → tools.fremontmakers.com
     if (url.hostname === "offers.hotelstcloud.com" && !url.pathname.startsWith("/api")) {
       const p = url.pathname.replace(/\/$/, "") || "/";
+      const OFFERS_HR_TO_TOOLS = {
+        "/hr": "/hr/",
+        "/hr/new-hire": "/hr/new-hire/",
+        "/hr/employee-update": "/hr/employee-update/",
+        "/hr/disciplinary": "/hr/disciplinary/",
+        "/hr/termination": "/hr/termination/",
+        "/hr/welcome": "/hr/welcome/",
+        "/hr/tracker": "/hr/tracker/",
+      };
+      if (OFFERS_HR_TO_TOOLS[p]) {
+        const dest = new URL("https://tools.unbridledhospitality.com" + OFFERS_HR_TO_TOOLS[p]);
+        dest.search = url.search;
+        dest.hash = url.hash;
+        return Response.redirect(dest.toString(), 302);
+      }
       const OFFERS_TO_FM = {
         "/assets/fremont-makers-quote": "/quote",
         "/assets/fremont-makers-quote.html": "/quote",
@@ -447,6 +493,17 @@ export default {
       }
       if (p === "/assets/front-desk-manual" || p === "/assets/front-desk-manual.html") {
         const dest = new URL("https://tools.hotelstcloud.com/front-desk-manual");
+        dest.search = url.search;
+        dest.hash = url.hash;
+        return Response.redirect(dest.toString(), 302);
+      }
+      if (
+        p === "/assets/kitchen-pm-checklist" ||
+        p === "/assets/kitchen-pm-checklist.html" ||
+        p === "/assets/kitchen-pm-checklist.pdf"
+      ) {
+        const dest = new URL("https://tools.hotelstcloud.com/kitchen-pm-checklist");
+        if (p.endsWith(".pdf")) dest.pathname = "/kitchen-pm-checklist.pdf";
         dest.search = url.search;
         dest.hash = url.hash;
         return Response.redirect(dest.toString(), 302);
