@@ -76,7 +76,6 @@ function originOf(request) {
 function stripeKey(env, event, sessionId) {
   const sid = String(sessionId || "");
   if (sid.startsWith("cs_test_") && env.STRIPE_TEST_SECRET_KEY) return env.STRIPE_TEST_SECRET_KEY;
-  if (event === "christmas-lights" && env.STRIPE_TEST_SECRET_KEY) return env.STRIPE_TEST_SECRET_KEY;
   return env.STRIPE_SECRET_KEY;
 }
 
