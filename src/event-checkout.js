@@ -43,7 +43,7 @@ const EVENTS = {
     cancelPath: "/murder-mystery/",
   },
   "christmas-lights": {
-    name: "Christmas with Hotel St. Cloud",
+    name: "Christmas Lights Tour with Hotel St. Cloud",
     date: "",
     successPath: "/christmas-lights/thanks/",
     cancelPath: "/christmas-lights/",
@@ -342,7 +342,12 @@ function ticketLine(order) {
     const n = order.adults || 0;
     return `${n} ticket${Number(n) === 1 ? "" : "s"} · ${ticketTypeLabel(order)}`;
   }
-  return `Adults ${order.adults || 0} · children ${order.children || 0} · family packs ${order.family || 0} · 2 and under: ${order.under3 || 0}`;
+  return [
+    `Adults ${order.adults || 0}`,
+    `Children ${order.children || 0}`,
+    `Family Packs ${order.family || 0}`,
+    `2 and Under ${order.under3 || 0}`,
+  ].join("<br>");
 }
 
 async function sendResend(env, payload) {
@@ -437,7 +442,7 @@ function guestConfirmHtml(order) {
             ${agenda}
             ${room}
             ${notes}
-            <p style="margin:24px 0 6px;font-size:15px;line-height:1.55">We cannot wait to host you.</p>
+            <p style="margin:24px 0 6px;font-size:15px;line-height:1.55">${lights ? "We can't wait to see the lights with you," : "We cannot wait to host you."}</p>
             <p style="margin:0 0 4px;font-size:15px;line-height:1.55"><strong>Team Hotel St. Cloud</strong></p>
             <p style="margin:0 0 8px;font-size:13px;line-height:1.55;color:${muted}">631 Main Street, Cañon City<br>(719) 602-3469 · reservations@hotelstcloud.com</p>
           </td>
