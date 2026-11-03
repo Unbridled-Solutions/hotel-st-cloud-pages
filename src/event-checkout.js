@@ -393,10 +393,10 @@ function guestConfirmHtml(order) {
       <p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:#2b1a14">Each plate comes with a side salad. If you chose a vegetarian or vegan entrée, we will ensure the kitchen is notified.</p>
       <p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:#2b1a14"><strong>Your menu:</strong> ${menuLine(order)}</p>`
     : lights
-    ? `<p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:#1f2b3f">We'll send pickup and bus departure details before the tour.</p>`
+    ? `<p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:#1f2b3f">The bus leaves Hotel St. Cloud at 5:30pm. Please arrive a few minutes early so we can get everyone seated.</p>`
     : "";
   const intro = lights
-    ? `<p style="margin:0 0 16px;font-size:15px;line-height:1.55">Thank you for booking. We have you down for <strong>${order.eventName}</strong>${order.eventDate ? " on " + order.eventDate : ""}.</p>`
+    ? `<p style="margin:0 0 16px;font-size:15px;line-height:1.55">Thank you for booking. We have your seats reserved for <strong>${order.eventName}</strong>${order.eventDate ? " on " + order.eventDate : ""}.</p>`
     : `<p style="margin:0 0 16px;font-size:15px;line-height:1.55">We have your tickets for <strong>${order.eventName}</strong>${order.eventDate ? " on " + order.eventDate : ""}.</p>`;
   const room = order.wantRoom === "yes"
     ? `<p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:${lights ? "#1f2b3f" : "#2b1a14"}">You asked about a room. Our reservations team will follow up.</p>`
@@ -424,7 +424,7 @@ function guestConfirmHtml(order) {
           <td style="padding:18px 24px 28px;text-align:center;color:#eadfc8;font-family:Georgia,'Times New Roman',serif">
             <div style="font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:${gold};margin-bottom:8px">${lights ? "Thank you for booking" : "You're in"}</div>
             <div style="font-size:26px;line-height:1.2">${order.eventName}</div>
-            ${order.eventDate ? `<div style="margin-top:8px;font-size:14px;font-family:Arial,sans-serif;letter-spacing:.04em">${order.eventDate}</div>` : ""}
+            ${order.eventDate ? `<div style="margin-top:8px;font-size:14px;font-family:Arial,sans-serif;letter-spacing:.04em">${order.eventDate}${lights ? " · Bus leaves at 5:30pm" : ""}</div>` : ""}
           </td>
         </tr>
       </table>
