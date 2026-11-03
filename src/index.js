@@ -188,8 +188,11 @@ function mergePlannerBundle(existing, incoming, ns) {
   }
   if (ns === "uhg-sourcing") {
     const prevReq = existing && existing.requests && typeof existing.requests === "object" ? existing.requests : {};
-    const incReq = incoming && incoming.requests && typeof incoming.requests === "object" ? incoming.requests : {};
-    out.requests = Object.assign({}, prevReq, incReq);
+    const hasIncoming = incoming && Object.prototype.hasOwnProperty.call(incoming, "requests");
+    const incReq = hasIncoming && incoming.requests && typeof incoming.requests === "object" ? incoming.requests : {};
+    const incEmpty = !Object.keys(incReq).length;
+    if (hasIncoming && !(incEmpty && Object.keys(prevReq).length)) out.requests = incReq;
+    else out.requests = prevReq;
     const prevT = Date.parse((existing && existing.updated) || 0) || 0;
     const incT = Date.parse((incoming && incoming.updated) || 0) || 0;
     if (incT >= prevT && incoming && incoming.updated) out.updated = incoming.updated;
