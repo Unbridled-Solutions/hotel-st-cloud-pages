@@ -223,9 +223,15 @@ function orderFromSession(session, extra = {}) {
     entreeVeg: meta.entreeVeg || extra.entreeVeg || "0",
     entreeA: meta.entreeA || extra.entreeA || "0",
     entreeB: meta.entreeB || extra.entreeB || "0",
-    amount: session.amount_total || 0,
+    amount: extra.taxRefunded
+      ? (session.amount_subtotal || extra.subtotal || extra.amount || 0)
+      : (session.amount_total || extra.amount || 0),
     subtotal: session.amount_subtotal || extra.subtotal || 0,
-    tax: (session.total_details && session.total_details.amount_tax) || extra.tax || 0,
+    taxOriginal: extra.taxOriginal || (session.total_details && session.total_details.amount_tax) || extra.tax || 0,
+    taxRefunded: Number(extra.taxRefunded || 0),
+    tax: extra.taxRefunded
+      ? Math.max(0, Number(extra.taxOriginal || (session.total_details && session.total_details.amount_tax) || extra.tax || 0) - Number(extra.taxRefunded || 0))
+      : ((session.total_details && session.total_details.amount_tax) || extra.tax || 0),
     currency: session.currency || "usd",
     paymentStatus: session.payment_status || "",
     status: extra.status || "new",
@@ -838,6 +844,11 @@ export async function handleEventCheckout(request, env) {
       refundNotes: body.refundNotes != null ? body.refundNotes : existing.refundNotes,
       workedBy: body.workedBy != null ? body.workedBy : existing.workedBy,
     });
+    if (body.taxRefunded != null) next.taxRefunded = Number(body.taxRefunded) || 0;
+    if (body.taxOriginal != null) next.taxOriginal = Number(body.taxOriginal) || 0;
+    if (body.tax != null) next.tax = Number(body.tax);
+    if (body.amount != null) next.amount = Number(body.amount);
+    if (body.net != null) next.net = Number(body.net);
     const log = Array.isArray(existing.activity) ? existing.activity.slice() : [];
     if (body.activityEntry && typeof body.activityEntry === "object") {
       const entry = {
