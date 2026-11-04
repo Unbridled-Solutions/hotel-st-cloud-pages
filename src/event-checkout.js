@@ -111,6 +111,47 @@ async function priceIdForLookup(env, lookup, key) {
   return "";
 }
 
+/** CPA 4 Nov 2026: bus tickets are not taxed. Blank tax_code inherits Mystery food default. */
+const LIGHTS_TAX_CODE = "txcd_20030000"; // General – Services → $0 in Colorado
+
+async function ensureLightsNontax(env, key) {
+  const lookups = ["hsc-lights-adult", "hsc-lights-child", "hsc-lights-family"];
+  const stamped = [];
+  for (const lookup of lookups) {
+    const found = await stripeGet(
+      env,
+      "/prices?lookup_keys[]=" + encodeURIComponent(lookup) + "&active=true&expand[]=data.product&limit=1",
+      key
+    );
+    const price = found.data && found.data[0];
+    if (!price) {
+      stamped.push({ lookup, error: "no price" });
+      continue;
+    }
+    const prod = typeof price.product === "object" ? price.product : null;
+    const prodId = prod && prod.id ? prod.id : typeof price.product === "string" ? price.product : "";
+    const current = (prod && prod.tax_code) || null;
+    if (!prodId) {
+      stamped.push({ lookup, error: "no product" });
+      continue;
+    }
+    if (current === LIGHTS_TAX_CODE) {
+      stamped.push({ lookup, product: prodId, tax_code: current, action: "ok" });
+      continue;
+    }
+    const patched = await stripePost(env, "/products/" + prodId, { tax_code: LIGHTS_TAX_CODE }, key);
+    stamped.push({
+      lookup,
+      product: prodId,
+      from: current,
+      tax_code: patched.tax_code || null,
+      action: patched.tax_code === LIGHTS_TAX_CODE ? "stamped" : "fail",
+      err: patched.error ? patched.error.message : null,
+    });
+  }
+  return stamped;
+}
+
 function qty(v) {
   const n = parseInt(v, 10);
   return Number.isFinite(n) && n > 0 ? n : 0;
@@ -615,6 +656,9 @@ export async function handleEventCheckout(request, env) {
     if (!name || !email) return json({ error: "Name and email are required." }, 400);
     const items = buildLineItems(event, body);
     if (!items.length) return json({ error: "Add at least one ticket." }, 400);
+    if (event === "christmas-lights") {
+      await ensureLightsNontax(env, key);
+    }
     for (const it of items) {
       if (it.lookup) {
         const resolved = await priceIdForLookup(env, it.lookup, key);
@@ -704,7 +748,8 @@ export async function handleEventCheckout(request, env) {
       "metadata[entreeVeg]": String(veg),
       "metadata[ticketLookup]": ticketLookup,
       "metadata[ticketType]": ticketLookup ? murderTicketType(ticketLookup) : "",
-      "automatic_tax[enabled]": "true",
+      // Lights bus tickets: CPA 4 Nov 2026, no sales tax. Mystery still exclusive + CO tax.
+      "automatic_tax[enabled]": event === "christmas-lights" ? "false" : "true",
     };
     items.forEach((it, i) => {
       params[`line_items[${i}][price]`] = it.price;
