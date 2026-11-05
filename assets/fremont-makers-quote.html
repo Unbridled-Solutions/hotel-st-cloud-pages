@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fremont Makers — Project Builder v1014t</title>
+<title>Fremont Makers — Project Builder v1105a</title>
 <meta name="robots" content="noindex, nofollow">
-<!-- FM-BUILD-v20261026t-co-inv-ar -->
+<!-- FM-BUILD-v20261105a-no-front-door -->
 <script>
 (function(){
   try {
@@ -696,20 +696,6 @@
 </head>
 <body>
 
-<!-- Front-door gate — session only, password is not stored in KV -->
-<div id="fm-gate" style="display:flex;position:fixed;inset:0;background:#0e1117;z-index:10050;align-items:center;justify-content:center;">
-  <div style="width:min(420px,92vw);background:#161b25;border:1px solid #2a3347;border-radius:12px;padding:36px 32px;text-align:center;">
-    <div style="font-family:'Playfair Display',Georgia,serif;font-size:22px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;color:#e8eaf0;">Fremont Makers</div>
-    <div style="font-family:'Pinyon Script',cursive;font-size:18px;color:#7a8299;margin-bottom:22px;">making freedom</div>
-    <div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#7a8299;margin-bottom:16px;">Team door</div>
-    <input id="fm-gate-pw" type="password" placeholder="Password" autocomplete="off"
-      style="width:100%;padding:12px 14px;background:#111621;border:1px solid #2a3347;border-radius:8px;color:#e8eaf0;font-size:16px;text-align:center;"
-      onkeydown="if(event.key==='Enter') fmGateTry()" />
-    <div id="fm-gate-err" style="min-height:18px;margin:10px 0;font-size:13px;color:#e85050;"></div>
-    <button type="button" onclick="fmGateTry()" style="width:100%;padding:12px;background:#e8a135;color:#0e1117;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;">Enter</button>
-  </div>
-</div>
-
 <!-- Loading overlay — shown while KV cloud fetch completes -->
 <div id="fm-loading-overlay" style="display:flex;position:fixed;inset:0;background:#12161b;z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:16px;">
   <div style="width:48px;height:48px;border:4px solid #2a3140;border-top-color:#3de8c8;border-radius:50%;animation:fm-spin 0.8s linear infinite;"></div>
@@ -776,7 +762,7 @@
       <span style="font-size:11px;color:var(--muted);">%</span>
       <button class="status-btn" onclick="applyBulkMarkup()" style="font-size:11px;padding:3px 8px;border-color:var(--accent);color:var(--accent);">Apply</button>
     </div>
-    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1014t</span>
+    <span style="font-size:9px;color:var(--muted);opacity:0.5;margin-left:4px;">v1105a</span>
   </div>
   <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
     <span class="status-label">Status:</span>
@@ -3893,35 +3879,6 @@ function fmSyncThemeToggle() {
   if (paperBtn) paperBtn.classList.toggle('on', t === 'paper');
   if (darkBtn) darkBtn.classList.toggle('on', t === 'dark');
 }
-
-const FM_GATE_PW = 'FM080126';
-function fmGateOk() {
-  try { return sessionStorage.getItem('fm-quote-gate') === '1'; } catch(e) { return false; }
-}
-function fmGateHide() {
-  const g = document.getElementById('fm-gate');
-  if (g) g.style.display = 'none';
-}
-function fmGateTry() {
-  const el = document.getElementById('fm-gate-pw');
-  const err = document.getElementById('fm-gate-err');
-  if ((el && (el.value || '').trim()) === FM_GATE_PW) {
-    try { sessionStorage.setItem('fm-quote-gate', '1'); } catch(e) {}
-    if (err) err.textContent = '';
-    fmGateHide();
-  } else {
-    if (err) err.textContent = 'Incorrect password.';
-    if (el) { el.value = ''; el.focus(); }
-  }
-}
-(function fmGateBoot() {
-  if (fmGateOk()) fmGateHide();
-  else {
-    const g = document.getElementById('fm-gate');
-    if (g) g.style.display = 'flex';
-    setTimeout(() => { const el = document.getElementById('fm-gate-pw'); if (el) el.focus(); }, 80);
-  }
-})();
 
 function today() {
   return new Date().toISOString().split('T')[0];
