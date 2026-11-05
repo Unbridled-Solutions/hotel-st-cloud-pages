@@ -131,6 +131,7 @@
   }
   function orderTotals(d) {
     var t = { itemized: 0, tax: 0, cost: 0, homes: 0, ok: true };
+    if (d.noSkus) { d.models.forEach(function (m) { t.homes += d.kind === 'single' ? 1 : (m.qty || 0); }); t.total = 0; return t; }   // no SKUs yet: nothing to price
     d.models.forEach(function (m) { var p = priceModel(d, m); if (!p || !p.ok) { t.ok = false; return; } var q = d.kind === 'single' ? 1 : (m.qty || 0);
       t.itemized += p.summary.totalCents * q; t.tax += p.summary.taxCents * q; t.cost += p.internal.costCents * q; t.homes += q; });
     var bid = toCents(d.bidAmount);
@@ -174,7 +175,7 @@
       e = e.concat(A.check(d.addr, d.kind === 'single' ? 'Install address' : 'Site address'));
       if (d.kind === 'builder') d.models.forEach(function (m, k) { if (!m.name.trim() || !(m.qty >= 1)) e.push('Model ' + (k + 1) + ' needs a name and at least 1 house.'); });
     }
-    if (i === 2) d.models.forEach(function (m) { if (!m.lines.length) e.push((m.name || 'The home') + ' has no cabinets yet. Add the supplier PDF.'); });
+    if (i === 2 && !d.noSkus) d.models.forEach(function (m) { if (!m.lines.length) e.push((m.name || 'The home') + ' has no cabinets yet. Add the supplier PDF, or choose "No, sketch first".'); });
     if (i === 3) {
       ['markupPct', 'discountPctOfCost', 'gaPct', 'taxPct'].forEach(function (k) { if (!(d.pricing[k] >= 0)) e.push('Pricing values must be 0 or more.'); });
       var ah = String(d.pricing.assemblyHours == null ? '' : d.pricing.assemblyHours).trim();
@@ -237,7 +238,11 @@
   function npCabinets(c, d) {
     var esc = c.esc, $f = c.money, pdfs = samplePdfs();
     function opts(sel) { return pdfs.map(function (p) { return '<option value="' + p.id + '"' + (sel === p.id ? ' selected' : '') + '>' + esc(p.name) + ' · ' + p.lines.length + ' line' + (p.lines.length === 1 ? '' : 's') + '</option>'; }).join(''); }
-    return '<h2 class="fmp1-h" style="font-size:20px">Cabinets</h2>' +
+    var ask = '<div class="p2-np-skus"><b>Do you have SKUs to upload?</b><div class="p2-chips" role="group" aria-label="Do you have SKUs?">' +
+      '<button class="fmp1-btn" data-npskus="yes" aria-pressed="' + !d.noSkus + '">Yes, from the supplier PDF</button><button class="fmp1-btn" data-npskus="no" aria-pressed="' + !!d.noSkus + '">No, sketch first</button></div></div>';
+    if (d.noSkus) return '<h2 class="fmp1-h" style="font-size:20px">Cabinets</h2>' + ask +
+      '<div class="fmp1-note fmp1-note--info p2-small">The project starts without cabinets or a price. Its Elevations tab opens as a sketch with industry-standard sizes, custom sizes and a color to show. Add the supplier PDF there when you have it; the quote is priced then, with the settings on the next step.</div>';
+    return '<h2 class="fmp1-h" style="font-size:20px">Cabinets</h2>' + ask +
       (d.elevations && d.elevations.rooms.length ? '<p class="p2-small fmp1-muted">Drawings come along: ' + d.elevations.rooms.length + ' room' + (d.elevations.rooms.length === 1 ? '' : 's') + '. Cabinets you add here show as "to place" on the Elevations tab.</p>' : '') + d.models.map(function (m, i) {
       var colors = {}; m.lines.forEach(function (l) { colors[suffix(l.sku)] = 1; }); var cs = Object.keys(colors);
       var cost = m.lines.reduce(function (t, l) { return t + l.unitCostCents * l.qty; }, 0), units = m.lines.reduce(function (t, l) { return t + (+l.qty || 0); }, 0);
@@ -289,6 +294,7 @@
         }).join('') + '</tbody></table></div>';
     }).join('');
     var t = orderTotals(d);
+    if (d.noSkus) tables = '<div class="fmp1-note fmp1-note--info p2-small">No SKUs yet, so there\'s nothing to price. These settings are saved on the project and used when the supplier PDF is added.</div>';
     return '<h2 class="fmp1-h" style="font-size:20px">Price</h2><div class="p2-np-boxes">' + asm + plan + settings + '</div>' +
       '<label class="p2-row p2-small"><input type="checkbox" data-npbid' + (d.bid ? ' checked' : '') + '> Priced by bid</label>' +
       (d.bid ? fld('Agreed bid price ($)', 'data-np="bidAmount" inputmode="decimal"', d.bidAmount) + '<p class="p2-note">The customer gets a lump-sum page: cabinets and quantities, no prices, one agreed price. Itemized: ' + c.money(t.itemized) + (toCents(d.bidAmount) > 0 ? ' · bid is ' + c.money(Math.abs(toCents(d.bidAmount) - t.itemized)) + (toCents(d.bidAmount) >= t.itemized ? ' above' : ' below') : '') + '.</p>' : '') + tables +
@@ -301,7 +307,7 @@
       '<li><span>Customer</span><b>' + esc(d.customer === '__new' ? d.newCustomer : d.customer) + '</b></li><li><span>Project</span><b>' + esc(d.project) + '</b></li>' +
       '<li><span>Signer</span><b>' + esc(d.signer) + ' · ' + esc(d.email) + '</b></li><li><span>Homes</span><b>' + t.homes + '</b></li><li><span>Address</span><b>' + esc(d.address) + '</b></li>' +
       '<li><span>Assembly</span><b>' + (asmHours(d) ? asmHours(d) + ' h × ' + $f(asmRate(d)) + ' = ' + $f(asmCents(d)) + ' per home' : 'None') + '</b></li>' +
-      '<li><span>Total</span><b>' + $f(t.total) + (d.bid ? ' (agreed bid)' : '') + '</b></li></ul>' +
+      '<li><span>Total</span><b>' + (d.noSkus ? 'Not priced yet (no SKUs; sketch first)' : $f(t.total) + (d.bid ? ' (agreed bid)' : '')) + '</b></li></ul>' +
       '<div class="p2-form" style="flex-direction:column;align-items:stretch">' + fld('Install / delivery date (estimate)', 'data-np="install" min="' + c.TODAY + '"', d.install, 'date') +
       '<table class="fmp1-table"><thead><tr><th>Invoice</th><th>Due</th><th class="r">Amount</th></tr></thead><tbody>' + plan.map(function (p, i) {
         return '<tr><td>' + esc(invoiceLabel(d.pricing, i)) + '</td><td>' + (i === 0 ? 'On signing' : c.longDate(dues[i])) + '</td><td class="r">' + (amts[i] != null ? $f(amts[i]) : '—') + '</td></tr>'; }).join('') + '</tbody></table></div></div>' +
@@ -326,6 +332,8 @@
         plan: plan.slice(), planNames: planStages(d.pricing).map(function (x) { return x.name; }), planMode: d.pricing.planMode === 'custom' ? 'custom' : 'preset', copiedFrom: d.copiedFrom || null },
       models: d.models.map(function (m) { return { name: d.kind === 'single' ? d.project.trim() : m.name.trim(), qty: d.kind === 'single' ? 1 : m.qty, lines: JSON.parse(JSON.stringify(m.lines)) }; }),
       bid: d.bid ? { bidCents: toCents(d.bidAmount), itemizedCents: t.itemized } : null };
+    job.charges = jobCharges(job);
+    if (d.noSkus) { job.models.forEach(function (m) { m.lines = []; }); job.charges = { parts: [] }; job.elevations = { rooms: [], sizes: {}, versions: [], revisions: [], sketch: { color: 'SBW', by: c.me().name, on: c.TODAY } }; }
     if (d.duplicatedFrom) job.duplicatedFrom = d.duplicatedFrom;
     if (d.customerId) job.customerId = d.customerId;
     if (d.fromTemplate) job.fromTemplate = d.fromTemplate;
@@ -347,6 +355,46 @@
     return Q.priceHouse({ lines: m.lines.map(function (l) { return { description: l.desc, sku: l.sku, qty: l.qty, unitCostCents: l.unitCostCents, markupPct: l.markupPct }; }),
       discountPctOfCost: pr.discountPctOfCost, labor: jobLabor(pr), gaPct: pr.gaPct, taxPct: pr.taxPct });
   }
+  /* The job's charges, broken out for the books (FMStore.charges): one part per model × homes, plus any agreed bid difference */
+  function jobCharges(x) {
+    var S = window.FMStore, parts = [], itemized = 0;
+    (x.models || []).forEach(function (m, i) {
+      if (!m.lines || !m.lines.length) return;
+      var p = priceJobModel(x, m); if (!p.ok) return; var n = m.qty || 1; itemized += p.summary.totalCents * n;
+      parts.push(S.part((m.name || 'Model ' + (i + 1)) + (n > 1 ? ' × ' + n : ''), p.summary, n, p.internal.costCents));
+    });
+    if (x.bid && x.bid.bidCents && x.bid.bidCents !== itemized) parts.push(S.part('Agreed bid price ' + (x.bid.bidCents > itemized ? 'above' : 'below') + ' the itemized quote', { otherCents: x.bid.bidCents - itemized, totalCents: x.bid.bidCents - itemized }, 1, 0, 'agreed'));
+    return { parts: parts };
+  }
+  /* Work a quote's totals out again from its lines: total (or the agreed bid), tax, cost, invoices and the charge breakdown */
+  function reprice(x) {
+    var itemized = 0, tax = 0, cost = 0;
+    x.models.forEach(function (mm) { if (!mm.lines.length) return; var p = priceJobModel(x, mm); if (!p.ok) return; var n = mm.qty || 1; itemized += p.summary.totalCents * n; tax += p.summary.taxCents * n; cost += p.internal.costCents * n; });
+    var total = x.bid ? x.bid.bidCents : itemized; if (x.bid) x.bid.itemizedCents = itemized;
+    var was = x.originalContractCents; x.originalContractCents = total; x.taxCents = tax; x.costCents = cost;
+    var amts = K.invoiceAmounts(total, x.pricing.plan || [100]); x.invoices.forEach(function (inv, i) { if (amts[i] != null && !inv.changeOrderId) inv.amountCents = amts[i]; });
+    x.charges = jobCharges(x);
+    return { total: total, itemized: itemized, was: was };
+  }
+  /* A quote that had no SKUs (sketched, or started without them) gets its cabinets from a supplier PDF. The sketch's cabinets
+     are matched to the new SKUs by code (B30 → B30-SBW); custom sizes and codes the PDF doesn't have stay as drawn and are listed. */
+  function addSkus(c, j, pdfId) {
+    var pdf = pdfById(pdfId), who = c.me().name, msg = '', EL = window.FMElev; if (!pdf) return '';
+    c.store.update(j.jobCode, function (x) {
+      x.models = x.models && x.models.length ? x.models : [{ name: x.projectName || 'Project', qty: 1, lines: [] }];
+      var m = x.models[0], mk = x.pricing && x.pricing.markupPct != null ? x.pricing.markupPct : DEFAULTS.markupPct, oldKey = m.name || 'Sketch';
+      m.lines = pdf.lines.map(function (l) { return { sku: l.sku, desc: l.desc, qty: l.qty, unitCostCents: l.unitCostCents, markupPct: mk }; });
+      var rp = reprice(x), E = x.elevations, extra = '';
+      if (E && E.sketch && EL) {
+        var key = m.name || 'Model 1', mine = E.rooms.filter(function (r) { return r.set === oldKey || r.set === 'Sketch'; }), conv = EL.copyRooms(mine, m.lines, { set: key });
+        E.rooms = E.rooms.filter(function (r) { return mine.indexOf(r) < 0; }).concat(conv.rooms); delete E.sketch;
+        extra = conv.items ? ' The sketch\'s ' + conv.items + ' cabinet' + (conv.items === 1 ? ' was' : 's were') + ' matched by code' + (conv.unmatched.length ? '; not on the PDF, kept as drawn: ' + conv.unmatched.map(function (u) { return u.code + ' ×' + u.count; }).join(', ') : '') + '.' : '';
+      }
+      msg = pdf.lines.length + ' cabinet lines added from ' + pdf.name + '. Quote total ' + c.money(rp.was || 0) + ' → ' + c.money(rp.total) + '.' + extra;
+      return x;
+    }, 'SKUs added from ' + pdf.name + ' by ' + who + '.', who);
+    return msg;
+  }
   /* Elevations → "Add them to the quote": cabinets placed beyond a quote's quantities raise those quantities (same unit cost and
      markup), and the quote total and invoices are worked out again. Only for quotes not yet sent; ex: [{ sku, code, extra }]. */
   function addToQuote(c, j, setKey, ex) {
@@ -355,11 +403,7 @@
       var mi = -1; (x.models || []).forEach(function (m, i) { if ((m.name || 'Model ' + (i + 1)) === setKey) mi = i; }); if (mi < 0) mi = 0;
       var m = x.models[mi], added = [];
       ex.forEach(function (q) { var l = m.lines.filter(function (y) { return String(y.sku).toUpperCase() === String(q.sku).toUpperCase(); })[0]; if (l) { l.qty += q.extra; added.push(q.code + ' +' + q.extra); } });
-      var itemized = 0, tax = 0, cost = 0;
-      x.models.forEach(function (mm) { var p = priceJobModel(x, mm); if (!p.ok) return; var n = mm.qty || 1; itemized += p.summary.totalCents * n; tax += p.summary.taxCents * n; cost += p.internal.costCents * n; });
-      var total = x.bid ? x.bid.bidCents : itemized; if (x.bid) x.bid.itemizedCents = itemized;
-      var was = x.originalContractCents; x.originalContractCents = total; x.taxCents = tax; x.costCents = cost;
-      var amts = K.invoiceAmounts(total, x.pricing.plan); x.invoices.forEach(function (inv, i) { if (amts[i] != null) inv.amountCents = amts[i]; });
+      var rp = reprice(x), total = rp.total, itemized = rp.itemized, was = rp.was;
       msg = 'Added to the quote: ' + added.join(', ') + '. ' + (x.bid ? 'The agreed bid stays ' + c.money(total) + '; itemized is now ' + c.money(itemized) + '.' : 'Quote total ' + c.money(was) + ' → ' + c.money(total) + '; the invoices follow.');
       return x;
     }, 'Quote quantities raised from the elevations by ' + who + '.', who);
@@ -682,6 +726,7 @@
           Object.keys(keep).forEach(function (k) { if (keep[k]) nd[k] = keep[k]; }); if (keepAddr) { nd.addr = keepAddr; nd.address = A.format(keepAddr); } saveDraft(c); }
         c.render(); return true;
       }
+      if (t.dataset.npskus) { d.noSkus = t.dataset.npskus === 'no'; d.errors = []; saveDraft(c); c.render(); return true; }
       if (t.dataset.npkind) { d.kind = t.dataset.npkind; if (d.kind === 'single') d.models = d.models.slice(0, 1); saveDraft(c); c.render(); return true; }
       if (t.hasAttribute('data-npplanadd')) { d.pricing.plan.push(0); d.pricing.planNames.push(''); d.errors = []; saveDraft(c); c.render(); var ni = document.querySelector('[data-npplanname="' + (d.pricing.plan.length - 1) + '"]'); if (ni) ni.focus(); return true; }
       if (t.dataset.npplandel) { var di = +t.dataset.npplandel; d.pricing.plan.splice(di, 1); d.pricing.planNames.splice(di, 1); saveDraft(c); c.render(); return true; }
@@ -841,6 +886,13 @@
   }
 
   window.P2NewProject = { render: renderNew, blankDraft: blankDraft, migrate: migrate };
-  window.P2Flows = { planStages: planStages, addToQuote: addToQuote, startCO: startCO, changes: renderChanges, contract: renderContract, click: click, input: input, change: change, quotesFor: quotesFor, signers: signers, dupConfirm: dupConfirm, fromTemplate: fromTemplate };
+  window.P2Flows = { planStages: planStages, addToQuote: addToQuote, addSkus: addSkus, samplePdfs: samplePdfs, startCO: startCO, changes: renderChanges, contract: renderContract, click: click, input: input, change: change, quotesFor: quotesFor, signers: signers, dupConfirm: dupConfirm, fromTemplate: fromTemplate };
+  /* Projects made in this preview before charges were broken out get their breakdown worked out from their lines */
+  if (window.P2 && window.P2.ctx) (function () {
+    var c0 = window.P2.ctx();
+    c0.store.jobs({ all: true }).forEach(function (j) {
+      if (!j.charges && j.pricing && (j.models || []).some(function (m) { return m.lines && m.lines.length; })) c0.store.update(j.jobCode, function (x) { x.charges = jobCharges(x); return x; }, null, 'system');
+    });
+  })();
   if (window.P2) window.P2.render();
 })();

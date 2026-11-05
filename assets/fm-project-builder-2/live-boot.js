@@ -1,49 +1,42 @@
 /*
- * Project Builder 2.0 boot. GET ns=fm-quotes only. Never POST it.
- * Flag fm_phase1 must be on (query or localStorage) before live jobs load.
- * Then loads Phase 2 screens. Writes stay in browser preview storage.
- * FM_CONFIG.live stays false until sign-in + shared database exist.
+ * Project Builder 2.10.0 live boot.
+ * Canonical URL: /projectbuilder
+ * GET ns=fm-quotes only (read-only import). Never POST that namespace.
+ * New writes go to GET/POST ns=fm-phase1.
  */
 (function () {
   'use strict';
   var root = document.getElementById('p2');
-  window.FM_CONFIG = window.FM_CONFIG || { live: false, filesBase: '/assets/fm-project-builder-2/files/' };
-  window.FM_CONFIG.live = false;
-  var params = new URLSearchParams(location.search);
-  var flagged = params.get('fm_phase1') === 'on';
-  try {
-    if (flagged) localStorage.setItem('fm_phase1', 'on');
-    if (localStorage.getItem('fm_phase1') === 'on') flagged = true;
-  } catch (e) {}
+  var BASE = '/assets/fm-project-builder-2';
+  window.FM_CONFIG = window.FM_CONFIG || {};
+  window.FM_CONFIG.live = true;
+  window.FM_CONFIG.filesBase = BASE + '/files/';
+  window.FM_CONFIG.logoBase = BASE + '/assets/brand/';
 
   function esc(s) {
     return String(s == null ? '' : s)
-      .split('&').join('\u0026amp;')
-      .split('<').join('\u0026lt;')
-      .split('>').join('\u0026gt;')
-      .split('"').join('\u0026quot;');
+      .split('&').join('&'+'amp;')
+      .split('<').join('&'+'lt;')
+      .split('>').join('&'+'gt;')
+      .split('"').join('&'+'quot;');
   }
 
-  function gate() {
-    root.removeAttribute('style');
-    root.innerHTML =
-      '<div class="fmp1-card gate" style="grid-column:1/-1">' +
-      '<div class="pv-brand" style="display:flex;gap:12px;align-items:center"><div class="pv-mark" style="width:34px;text-align:center;font-family:var(--fmp1-font-display);font-weight:700"><span>F</span><span>M</span></div>' +
-      '<div><span class="pv-word">FREMONT MAKERS</span><span class="fmp1-eyebrow">Project Builder 2.0 · v2.9.0</span></div></div>' +
-      '<h1 class="fmp1-h p2-h1">This is the new book. The current builder is still the live one.</h1>' +
-      '<p class="fmp1-muted p2-sub">2.9.0 reads jobs from the current Project Builder and never writes them. Preview bar stays on until sign-in and a shared database exist. Current tool stays at /quote.</p>' +
-      '<div class="p2-row" style="margin-top:16px">' +
-      '<a class="fmp1-btn fmp1-btn--primary" href="/project-builder-2?fm_phase1=on">Open 2.0</a>' +
-      '<a class="fmp1-btn fmp1-btn--quiet" href="/quote">Current Project Builder</a>' +
-      '<a class="fmp1-btn fmp1-btn--quiet" href="/">Dashboard</a>' +
-      '</div></div>';
+  function isoToday() {
+    try {
+      return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Denver' });
+    } catch (e) {
+      return new Date().toISOString().slice(0, 10);
+    }
   }
 
   function fail(msg) {
+    if (!root) return;
+    root.removeAttribute('style');
     root.innerHTML =
-      '<div class="fmp1-card gate" style="grid-column:1/-1"><h1 class="fmp1-h p2-h1">Could not load 2.0</h1>' +
+      '<div class="fmp1-card gate" style="grid-column:1/-1"><h1 class="fmp1-h p2-h1">Could not load Project Builder</h1>' +
       '<p class="fmp1-muted">' + esc(msg) + '</p>' +
-      '<div class="p2-row"><a class="fmp1-btn" href="/quote">Current Project Builder</a></div></div>';
+      '<div class="p2-row"><a class="fmp1-btn fmp1-btn--quiet" href="/quote">Lookup (DNU)</a>' +
+      '<a class="fmp1-btn fmp1-btn--quiet" href="/">Dashboard</a></div></div>';
   }
 
   function loadScripts(urls, done) {
@@ -58,34 +51,67 @@
     next(0);
   }
 
-  if (!flagged) { gate(); return; }
+  function phase1Storage(saved) {
+    var cached = saved || null;
+    var timer = null;
+    return {
+      load: function () { return cached; },
+      save: function (st) {
+        cached = st;
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(function () {
+          fetch('/api/planner/bundle?ns=fm-phase1', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            cache: 'no-store',
+            body: JSON.stringify({
+              'fm-phase1-state': st,
+              'fm-phase1-savedAt': new Date().toISOString()
+            })
+          }).catch(function () { /* keep in memory if cloud save fails */ });
+        }, 500);
+      }
+    };
+  }
 
-  root.innerHTML = '<div class="fmp1-card p2-pad" style="grid-column:1/-1"><span class="fmp1-eyebrow">Project Builder 2.0 · v2.9.0</span><p class="fmp1-muted">Reading current jobs. Nothing is being written to the live builder.</p></div>';
+  if (!root) return;
+  root.innerHTML = '<div class="fmp1-card p2-pad" style="grid-column:1/-1"><span class="fmp1-eyebrow">Project Builder · v2.10.0</span><p class="fmp1-muted">Reading jobs. The old builder is not being written.</p></div>';
 
-  fetch('/api/planner/bundle?ns=fm-quotes', { cache: 'no-store' })
-    .then(function (r) {
+  Promise.all([
+    fetch('/api/planner/bundle?ns=fm-quotes', { cache: 'no-store' }).then(function (r) {
       if (!r.ok) throw new Error('Quotes GET ' + r.status);
       return r.json();
+    }),
+    fetch('/api/planner/bundle?ns=fm-phase1', { cache: 'no-store' }).then(function (r) {
+      if (!r.ok) return { success: true, data: {} };
+      return r.json();
     })
-    .then(function (body) {
-      var data = (body && body.data) || {};
-      if (!window.FMPhase1Adapter) throw new Error('Adapter missing');
-      window.FM_SAMPLE = window.FMPhase1Adapter.sampleFromBundle(data);
-      window.FM_SAMPLE._readOnlyNs = 'fm-quotes';
-      window.FM_SAMPLE._note = 'Live GET ns=fm-quotes. 2.0 does not POST that namespace.';
-      loadScripts([
-        '/assets/fm-project-builder-2/src/fm-phase2-measure.js',
-        '/assets/fm-project-builder-2/src/fm-phase2-reports.js',
-        '/assets/fm-project-builder-2/src/fm-phase2-customers.js',
-        '/assets/fm-project-builder-2/src/fm-phase2-address.js',
-        '/assets/fm-project-builder-2/src/fm-phase2-schedule.js',
-        '/assets/fm-project-builder-2/preview/phase2-app.js',
-        '/assets/fm-project-builder-2/preview/phase2-flows.js',
-        '/assets/fm-project-builder-2/preview/phase2-elevations.js',
-        '/assets/fm-project-builder-2/preview/phase2-measure.js',
-        '/assets/fm-project-builder-2/preview/phase2-customers.js',
-        '/assets/fm-project-builder-2/preview/phase2-reports.js'
-      ], function () {});
-    })
-    .catch(function (err) { fail(err.message || String(err)); });
+  ]).then(function (pair) {
+    var quotesBody = pair[0] || {};
+    var phase1Body = pair[1] || {};
+    var quotes = quotesBody.data || {};
+    var phase1 = phase1Body.data || {};
+    if (!window.FMLegacy) throw new Error('FMLegacy missing');
+    var read = window.FMLegacy.read(quotes);
+    window.FM_SAMPLE = {
+      today: isoToday(),
+      legacyProjects: read.legacyProjects || []
+    };
+    window.FM_COMPANY_LEGACY = read.company || null;
+    window.FM_LEGACY_SKIPPED = read.skipped || [];
+    window.FM_LEGACY_DETAILS = read.details || {};
+    window.FM_CONFIG.storage = phase1Storage(phase1['fm-phase1-state'] || null);
+    window.FM_CONFIG.importedAt = isoToday();
+    loadScripts([
+      BASE + '/preview/phase2-app.js',
+      BASE + '/preview/phase2-flows.js',
+      BASE + '/preview/phase2-elevations.js',
+      BASE + '/preview/phase2-measure.js',
+      BASE + '/preview/phase2-customers.js',
+      BASE + '/preview/phase2-reports.js',
+      BASE + '/preview/phase2-company.js'
+    ], function () {});
+  }).catch(function (err) {
+    fail(err.message || String(err));
+  });
 })();

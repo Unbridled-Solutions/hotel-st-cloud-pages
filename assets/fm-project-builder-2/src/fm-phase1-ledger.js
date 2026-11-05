@@ -305,6 +305,15 @@
         payments: paid ? [{ amountCents: amt, date: toISO(inv.paidDate), method: inv.check ? 'check' : 'unknown', reference: inv.check || '' }] : []
       };
     });
+    /* Change orders the existing tool keeps inside the job (its real records do; FMLegacy.read gives them here).
+       Each is linked to its own invoice by amount, the same way an attached legacy change order is. */
+    (p.changeOrders || []).forEach(function (c) {
+      var co = { id: p.jobCode + '-co' + c.number, number: c.number, date: toISO(c.date), reason: c.reason || '', amountCents: toCents(c.amount),
+                 status: c.status || 'invoiced', lines: [], source: { system: 'legacy', jobCode: p.jobCode, inRecord: true } };
+      job.changeOrders.push(co);
+      var inv = job.invoices.filter(function (i) { return i.role === 'change_order' && !i.changeOrderId && i.amountCents === co.amountCents; })[0];
+      if (inv) inv.changeOrderId = co.id;
+    });
     job.stage = legacyStatusToStage(p, job);
     return job;
   }

@@ -69,7 +69,7 @@ test('reconcile: payments without a check number and missing costs', function ()
 test('P&L: gross profit for jobs contracted in the period, sales tax kept out of revenue', function () {
   var pl = BK.profitAndLoss(JOBS, '2026-01-01', TODAY);
   eq(pl.jobs.map(function (j) { return [j.jobCode, j.revenueCents, j.grossProfitCents]; }), [['A', 920000, 400000], ['D', 190000, 190000]]);
-  eq(pl.totals, { contractCents: 1200000, taxCents: 90000, revenueCents: 1110000, costCents: 500000, absorbedCents: 20000, grossProfitCents: 590000, marginPct: 53.2 });
+  eq(pl.totals, { contractCents: 1200000, taxCents: 90000, cabinetsCents: 0, discountCents: 0, laborCents: 0, gaCents: 0, otherCents: 0, agreedCents: 0, roundingCents: 0, unbrokenCents: 0, revenueCents: 1110000, quotedCostCents: 500000, mfrDiscountCents: 0, costCents: 500000, absorbedCents: 20000, grossProfitCents: 590000, marginPct: 53.2 });
   eq(pl.missingCost, 1);
   eq([pl.cash.collectedCents, pl.cash.salesTaxCents, pl.cash.netOfTaxCents], [500000, 40000, 460000]);
   eq(BK.profitAndLoss(JOBS, '2026-10-01', TODAY).jobs.map(function (j) { return j.jobCode; }), ['D']);

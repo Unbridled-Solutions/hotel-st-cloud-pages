@@ -1,32 +1,48 @@
 # Handoff to Hermes: Project Builder Phase 1 + 2
 
-**From:** Fremont Makers (Linds) via Claude · **Date:** 2026-10-30 · **Package version:** 2.9.0
+**From:** Fremont Makers (Linds) via Claude · **Date:** 2026-11-05 · **Package version:** 2.10.0
 
-## Current state (2.9.0, Oct 30 2026)
+## Current state (2.10.0, Nov 5 2026)
 
 *Rewritten each release, so you don't need the history below. The numbered sections are the detail.*
 
-- **What this is:** a new Project Builder (Phase 1 quote and ledger math, Phase 2 app `phase2.html`) that launches **beside** the existing tool behind the `fm_phase1` flag. **Nothing is live.** Follow `HERMES-LAUNCH.md`.
+- **What this is:** a new Project Builder: Phase 1 quote and ledger math, plus the Phase 2 app `phase2.html`. **Nothing is live.** Follow `HERMES-LAUNCH.md`.
+- **Where it goes (owner, Nov 5):**
+  - The new tool goes at **`tools.fremontmakers.com/projectbuilder`**, behind the `fm_phase1` flag.
+  - The existing tool **stays live at `/quote`, unchanged**. It becomes "do not use" for the team from the switch-over day.
+  - See `HERMES-LAUNCH.md` §0.
+- **Real data (new in 2.10.0, §31):**
+  - `src/fm-phase2-legacy.js` (`FMLegacy.read`) reads the old tool's real cloud bundle: the project list, one record per project, builder-order houses as their own records, payments in slots 1–3, change orders inside the job.
+  - Tested on a Nov 5 copy, it gives the same jobs, balances and gross profit the package was built on.
+  - It replaces the guessed field names in §4.
+- **Company books:**
+  - Job P&L with every charge broken out, and net cabinet cost (§30).
+  - **New: Company P&L and Balance sheet**, carried over from the old tool with the owner's numbers. Only Full access can edit them, and every change is logged (`src/fm-phase2-company.js`, §31).
+- **Data brought up to Nov 5:**
+  - Penrose invoice 3 was paid Nov 4 (check 2980).
+  - Willow Creek change order 1's invoice was paid Oct 28 (check 5568).
+  - That change order's real cost is $5,388.73.
+  - The Penrose supplier refund means the shop absorbed $62.91.
 - **Screens:**
-  - **Sidebar:** Projects (All projects, Elevations, Customers, Field measure); Company books (Dashboard, Pipeline, Deposits due, Reconcile, P&L, Balance sheet, Reports & exports); Company (Users).
-  - **Job page** with tabs; New Project, change order and contract flows.
-- **Pricing:** set per job, never per customer.
-  - **Defaults:** 35% markup · 12% discount off cost · 2% G&A · 7.9% tax · 50/50 plan.
-  - **Assembly:** hours × rate per home ($20.50/h, hours entered on each job).
-  - Custom payment plans are allowed. A change order can use its own pricing (§29).
+  - **Sidebar:** Projects (All projects, Elevations, Customers, Field measure); Company books (Dashboard, Pipeline, Deposits due, Reconcile, Job P&L, Company P&L, Job balances, Balance sheet, Reports & exports); Company (Users).
+  - **Elevations** have Elevation / Layout / 3D views, and can be sketched without SKUs (§30).
+- **Pricing:**
+  - Set per job, never per customer: 35% markup · 12% discount off cost · 2% G&A · 7.9% tax · 50/50.
+  - Assembly is hours × $20.50.
+  - Change orders can have their own pricing (§29).
 - **Contracts:**
-  - Every packet prints the full **Customer Sales Agreement**, with the wording approved by the owner Oct 30 (`src/fm-phase2-agreement.js`, `docs/contract-language-review.md`).
+  - Every packet prints the full approved Customer Sales Agreement.
   - The deposit is due on signing.
-  - Contracts can go out with elevations marked preliminary.
+  - Elevations can go out marked preliminary.
   - The schedule can be adjusted after signing (§29).
-- **Test / Void:** Full access only. These projects are left out of every total, list and report (§29).
-- **Server work still to do (yours):** sign-in and access levels, the shared database, file storage with SHA-256, the supplier PDF import, Dropbox Sign, and field-measure sync (`HERMES-LAUNCH.md` §2).
-- **Tests:** 17 files, 189 tests, all passing (`HERMES-LAUNCH.md` §1).
+- **Server work still to do (yours):** sign-in and access levels, the shared database, file storage with SHA-256, the supplier PDF import, Dropbox Sign, field-measure sync, and **locking the old tool's open data address** behind sign-in (`HERMES-LAUNCH.md` §0, §2).
+- **Tests:** 19 files, 211 tests, all passing (`HERMES-LAUNCH.md` §1).
 - **Waiting on the owner:**
   - Tayler's email
-  - the accountant's answer on sales tax on lump-sum bid pages
-  - confirming the field measure defaults (§24)
-- **Since 2.8.0:** see `UPGRADE-2.8.0-to-2.9.0.md` and §29.
+  - the accountant: sales tax on lump-sum bid pages, the Balance sheet's $100,000 difference, loan principal on the P&L
+  - the field measure defaults (§24)
+  - the switch-over day
+- **Since 2.9.0:** see `UPGRADE-2.9.0-to-2.10.0.md`, §30 and §31.
 
 > **Start here: `HERMES-LAUNCH.md`.** Nothing is live yet (owner, Oct 28): Phase 1 and Phase 2 launch together, beside the existing tool. The launch guide lists the order of work.
 >
@@ -74,7 +90,7 @@
 > **⚠ Prerequisite for §10:** each employee must sign in, and the log must be stored on a **shared server database**. Today the Project Builder keeps its data in one browser's IndexedDB, where "who did it" can't be trusted and notes wouldn't reach other computers. Confirm with the owner how logins and a shared database will work before building §10. The ledger (§2) has no such dependency and can ship first.
 >
 > **1.0.1 change:** Invoice shares are measured against the **current contract total** (original + counted change orders), per the owner's decision. See §2, row 4.
-**Target:** fremontmakers.com, alongside the existing Project Builder at `tools.fremontmakers.com`
+**Target:** `tools.fremontmakers.com/projectbuilder` (owner, Nov 5), beside the existing Project Builder at `tools.fremontmakers.com/quote`, which stays live and unchanged.
 
 ---
 
@@ -83,7 +99,7 @@
 The existing Project Builder is in daily use and **must not be overridden, replaced, or changed in behavior.** Phase 1 ships *beside* it.
 
 1. **Additive only.** Do not edit, rename, or delete any existing file, route, component, stylesheet, or data store of the current tool.
-2. **Separate route.** Mount Phase 1 at its own path (suggested: `/project-builder/phase1/`). The current tool's URLs keep working exactly as today.
+2. **Separate route.** Mount the new Project Builder at **`/projectbuilder`** (owner, Nov 5; it replaces the earlier suggestion `/project-builder/`). The current tool's URLs (`/quote`, `/contract`, `/elevation`, `/sales-agreement`) keep working exactly as today and are never redirected. From switch-over the team stops using `/quote` (do not use), but it stays up (`HERMES-LAUNCH.md` §0).
 3. **Feature flag, off by default.** Phase 1 is reachable only when `fm_phase1=on` (env var or per-user setting). Turning the flag off must leave the site exactly as it is now.
 4. **Read-only on legacy data.** Phase 1 reads the existing project records and never writes to them. The ledger never mutates its inputs; test `adapter never mutates legacy records` enforces this.
 5. **Separate storage.** Anything Phase 1 saves (change-order links, stage history) goes in a **new** store named `fm_phase1`, keyed by legacy job code. Never write to the current tool's IndexedDB/database.
@@ -184,7 +200,9 @@ Backward moves are limited to **Void contract** (only when no payments exist) an
 
 ---
 
-## 4. Assumed legacy field names (Hermes: confirm and map)
+## 4. Assumed legacy field names (superseded by §31)
+
+> **Superseded in 2.10.0:** the real data shape is now known and read by `FMLegacy.read` (§31). The table below is kept for history.
 
 | Phase 1 reads | Assumed legacy field | Example |
 |---|---|---|
@@ -639,7 +657,7 @@ Created from the change order flow (the same place supplier quotes are imported,
 Internally, the job header and the P&L show "Courtesy changes: N, $X absorbed" (`absorbedTotal`).
 
 ### For Penrose specifically
-Recorded properly, CO 1 shows absorbed **$1,652.70**, final: Wholesale Cabinets gave no credit for the removed DC324 ×2 and VDC12 ×1 (owner, Oct 29). Customer page unchanged: no charge, total $10,973.11.
+Recorded properly, CO 1 shows absorbed **$62.91**, final: the shop paid $1,652.70 for the added cabinets and Wholesale Cabinets refunded **$1,589.79** for the returned DC324 ×2 and VDC12 ×1 (owner, Nov 4; this replaces the Oct 29 "no credit"). Customer page unchanged: no charge, total $10,973.11.
 
 ### Acceptance
 - [ ] `node tests/changeorder.test.js` → 14 passed (8 courtesy, 6 flow).
@@ -1120,3 +1138,129 @@ Owner, Oct 29: the Dashboard's "Needs attention" items were whole sentences styl
 - **Load order:** `fm-phase2-agreement.js` loads before `fm-phase1-docs.js` (phase2.html and preview.html).
 
 **Tests:** 17 files, 189 tests, all passing: contract 22, changeorder 15, docs 10, store 8, schedule 6 (new); the rest unchanged.
+
+## 30. Gross profit drill-down; elevation views; sketching without SKUs (Nov 4, released in 2.10.0)
+
+Built Nov 4 from the owner's requests. (Willow Creek's figures below were updated again on Nov 5 when change order 1's real cost came in: see §31.)
+
+**Gross profit, broken out**
+- **How it's worked out:** gross profit = revenue (contract total − sales tax) − **net cabinet cost** − courtesy absorbed.
+  - **Net cabinet cost** = the supplier's quoted cost **less the manufacturer's discount** (owner, Nov 4). The supplier quotes we upload don't show that discount; it is received when the order is placed. It is the same discount the quote passes to the customer, so it comes from each job's charge breakdown.
+  - **Assembly labor and G&A count fully as profit**, because no wage cost is recorded against them (owner, Nov 4).
+  - **Example:** Willow Creek's gross profit is now **$25,747.47** (quoted cost $55,816.34 less discount $6,320.74 = net $49,495.60), up from $19,426.73. Penrose's is $3,221.01.
+- **`FMStore.charges(job)` (new; store 0.3.0)** breaks a job into parts: one per model × homes, one per change order, and one for any agreed (bid or grandfathered) difference.
+  - **Each part carries:** cabinets at sell, discount, assembly labor, G&A, other, sales tax, total, and cabinet cost.
+  - **Parts always add up to the contract total.** Pennies the printed parts don't add to go in "Other". Anything unexplained gets a "Not broken out" row.
+  - **Where parts come from:** Phase 2 jobs keep `job.charges.parts`. They are set at New Project and whenever the quote is repriced (`reprice()`: Add to quote, adding SKUs). The seed builds them for Willow Creek (each model × 2, plus change order 1) and Penrose (itemized, plus the $2,188.06 grandfathered difference).
+  - **Change orders:** each one counts from its `priced.summary`. Agreed-amount change orders count as Other plus tax.
+- **`FMBooks.profitAndLoss`** rows and totals now carry `cabinetsCents`, `discountCents`, `laborCents`, `gaCents`, `otherCents`, `quotedCostCents`, `mfrDiscountCents` and `costCents` (net), plus each job's `parts`. `job.costCents` stays the quoted cost. **The P&L page** adds a "Where the money comes from" card (each charge → revenue → sales tax → contract total → cost → gross profit) and a **Breakdown** toggle on each job (part-by-part table and its gross profit sum).
+- **P&L revenue, broken out (owner, Nov 4):**
+  - **"Where the money comes from"** lists cabinets at actual sale price, the manufacturer discount given to the customer, assembly labor and G&A. The agreed price above the itemized quote (Penrose, $2,188.06) and old-tool rounding ($0.03) each get their own row. A **Revenue by job** table shows the same columns for each job.
+  - **Missing detail:** a job without line detail shows "Not broken out", with a note asking for its signed contract packet.
+- **Saved data upgrades on load:** `FMStore.create` runs `upgrade(state, seed)`. Jobs saved before the breakdown pick up `charges`, Willow Creek change order 1's lines, tax and cost, and its documents from the seed. It only fills what's missing. Phase 2 projects saved without `charges` get them worked out from their lines when the app loads.
+- **Server:** run the same one-time fill when existing jobs are imported.
+- **Penrose change order 1 (owner, Nov 4):** Wholesale Cabinets refunded **$1,589.79** for the returned cabinets. The shop absorbed **$62.91** ($1,652.70 paid − $1,589.79), not $1,652.70. Penrose gross profit is now $4,810.80 (46.5%). Saved data picks up the refund on load.
+- **Reports & exports → Jobs CSV:** new columns for cabinets (sell), discount, assembly labor, G&A and other, plus cabinet cost as quoted, manufacturer's discount received, and net cabinet cost. Gross profit uses the net cost.
+- **Server:** store `charges.parts` on each job and recompute it whenever a quote is priced or repriced.
+
+**Elevations: three main views**
+- **Elevation, Layout and 3D** are the main toggles at the top of the drawing.
+  - **Elevation:** the front-facing view of one wall, with the wall picker under it.
+  - **Layout:** bird's-eye view of the room (was "Floor plan").
+  - **3D:** the room in 3D.
+- Printed pages call the bird's-eye page "Layout".
+
+**Sketching without SKUs**
+- **New Project → Cabinets** asks "Do you have SKUs to upload?" Answering **No, sketch first** creates the project with no cabinet lines and no price. The price settings are kept for later. Its elevations start as a **sketch** (`elevations.sketch {color, by, on}`).
+- **Elevations tab on a quote with no SKUs:** the same question. **Yes** means pick the supplier PDF; **No** means start a sketch.
+- **Sketch panel**, in place of "From the quote":
+  - **Colors:** White, Natural wood, Moss green, Dark hickory, Gray, Navy (`FMElev.FINISHES`).
+  - **Industry-standard sizes** by group (`FMElev.STANDARD`): base, sink and drawer bases, wall 30/36/42″, over range and fridge, tall pantry, vanities, fillers. Sizes come from the codes.
+  - **Custom size:** type, W × H × D and a name (`FMElev.customSize`, stored in `elevations.sizes` as CUST1, CUST2…).
+- **Got the SKUs? Add the supplier PDF** (`P2Flows.addSkus`):
+  - Its lines become the quote's cabinets at the job's markup, and the quote is repriced.
+  - The sketch's cabinets are matched to the SKUs by code (`FMElev.copyRooms`, so B30 becomes B30-SBW). Codes the PDF doesn't have stay as drawn and are listed.
+- A sketch has no quote to check against, so the contract's elevations check skips it. The contract is still blocked until there are cabinet lines.
+- **Server:** allow quotes with no lines while `elevations.sketch` is set. Add-SKUs is one write: lines, totals, invoices, charges, rooms.
+
+**Tests:** 17 files, 192 tests, all passing: store 10 (+1 charges, +1 upgrade of saved data), elevations 21 (+1 sketch sizes).
+
+## 31. The old tool's real data; Company P&L and Balance sheet; `/projectbuilder` (Nov 5, 2.10.0)
+
+The owner gave access to the live tool (`tools.fremontmakers.com/quote`, build "v1105a", Nov 5). It was reviewed in detail, in a copy with saving turned off, so nothing in the live tool was changed.
+
+**Where it lives (owner, Nov 5)**
+- The new tool is at **`tools.fremontmakers.com/projectbuilder`**.
+- `/quote` stays live and unchanged. From switch-over it is "do not use" for the team: no new entries, but still open for looking things up.
+- On switch-over day, take a final read-only copy of its data and import it. `HERMES-LAUNCH.md` §0 has the steps, plus the security fixes the old tool needs on the server.
+
+**The real data shape, and `FMLegacy` (new: `src/fm-phase2-legacy.js`, 1.0.0)**
+- **Where it's stored:** the old tool keeps everything in one cloud bundle. `GET /api/planner/bundle?ns=fm-quotes` returns `{ success, data }`, and the page saves by POSTing the whole bundle back. Its keys:
+  - `fm-quotes-index`: the project list
+  - `fm-quote-<id>`: one record per project, **and one per house of a builder order** (`kind: 'child'`, with `parentOrderId`)
+  - `fm-cpnl-YYYY-MM`: the P&L inputs for that month
+  - `fm-balance-sheet`
+- **Fields that matter:**
+  - project: `project` (name), `date`, `installDate`, `status` (`proposed` / `contract` / `completed` / `lost`), `contractTotal`, `signerName`, `customerEmail`, `address`
+  - pricing: `bulkDiscPct`, `gnaPct`, `taxPct`, `labor[] { name, rate, hours }`, `payPlan` (`50-50` or `50-30-20`)
+  - lines: `cabinets[] { desc, serial, qty, cost, markup }`
+  - payments: `ar` (`d1Due`, `d1Amt`, `d1Paid`, `d1PaidAt`, `d1Check`, and the same for 2 and 3)
+  - change orders: `changeOrders[] { n, at, reason, payChoice, changeAmount, diff.added[] (with unit cost), materialsNet, extraInvoice { amt, due, paid, paidAt, check }, signatures }`
+- **`FMLegacy.read(data)` returns:**
+  - `legacyProjects` in the shape `FMStore.seed` reads
+  - `details`: each job's pricing, labor, lines, houses with their lines, and change orders
+  - `company`: the P&L months and Balance Sheet, in cents
+  - `skipped`: each record left out, with why
+- **What gets skipped:**
+  - records stored but not on the list: 54 on Nov 5, mostly deleted tests and the change order copy once saved as its own project (FM-2610-475)
+  - houses whose order was deleted: 5 "Willow CreekTEST" houses
+  - model recipes
+- **Change orders kept inside a job:** the ledger now reads these from `legacyProjects[].changeOrders` (`normalizeLegacyProject`) and links each to its invoice by amount. Willow Creek comes in at $80,888.05 either way.
+- **What the real data corrected:**
+  - Willow Creek's buyer email was a placeholder ("for HelloSign") and its address a sample; both are really empty.
+  - Como House has a signer.
+  - Penrose's first payment has no check number.
+- **Fixture:** `tests/fixtures/legacy-bundle-2026-11-05.js` holds the list, the 18 listed records, 2 unlisted ones, the P&L months and the Balance Sheet, with saved quote and elevation versions emptied. **`tests/legacy.test.js` (10 tests)** checks that the fixture lands exactly on `preview/sample-data.js` and the order files, and seeds identical jobs and books.
+
+**Data brought up to Nov 5**
+- **Penrose invoice 3:** paid Nov 4, check 2980, so Penrose is paid in full.
+- **Willow Creek change order 1 invoice:** paid Oct 28, check 5568.
+- **Willow Creek change order 1 cost:** **$5,388.73**, the sum of its line costs from the old tool's record. It's no longer worked back from the discount ($5,388.80). The lines in `preview/willow-creek-full-order.js` carry `unitCost`.
+  - Willow Creek gross profit is now **$25,747.54**, and the year to date **$30,558.34** (35.7%).
+- **Sample "today"** is now Nov 5. Tests about open invoices use an "as of Oct 27" copy of the sample (`asOfOct27`), so they still test open invoices.
+- **Saved data picks these up on load** (`upgrade()`):
+  - payments recorded in the old tool later; a payment already recorded in the new tool is never overwritten
+  - a change order cost that was an estimate, replaced by the real one
+
+**Company P&L and Balance sheet (new: `src/fm-phase2-company.js`, FMCompany 1.0.0; `preview/phase2-company.js`; `preview/company-books.js`)**
+- **Carried over from the old tool's P&L and Balance Sheet pages:** same lines and notes, and the owner's numbers (July–September entered; the Balance Sheet).
+- **Company P&L periods:** next 3 months, one month, a quarter or a year. Revenue and cabinet cost come from the job books.
+- **What changed from the old page:**
+  - **Revenue is the contract less sales tax.** The old page counted sales tax as revenue.
+  - **Cabinet cost** is the quoted cost less the manufacturer's discount, plus courtesy absorbed.
+  - **No "Assembly labor (from jobs)" expense row.** Assembly billed to customers is gross profit (owner, Nov 4); the wages are in Contract labor and Guaranteed payments.
+  - **A month nobody entered** uses the standard monthly amounts and is marked "estimate". Months before the first one entered (July 2026) are "before records", not estimated.
+  - **Editing needs Full access** and is logged ("Company P&L Oct 2026 · Rent / warehouse: $2,255.00 → $2,300.00"). The old page's passwords are not used.
+- **Balance sheet:**
+  - the same lines, groups, totals and balance check, plus a CSV download
+  - grey notes compare accounts receivable with what the jobs say is owed, and net income with the Company P&L
+  - it shows the old data as entered: **off by $100,000.00**, which the owner will correct with the accountant
+- **Renamed:** the job-based "Balance sheet" is now **Job balances**, and "P&L" is **Job P&L**.
+- **Store:**
+  - `state.company`, `FMStore.company()` and `saveCompany(result, by, at)`, logged under `COMPANY`
+  - `FMStore.seed({ ..., company })`
+  - saved data without company books gets them from the seed
+- **Server:**
+  - store the company books (months, standard amounts, balance, log)
+  - check Full access on every write
+  - import them once from the old tool with `FMLegacy.read(data).company` → `FMCompany.fromLegacy`
+- **`tests/company.test.js` (8 tests):** the preview numbers equal what FMLegacy reads; September and October figures; estimates and before-records months; periods; Full-access editing and logging; the Balance Sheet totals and the $100,000 difference; Test / Void jobs left out.
+
+**Acceptance (2.10.0)**
+- [ ] `/projectbuilder` serves the new tool with the flag on, and `/quote` is unchanged (visual check plus a byte-identical page).
+- [ ] The old tool's data address needs sign-in; the old page still works for signed-in staff.
+- [ ] Importing the live bundle gives the three jobs: Willow Creek $80,888.05 with $36,783.01 owed; Penrose $10,973.11 paid in full; Como House Lost. The skipped list goes to the owner.
+- [ ] Job P&L year to date: revenue $85,595.39, gross profit $30,558.34 (35.7%).
+- [ ] Company P&L, November 2026 (estimate): operating expenses $21,996.68, net income −$24,111.82. September: net income −$13,475.20.
+- [ ] Balance sheet: total assets $5,407.72; liabilities + equity $105,407.72; "Off by $100,000.00".
+- [ ] A Coordinator can't edit company books; a Full-access edit is logged with name and time.

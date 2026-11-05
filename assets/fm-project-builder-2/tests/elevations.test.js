@@ -242,6 +242,20 @@ test('room templates: copy rooms to another model or job', function () {
   eq(src[0].walls[0].base[0].sku, 'B33-SBW', 'source untouched');
 });
 
+test('sketching without SKUs: every standard size reads from its code; custom sizes are checked', function () {
+  var EL2 = typeof EL !== 'undefined' ? EL : (isNode ? require('../src/fm-phase2-elevations.js') : globalThis.FMElev);
+  var all = [].concat.apply([], EL2.STANDARD.map(function (g) { return g.codes; }));
+  all.forEach(function (code) { var s = EL2.parseSku(code); if (!s.drawn || !s.w || !s.sure) throw new Error(code + ' does not read as a drawable size'); });
+  eq([EL2.parseSku('B30').w, EL2.parseSku('B30').h, EL2.parseSku('W3036').h, EL2.parseSku('W3036').layer, EL2.parseSku('U188424').kind, EL2.parseSku('W301524').d], [30, 34.5, 36, 'upper', 'tall', 24]);
+  var bad = EL2.customSize({}, { kind: 'shelf', w: 1, h: 30, d: 12 });
+  eq(bad.ok, false); eq(bad.problems.length, 2);
+  var a = EL2.customSize({}, { kind: 'wall', w: 27, h: 40, d: 12, label: 'Over the hood' }), sizes = {}; sizes[a.code] = a.size;
+  eq([a.code, EL2.parseSku(a.code, sizes).w, EL2.parseSku(a.code, sizes).layer, EL2.parseSku(a.code, sizes).label], ['CUST1', 27, 'upper', 'Over the hood']);
+  eq(EL2.customSize(sizes, { kind: 'base', w: 20, h: 34.5, d: 24 }).code, 'CUST2');
+  eq(EL2.FINISHES.length, 6);
+  eq(EL2.copyRooms([{ walls: [{ base: [{ sku: 'B30' }, { sku: 'CUST1' }] }] }], [{ sku: 'B30-SBW' }]).unmatched, [{ code: 'CUST1', count: 1 }], 'sketch cabinets match the real SKUs by code later');
+});
+
 console.log('elevations.test.js\n' + results.join('\n'));
 console.log((results.length - failed) + ' passed, ' + failed + ' failed');
 if (isNode && failed) process.exit(1);

@@ -35,7 +35,7 @@
     return '<div class="p2-head"><h1 class="fmp1-h p2-h1">Reports &amp; exports</h1><p class="p2-sub">For finance: jobs, invoices, payments, sales tax and change orders, as CSV files that open in Excel, Google Sheets or QuickBooks.</p></div>' +
       '<div class="fmp1-card p2-pad"><div class="p2-between"><span class="fmp1-eyebrow">Period</span><button class="fmp1-btn" data-rpall>Download all ' + ts.filter(function (t) { return t.rows.length; }).length + '</button></div>' + chips +
       (u.msg ? '<div class="fmp1-note fmp1-note--info p2-small" role="status">' + esc(u.msg) + '</div>' : '') + '</div>' + cards +
-      '<p class="p2-note">Money columns are plain numbers (10500.00) so spreadsheets can add them up; each file ends with a Total row. Sales tax inside a payment is the job\'s tax over its contract total. Overhead, payroll and bank balances stay in your accounting system.</p>';
+      '<p class="p2-note">Money columns are plain numbers (10500.00) so spreadsheets can add them up; each file ends with a Total row. Sales tax inside a payment is the job\'s tax over its contract total. Overhead, payroll and bank balances are on the Company P&amp;L and Balance sheet.</p>';
   }
 
   /* one file: the page's download permission if it has one, else a normal browser download */

@@ -33,22 +33,31 @@
     return { key: key, title: title, about: about, columns: columns, rows: rows, totals: totals };
   }
 
+  /* every charge on a job, broken out (FMStore.charges); null if the store module isn't loaded */
+  function chargesOf(j) {
+    var S = typeof module === 'object' && module.exports ? require('./fm-phase2-store.js') : globalThis.FMStore;
+    return S && S.charges ? S.charges(j).totals : null;
+  }
+
   /* 1. Jobs: one row per job, contract to cash. */
   function jobs(all, opts) {
     opts = opts || {};
     var rows = realJobs(all).filter(function (j) { return opts.includeQuotes || contracted(j); }).map(function (j) {
-      var s = FM.contractSummary(j), cost = j.costCents == null ? null : j.costCents, absorbed = j.absorbedCents || 0, rev = s.currentCents - (j.taxCents || 0);
-      return { jobCode: j.jobCode, customer: j.customer, project: j.projectName || '', stage: STAGE[j.stage] || j.stage, quoteDate: j.quoteDate || '', contractedOn: j.contractedOn || '',
+      var s = FM.contractSummary(j), ch = chargesOf(j) || {}, quoted = j.costCents == null ? null : j.costCents, mfr = quoted == null ? null : -(ch.discountCents || 0);
+      var cost = quoted == null ? null : quoted - mfr, absorbed = j.absorbedCents || 0, rev = s.currentCents - (j.taxCents || 0);   // cost less the manufacturer's discount (received on ordering)
+      return { cabinetsCents: ch.cabinetsCents || 0, discountCents: ch.discountCents || 0, laborCents: ch.laborCents || 0, gaCents: ch.gaCents || 0, otherCents: ch.otherCents || 0, jobCode: j.jobCode, customer: j.customer, project: j.projectName || '', stage: STAGE[j.stage] || j.stage, quoteDate: j.quoteDate || '', contractedOn: j.contractedOn || '',
         deliveryDate: j.deliveryDate || '', originalCents: s.originalCents, changeOrderCents: s.changeOrderCents, contractCents: s.currentCents, taxCents: j.taxCents || 0,
-        revenueCents: rev, invoicedCents: s.invoicedCents, paidCents: s.paidCents, balanceCents: s.balanceCents, costCents: cost, absorbedCents: absorbed,
+        revenueCents: rev, invoicedCents: s.invoicedCents, paidCents: s.paidCents, balanceCents: s.balanceCents, quotedCostCents: quoted, mfrDiscountCents: mfr, costCents: cost, absorbedCents: absorbed,
         grossProfitCents: cost == null ? null : rev - cost - absorbed, marginPct: cost == null || !rev ? '' : Math.round((rev - cost - absorbed) / rev * 1000) / 10 };
     });
-    return table('jobs', 'Jobs', 'One row per job: contract, change orders, sales tax, invoiced, paid, balance, cost and gross profit.', [
+    return table('jobs', 'Jobs', 'One row per job: contract, change orders, each charge (cabinets, discount, assembly, G&A, other, sales tax), invoiced, paid, balance, cost and gross profit.', [
       { key: 'jobCode', label: 'Job' }, { key: 'customer', label: 'Customer' }, { key: 'project', label: 'Project' }, { key: 'stage', label: 'Stage' },
       { key: 'quoteDate', label: 'Quote date' }, { key: 'contractedOn', label: 'Contracted on' }, { key: 'deliveryDate', label: 'Delivery (estimate)' },
       { key: 'originalCents', label: 'Original contract', money: true }, { key: 'changeOrderCents', label: 'Change orders', money: true }, { key: 'contractCents', label: 'Current contract', money: true },
+      { key: 'cabinetsCents', label: 'Cabinets (sell)', money: true }, { key: 'discountCents', label: 'Mfr. discount', money: true }, { key: 'laborCents', label: 'Assembly labor', money: true },
+      { key: 'gaCents', label: 'G&A', money: true }, { key: 'otherCents', label: 'Other (agreed prices, rounding)', money: true },
       { key: 'taxCents', label: 'Sales tax', money: true }, { key: 'revenueCents', label: 'Revenue before tax', money: true }, { key: 'invoicedCents', label: 'Invoiced', money: true },
-      { key: 'paidCents', label: 'Paid', money: true }, { key: 'balanceCents', label: 'Balance', money: true }, { key: 'costCents', label: 'Cabinet cost', money: true },
+      { key: 'paidCents', label: 'Paid', money: true }, { key: 'balanceCents', label: 'Balance', money: true }, { key: 'quotedCostCents', label: 'Cabinet cost (as quoted)', money: true }, { key: 'mfrDiscountCents', label: 'Mfr. discount received', money: true }, { key: 'costCents', label: 'Cabinet cost (net)', money: true },
       { key: 'absorbedCents', label: 'Courtesy absorbed', money: true }, { key: 'grossProfitCents', label: 'Gross profit', money: true }, { key: 'marginPct', label: 'Margin %' }], rows);
   }
 

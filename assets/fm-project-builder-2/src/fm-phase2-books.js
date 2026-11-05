@@ -9,12 +9,13 @@
  *   pipelineGroups(jobs, today)       the Pipeline page: quotes out, in production, finishing up, complete, lost
  *   depositsDue(jobs, today)          every unpaid invoice, by when it's due; flags factory orders waiting on a deposit
  *   reconcile(jobs)                   per-job checks: invoices = contract, payments recorded properly, costs on file
- *   profitAndLoss(jobs, from, to)     job gross profit for jobs contracted in the period, plus cash collected
+ *   profitAndLoss(jobs, from, to)     job gross profit for jobs contracted in the period, every charge broken out (cabinets, discount,
+ *                                     assembly labor, G&A, other, sales tax) with each job's parts, plus cash collected
  *   balanceSheet(jobs, today)         what customers owe, what we hold for them, sales tax collected
  *
  * Book job shape (built by the Phase 2 store from real jobs):
  *   { jobCode, customer, project, stage, contractedOn, deliveryDate, quoteDate,
- *     contractCents, taxCents, costCents (supplier cost, null if unknown), absorbedCents (courtesy change orders),
+ *     contractCents, taxCents, costCents (supplier cost as quoted, null if unknown; P&L takes the manufacturer's discount off it), absorbedCents (courtesy change orders),
  *     invoices: [{ id, label, role, amountCents, dueDate, status, payments: [{ amountCents, date, method, reference }] }] }
  * Stages: quote, contract_signed, deposit_paid, factory_ordered, delivered, final_paid, complete, lost.
  *
@@ -150,11 +151,19 @@
   /* ---------- P&L (job gross profit) ---------- */
   function profitAndLoss(jobs, from, to) {
     var booked = jobs.filter(function (j) { return isContracted(j) && inRange(j.contractedOn, from, to); }).map(function (j) {
-      var revenue = j.contractCents - j.taxCents, cost = j.costCents || 0, absorbed = j.absorbedCents || 0, gp = revenue - cost - absorbed;
+      /* Cabinet cost = the supplier cost on the quote LESS the manufacturer's discount, which the shop receives when it places
+         the order; the supplier quotes don't show it (owner, Nov 4 2026). It's the same discount the quote passes to the customer. */
+      var ch = j.charges || { parts: [], totals: {} }, ct = ch.totals || {};
+      var kindSum = function (k) { return (ch.parts || []).filter(function (p) { return p.kind === k; }).reduce(function (s, p) { return s + (p.otherCents || 0); }, 0); };
+      var agreed = kindSum('agreed'), unbroken = (ch.parts || []).filter(function (p) { return p.kind === 'gap' && /^Not broken out/.test(p.label); }).reduce(function (s, p) { return s + (p.otherCents || 0); }, 0);
+      var revenue = j.contractCents - j.taxCents, quoted = j.costCents || 0, mfr = j.costCents == null ? 0 : -(ct.discountCents || 0), cost = quoted - mfr, absorbed = j.absorbedCents || 0, gp = revenue - cost - absorbed;
       return { jobCode: j.jobCode, customer: j.customer, project: j.project, contractCents: j.contractCents, taxCents: j.taxCents,
-               revenueCents: revenue, costCents: cost, costKnown: j.costCents != null, absorbedCents: absorbed, grossProfitCents: gp, marginPct: pct(gp, revenue) };
+               cabinetsCents: ct.cabinetsCents || 0, discountCents: ct.discountCents || 0, laborCents: ct.laborCents || 0, gaCents: ct.gaCents || 0, otherCents: ct.otherCents || 0,
+               agreedCents: agreed, roundingCents: (ct.otherCents || 0) - agreed - unbroken, unbrokenCents: unbroken,
+               parts: ch.parts || [],
+               revenueCents: revenue, quotedCostCents: quoted, mfrDiscountCents: mfr, costCents: cost, costKnown: j.costCents != null, absorbedCents: absorbed, grossProfitCents: gp, marginPct: pct(gp, revenue) };
     });
-    var t = { contractCents: 0, taxCents: 0, revenueCents: 0, costCents: 0, absorbedCents: 0, grossProfitCents: 0 };
+    var t = { contractCents: 0, taxCents: 0, cabinetsCents: 0, discountCents: 0, laborCents: 0, gaCents: 0, otherCents: 0, agreedCents: 0, roundingCents: 0, unbrokenCents: 0, revenueCents: 0, quotedCostCents: 0, mfrDiscountCents: 0, costCents: 0, absorbedCents: 0, grossProfitCents: 0 };
     booked.forEach(function (r) { Object.keys(t).forEach(function (k) { t[k] += r[k]; }); });
     t.marginPct = pct(t.grossProfitCents, t.revenueCents);
     var cash = [];

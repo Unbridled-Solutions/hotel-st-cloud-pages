@@ -408,6 +408,8 @@ export default {
         "/release-notes": "/assets/fremont-makers-quote-release-notes.html",
         "/elevation": "/assets/fremont-makers-elevation.html",
         "/elevations": "/assets/fremont-makers-elevation.html",
+        "/projectbuilder": "/assets/fm-project-builder-2/index.html",
+        "/projectbuilder.html": "/assets/fm-project-builder-2/index.html",
         "/project-builder": "/assets/fm-project-builder-2/index.html",
         "/project-builder-2": "/assets/fm-project-builder-2/index.html",
         "/project-builder/2": "/assets/fm-project-builder-2/index.html",

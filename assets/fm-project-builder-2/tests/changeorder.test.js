@@ -52,7 +52,7 @@ test('absorbed cost uses what was actually paid, less any supplier credit', func
   eq([r.co.absorbedCents, r.co.absorbedIsEstimate], [165270, true]);   // $1,652.70 paid by card; credit unknown
   ok(/credited the removed cabinets \(DC324-VDH ×2, VDC12-VDH ×1\)/.test(r.warnings[0]), r.warnings[0]);
   var none = CO.courtesy(penroseInput({ supplierCreditCents: C(REC.supplierCredit) }), { today: TODAY });
-  eq([none.co.absorbedCents, none.co.absorbedIsEstimate], [165270, false], 'owner, Oct 29: no supplier credit, so $1,652.70 is final');
+  eq([none.co.absorbedCents, none.co.absorbedIsEstimate], [6291, false], 'owner, Nov 4: $1,589.79 refunded for the returned cabinets, so the shop ate $62.91');
   var c = CO.courtesy(penroseInput({ supplierCreditCents: 50000 }), { today: TODAY });
   eq([c.co.absorbedCents, c.co.absorbedIsEstimate, c.warnings.length], [115270, false, 0]);
   var n = CO.courtesy(penroseInput({ supplierOrder: null }), { today: TODAY });

@@ -4,7 +4,15 @@
 var isNode = typeof require === 'function' && typeof module === 'object';
 var FM = isNode ? require('../src/fm-phase1-ledger.js') : globalThis.FMPhase1;
 var ACT = isNode ? require('../src/fm-phase1-activity.js') : globalThis.FMActivity;
-var SAMPLE = isNode ? require('../preview/sample-data.js') : globalThis.FM_SAMPLE;
+var SAMPLE_NOW = isNode ? require('../preview/sample-data.js') : globalThis.FM_SAMPLE;
+/* The scenarios below are as of Oct 27 2026, when Penrose invoice 3 and the Willow Creek change order invoice were still open
+   (both were paid later: Oct 28 and Nov 4). */
+function asOfOct27(S) {
+  var c = JSON.parse(JSON.stringify(S)); c.today = '2026-10-27';
+  c.legacyProjects.forEach(function (p) { (p.invoices || []).forEach(function (i) { if (i.paidDate && i.paidDate > c.today) { i.status = 'Due'; delete i.paidDate; delete i.check; } }); });
+  return c;
+}
+var SAMPLE = asOfOct27(SAMPLE_NOW);
 
 var results = [], failed = 0;
 function test(name, fn) {

@@ -22,7 +22,7 @@
   else root.FMElev = factory();
 }(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
-  var VERSION = '0.3.0';
+  var VERSION = '0.4.0';
 
   var STD = { ceiling: 96, soffit: 0, toeKick: 4.5, baseHeight: 34.5, counter: 1.5, gapToUppers: 18 };
   var DEPTH = { base: 24, wall: 12, vanity: 21, tall: 24 };
@@ -544,7 +544,37 @@
   function r2(x) { return Math.round(x * 100) / 100; }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   var INK = '#243A32', LINE = '#5b6b62', FAINT = '#9aa59e', PAPER = '#FBF8F1';
-  var FINISH = { SBW: '#F4F1EA', SWD: '#C89F72', UMO: '#7C8F6E', VDH: '#5A4332', '': '#E7DCC6' };
+  var FINISH = { SBW: '#F4F1EA', SWD: '#C89F72', UMO: '#7C8F6E', VDH: '#5A4332', SGR: '#A7ADAA', NVY: '#34435A', '': '#E7DCC6' };
+  /* Colors to sketch in before there are SKUs (the first four are the supplier colorways the shop sells). */
+  var FINISHES = [['SBW', 'White'], ['SWD', 'Natural wood'], ['UMO', 'Moss green'], ['VDH', 'Dark hickory'], ['SGR', 'Gray'], ['NVY', 'Navy']];
+
+  /* Industry-standard cabinet sizes for sketching when there are no SKUs yet. Codes follow the usual naming, so the
+     sizes come from the code (B30 = base 30″ wide, W3036 = wall 30″ × 36″, U188424 = tall 18″ × 84″ × 24″). Base 34½″ tall
+     and 24″ deep, wall 12″ deep, vanity 21″ deep. When the supplier PDF arrives, each one is matched to the real SKU by code. */
+  var STANDARD = [
+    { group: 'Base cabinets · 34½″ tall, 24″ deep', codes: ['B09', 'B12', 'B15', 'B18', 'B21', 'B24', 'B27', 'B30', 'B33', 'B36', 'B42'] },
+    { group: 'Sink and drawer bases', codes: ['SB30', 'SB33', 'SB36', '3DB12', '3DB15', '3DB18', '3DB21', '3DB24'] },
+    { group: 'Wall cabinets · 30″ tall', codes: ['W0930', 'W1230', 'W1530', 'W1830', 'W2130', 'W2430', 'W2730', 'W3030', 'W3330', 'W3630'] },
+    { group: 'Wall cabinets · 36″ tall', codes: ['W1236', 'W1536', 'W1836', 'W2136', 'W2436', 'W3036', 'W3336', 'W3636'] },
+    { group: 'Wall cabinets · 42″ tall', codes: ['W1242', 'W1542', 'W1842', 'W2442', 'W3042', 'W3642'] },
+    { group: 'Over the range and refrigerator', codes: ['W3012', 'W3015', 'W3018', 'W3612', 'W3615', 'W301524', 'W361524'] },
+    { group: 'Tall pantry · 24″ deep', codes: ['U188424', 'U189024', 'U248424', 'U249024', 'U249624'] },
+    { group: 'Vanities · 21″ deep', codes: ['VSB24', 'VSB30', 'VSB36', 'VSB48'] },
+    { group: 'Fillers', codes: ['BF3', 'F330', 'F342', 'F396'] }
+  ];
+  /* A size made up for the drawing: kept in the job's sizes under its own code (CUST1, CUST2…). */
+  function customSize(sizes, input) {
+    var kinds = { base: 'Base cabinet', wall: 'Wall cabinet', tall: 'Tall cabinet', vanity: 'Vanity' }, P = [];
+    var w = +input.w, h = +input.h, d = +input.d, kind = kinds[input.kind] ? input.kind : null;
+    if (!kind) P.push('Choose base, wall, tall or vanity.');
+    if (!(w >= 3 && w <= 96)) P.push('Width must be 3″ to 96″.');
+    if (!(h >= 3 && h <= 108)) P.push('Height must be 3″ to 108″.');
+    if (!(d >= 0.75 && d <= 36)) P.push('Depth must be ¾″ to 36″.');
+    if (P.length) return { ok: false, problems: P };
+    var n = 1; while ((sizes || {})['CUST' + n]) n++;
+    var code = 'CUST' + n, label = String(input.label || '').trim() || 'Custom ' + kinds[kind].toLowerCase();
+    return { ok: true, code: code, size: { kind: kind, w: w, h: h, d: d, label: label, style: kind === 'wall' ? 'doors' : 'combo', source: 'sketch' } };
+  }
   function finishFor(color) { return FINISH[color] || FINISH['']; }
 
   /* Door and drawer faces in the item's own box (x right, y up from its bottom). */
@@ -928,5 +958,5 @@
 
   return { VERSION: VERSION, STD: STD, APPLIANCES: APPLIANCES, splitSku: splitSku, parseSku: parseSku, describe: describe, inches: inches, feetInches: feetInches,
     layoutWall: layoutWall, layoutRoom: layoutRoom, roomChecks: roomChecks, landing: landing, RULE: RULE, applyLineChanges: applyLineChanges, reviseRooms: reviseRooms, copyRooms: copyRooms, svgPlan: svgPlan, trimCheck: trimCheck, sizesFromLines: sizesFromLines, reconcile: reconcile, placedCounts: placedCounts, autoPlace: autoPlace, svgElevation: svgElevation, svg3D: svg3D, autoYaw: autoYaw, moveItem: moveItem, fronts: fronts,
-    emptyWall: emptyWall, newId: newId, finishFor: finishFor };
+    emptyWall: emptyWall, newId: newId, finishFor: finishFor, FINISHES: FINISHES, STANDARD: STANDARD, customSize: customSize };
 }));

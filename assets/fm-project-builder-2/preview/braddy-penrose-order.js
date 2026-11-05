@@ -64,14 +64,14 @@
   invoices: [
     { label: 'Invoice 1 · 50% deposit',              due: '2026-09-16', amount: 5363.77, status: 'Paid', paidDate: '2026-09-16', check: '' },
     { label: 'Invoice 2 · 30% progress',             due: '2026-09-25', amount: 3365.60, status: 'Paid', paidDate: '2026-10-05', check: '2967' },
-    { label: 'Invoice 3 · 20% pickup or delivery',   due: '2026-11-09', amount: 2243.74, status: 'Due' }
+    { label: 'Invoice 3 · 20% pickup or delivery',   due: '2026-11-09', amount: 2243.74, status: 'Paid', paidDate: '2026-11-04', check: '2980' }
   ],
 
   /* Change Order 1, from the 8:34 PM recording. A courtesy: backordered cabinets were swapped
      for in-stock ones at no charge (owner, Oct 27). The tool printed "Why: SKUs updated Oct 2026",
      "This change $0.00", and noted "SKU sell moved −$1,649.95 · shop ate it". The added cabinets
      were entered at $0.00 unit cost, so their real cost isn't on the job; it's on supplier order
-     #1000173203 below. Whether the supplier credited the removed cabinets isn't known. */
+     #1000173203 below. The removed cabinets were returned and refunded $1,589.79 (owner, Nov 4). */
   changeOrders: [
     { number: 1, date: '2026-10-14', kind: 'courtesy', printedWhy: 'SKUs updated Oct 2026', printedThisChange: 0,
       removed: [ { sku: 'DC324-VDH', desc: 'Dark Hickory Shaker DC324', qty: 2 },
@@ -80,7 +80,7 @@
       added: [ { sku: 'VDC42RS-VDH', desc: 'Dark Hickory Shaker VDC42RS', qty: 1, unitCostAsEntered: 0, unitCost: 707.92 },
                { sku: 'DC224-VDH', desc: 'Dark Hickory Shaker DC224', qty: 2, unitCostAsEntered: 0, unitCost: 446.26 } ],
       supplierOrder: '1000173203',
-      supplierCredit: 0 }   // owner, Oct 29: Wholesale Cabinets did not credit the removed cabinets; the shop ate the cost as a courtesy (backorder)
+      supplierCredit: 1589.79 }   // owner, Nov 4: refunded $1,589.79 for the returned cabinets, so the shop ate only $62.91 ($1,652.70 − $1,589.79). Replaces "no credit" (Oct 29).
   ],
 
   supplierOrders: [

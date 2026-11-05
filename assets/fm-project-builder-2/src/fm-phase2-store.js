@@ -38,6 +38,10 @@
         W.houses.forEach(function (h) { var m = W.models[h.model].contract; tax += FM.toCents(m.tax); cost += FM.toCents(m.costTotal); });
         x.taxCents = tax; x.costCents = cost;
         x.costNote = null;
+        x.charges = { parts: Object.keys(W.models).map(function (name) {   // each model's signed quote, times its houses
+          var c = W.models[name].contract, n = W.houses.filter(function (h) { return h.model === name; }).length, cts = FM.toCents;
+          return part(name + ' × ' + n, { cabinetsCents: cts(c.cabinets), discountCents: cts(c.discount), laborCents: cts(c.assembly), gaCents: cts(c.ga), taxCents: cts(c.tax), totalCents: cts(c.total) }, n, cts(c.costTotal));
+        }) };
         (W.changeOrders || []).forEach(function (wc) {   // the executed change order, with its lines and its own pricing
           var co = x.changeOrders.filter(function (c) { return c.number === wc.number; })[0]; if (!co) return;
           var pt = wc.printed, cents = FM.toCents;
@@ -48,7 +52,7 @@
             summary: { cabinetsCents: cents(pt.cabinets), discountCents: -cents(pt.discount), laborCents: cents(pt.assembly), gaCents: cents(pt.ga), taxCents: cents(pt.tax), totalCents: cents(pt.total) } };
           co.taxCents = cents(pt.tax); co.costCents = cents(wc.costTotal); co.costIsEstimate = !!wc.costIsEstimate;
           x.taxCents += co.taxCents; x.costCents += co.costCents;
-          x.costNote = 'Change order ' + wc.number + ' cost is worked back from its ' + wc.pricing.discountPctOfCost + '% discount (the PDF has no unit costs).';
+          x.costNote = wc.costIsEstimate ? 'Change order ' + wc.number + ' cost is worked back from its ' + wc.pricing.discountPctOfCost + '% discount (the PDF has no unit costs).' : null;
           (wc.documents || []).forEach(function (d) { x.documents.push(Object.assign({ jobCode: x.jobCode, changeOrder: wc.number }, d)); });
         });
         x.pricing = { markupPct: null, discountPctOfCost: W.pricing.mfrDiscountPct, gaPct: W.pricing.gaPct, taxPct: W.pricing.taxPct, note: 'Markup set per model (18–72%).' };
@@ -73,14 +77,93 @@
         x.absorbedCents = x.changeOrders.reduce(function (t, c) { return t + (c.absorbedCents || 0); }, 0);
         x.documents = (B.documents || []).filter(function (d) { return d.jobCode === x.jobCode; });
         x.grandfathered = { signedCents: FM.toCents(k.total) };
+        var cts = FM.toCents, item = cts(k.cabinets) - cts(k.discount) + cts(k.assembly) + cts(k.ga) + cts(k.tax);
+        x.charges = { parts: [part(B.project || 'Penrose', { cabinetsCents: cts(k.cabinets), discountCents: cts(k.discount), laborCents: cts(k.assembly), gaCents: cts(k.ga), taxCents: cts(k.tax), totalCents: item }, 1, x.costCents),
+          part('Agreed bid price above the itemized quote (grandfathered)', { otherCents: cts(k.total) - item, totalCents: cts(k.total) - item }, 1, 0, 'agreed')] };
       }
       if (B && W && x.jobCode === W.jobCode) x.documents = (B.documents || []).filter(function (d) { return d.jobCode === x.jobCode; }).concat(x.documents);
       return x;
     });
-    return { version: VERSION, today: S.today, jobs: jobs, log: [], seq: 0 };
+    return { version: VERSION, today: S.today, jobs: jobs, log: [], seq: 0, company: src.company ? clone(src.company) : null };
+  }
+
+  /* Data saved before a job had its charge breakdown (or before Willow Creek change order 1 had its lines) picks those up
+     from the seed, so the books never show a job as one unexplained number. Only fills what's missing; never overwrites. */
+  function upgrade(state, seed) {
+    if (!state.company && seed.company) state.company = clone(seed.company);   // saved before the company books came over (2.10.0)
+    (state.jobs || []).forEach(function (j) {
+      var s = (seed.jobs || []).filter(function (x) { return x.jobCode === j.jobCode; })[0];
+      // a supplier credit learned later (Penrose CO 1 refund, Nov 4) replaces what the saved courtesy change order assumed
+      if (s) (j.changeOrders || []).forEach(function (co) {
+        var sc = (s.changeOrders || []).filter(function (x) { return x.id === co.id && x.kind === 'courtesy'; })[0];
+        if (!sc || co.supplierCreditCents === sc.supplierCreditCents) return;
+        co.supplierCreditCents = sc.supplierCreditCents; co.absorbedCents = sc.absorbedCents; co.absorbedIsEstimate = sc.absorbedIsEstimate;
+        j.absorbedCents = (j.changeOrders || []).filter(function (x) { return x.kind === 'courtesy'; }).reduce(function (t, x) { return t + (x.absorbedCents || 0); }, 0);
+      });
+      if (s) (j.changeOrders || []).forEach(function (co) {
+        // a cost that was worked back (an estimate) is replaced once the real one is known (Willow Creek CO 1, Nov 5)
+        var sc = (s.changeOrders || []).filter(function (x) { return x.id === co.id; })[0];
+        if (!sc || !co.costIsEstimate || sc.costIsEstimate || sc.costCents == null || co.costCents === sc.costCents) return;
+        if (j.costCents != null) j.costCents += sc.costCents - (co.costCents || 0);
+        co.costCents = sc.costCents; co.costIsEstimate = false; j.costNote = s.costNote === undefined ? null : s.costNote;
+      });
+      // payments recorded in the existing tool after this data was saved (Penrose invoice 3, Willow Creek CO 1 invoice)
+      if (s) (j.invoices || []).forEach(function (inv) {
+        var si = (s.invoices || []).filter(function (x) { return x.id === inv.id; })[0];
+        if (!si || (inv.payments || []).length || !(si.payments || []).length || si.amountCents !== inv.amountCents) return;
+        inv.payments = clone(si.payments); if (si.status) inv.status = si.status;
+      });
+      if (!s || j.charges || !s.charges) return;
+      j.charges = clone(s.charges);
+      (j.changeOrders || []).forEach(function (co) {
+        var sc = (s.changeOrders || []).filter(function (x) { return x.id === co.id; })[0]; if (!sc || co.priced || !sc.priced) return;
+        ['kind', 'priced', 'pricing', 'added', 'removed', 'due', 'costIsEstimate'].forEach(function (k) { if (sc[k] !== undefined) co[k] = clone(sc[k]); });
+        j.taxCents = (j.taxCents || 0) + (sc.taxCents || 0) - (co.taxCents || 0); if (j.costCents != null) j.costCents += (sc.costCents || 0) - (co.costCents || 0);
+        co.taxCents = sc.taxCents; co.costCents = sc.costCents;
+      });
+      if (s.costNote !== undefined) j.costNote = s.costNote;
+      var have = {}; (j.documents || []).forEach(function (d) { have[d.file] = true; });
+      j.documents = (j.documents || []).concat((s.documents || []).filter(function (d) { return !have[d.file]; }).map(clone));
+    });
   }
 
   function counts(j) { return !j.testVoid; }
+
+  /*
+   * Charges on a job, broken out (HANDOFF §30). One part per model / house group, per change order, and for any agreed
+   * (bid or grandfathered) difference. Every part: cabinets (at sell), discount (negative), labor (assembly), G&A, other,
+   * sales tax, total and cabinet cost. The parts always add up to the contract total; a gap is shown as its own row.
+   * Gross profit = revenue (contract − sales tax) − cabinet cost − courtesy absorbed. Assembly labor and G&A count as
+   * profit: the tool records no wage cost against them (owner, Nov 4 2026).
+   */
+  function part(label, s, n, costCents, kind) {
+    n = n || 1;
+    var known = (s.cabinetsCents || 0) - Math.abs(s.discountCents || 0) + (s.laborCents || 0) + (s.gaCents || 0) + (s.otherCents || 0) + (s.taxCents || 0);
+    if (s.totalCents != null && known !== s.totalCents) s = Object.assign({}, s, { otherCents: (s.otherCents || 0) + s.totalCents - known });   // pennies the printed parts don't add to
+    return { label: label, kind: kind || 'model', qty: n, cabinetsCents: (s.cabinetsCents || 0) * n, discountCents: -Math.abs(s.discountCents || 0) * n, laborCents: (s.laborCents || 0) * n,
+      gaCents: (s.gaCents || 0) * n, otherCents: (s.otherCents || 0) * n, taxCents: (s.taxCents || 0) * n, totalCents: (s.totalCents || 0) * n, costCents: costCents == null ? null : costCents * n };
+  }
+  var KEYS = ['cabinetsCents', 'discountCents', 'laborCents', 'gaCents', 'otherCents', 'taxCents', 'totalCents'];
+  function charges(job) {
+    var parts = ((job.charges && job.charges.parts) || []).map(clone);
+    (job.changeOrders || []).filter(function (c) { return FM.coCountsTowardContract(c) && c.kind !== 'courtesy' && c.amountCents; }).forEach(function (c) {
+      var label = 'Change order ' + c.number;
+      if (c.priced && c.priced.summary && c.kind !== 'custom') parts.push(part(label, c.priced.summary, 1, c.costCents == null ? null : c.costCents, 'change_order'));
+      else parts.push(part(label + ' (agreed amount)', { otherCents: c.amountCents - (c.taxCents || 0), taxCents: c.taxCents || 0, totalCents: c.amountCents }, 1, c.costCents == null ? null : c.costCents, 'change_order'));
+    });
+    var contract = FM.contractSummary(job).currentCents, sumOf = function (k) { return parts.reduce(function (t, p) { return t + p[k]; }, 0); };
+    var gap = contract - sumOf('totalCents');
+    if (gap) {
+      var taxGap = (job.taxCents || 0) - sumOf('taxCents'), small = Math.abs(gap) <= 100 && !taxGap;
+      parts.push(part(small ? 'Rounding (as printed by the old tool)' : parts.length ? 'Not broken out' : 'Not broken out (no line detail on file)',
+        { otherCents: gap - (small ? 0 : taxGap), taxCents: small ? 0 : taxGap, totalCents: gap }, 1, null, 'gap'));
+    }
+    var totals = {}; KEYS.forEach(function (k) { totals[k] = sumOf(k); });
+    var known = parts.filter(function (p) { return p.costCents != null; });
+    totals.costCents = known.length ? known.reduce(function (t, p) { return t + p.costCents; }, 0) : null;
+    totals.revenueCents = totals.totalCents - totals.taxCents;
+    return { parts: parts, totals: totals };
+  }
 
   /* The shape Company Books (FMBooks) reads. */
   function toBooks(job) {
@@ -88,7 +171,7 @@
     return { jobCode: job.jobCode, customer: job.customer, project: job.projectName, stage: job.stage,
       contractedOn: job.contractedOn || null, quoteDate: job.quoteDate || null, deliveryDate: job.deliveryDate || null,
       contractCents: s.currentCents, taxCents: job.taxCents || 0, costCents: job.costCents == null ? null : job.costCents,
-      absorbedCents: job.absorbedCents || 0, invoices: job.invoices, testVoid: !!job.testVoid };
+      absorbedCents: job.absorbedCents || 0, invoices: job.invoices, testVoid: !!job.testVoid, charges: charges(job) };
   }
 
   var METHODS = { check: 'Check', ach: 'ACH / bank transfer', card: 'Card', cash: 'Cash' };
@@ -97,6 +180,7 @@
     opts = opts || {};
     var storage = opts.storage || null;
     var state = (storage && storage.load && storage.load()) || clone(opts.seed);
+    if (opts.seed && state !== opts.seed) upgrade(state, opts.seed);
     function save() { if (storage && storage.save) storage.save(state); }
     function job(code) { return state.jobs.filter(function (j) { return j.jobCode === code; })[0] || null; }
     function log(jobCode, text, by, at) {
@@ -125,6 +209,14 @@
         if (!user || user.access !== 'full') return { ok: false, error: 'Only someone with Full access can restore a project.' };
         if (!j.testVoid) return { ok: false, error: 'This project isn\'t marked Test / Void.' };
         return this.update(code, function (x) { delete x.testVoid; return x; }, 'Restored by ' + user.name + ' (was Test / Void). It counts again, at the stage it had.', user.name, at);
+      },
+      /* Company P&L and Balance Sheet (FMCompany). Changes are made with FMCompany.setMonth / setStandard / setBalance,
+         which check Full access, then saved here and logged under 'COMPANY'. */
+      company: function () { return state.company; },
+      saveCompany: function (r, by, at) {
+        if (!r || !r.ok) return r || { ok: false, error: 'Nothing to save.' };
+        state.company = clone(r.company); log('COMPANY', r.text, by, at); save();
+        return { ok: true, company: state.company };
       },
       log: function (jobCode) { return state.log.filter(function (e) { return !jobCode || e.jobCode === jobCode; }); },
       reset: function () { state = clone(opts.seed); save(); },
@@ -172,5 +264,5 @@
     };
   }
 
-  return { VERSION: VERSION, seed: seed, toBooks: toBooks, counts: counts, create: create, browserStorage: browserStorage, METHODS: METHODS };
+  return { VERSION: VERSION, seed: seed, upgrade: upgrade, toBooks: toBooks, counts: counts, charges: charges, part: part, create: create, browserStorage: browserStorage, METHODS: METHODS };
 }));

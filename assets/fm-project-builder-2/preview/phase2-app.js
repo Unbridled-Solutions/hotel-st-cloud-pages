@@ -1,7 +1,7 @@
 /*
  * Project Builder · Phase 2 app (preview). Screens only: every rule lives in src/ (FMPhase1, FMQuote, FMDocs,
  * FMBooks, FMStore, FMContract, FMChangeOrder, FMBid). Data is the sample jobs, saved in this browser only.
- * Routes (hash): #/books/<dashboard|pipeline|deposits|reconcile|pnl|balance>, #/projects, #/new,
+ * Routes (hash): #/books/<dashboard|pipeline|deposits|reconcile|pnl|company|jobbalances|balance|exports>, #/projects, #/new,
  *                #/job/<code>/<overview|cabinets|elevations|changes|contract|invoices|documents|activity>, #/users, #/measure[/<visit>]
  */
 (function () {
@@ -9,10 +9,12 @@
   var FM = window.FMPhase1, Q = window.FMQuote, D = window.FMDocs, BK = window.FMBooks, ST = window.FMStore;
   var W = window.FM_WILLOW_ORDER, B = window.FM_BRADDY_ORDER, SAMPLE = window.FM_SAMPLE, TODAY = SAMPLE.today;
   var root = document.getElementById('p2');
-  var SEED = ST.seed({ sample: SAMPLE, willow: W, braddy: B });
-  var DEMO = demoQuote(); SEED.jobs.push(DEMO);
-  var store = ST.create({ seed: SEED, storage: ST.browserStorage('fm_phase2_preview') });
-  if (!store.job(DEMO.jobCode)) store.addJob(DEMO, 'Sample data');
+  var SEED = ST.seed({ sample: SAMPLE, willow: W, braddy: B, company: window.FMCompany && window.FM_COMPANY_LEGACY ? window.FMCompany.fromLegacy(window.FM_COMPANY_LEGACY) : null });
+  var LIVE = !!(window.FM_CONFIG && window.FM_CONFIG.live);
+  var DEMO = null;
+  if (!LIVE) { DEMO = demoQuote(); SEED.jobs.push(DEMO); }
+  var store = ST.create({ seed: SEED, storage: (window.FM_CONFIG && window.FM_CONFIG.storage) || ST.browserStorage('fm_phase2_preview') });
+  if (!LIVE && DEMO && !store.job(DEMO.jobCode)) store.addJob(DEMO, 'Sample data');
 
   /* ---------- users (HANDOFF §23): everyone has full access for now; a Coordinator level can be added later ---------- */
   var ACCESS = { full: 'Full access', coordinator: 'Coordinator' };
@@ -65,6 +67,7 @@
       invoices: plan.map(function (pc, i) { return { id: code + '-inv' + (i + 1), label: 'Invoice ' + (i + 1) + ' · ' + pc + '%', role: i === 0 ? 'deposit' : 'progress', changeOrderId: null, dueDate: dues[i], amountCents: amts[i], status: 'open', payments: [] }; }),
       pricing: { markupPct: 35, discountPctOfCost: 12, gaPct: 2, taxPct: 7.9, assemblyCents: 64000, plan: plan },
       models: [{ name: 'Sample kitchen and baths', qty: 1, lines: lines }],
+      charges: { parts: [ST.part('Sample kitchen and baths', pr.summary, 1, pr.internal.costCents)] },
       elevations: { rooms: [kitchen, baths], sizes: {}, versions: [] } };
   }
 
@@ -117,7 +120,9 @@
         link('#/books/pipeline', 'Pipeline', r.a === 'pipeline') +
         link('#/books/deposits', 'Deposits due', r.a === 'deposits', overdue) +
         link('#/books/reconcile', 'Reconcile', r.a === 'reconcile', issues) +
-        link('#/books/pnl', 'P&amp;L', r.a === 'pnl') +
+        link('#/books/pnl', 'Job P&amp;L', r.a === 'pnl') +
+        link('#/books/company', 'Company P&amp;L', r.a === 'company') +
+        link('#/books/jobbalances', 'Job balances', r.a === 'jobbalances') +
         link('#/books/balance', 'Balance sheet', r.a === 'balance') + link('#/books/exports', 'Reports &amp; exports', r.a === 'exports') + '</nav>' +
       '<nav class="p2-nav" aria-label="Company"><h2>Company</h2>' + link('#/users', 'Users', r.area === 'users') + '</nav>' +
       '<div class="p2-side-foot">' + FMTheme.toggleHTML(FMTheme.get(root)) +
@@ -426,7 +431,8 @@
     if (key === 'deposits') return booksDeposits(jobs);
     if (key === 'reconcile') return booksReconcile(jobs);
     if (key === 'pnl') return booksPnl(jobs);
-    if (key === 'balance') return booksBalance(jobs);
+    if (key === 'jobbalances') return booksBalance(jobs);
+    if (key === 'company' || key === 'balance') return window.P2Company ? window.P2Company.render(ctx(), key) : '<p>Company books are loading…</p>';
     if (key === 'exports') return window.P2Reports ? window.P2Reports.render(ctx()) : '<p>Reports are loading…</p>';
     return booksDashboard(jobs);
   }
@@ -530,10 +536,29 @@
   }
   function booksPnl(jobs) {
     var r = periodRange(ui.period), pl = BK.profitAndLoss(jobs, r[0], r[1]), t = pl.totals;
+    var money = function (c) { return c ? $f(c) : '<span class="fmp1-faint">—</span>'; };
     var rows = pl.jobs.map(function (x) {
-      return '<tr><td>' + jobLink(x.jobCode, x.customer) + '<br><span class="fmp1-faint p2-small">' + esc(x.project || x.jobCode) + '</span></td><td class="r">' + $f(x.revenueCents) + '</td><td class="r">' + (x.costKnown ? $f(x.costCents) : '<span class="fmp1-faint">not on file</span>') + '</td>' +
-        '<td class="r">' + (x.absorbedCents ? $f(x.absorbedCents) : '—') + '</td><td class="r"><b>' + $f(x.grossProfitCents) + '</b></td><td class="r">' + x.marginPct + '%</td></tr>';
+      var key = 'pl:' + x.jobCode, open = ui.open[key];
+      var row = '<tr><td>' + jobLink(x.jobCode, x.customer) + '<br><span class="fmp1-faint p2-small">' + esc(x.project || x.jobCode) + '</span><br><button class="p2-tog" data-houses="' + esc(key) + '" aria-expanded="' + !!open + '">' + (open ? '▾ Hide breakdown' : '▸ Breakdown') + '</button></td>' +
+        '<td class="r">' + $f(x.contractCents) + '</td><td class="r">' + $f(x.taxCents) + '</td><td class="r">' + $f(x.revenueCents) + '</td><td class="r">' + (x.costKnown ? $f(x.costCents) : '<span class="fmp1-faint">not on file</span>') + '</td>' +
+        '<td class="r">' + money(x.absorbedCents) + '</td><td class="r"><b>' + $f(x.grossProfitCents) + '</b></td><td class="r">' + x.marginPct + '%</td></tr>';
+      if (open) row += '<tr class="p2-pl-detail"><td colspan="8">' + plDetail(x) + '</td></tr>';
+      return row;
     }).join('');
+    var mix = [['Cabinets (actual sale price)', t.cabinetsCents], ['Manufacturer discount (given to the customer)', t.discountCents], ['Assembly labor', t.laborCents], ['G&amp;A', t.gaCents]];
+    if (t.agreedCents) mix.push(['Agreed price above the itemized quote <span class="fmp1-faint p2-small">(' + pl.jobs.filter(function (x) { return x.agreedCents; }).map(function (x) { return esc(x.project || x.customer); }).join(', ') + ')</span>', t.agreedCents]);
+    if (t.roundingCents) mix.push(['Rounding <span class="fmp1-faint p2-small">(as printed by the old tool)</span>', t.roundingCents]);
+    if (t.unbrokenCents) mix.push(['<span style="color:var(--fmp1-alert-ink)">Not broken out: no line detail on file</span>', t.unbrokenCents]);
+    var summary = '<div class="fmp1-card p2-pad p2-pl-sum"><span class="fmp1-eyebrow">Where the money comes from</span><table class="fmp1-table"><tbody>' +
+      mix.map(function (m) { return '<tr><td>' + m[0] + '</td><td class="r">' + money(m[1]) + '</td></tr>'; }).join('') +
+      '<tr class="p2-sub"><td><b>Revenue</b> <span class="fmp1-faint p2-small">(contract less sales tax)</span></td><td class="r"><b>' + $f(t.revenueCents) + '</b></td></tr>' +
+      '<tr><td>Sales tax <span class="fmp1-faint p2-small">(owed to the state, not revenue)</span></td><td class="r">' + $f(t.taxCents) + '</td></tr>' +
+      '<tr class="p2-sub"><td><b>Contract total</b></td><td class="r"><b>' + $f(t.contractCents) + '</b></td></tr>' +
+      '<tr><td>Revenue</td><td class="r">' + $f(t.revenueCents) + '</td></tr><tr><td>− Cabinet cost, as quoted by the supplier</td><td class="r">−' + $f(t.quotedCostCents) + '</td></tr>' +
+      '<tr><td>+ Manufacturer\'s discount <span class="fmp1-faint p2-small">(received when the order is placed)</span></td><td class="r">' + (t.mfrDiscountCents ? '+' + $f(t.mfrDiscountCents) : money(0)) + '</td></tr>' +
+      '<tr><td>− Courtesy absorbed</td><td class="r">' + (t.absorbedCents ? '−' + $f(t.absorbedCents) : money(0)) + '</td></tr>' +
+      '<tr class="p2-sub"><td><b>Gross profit</b></td><td class="r"><b>' + $f(t.grossProfitCents) + '</b> <span class="fmp1-faint p2-small">' + t.marginPct + '%</span></td></tr></tbody></table>' +
+      '<p class="p2-note">Net cabinet cost (' + $f(t.costCents) + ') is the supplier\'s quoted cost less the manufacturer\'s discount, which the supplier quotes don\'t show because it comes when the order is placed. Assembly labor and G&amp;A count fully as profit: no wage cost is recorded against them.</p></div>';
     return head('P&amp;L', 'Job profit for work contracted in the period, and cash collected. Sales tax is passed through to the state, so it isn\'t counted as revenue.') +
       '<div class="p2-chips" role="group" aria-label="Period">' + Object.keys(PERIODS).map(function (k) { return '<button class="fmp1-btn" data-period="' + k + '" aria-pressed="' + (ui.period === k) + '">' + PERIODS[k] + '</button>'; }).join('') + '</div>' +
       '<p class="p2-small fmp1-faint">' + longDate(r[0]) + ' – ' + longDate(r[1]) + '</p>' +
@@ -541,20 +566,47 @@
         '<div class="fmp1-card p2-kpi"><span class="k">Revenue (less sales tax)</span><span class="v">' + $f(t.revenueCents) + '</span></div>' +
         '<div class="fmp1-card p2-kpi"><span class="k">Gross profit</span><span class="v">' + $f(t.grossProfitCents) + '</span><span class="p2-small fmp1-faint">' + t.marginPct + '% margin</span></div>' +
         '<div class="fmp1-card p2-kpi"><span class="k">Cash collected</span><span class="v">' + $f(pl.cash.collectedCents) + '</span><span class="p2-small fmp1-faint">' + $f(pl.cash.salesTaxCents) + ' of it sales tax</span></div></div>' +
-      '<div class="fmp1-card fmp1-table-wrap"><table class="fmp1-table p2-table"><thead><tr><th>Job</th><th class="r">Revenue</th><th class="r">Cabinet cost</th><th class="r">Courtesy</th><th class="r">Gross profit</th><th class="r">Margin</th></tr></thead><tbody>' +
-        (rows || '<tr><td colspan="6" class="p2-empty">No jobs contracted in this period.</td></tr>') +
-        (rows ? '<tr class="is-total"><td>Total</td><td class="r">' + $f(t.revenueCents) + '</td><td class="r">' + $f(t.costCents) + '</td><td class="r">' + $f(t.absorbedCents) + '</td><td class="r">' + $f(t.grossProfitCents) + '</td><td class="r">' + t.marginPct + '%</td></tr>' : '') + '</tbody></table></div>' +
-      '<p class="p2-note">Cabinet cost is the supplier price on each quote' + (pl.missingCost ? '; ' + pl.missingCost + ' job(s) have no cost on file, so their profit is overstated' : '') + '. "Courtesy" is what the shop absorbed on no-charge change orders. Overhead and payroll live in your accounting system, so this is job profit, not net profit.</p>';
+      (pl.jobs.length ? summary + revenueByJob(pl) : '') +
+      '<div class="fmp1-card fmp1-table-wrap"><table class="fmp1-table p2-table p2-pl"><thead><tr><th>Job</th><th class="r">Contract</th><th class="r">Sales tax</th><th class="r">Revenue</th><th class="r">Net cabinet cost</th><th class="r">Courtesy</th><th class="r">Gross profit</th><th class="r">Margin</th></tr></thead><tbody>' +
+        (rows || '<tr><td colspan="8" class="p2-empty">No jobs contracted in this period.</td></tr>') +
+        (rows ? '<tr class="is-total"><td>Total</td><td class="r">' + $f(t.contractCents) + '</td><td class="r">' + $f(t.taxCents) + '</td><td class="r">' + $f(t.revenueCents) + '</td><td class="r">' + $f(t.costCents) + '</td><td class="r">' + $f(t.absorbedCents) + '</td><td class="r">' + $f(t.grossProfitCents) + '</td><td class="r">' + t.marginPct + '%</td></tr>' : '') + '</tbody></table></div>' +
+      '<p class="p2-note">Open a job\'s breakdown to see each model, change order and agreed price, charge by charge' + (pl.missingCost ? '. ' + pl.missingCost + ' job(s) have no cost on file, so their profit is overstated' : '') + '. "Courtesy" is what the shop absorbed on no-charge change orders. This is job profit; overhead and payroll are on the <a href="#/books/company">Company P&amp;L</a>, which takes it to net income.</p>';
+  }
+  /* Revenue for each job, charge by charge (the "Where the money comes from" card, per job) */
+  function revenueByJob(pl) {
+    var t = pl.totals, m = function (c) { return c ? $f(c) : '<span class="fmp1-faint">—</span>'; };
+    var row = function (label, x) { return '<tr><td>' + label + '</td><td class="r">' + m(x.cabinetsCents) + '</td><td class="r">' + m(x.discountCents) + '</td><td class="r">' + m(x.laborCents) + '</td><td class="r">' + m(x.gaCents) + '</td><td class="r">' + m(x.otherCents) + '</td><td class="r"><b>' + $f(x.revenueCents) + '</b></td></tr>'; };
+    var missing = pl.jobs.filter(function (x) { return x.unbrokenCents; });
+    return '<div class="fmp1-card fmp1-table-wrap"><div class="p2-pad" style="padding-bottom:0"><span class="fmp1-eyebrow">Revenue by job</span></div><table class="fmp1-table p2-table p2-pl"><thead><tr><th>Job</th><th class="r">Cabinets (sale price)</th><th class="r">Mfr. discount</th><th class="r">Assembly</th><th class="r">G&amp;A</th><th class="r">Agreed / rounding</th><th class="r">Revenue</th></tr></thead><tbody>' +
+      pl.jobs.map(function (x) { return row(jobLink(x.jobCode, x.customer) + '<br><span class="fmp1-faint p2-small">' + esc(x.project || x.jobCode) + '</span>', x); }).join('') +
+      '<tr class="is-total"><td>Total</td><td class="r">' + $f(t.cabinetsCents) + '</td><td class="r">' + $f(t.discountCents) + '</td><td class="r">' + $f(t.laborCents) + '</td><td class="r">' + $f(t.gaCents) + '</td><td class="r">' + $f(t.otherCents) + '</td><td class="r">' + $f(t.revenueCents) + '</td></tr></tbody></table>' +
+      (missing.length ? '<div class="fmp1-note fmp1-note--alert p2-small" style="margin:10px">No line detail on file for ' + missing.map(function (x) { return esc(x.customer + ' · ' + x.jobCode); }).join(', ') + ', so its revenue can\'t be broken out. Send the signed contract packet (with the Final Job Quote) to fill it in.</div>' : '') + '</div>';
+  }
+  /* One job's charges, part by part, ending in its gross profit */
+  function plDetail(x) {
+    var m = function (c) { return c ? $f(c) : '<span class="fmp1-faint">—</span>'; };
+    var cols = ['cabinetsCents', 'discountCents', 'laborCents', 'gaCents', 'otherCents', 'taxCents', 'totalCents'];
+    var sumK = function (k) { return x.parts.reduce(function (s, p) { return s + (p[k] || 0); }, 0); };
+    var body = x.parts.map(function (p) {
+      var net = p.costCents == null ? null : p.costCents + (p.discountCents || 0);   // quoted cost less the manufacturer's discount
+      return '<tr><td>' + esc(p.label) + '</td>' + cols.map(function (k) { return '<td class="r">' + (k === 'totalCents' ? '<b>' + $f(p[k]) + '</b>' : m(p[k])) + '</td>'; }).join('') +
+        '<td class="r">' + (p.costCents == null ? '<span class="fmp1-faint">not on file</span>' : m(p.costCents)) + '</td><td class="r">' + (net == null ? '—' : m(net)) + '</td></tr>';
+    }).join('');
+    var cost = x.parts.filter(function (p) { return p.costCents != null; }).reduce(function (s, p) { return s + p.costCents; }, 0);
+    var netAll = x.parts.filter(function (p) { return p.costCents != null; }).reduce(function (s, p) { return s + p.costCents + (p.discountCents || 0); }, 0);
+    return '<div class="fmp1-table-wrap"><table class="fmp1-table p2-pl-parts"><thead><tr><th>Part</th><th class="r">Cabinets</th><th class="r">Discount</th><th class="r">Assembly</th><th class="r">G&amp;A</th><th class="r">Other</th><th class="r">Sales tax</th><th class="r">Total</th><th class="r">Cost as quoted</th><th class="r">Net cost</th></tr></thead><tbody>' + body +
+      '<tr class="is-total"><td>Job total</td>' + cols.map(function (k) { return '<td class="r">' + $f(sumK(k)) + '</td>'; }).join('') + '<td class="r">' + $f(cost) + '</td><td class="r">' + $f(netAll) + '</td></tr></tbody></table></div>' +
+      '<p class="p2-small" style="margin:6px 0 0">Revenue ' + $f(x.revenueCents) + ' (total ' + $f(x.contractCents) + ' less sales tax ' + $f(x.taxCents) + ') − net cabinet cost ' + $f(x.costCents) + ' (quoted ' + $f(x.quotedCostCents) + ' less the manufacturer\'s discount ' + $f(x.mfrDiscountCents) + ')' + (x.absorbedCents ? ' − courtesy absorbed ' + $f(x.absorbedCents) : '') + ' = <b>gross profit ' + $f(x.grossProfitCents) + '</b> (' + x.marginPct + '%).</p>';
   }
 
   function booksBalance(jobs) {
     var b = BK.balanceSheet(jobs, TODAY);
     function rows(list) { return list.map(function (x) { return '<tr><td>' + esc(x.label) + (x.note ? '<br><span class="fmp1-faint p2-small">' + esc(x.note) + '</span>' : '') + '</td><td class="r"><b>' + $f(x.cents) + '</b></td></tr>'; }).join(''); }
-    return head('Balance sheet', 'What customers owe you and what you\'re holding for them, as of ' + longDate(TODAY) + ', from the jobs in the Project Builder.') +
+    return head('Job balances', 'What customers owe you and what you\'re holding for them, as of ' + longDate(TODAY) + ', from the jobs in the Project Builder.') +
       '<div class="p2-grid"><div class="fmp1-card fmp1-table-wrap"><table class="fmp1-table p2-bs"><thead><tr><th>Owed to you</th><th class="r">Amount</th></tr></thead><tbody>' + rows(b.assets) + '</tbody></table></div>' +
       '<div class="fmp1-card fmp1-table-wrap"><table class="fmp1-table p2-bs"><thead><tr><th>Held for others</th><th class="r">Amount</th></tr></thead><tbody>' + rows(b.liabilities) + '</tbody></table></div>' +
       '<div class="fmp1-card fmp1-table-wrap"><table class="fmp1-table p2-bs"><thead><tr><th>For reference</th><th class="r">Amount</th></tr></thead><tbody>' + rows(b.memo) + '</tbody></table></div></div>' +
-      '<p class="p2-note">This covers job balances only. Cash in the bank, equipment, loans and owner\'s equity are in your accounting system; use these numbers to check it.</p>';
+      '<p class="p2-note">This covers job balances only. Cash, equipment, loans and members\' equity are on the company <a href="#/books/balance">Balance sheet</a>.</p>';
   }
 
   /* ---------- document viewer ---------- */
@@ -742,6 +794,7 @@
     }
     if (t.dataset.useradd != null || t.dataset.userrm) return usersClick(t);
     if (window.P2Reports && window.P2Reports.click(ctx(), t)) return;
+    if (window.P2Company && window.P2Company.click(ctx(), t)) return;
     if (window.P2Customers && window.P2Customers.click(ctx(), t, j)) return;
     if (window.P2Measure && window.P2Measure.click(ctx(), t, e)) return;
     if (window.P2Measure && j && window.P2Measure.jobClick(ctx(), t, j)) return;
@@ -760,6 +813,7 @@
     if (e.target.hasAttribute('data-actor')) { ui.actor = e.target.value; try { window.localStorage.setItem('fm_phase2_actor', ui.actor); } catch (x) { /* ignore */ } return render(); }
     if (e.target.dataset.userf) return usersChange(e.target);
     if (window.P2Reports && window.P2Reports.change(ctx(), e)) return;
+    if (window.P2Company && window.P2Company.change(ctx(), e)) return;
     if (window.P2Customers && window.P2Customers.change(ctx(), e)) return;
     if (window.P2Measure && window.P2Measure.change(ctx(), e)) return;
     if (window.P2Elev && window.P2Elev.change(ctx(), e)) return;

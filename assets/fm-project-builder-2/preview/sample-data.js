@@ -7,7 +7,7 @@
   if (typeof module === 'object' && module.exports) module.exports = data;
   else root.FM_SAMPLE = data;
 }(typeof globalThis !== 'undefined' ? globalThis : this, {
-  today: '2026-10-27',
+  today: '2026-11-05',
 
   legacyProjects: [
     {
@@ -45,7 +45,7 @@
       invoices: [
         { label: 'Invoice 1 · 50% at order', due: '2026-10-01', amount: 35364.33, status: 'Paid', paidDate: '2026-10-02', check: '5547' },
         { label: 'Invoice 2 · 50% at delivery', due: '2026-11-20', amount: 36783.01, status: 'Due' },
-        { label: 'Change order 1 invoice', due: '2026-10-26', amount: 8740.71, status: 'Due' }
+        { label: 'Change order 1 invoice', due: '2026-10-26', amount: 8740.71, status: 'Paid', paidDate: '2026-10-28', check: '5568' }
       ],
       changeLog: [
         { date: '2026-10-26', what: 'Change order 1', amount: 8740.71, reason: 'SKUs updated Oct 2026' }
@@ -64,7 +64,7 @@
       invoices: [
         { label: 'Invoice 1 · 50%', due: '2026-09-16', amount: 5363.77, status: 'Paid', paidDate: '2026-09-16' },
         { label: 'Invoice 2 · 30%', due: '2026-09-25', amount: 3365.60, status: 'Paid', paidDate: '2026-10-05', check: '2967' },
-        { label: 'Invoice 3 · 20%', due: '2026-11-09', amount: 2243.74, status: 'Due' }
+        { label: 'Invoice 3 · 20%', due: '2026-11-09', amount: 2243.74, status: 'Paid', paidDate: '2026-11-04', check: '2980' }
       ]
     },
     {

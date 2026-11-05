@@ -199,7 +199,7 @@
         (p.note ? '<p class="doc-note">' + esc(p.note) + '</p>' : '') +
         '<p class="doc-note">Measurements are in inches; dimensions govern over the drawing. Field-verify walls, openings and ceiling height before ordering.</p>', foot());
     }).join('') + (views || []).map(function (v) {
-      var plan = v.kind === 'plan', name = plan ? 'Floor plan' : '3D view';
+      var plan = v.kind === 'plan', name = plan ? 'Layout' : '3D view';
       return sheet(name + ' · ' + v.room, head(name, v.room, opts) + jobFields(job, field('Drawing', esc(opts.status || 'Draft for the quote'))) + flag +
         '<figure class="doc-elev doc-elev--3d">' + v.svg + '</figure><p class="doc-note">' + (plan ? 'Seen from above, in inches. Field-verify walls and openings before ordering.' : 'For look and layout only. Use the elevation pages for measurements.') + '</p>', foot());
     }).join('');

@@ -32,6 +32,9 @@
       return { key: k, name: k + ' · ' + nh + ' houses', lines: linesAfter(j, c.W.models[k].lines, other), color: c.W.models[k].suffix };
     });
     if (c.B && j.jobCode === c.B.jobCode) return [{ key: 'main', name: j.projectName || 'Project', lines: linesAfter(j, c.B.model.lines), color: c.B.model.suffix }];
+    var sk = j.elevations && j.elevations.sketch, noLines = !(j.models || []).some(function (m) { return m.lines && m.lines.length; });
+    if (sk && noLines) return [{ key: (j.models && j.models[0] && j.models[0].name) || 'Sketch', name: 'Sketch · no SKUs yet', lines: [], color: sk.color || 'SBW', sketch: true }];
+    if (noLines) return [];
     if (j.models && j.models.length) return j.models.map(function (m, i) {
       // a signed change order already rewrote the first model's lines; an approved courtesy did not
       var lines = i === 0 ? linesAfter(j, m.lines) : m.lines;
@@ -49,6 +52,7 @@
     return coChanges(j).filter(function (co) { return done.indexOf(co.id) < 0 && co.id !== open; });
   }
   function statusText(c, j) {
+    if (j.elevations && j.elevations.sketch && setsFor(c, j).some(function (s) { return s.sketch; })) return 'Sketch · standard sizes, no SKUs yet';
     if (j.stage === 'quote') return frozen(j) ? 'Locked while the contract is out for signature' : 'Draft · part of the quote';
     if (j.stage === 'lost') return 'Quote was lost · read only';
     var E = j.elevations || {};
@@ -139,7 +143,7 @@
   /* ---------- render ---------- */
   function tab(c, j) {
     var esc = c.esc, E = j.elevations || blankE(), sets = setsFor(c, j);
-    if (!sets.length) return '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Elevations</span><p class="p2-empty">No cabinets on this job yet. Cabinets come in from the supplier PDF in New Project; then they can be drawn here.</p></div>';
+    if (!sets.length) return startCard(c, j);
     var S = state(c, j, sets, E), u = S.u, ed = editable(j);
     E = readE(E, S.set);
     var rec = EL.reconcile(S.set.lines, S.rooms, E.sizes);
@@ -150,7 +154,7 @@
       '<span class="p2-row">' + (ed ? undoButtons(c, j) : '') + (ed && !revising(j) ? '<button class="fmp1-btn" data-elsavever>Save version</button>' : '') +
       '<button class="fmp1-btn fmp1-btn--quiet" data-elver aria-expanded="' + !!u.versions + '">Versions (' + (E.versions || []).length + ')</button>' +
       '<button class="fmp1-btn fmp1-btn--primary" data-elprint' + (S.rooms.length ? '' : ' disabled') + '>Print / save PDF</button></span></div>' +
-      '<p class="p2-small fmp1-muted">Cabinets come from this job\'s quote (the supplier PDF), and each size is read from its SKU code. ' +
+      '<p class="p2-small fmp1-muted">' + (S.set.sketch ? 'A sketch with standard and custom sizes, for illustration. No SKUs or prices yet; when the supplier PDF is added, each cabinet is matched to its SKU. ' : 'Cabinets come from this job\'s quote (the supplier PDF), and each size is read from its SKU code. ') +
         (revising(j) ? 'Revising the signed drawings for a change order.' : ed ? 'Lay them out wall by wall; the drawings go into the contract packet when the contract is sent.' : j.stage === 'quote' ? 'Pricing and drawings are frozen until the contract is signed, declined or canceled.' : 'Changes after signing go through a change order, and the drawings get a numbered revision.') + '</p>' + revisionHTML(c, j) +
       (sets.length > 1 ? '<label class="p2-fld" style="max-width:320px"><span>Model</span><select class="fmp1-input" data-elset>' + sets.map(function (s) {
         var nr = roomsOfSet(E, s.key).length;
@@ -163,13 +167,16 @@
 
     if (!S.room) {
       return head + '<div class="fmp1-card p2-pad"><p class="p2-empty">' + (ed ? 'No rooms yet. Add a room (Kitchen, Hall bath…), give each wall its length, then add the cabinets from the quote.' :
-        'No elevations were drawn for this job before it was signed.') + '</p>' + (ed ? '<div class="p2-row"><button class="fmp1-btn fmp1-btn--primary" data-eladdroom>+ Add a room</button></div>' : '') + '</div>' + quotePanel(c, j, S, rec, ed, E);
+        'No elevations were drawn for this job before it was signed.') + '</p>' + (ed ? '<div class="p2-row"><button class="fmp1-btn fmp1-btn--primary" data-eladdroom>+ Add a room</button></div>' : '') + '</div>' + (S.set.sketch ? sketchPanel(c, j, S, ed, E) : quotePanel(c, j, S, rec, ed, E));
     }
     var R = roomLayouts(S.room, S.set, E), wall = S.wall, we = wallEntry(R, wall), lay = we ? we.layout : null;
-    var walls = '<div class="p2-row" role="tablist" aria-label="Walls in ' + esc(S.room.name) + '">' + S.room.walls.map(function (w) {
-      return '<button class="fmp1-btn' + (w.id === u.wall && u.view === 'front' ? ' fmp1-btn--primary' : '') + '" data-elwall="' + esc(w.id) + '">' + esc(w.name) + ' <span class="p2-small fmp1-faint">' + EL.feetInches(+w.lengthIn || 0) + '</span></button>'; }).join('') +
-      (ed ? '<button class="fmp1-btn fmp1-btn--quiet" data-eladdwall>+ Wall</button>' : '') +
-      '<span class="p2-el-views p2-row"><button class="fmp1-btn' + (u.view === 'plan' ? ' fmp1-btn--primary' : '') + '" data-elview="plan">Floor plan</button><button class="fmp1-btn' + (u.view === '3d' ? ' fmp1-btn--primary' : '') + '" data-elview="3d">3D room</button></span></div>';
+    /* Three main views: Elevation (front-facing, one wall at a time), Layout (bird's-eye) and 3D */
+    var VIEWS = [['front', 'Elevation', 'Front-facing view of one wall'], ['plan', 'Layout', 'Bird\'s-eye view of the room'], ['3d', '3D', 'The room in 3D']];
+    var views = '<div class="p2-el-viewbar" role="tablist" aria-label="View">' + VIEWS.map(function (v) {
+      return '<button class="p2-el-vbtn" role="tab" aria-selected="' + (u.view === v[0]) + '" data-elview="' + v[0] + '" title="' + v[2] + '">' + v[1] + '</button>'; }).join('') + '</div>';
+    var walls = views + (u.view === 'front' ? '<div class="p2-row p2-el-walls" role="tablist" aria-label="Walls in ' + esc(S.room.name) + '"><span class="p2-small fmp1-faint">Wall</span>' + S.room.walls.map(function (w) {
+      return '<button class="fmp1-btn' + (w.id === u.wall ? ' fmp1-btn--primary' : '') + '" role="tab" aria-selected="' + (w.id === u.wall) + '" data-elwall="' + esc(w.id) + '">' + esc(w.name) + ' <span class="p2-small fmp1-faint">' + EL.feetInches(+w.lengthIn || 0) + '</span></button>'; }).join('') +
+      (ed ? '<button class="fmp1-btn fmp1-btn--quiet" data-eladdwall>+ Wall</button>' : '') + '</div>' : '');
 
     var drawing;
     if (u.view === 'plan') {
@@ -189,7 +196,7 @@
 
     var center = '<div class="fmp1-card p2-pad p2-el-main">' + walls + drawing + '</div>';
     var left = wall && u.view === 'front' ? wallPanel(c, j, S, wall, lay, ed, E) : roomPanel(c, j, S, ed);
-    return head + '<div class="p2-el-grid">' + '<div class="p2-el-side">' + left + '</div>' + center + '<div class="p2-el-side">' + quotePanel(c, j, S, rec, ed, E) + '</div></div>';
+    return head + '<div class="p2-el-grid">' + '<div class="p2-el-side">' + left + '</div>' + center + '<div class="p2-el-side">' + (S.set.sketch ? sketchPanel(c, j, S, ed, E) : quotePanel(c, j, S, rec, ed, E)) + '</div></div>';
   }
 
   function undoButtons(c, j) {
@@ -327,6 +334,43 @@
       (ed ? '<button class="p2-linkbtn p2-small" data-elrmroom style="color:var(--fmp1-alert-ink);align-self:flex-start">Remove this room</button>' : '') + '</div>';
   }
 
+  /* No SKUs on the job yet: ask first. Yes → add the supplier PDF; no → sketch with standard sizes. */
+  function startCard(c, j) {
+    var ed = editable(j), esc = c.esc;
+    if (!ed) return '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Elevations</span><p class="p2-empty">No cabinets or drawings on this job.</p></div>';
+    return '<div class="fmp1-card p2-pad p2-el-start"><span class="fmp1-eyebrow">Start the elevations</span><h2 class="fmp1-h" style="font-size:20px;margin:6px 0 4px">Do you have SKUs to upload?</h2>' +
+      '<p class="p2-small fmp1-muted">With the supplier PDF, every cabinet comes in with its real size and price. Without it, sketch the room with industry-standard sizes (and custom ones) for illustration.</p>' +
+      '<div class="p2-el-choices"><div class="p2-el-choice"><b>Yes, I have the supplier PDF</b><span class="p2-small fmp1-faint">Its lines become this quote\'s cabinets; then draw them wall by wall.</span>' + pdfPicker(c) + '</div>' +
+      '<div class="p2-el-choice"><b>No, sketch with standard sizes</b><span class="p2-small fmp1-faint">Base, wall, tall and vanity sizes, custom sizes, and a color to show. Add the SKUs whenever you have them.</span><button class="fmp1-btn fmp1-btn--primary" data-elsketch>Start a sketch</button></div></div></div>';
+  }
+  function pdfPicker(c) {
+    var pdfs = window.P2Flows && window.P2Flows.samplePdfs ? window.P2Flows.samplePdfs() : [];
+    return '<label class="p2-fld"><span>Supplier PDF</span><select class="fmp1-input" data-elskupdf><option value="">Choose a PDF…</option>' + pdfs.map(function (p) { return '<option value="' + c.esc(p.id) + '">' + c.esc(p.name) + ' · ' + p.lines.length + ' lines</option>'; }).join('') + '</select></label>';
+  }
+  /* Sketch mode: standard sizes to add, a custom size, the color, and a way to bring the SKUs in later */
+  function sketchPanel(c, j, S, ed, E) {
+    var esc = c.esc, u = c.ui.el, canAdd = ed && S.wall && u.view === 'front', color = S.set.color;
+    var colors = '<div class="p2-el-colors" role="group" aria-label="Color">' + EL.FINISHES.map(function (f) {
+      return '<button class="p2-el-swatch" data-elcolor="' + f[0] + '" aria-pressed="' + (color === f[0]) + '" title="' + esc(f[1]) + '"' + (ed ? '' : ' disabled') + '><i style="background:' + EL.finishFor(f[0]) + '"></i>' + esc(f[1]) + '</button>'; }).join('') + '</div>';
+    var placed = EL.placedCounts(S.rooms);
+    var groups = EL.STANDARD.map(function (g, gi) {
+      return '<details class="p2-el-sizes"' + (gi < 3 ? ' open' : '') + '><summary class="p2-small"><b>' + esc(g.group) + '</b></summary><div class="p2-el-sizegrid">' + g.codes.map(function (code) {
+        var sp = EL.parseSku(code, E.sizes), n = placed[code] || 0;
+        return '<button class="p2-el-size" data-eladd="' + esc(code) + '"' + (canAdd ? '' : ' disabled') + ' title="' + esc(EL.describe(sp)) + '"><b>' + esc(code) + '</b><span>' + EL.inches(sp.w) + (sp.kind === 'base' || sp.kind === 'vanity' ? '' : ' × ' + EL.inches(sp.h)) + '</span>' + (n ? '<em>' + n + '</em>' : '') + '</button>'; }).join('') + '</div></details>';
+    }).join('');
+    var customs = Object.keys(E.sizes || {}).filter(function (k) { return /^CUST\d+$/.test(k); }).map(function (k) {
+      var s = E.sizes[k]; return '<button class="p2-el-size" data-eladd="' + k + '"' + (canAdd ? '' : ' disabled') + '><b>' + esc(s.label) + '</b><span>' + EL.inches(s.w) + ' × ' + EL.inches(s.h) + ' × ' + EL.inches(s.d) + '</span>' + (placed[k] ? '<em>' + placed[k] + '</em>' : '') + '</button>'; }).join('');
+    var cf = u.cust || {};
+    var custom = ed ? '<details class="p2-el-sizes"' + (u.custOpen ? ' open' : '') + '><summary class="p2-small"><b>Custom size</b></summary>' + (customs ? '<div class="p2-el-sizegrid">' + customs + '</div>' : '') +
+      '<div class="p2-el-2"><label class="p2-fld"><span>Type</span><select class="fmp1-input" data-elcust="kind">' + [['base', 'Base'], ['wall', 'Wall'], ['tall', 'Tall'], ['vanity', 'Vanity']].map(function (o) { return '<option value="' + o[0] + '"' + ((cf.kind || 'base') === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
+      '<label class="p2-fld"><span>Name (optional)</span><input class="fmp1-input" data-elcust="label" value="' + esc(cf.label || '') + '"></label></div>' +
+      '<div class="p2-el-3">' + ['w', 'h', 'd'].map(function (k) { return '<label class="p2-fld"><span>' + { w: 'Width', h: 'Height', d: 'Depth' }[k] + ' (in)</span><input class="fmp1-input" inputmode="decimal" data-elcust="' + k + '" value="' + esc(cf[k] || '') + '"></label>'; }).join('') + '</div>' +
+      (u.custErr ? '<p class="p2-small" role="alert" style="color:var(--fmp1-alert-ink)">' + esc(u.custErr) + '</p>' : '') +
+      '<button class="fmp1-btn" data-elcustadd' + (canAdd ? '' : ' disabled') + '>Add to this wall</button></details>' : '';
+    return '<div class="fmp1-card p2-pad"><div class="p2-between"><span class="fmp1-eyebrow">Cabinet sizes</span><span class="fmp1-pill">Sketch</span></div>' +
+      '<b class="p2-small">Color</b>' + colors + (canAdd ? '<p class="p2-small fmp1-faint">Click a size to add it to ' + esc(S.wall.name) + '.</p>' : '<p class="p2-small fmp1-faint">' + (ed ? 'Pick a wall on the Elevation view to add cabinets.' : 'Read only.') + '</p>') +
+      groups + custom + (ed ? '<div class="p2-el-run"><b class="p2-small">Got the SKUs?</b><span class="p2-small fmp1-faint">Add the supplier PDF. Its lines become this quote\'s cabinets, and each sketched cabinet is matched to its SKU by code.</span>' + pdfPicker(c) + '</div>' : '') + '</div>';
+  }
   function quotePanel(c, j, S, rec, ed, E) {
     var esc = c.esc, u = c.ui.el, canAdd = ed && S.wall && u.view !== '3d';
     var total = rec.rows.reduce(function (t, r) { return t + r.quoted; }, 0), placed = rec.rows.reduce(function (t, r) { return t + Math.min(r.placed, r.quoted); }, 0);
@@ -411,7 +455,7 @@
   }
   /* How complete the drawings are against the quote: { sets, any (rooms drawn), quoted, missing, complete } */
   function completeness(c, j) {
-    var sets = setsFor(c, j), E = j.elevations || blankE(), missing = 0, quoted = 0, any = false;
+    var sets = setsFor(c, j).filter(function (s) { return !s.sketch; }), E = j.elevations || blankE(), missing = 0, quoted = 0, any = false;   // a sketch has no quote to check against
     sets.forEach(function (s) { var rs = roomsOfSet(E, s.key), r = EL.reconcile(s.lines, rs, readE(E, s).sizes); if (rs.length) any = true; missing += r.missing; r.rows.forEach(function (x) { quoted += x.quoted; }); });
     return { sets: sets.length, any: any, quoted: quoted, missing: missing, complete: !!sets.length && any && missing === 0 };
   }
@@ -448,12 +492,25 @@
     var r = c.route ? c.route() : null;
     var hash = (location.hash || '').split('/'); if (hash[1] !== 'job' || hash[3] !== 'elevations') return false;
     var j = c.store.job(decodeURIComponent(hash[2] || '')); if (!j) return false;
+    if (t.hasAttribute('data-elsketch') && editable(j)) {
+      save(c, j, 'sketch started with standard sizes (no SKUs yet).', function (E) { E.sketch = { color: 'SBW', by: c.me().name, on: c.TODAY }; }, true);
+      c.ui.el = null; c.render(); return true;
+    }
     var x = cur(c, j); if (!x) return false;
     var u = x.u, ed = editable(j), d = t.dataset;
     function done() { c.render(); return true; }
+    if (d.elcolor && ed && x.S.set.sketch) { var fn = (EL.FINISHES.filter(function (f) { return f[0] === d.elcolor; })[0] || [])[1]; save(c, j, 'sketch color set to ' + fn + '.', function (E) { E.sketch.color = d.elcolor; }); return done(); }
+    if (t.hasAttribute('data-elcustadd') && ed && x.S.wall) {
+      var cs = EL.customSize(x.E.sizes, u.cust || {}); u.custOpen = true;
+      if (!cs.ok) { u.custErr = cs.problems.join(' '); return done(); }
+      u.custErr = null; var cid = EL.newId(), crun = cs.size.kind === 'wall' ? 'upper' : 'base';
+      save(c, j, 'custom ' + cs.size.label + ' (' + cs.size.w + '″ × ' + cs.size.h + '″ × ' + cs.size.d + '″) added to ' + x.S.wall.name + '.', function (E) {
+        E.sizes = E.sizes || {}; E.sizes[cs.code] = cs.size; var w3 = findWall(E, u); w3[crun] = (w3[crun] || []).concat([{ id: cid, sku: cs.code, gapBefore: 0 }]); });
+      u.cust = { kind: (u.cust || {}).kind }; return done();
+    }
     if (d.elroom) { u.room = d.elroom; u.wall = null; u.sel = null; u.view = 'front'; u.yaw = null; return done(); }
     if (d.elwall) { u.wall = d.elwall; u.sel = null; u.view = 'front'; return done(); }
-    if (d.elview) { u.view = u.view === d.elview ? 'front' : d.elview; return done(); }
+    if (d.elview) { u.view = d.elview; if (u.view === 'front' && !u.wall && x.S.room && x.S.room.walls[0]) u.wall = x.S.room.walls[0].id; return done(); }
     if (d.elturn) { var y0 = u.yaw == null ? EL.autoYaw(x.S.room ? x.S.room.walls : []) : u.yaw; u.yaw = ((y0 + +d.elturn + 540) % 360) - 180; return done(); }
     if (d.elsel) { u.sel = u.sel === d.elsel ? null : d.elsel; u.view = 'front'; return done(); }
     if (t.hasAttribute('data-elver')) { u.versions = !u.versions; return done(); }
@@ -626,8 +683,12 @@
   function change(c, e) {
     var el = e.target, hash = (location.hash || '').split('/'); if (hash[1] !== 'job' || hash[3] !== 'elevations') return false;
     var j = c.store.job(decodeURIComponent(hash[2] || '')); if (!j) return false;
+    if (el.hasAttribute('data-elskupdf') && el.value && editable(j) && window.P2Flows) {   // SKUs for a job that had none (or a sketch)
+      c.ui.el = null; var msg = window.P2Flows.addSkus(c, j, el.value); c.render(); var u0 = c.ui.el; if (u0) u0.msg = msg; else c.ui.elMsg = msg; c.render(); return true;
+    }
     var x = cur(c, j); if (!x) return false;
     var u = x.u, d = el.dataset;
+    if (d.elcust) { u.cust = u.cust || {}; u.cust[d.elcust] = el.value; return true; }
     if (el.hasAttribute('data-elset')) { u.set = el.value; u.room = null; u.wall = null; u.sel = null; c.render(); return true; }
     if (el.hasAttribute('data-elcopysrc')) { u.copySrc = el.value; c.render(); return true; }
     if (!editable(j)) return false;

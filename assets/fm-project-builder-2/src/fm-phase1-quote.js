@@ -182,7 +182,7 @@
      "FREMONT MAKERS / making freedom" logo only (owner, Oct 28: no separate F/M mark), in Juniper Shadow
      (assets/brand/, owner-supplied, recolored).
      meta.logoBase: where assets/brand/ is served from (default "assets/brand/", relative to the page). */
-  var LOGO_BASE = 'assets/brand/';
+  var LOGO_BASE = (typeof window !== 'undefined' && window.FM_CONFIG && window.FM_CONFIG.logoBase) || 'assets/brand/';
   function logoHTML(meta) {
     meta = meta || {};
     var base = meta.logoBase || LOGO_BASE;
