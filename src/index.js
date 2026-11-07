@@ -12,6 +12,7 @@ import { handleHscVaultLogins } from './hsc-manager-vault.js';
 import { handleVenueInquire } from './venue-inquire.js';
 import { handleEateryReservations } from './eatery-reservations.js';
 import { handleFmHellosign } from './fm-hellosign.js';
+import { handleFmProjectBuilderFiles } from './fm-project-builder-files.js';
 
 const AIRTABLE_BASE = "appUUjLXEUwlyx23M";
 const SOCC_TABLE    = "SOCC%20Barista%20Applications";
@@ -297,6 +298,10 @@ export default {
     if (url.pathname.startsWith("/api/fm/hellosign")) {
       const hs = await handleFmHellosign(request, env);
       if (hs) return hs;
+    }
+
+    if (url.pathname.startsWith("/api/projectbuilder/files")) {
+      return handleFmProjectBuilderFiles(request, env);
     }
 
     if (url.pathname.startsWith("/api/events/")) {

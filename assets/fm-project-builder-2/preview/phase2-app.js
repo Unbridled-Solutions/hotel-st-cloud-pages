@@ -668,7 +668,7 @@
     } else if (kind === 'file') {
       var d = (j.documents || []).filter(function (x) { return window.FMFiles.key(x) === key; })[0]; if (!d) return;
       ui.viewer = { title: d.title + ' · ' + j.jobCode, from: '[data-open-file="' + key + '"]', stored: d.file, html: d.uploadedBy ? uploadCard(d, '<div class="fmp1-note fmp1-note--info p2-small" role="status">Opening…</div>') : fileCard(d, '<div class="fmp1-note fmp1-note--info p2-small" role="status">Looking for the stored file…</div>') };
-      if (d.uploadedBy) loadUpload(d); else loadStored(d);
+      if (d.uploadedBy || (window.FM_CONFIG && window.FM_CONFIG.live)) loadUpload(d); else loadStored(d);
     }
   }
 
@@ -781,14 +781,40 @@
         (d.flag ? '<div class="fmp1-note fmp1-note--alert p2-small"><span><b>Check:</b> ' + esc(d.flag) + '</span></div>' : '') + rm + '</li>';
     }).join('');
   }
-  /* Uploaded files. In the live tool they're on the server (POST/GET /api/projectbuilder/files, HANDOFF §32). This preview keeps
-     them in the browser (IndexedDB), so they stay on this computer only. */
+  /* Uploaded files. Live: POST/GET /api/projectbuilder/files (R2, HANDOFF §32). Preview: this browser only (IndexedDB). */
   var FILESTORE = (function () {
-    var mem = {}, dbp = null;
+    var mem = {}, dbp = null, LIVE = !!(window.FM_CONFIG && window.FM_CONFIG.live);
+    var API = (window.FM_CONFIG && window.FM_CONFIG.filesApi) || '/api/projectbuilder/files';
     function db() { if (!dbp) dbp = new Promise(function (res, rej) { try { var r = indexedDB.open('fm_phase2_files', 1); r.onupgradeneeded = function () { r.result.createObjectStore('files'); }; r.onsuccess = function () { res(r.result); }; r.onerror = function () { rej(r.error); }; } catch (e) { rej(e); } }); return dbp; }
+    function localPut(k, blob) { mem[k] = blob; return db().then(function (d) { return new Promise(function (res) { var t = d.transaction('files', 'readwrite'); t.objectStore('files').put(blob, k); t.oncomplete = function () { res(); }; t.onerror = function () { res(); }; }); }).catch(function () { /* kept in memory */ }); }
+    function localGet(k) { if (mem[k]) return Promise.resolve(mem[k]); return db().then(function (d) { return new Promise(function (res) { var rq = d.transaction('files').objectStore('files').get(k); rq.onsuccess = function () { res(rq.result || null); }; rq.onerror = function () { res(null); }; }); }).catch(function () { return null; }); }
     return {
-      put: function (k, blob) { mem[k] = blob; return db().then(function (d) { return new Promise(function (res) { var t = d.transaction('files', 'readwrite'); t.objectStore('files').put(blob, k); t.oncomplete = function () { res(); }; t.onerror = function () { res(); }; }); }).catch(function () { /* kept in memory */ }); },
-      get: function (k) { if (mem[k]) return Promise.resolve(mem[k]); return db().then(function (d) { return new Promise(function (res) { var rq = d.transaction('files').objectStore('files').get(k); rq.onsuccess = function () { res(rq.result || null); }; rq.onerror = function () { res(null); }; }); }).catch(function () { return null; }); }
+      put: function (k, blob, meta) {
+        if (!LIVE) return localPut(k, blob);
+        var fd = new FormData();
+        fd.append('file', blob, (meta && meta.file) || k);
+        fd.append('id', k);
+        if (meta && meta.jobCode) fd.append('jobCode', meta.jobCode);
+        return fetch(API, { method: 'POST', body: fd, cache: 'no-store' }).then(function (r) {
+          return r.json().then(function (body) {
+            if (!r.ok || !body.success) throw new Error((body && body.error) || ('Upload failed (' + r.status + ')'));
+            mem[k] = blob;
+            return body;
+          });
+        });
+      },
+      get: function (k) {
+        if (mem[k]) return Promise.resolve(mem[k]);
+        if (!LIVE) return localGet(k);
+        return fetch(API + '/' + encodeURIComponent(k), { cache: 'no-store' }).then(function (r) {
+          if (r.ok) return r.blob().then(function (b) { mem[k] = b; return b; });
+          var base = (window.FM_CONFIG && window.FM_CONFIG.filesBase) || '/assets/fm-project-builder-2/files/';
+          return fetch(base + encodeURIComponent(k), { cache: 'no-store' }).then(function (r2) {
+            if (!r2.ok) return localGet(k);
+            return r2.blob().then(function (b) { mem[k] = b; return b; });
+          });
+        }).catch(function () { return localGet(k); });
+      }
     };
   })();
   function upload(el) {
@@ -803,7 +829,7 @@
         var res = window.FMFiles.check({ name: file.name, size: file.size, type: file.type, sha256: h }, input, { jobCode: j.jobCode, by: me().name, today: TODAY, existing: all, seq: seq });
         el.value = '';
         if (!res.ok) { ui.up = Object.assign({}, U, { job: j.jobCode, co: co, err: res.problems, msg: null }); return render(); }
-        return FILESTORE.put(res.doc.id, new Blob([buf], { type: res.doc.type })).then(function () {
+        return FILESTORE.put(res.doc.id, new Blob([buf], { type: res.doc.type }), { file: res.doc.file, jobCode: j.jobCode }).then(function () {
           store.update(j.jobCode, function (x) { x.documents = (x.documents || []).concat([res.doc]); return x; },
             (co != null ? 'File attached to change order ' + co : 'Uploaded ' + window.FMFiles.CATEGORIES[res.doc.category].label.toLowerCase()) + ': "' + res.doc.title + '" (' + window.FMFiles.size(res.doc.bytes) + ') by ' + me().name + '.', me().name);
           ui.up = { job: j.jobCode, co: co, category: U.category || '', msg: 'Uploaded "' + res.doc.title + '"' + (co != null ? ' to change order ' + co : '') + '.' + (res.warnings.length ? ' ' + res.warnings.join(' ') : ''), err: null };
@@ -818,9 +844,13 @@
   }
   function loadUpload(d) {
     var k = window.FMFiles.key(d);
-    FILESTORE.get(k).then(function (blob) {
+    function paint(blob) {
       if (!ui.viewer || ui.viewer.stored !== d.file) return;
-      if (!blob) { ui.viewer.html = uploadCard(d, '<div class="fmp1-note fmp1-note--info p2-small"><span>This file was uploaded in a different browser, so this preview can\'t show it. In the live tool every file comes from the server.</span></div>'); return render(); }
+      if (!blob) {
+        if (!d.uploadedBy) return loadStored(d);
+        ui.viewer.html = uploadCard(d, '<div class="fmp1-note fmp1-note--info p2-small"><span>This file isn\'t in cloud storage yet. Re-upload it from Documents, or Open after the next save.</span></div>');
+        return render();
+      }
       if (window.FMFiles.ext(d.file) === 'html') return blob.text().then(function (t) { if (!ui.viewer) return; ui.viewer.html = t; ui.viewer.stored = null; ui.viewer.pdfUrl = null; render(); });   // signed copies made in the tool: document + certificate
       var url = URL.createObjectURL(blob), e = window.FMFiles.ext(d.file);
       ui.viewer.pdfUrl = url;
@@ -828,7 +858,8 @@
         : e === 'pdf' ? '<div class="fmp1-card p2-pad pv-pdfwrap"><iframe class="pv-pdf" src="' + url + '" title="' + esc(d.title) + '"></iframe></div>'
         : uploadCard(d, '<p class="p2-small">This kind of file opens in its own app. Use <b>Download</b> above.</p>');
       render();
-    });
+    }
+    FILESTORE.get(k).then(paint);
   }
   function ctx() { return { store: store, ui: ui, me: me, TODAY: TODAY, esc: esc, money: $f, longDate: longDate, render: render, go: go, W: W, B: B, openDoc: openDoc, docRows: docRows, stagePill: stagePill , files: FILESTORE, packetHTML: function (j) { return D.renderPacket(j, packetOpts(j)); } }; }
   window.P2 = { ctx: ctx, render: render };
