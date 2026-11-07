@@ -1,7 +1,7 @@
 /*
  * Project Builder · Phase 2 app (preview) · the three flows:
  *   New Project (§15)  ·  Change orders (§17, §19)  ·  Contract and e-sign (§16, §18)
- * Rules live in src/ (FMQuote, FMContract, FMChangeOrder, FMBid). Dropbox Sign is simulated here; in production the
+ * Rules live in src/ (FMQuote, FMContract, FMChangeOrder, FMBid). Signing runs in the tool (preview/phase2-sign.js, FMSign); in production the
  * server makes those calls (§16). Supplier PDFs are simulated by the sample orders (Penrose and Willow Creek models).
  */
 (function () {
@@ -169,7 +169,7 @@
       if (!(d.customer === '__new' ? d.newCustomer.trim() : d.customer)) e.push('Choose or add the customer.');
       if (!d.project.trim()) e.push('Add a project name.');
       if (!d.signer.trim()) e.push('Add who will sign.');
-      if (!K.isEmail(d.email)) e.push('Add the signer\'s email (Dropbox Sign sends the contract there).');
+      if (!K.isEmail(d.email)) e.push('Add the signer\'s email (the signing link goes there).');
     }
     if (i === 1) {
       e = e.concat(A.check(d.addr, d.kind === 'single' ? 'Install address' : 'Site address'));
@@ -419,9 +419,8 @@
       var src = pdfLines.filter(function (l) { return String(l.sku).toUpperCase() === k; })[0];
       if (src) cur.push({ sku: src.sku, desc: src.desc, qty: q.extra, unitCostCents: src.unitCostCents }); else unknown.push(q.code + ' ×' + q.extra);
     });
-    c.ui.co = { job: j.jobCode, step: 1, reason: 'customer_request', note: 'Cabinets added on the elevations: ' + ex.map(function (q) { return q.code + ' ×' + q.extra; }).join(', ') + '.', house: house, base: bl, current: cur,
-      choice: null, customAmt: '', customNote: '', colorOk: false, pricing: coDefaults(j),
-      errors: unknown.length ? [unknown.join(', ') + (unknown.length === 1 ? ' isn\'t' : ' aren\'t') + ' on the order or a supplier PDF yet. Add it from the supplier PDF below so it has a cost.'] : [] };
+    c.ui.co = newCO(c, j, { step: 1, type: 'add', note: 'Cabinets added on the elevations: ' + ex.map(function (q) { return q.code + ' ×' + q.extra; }).join(', ') + '.', house: house, base: bl, current: cur,
+      errors: unknown.length ? [unknown.join(', ') + (unknown.length === 1 ? ' isn\'t' : ' aren\'t') + ' on the order or a supplier PDF yet. Use Add a cabinet so it has a cost.'] : [] });
   }
 
   /* quote pages for the packet (new Phase 2 jobs) */
@@ -436,7 +435,10 @@
     return out;
   }
 
-  /* ================= Change orders ================= */
+  /* ================= Change orders (reworked in 2.11.0, HANDOFF.md §32) =================
+     Start from what happened (add, swap, remove or return, backordered, damaged, our mistake, something else); every tool stays
+     available whatever was picked: + / − on a line, Add a cabinet by hand, a supplier PDF, Swap, Replace (damaged, at our cost),
+     Backordered (wait for it), other charges or credits, and a new delivery date. */
   function baseLines(c, j, house) {
     if (B && j.jobCode === B.jobCode) return B.model.lines.filter(function (l) { return !l.noCharge; }).map(function (l) { return { sku: l.sku, desc: l.desc, qty: l.qty, unitCostCents: FM.toCents(l.unitCost), markupPct: l.markupPct }; });
     if (W && j.jobCode === W.jobCode) { var h = j.houses.filter(function (x) { return x.jobCode === house; })[0] || j.houses[0]; return W.models[h.model].lines.map(function (l) { return { sku: l.sku, desc: l.desc, qty: l.qty, unitCostCents: FM.toCents(l.unitCost), markupPct: l.markupPct }; }); }
@@ -459,59 +461,149 @@
     return { markupPct: num(p.markupPct), discountPctOfCost: num(p.discountPctOfCost), gaPct: num(p.gaPct), taxPct: num(p.taxPct),
       labor: h > 0 && r > 0 ? [{ role: 'Assembly', rateCents: r, hours: h }] : [] };
   }
-  function coPriced(f) { var d = coDiff(f); return CO.priceChange({ added: d.added, removed: d.removed }, coSettings(f)); }
+  function coDiff(f) { var d = CO.diffLines(f.base, f.current); d.replaced = f.replaced || []; return d; }
+  function coExtras(f) { return (f.extras || []).map(function (x) { return { label: x.label, amountCents: toCents(x.amount), taxable: !!x.taxable }; }); }
+  function goodExtras(f) { return coExtras(f).filter(function (x) { return String(x.label || '').trim() && x.amountCents && !isNaN(x.amountCents); }); }
+  function coPriced(f) { var d = coDiff(f); return CO.priceChange({ added: d.added, removed: d.removed, extras: goodExtras(f) }, coSettings(f)); }
+  function sellChanges(f) { var d = coDiff(f); return !!(d.added.length || d.removed.length || goodExtras(f).length); }
+  function needsPricing(f) { return sellChanges(f) || num(f.pricing.asmHours) > 0; }
   function coDiffers(j, f) { var a = coDefaults(j), p = f.pricing; return ['markupPct', 'discountPctOfCost', 'gaPct', 'taxPct'].filter(function (k) { return num(a[k]) !== num(p[k]); }); }
-  function coDiff(f) {
-    var before = {}; f.base.forEach(function (l) { before[l.sku] = l; });
-    var added = [], removed = [];
-    f.current.forEach(function (l) {
-      var b = before[l.sku];
-      if (!b && l.qty > 0) { var a = JSON.parse(JSON.stringify(l)); if (!l.mkEdited) delete a.markupPct; added.push(a); }   // a new line uses the change order's markup unless set by hand
-      else if (b && l.qty !== b.qty) (l.qty > b.qty ? added : removed).push({ sku: l.sku, desc: l.desc, qty: Math.abs(l.qty - b.qty), unitCostCents: l.unitCostCents, markupPct: l.qty > b.qty && l.mkEdited ? l.markupPct : b.markupPct, from: b.qty, to: l.qty });
-    });
-    return { added: added, removed: removed };
+  function replacedCost(f) { return (f.replaced || []).reduce(function (t, l) { return t + (l.unitCostCents || 0) * l.qty; }, 0); }
+  function reasonLabel(f) { return f.type === 'backorder' && f.boMode === 'wait' ? CO.CHANGE_REASONS.backorder_wait : CO.CHANGE_REASONS[(CO.TYPES[f.type] || {}).reason] || 'Other'; }
+  /* SKUs the team might type: what's on the job, then every supplier PDF on file, with their costs. */
+  function knownSkus(f) {
+    var out = {}, cts = function (l) { return l.unitCostCents != null ? l.unitCostCents : l.unitCost != null ? FM.toCents(l.unitCost) : null; };
+    function put(l) { var c = cts(l); if (l && l.sku && c > 0) out[String(l.sku).toUpperCase()] = { sku: l.sku, desc: l.desc, unitCostCents: c }; }
+    [].concat.apply([], samplePdfs().map(function (p) { return p.lines; })).forEach(put);
+    if (W && f.job === W.jobCode) { Object.keys(W.models).forEach(function (m) { W.models[m].lines.forEach(put); }); (W.changeOrders || []).forEach(function (co) { (co.lines || []).forEach(put); }); }
+    if (B && f.job === B.jobCode) B.model.lines.forEach(put);
+    f.base.forEach(put);
+    return out;
   }
-  var CO_STEPS = ['What and why', 'Cabinets', 'Price', 'Review'];
+  function newCO(c, j, over) {
+    var house = j.houses && j.houses.length > 1 ? j.houses[0].jobCode : null, bl = baseLines(c, j, house);
+    var f = { job: j.jobCode, step: 0, type: null, boMode: null, note: '', house: house, base: bl, current: JSON.parse(JSON.stringify(bl)), replaced: [], extras: [], waitFor: [], newDate: '',
+      choice: null, customAmt: '', customNote: '', colorOk: false, errors: [], pricing: coDefaults(j), addForm: null, rowForm: null };
+    for (var k in (over || {})) f[k] = over[k];
+    return f;
+  }
+  var CO_STEPS = ['What happened', 'Cabinets', 'Price', 'Review'];
+  var CO_TIPS = {
+    add: 'Use + on a line, or Add a cabinet that isn\'t on the order yet. A supplier PDF adds all its lines at once.',
+    swap: 'Click Swap on the line that\'s changing and enter the cabinet that takes its place.',
+    remove: 'Use − to take cabinets off (down to 0 removes the line). The customer is credited what they paid. A restocking fee goes under Other charges below.',
+    backorder: 'Click Swap on the backordered cabinet and enter the one that\'s in stock.',
+    backorder_wait: 'Click Backordered on each cabinet that\'s late. The order doesn\'t change; the new date is recorded and the customer can be told.',
+    damage: 'Click Replace on the damaged cabinet. It\'s reordered at our cost, and you note who the claim goes to.',
+    mistake: 'Swap the wrong cabinet for the right one, or Replace one that has to be reordered.',
+    other: 'Change cabinets if you need to, or go straight to Other charges or credits (labor, freight, a fee or a credit).'
+  };
+  var EXTRA_PRESETS = [['Restocking fee', true], ['Freight', false], ['Extra labor', false], ['Credit', false], ['Other charge', false]];
+  var CO_TONE = { 'pending approval': 'fmp1-pill--alert', sent: 'fmp1-pill--proposed', withdrawn: '', recorded: 'fmp1-pill--good', approved: 'fmp1-pill--good', signed: 'fmp1-pill--good', invoiced: 'fmp1-pill--good', paid: 'fmp1-pill--good' };
+
+  function coCard(c, j, co) {
+    var esc = c.esc, $f = c.money, ui = c.ui, full = c.me().access === 'full', P = co.pricing;
+    var moves = (co.removed || []).map(function (r) { return r.to ? esc(r.sku) + ' ' + r.from + ' → ' + r.to : 'Removed ' + esc(r.sku) + ' ×' + r.qty; }).concat((co.added || []).map(function (a) { return 'Added ' + esc(a.sku) + ' ×' + a.qty; }))
+      .concat((co.replaced || []).map(function (r) { return 'Replaced ' + esc(r.sku) + ' ×' + r.qty + (r.why ? ' (' + esc(r.why) + ')' : ''); }))
+      .concat((co.waitFor || []).map(function (w) { return 'Backordered ' + esc(w.sku) + ' ×' + w.qty; }))
+      .concat((co.extras || []).map(function (x) { return esc(x.label) + ' ' + $f(x.amountCents); })).join(' · ');
+    var own = P && co.kind === 'charge' ? num(P.discountPctOfCost) + '% discount · ' + num(P.gaPct) + '% G&amp;A · ' + num(P.taxPct) + '% tax' + (P.labor && P.labor[0] ? ' · assembly ' + P.labor[0].hours + ' h × ' + $f(P.labor[0].rateCents) : '') : '';
+    var claims = (co.replaced || []).filter(function (r) { return r.claim && r.claim !== 'none'; }).map(function (r) { return (CO.CLAIMS[r.claim] || r.claim).replace(/ \(.*\)$/, ''); });
+    var absorbed = co.status !== 'withdrawn' && (co.absorbedCents || co.absorbedIsEstimate || (co.replaced || []).length || co.kind === 'courtesy') ? '<span class="p2-small fmp1-faint">Internal: shop absorbs ' + $f(co.absorbedCents || 0) +
+      (CO.claimPending(co) ? ' until the claim with the ' + esc(claims.join(' / ').toLowerCase()) + ' is paid' : co.absorbedIsEstimate ? (co.kind === 'courtesy' ? ' (before any supplier credit)' : ' (assumes the supplier takes the removed cabinets back in full)') : '') + '</span>' : '';
+    var credits = CO.creditsOf(co).filter(function (cr) { return cr.on || cr.by; }).map(function (cr) { return '<span class="p2-small fmp1-faint">' + (cr.from === 'freight' ? 'Freight carrier' : 'Supplier') + (cr.none ? ' won\'t credit the ' : ' credited ' + $f(cr.amountCents) + ' for the ') + (cr.for === 'returned' ? 'returned cabinets' : 'damage claim') + (cr.on ? ', ' + c.longDate(cr.on) : '') + (cr.reference ? ' (' + esc(cr.reference) + ')' : '') + '</span>'; }).join('');
+    var acts = [];
+    if (co.status === 'pending approval') acts.push(full ? '<button class="fmp1-btn fmp1-btn--primary" data-coapprove="' + esc(co.id) + '">Approve courtesy</button>' : '<span class="p2-small fmp1-faint">Waiting for someone with full access to approve.</span>');
+    if (co.status !== 'withdrawn') acts.push('<button class="fmp1-btn' + (acts.length ? ' fmp1-btn--quiet' : '') + '" data-codoc="' + esc(co.id) + '">Open change order</button>');
+    if (co.status !== 'withdrawn' && ((co.removed || []).length || (co.replaced || []).length)) acts.push('<button class="fmp1-btn fmp1-btn--quiet" data-cocredit="' + esc(co.id) + '">Record a credit</button>');
+    if (co.status !== 'withdrawn') acts.push('<label class="fmp1-btn fmp1-btn--quiet p2-filebtn">Attach a file<input type="file" data-upload data-upco="' + co.number + '" accept="' + window.FMFiles.accept() + '"></label>');
+    if (co.status === 'sent' || co.status === 'pending approval') acts.push('<button class="fmp1-btn fmp1-btn--quiet" data-cowd="' + esc(co.id) + '">Withdraw</button>');
+    var form = '';
+    if (ui.coCredit && ui.coCredit.id === co.id) {
+      var F = ui.coCredit, both = (co.removed || []).length && (co.replaced || []).length;
+      form = '<div class="p2-form" data-coform>' + (both ? '<label class="p2-fld"><span>For</span><select class="fmp1-input" data-cocr="for"><option value="returned"' + (F.for === 'returned' ? ' selected' : '') + '>Returned cabinets</option><option value="damaged"' + (F.for === 'damaged' ? ' selected' : '') + '>Damage claim</option></select></label>' : '') +
+        '<label class="p2-fld"><span>From</span><select class="fmp1-input" data-cocr="from"><option value="supplier">Supplier</option><option value="freight"' + (F.from === 'freight' ? ' selected' : '') + '>Freight carrier</option></select></label>' +
+        fld('Amount ($)', 'data-cocr="amount" inputmode="decimal" data-autofocus', F.amount) + fld('Date', 'data-cocr="on" max="' + c.TODAY + '"', F.on, 'date') + fld('Credit memo / reference', 'data-cocr="reference"', F.reference) +
+        '<label class="p2-row p2-small"><input type="checkbox" data-cocr="none"' + (F.none ? ' checked' : '') + '> They won\'t credit it</label>' +
+        '<button class="fmp1-btn fmp1-btn--primary" data-cocrsave>Save credit</button><button class="fmp1-btn fmp1-btn--quiet" data-cocrcancel>Cancel</button>' +
+        (F.error ? '<span class="p2-small" role="alert" style="color:var(--fmp1-alert-ink);flex-basis:100%">' + esc(F.error) + '</span>' : '') + '</div>';
+    }
+    if (ui.coWd && ui.coWd.id === co.id) form = '<div class="p2-form" data-coform>' + fld('Why it\'s withdrawn', 'data-cowdr data-autofocus', ui.coWd.reason) + '<button class="fmp1-btn fmp1-btn--primary" data-cowdsave>Withdraw</button><button class="fmp1-btn fmp1-btn--quiet" data-cowdcancel>Cancel</button>' +
+      (ui.coWd.error ? '<span class="p2-small" role="alert" style="color:var(--fmp1-alert-ink);flex-basis:100%">' + esc(ui.coWd.error) + '</span>' : '') + '</div>';
+    var docs = c.docRows(j, { packet: false, changeOrder: co.number });
+    return '<li style="flex-direction:column;align-items:stretch"' + (co.status === 'withdrawn' ? ' class="p2-co-wd"' : '') + '><div class="p2-between"><b>Change order ' + co.number + (co.kind === 'courtesy' ? ' · courtesy' : co.kind === 'notice' ? ' · no change to the contract' : co.amountCents < 0 ? ' · credit' : '') + '</b><span class="p2-row"><span class="fmp1-pill ' + (CO_TONE[co.status] || '') + '">' + esc(co.status) + '</span><b>' + $f(co.amountCents || 0) + '</b></span></div>' +
+      '<span class="p2-small fmp1-muted">' + c.longDate(co.date) + ' · ' + esc(co.reason || '') + (co.note ? ': ' + esc(co.note) : '') + '</span>' + (moves ? '<span class="p2-small">' + moves + '</span>' : '') +
+      (co.newDeliveryDate ? '<span class="p2-small">New delivery date ' + c.longDate(co.newDeliveryDate) + (co.status === 'sent' || co.status === 'pending approval' ? ' (applies once it goes through)' : '') + '</span>' : '') +
+      (own ? '<span class="p2-small fmp1-faint">Priced with ' + own + (co.differsFromJob && co.differsFromJob.length || co.source ? ' (its own settings)' : '') + (co.priced && co.priced.printed ? '. Numbers as printed on the executed PDF.' : '') + '</span>' : '') +
+      (window.P2Elev && window.P2Elev.coNote ? window.P2Elev.coNote(c, j, co) : '') + absorbed + credits +
+      (co.withdrawn ? '<span class="p2-small fmp1-faint">Withdrawn by ' + esc(co.withdrawn.by) + (co.withdrawn.on ? ' on ' + c.longDate(co.withdrawn.on) : '') + ': ' + esc(co.withdrawn.reason) + '</span>' : '') +
+      (co.status === 'sent' && window.P2Sign ? window.P2Sign.coBlock(c, j, co) : '') +
+      docs + (acts.length ? '<span class="p2-row p2-wrap">' + acts.join('') + '</span>' : '') + form + '</li>';
+  }
+
   function renderChanges(c, j) {
-    var esc = c.esc, $f = c.money, f = c.ui.co && c.ui.co.job === j.jobCode ? c.ui.co : null;
-    var list = (j.changeOrders || []).map(function (co) {
-      var tone = co.status === 'pending approval' ? 'fmp1-pill--alert' : co.status === 'sent' ? 'fmp1-pill--proposed' : 'fmp1-pill--good';
-      var lines = (co.removed || []).map(function (r) { return 'Removed ' + esc(r.sku) + ' ×' + r.qty; }).concat((co.added || []).map(function (a) { return 'Added ' + esc(a.sku) + ' ×' + a.qty; })).join(' · ');
-      var actions = '';
-      if (co.status === 'pending approval') actions = c.me().access === 'full' ? '<button class="fmp1-btn fmp1-btn--primary" data-coapprove="' + esc(co.id) + '">Approve courtesy</button>' : '<span class="p2-small fmp1-faint">Waiting for someone with full access to approve.</span>';
-      if (co.status === 'sent') actions = '<button class="fmp1-btn fmp1-btn--primary" data-cosigned="' + esc(co.id) + '">Buyer signed (simulate)</button>';
-      if (co.priced && co.priced.lines && co.priced.lines.length) actions += '<button class="fmp1-btn' + (actions ? ' fmp1-btn--quiet' : '') + '" data-codoc="' + esc(co.id) + '">Open change order</button>';
-      var P = co.pricing, own = P ? num(P.discountPctOfCost) + '% discount · ' + num(P.gaPct) + '% G&amp;A · ' + num(P.taxPct) + '% tax' + (P.labor && P.labor[0] ? ' · assembly ' + P.labor[0].hours + ' h × ' + $f(P.labor[0].rateCents) : '') : '';
-      return '<li style="flex-direction:column;align-items:stretch"><div class="p2-between"><b>Change order ' + co.number + (co.kind === 'courtesy' ? ' · courtesy' : '') + '</b><span class="p2-row"><span class="fmp1-pill ' + tone + '">' + esc(co.status) + '</span><b>' + $f(co.amountCents || 0) + '</b></span></div>' +
-        '<span class="p2-small fmp1-muted">' + c.longDate(co.date) + ' · ' + esc(co.reason || '') + (co.note ? ': ' + esc(co.note) : '') + '</span>' + (lines ? '<span class="p2-small">' + lines + '</span>' : '') +
-        (own && co.kind === 'charge' ? '<span class="p2-small fmp1-faint">Priced with ' + own + (co.differsFromJob && co.differsFromJob.length || co.source ? ' (its own settings)' : '') + (co.priced && co.priced.printed ? '. Numbers as printed on the executed PDF.' : '') + '</span>' : '') +
-        (window.P2Elev && window.P2Elev.coNote ? window.P2Elev.coNote(c, j, co) : '') + (co.kind === 'courtesy' ? '<span class="p2-small fmp1-faint">Internal: shop absorbed ' + $f(co.absorbedCents || 0) + (co.absorbedIsEstimate ? ' (before any supplier credit)' : '') + '</span>' : '') + (actions ? '<span class="p2-row">' + actions + '</span>' : '') + '</li>';
-    }).join('');
+    var f = c.ui.co && c.ui.co.job === j.jobCode ? c.ui.co : null, cos = j.changeOrders || [];
     var canStart = j.stage !== 'quote' && j.stage !== 'lost';
-    var head = '<div class="fmp1-card p2-pad"><div class="p2-between"><span class="fmp1-eyebrow">Change orders · ' + (j.changeOrders || []).length + '</span>' +
+    var head = '<div class="fmp1-card p2-pad"><div class="p2-between"><span class="fmp1-eyebrow">Change orders · ' + cos.length + '</span>' +
       (f ? '' : canStart ? '<button class="fmp1-btn fmp1-btn--primary" data-costart>New change order</button>' : '<span class="p2-small fmp1-faint">Change orders apply to signed jobs. Edit the quote instead.</span>') + '</div>' +
-      (list ? '<ul class="p2-list">' + list + '</ul>' : '<p class="p2-empty">No change orders on this job.</p>') + '</div>';
+      (c.ui.up && c.ui.up.job === j.jobCode && c.ui.up.co != null && (c.ui.up.msg || c.ui.up.err) ? (c.ui.up.err ? '<div class="fmp1-note fmp1-note--alert p2-small" role="alert"><span>' + c.esc(c.ui.up.err.join(' ')) + '</span></div>' : '<div class="fmp1-note fmp1-note--good p2-small" role="status">✓ ' + c.esc(c.ui.up.msg) + '</div>') : '') +
+      (cos.length ? '<ul class="p2-list">' + cos.map(function (co) { return coCard(c, j, co); }).join('') + '</ul>' : '<p class="p2-empty">No change orders on this job. Anything that changes after the contract is signed (more cabinets, a swap, a return, a backorder, damage) goes here.</p>') + '</div>';
     return head + (f ? coFlow(c, j, f) : '');
   }
+
   function coFlow(c, j, f) {
-    var esc = c.esc, $f = c.money, d = coDiff(f), set = settingsFor(j), sfx = houseSuffix(c, j, f.house);
+    var esc = c.esc, $f = c.money, d = coDiff(f), sfx = houseSuffix(c, j, f.house), T = CO.TYPES[f.type];
     var tabs = '<nav class="p2-tabs" aria-label="Change order steps">' + CO_STEPS.map(function (s, i) { return '<a href="#" data-costep="' + i + '"' + (i === f.step ? ' aria-current="page"' : '') + '>' + (i + 1) + '. ' + s + '</a>'; }).join('') + '</nav>';
     var body;
     if (f.step === 0) {
-      body = (j.houses && j.houses.length > 1 ? '<label class="p2-fld"><span>House</span><select class="fmp1-input" data-cof="house">' + j.houses.map(function (h) { return '<option value="' + esc(h.jobCode) + '"' + (f.house === h.jobCode ? ' selected' : '') + '>' + esc(h.name + ' · ' + h.color) + '</option>'; }).join('') + '</select></label><p class="p2-note">A PDF that covers several houses is split by color; each color goes to the houses that use it.</p>' : '') +
-        '<label class="p2-fld"><span>Reason</span><select class="fmp1-input" data-cof="reason">' + Object.keys(CO.CHANGE_REASONS).map(function (k) { return '<option value="' + k + '"' + (f.reason === k ? ' selected' : '') + '>' + CO.CHANGE_REASONS[k] + '</option>'; }).join('') + '</select></label>' +
-        '<label class="p2-fld"><span>Note for the paper trail</span><textarea class="fmp1-input" rows="2" data-cof="note">' + esc(f.note) + '</textarea></label>';
+      body = '<div class="p2-cotypes" role="group" aria-label="What happened">' + Object.keys(CO.TYPES).map(function (k) {
+          return '<button class="p2-cotype" data-cotype="' + k + '" aria-pressed="' + (f.type === k) + '"><b>' + esc(CO.TYPES[k].label) + '</b><span>' + esc(CO.TYPES[k].help) + '</span></button>'; }).join('') + '</div>' +
+        (f.type === 'backorder' ? '<div class="p2-chips" role="group" aria-label="Backordered: what are we doing?"><button class="fmp1-btn" data-cobo="swap" aria-pressed="' + (f.boMode === 'swap') + '"><b>Swap in another cabinet</b></button><button class="fmp1-btn" data-cobo="wait" aria-pressed="' + (f.boMode === 'wait') + '"><b>Wait for it</b>&nbsp;and record the new date</button></div>' : '') +
+        (j.houses && j.houses.length > 1 ? '<label class="p2-fld"><span>House</span><select class="fmp1-input" data-cof="house">' + j.houses.map(function (h) { return '<option value="' + esc(h.jobCode) + '"' + (f.house === h.jobCode ? ' selected' : '') + '>' + esc(h.name + ' · ' + h.color) + '</option>'; }).join('') + '</select></label><p class="p2-note">A PDF that covers several houses is split by color; each color goes to the houses that use it.</p>' : '') +
+        '<label class="p2-fld"><span>What happened, in a sentence (for the paper trail)</span><textarea class="fmp1-input" rows="2" data-cof="note" placeholder="' + esc(T ? { add: 'Buyer added a pantry cabinet', swap: 'Buyer wants a 36" sink base instead of the 30"', remove: 'Buyer is returning two wall cabinets', backorder: 'B30 backordered until Dec 12', damage: 'W3042 arrived with a cracked side panel', mistake: 'We ordered the wrong hinge side', other: 'Second delivery trip' }[f.type] : '') + '">' + esc(f.note) + '</textarea></label>' +
+        '<div class="p2-row p2-wrap">' + fld('New delivery date' + (f.type === 'backorder' && f.boMode === 'wait' ? '' : ' (only if it moves)'), 'data-cof="newDate"', f.newDate, 'date') +
+        '<span class="p2-small fmp1-faint">Now ' + c.longDate(j.deliveryDate) + '. It changes on the job once this change order goes through.</span></div>';
     } else if (f.step === 1) {
-      var bad = CO.colorCheck(f.current.filter(function (l) { return l.qty > 0; }), sfx);
-      var before = {}; f.base.forEach(function (l) { before[l.sku] = l.qty; });
-      body = '<label class="p2-fld"><span>Add from a supplier PDF (adds to the list; never lowers a quantity)</span><select class="fmp1-input" data-copdf><option value="">Choose a PDF…</option>' + samplePdfs().map(function (p) { return '<option value="' + p.id + '">' + esc(p.name) + '</option>'; }).join('') + '</select></label>' +
+      var bad = CO.colorCheck(f.current.filter(function (l) { return l.qty > 0; }), sfx), before = {}, wait = f.type === 'backorder' && f.boMode === 'wait';
+      f.base.forEach(function (l) { before[l.sku] = l.qty; });
+      var tip = CO_TIPS[wait ? 'backorder_wait' : f.type] || CO_TIPS.other, known = knownSkus(f), A = f.addForm, R = f.rowForm;
+      var addForm = A ? '<div class="p2-form" data-coform><b style="flex-basis:100%">Add a cabinet</b>' + fld('SKU', 'data-coadd="sku" list="p2-co-skus" data-autofocus', A.sku) + fld('Description', 'data-coadd="desc"', A.desc) +
+          fld('Qty', 'data-coadd="qty" inputmode="numeric"', A.qty) + fld('Unit cost ($)', 'data-coadd="cost" inputmode="decimal"', A.cost) +
+          '<button class="fmp1-btn fmp1-btn--primary" data-coaddsave>Add</button><button class="fmp1-btn fmp1-btn--quiet" data-coaddcancel>Cancel</button>' +
+          '<span class="p2-small fmp1-faint" style="flex-basis:100%">A SKU from the order or a supplier PDF fills in its description and cost. Unit cost is the supplier\'s price before the manufacturer discount.</span>' +
+          (A.errors ? '<ul class="p2-errs p2-small" role="alert" style="color:var(--fmp1-alert-ink);flex-basis:100%">' + A.errors.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '') + '</div>' : '';
+      var list = '<datalist id="p2-co-skus">' + Object.keys(known).map(function (k) { return '<option value="' + esc(known[k].sku) + '">' + esc(known[k].desc || '') + '</option>'; }).join('') + '</datalist>';
+      var rows = f.current.map(function (l, i) {
+        var b = before[l.sku] || 0, changed = b !== l.qty;
+        var row = '<tr' + (changed ? ' class="p2-co-chg"' : '') + '><td class="fmp1-code">' + esc(l.sku) + (l.swapFor ? '<br><span class="p2-small fmp1-faint">swapped for ' + esc(l.swapFor) + '</span>' : '') + '</td><td class="p2-np-desc">' + esc(l.desc || '') + '</td>' +
+          '<td><span class="p2-row" style="flex-wrap:nowrap"><button class="fmp1-btn" data-coqty="' + i + '" data-d="-1" aria-label="One fewer ' + esc(l.sku) + '"' + (l.qty ? '' : ' disabled') + '>−</button><b style="min-width:1.5em;text-align:center">' + l.qty + '</b><button class="fmp1-btn" data-coqty="' + i + '" data-d="1" aria-label="One more ' + esc(l.sku) + '">+</button></span></td>' +
+          '<td class="r">' + (changed ? b + ' → ' + l.qty : '') + '</td><td class="r">' + $f(l.unitCostCents) + '</td>' +
+          '<td class="r p2-act">' + (l.qty > 0 ? (wait ? '<button class="fmp1-btn fmp1-btn--quiet" data-corow="wait:' + i + '">Backordered</button>' : '<button class="fmp1-btn fmp1-btn--quiet" data-corow="swap:' + i + '">Swap</button><button class="fmp1-btn fmp1-btn--quiet" data-corow="repl:' + i + '">Replace</button>') : '') + '</td></tr>';
+        if (R && R.idx === i) {
+          var inner = R.kind === 'swap' ? '<b style="flex-basis:100%">Swap ' + esc(l.sku) + ' for another cabinet</b>' + fld('How many', 'data-corf="qty" inputmode="numeric"', R.qty) + fld('New SKU', 'data-corf="sku" list="p2-co-skus" data-autofocus', R.sku) + fld('Description', 'data-corf="desc"', R.desc) + fld('Unit cost ($)', 'data-corf="cost" inputmode="decimal"', R.cost) +
+              '<button class="fmp1-btn fmp1-btn--primary" data-corfsave>Swap</button>'
+            : R.kind === 'repl' ? '<b style="flex-basis:100%">Replace damaged ' + esc(l.sku) + ' (reordered at our cost; the customer\'s order doesn\'t change)</b>' + fld('How many', 'data-corf="qty" inputmode="numeric" data-autofocus', R.qty) + fld('Unit cost ($)', 'data-corf="cost" inputmode="decimal"', R.cost) +
+              '<label class="p2-fld"><span>Claim goes to</span><select class="fmp1-input" data-corf="claim"><option value="">Choose…</option>' + Object.keys(CO.CLAIMS).map(function (k) { return '<option value="' + k + '"' + (R.claim === k ? ' selected' : '') + '>' + esc(CO.CLAIMS[k]) + '</option>'; }).join('') + '</select></label>' +
+              fld('What\'s wrong with it', 'data-corf="why" placeholder="cracked side panel"', R.why) + '<button class="fmp1-btn fmp1-btn--primary" data-corfsave>Add replacement</button>'
+            : '<b style="flex-basis:100%">' + esc(l.sku) + ' is backordered</b>' + fld('How many', 'data-corf="qty" inputmode="numeric" data-autofocus', R.qty) + '<button class="fmp1-btn fmp1-btn--primary" data-corfsave>Mark backordered</button>';
+          row += '<tr><td colspan="6"><div class="p2-form" data-coform>' + inner + '<button class="fmp1-btn fmp1-btn--quiet" data-corfcancel>Cancel</button>' + (R.error ? '<span class="p2-small" role="alert" style="color:var(--fmp1-alert-ink);flex-basis:100%">' + esc(R.error) + '</span>' : '') + '</div></td></tr>';
+        }
+        return row;
+      }).join('');
+      var repl = f.replaced.length ? '<div class="p2-co-sub"><b>Replacements at our cost</b><span class="p2-small fmp1-faint"> · not billed to the customer · ' + $f(replacedCost(f)) + '</span><ul class="p2-list">' + f.replaced.map(function (r, i) {
+          return '<li><span><span class="fmp1-code">' + esc(r.sku) + '</span> ×' + r.qty + ' · ' + $f(r.unitCostCents * r.qty) + (r.why ? ' · ' + esc(r.why) : '') + ' · claim: ' + esc(CO.CLAIMS[r.claim] || '') + '</span><button class="fmp1-btn fmp1-btn--quiet" data-corm="replaced:' + i + '">Remove</button></li>'; }).join('') + '</ul></div>' : '';
+      var waits = f.waitFor.length ? '<div class="p2-co-sub"><b>Backordered</b><ul class="p2-list">' + f.waitFor.map(function (w, i) { return '<li><span><span class="fmp1-code">' + esc(w.sku) + '</span> ×' + w.qty + (f.newDate ? ' · now expected ' + c.longDate(f.newDate) : '') + '</span><button class="fmp1-btn fmp1-btn--quiet" data-corm="waitFor:' + i + '">Remove</button></li>'; }).join('') + '</ul></div>' : '';
+      var extras = '<div class="p2-co-sub"><b>Other charges or credits</b><span class="p2-small fmp1-faint"> · restocking fee, freight, extra labor, or a credit (enter a credit as a minus amount)</span>' +
+        (f.extras.length ? '<div class="fmp1-table-wrap"><table class="fmp1-table p2-co-extras"><tbody>' + f.extras.map(function (x, i) {
+          return '<tr><td><input class="fmp1-input" data-coex="' + i + ':label" value="' + esc(x.label) + '" aria-label="What it is"></td><td class="r"><input class="fmp1-input p2-amt" inputmode="decimal" data-coex="' + i + ':amount" value="' + esc(x.amount) + '" aria-label="Amount" placeholder="0.00"></td>' +
+            '<td><label class="p2-row p2-small"><input type="checkbox" data-coex="' + i + ':taxable"' + (x.taxable ? ' checked' : '') + '> taxable</label></td><td class="r"><button class="fmp1-btn fmp1-btn--quiet" data-corm="extras:' + i + '">Remove</button></td></tr>'; }).join('') + '</tbody></table></div>' : '') +
+        '<div class="p2-row p2-wrap">' + EXTRA_PRESETS.map(function (p, i) { return '<button class="fmp1-btn fmp1-btn--quiet" data-coexadd="' + i + '">+ ' + p[0] + '</button>'; }).join('') + '</div></div>';
+      body = '<p class="p2-note">' + esc(tip) + '</p>' +
+        '<div class="p2-row p2-wrap">' + (A ? '' : '<button class="fmp1-btn" data-coaddopen>+ Add a cabinet</button>') + '<label class="p2-fld" style="min-width:240px"><span>Or add every line from a supplier PDF</span><select class="fmp1-input" data-copdf><option value="">Choose a PDF…</option>' + samplePdfs().map(function (p) { return '<option value="' + p.id + '">' + esc(p.name) + '</option>'; }).join('') + '</select></label></div>' + addForm + list +
         (bad.length ? '<div class="fmp1-note fmp1-note--alert p2-small" role="alert">' + bad.length + ' cabinet line' + (bad.length > 1 ? 's don\'t' : ' doesn\'t') + ' match this house\'s color (' + esc(COLORS[sfx] || sfx) + '): ' + bad.map(function (b) { return esc(b.sku); }).join(', ') + '. <label class="p2-row" style="display:inline-flex"><input type="checkbox" data-cocolor' + (f.colorOk ? ' checked' : '') + '> keep anyway (logged)</label></div>' : '') +
-        '<div class="fmp1-table-wrap"><table class="fmp1-table p2-table"><thead><tr><th>SKU</th><th>Qty</th><th class="r">Change</th><th class="r">Unit cost</th></tr></thead><tbody>' + f.current.map(function (l, i) {
-          var b = before[l.sku] || 0, changed = b !== l.qty;
-          return '<tr' + (changed ? ' style="background:var(--fmp1-info-soft)"' : '') + '><td class="fmp1-code">' + esc(l.sku) + '</td><td><span class="p2-row"><button class="fmp1-btn" data-coqty="' + i + '" data-d="-1" aria-label="One fewer ' + esc(l.sku) + '">−</button>' + l.qty + '<button class="fmp1-btn" data-coqty="' + i + '" data-d="1" aria-label="One more ' + esc(l.sku) + '">+</button></span></td><td class="r">' + (changed ? b + ' → ' + l.qty : '') + '</td><td class="r">' + $f(l.unitCostCents) + '</td></tr>';
-        }).join('') + '</tbody></table></div>';
+        '<div class="fmp1-table-wrap"><table class="fmp1-table p2-table p2-co-lines"><thead><tr><th>SKU</th><th>Description</th><th>Qty</th><th class="r">Change</th><th class="r">Unit cost</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>' + repl + waits + extras;
     } else if (f.step === 2) {
-      var p = coPriced(f), P = f.pricing, sm = p.ok ? p.summary : null, diff = coDiffers(j, f);
+      var p = coPriced(f), P = f.pricing, sm = p.ok ? p.summary : null, diff = coDiffers(j, f), sells = sellChanges(f), sg = CO.suggest(f.type, d, goodExtras(f));
       f.priced = p;
       var box = '<div class="p2-np-boxes"><section class="p2-np-box p2-np-wide"><div class="p2-between"><b>Pricing for this change order</b>' +
           (diff.length || P.asmHours ? '<a href="#" class="p2-small" data-coreset>Reset to job settings</a>' : '<span class="p2-small fmp1-faint">Same as the job</span>') + '</div><div class="p2-np-set">' +
@@ -522,69 +614,107 @@
           fld('Hours', 'data-cop="asmHours" inputmode="decimal"', P.asmHours) + '<span class="p2-np-op" aria-hidden="true">×</span>' + fld('Hourly rate ($)', 'data-cop="asmRate" inputmode="decimal"', P.asmRate) +
           '<span class="p2-np-op" aria-hidden="true">=</span><div class="p2-fld"><span>Labor</span><b class="p2-np-asmtotal">' + $f(sm ? sm.laborCents : 0) + '</b></div></div>' +
           '<span class="p2-small fmp1-faint">Leave hours blank if the change needs no assembly.</span></section></div>';
-      var rows = p.ok ? p.lines.map(function (l) {
+      var rows2 = p.ok ? p.lines.map(function (l) {
+        if (l.extra) return '<tr><td class="fmp1-faint">other</td><td class="p2-np-desc">' + esc(l.desc) + '</td><td class="r">1</td><td class="r"></td><td class="r"></td><td class="r">' + $f(l.totalCents) + '</td></tr>';
         var cur = f.current.filter(function (x) { return x.sku === l.sku; })[0], idx = f.current.indexOf(cur);
         return '<tr' + (l.removed ? ' class="p2-co-rm"' : '') + '><td class="fmp1-code">' + esc(l.sku) + (cur && cur.mkEdited && !l.removed ? ' <span class="fmp1-pill">edited</span>' : '') + '</td><td class="p2-np-desc">' + esc(l.desc || '') + '</td><td class="r">' + (l.qty > 0 ? '+' : '−') + Math.abs(l.qty) + '</td><td class="r">' + $f(l.unitCostCents) + '</td>' +
           '<td class="r">' + (l.removed ? '<span class="fmp1-faint" title="Credited at the markup it was sold at">' + l.markupPct + '</span>' : '<input class="fmp1-input p2-np-mk" inputmode="decimal" aria-label="Markup for ' + esc(l.sku) + '" data-coline="' + idx + '" value="' + l.markupPct + '">') + '</td><td class="r">' + $f(l.totalCents) + '</td></tr>';
       }).join('') : '';
       var sum = sm ? '<table class="fmp1-table p2-co-sum"><tbody>' + [['Cabinets', sm.cabinetsCents], sm.discountCents ? ['Mfr. bulk discount (' + num(P.discountPctOfCost) + '% of cost)', sm.discountCents] : null, sm.laborCents ? ['Assembly labor', sm.laborCents] : null,
-          sm.gaCents ? ['G&amp;A (' + num(P.gaPct) + '%)', sm.gaCents] : null, sm.taxCents ? ['Tax (' + num(P.taxPct) + '% on product)', sm.taxCents] : null].filter(Boolean).map(function (r) { return '<tr><td>' + r[0] + '</td><td class="r">' + $f(r[1]) + '</td></tr>'; }).join('') +
-          '<tr class="p2-co-total"><td>This change</td><td class="r">' + $f(sm.totalCents) + '</td></tr></tbody></table>' : '<div class="fmp1-note fmp1-note--alert p2-small" role="alert">' + esc(p.error) + '</div>';
-      body = box + '<div class="fmp1-table-wrap"><table class="fmp1-table p2-np-lines p2-np-price"><thead><tr><th>SKU</th><th>Description</th><th class="r">Change</th><th class="r">Unit cost</th><th class="r">Markup %</th><th class="r">Sell</th></tr></thead><tbody>' + rows + '</tbody></table></div>' + sum +
-        '<div class="p2-chips" role="group" aria-label="How it\'s billed">' + [['charge', 'Charge it', p.ok ? $f(p.deltaCents) : '—'], ['courtesy', 'Courtesy', '$0.00'], ['custom', 'Agreed amount', 'You enter it']].map(function (o) {
-          return '<button class="fmp1-btn" data-cochoice="' + o[0] + '" aria-pressed="' + (f.choice === o[0]) + '"><b>' + o[1] + '</b>&nbsp;' + o[2] + '</button>'; }).join('') + '</div>' +
-        '<p class="p2-note">Nothing is chosen until you pick. Tab moves line to line; type to replace a markup.</p>' +
+          sm.otherCents ? ['Other charges and credits', sm.otherCents] : null, sm.gaCents ? ['G&amp;A (' + num(P.gaPct) + '%)', sm.gaCents] : null, sm.taxCents ? ['Tax (' + num(P.taxPct) + '% on product)', sm.taxCents] : null].filter(Boolean).map(function (r) { return '<tr><td>' + r[0] + '</td><td class="r">' + $f(r[1]) + '</td></tr>'; }).join('') +
+          '<tr class="p2-co-total"><td>This change' + (sm.totalCents < 0 ? ' (a credit to the customer)' : '') + '</td><td class="r">' + $f(sm.totalCents) + '</td></tr></tbody></table>' : '<div class="fmp1-note fmp1-note--alert p2-small" role="alert">' + esc(p.error) + '</div>';
+      var rc = replacedCost(f);
+      body = (sells || num(P.asmHours) > 0 ? box + '<div class="fmp1-table-wrap"><table class="fmp1-table p2-np-lines p2-np-price"><thead><tr><th>SKU</th><th>Description</th><th class="r">Change</th><th class="r">Unit cost</th><th class="r">Markup %</th><th class="r">Sell</th></tr></thead><tbody>' + rows2 + '</tbody></table></div>' + sum
+          : '<p class="p2-note">Nothing on the customer\'s order changes price' + (f.waitFor.length ? ': the backordered cabinets are still coming' : '') + '.</p>') +
+        (rc ? '<div class="fmp1-note fmp1-note--info p2-small"><span>Replacements at our cost: <b>' + $f(rc) + '</b>. Not billed to the customer. ' + (f.replaced.some(function (r) { return r.claim && r.claim !== 'none'; }) ? 'Record the claim payment on the change order when it comes in, and the shop\'s cost drops by that much.' : 'The shop covers it.') + '</span></div>' : '') +
+        (sg ? '<p class="p2-note">' + esc(sg.text) + '</p>' : '') +
+        '<div class="p2-chips" role="group" aria-label="How it\'s billed">' + [['charge', 'Charge it', p.ok ? $f(p.deltaCents) : '—', !sells], ['courtesy', 'Courtesy', '$0.00', !sells && !rc], ['custom', 'Agreed amount', 'You enter it', false], ['nochange', 'No change to the contract', '$0.00', sells]].map(function (o) {
+          return '<button class="fmp1-btn" data-cochoice="' + o[0] + '" aria-pressed="' + (f.choice === o[0]) + '"' + (o[3] ? ' disabled title="' + (o[0] === 'nochange' ? 'Cabinets or charges change: charge it, courtesy, or an agreed amount' : 'Nothing on the order changes price') + '"' : '') + '><b>' + o[1] + '</b>&nbsp;' + o[2] + '</button>'; }).join('') + '</div>' +
+        '<p class="p2-note">Nothing is chosen until you pick.' + (sells ? ' Tab moves line to line; type to replace a markup.' : '') + '</p>' +
         (f.choice === 'custom' ? '<div class="p2-form">' + fld('Agreed amount ($)', 'data-cof="customAmt" inputmode="decimal"', f.customAmt) + fld('Why it differs', 'data-cof="customNote"', f.customNote) + '</div>' : '') +
-        (f.choice === 'courtesy' ? '<p class="p2-note">No charge to the customer. Someone with full access approves it, and the cost the shop absorbs is recorded.</p>' : '');
+        (f.choice === 'courtesy' ? '<p class="p2-note">No charge to the customer. Someone with full access approves it, and the cost the shop absorbs is recorded.</p>' : '') +
+        (f.choice === 'nochange' ? '<p class="p2-note">Recorded as soon as you save. Nothing to approve or sign; open the change order to send the customer a notice.</p>' : '');
     } else {
       f.priced = coPriced(f);
-      var amt = f.choice === 'courtesy' ? 0 : f.choice === 'charge' ? (f.priced && f.priced.ok ? f.priced.deltaCents : 0) : toCents(f.customAmt);
-      body = '<ul class="p2-list"><li><span>Reason</span><b>' + esc(CO.CHANGE_REASONS[f.reason]) + (f.note ? ': ' + esc(f.note) : '') + '</b></li>' +
-        '<li><span>Cabinets</span><b>' + (d.added.length + d.removed.length ? d.removed.map(function (r) { return '−' + esc(r.sku) + ' ×' + r.qty; }).concat(d.added.map(function (a) { return '+' + esc(a.sku) + ' ×' + a.qty; })).join(', ') : 'No cabinet changes') + '</b></li>' +
-        (f.choice === 'charge' && f.priced && f.priced.ok ? '<li><span>Priced with</span><b>' + num(f.pricing.markupPct) + '% markup on new lines · ' + num(f.pricing.discountPctOfCost) + '% discount · ' + num(f.pricing.gaPct) + '% G&amp;A · ' + num(f.pricing.taxPct) + '% tax' +
+      var amt = f.choice === 'courtesy' || f.choice === 'nochange' ? 0 : f.choice === 'charge' ? (f.priced && f.priced.ok ? f.priced.deltaCents : 0) : toCents(f.customAmt);
+      body = '<ul class="p2-list"><li><span>What happened</span><b>' + esc(reasonLabel(f)) + (f.note ? ': ' + esc(f.note) : '') + '</b></li>' +
+        '<li><span>Cabinets</span><b>' + (d.added.length + d.removed.length ? d.removed.map(function (r) { return '−' + esc(r.sku) + ' ×' + r.qty; }).concat(d.added.map(function (a) { return '+' + esc(a.sku) + ' ×' + a.qty; })).join(', ') : 'No change to the order') + '</b></li>' +
+        (f.replaced.length ? '<li><span>Replaced at our cost</span><b>' + f.replaced.map(function (r) { return esc(r.sku) + ' ×' + r.qty; }).join(', ') + ' · ' + $f(replacedCost(f)) + '</b></li>' : '') +
+        (f.waitFor.length ? '<li><span>Backordered</span><b>' + f.waitFor.map(function (w) { return esc(w.sku) + ' ×' + w.qty; }).join(', ') + '</b></li>' : '') +
+        (goodExtras(f).length ? '<li><span>Other charges or credits</span><b>' + goodExtras(f).map(function (x) { return esc(x.label) + ' ' + $f(x.amountCents); }).join(', ') + '</b></li>' : '') +
+        (f.newDate ? '<li><span>Delivery date</span><b>' + c.longDate(j.deliveryDate) + ' → ' + c.longDate(f.newDate) + '</b></li>' : '') +
+        (f.choice === 'charge' && f.priced && f.priced.ok && needsPricing(f) ? '<li><span>Priced with</span><b>' + num(f.pricing.markupPct) + '% markup on new lines · ' + num(f.pricing.discountPctOfCost) + '% discount · ' + num(f.pricing.gaPct) + '% G&amp;A · ' + num(f.pricing.taxPct) + '% tax' +
           (f.priced.summary.laborCents ? ' · assembly ' + num(f.pricing.asmHours) + ' h × ' + $f(toCents(f.pricing.asmRate)) : '') + '</b></li>' : '') +
-        '<li><span>This change</span><b>' + $f(isNaN(amt) ? 0 : amt) + (f.choice === 'courtesy' ? ' (courtesy)' : '') + '</b></li>' +
+        '<li><span>This change</span><b>' + $f(isNaN(amt) ? 0 : amt) + (f.choice === 'courtesy' ? ' (courtesy)' : f.choice === 'nochange' ? ' (no change to the contract)' : '') + '</b></li>' +
         '<li><span>Billing</span><b>' + (amt > 0 ? 'Its own invoice, due on signing' : amt < 0 ? 'A credit on the next invoice' : 'No invoice') + '</b></li></ul>' +
-        '<p class="p2-note">' + (f.choice === 'courtesy' ? 'Saves as a courtesy change order for someone with full access to approve, then goes to the buyer to acknowledge.' : 'Sends to the buyer for signature. The contract total and the invoice switch on when it\'s signed.') + '</p>';
+        '<p class="p2-note">' + (f.choice === 'courtesy' ? 'Saves as a courtesy change order for someone with full access to approve, then goes to the buyer to acknowledge.' : f.choice === 'nochange' ? 'Recorded now. The delivery date and the shop\'s cost update on the job right away.' : 'Sends to the buyer for signature. The contract total, the invoice and any new date switch on when it\'s signed.') + '</p>';
     }
     var errs = f.errors && f.errors.length ? '<div class="fmp1-note fmp1-note--alert p2-small" role="alert"><ul class="p2-errs">' + f.errors.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>' : '';
-    return '<div class="fmp1-card p2-pad"><div class="p2-between"><b>New change order ' + ((j.changeOrders || []).length + 1) + '</b><button class="fmp1-btn fmp1-btn--quiet" data-cocancel>Cancel</button></div>' + tabs + errs + body +
-      '<div class="p2-between"><button class="fmp1-btn fmp1-btn--quiet" data-coback' + (f.step ? '' : ' disabled') + '>Back</button>' + (f.step < 3 ? '<button class="fmp1-btn fmp1-btn--primary" data-conext>Next</button>' : '<button class="fmp1-btn fmp1-btn--primary" data-cosave>' + (f.choice === 'courtesy' ? 'Save for approval' : 'Send for signature') + '</button>') + '</div></div>';
+    return '<div class="fmp1-card p2-pad" data-coflow><div class="p2-between"><b>New change order ' + ((j.changeOrders || []).length + 1) + (T ? ' · ' + esc(T.label) : '') + '</b><button class="fmp1-btn fmp1-btn--quiet" data-cocancel>Cancel</button></div>' + tabs + errs + body +
+      '<div class="p2-between"><button class="fmp1-btn fmp1-btn--quiet" data-coback' + (f.step ? '' : ' disabled') + '>Back</button>' + (f.step < 3 ? '<button class="fmp1-btn fmp1-btn--primary" data-conext>Next</button>' : '<button class="fmp1-btn fmp1-btn--primary" data-cosave>' + (f.choice === 'courtesy' ? 'Save for approval' : f.choice === 'nochange' ? 'Record it' : 'Send for signature') + '</button>') + '</div></div>';
   }
   function coStepErrors(c, j, f) {
-    var e = [], d = coDiff(f);
-    if (f.step === 0 && !String(f.note).trim()) e.push('Add a note for the paper trail.');
+    var e = [], d = coDiff(f), iso = /^\d{4}-\d{2}-\d{2}$/;
+    if (f.step === 0) {
+      if (!f.type) e.push('Choose what happened.');
+      if (f.type === 'backorder' && !f.boMode) e.push('Backordered: swap in another cabinet, or wait for it?');
+      if (!String(f.note).trim()) e.push('Add a sentence for the paper trail.');
+      if (f.type === 'backorder' && f.boMode === 'wait' && !iso.test(f.newDate || '')) e.push('Enter when the backordered cabinets are now expected (the new delivery date).');
+      if (f.newDate && !iso.test(f.newDate)) e.push('Enter the new delivery date as a date.');
+    }
     if (f.step === 1) {
-      if (!d.added.length && !d.removed.length) e.push('Add or remove at least one cabinet.');
+      if (f.addForm || f.rowForm) e.push('Finish or cancel the open form first.');
+      var bad = coExtras(f).filter(function (x) { return !String(x.label || '').trim() || !x.amountCents || isNaN(x.amountCents); });
+      if (bad.length) e.push('Each other charge or credit needs a name and an amount (or remove it).');
+      if (!d.added.length && !d.removed.length && !f.replaced.length && !goodExtras(f).length && !f.waitFor.length && !f.newDate)
+        e.push(f.type === 'backorder' && f.boMode === 'wait' ? 'Click Backordered on at least one cabinet.' : 'Change at least one cabinet (add, remove, swap or replace), or add a charge or credit.');
       if (CO.colorCheck(f.current.filter(function (l) { return l.qty > 0; }), houseSuffix(c, j, f.house)).length && !f.colorOk) e.push('Fix the wrong-color cabinets, or tick "keep anyway".');
     }
     if (f.step === 2) {
       var P = f.pricing, names = { markupPct: 'Markup', discountPctOfCost: 'Discount', gaPct: 'G&A', taxPct: 'Sales tax' };
-      Object.keys(names).forEach(function (k) { if (!(num(P[k]) >= 0)) e.push(names[k] + ' must be a number, 0 or more.'); });
-      if (String(P.asmHours).trim() && !(num(P.asmHours) >= 0)) e.push('Assembly hours must be a number, 0 or more.');
-      if (num(P.asmHours) > 0 && !(toCents(P.asmRate) > 0)) e.push('Enter the hourly rate for the assembly.');
-      f.current.forEach(function (l) { if (l.mkEdited && !(num(l.markupPct) >= 0)) e.push(l.sku + ': markup must be 0% or more.'); });
+      if (needsPricing(f)) {
+        Object.keys(names).forEach(function (k) { if (!(num(P[k]) >= 0)) e.push(names[k] + ' must be a number, 0 or more.'); });
+        if (String(P.asmHours).trim() && !(num(P.asmHours) >= 0)) e.push('Assembly hours must be a number, 0 or more.');
+        if (num(P.asmHours) > 0 && !(toCents(P.asmRate) > 0)) e.push('Enter the hourly rate for the assembly.');
+        f.current.forEach(function (l) { if (l.mkEdited && !(num(l.markupPct) >= 0)) e.push(l.sku + ': markup must be 0% or more.'); });
+      }
       f.priced = coPriced(f);
-      var ch = CO.choosePrice(f.choice, f.priced, { amountCents: toCents(f.customAmt), note: f.customNote }); if (!ch.ok) e.push(ch.error);
+      var ch = CO.choosePrice(f.choice, f.priced, { amountCents: toCents(f.customAmt), note: f.customNote }, { sellChanges: sellChanges(f) }); if (!ch.ok) e.push(ch.error);
     }
     return e;
   }
+  /* What goes through when a change order is approved, signed or recorded: the delivery date and the shop's absorbed total. */
+  function goThrough(x, co) {
+    x.absorbedCents = CO.absorbedOnJob(x.changeOrders);
+    if (co.newDeliveryDate) x.deliveryDate = co.newDeliveryDate;
+  }
   function saveCO(c, j, f) {
-    var d = coDiff(f), n = (j.changeOrders || []).length + 1, id = j.jobCode + '-co' + n, who = c.me().name;
+    var d = coDiff(f), n = (j.changeOrders || []).length + 1, id = j.jobCode + '-co' + n, who = c.me().name, nd = f.newDate || null;
+    var extra = { type: f.type, newDeliveryDate: nd, waitFor: JSON.parse(JSON.stringify(f.waitFor)), house: f.house || null };
+    if (f.choice === 'nochange') {
+      var nr = CO.notice({ number: n, date: c.TODAY, type: f.type, note: f.note, requestedBy: who, replaced: f.replaced, newDeliveryDate: nd, waitFor: f.waitFor }, { today: c.TODAY });
+      if (!nr.ok) return nr.problems;
+      var nco = Object.assign(nr.co, { id: id, house: f.house || null });
+      c.store.update(j.jobCode, function (x) { x.changeOrders = x.changeOrders.concat([nco]); goThrough(x, nco); return x; }, nr.log + ' By ' + who + '.', who);
+      return null;
+    }
     if (f.choice === 'courtesy') {
-      var rr = { backorder: 'backorder', our_mistake: 'shop_error', other: 'other' }[f.reason] || 'goodwill';
-      var r = CO.courtesy({ number: n, date: c.TODAY, reason: rr, note: f.note, requestedBy: who, removed: d.removed, added: d.added, supplierOrder: null, supplierCreditCents: null }, { today: c.TODAY });
+      var rr = { backorder: 'backorder', mistake: 'shop_error', damage: 'other', other: 'other' }[f.type] || 'goodwill';
+      var r = CO.courtesy({ number: n, date: c.TODAY, reason: rr, note: f.note, requestedBy: who, removed: d.removed, added: d.added, replaced: f.replaced, supplierOrder: null, supplierCreditCents: null }, { today: c.TODAY });
       if (!r.ok) return r.problems;
-      var co = r.co; co.id = id; co.reason = CO.CHANGE_REASONS[f.reason]; co.status = 'pending approval';
+      var co = Object.assign(r.co, extra, { id: id, reason: reasonLabel(f), status: 'pending approval', credits: [] });
       c.store.update(j.jobCode, function (x) { x.changeOrders = x.changeOrders.concat([co]); return x; }, 'Courtesy change order ' + n + ' saved for approval by ' + who + '. Shop would absorb ' + c.money(co.absorbedCents) + '.', who);
       return null;
     }
     var pz = coPriced(f); if (!pz.ok) return [pz.error];
     var amt = f.choice === 'charge' ? pz.deltaCents : toCents(f.customAmt);
     var taxC = f.choice === 'charge' ? pz.taxCents : Math.round(amt * (j.taxCents || 0) / Math.max(1, FM.contractSummary(j).currentCents));
-    var rec = { id: id, number: n, date: c.TODAY, kind: f.choice, status: 'sent', amountCents: amt, taxCents: taxC, costCents: pz.costCents, reason: CO.CHANGE_REASONS[f.reason], note: f.note + (f.choice === 'custom' && f.customNote ? ' (agreed amount: ' + f.customNote + ')' : ''), removed: d.removed, added: d.added, house: f.house || null, lines: f.current,
-      pricing: pz.settings, differsFromJob: coDiffers(j, f), priced: { lines: pz.lines, summary: pz.summary } };
-    c.store.update(j.jobCode, function (x) { x.changeOrders = x.changeOrders.concat([rec]); return x; }, 'Change order ' + n + ' (' + c.money(amt) + ') sent for signature by ' + who + '.', who);
+    var rec = Object.assign({ id: id, number: n, date: c.TODAY, kind: f.choice, status: 'sent', amountCents: amt, taxCents: taxC, costCents: pz.costCents, reason: reasonLabel(f), note: f.note + (f.choice === 'custom' && f.customNote ? ' (agreed amount: ' + f.customNote + ')' : ''), removed: d.removed, added: d.added, lines: f.current,
+      replaced: JSON.parse(JSON.stringify(f.replaced)), replacedCostCents: replacedCost(f), removedCostCents: pz.removedCostCents, extras: pz.extras, credits: [],
+      pricing: pz.settings, differsFromJob: coDiffers(j, f), priced: { lines: pz.lines, summary: pz.summary } }, extra);
+    var ab = CO.absorbedFor(rec); rec.absorbedCents = ab.cents; rec.absorbedIsEstimate = ab.estimate;
+    c.store.update(j.jobCode, function (x) { x.changeOrders = x.changeOrders.concat([rec]); return x; }, 'Change order ' + n + ' (' + c.money(amt) + ') saved by ' + who + '; sending it for signature.', who);
+    if (window.P2Sign) window.P2Sign.sendCO(c, j.jobCode, id);
     return null;
   }
 
@@ -626,7 +756,7 @@
     var openIt = Object.keys(bad).some(function (x) { return FIX[x] && x !== 'fmSigner'; }) || c.ui.ctOpen === j.jobCode;
     return '<details class="p2-ctdet"' + (openIt ? ' open' : '') + '><summary><b>Contract details and payment schedule</b> <span class="p2-small fmp1-faint">' + (out ? 'locked while it\'s out for signature' : 'edit anything that\'s wrong here') + '</span></summary>' +
       '<div class="p2-ctgrid">' + f('ct-customer', 'Customer', 'data-ctf="customer"', j.customer) + f('ct-project', 'Project name', 'data-ctf="projectName"', j.projectName) +
-      f('ct-signer', 'Who signs for the buyer', 'data-ctf="signer"', k.signer) + f('ct-email', 'Their email (Dropbox Sign sends here)', 'data-ctf="buyerEmail" autocomplete="off"', k.buyerEmail, 'email') + '</div>' +
+      f('ct-signer', 'Who signs for the buyer', 'data-ctf="signer"', k.signer) + f('ct-email', 'Their email (the signing link goes here)', 'data-ctf="buyerEmail" autocomplete="off"', k.buyerEmail, 'email') + '</div>' +
       '<div id="ct-addr" tabindex="-1">' + A.fieldsHTML(function (x) { return 'data-ctaddr="' + x + '"' + dis; }, addr, { legend: 'Install address' }) + '</div>' +
       '<div class="p2-ctgrid">' + f('ct-install', 'Install / delivery date (estimate)', 'data-ctinstall min="' + c.TODAY + '"', j.deliveryDate, 'date') + '</div>' + sched +
       '<p class="p2-note">The deposit is always due on signing. Changes here are logged with your name.</p></details>';
@@ -641,24 +771,16 @@
     }
     var es = j.esign || { state: 'none' };
     if (j.stage !== 'quote') {
-      return '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Contract</span><p class="p2-ok">✓ ' + (es.state === 'signed_on_paper' ? 'Signed on paper' : 'Signed by everyone in Dropbox Sign') + ' · Contracted ' + c.longDate(j.contractedOn) + '</p>' +
+      return '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Contract</span><p class="p2-ok">✓ ' + (window.P2Sign ? window.P2Sign.signedHow(es) : 'Signed') + ' · Contracted ' + c.longDate(j.contractedOn) + '</p>' +
         '<p class="p2-small">Signed for Fremont Makers by ' + esc(j.fmSigner ? j.fmSigner.name : '—') + '.</p>' + c.docRows(j, { kind: 'contract' }) + '</div>';
     }
     var r = readyCheck(c, j);
-    var out = es.state === 'out_for_signature' || es.state === 'buyer_signed' || es.state === 'sending';
+    var out = es.state === 'out_for_signature' || es.state === 'buyer_signed' || es.state === 'sending'   // in the tool or outside it
     var checks = r.blockers.map(function (b) { return '<li class="p2-block"><span>' + esc(b.message) + '</span>' + fixLink(c, j, b) + '</li>'; })
       .concat(r.warnings.map(function (w) { return '<li class="p2-warn"><span>' + esc(w.message) + '</span></li>'; })).join('');
     var signer = '<label class="p2-fld" style="max-width:340px"><span>Signs for Fremont Makers on this job</span><select class="fmp1-input" id="ct-fmsigner" data-fmsigner' + (out ? ' disabled' : '') + '><option value="">Choose…</option>' +
       signers().map(function (p, i) { return '<option value="' + i + '"' + (p.email ? '' : ' disabled') + (j.fmSigner && p.email && j.fmSigner.email === p.email ? ' selected' : '') + '>' + esc(p.name) + (p.email ? '' : ' (add an email on the Users page)') + '</option>'; }).join('') + '</select></label>';
-    var send = out ? '<div class="fmp1-note fmp1-note--info p2-small">' + (es.state === 'buyer_signed' ? 'The buyer signed. Waiting on ' + esc(j.fmSigner.name) + ' to countersign.' : 'Out for signature. Pricing is frozen until it\'s signed, declined or canceled.') + '</div>' +
-        '<div class="p2-row">' + (es.state === 'out_for_signature' ? '<button class="fmp1-btn" data-esim="signed">Buyer signs (simulate)</button><button class="fmp1-btn fmp1-btn--quiet" data-esim="declined">Buyer declines (simulate)</button>' : '') +
-        (es.state === 'buyer_signed' ? '<button class="fmp1-btn fmp1-btn--primary" data-esim="fm">Countersign as ' + esc(j.fmSigner.name) + ' (frame)</button>' : '') + '</div>'
-      : '<div class="p2-chips" role="group" aria-label="How it\'s signed">' + [['email', 'Email for signature'], ['review', 'Check, then send'], ['in_person', 'Sign here now']].map(function (m) {
-          return '<button class="fmp1-btn" data-esmode="' + m[0] + '" aria-pressed="' + ((c.ui.esMode || 'email') === m[0]) + '">' + m[1] + '</button>'; }).join('') + '</div>' +
-        '<div class="p2-row"><button class="fmp1-btn fmp1-btn--primary" data-essend' + (r.ready ? '' : ' disabled') + '>Send for signature</button><span class="p2-small fmp1-faint">' + (r.ready ? 'Goes to ' + esc(j.contacts.buyerEmail) + ' (simulated in the preview)' : 'Fix the items above first.') + '</span></div>' +
-        '<details><summary class="p2-small"><b>Signed on paper instead?</b> Upload the wet-signed copy</summary><div class="p2-form" style="margin-top:8px"><span class="p2-small">Sample scan: ' + esc(j.jobCode) + ' signed contract.pdf</span>' +
-        '<label class="p2-row p2-small"><input type="checkbox" data-paperbuyer> Buyer signed every line</label><label class="p2-row p2-small"><input type="checkbox" data-paperfm> Fremont Makers countersigned</label>' +
-        '<button class="fmp1-btn" data-paper' + (r.ready ? '' : ' disabled') + '>Record signed copy</button></div></details>';
+    var send = window.P2Sign ? window.P2Sign.contractCard(c, j, r) : '';
     var errs = c.ui.esErr ? '<div class="fmp1-note fmp1-note--alert p2-small" role="alert">' + esc(c.ui.esErr) + '</div>' : '';
     return '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Ready to contract?</span>' + (checks ? '<ul class="p2-list p2-checks">' + checks + '</ul>' : '<p class="p2-ok">✓ Everything checks out.</p>') +
       (window.P2Elev && window.P2Elev.contractAck ? window.P2Elev.contractAck(c, j, out) : '') + signer + contractDetails(c, j, r, out) + '</div>' +
@@ -690,6 +812,24 @@
     }, null, who);
     c.store.update(j.jobCode, function (x) { return x; }, text, who);
     c.render();
+  }
+  function coDocHTML(c, j, dco) {
+    var prev = FM.contractSummary(j).originalCents;
+    j.changeOrders.forEach(function (x) { if (x.number < dco.number && FM.coCountsTowardContract(x)) prev += x.amountCents || 0; });
+    return D.renderChangeOrderDoc(j, dco, { previousCents: prev, printedNote: dco.priced && dco.priced.printed ? 'Reprinted from the executed change order. Sell prices as printed there.' : '' });
+  }
+  /* A change order the buyer signed (in the tool, or a signed copy uploaded) goes through: contract total, invoice, lines, delivery date. */
+  function coSigned(c, jobCode, coId, how) {
+    var j = c.store.job(jobCode), sc = j.changeOrders.filter(function (x) { return x.id === coId; })[0]; if (!sc || sc.status !== 'sent') return;
+    var inv = CO.invoiceFor(sc, { today: c.TODAY });
+    c.store.update(j.jobCode, function (x) {
+      x.changeOrders = x.changeOrders.map(function (y) { if (y.id === sc.id) { y.status = 'signed'; y.signedOn = c.TODAY; } return y; });
+      x.taxCents = (x.taxCents || 0) + (sc.taxCents || 0); if (x.costCents != null) x.costCents += (sc.costCents || 0);
+      if (inv) x.invoices = x.invoices.concat([{ id: x.jobCode + '-inv' + (x.invoices.length + 1), label: inv.amountCents < 0 ? inv.label : inv.label + ' invoice', role: 'change_order', changeOrderId: sc.id, dueDate: c.TODAY, amountCents: inv.amountCents, status: 'open', payments: [] }]);
+      if (x.models && x.models[0] && sc.lines && !sc.house) { x.models[0].lines = sc.lines.filter(function (l) { return l.qty > 0; }).map(function (l) { var z = JSON.parse(JSON.stringify(l)); delete z.swapFor; delete z.mkEdited; return z; }); x.changeOrders.forEach(function (y) { if (y.id === sc.id) y.inLines = true; }); }
+      goThrough(x, sc);
+      return x;
+    }, 'Change order ' + sc.number + ' signed (' + how + '). Contract total ' + (sc.amountCents < 0 ? '−' + c.money(-sc.amountCents) : '+' + c.money(sc.amountCents)) + (inv ? (sc.amountCents < 0 ? '; the credit goes on the next invoice.' : '; its own invoice is due today.') : '.') + (sc.newDeliveryDate ? ' Delivery date now ' + c.longDate(sc.newDeliveryDate) + '.' : ''), c.me().name);
   }
   function contracted(c, j, how) {
     var who = c.me().name;
@@ -749,71 +889,85 @@
     }
     if (!j) return false;
     // Change orders
-    if (t.hasAttribute('data-costart')) { var house = j.houses && j.houses.length > 1 ? j.houses[0].jobCode : null, bl = baseLines(c, j, house);
-      c.ui.co = { job: j.jobCode, step: 0, reason: 'customer_request', note: '', house: house, base: bl, current: JSON.parse(JSON.stringify(bl)), choice: null, customAmt: '', customNote: '', colorOk: false, errors: [], pricing: coDefaults(j) }; c.render(); return true; }
+    if (t.hasAttribute('data-costart')) { c.ui.co = newCO(c, j); c.ui.coCredit = c.ui.coWd = null; c.render(); return true; }
     var f = c.ui.co;
     if (f && f.job === j.jobCode) {
       if (t.hasAttribute('data-cocancel')) { c.ui.co = null; c.render(); return true; }
-      if (t.dataset.costep) { f.step = +t.dataset.costep; f.errors = []; c.render(); return true; }
+      if (t.dataset.costep) { var to = +t.dataset.costep; if (to > f.step) { for (var st = f.step; st < to; st++) { var se = coStepErrors(c, j, Object.assign({}, f, { step: st })); if (se.length) { f.step = st; f.errors = se; c.render(); return true; } } } f.step = to; f.errors = []; c.render(); return true; }
       if (t.hasAttribute('data-conext')) { f.errors = coStepErrors(c, j, f); if (!f.errors.length) f.step++; c.render(); return true; }
       if (t.hasAttribute('data-coback')) { f.step = Math.max(0, f.step - 1); f.errors = []; c.render(); return true; }
+      if (t.dataset.cotype) { f.type = t.dataset.cotype; if (f.type !== 'backorder') f.boMode = null; f.choice = null; f.errors = []; c.render(); return true; }
+      if (t.dataset.cobo) { f.boMode = t.dataset.cobo; if (f.boMode === 'swap') f.waitFor = []; f.errors = []; c.render(); return true; }
       if (t.dataset.coqty) { var l = f.current[+t.dataset.coqty]; l.qty = Math.max(0, l.qty + (+t.dataset.d)); c.render(); return true; }
-      if (t.hasAttribute('data-coreset')) { f.pricing = coDefaults(j); f.current.forEach(function (l) { if (l.mkEdited) { delete l.mkEdited; var b = f.base.filter(function (x) { return x.sku === l.sku; })[0]; if (b) l.markupPct = b.markupPct; else delete l.markupPct; } }); c.render(); return true; }
+      if (t.hasAttribute('data-coaddopen')) { f.addForm = { sku: '', desc: '', qty: '1', cost: '' }; f.rowForm = null; c.render(); return true; }
+      if (t.hasAttribute('data-coaddcancel')) { f.addForm = null; f.errors = []; c.render(); return true; }
+      if (t.hasAttribute('data-coaddsave')) {
+        var A = f.addForm, ar = CO.addLine(f.current, { sku: A.sku, desc: A.desc, qty: parseInt(A.qty, 10), unitCostCents: toCents(A.cost) });
+        if (!ar.ok) { A.errors = ar.problems; c.render(); return true; }
+        f.current = ar.lines; f.addForm = null; f.errors = []; c.render(); return true;
+      }
+      if (t.dataset.corow) {
+        var pr = t.dataset.corow.split(':'), ln = f.current[+pr[1]];
+        f.rowForm = { kind: pr[0], idx: +pr[1], qty: String(pr[0] === 'repl' ? 1 : ln.qty), sku: '', desc: '', cost: pr[0] === 'repl' ? (ln.unitCostCents / 100).toFixed(2) : '', claim: '', why: '' }; f.addForm = null; c.render(); return true;
+      }
+      if (t.hasAttribute('data-corfcancel')) { f.rowForm = null; f.errors = []; c.render(); return true; }
+      if (t.hasAttribute('data-corfsave')) {
+        var R = f.rowForm, rl = f.current[R.idx], q = parseInt(R.qty, 10);
+        if (R.kind === 'swap') {
+          var sw = CO.swapLine(f.current, rl.sku, { sku: String(R.sku).trim().toUpperCase(), desc: R.desc, unitCostCents: toCents(R.cost) }, q);
+          if (!sw.ok) { R.error = sw.error; c.render(); return true; }
+          f.current = sw.lines;
+        } else {
+          if (!(q > 0) || q > rl.qty) { R.error = 'Between 1 and ' + rl.qty + '.'; c.render(); return true; }
+          if (R.kind === 'repl') {
+            if (!(toCents(R.cost) > 0)) { R.error = 'Enter what the replacement costs us.'; c.render(); return true; }
+            if (!R.claim) { R.error = 'Say who the claim goes to, or that we cover it.'; c.render(); return true; }
+            f.replaced.push({ sku: rl.sku, desc: rl.desc, qty: q, unitCostCents: toCents(R.cost), claim: R.claim, why: String(R.why || '').trim() });
+          } else f.waitFor.push({ sku: rl.sku, desc: rl.desc, qty: q });
+        }
+        f.rowForm = null; f.errors = []; c.render(); return true;
+      }
+      if (t.dataset.corm) { var rm = t.dataset.corm.split(':'); f[rm[0]].splice(+rm[1], 1); c.render(); return true; }
+      if (t.dataset.coexadd) { var ps = EXTRA_PRESETS[+t.dataset.coexadd]; f.extras.push({ label: ps[0] === 'Other charge' ? '' : ps[0], amount: ps[0] === 'Credit' ? '-' : '', taxable: ps[1] }); c.render();
+        var ins = document.querySelectorAll('[data-coex$=":' + (ps[0] === 'Other charge' ? 'label' : 'amount') + '"]'); if (ins.length) ins[ins.length - 1].focus(); return true; }
+      if (t.hasAttribute('data-coreset')) { f.pricing = coDefaults(j); f.current.forEach(function (x) { if (x.mkEdited) { delete x.mkEdited; var b = f.base.filter(function (y) { return y.sku === x.sku; })[0]; if (b) x.markupPct = b.markupPct; else delete x.markupPct; } }); c.render(); return true; }
       if (t.dataset.cochoice) { f.choice = t.dataset.cochoice; f.errors = []; c.render(); return true; }
       if (t.hasAttribute('data-cosave')) { var pe = saveCO(c, j, f); if (pe) { f.errors = pe; c.render(); return true; } c.ui.co = null; c.render(); return true; }
     }
     if (t.dataset.codoc) {
       var dco = j.changeOrders.filter(function (x) { return x.id === t.dataset.codoc; })[0], prev = FM.contractSummary(j).originalCents;
-      j.changeOrders.forEach(function (x) { if (x.number < dco.number && x.kind !== 'courtesy' && x.status !== 'sent') prev += x.amountCents || 0; });
-      c.ui.viewer = { title: 'Change order ' + dco.number + ' · ' + j.jobCode + ' · ' + j.customer, html: D.renderChangeOrderDoc(j, dco, { previousCents: prev,
-        printedNote: dco.priced.printed ? 'Reprinted from the executed change order. Sell prices as printed there.' : '' }), from: '[data-codoc="' + dco.id + '"]' };
+      j.changeOrders.forEach(function (x) { if (x.number < dco.number && FM.coCountsTowardContract(x)) prev += x.amountCents || 0; });
+      c.ui.viewer = { title: 'Change order ' + dco.number + ' · ' + j.jobCode + ' · ' + j.customer, html: coDocHTML(c, j, dco), from: '[data-codoc="' + dco.id + '"]' };
       c.render(); return true;
     }
     if (t.dataset.coapprove) {
       var co = j.changeOrders.filter(function (x) { return x.id === t.dataset.coapprove; })[0], ap = CO.approve(Object.assign({}, co, { status: 'draft' }), c.me().name, { owners: window.P2Users ? window.P2Users.approvers() : [], at: c.TODAY });
-      if (ap.ok) c.store.update(j.jobCode, function (x) { x.changeOrders = x.changeOrders.map(function (y) { if (y.id !== co.id) return y; var z = ap.co; z.status = 'approved'; return z; }); x.absorbedCents = (x.absorbedCents || 0) + (co.absorbedCents || 0); return x; }, ap.log, c.me().name);
+      if (ap.ok) c.store.update(j.jobCode, function (x) { x.changeOrders = x.changeOrders.map(function (y) { if (y.id !== co.id) return y; var z = ap.co; z.status = 'approved'; return z; }); goThrough(x, co); return x; }, ap.log + (co.newDeliveryDate ? ' Delivery date now ' + c.longDate(co.newDeliveryDate) + '.' : ''), c.me().name);
       c.render(); return true;
     }
-    if (t.dataset.cosigned) {
-      var sc = j.changeOrders.filter(function (x) { return x.id === t.dataset.cosigned; })[0], inv = CO.invoiceFor(sc, { today: c.TODAY });
-      c.store.update(j.jobCode, function (x) {
-        x.changeOrders = x.changeOrders.map(function (y) { if (y.id === sc.id) { y.status = 'signed'; y.signedOn = c.TODAY; } return y; });
-        x.taxCents = (x.taxCents || 0) + (sc.taxCents || 0); if (x.costCents != null) x.costCents += (sc.costCents || 0);
-        if (inv) x.invoices = x.invoices.concat([{ id: x.jobCode + '-inv' + (x.invoices.length + 1), label: inv.label + ' invoice', role: 'change_order', changeOrderId: sc.id, dueDate: c.TODAY, amountCents: inv.amountCents, status: 'open', payments: [] }]);
-        if (x.models && x.models[0] && sc.lines && !sc.house) { x.models[0].lines = sc.lines.filter(function (l) { return l.qty > 0; }); x.changeOrders.forEach(function (y) { if (y.id === sc.id) y.inLines = true; }); }
-        return x;
-      }, 'Change order ' + sc.number + ' signed by the buyer. Contract total +' + c.money(sc.amountCents) + (inv ? '; its own invoice is due today.' : '.'), c.me().name);
-      c.render(); return true;
+    if (t.dataset.cosigned) { coSigned(c, j.jobCode, t.dataset.cosigned, 'the buyer'); c.render(); return true; }
+    if (t.dataset.cocredit) { var cc = j.changeOrders.filter(function (x) { return x.id === t.dataset.cocredit; })[0]; c.ui.coCredit = { id: cc.id, for: (cc.removed || []).length ? 'returned' : 'damaged', from: 'supplier', amount: '', on: c.TODAY, reference: '', none: false }; c.ui.coWd = null; c.render(); return true; }
+    if (t.hasAttribute('data-cocrcancel')) { c.ui.coCredit = null; c.render(); return true; }
+    if (t.hasAttribute('data-cocrsave') && c.ui.coCredit) {
+      var F = c.ui.coCredit, cr0 = j.changeOrders.filter(function (x) { return x.id === F.id; })[0];
+      var rc = CO.recordCredit(cr0, { amountCents: toCents(F.amount), on: F.on, reference: F.reference, from: F.from, for: F.for, none: F.none }, { by: c.me().name, today: c.TODAY });
+      if (!rc.ok) { F.error = rc.error; c.render(); return true; }
+      c.store.update(j.jobCode, function (x) { x.changeOrders = x.changeOrders.map(function (y) { return y.id === F.id ? rc.co : y; }); x.absorbedCents = CO.absorbedOnJob(x.changeOrders); return x; }, rc.log + ' By ' + c.me().name + '.', c.me().name);
+      c.ui.coCredit = null; c.render(); return true;
+    }
+    if (t.dataset.cowd) { c.ui.coWd = { id: t.dataset.cowd, reason: '' }; c.ui.coCredit = null; c.render(); return true; }
+    if (t.hasAttribute('data-cowdcancel')) { c.ui.coWd = null; c.render(); return true; }
+    if (t.hasAttribute('data-cowdsave') && c.ui.coWd) {
+      var wd = c.ui.coWd, w0 = j.changeOrders.filter(function (x) { return x.id === wd.id; })[0], wr = CO.withdraw(w0, c.me().name, wd.reason, c.TODAY);
+      if (!wr.ok) { wd.error = wr.error; c.render(); return true; }
+      c.store.update(j.jobCode, function (x) { x.changeOrders = x.changeOrders.map(function (y) { return y.id === wd.id ? wr.co : y; }); return x; }, wr.log, c.me().name);
+      c.ui.coWd = null; c.render(); return true;
     }
     // Contract
     if (t.dataset.ctfix) {
       var tg = document.getElementById(t.dataset.ctfix), dt = tg && tg.closest('details'); if (dt) dt.open = true; c.ui.ctOpen = j.jobCode;
       if (tg) { var fi = tg.matches('input,select') ? tg : tg.querySelector('input:not([disabled]),select:not([disabled])') || tg; tg.scrollIntoView({ block: 'center' }); fi.focus(); }
       return true;
-    }
-    if (t.dataset.esmode) { c.ui.esMode = t.dataset.esmode; c.render(); return true; }
-    if (t.hasAttribute('data-essend')) {
-      if (!readyCheck(c, j).ready) { c.render(); return true; }   // the button is disabled too; this is the real check
-      var req = K.signatureRequest(readinessJob(j), { mode: c.ui.esMode || 'email', clientId: 'demo-client-id', requesterEmail: 'office@example.com', testMode: true });
-      var st = K.applyEvent({ requestId: 'sr_' + j.jobCode, state: 'sending', jobStatus: 'proposed', seen: [] }, { event: { event_type: 'signature_request_sent', event_time: '1' }, signature_request: { signature_request_id: 'sr_' + j.jobCode } });
-      c.store.update(j.jobCode, function (x) { x.esign = st.state; return x; }, 'Contract sent for signature (' + req.url.split('/v3/')[1] + ') by ' + c.me().name + '. Signed for Fremont Makers by ' + j.fmSigner.name + '.', c.me().name);
-      c.render(); return true;
-    }
-    if (t.dataset.esim) {
-      var ev = { signed: 'signature_request_signed', declined: 'signature_request_declined', fm: 'signature_request_all_signed' }[t.dataset.esim];
-      var es = K.applyEvent(j.esign, { event: { event_type: ev, event_time: String(Date.now()) }, signature_request: { signature_request_id: j.esign.requestId, signatures: [{ signer_email_address: j.contacts.buyerEmail, status_code: 'signed' }] } });
-      c.store.update(j.jobCode, function (x) { x.esign = es.state; return x; }, es.log, c.me().name);
-      if (es.state.state === 'signed') contracted(c, c.store.job(j.jobCode), 'Dropbox Sign, countersigned by ' + j.fmSigner.name);
-      c.render(); return true;
-    }
-    if (t.hasAttribute('data-paper')) {
-      var root = t.closest('details');
-      var pr = K.recordPaperSigned(j.esign || {}, { fileName: j.jobCode + ' signed contract.pdf', bytes: 1843200, sha256: '9c4e1f0a7b2d3c5e6f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6', signedDate: c.TODAY, uploadedBy: c.me().name,
-        buyerSignedAll: root.querySelector('[data-paperbuyer]').checked, fmSigned: root.querySelector('[data-paperfm]').checked, fmSignerName: j.fmSigner ? j.fmSigner.name : '' }, { today: c.TODAY, ready: true });
-      if (!pr.ok) { c.ui.esErr = pr.errors.join(' '); c.render(); return true; }
-      c.ui.esErr = null;
-      c.store.update(j.jobCode, function (x) { x.esign = pr.state; x.documents = (x.documents || []).concat([{ jobCode: x.jobCode, title: 'Signed contract (paper)', file: pr.document.fileName, pages: 6, bytes: pr.document.bytes, sha256: pr.document.sha256, kind: 'contract', contains: 'Wet-signed contract packet' }]); return x; }, pr.log, c.me().name);
-      contracted(c, c.store.job(j.jobCode), 'signed on paper'); c.render(); return true;
     }
     return false;
   }
@@ -827,8 +981,21 @@
     if (el.dataset.npp) { d = loadDraft(c); d.pricing[el.dataset.npp] = /^assembly/.test(el.dataset.npp) ? el.value : num(el.value); if (el.dataset.npp === 'markupPct') reapply(d); saveDraft(c); refreshLater(c); return; }
     if (el.dataset.npline) { d = loadDraft(c); var ix = el.dataset.npline.split(':'), ln = d.models[+ix[0]].lines[+ix[1]]; ln.markupPct = num(el.value); ln.edited = true; saveDraft(c); refreshLater(c); return; }
     if (el.dataset.cof && c.ui.co) { c.ui.co[el.dataset.cof] = el.value; return; }
+    if (el.dataset.coadd && c.ui.co && c.ui.co.addForm) { var A = c.ui.co.addForm; A[el.dataset.coadd] = el.value; if (el.dataset.coadd === 'sku') fillFromSku(c, A, el.value); return; }
+    if (el.dataset.corf && c.ui.co && c.ui.co.rowForm) { var R = c.ui.co.rowForm; R[el.dataset.corf] = el.value; if (el.dataset.corf === 'sku') fillFromSku(c, R, el.value); return; }
+    if (el.dataset.coex && c.ui.co) { var ex = el.dataset.coex.split(':'), xr = c.ui.co.extras[+ex[0]]; if (xr) xr[ex[1]] = ex[1] === 'taxable' ? el.checked : el.value; return; }
+    if (el.dataset.cocr && c.ui.coCredit) { c.ui.coCredit[el.dataset.cocr] = el.type === 'checkbox' ? el.checked : el.value; return; }
+    if (el.hasAttribute('data-cowdr') && c.ui.coWd) { c.ui.coWd.reason = el.value; return; }
     if (el.dataset.cop && c.ui.co) { c.ui.co.pricing[el.dataset.cop] = el.value; refreshLater(c); return; }
     if (el.dataset.coline && c.ui.co) { var cl = c.ui.co.current[+el.dataset.coline]; cl.markupPct = num(el.value); cl.mkEdited = true; refreshLater(c); return; }
+  }
+  /* Typing a SKU that's on the order or a supplier PDF fills in its description and cost (only boxes still empty). */
+  function fillFromSku(c, form, v) {
+    var k = knownSkus(c.ui.co)[String(v).trim().toUpperCase()]; if (!k) return;
+    var changed = false;
+    if (!form.desc) { form.desc = k.desc || ''; changed = true; }
+    if (!form.cost && k.unitCostCents) { form.cost = (k.unitCostCents / 100).toFixed(2); changed = true; }
+    if (changed) { var root = document.querySelector('[data-coform]'); if (root) { [].forEach.call(root.querySelectorAll('[data-coadd="desc"],[data-corf="desc"]'), function (n) { n.value = form.desc; }); [].forEach.call(root.querySelectorAll('[data-coadd="cost"],[data-corf="cost"]'), function (n) { n.value = form.cost; }); } }
   }
   var timer = null;
   function refreshLater(c) { clearTimeout(timer); timer = setTimeout(function () { var a = document.activeElement, key = a && (a.dataset.npp || a.dataset.npline || a.dataset.np || a.dataset.cop || a.dataset.coline), sel = a && a.selectionStart, selEnd = a && a.selectionEnd; c.render(); if (key) { var n = document.querySelector('[data-npp="' + key + '"],[data-npline="' + key + '"],[data-np="' + key + '"],[data-cop="' + key + '"],[data-coline="' + key + '"]'); if (n) { n.focus(); try { n.setSelectionRange(sel, selEnd); } catch (x) { /* number inputs */ } } } }, 450); }
@@ -870,7 +1037,8 @@
     }
     var r = location.hash.replace(/^#\/?/, '').split('/'), j = r[0] === 'job' ? c.store.job(decodeURIComponent(r[1])) : null;
     if (!j) return;
-    if (el.dataset.cof === 'house' && c.ui.co) { var f = c.ui.co; f.house = el.value; f.base = baseLines(c, j, f.house); f.current = JSON.parse(JSON.stringify(f.base)); c.render(); return; }
+    if (el.dataset.cof === 'house' && c.ui.co) { var f = c.ui.co; f.house = el.value; f.base = baseLines(c, j, f.house); f.current = JSON.parse(JSON.stringify(f.base)); f.replaced = []; f.waitFor = []; c.render(); return; }
+    if (el.dataset.coex && c.ui.co) { c.render(); return; }   // show the new total once the box is left
     if (el.dataset.cof === 'reason' && c.ui.co) { c.ui.co.reason = el.value; return; }
     if (el.hasAttribute('data-copdf') && c.ui.co) { var pd = pdfById(el.value); if (pd) { c.ui.co.current = CO.mergeLines(c.ui.co.current, pd.lines.map(function (l) { return { sku: l.sku, desc: l.desc, qty: l.qty, unitCostCents: l.unitCostCents }; }), 'add').lines; } c.render(); return; }
     if (el.hasAttribute('data-cocolor') && c.ui.co) { c.ui.co.colorOk = el.checked; c.render(); return; }
@@ -886,7 +1054,7 @@
   }
 
   window.P2NewProject = { render: renderNew, blankDraft: blankDraft, migrate: migrate };
-  window.P2Flows = { planStages: planStages, addToQuote: addToQuote, addSkus: addSkus, samplePdfs: samplePdfs, startCO: startCO, changes: renderChanges, contract: renderContract, click: click, input: input, change: change, quotesFor: quotesFor, signers: signers, dupConfirm: dupConfirm, fromTemplate: fromTemplate };
+  window.P2Flows = { contracted: contracted, coSigned: coSigned, readyCheck: readyCheck, readinessJob: readinessJob, coDocHTML: coDocHTML, planStages: planStages, addToQuote: addToQuote, addSkus: addSkus, samplePdfs: samplePdfs, startCO: startCO, changes: renderChanges, contract: renderContract, click: click, input: input, change: change, quotesFor: quotesFor, signers: signers, dupConfirm: dupConfirm, fromTemplate: fromTemplate };
   /* Projects made in this preview before charges were broken out get their breakdown worked out from their lines */
   if (window.P2 && window.P2.ctx) (function () {
     var c0 = window.P2.ctx();

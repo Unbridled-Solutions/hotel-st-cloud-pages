@@ -10,11 +10,9 @@
   var W = window.FM_WILLOW_ORDER, B = window.FM_BRADDY_ORDER, SAMPLE = window.FM_SAMPLE, TODAY = SAMPLE.today;
   var root = document.getElementById('p2');
   var SEED = ST.seed({ sample: SAMPLE, willow: W, braddy: B, company: window.FMCompany && window.FM_COMPANY_LEGACY ? window.FMCompany.fromLegacy(window.FM_COMPANY_LEGACY) : null });
-  var LIVE = !!(window.FM_CONFIG && window.FM_CONFIG.live);
-  var DEMO = null;
-  if (!LIVE) { DEMO = demoQuote(); SEED.jobs.push(DEMO); }
+  var DEMO = demoQuote(); SEED.jobs.push(DEMO);
   var store = ST.create({ seed: SEED, storage: (window.FM_CONFIG && window.FM_CONFIG.storage) || ST.browserStorage('fm_phase2_preview') });
-  if (!LIVE && DEMO && !store.job(DEMO.jobCode)) store.addJob(DEMO, 'Sample data');
+  if (!store.job(DEMO.jobCode)) store.addJob(DEMO, 'Sample data');
 
   /* ---------- users (HANDOFF §23): everyone has full access for now; a Coordinator level can be added later ---------- */
   var ACCESS = { full: 'Full access', coordinator: 'Coordinator' };
@@ -134,6 +132,7 @@
 
   function render() {
     var r = route(), body;
+    if (r.area === 'sign' && window.P2Sign) { root.innerHTML = '<div class="sg-wrap">' + window.P2Sign.page(ctx(), r.a) + viewerHTML() + '</div>'; root.classList.remove('is-measure'); root.classList.add('is-sign'); var sv = root.querySelector('[data-close-viewer]'); if (sv) { sv.focus(); fitViewer(); } window.P2Sign.after(ctx(), r.a); return; }
     if (r.area === 'projects') body = viewProjects();
     else if (r.area === 'job') body = viewJob(store.job(r.a), r.b || 'overview');
     else if (r.area === 'users') body = viewUsers();
@@ -144,7 +143,7 @@
     else body = viewBooks(r.a || 'dashboard');
     var notLive = window.FM_CONFIG && window.FM_CONFIG.live ? '' : '<div class="p2-previewbar" role="note"><b>Preview, not the live tool.</b> Sample data, saved only in this browser: nothing here is shared with anyone, backed up, or sent. Don\'t enter real jobs until the server is connected.</div>';
     root.innerHTML = nav(r) + '<main class="p2-main" id="p2-main">' + notLive + body + viewerHTML() + '</main>';
-    root.classList.toggle('is-measure', r.area === 'measure');   // on a phone, field measure keeps the menu short
+    root.classList.toggle('is-measure', r.area === 'measure'); root.classList.remove('is-sign');   // on a phone, field measure keeps the menu short
     var vc = root.querySelector('[data-close-viewer]'); if (vc) { vc.focus(); fitViewer(); }
     var f = root.querySelector('[data-autofocus]'); if (f && !vc) f.focus({ preventScroll: true });
     var pf = !vc && (root.querySelector('[data-payform]') || root.querySelector('[data-paidnote]'));
@@ -273,7 +272,7 @@
         '<td class="r">' + (l.noCharge ? '<span class="fmp1-pill fmp1-pill--good">No charge</span>' : l.markupPct + '%' + (l.markupPct === 0 ? ' <span class="fmp1-pill fmp1-pill--alert">at cost</span>' : '')) + '</td><td class="r"><b>' + (l.noCharge ? '—' : $f(s)) + '</b></td></tr>';
     }).join('');
     var removed = (cos || []).map(function (c) { return (c.removed || []).map(function (r) {
-      return '<tr class="pv-removed"><td class="fmp1-code">' + esc(r.sku) + '</td><td>' + esc(r.desc) + '</td><td class="r">' + r.qty + ' → 0</td><td colspan="4" class="fmp1-faint">Removed by change order ' + c.number + ' (' + longDate(c.date) + ')</td></tr>'; }).join(''); }).join('');
+      return '<tr class="pv-removed"><td class="fmp1-code">' + esc(r.sku) + '</td><td>' + esc(r.desc) + '</td><td class="r">' + (r.from != null && r.to != null ? r.from + ' → ' + r.to : r.qty + ' → 0') + '</td><td colspan="4" class="fmp1-faint">' + (r.to ? 'Reduced' : 'Removed') + ' by change order ' + c.number + ' (' + longDate(c.date) + ')</td></tr>'; }).join(''); }).join('');
     return '<div class="fmp1-table-wrap"><table class="fmp1-table p2-table"><thead><tr><th>SKU</th><th>Description</th><th class="r">Qty</th><th class="r">Unit cost</th><th class="r">Cost</th><th class="r">Markup</th><th class="r">Sell</th></tr></thead><tbody>' + rows +
       '<tr class="is-total"><td colspan="4">Charged lines</td><td class="r">' + $f(cost) + '</td><td></td><td class="r">' + $f(sell) + '</td></tr>' + removed + '</tbody></table></div>';
   }
@@ -294,11 +293,11 @@
       var st = FM.invoiceState(inv, TODAY), paidC = FM.invoicePaidCents(inv), share = FM.invoicePercent(inv, j), pays = (inv.payments || []).map(function (p) {
         return longDate(p.date) + ' · ' + $f(p.amountCents) + (p.reference ? ' · ' + esc(p.reference) : ' · <span style="color:var(--fmp1-alert-ink)">no check #</span>');
       }).join('<br>');
-      var tone = st.key === 'paid' ? 'fmp1-pill--good' : st.key === 'overdue' ? 'fmp1-pill--alert' : 'fmp1-pill--proposed';
+      var tone = st.key === 'paid' ? 'fmp1-pill--good' : st.key === 'overdue' || st.key === 'credit' ? 'fmp1-pill--alert' : 'fmp1-pill--proposed';
       var row = '<tr><td><button class="p2-linkbtn" data-open-inv="' + esc(inv.id) + '">' + esc(inv.label) + '</button><br><span class="fmp1-faint p2-small">Due ' + longDate(inv.dueDate) + '</span></td>' +
-        '<td><span class="fmp1-pill ' + tone + '">' + esc(st.label) + '</span></td><td class="r">' + (inv.role === 'change_order' ? '<span class="fmp1-faint p2-small">change order</span>' : share.actual.toFixed(2) + '%') + '</td>' +
+        '<td><span class="fmp1-pill ' + tone + '">' + esc(st.label) + '</span></td><td class="r">' + (inv.role === 'change_order' || inv.amountCents < 0 ? '<span class="fmp1-faint p2-small">change order</span>' : share.actual.toFixed(2) + '%') + '</td>' +
         '<td class="r"><b>' + $f(inv.amountCents) + '</b></td><td class="p2-small">' + (pays || '<span class="fmp1-faint">None yet</span>') +
-        (paidC < inv.amountCents && !(ui.pay && ui.pay.inv === inv.id) ? '<div style="margin-top:6px"><button class="fmp1-btn" data-pay="' + esc(inv.id) + '">Record payment</button></div>' : '') + '</td></tr>';
+        (st.key !== 'paid' && st.key !== 'void' && !(ui.pay && ui.pay.inv === inv.id) ? '<div style="margin-top:6px"><button class="fmp1-btn" data-pay="' + esc(inv.id) + '">' + (inv.amountCents < 0 ? 'Record refund' : 'Record payment') + '</button></div>' : '') + '</td></tr>';
       if (ui.pay && ui.pay.inv === inv.id) row += '<tr><td colspan="5">' + payForm(inv) + '</td></tr>';
       return row;
     }).join('');
@@ -360,20 +359,46 @@
     return false;
   }
   function payForm(inv) {
-    var owed = inv.amountCents - FM.invoicePaidCents(inv), v = ui.pay.values || {};
+    var owed = Math.abs(inv.amountCents - FM.invoicePaidCents(inv)), v = ui.pay.values || {};
     return '<div data-payform class="p2-form" role="group" aria-label="Record a payment on ' + esc(inv.label) + '">' +
       '<label class="p2-fld"><span>Amount</span><input class="fmp1-input" inputmode="decimal" data-payf="amount" value="' + esc(v.amount != null ? v.amount : (owed / 100).toFixed(2)) + '" data-autofocus></label>' +
-      '<label class="p2-fld"><span>Received</span><input class="fmp1-input" type="date" max="' + TODAY + '" data-payf="date" value="' + esc(v.date || TODAY) + '"></label>' +
+      '<label class="p2-fld"><span>' + (inv.amountCents < 0 ? 'Refunded on' : 'Received') + '</span><input class="fmp1-input" type="date" max="' + TODAY + '" data-payf="date" value="' + esc(v.date || TODAY) + '"></label>' +
       '<label class="p2-fld"><span>Method</span><select class="fmp1-input" data-payf="method">' + Object.keys(ST.METHODS).map(function (k) { return '<option value="' + k + '"' + ((v.method || 'check') === k ? ' selected' : '') + '>' + ST.METHODS[k] + '</option>'; }).join('') + '</select></label>' +
       '<label class="p2-fld"><span>Check # / reference</span><input class="fmp1-input" data-payf="reference" value="' + esc(v.reference || '') + '"></label>' +
       '<button class="fmp1-btn fmp1-btn--primary" data-paysave>Save payment</button><button class="fmp1-btn fmp1-btn--quiet" data-paycancel>Cancel</button>' +
       (ui.pay.errors ? '<ul class="p2-errs p2-small" role="alert" style="color:var(--fmp1-alert-ink)">' + ui.pay.errors.map(function (e) { return '<li>' + esc(e) + '</li>'; }).join('') + '</ul>' : '') + '</div>';
   }
 
+  /* ---------- Documents tab (HANDOFF §32): contract and invoices · change orders · supplier orders · supporting documents ---------- */
   function tabDocuments(j) {
-    var docs = j.documents || [];
-    return '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Documents · ' + (docs.length + (j.stage !== 'lost' ? 1 : 0)) + '</span>' + docRows(j) +
-      (docs.length ? '' : '<p class="p2-small fmp1-faint">No signed files attached yet. Signed contracts and wet-signed uploads appear here.</p>') + '</div>';
+    var FF = window.FMFiles, S = FF.sections(j.documents, j.changeOrders), U = ui.up && ui.up.job === j.jobCode ? ui.up : { category: '', title: '', note: '' };
+    function sec(title, sub, inner, extra) { return '<section class="p2-docsec"><div class="p2-between"><h3>' + title + '</h3>' + (extra || '') + '</div>' + (sub ? '<p class="p2-small fmp1-faint">' + sub + '</p>' : '') + inner + '</section>'; }
+    var contract = docRows(j, { only: S.contract });
+    var cos = S.changeOrders.length ? S.changeOrders.map(function (g) {
+      var co = (j.changeOrders || []).filter(function (x) { return x.number === g.number; })[0];
+      var gen = co && co.status !== 'withdrawn' ? '<li><button class="p2-docrow" data-codoc="' + esc(co.id) + '"><span class="p2-docicon" aria-hidden="true"></span><span class="p2-doctext"><b>Change order ' + g.number + ' (from the tool)</b><span class="p2-small fmp1-faint">For the buyer to sign · printed from what\'s on the job</span></span><span class="p2-docopen">Open</span></button></li>' : '';
+      return '<div class="p2-docgroup"><div class="p2-between"><b>Change order ' + g.number + (g.reason ? ' · ' + esc(g.reason) : '') + '</b><span class="p2-row">' + (g.status ? '<span class="fmp1-pill">' + esc(g.status) + '</span>' : '') +
+        '<label class="fmp1-btn fmp1-btn--quiet p2-filebtn">Attach a file<input type="file" data-upload data-upco="' + g.number + '" accept="' + FF.accept() + '"></label></span></div>' +
+        '<ul class="p2-docs">' + gen + docRowsList(j, g.docs, { removable: true }) + '</ul>' + (gen || g.docs.length ? '' : '<p class="p2-small fmp1-faint">No files yet.</p>') + '</div>';
+    }).join('') : '<p class="p2-small fmp1-faint">No change orders on this job.</p>';
+    var supplier = S.supplier.length ? docRows(j, { packet: false, only: S.supplier }) : '<p class="p2-small fmp1-faint">None attached.</p>';
+    var cats = FF.CATEGORIES;
+    var form = '<div class="p2-upform" data-upform><label class="p2-fld"><span>Kind of document</span><select class="fmp1-input" data-upf="category"><option value="">Choose…</option>' + Object.keys(cats).map(function (k) { return '<option value="' + k + '"' + (U.category === k ? ' selected' : '') + '>' + esc(cats[k].label) + '</option>'; }).join('') + '</select></label>' +
+      '<label class="p2-fld"><span>Name (optional)</span><input class="fmp1-input" data-upf="title" value="' + esc(U.title || '') + '" placeholder="Uses the file name"></label>' +
+      '<label class="p2-fld p2-upnote"><span>Note (optional)</span><input class="fmp1-input" data-upf="note" value="' + esc(U.note || '') + '" placeholder="e.g. Rev B from the architect, Oct 30"></label>' +
+      '<label class="fmp1-btn fmp1-btn--primary p2-filebtn">Choose file and upload<input type="file" data-upload accept="' + FF.accept() + '"></label>' +
+      '<span class="p2-small fmp1-faint" style="flex-basis:100%">' + (U.category && cats[U.category] ? esc(cats[U.category].hint) + '. ' : '') + 'PDF, photos (JPG, PNG, HEIC), CAD (DWG, DXF), Word, Excel, CSV, text or email, up to 25 MB. ' +
+      (window.FM_CONFIG && window.FM_CONFIG.live ? 'Saved to the job.' : 'In this preview the file stays in this browser only; the live tool saves it on the server.') + '</span></div>';
+    var note = ui.up && ui.up.job === j.jobCode && ui.up.co == null && (ui.up.msg || ui.up.err) ? (ui.up.err ? '<div class="fmp1-note fmp1-note--alert p2-small" role="alert"><ul class="p2-errs">' + ui.up.err.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>' : '<div class="fmp1-note fmp1-note--good p2-small" role="status">✓ ' + esc(ui.up.msg) + '</div>') : '';
+    var supporting = S.supporting.map(function (g) { return '<div class="p2-docgroup"><b>' + esc(g.label) + ' · ' + g.docs.length + '</b><ul class="p2-docs">' + docRowsList(j, g.docs, { removable: true }) + '</ul></div>'; }).join('');
+    var removed = S.removed.length ? '<details class="p2-docsec"><summary class="p2-small">Removed · ' + S.removed.length + ' (kept; can be restored)</summary><ul class="p2-list">' + S.removed.map(function (d) {
+      return '<li><span>' + esc(d.title) + ' <span class="p2-small fmp1-faint">· removed by ' + esc(d.removed.by) + (d.removed.on ? ' on ' + longDate(d.removed.on) : '') + (d.removed.reason ? ': ' + esc(d.removed.reason) : '') + '</span></span><button class="fmp1-btn fmp1-btn--quiet" data-docrestore="' + esc(window.FMFiles.key(d)) + '">Restore</button></li>'; }).join('') + '</ul></details>' : '';
+    return '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Documents · ' + (S.count + (j.stage !== 'lost' ? 1 : 0)) + '</span>' +
+      sec('Contract and invoices', '', contract || '<p class="p2-small fmp1-faint">No signed files attached yet.</p>') +
+      sec('Change orders', 'Each change order\'s own document, plus anything attached to it (signed copy, supplier quote, damage photos).', cos) +
+      sec('Supplier orders', '', supplier) +
+      sec('Supporting documents', 'Architectural plans, photos and anything else from the client that belongs with the job.', form + note + (supporting || '<p class="p2-empty">Nothing uploaded yet.</p>')) +
+      removed + '</div>';
   }
   function tabActivity(j) {
     var log = store.log(j.jobCode);
@@ -641,9 +666,9 @@
     } else if (kind === 'packet') {
       ui.viewer = { title: 'Contract packet · ' + j.jobCode + ' · ' + j.customer, html: D.renderPacket(j, packetOpts(j)), from: '[data-open-packet]' };
     } else if (kind === 'file') {
-      var d = (j.documents || []).filter(function (x) { return x.file === key; })[0];
-      ui.viewer = { title: d.title + ' · ' + j.jobCode, from: '[data-open-file="' + key + '"]', stored: d.file, html: fileCard(d, '<div class="fmp1-note fmp1-note--info p2-small" role="status">Looking for the stored file…</div>') };
-      loadStored(d);
+      var d = (j.documents || []).filter(function (x) { return window.FMFiles.key(x) === key; })[0]; if (!d) return;
+      ui.viewer = { title: d.title + ' · ' + j.jobCode, from: '[data-open-file="' + key + '"]', stored: d.file, html: d.uploadedBy ? uploadCard(d, '<div class="fmp1-note fmp1-note--info p2-small" role="status">Opening…</div>') : fileCard(d, '<div class="fmp1-note fmp1-note--info p2-small" role="status">Looking for the stored file…</div>') };
+      if (d.uploadedBy) loadUpload(d); else loadStored(d);
     }
   }
 
@@ -733,22 +758,85 @@
   }
 
   /* ---------- shared context for the flows (preview/phase2-flows.js) ---------- */
-  /* One list of documents for a job: the contract packet first, then the signed files. The whole row opens it. */
+  /* One list of documents for a job: the contract packet first, then the files. The whole row opens it.
+     opts: { packet, packetTitle, packetSub, kind, changeOrder, only (a list to show instead of filtering), removable } */
   function docRows(j, opts) {
     opts = opts || {};
     var rows = [];
-    if (j.stage !== 'lost' && opts.packet !== false) rows.push('<li><button class="p2-docrow" data-open-packet><span class="p2-docicon" aria-hidden="true"></span><span class="p2-doctext"><b>' + (opts.packetTitle || 'Contract packet') + '</b><span class="p2-small fmp1-faint">' + (opts.packetSub || 'Summary, payment schedule, invoices, quote' + (j.elevations && j.elevations.rooms && j.elevations.rooms.length ? ' and elevations' : '')) + '</span></span><span class="p2-docopen">Open</span></button></li>');
-    (j.documents || []).filter(function (d) { return !opts.kind || d.kind === opts.kind; }).forEach(function (d) {
-      rows.push('<li><button class="p2-docrow" data-open-file="' + esc(d.file) + '"><span class="p2-docicon" aria-hidden="true"></span><span class="p2-doctext"><b>' + esc(d.title) + '</b><span class="p2-small fmp1-faint">' + esc(d.file) + (d.pages ? ' · ' + d.pages + ' page' + (d.pages === 1 ? '' : 's') : '') + (d.bytes ? ' · ' + (d.bytes / 1e6).toFixed(1) + ' MB' : '') + '</span></span><span class="p2-docopen">Open</span></button></li>');
-    });
-    return rows.length ? '<ul class="p2-docs">' + rows.join('') + '</ul>' : '';
+    if (j.stage !== 'lost' && opts.packet !== false && opts.changeOrder == null) rows.push('<li><button class="p2-docrow" data-open-packet><span class="p2-docicon" aria-hidden="true"></span><span class="p2-doctext"><b>' + (opts.packetTitle || 'Contract packet') + '</b><span class="p2-small fmp1-faint">' + (opts.packetSub || 'Summary, payment schedule, invoices, quote' + (j.elevations && j.elevations.rooms && j.elevations.rooms.length ? ' and elevations' : '')) + '</span></span><span class="p2-docopen">Open</span></button></li>');
+    var list = opts.only || (j.documents || []).filter(function (d) { return !d.removed && (!opts.kind || d.kind === opts.kind) && (opts.changeOrder == null || d.changeOrder === opts.changeOrder); });
+    var html = rows.join('') + docRowsList(j, list, opts);
+    return html ? '<ul class="p2-docs">' + html + '</ul>' : '';
   }
-  function ctx() { return { store: store, ui: ui, me: me, TODAY: TODAY, esc: esc, money: $f, longDate: longDate, render: render, go: go, W: W, B: B, openDoc: openDoc, docRows: docRows, stagePill: stagePill }; }
+  function docRowsList(j, list, opts) {
+    opts = opts || {}; var FF = window.FMFiles, who = me();
+    return (list || []).map(function (d) {
+      var k = FF.key(d), meta = d.uploadedBy ? (FF.CATEGORIES[d.category] && d.changeOrder == null ? '' : '') + esc(d.file) + ' · ' + FF.size(d.bytes) + ' · uploaded by ' + esc(d.uploadedBy) + (d.uploadedOn ? ' ' + longDate(d.uploadedOn) : '')
+        : esc(d.file) + (d.pages ? ' · ' + d.pages + ' page' + (d.pages === 1 ? '' : 's') : '') + (d.bytes ? ' · ' + FF.size(d.bytes) : '');
+      var canRm = opts.removable && d.uploadedBy && (who.access === 'full' || who.name === d.uploadedBy);
+      var rm = ui.docRm && ui.docRm.id === k ? '<div class="p2-form">' + '<label class="p2-fld"><span>Why remove it (optional)</span><input class="fmp1-input" data-docrmr value="' + esc(ui.docRm.reason || '') + '" data-autofocus></label><button class="fmp1-btn fmp1-btn--primary" data-docrmsave>Remove</button><button class="fmp1-btn fmp1-btn--quiet" data-docrmcancel>Cancel</button><span class="p2-small fmp1-faint" style="flex-basis:100%">It\'s kept and can be restored.</span></div>' : '';
+      return '<li class="p2-docli"><div class="p2-docline"><button class="p2-docrow" data-open-file="' + esc(k) + '"><span class="p2-docicon' + (d.image ? ' p2-docicon--img' : '') + '" aria-hidden="true"></span><span class="p2-doctext"><b>' + esc(d.title) + '</b><span class="p2-small fmp1-faint">' + meta + '</span>' +
+        (d.note ? '<span class="p2-small">' + esc(d.note) + '</span>' : '') + (d.contains && !d.uploadedBy ? '<span class="p2-small fmp1-faint">' + esc(d.contains) + '</span>' : '') + '</span><span class="p2-docopen">Open</span></button>' +
+        (canRm && !rm ? '<button class="fmp1-btn fmp1-btn--quiet" data-docrm="' + esc(k) + '" aria-label="Remove ' + esc(d.title) + '">Remove</button>' : '') + '</div>' +
+        (d.flag ? '<div class="fmp1-note fmp1-note--alert p2-small"><span><b>Check:</b> ' + esc(d.flag) + '</span></div>' : '') + rm + '</li>';
+    }).join('');
+  }
+  /* Uploaded files. In the live tool they're on the server (POST/GET /api/projectbuilder/files, HANDOFF §32). This preview keeps
+     them in the browser (IndexedDB), so they stay on this computer only. */
+  var FILESTORE = (function () {
+    var mem = {}, dbp = null;
+    function db() { if (!dbp) dbp = new Promise(function (res, rej) { try { var r = indexedDB.open('fm_phase2_files', 1); r.onupgradeneeded = function () { r.result.createObjectStore('files'); }; r.onsuccess = function () { res(r.result); }; r.onerror = function () { rej(r.error); }; } catch (e) { rej(e); } }); return dbp; }
+    return {
+      put: function (k, blob) { mem[k] = blob; return db().then(function (d) { return new Promise(function (res) { var t = d.transaction('files', 'readwrite'); t.objectStore('files').put(blob, k); t.oncomplete = function () { res(); }; t.onerror = function () { res(); }; }); }).catch(function () { /* kept in memory */ }); },
+      get: function (k) { if (mem[k]) return Promise.resolve(mem[k]); return db().then(function (d) { return new Promise(function (res) { var rq = d.transaction('files').objectStore('files').get(k); rq.onsuccess = function () { res(rq.result || null); }; rq.onerror = function () { res(null); }; }); }).catch(function () { return null; }); }
+    };
+  })();
+  function upload(el) {
+    var file = el.files && el.files[0], r = route(), j = r.area === 'job' ? store.job(r.a) : null; if (!file || !j) return;
+    var co = el.dataset.upco ? +el.dataset.upco : null, U = ui.up && ui.up.job === j.jobCode ? ui.up : { job: j.jobCode };
+    var input = co != null ? { category: 'other', changeOrder: co } : { category: U.category, title: U.title, note: U.note };
+    var all = j.documents || [], seq = all.length + 1;
+    while (all.some(function (d) { return d.id === j.jobCode + '-doc' + seq; })) seq++;
+    file.arrayBuffer().then(function (buf) {
+      var sha = window.crypto && window.crypto.subtle ? window.crypto.subtle.digest('SHA-256', buf).then(hex).catch(function () { return null; }) : Promise.resolve(null);
+      return sha.then(function (h) {
+        var res = window.FMFiles.check({ name: file.name, size: file.size, type: file.type, sha256: h }, input, { jobCode: j.jobCode, by: me().name, today: TODAY, existing: all, seq: seq });
+        el.value = '';
+        if (!res.ok) { ui.up = Object.assign({}, U, { job: j.jobCode, co: co, err: res.problems, msg: null }); return render(); }
+        return FILESTORE.put(res.doc.id, new Blob([buf], { type: res.doc.type })).then(function () {
+          store.update(j.jobCode, function (x) { x.documents = (x.documents || []).concat([res.doc]); return x; },
+            (co != null ? 'File attached to change order ' + co : 'Uploaded ' + window.FMFiles.CATEGORIES[res.doc.category].label.toLowerCase()) + ': "' + res.doc.title + '" (' + window.FMFiles.size(res.doc.bytes) + ') by ' + me().name + '.', me().name);
+          ui.up = { job: j.jobCode, co: co, category: U.category || '', msg: 'Uploaded "' + res.doc.title + '"' + (co != null ? ' to change order ' + co : '') + '.' + (res.warnings.length ? ' ' + res.warnings.join(' ') : ''), err: null };
+          render();
+        });
+      });
+    });
+  }
+  function uploadCard(d, note) {
+    return '<div class="fmp1-card p2-pad pv-filenote"><span class="fmp1-eyebrow">' + esc(d.changeOrder != null ? 'Change order ' + d.changeOrder : (window.FMFiles.CATEGORIES[d.category] || {}).label || 'Document') + '</span><b>' + esc(d.file) + '</b><span class="p2-small fmp1-muted">' + window.FMFiles.size(d.bytes) + ' · uploaded by ' + esc(d.uploadedBy) + (d.uploadedOn ? ' on ' + longDate(d.uploadedOn) : '') + '</span>' +
+      (d.note ? '<span class="p2-small">' + esc(d.note) + '</span>' : '') + note + '</div>';
+  }
+  function loadUpload(d) {
+    var k = window.FMFiles.key(d);
+    FILESTORE.get(k).then(function (blob) {
+      if (!ui.viewer || ui.viewer.stored !== d.file) return;
+      if (!blob) { ui.viewer.html = uploadCard(d, '<div class="fmp1-note fmp1-note--info p2-small"><span>This file was uploaded in a different browser, so this preview can\'t show it. In the live tool every file comes from the server.</span></div>'); return render(); }
+      if (window.FMFiles.ext(d.file) === 'html') return blob.text().then(function (t) { if (!ui.viewer) return; ui.viewer.html = t; ui.viewer.stored = null; ui.viewer.pdfUrl = null; render(); });   // signed copies made in the tool: document + certificate
+      var url = URL.createObjectURL(blob), e = window.FMFiles.ext(d.file);
+      ui.viewer.pdfUrl = url;
+      ui.viewer.html = d.image && e !== 'heic' && e !== 'heif' ? '<div class="fmp1-card p2-pad pv-pdfwrap"><img class="pv-img" src="' + url + '" alt="' + esc(d.title) + '"></div>'
+        : e === 'pdf' ? '<div class="fmp1-card p2-pad pv-pdfwrap"><iframe class="pv-pdf" src="' + url + '" title="' + esc(d.title) + '"></iframe></div>'
+        : uploadCard(d, '<p class="p2-small">This kind of file opens in its own app. Use <b>Download</b> above.</p>');
+      render();
+    });
+  }
+  function ctx() { return { store: store, ui: ui, me: me, TODAY: TODAY, esc: esc, money: $f, longDate: longDate, render: render, go: go, W: W, B: B, openDoc: openDoc, docRows: docRows, stagePill: stagePill , files: FILESTORE, packetHTML: function (j) { return D.renderPacket(j, packetOpts(j)); } }; }
   window.P2 = { ctx: ctx, render: render };
 
   /* ---------- events ---------- */
   root.addEventListener('click', function (e) {
     var t = e.target.closest('button, a[data-npstep], a[data-costep], a[data-ctfix], a[data-coreset]'); if (!t) return;
+    if (window.P2Sign && window.P2Sign.click(ctx(), t)) { if (t.tagName === 'A') e.preventDefault(); return; }
     if (t.tagName === 'A') e.preventDefault();   // the step tabs of New Project and change orders are links: switch steps, don't navigate
     var r = route(), j = r.area === 'job' ? store.job(r.a) : null;
     if (t.hasAttribute('data-reset')) { store.reset(); ui.pay = ui.act = ui.viewer = ui.el = null; return render(); }
@@ -770,7 +858,7 @@
       var res = store.recordPayment(j.jobCode, ui.pay.inv, { amountCents: isNaN(amt) ? 0 : amt, date: v.date, method: v.method, reference: v.reference }, me().name);
       if (!res.ok) { ui.pay.errors = res.errors; ui.pay.values = v; return render(); }
       var paidInv = j.invoices.filter(function (i) { return i.id === ui.pay.inv; })[0];
-      ui.paidNote = 'Payment of ' + $f(amt) + ' recorded on ' + (paidInv ? paidInv.label : 'the invoice') + '. It now shows in Payments, the job balance and Company books.';
+      ui.paidNote = (paidInv && paidInv.amountCents < 0 ? 'Refund of ' : 'Payment of ') + $f(amt) + ' recorded on ' + (paidInv ? paidInv.label : 'the invoice') + '. It now shows in Payments, the job balance and Company books.';
       ui.pay = null; return render();
     }
     if (j && (t.hasAttribute('data-schedopen') || ui.sched) && schedClick(t, j)) return;
@@ -792,6 +880,18 @@
       store.update(j.jobCode, function () { return a.job; }, def.label + (input.date ? ' (' + input.date + ')' : '') + (input.reason ? ': ' + input.reason : '') + '.', me().name);
       ui.act = null; return render();
     }
+    if (t.dataset.docrm) { ui.docRm = { id: t.dataset.docrm, reason: '' }; return render(); }
+    if (t.hasAttribute('data-docrmcancel')) { ui.docRm = null; return render(); }
+    if (t.hasAttribute('data-docrmsave') && j && ui.docRm) {
+      var rd = (j.documents || []).filter(function (x) { return window.FMFiles.key(x) === ui.docRm.id; })[0], rr = rd && window.FMFiles.remove(rd, me().name, TODAY, ui.docRm.reason);
+      if (rr && rr.ok) store.update(j.jobCode, function (x) { x.documents = x.documents.map(function (y) { return window.FMFiles.key(y) === ui.docRm.id ? rr.doc : y; }); return x; }, rr.log + ' (' + me().name + ')', me().name);
+      ui.docRm = null; return render();
+    }
+    if (t.dataset.docrestore && j) {
+      var sd = (j.documents || []).filter(function (x) { return window.FMFiles.key(x) === t.dataset.docrestore; })[0], sr = window.FMFiles.restore(sd, me().name);
+      store.update(j.jobCode, function (x) { x.documents = x.documents.map(function (y) { return window.FMFiles.key(y) === t.dataset.docrestore ? sr.doc : y; }); return x; }, sr.log, me().name);
+      return render();
+    }
     if (t.dataset.useradd != null || t.dataset.userrm) return usersClick(t);
     if (window.P2Reports && window.P2Reports.click(ctx(), t)) return;
     if (window.P2Company && window.P2Company.click(ctx(), t)) return;
@@ -803,13 +903,18 @@
   });
   root.addEventListener('input', function (e) {
     if ((e.target.dataset.schedf || e.target.dataset.schedq) && schedInput(e.target)) return;
+    if (e.target.dataset.upf) { var ur = route(); ui.up = ui.up && ui.up.job === ur.a ? ui.up : { job: ur.a }; ui.up[e.target.dataset.upf] = e.target.value; ui.up.msg = ui.up.err = null; return; }
+    if (e.target.hasAttribute('data-docrmr') && ui.docRm) { ui.docRm.reason = e.target.value; return; }
     if (e.target.hasAttribute('data-q')) { ui.q = e.target.value; var pos = e.target.selectionStart; render(); var s = root.querySelector('[data-q]'); s.focus(); s.setSelectionRange(pos, pos); }
     if (window.P2Customers && window.P2Customers.input(ctx(), e)) return;
     if (window.P2Elev && window.P2Elev.input(ctx(), e)) return;
+    if (window.P2Sign && window.P2Sign.input(ctx(), e)) return;
     if (window.P2Flows && window.P2Flows.input) window.P2Flows.input(ctx(), e);
   });
   root.addEventListener('change', function (e) {
     if (e.target.dataset.schedf || e.target.dataset.schedq) { schedInput(e.target); if (e.target.dataset.schedf) render(); return; }   // re-total once a box is left
+    if (e.target.hasAttribute('data-upload')) { upload(e.target); return; }
+    if (e.target.dataset.upf === 'category') { render(); return; }   // show that kind's hint
     if (e.target.hasAttribute('data-actor')) { ui.actor = e.target.value; try { window.localStorage.setItem('fm_phase2_actor', ui.actor); } catch (x) { /* ignore */ } return render(); }
     if (e.target.dataset.userf) return usersChange(e.target);
     if (window.P2Reports && window.P2Reports.change(ctx(), e)) return;
@@ -817,6 +922,7 @@
     if (window.P2Customers && window.P2Customers.change(ctx(), e)) return;
     if (window.P2Measure && window.P2Measure.change(ctx(), e)) return;
     if (window.P2Elev && window.P2Elev.change(ctx(), e)) return;
+    if (window.P2Sign && window.P2Sign.change(ctx(), e)) return;
     if (window.P2Flows && window.P2Flows.change) window.P2Flows.change(ctx(), e);
   });
   /* Tabbing or clicking into a number box selects what's there, so typing replaces it (markup, hours, percentages…).
@@ -831,7 +937,7 @@
   });
   root.addEventListener('mouseup', function (e) { if (e.target.matches && e.target.matches('input[inputmode="decimal"], input[inputmode="numeric"]') && Date.now() - lastNav < 400) e.preventDefault(); });   // keep the selection the click just made
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && ui.viewer) { var c = root.querySelector('[data-close-viewer]'); if (c) c.click(); } });
-  window.addEventListener('hashchange', function () { ui.pay = ui.pendingPay || null; ui.pendingPay = null; ui.act = null; ui.paidNote = null; ui.viewer = null; ui.esErr = null; window.scrollTo(0, 0); render(); });
+  window.addEventListener('hashchange', function () { ui.pay = ui.pendingPay || null; ui.pendingPay = null; ui.act = null; ui.paidNote = null; ui.viewer = null; ui.esErr = null; ui.docRm = null; if (ui.up) { ui.up.msg = ui.up.err = null; } window.scrollTo(0, 0); render(); });
   window.addEventListener('resize', fitViewer);
   FMTheme.init(root); FMTheme.bind(root, root);
   if (window.P2Elev) window.P2Elev.bind(root, ctx);

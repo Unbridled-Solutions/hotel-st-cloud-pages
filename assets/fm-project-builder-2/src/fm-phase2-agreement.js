@@ -90,5 +90,6 @@
   }
 
   return { VERSION: VERSION, SIGNED: SIGNED, GOODS: GOODS, CHANGES: CHANGES, QUESTIONS: QUESTIONS, LAW: SIGNED.law,
-           ESIGN: 'Signed through Dropbox Sign or on paper; each signed copy is an original.', sections: sections, paymentText: paymentText };
+           ESIGN_SIGNED: 'Signed through Dropbox Sign or on paper; each signed copy is an original.',   // wording on contracts signed before Nov 6, 2026; reprints keep it
+           ESIGN: 'Signed electronically (in Fremont Makers\' signing tool or another e-signature service) or on paper; each signed copy is an original.', sections: sections, paymentText: paymentText };
 }));

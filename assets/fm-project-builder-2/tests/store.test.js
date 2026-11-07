@@ -38,7 +38,7 @@ test('seed: tax and supplier cost for the books come from the signed quotes', fu
   eq([w.taxCents, w.costCents], [502418 + 62080, 5042754 + 538873]);   // 10 houses (tax $5,024.18, cost $50,427.54) + change order 1 (tax $620.80, cost $5,388.73 from its line costs)
   eq([p.taxCents, p.costCents, p.absorbedCents], [62079, 576696, 6291]);   // $1,652.70 paid − $1,589.79 refunded
   eq(p.changeOrders.map(function (c) { return [c.number, c.kind, c.amountCents]; }), [[1, 'courtesy', 0]]);
-  eq(p.documents.length, 2); eq(w.documents.length, 3);
+  eq(p.documents.length, 3); eq(p.documents[2].changeOrder, 1);   // + change order 1 PDF (Nov 6) eq(w.documents.length, 3);
   eq([w.contractedOn, p.contractedOn, s.job('FM-2609-991').contractedOn], ['2026-10-01', '2026-09-16', null]);
 });
 
@@ -143,5 +143,25 @@ test('Nov 5: payments made in the existing tool, and the real change order cost,
 });
 
 console.log('store.test.js\n' + results.join('\n'));
+
+test('saved data picks up documents added later (Braddy change order 1 PDF) and keeps uploads', function () {
+  var seedS = ST.seed({ sample: SAMPLE, willow: W, braddy: B }), saved = JSON.parse(JSON.stringify(seedS));
+  var p = saved.jobs.filter(function (j) { return j.jobCode === 'FM-2609-314'; })[0];
+  p.documents = p.documents.filter(function (d) { return d.kind !== 'change_order'; }).concat([{ id: 'FM-2609-314-doc9', kind: 'supporting', category: 'photo', title: 'Site', file: 'site.jpg', bytes: 1, uploadedBy: 'Linds' }]);
+  ST.upgrade(saved, seedS);
+  eq(p.documents.map(function (d) { return d.kind; }), ['contract', 'supplier-order', 'supporting', 'change_order']);
+});
+
+
+test('Braddy CO 1: VSB30 3 → 2 (owner, Nov 6) reaches saved data, and the answered check note goes', function () {
+  var seedS = ST.seed({ sample: SAMPLE, willow: W, braddy: B }), saved = JSON.parse(JSON.stringify(seedS));
+  var p = saved.jobs.filter(function (j) { return j.jobCode === 'FM-2609-314'; })[0], co = p.changeOrders[0];
+  eq(co.removed.map(function (r) { return r.sku + ' ' + (r.from != null ? r.from + '→' + r.to : r.qty + '→0'); }), ['DC324-VDH 2→0', 'VDC12-VDH 1→0', 'VSB30-VDH 3→2']);
+  co.removed = co.removed.slice(0, 2); p.documents[2].flag = 'old note';
+  ST.upgrade(saved, seedS);
+  eq([co.removed.length, co.removed[2].to, p.documents[2].flag, /Owner, Nov 6/.test(p.documents[2].note)], [3, 2, undefined, true]);
+  eq(co.absorbedCents, 6291, 'the refund already covers it; absorbed unchanged');
+});
+
 console.log((results.length - failed) + ' passed, ' + failed + ' failed');
 if (isNode && failed) process.exit(1);

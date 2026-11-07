@@ -1,10 +1,18 @@
 # Handoff to Hermes: Project Builder Phase 1 + 2
 
-**From:** Fremont Makers (Linds) via Claude · **Date:** 2026-11-05 · **Package version:** 2.10.0
+**From:** Fremont Makers (Linds) via Claude · **Date:** 2026-11-06 · **Package version:** 2.11.0
 
-## Current state (2.10.0, Nov 5 2026)
+## Current state (2.11.0, Nov 6 2026)
 
 *Rewritten each release, so you don't need the history below. The numbered sections are the detail.*
+
+> **New in 2.11.0 (Nov 6):**
+> - **§34: signing in the tool, with a certificate of completion,** plus a guided "sign outside the tool, then upload" path. This replaces Dropbox Sign: the owner put the API on hold ($75/month). Reminders on days 3 and 7, links expire after 30 days.
+> - **§32:** supporting documents in the Documents tab, the Braddy change order 1 PDF (VSB30 3 → 2 confirmed by the owner), and change orders for every kind of change (add, swap, return, backorder, damage, our mistake, other).
+> - §33: the Dropbox Sign plan, **on hold. Don't build it.**
+>
+> 21 test files, 252 tests.
+
 
 - **What this is:** a new Project Builder: Phase 1 quote and ledger math, plus the Phase 2 app `phase2.html`. **Nothing is live.** Follow `HERMES-LAUNCH.md`.
 - **Where it goes (owner, Nov 5):**
@@ -35,8 +43,8 @@
   - The deposit is due on signing.
   - Elevations can go out marked preliminary.
   - The schedule can be adjusted after signing (§29).
-- **Server work still to do (yours):** sign-in and access levels, the shared database, file storage with SHA-256, the supplier PDF import, Dropbox Sign, field-measure sync, and **locking the old tool's open data address** behind sign-in (`HERMES-LAUNCH.md` §0, §2).
-- **Tests:** 19 files, 211 tests, all passing (`HERMES-LAUNCH.md` §1).
+- **Server work still to do (yours):** sign-in and access levels, the shared database, file storage with SHA-256, the supplier PDF import, the public signing page (§34), field-measure sync, and **locking the old tool's open data address** behind sign-in (`HERMES-LAUNCH.md` §0, §2).
+- **Tests:** 21 files, 252 tests, all passing (`HERMES-LAUNCH.md` §1).
 - **Waiting on the owner:**
   - Tayler's email
   - the accountant: sales tax on lump-sum bid pages, the Balance sheet's $100,000 difference, loan principal on the P&L
@@ -135,6 +143,9 @@ If any step below seems to require breaking a rule, stop and ask the owner.
 | `preview/sample-data.js` | Records copied from the Oct 27 recording, in a **guessed** legacy shape (see §4). | Test fixture |
 | `src/fm-phase2-contract.js` | Phase 2 contract logic: ready check, invoice dates and amounts, Dropbox Sign request bodies, frame options, callback events → job status. `window.FMContract`. | Phase 2 (§16), don't ship yet |
 | `tests/contract.test.js` | 22 tests. `node tests/contract.test.js` | CI |
+| `src/fm-phase2-sign.js` | Signing in the tool: requests, consent, signatures, reminders, expiry, signing outside the tool, the certificate of completion. `window.FMSign`. | Phase 2 (§34) |
+| `preview/phase2-sign.js` | Contract tab signing card, change order signing block, the signing page `#/sign/<link>`. | Preview (§34) |
+| `tests/sign.test.js` | 15 tests. `node tests/sign.test.js` | CI |
 | `docs/change-order-flow.html` | Phase 2 change order flow proposal with a working prototype on Penrose. | Reference (§19), don't ship |
 | `src/fm-phase2-changeorder.js` | Phase 2 change orders: the flow (merge, color check, whole-order split, pricing with the job's settings, own invoice; §19) and courtesy change orders (real cost, absorbed cost, owner approval, customer page without costs; §17). `window.FMChangeOrder`. | Phase 2 (§17), don't ship yet |
 | `tests/changeorder.test.js` | 14 tests. `node tests/changeorder.test.js` | CI |
@@ -1264,3 +1275,250 @@ The owner gave access to the live tool (`tools.fremontmakers.com/quote`, build "
 - [ ] Company P&L, November 2026 (estimate): operating expenses $21,996.68, net income −$24,111.82. September: net income −$13,475.20.
 - [ ] Balance sheet: total assets $5,407.72; liabilities + equity $105,407.72; "Off by $100,000.00".
 - [ ] A Coordinator can't edit company books; a Full-access edit is logged with name and time.
+
+## 32. Supporting documents; change order PDFs; change orders for every kind of change (Nov 6, 2.11.0)
+
+*Built Nov 6 at the owner's request ("for our next build"). It ships in the next version when the owner says send.*
+
+### What the owner asked
+- **Documents tab:** a place to upload supporting documents from clients, such as architectural plans or photos.
+- **Attach the change order PDFs:**
+  - Braddy (Penrose) change order 1.
+  - Willow Creek change order 1 (the change order and its invoice).
+- **Change orders:** one more pass so they handle any change after the contract, and stay intuitive and flexible: backordered cabinets, swaps, returns, damage, new cabinets.
+
+### Documents tab (`src/fm-phase2-files.js`, `FMFiles` 1.0.0)
+- **Four sections:** Contract and invoices · Change orders (grouped by change order, each with its own "from the tool" document and anything attached) · Supplier orders · Supporting documents.
+- **Supporting documents:**
+  - **Kinds:** Architectural plans, Photos, Specs and selections, Emails and notes, Other.
+  - **Each upload records:** the kind, name, note, who and when, size, type and SHA-256.
+  - **File types:** PDF, JPG, PNG, HEIC, WEBP, GIF, DWG, DXF, DOC/DOCX, XLS/XLSX, CSV, TXT, EML. Up to 25 MB.
+  - **Duplicates:** the same file twice (same SHA-256) is refused. A different file with the same name is saved as "name (2)".
+- **Attach a file** on any change order (on its card, or its group in Documents), for example a signed copy, damage photos or a supplier quote.
+- **Remove never deletes:**
+  - The file is hidden and kept, with who, when and why.
+  - It can be restored from "Removed".
+  - Only the uploader or Full access can remove an upload.
+  - Signed contracts, invoices and supplier orders can't be removed.
+- **Server work (Hermes):**
+  - `POST /api/projectbuilder/files` (multipart, job code, optional change order number) stores the file and returns `{ id, sha256, bytes, type }`.
+  - `GET /api/projectbuilder/files/:id` serves it to signed-in users only.
+  - Store the record from `FMFiles.check(...).doc` in `job.documents`. Check the SHA-256 on the server.
+  - The preview keeps uploads in the viewer's own browser (IndexedDB) and says so on screen. Nothing in the preview is uploaded anywhere.
+- **Braddy change order 1 PDF** (`FM-2609-314 · Braddy Builders COR 1.pdf`, 2 pages, 401,071 bytes, SHA-256 `8bbd4a2c…02bb6`) is now on the job under change order 1.
+  - The PDF also lists VSB30-VDH as "3 → 2". The existing tool's record missed that line. **The owner confirmed on Nov 6 that it's right**, so change order 1 now removes VSB30 ×1 (3 → 2) along with DC324 ×2 and VDC12 ×1.
+  - Removed sell is $2,001.39: the $1,649.95 the old tool noted, plus VSB30 at $351.44.
+  - The shop's absorbed cost stays $62.91, because the $1,589.79 refund is unchanged.
+  - The cabinet list shows "3 → 2, reduced by change order 1". The customer page prints "VSB30-VDH changed 3 → 2".
+  - `FMStore.upgrade` adds the line to saved data. It also replaces the check note that 2d1101a briefly showed.
+- **Willow Creek change order 1:** both PDFs were already in the data (2.9.0). Their SHA-256s were checked against the owner's Dropbox copies on Nov 6 and match. They now show under change order 1.
+- **Saved data:** `FMStore.upgrade` adds documents added to the seed later to saved jobs (by file name) and keeps uploads.
+
+### Change orders, reworked (`src/fm-phase2-changeorder.js` 0.4.0, `preview/phase2-flows.js`)
+**Step 1, What happened.** Pick one of seven:
+- Add cabinets
+- Swap cabinets
+- Remove or return
+- Backordered (swap in another cabinet, or wait for it)
+- Damaged
+- Our mistake
+- Something else
+
+Each sets the printed reason, opens the right hint, and suggests (never picks) how it's billed. Then add one sentence for the paper trail. If the delivery date moves, enter the new one (required for "wait for it").
+
+**Step 2, Cabinets.** Every tool works whatever was picked:
+- **+ / −** on any line (down to 0 removes it).
+- **Add a cabinet** by hand: SKU, description, qty, unit cost. Typing a SKU that's on the job, a past change order or a supplier PDF fills in its description and cost. `FMChangeOrder.addLine`.
+- **Add every line from a supplier PDF** (as before).
+- **Swap** a line for another SKU, for some or all of its quantity. `swapLine`.
+- **Replace** a damaged cabinet with the same one:
+  - It's reordered at our cost; the customer's order doesn't change.
+  - Enter the cost, who the claim goes to (supplier, freight carrier, or we cover it) and what's wrong.
+- **Backordered** (when waiting): marks the late cabinets; nothing on the order changes.
+- **Other charges or credits:** restocking fee (taxable by default), freight, extra labor, a credit (a minus amount), or anything else. Each can be marked taxable.
+
+**Step 3, Price.**
+- The change order's own pricing works as in 2.9.0.
+- New totals rows: other charges, replacements at our cost (never billed), and a suggestion line.
+- Four choices, with nothing chosen until the person picks:
+  - **Charge it**
+  - **Courtesy ($0)**
+  - **Agreed amount**
+  - **No change to the contract**: only when no cabinet is added or removed and no charge is entered, so replacements and new dates only.
+
+**Step 4, Review, then save:**
+- **No change to the contract** (`FMChangeOrder.notice`): recorded at once (status `recorded`). The delivery date and the shop's absorbed total update right away. Nothing to approve or sign.
+- **Courtesy:** saved for Full access to approve. Approval applies the new date and the absorbed cost.
+- **Charge or agreed amount:** sent for signature. Signing adds the contract amount and its invoice, then applies the new date and any absorbed cost.
+  - **A negative amount is a credit.** Its invoice shows "Credit owed" until a refund is recorded on it ("Record refund", stored as a negative payment), then "Refunded".
+
+**After saving, on each change order card:**
+- **Open change order:** the customer document for every kind.
+  - Courtesy pages say "this change is $0".
+  - No-change pages say "No change to your contract", list replacements as "No charge" and backorders with the new date.
+  - Credits say how the credit is applied.
+  - Cost, markup, claims and absorbed amounts are never printed.
+- **Record a credit:** money back from the supplier or freight carrier, for returned cabinets or a damage claim (`recordCredit`). "They won't credit it" is allowed.
+  - The shop's absorbed cost is recomputed and logged.
+- **Withdraw:** for one that's sent or waiting for approval, with a reason (`withdraw`). It stays on the list, crossed out, and is never billed.
+- **Attach a file.**
+
+**What the shop absorbs** (`absorbedFor`; internal only):
+- **Courtesy:** paid for the added cabinets + replacements − credits.
+- **No change:** replacements − damage credits.
+- **Charge or agreed amount:** replacements − damage credits, plus whatever the supplier kept on returned cabinets. Until the real credit is recorded, the job cost assumes a full credit, and the card says so.
+- **`job.absorbedCents` = `absorbedOnJob`:** approved courtesy + recorded no-change + signed charge.
+
+**Ledger:** `invoiceState` gives negative invoices `credit` / "Credit owed" until refunded. `FMStore.recordPayment` records refunds on them.
+
+**Penrose change order 1** comes through unchanged ($62.91 absorbed after the $1,589.79 refund).
+
+### Data and server
+- **New fields on a change order:**
+  - `type`
+  - `replaced [{ sku, desc, qty, unitCostCents, claim, why }]`, `replacedCostCents`
+  - `waitFor [{ sku, desc, qty }]`, `newDeliveryDate`
+  - `extras [{ label, amountCents, taxable }]`, `removedCostCents`
+  - `credits [{ amountCents, on, reference, from, for, none, by }]`
+  - `withdrawn { by, on, reason }`
+- **New statuses:** `recorded` and `withdrawn`. New kind: `notice`. `priced.summary.otherCents`.
+- **New job document fields:** `id`, `kind: 'supporting'`, `category`, `note`, `uploadedBy`, `uploadedOn`, `type`, `image`, `changeOrder`, `removed`, `flag`.
+- **All writes are logged** with who did them, as before.
+
+### Tests
+- **New `files` test file:** 9 tests.
+- **`changeorder`:** 25 tests (10 new).
+- **`store`:** 13 tests (2 new).
+- **`braddy` and `store`:** document counts updated for the Braddy change order 1 PDF.
+- **Total:** 20 files, 232 tests.
+
+### Acceptance checks (`phase2.html`, after Reset sample data)
+1. **Penrose → Documents:** four sections. Under Change order 1: "Change order 1 (from the tool)", and the PDF with the owner's note confirming VSB30 3 → 2. **Penrose → Cabinets:** VSB30-VDH shows "3 → 2, reduced by change order 1". Upload a photo under Supporting documents → Photos; remove it; restore it.
+2. **Penrose → Change orders → New change order → Damaged:** Replace WC3024-VDH (claim: freight carrier) → only "No change to the contract", Courtesy and Agreed amount can be picked → Record it. The card shows "shop absorbs $228.00 until the claim with the freight carrier is paid". Record a credit of $228 → $0.00.
+3. **Remove or return:** − on WC2442-VDH, + Restocking fee $40 → Charge it → a credit of −$391.59. Buyer signed → the invoice shows "Credit owed"; Record refund → "Refunded"; balance $0.00.
+4. **Willow Creek → Backordered → Wait for it,** new date Dec 12 → Backordered on a line → Record it. The delivery date on the job is now Dec 12, 2026.
+5. **Swap:** Swap a line for W3042-SBW (the description and $307.76 fill in) → Charge it → Withdraw with a reason → it stays, crossed out.
+
+## 33. Dropbox Sign live: the plan and the owner's choices (Nov 6, 2.11.0)
+
+> **On hold (owner, Nov 6):** the Dropbox Sign API costs $75/month, too much for what Fremont Makers uses. **Build §34 instead.** Keep this section and the Dropbox Sign code in `src/fm-phase2-contract.js` for later; nothing in the app calls the Dropbox Sign request builders now.
+
+*The owner is getting the Dropbox Sign API ready. They reviewed the sample and the plan and said build it this way. Read with §16, which is still the detail. The sample screens and plan are in `docs/dropbox-sign-plan.html` (hosted for the owner at https://claude.ai/artifact/FFq7C9ThNS6NMYxVe18DmJ).*
+
+### Owner decisions (Nov 6)
+- **Automatic reminders** 3 and 7 days after sending, to whoever still has to sign. There's also a manual **Send reminder** button.
+- **A request expires after 30 days unsigned.** The job goes back to Proposed, prices unlock, and the activity log says why.
+- **At launch, Fremont Makers countersigns from Dropbox Sign's email.** Signing inside the tool ("Sign here now", "Countersign now") comes in Phase B, after Dropbox Sign approves the API app. Don't hold launch for it.
+- **Change orders go through Dropbox Sign too.** This replaces "Buyer signed (simulate)":
+  - **Charged or credit:** the buyer signs, then Fremont Makers countersigns.
+  - **Courtesy or no change to the contract:** the buyer acknowledges; no countersignature.
+
+### Two phases
+- **Phase A (launch):** email signing, a tracker, reminders, cancel and resend, the expiry, the signed PDF and audit trail saved to Documents, change orders, and paper upload as the fallback.
+  - **Needs:** the paid API plan, the API key as a server secret, and the account callback URL.
+- **Phase B:** embedded signing (`create_embedded` + `embedded/sign_url`, requested the moment someone clicks; the link lasts 60 minutes), and optionally "check, then send".
+  - **Needs:** an API app for fremontmakers.com approved for embedded signing, its client ID, and the Dropbox Sign frame allowed in the page's CSP `frame-src`.
+
+### Code in this build (`src/fm-phase2-contract.js` 0.6.0)
+- `FMContract.SETTINGS` = `{ reminderDays: [3, 7], expiryDays: 30, countersign: 'email' }`.
+- **`signatureRequest(job, { today })`** adds `expires_at`: 30 days out, as a Unix time at midnight UTC.
+- **`changeOrderRequest(job, co, opts)`** builds the request body for a change order:
+  - Signers by kind, as in the decisions above.
+  - `metadata.fm_change_order`.
+  - A message that names the amount, the credit, or "no charge".
+  - It throws for a withdrawn change order or a missing buyer email.
+- **`reminderDue(es, today)`:** the server runs this daily. It returns `{ day, email, log }` when a day-3 or day-7 reminder is due and not yet sent. Then call `POST /v3/signature_request/remind/{id}` and add the day to `es.reminded`.
+- **`applyEvent`** handles `signature_request_expired`: the state becomes `expired` (a stop state), prices unlock, and the event is logged. It never undoes a finished signing.
+
+### Server (Hermes)
+Endpoints, under the new address. These replace §16's `/api/fm/contracts/…` names, to match `/api/projectbuilder/files`:
+
+| Endpoint | Does | Dropbox Sign |
+|---|---|---|
+| `POST /api/projectbuilder/esign/send` | Send a contract or change order N. Runs the ready check again on the server. | `signature_request/send` (A), `create_embedded` (B) |
+| `POST /api/projectbuilder/esign/remind` | Manual reminder to the next signer. | `signature_request/remind/{id}` |
+| `POST /api/projectbuilder/esign/cancel` | Cancel; prices unlock. | `signature_request/cancel/{id}` |
+| `POST /api/projectbuilder/esign/sign-url` | Phase B, one-time signing link. | `embedded/sign_url/{signature_id}` |
+| `POST /api/projectbuilder/esign/callback` | Public; verified. | (Dropbox Sign calls us) |
+
+- **The PDF:**
+  - Print the contract packet (or the change order) to PDF on the server with headless Chrome and `fm-phase1-print.css`, carrying the hidden `FMContract.TAGS`.
+  - Store the exact PDF sent and its SHA-256 with the request.
+  - After `downloadable`, fetch the signed PDF (`GET /v3/signature_request/files/{id}`) and its audit trail, store them beside it with their SHA-256s, and list them in Documents.
+- **The callback:**
+  - Verify `event_hash`.
+  - Reply 200 with `Hello API Event Received` first, then do the slow work (fetching PDFs) in the background.
+  - Keep raw events for a year.
+  - Route by `metadata.fm_job_code` + `fm_change_order`.
+- **Per-job `esign` record:**
+  - `requestId`, `what` (`contract` or `change_order:N`)
+  - `state`, `signers [{ role, name, email, signatureId, status, order }]`
+  - `sentPdf { file, sha256, version }`, `sentBy`, `sentAt`, `sentOn`
+  - `expiresAt`, `reminded []`, `seen []`, `testMode`
+  - A change order keeps its own record on the change order.
+- **Change order statuses:**
+  - Signing a charge or credit change order (`all_signed`) does what "Buyer signed (simulate)" does now: the contract amount, the invoice, the new delivery date, and absorbed cost.
+  - An acknowledged courtesy or no-change change order is marked `buyerAck: 'signed'`.
+- **Screens:**
+  - The Contract tab tracker: Sent → Opened → Buyer signs → Countersign → Contracted, with Send reminder, Cancel and "Expires <date>".
+  - A Dashboard task when a countersignature is waiting, with "Resend <name>'s email" in Phase A.
+  - Errors show in the page with Retry, never `alert()`.
+
+### Going live, in order
+1. **Owner:** upgrade the API plan; give Hermes the API key through the password manager or server secrets; confirm the signer list and send Tayler's email.
+2. **Hermes:** set the account callback to `https://tools.fremontmakers.com/api/projectbuilder/esign/callback`, and build on staging with `test_mode`.
+3. **Hermes:** do a test run with the owner's own emails:
+   - sign as the buyer, then as Fremont Makers, and check Contracted, both PDFs and the activity log
+   - decline one, cancel one, let one expire (use a short `expires_at` in test), and record one on paper
+   - send a charged change order and an acknowledgement-only one
+4. **Owner:** approve the test contract and its signed PDF.
+5. **Hermes:** turn `test_mode` off on the live tool.
+6. **Phase B:** the API app and embedded approval.
+
+### Tests
+- `contract`: 26 tests (4 new: expiry, the expired event, reminders, change order requests).
+- **Total:** 20 files, 236 tests.
+
+## 34. Signing in the tool, with a certificate; signing outside the tool (Nov 6, 2.11.0)
+
+*Owner, Nov 6: "it's $75/month … to add the API for esign into our tool. That's too much right now … can you create an esign certificate of sorts to embed into the tool? and if not, we have to just have it walk us through the steps to go outside the tool to collect signatures and then come back to upload/mark signed docs as received." Both are built. Signing in the tool is the default; outside is the backup.*
+
+### Why this is a valid electronic signature
+The U.S. ESIGN Act (15 U.S.C. §7001) and Colorado's UETA (C.R.S. 24-71.3) treat an electronic signature like a handwritten one when four things are true. The tool records each:
+
+| What the law needs | How the tool does it |
+|---|---|
+| The signer meant to sign | They type their name exactly as it's on the document (or draw it) and tick "I have reviewed the document and I sign it." |
+| They agreed to do business electronically | A plain-words consumer disclosure (`FMSign.CONSENT`: paper copy on request, how to withdraw, what they need, it covers this document only) and a separate box they tick first. |
+| The signature is tied to the exact record | The document is frozen when it's sent and its SHA-256 recorded. Signing is refused if the document shown doesn't match. |
+| Everyone can keep a copy | When everyone has signed, a **Signatures and certificate of completion** page is added (`FMSign.renderCertificate`): each signer's signature, name, email, when they opened it, agreed and signed, IP address, browser, method, the fingerprint, and the full history. The signed copy is filed under Documents, and each signer can download it from their link. |
+
+This is what Dropbox Sign or DocuSign give too (their "audit trail"). It isn't a cryptographic "digital certificate"; contracts like these don't need one. The agreement's e-sign line now reads "Signed electronically (in Fremont Makers' signing tool or another e-signature service) or on paper"; contracts signed before Nov 6 reprint with their original wording (`FMAgreement.ESIGN_SIGNED`). **Suggest the owner shows the consent wording and that line to whoever reviewed the contract language (`docs/contract-language-review.md`).**
+
+### How it works for the team (Contract tab → Send for signature)
+- **Sign in the tool:** Send for signature → the tool shows the buyer's link with **Email it from your mail app** (opens a ready-written email in the team's own mail, so no email service is needed), **Copy link (to text it)**, and a status list per signer. When the buyer has signed, the chosen Fremont Makers signer gets **Countersign as …**. **Day 3 / day 7 reminder due** appears with **Email a reminder**. **Cancel request** needs a reason; the links stop working. Declined, canceled or expired (30 days) requests unlock pricing and say why.
+- **Sign outside the tool:** three steps on screen: 1) open the contract packet and save the PDF, 2) send it your usual way (Dropbox Sign website, DocuSign or similar, emailed PDF, paper in person) and press **I sent it** (freezes the price; optional), 3) upload the signed copy, enter the date, tick "the buyer signed every line" and "Fremont Makers countersigned", **Mark signed**. The job becomes Contracted and the copy goes under Documents. If a request in the tool was still out, it's canceled so nobody signs twice.
+- **Change orders** that need a signature (charged or credit) are sent automatically when saved, and their card shows the same signing block, plus **Signed outside the tool? Upload it**. When signed, the change order goes through as before (contract total, invoice, lines, delivery date) and the signed copy with its certificate is filed under that change order. Courtesy and no-change change orders still go through approval only; `FMSign.create(…, { acknowledgementOnly: true })` supports a buyer acknowledgement if the owner wants it later.
+
+### Code
+- `src/fm-phase2-sign.js` (`window.FMSign` 1.0.0, pure): `create`, `check`, `open`, `sign`, `decline`, `cancel`, `status` (expiry), `reminderDue`/`remind` (days 3 and 7), `jobState` (maps to the e-sign states the app already uses, so pricing freeze works unchanged), `link`, `email` (mailto text), `markSentOutside`, `recordOutside`, `certificate`, `renderCertificate`.
+- `preview/phase2-sign.js` (`window.P2Sign`): the Contract tab card, the change order block, and the signing page at `#/sign/<link>`.
+- `src/fm-phase2-contract.js`: `isQuoteFrozen` knows `signed_outside`; readiness wording no longer mentions Dropbox Sign. `src/fm-phase2-files.js`: copies signed in the tool can't be removed. `src/fm-phase1-docs.js` / `src/fm-phase2-agreement.js`: the e-sign line. `src/fm-phase1-print.css`: certificate styles.
+- Tests: `tests/sign.test.js` (15), `files` +1. **21 files, 252 tests.**
+
+### Server (Hermes)
+Nothing to buy. Endpoints:
+- `POST /api/projectbuilder/sign/send` (signed in): body `{ jobCode, kind, coNumber? }`. The server renders the document **to a PDF**, stores those bytes, computes their SHA-256, makes one token per signer from **32 bytes of `crypto.randomBytes`**, runs `FMSign.create`, saves the request on the job (`job.esign.request` or `changeOrder.esign.request`) and returns the links. Pricing freezes (`FMSign.jobState`).
+- `GET /projectbuilder/sign/:token` (**public, no sign-in, https only**): runs `FMSign.check`/`open` and records "viewed". Shows the stored PDF (with a **Download PDF** link, so phones can zoom), the consent text and the signing form. Never show other jobs, prices beyond the document, or the other signer's token.
+- `POST /api/projectbuilder/sign/:token` (public): `{ action: 'sign' | 'decline', consent, agree, typedName, drawn?, reason? }`. **The server sets `at` (its own clock, UTC), `ip` (from the request, behind the proxy's real-client header) and `userAgent`, and passes the stored PDF's SHA-256 as `ctx.sha256`.** Never take those from the page. On completion: append the certificate page to the PDF (same content as `renderCertificate`), store it as a job document with its own SHA-256 and `signRequest`, then run the same "contracted" or "change order signed" step the preview runs (`contracted()` / `coSigned()` in `preview/phase2-flows.js`).
+- `POST /api/projectbuilder/sign/:id/cancel` (signed in, reason required) and `POST …/remind` (records a reminder).
+- `POST /api/projectbuilder/sign/outside` (signed in, multipart): `FMSign.markSentOutside` or `recordOutside` with the uploaded file; store the file like any upload (§32).
+- **Email:** optional. Without an email service the team sends links and reminders from their own mail (the mailto buttons). If the server already sends email, it can send the link, the day 3/7 reminders (daily job using `reminderDue`) and the finished copy; keep the mailto buttons either way.
+- **Security:** rate-limit the public routes per IP and per token; tokens are secrets (never log them in full, never put them in analytics); requests and events are append-only; keep signed copies forever.
+
+### Check (preview, after Reset sample data)
+1. **Sample quote → Contract:** fill the buyer's email, the install address, the Fremont Makers signer and the elevations box. **Send for signature** shows Dana's link, **Email it from your mail app**, **Copy link**, and a two-line status.
+2. **See what Dana sees:** the packet shows with "✓ same document that was sent". **Sign** with nothing filled shows three messages. Tick, type the name, draw instead, tick, **Sign** → "You've signed."
+3. Back on the job: Dana ✓, **Countersign as Kristy Slaughenhaupt** → sign → "Everyone has signed" → **Open the signed copy**: the packet plus the certificate page (both signatures, times, browser, fingerprint, history). The job is Contracted; Documents lists "Signed contract with certificate", without a Remove button.
+4. **Reset, then Sign outside the tool:** **I sent it** freezes pricing; choose a PDF, tick both boxes, **Mark signed** → Contracted, "Signed outside the tool (Dropbox Sign website)", the PDF under Documents.
+5. **A charged change order:** saving it sends it; its card shows the signing block. After both sign, the change order is Signed with its invoice, and its signed copy sits under that change order in Documents.

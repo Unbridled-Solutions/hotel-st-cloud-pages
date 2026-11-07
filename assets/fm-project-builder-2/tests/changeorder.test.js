@@ -50,7 +50,7 @@ test('with real costs, the customer pays nothing and the contract total does not
 test('absorbed cost uses what was actually paid, less any supplier credit', function () {
   var r = CO.courtesy(penroseInput(), { today: TODAY });
   eq([r.co.absorbedCents, r.co.absorbedIsEstimate], [165270, true]);   // $1,652.70 paid by card; credit unknown
-  ok(/credited the removed cabinets \(DC324-VDH ×2, VDC12-VDH ×1\)/.test(r.warnings[0]), r.warnings[0]);
+  ok(/credited the removed cabinets \(DC324-VDH ×2, VDC12-VDH ×1, VSB30-VDH ×1\)/.test(r.warnings[0]), r.warnings[0]);
   var none = CO.courtesy(penroseInput({ supplierCreditCents: C(REC.supplierCredit) }), { today: TODAY });
   eq([none.co.absorbedCents, none.co.absorbedIsEstimate], [6291, false], 'owner, Nov 4: $1,589.79 refunded for the returned cabinets, so the shop ate $62.91');
   var c = CO.courtesy(penroseInput({ supplierCreditCents: 50000 }), { today: TODAY });
@@ -81,7 +81,7 @@ test('the customer page says no charge, lists the swap, and never shows cost', f
   eq(p.headline, 'No charge to you. Your contract total stays $10,973.11.');
   eq(p.why, 'Backordered item substituted: Backordered cabinets swapped for in-stock ones.');
   eq(p.rows.map(function (r) { return [r.action, r.sku, r.qty, r.price]; }), [
-    ['Removed', 'DC324-VDH', '2 → 0', ''], ['Removed', 'VDC12-VDH', '1 → 0', ''],
+    ['Removed', 'DC324-VDH', '2 → 0', ''], ['Removed', 'VDC12-VDH', '1 → 0', ''], ['Changed', 'VSB30-VDH', '3 → 2', ''],
     ['Added', 'VDC42RS-VDH', '0 → 1', 'No charge'], ['Added', 'DC224-VDH', '0 → 2', 'No charge']]);
   ok(JSON.stringify(p).indexOf('1,652.70') < 0 && JSON.stringify(p).indexOf('707') < 0, 'no costs on the customer page');
 });
@@ -161,7 +161,7 @@ test('a change order can use its own settings and assembly labor (Willow Creek C
 
 test('there is no default price choice; an agreed amount needs a reason', function () {
   var priced = { ok: true, deltaCents: 746638 };
-  eq(CO.choosePrice(undefined, priced).error, 'Choose how this change is priced: charge it, courtesy, or an agreed amount.');
+  eq(CO.choosePrice(undefined, priced).error, 'Choose how this change is priced: charge it, courtesy, an agreed amount, or no change to the contract.');
   eq(CO.choosePrice('courtesy', priced), { ok: true, amountCents: 0, kind: 'courtesy' });
   eq(CO.choosePrice('charge', priced).amountCents, 746638);
   eq(CO.choosePrice('custom', priced, { amountCents: 780000 }).error, 'Say why the agreed amount differs from the priced change.');
@@ -174,6 +174,105 @@ test('each change order gets its own invoice, due on signing (owner decision, qu
   eq([inv.role, inv.label, inv.amountCents, inv.due, inv.status], ['change_order', 'Change order 2', 47180, '2026-10-27', 'waiting for signature']);
   eq(CO.invoiceFor({ number: 1, amountCents: 0 }), null);
   eq(CO.invoiceFor({ number: 3, amountCents: -12000 }).role, 'change_order_credit');
+});
+
+
+/* ================= 2.11.0: every kind of change after the contract (HANDOFF §32) ================= */
+var SETTINGS = { markupPct: 30, discountPctOfCost: 12, gaPct: 2, taxPct: 7.9 };
+var BASE = [{ sku: 'B30-VDH', desc: 'Base 30', qty: 2, unitCostCents: 30000, markupPct: 30 }, { sku: 'W3042-VDH', desc: 'Wall 3042', qty: 4, unitCostCents: 25000, markupPct: 30 }];
+
+test('add a cabinet by hand (not on a PDF); a SKU already there just goes up', function () {
+  var r = CO.addLine(BASE, { sku: 'pwb18k-vdh', desc: 'Pantry', qty: 1, unitCostCents: 22736 });
+  eq([r.ok, r.lines.length, r.lines[2].sku], [true, 3, 'PWB18K-VDH']);
+  eq(CO.addLine(BASE, { sku: 'B30-VDH', qty: 1, unitCostCents: 30000 }).lines[0].qty, 3);
+  eq(CO.addLine(BASE, { sku: '', qty: 0 }).problems.length, 3);
+  eq(BASE[0].qty, 2);
+});
+
+test('swap: the old line goes down, the new one goes on; priced as the difference', function () {
+  var s = CO.swapLine(BASE, 'B30-VDH', { sku: 'B36-VDH', desc: 'Base 36', unitCostCents: 34000 }, 1);
+  eq(s.lines.map(function (l) { return l.sku + ':' + l.qty; }), ['B30-VDH:1', 'W3042-VDH:4', 'B36-VDH:1']);
+  var d = CO.diffLines(BASE, s.lines);
+  eq([d.added.map(function (l) { return l.sku; }), d.removed.map(function (l) { return l.sku + ' ' + l.from + '→' + l.to; })], [['B36-VDH'], ['B30-VDH 2→1']]);
+  var p = CO.priceChange({ added: d.added, removed: d.removed }, SETTINGS, Q);
+  eq(p.ok, true); ok(p.deltaCents > 0 && p.deltaCents < 10000, 'a bigger cabinet costs a little more: ' + p.deltaCents);
+  eq(CO.swapLine(BASE, 'B30-VDH', { sku: 'B30-VDH', unitCostCents: 1 }).ok, false);
+  eq(CO.swapLine(BASE, 'B30-VDH', { sku: 'B36-VDH', unitCostCents: 34000 }, 3).error, 'Swap between 1 and 2 of B30-VDH.');
+});
+
+test('return with a restocking fee: customer credited what they paid, fee added (taxable), a credit overall', function () {
+  var cur = JSON.parse(JSON.stringify(BASE)); cur[1].qty = 2;
+  var d = CO.diffLines(BASE, cur);
+  var p = CO.priceChange({ added: d.added, removed: d.removed, extras: [{ label: 'Restocking fee', amountCents: 9000, taxable: true }, { label: '', amountCents: 500 }] }, SETTINGS, Q);
+  eq(p.ok, true); ok(p.deltaCents < 0, 'a credit: ' + p.deltaCents);
+  eq([p.summary.otherCents, p.extras.length, p.lines[p.lines.length - 1].desc], [9000, 1, 'Restocking fee (taxable)']);
+  eq(p.removedCostCents, 50000);
+  var inv = CO.invoiceFor({ number: 2, amountCents: p.deltaCents }); eq(inv.role, 'change_order_credit');
+});
+
+test('damaged: replaced at our cost, no change to the contract, claim pending until paid', function () {
+  var n = CO.notice({ number: 2, date: '2026-11-06', type: 'damage', note: 'W3042 arrived cracked', requestedBy: 'Linds',
+    replaced: [{ sku: 'W3042-VDH', desc: 'Wall 3042', qty: 1, unitCostCents: 25000, claim: 'freight', why: 'cracked side' }] });
+  eq(n.ok, true);
+  eq([n.co.kind, n.co.status, n.co.amountCents, n.co.absorbedCents, n.co.absorbedIsEstimate, n.co.reason], ['notice', 'recorded', 0, 25000, true, 'Damaged cabinet replaced']);
+  var c = CO.recordCredit(n.co, { for: 'damaged', from: 'freight', amountCents: 25000, on: '2026-11-20', reference: 'Claim 8812' }, { by: 'Linds', today: '2026-11-30' });
+  eq([c.ok, c.co.absorbedCents, c.co.absorbedIsEstimate, c.deltaCents], [true, 0, false, -25000]);
+  ok(/Freight carrier credited \$250\.00 for the damage claim \(Claim 8812\)\. Shop absorbs \$0\.00 \(was \$250\.00\)\./.test(c.log), c.log);
+  eq(CO.notice({ number: 2, date: '2026-11-06', type: 'damage', note: 'x', requestedBy: 'L', replaced: [{ sku: 'A', qty: 1, unitCostCents: 0 }] }).problems,
+     ['Enter what the replacement A costs us.', 'Say who the damage claim for A goes to (or that we cover it).']);
+});
+
+test('backordered, wait for it: nothing changes but the date, which must be given', function () {
+  var n = CO.notice({ number: 3, date: '2026-11-06', type: 'backorder', note: 'B30 backordered', requestedBy: 'Linds', waitFor: [{ sku: 'B30-VDH', qty: 2 }], newDeliveryDate: '2026-12-12' });
+  eq([n.ok, n.co.reason, n.co.absorbedCents, n.co.newDeliveryDate], [true, 'Backordered: new delivery date', 0, '2026-12-12']);
+  eq(CO.notice({ number: 3, date: '2026-11-06', type: 'backorder', note: 'x', requestedBy: 'L', waitFor: [{ sku: 'B30-VDH', qty: 2 }] }).problems, ['Enter when the backordered cabinets are now expected.']);
+});
+
+test('"no change to the contract" only when nothing sells; a suggestion never picks for you', function () {
+  eq(CO.choosePrice('nochange', null, null, { sellChanges: false }), { ok: true, amountCents: 0, kind: 'notice' });
+  ok(/replacements and new dates only/.test(CO.choosePrice('nochange', null, null, { sellChanges: true }).error));
+  eq(CO.suggest('damage', { added: [], removed: [], replaced: [{}] }, []).choice, 'nochange');
+  eq(CO.suggest('backorder', { added: [{}], removed: [{}] }, []).choice, 'courtesy');
+  eq(CO.suggest('remove', { added: [], removed: [{}] }, []).choice, 'charge');
+  eq(CO.suggest('other', { added: [], removed: [] }, [{ label: 'Freight', amountCents: 5000 }]), null);
+});
+
+test('Penrose CO 1 keeps its numbers under the new rules ($62.91 absorbed after the refund)', function () {
+  var r = CO.courtesy(penroseInput({ supplierCreditCents: C(REC.supplierCredit) }), { today: TODAY });
+  eq([r.co.absorbedCents, r.co.absorbedIsEstimate, CO.absorbedFor(r.co).cents], [6291, false, 6291]);
+  var a = CO.approve(r.co, 'Linds', { owners: ['Linds'] }).co;
+  eq(CO.absorbedOnJob([a]), 6291);
+  eq(CO.absorbedOnJob([r.co]), 0, 'a draft or pending courtesy is not counted yet');
+});
+
+test('a charged return: once the supplier credit comes in short, the shortfall is absorbed', function () {
+  var co = { kind: 'charge', status: 'signed', number: 4, removed: [{ sku: 'W3042-VDH', qty: 2 }], removedCostCents: 50000, replaced: [], replacedCostCents: 0 };
+  eq(CO.absorbedFor(co), { cents: 0, estimate: true });
+  var c = CO.recordCredit(co, { for: 'returned', amountCents: 42500, on: '2026-11-10' }, { by: 'Linds', today: '2026-11-10' });
+  eq([c.co.absorbedCents, c.co.absorbedIsEstimate, c.co.supplierCreditCents], [7500, false, 42500]);
+  var none = CO.recordCredit(co, { for: 'returned', none: true, on: '2026-11-10' }, { by: 'Linds', today: '2026-11-10' });
+  eq(none.co.absorbedCents, 50000);
+  eq(CO.recordCredit(co, { for: 'damaged', amountCents: 1, on: '2026-11-10' }, { by: 'L' }).error, 'Nothing was replaced on this change order.');
+  eq(CO.recordCredit(co, { for: 'returned', amountCents: 1, on: '2026-12-10' }, { by: 'L', today: '2026-11-10' }).error, 'The credit date can\'t be in the future.');
+});
+
+test('withdraw a change order the buyer declined; one that went through can\'t be', function () {
+  var w = CO.withdraw({ number: 5, status: 'sent' }, 'Linds', 'Buyer declined', '2026-11-06');
+  eq([w.ok, w.co.status, w.co.withdrawn.reason], [true, 'withdrawn', 'Buyer declined']);
+  eq(CO.withdraw({ number: 5, status: 'sent' }, 'Linds', '').ok, false);
+  ok(/make a new change order to undo it/.test(CO.withdraw({ number: 1, status: 'signed' }, 'Linds', 'x').error));
+  eq(CO.counts(w.co), false);
+});
+
+test('the customer document: courtesy and no-change versions say so and print no cost', function () {
+  var D = isNode ? require('../src/fm-phase1-docs.js') : globalThis.FMDocs;
+  var job = FM.normalizeLegacyProject({ id: 'p', jobCode: 'FM-2609-314', customer: 'Braddy Builders', project: 'Penrose', status: 'contract', contractTotal: 10973.11, payments: [] });
+  var court = CO.courtesy(penroseInput(), { today: TODAY }).co; court.number = 1; court.reason = 'Backordered item substituted';
+  var h = D.renderChangeOrderDoc(job, court, {});
+  ok(/Courtesy: this change is \$0\./.test(h), 'courtesy lead'); ok(/DC324-VDH/.test(h) && /No charge/.test(h)); ok(!/707\.92|1,652\.70/.test(h), 'no cost printed');
+  var n = CO.notice({ number: 2, date: '2026-11-06', type: 'damage', note: 'cracked', requestedBy: 'L', replaced: [{ sku: 'W3042-VDH', qty: 1, unitCostCents: 25000, claim: 'supplier', why: 'cracked side' }], newDeliveryDate: '2026-11-20' }).co;
+  var h2 = D.renderChangeOrderDoc(job, n, {});
+  ok(/No change to your contract\./.test(h2) && /replaced: cracked side/.test(h2) && /November 20, 2026/.test(h2), 'notice'); ok(!/250\.00/.test(h2) && !/Supplier/.test(h2), 'no cost or claim printed');
 });
 
 console.log('changeorder.test.js\n' + results.join('\n'));

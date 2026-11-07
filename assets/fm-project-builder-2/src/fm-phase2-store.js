@@ -113,6 +113,20 @@
         if (!si || (inv.payments || []).length || !(si.payments || []).length || si.amountCents !== inv.amountCents) return;
         inv.payments = clone(si.payments); if (si.status) inv.status = si.status;
       });
+      // documents added to the seed later (Braddy change order 1 PDF, Nov 6) join saved jobs; uploads already there stay
+      if (s) { var had = {}; (j.documents || []).forEach(function (d) { had[d.file] = true; }); j.documents = (j.documents || []).concat((s.documents || []).filter(function (d) { return !had[d.file]; }).map(clone)); }
+      // a check note the owner has since answered (Braddy CO 1 VSB30, Nov 6) is replaced by the seed's wording
+      if (s) (j.documents || []).forEach(function (d) {
+        var sd = (s.documents || []).filter(function (x) { return x.file === d.file && !x.uploadedBy; })[0]; if (!sd || !d.flag || sd.flag) return;
+        delete d.flag; d.note = sd.note; d.contains = sd.contains;
+      });
+      // a removed line learned later (Braddy CO 1: VSB30 3 → 2, owner Nov 6) joins the saved courtesy change order
+      if (s) (j.changeOrders || []).forEach(function (co) {
+        var sc = (s.changeOrders || []).filter(function (x) { return x.id === co.id && x.kind === 'courtesy'; })[0]; if (!sc) return;
+        var have = {}; (co.removed || []).forEach(function (r) { have[r.sku] = true; });
+        var more = (sc.removed || []).filter(function (r) { return !have[r.sku]; });
+        if (more.length) co.removed = (co.removed || []).concat(more.map(clone));
+      });
       if (!s || j.charges || !s.charges) return;
       j.charges = clone(s.charges);
       (j.changeOrders || []).forEach(function (co) {
@@ -239,18 +253,18 @@
       recordPayment: function (code, invId, p, by, at) {
         var j = job(code); if (!j) return { ok: false, errors: ['No job ' + code + '.'] };
         var inv = j.invoices.filter(function (x) { return x.id === invId; })[0]; if (!inv) return { ok: false, errors: ['No invoice ' + invId + '.'] };
-        var owed = inv.amountCents - FM.invoicePaidCents(inv), errs = [];
-        if (!(p.amountCents > 0)) errs.push('Enter the amount received.');
-        else if (p.amountCents > owed) errs.push('That\'s more than the ' + FM.fmt(owed) + ' still owed on this invoice.');
+        var owed = inv.amountCents - FM.invoicePaidCents(inv), errs = [], refund = inv.amountCents < 0;
+        if (!(p.amountCents > 0)) errs.push(refund ? 'Enter the amount refunded.' : 'Enter the amount received.');
+        else if (refund ? p.amountCents > -owed : p.amountCents > owed) errs.push(refund ? 'That\'s more than the ' + FM.fmt(-owed) + ' credit still owed.' : 'That\'s more than the ' + FM.fmt(owed) + ' still owed on this invoice.');
         if (!/^\d{4}-\d{2}-\d{2}$/.test(p.date || '')) errs.push('Enter the date it was received.');
         else if (p.date > state.today) errs.push('The date can\'t be in the future.');
         if (!METHODS[p.method]) errs.push('Choose how it was paid.');
         if (p.method === 'check' && !String(p.reference || '').trim()) errs.push('Enter the check number.');
         if (errs.length) return { ok: false, errors: errs };
         var r = this.update(code, function (x) {
-          x.invoices = x.invoices.map(function (v) { if (v.id !== invId) return v; v.payments = (v.payments || []).concat([{ amountCents: p.amountCents, date: p.date, method: p.method, reference: String(p.reference || '').trim() }]); return v; });
+          x.invoices = x.invoices.map(function (v) { if (v.id !== invId) return v; v.payments = (v.payments || []).concat([{ amountCents: refund ? -p.amountCents : p.amountCents, date: p.date, method: p.method, reference: String(p.reference || '').trim() }]); return v; });
           return x;
-        }, 'Payment of ' + FM.fmt(p.amountCents) + ' recorded on ' + inv.label + ' (' + METHODS[p.method] + (p.reference ? ' ' + p.reference : '') + ').', by, at);
+        }, (refund ? 'Refund of ' : 'Payment of ') + FM.fmt(p.amountCents) + ' recorded on ' + inv.label + ' (' + METHODS[p.method] + (p.reference ? ' ' + p.reference : '') + ').', by, at);
         return { ok: true, job: r.job };
       }
     };

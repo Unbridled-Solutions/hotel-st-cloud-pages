@@ -1,8 +1,8 @@
 # Hermes: launch guide for the Project Builder (Phase 1 + 2)
 
-**From:** Fremont Makers (Linds) via Claude · **Date:** 2026-11-05 · **Package:** `fm-project-builder-phase1.zip`, version **2.10.0**
+**From:** Fremont Makers (Linds) via Claude · **Date:** 2026-11-06 · **Package:** `fm-project-builder-phase1.zip`, version **2.11.0**
 
-> **Updating from 2.9.0?** Use `fm-project-builder-update-2.9.0-to-2.10.0.zip` and read `UPGRADE-2.9.0-to-2.10.0.md`. It lists only what changed. The full zip is for a fresh start.
+> **Updating from 2.10.0?** Use `fm-project-builder-update-2.10.0-to-2.11.0.zip` and read `UPGRADE-2.10.0-to-2.11.0.md`. It lists only what changed. The full zip is for a fresh start.
 
 **Nothing is live yet.** Phase 1 and Phase 2 launch together as one new Project Builder at **`tools.fremontmakers.com/projectbuilder`**. The existing tool stays live at `tools.fremontmakers.com/quote`, unchanged. This guide is the order of work. `HANDOFF.md` has the detail; section numbers below (§) refer to it.
 
@@ -36,7 +36,7 @@ If a step seems to need any change to the existing tool, stop and ask the owner.
 
 ## 1. Check the package
 1. Unzip, then check every file against `MANIFEST.json` (SHA-256).
-2. Run the tests. All must pass (19 files, 211 tests):
+2. Run the tests. All must pass (21 files, 252 tests):
 
 | Command | Must print |
 |---|---|
@@ -51,14 +51,16 @@ If a step seems to need any change to the existing tool, stop and ask the owner.
 | `node tests/address.test.js` | `6 passed, 0 failed` |
 | `node tests/theme.test.js` | `5 passed, 0 failed` |
 | `node tests/braddy.test.js` | `9 passed, 0 failed` |
-| `node tests/contract.test.js` | `22 passed, 0 failed` |
-| `node tests/changeorder.test.js` | `15 passed, 0 failed` |
+| `node tests/contract.test.js` | `26 passed, 0 failed` |
+| `node tests/changeorder.test.js` | `25 passed, 0 failed` |
 | `node tests/bid.test.js` | `6 passed, 0 failed` |
 | `node tests/books.test.js` | `7 passed, 0 failed` |
-| `node tests/store.test.js` | `11 passed, 0 failed` |
+| `node tests/store.test.js` | `13 passed, 0 failed` |
 | `node tests/schedule.test.js` | `6 passed, 0 failed` |
 | `node tests/legacy.test.js` | `10 passed, 0 failed` |
 | `node tests/company.test.js` | `8 passed, 0 failed` |
+| `node tests/files.test.js` | `10 passed, 0 failed` |
+| `node tests/sign.test.js` | `15 passed, 0 failed` |
 
 3. Open `phase2.html` through a static server from the package root and click through it. **That page is the screen reference** for everything below.
 
@@ -74,9 +76,9 @@ These are simulated in the preview and must be real before launch:
    - the Company P&L and Balance Sheet numbers
    - a list of records it skipped, and why
    This replaces the guessed field names in §4.
-4. **File storage** for signed PDFs, supplier orders and wet-signed uploads, each with its SHA-256 (§14, §16).
+4. **File storage** for signed PDFs, supplier orders, signed copies, and the team's uploads (plans, photos, specs, emails; up to 25 MB each), each with its SHA-256. Removing a file hides it and keeps it (§14, §32).
 5. **Supplier PDF import.** Port the existing tool's Wholesale Cabinets PDF reader into one shared import used by New Project and change orders. Read its code; don't change the old tool. Adding a PDF never lowers a quantity (§15, §19).
-6. **Dropbox Sign:** the paid API plan (the owner approved it), an API app for `fremontmakers.com` with approval for in-frame signing, the server calls, and the callback handler (§16).
+6. **Signing in the tool (§34).** No Dropbox Sign: the owner put the API on hold (Nov 6, $75/month). Build the public signing page `/projectbuilder/sign/<link>` and its endpoints with `FMSign`. The server sets every time, IP address and browser, freezes the document as a PDF with its SHA-256, and appends the certificate of completion. Links go out from the team's own mail app, so no email service is needed. Also build "Sign outside the tool" (upload the signed copy, Mark signed).
 
 ## 3. Screens (match `phase2.html`)
 - **Sidebar:**
@@ -86,7 +88,7 @@ These are simulated in the preview and must be real before launch:
   - **Company:** Users
   - the Paper / Dark switch and the "FREMONT MAKERS / making freedom" logo (§13, §20, §22, §23, §31)
 - **All projects:** search, filters, balance and next step, with builder-order houses folded in (§22).
-- **Job page:** the header on every tab, and the tabs Overview, Cabinets, **Elevations**, Change orders, Contract, Invoices, Documents, Activity (§21, §22, §23).
+- **Job page:** the header on every tab, and the tabs Overview, Cabinets, **Elevations**, Change orders, Contract, Invoices, Documents, Activity (§21, §22, §23). **Documents** has four sections: contract and invoices, change orders, supplier orders, supporting documents with uploads (§32).
 - **Customers (§25):**
   - profiles with contacts (who signs, who gets invoices, who's on site), addresses, notes and their projects
   - **templates** for repeat homes and builder orders: models, house counts, cabinets, drawings, never pricing
@@ -107,8 +109,8 @@ These are simulated in the preview and must be real before launch:
 - **Addresses (§28):** Street, City, State (Colorado by default) and ZIP wherever an address is entered. They're stored as fields, plus the joined line that documents print.
 - **Flows:**
   - New Project (§15, §28): line preview, assembly hours × rate, custom payment plans
-  - contract and e-sign (§16)
-  - change orders, including courtesy ones (§17, §19)
+  - contract and signing: in the tool with a certificate, or outside the tool with an upload (§34)
+  - change orders for every kind of change: add, swap, return, backorder, damage, our mistake, other; supplier credits; withdraw; credit invoices and refunds (§17, §19, §32)
   - bid pages and grandfathered prices (§18)
 - **Customer documents** open in the page with Print:
   - invoices and the payment schedule

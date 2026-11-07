@@ -75,6 +75,8 @@
   function invoiceState(inv, todayISO) {
     if (inv.status === 'void') return { key: 'void', label: 'Void', days: 0 };
     var paid = invoicePaidCents(inv);
+    // a credit to the customer (a change order that took money off): owed back until a refund is recorded against it
+    if (inv.amountCents < 0) return paid <= inv.amountCents ? { key: 'paid', label: 'Refunded', days: 0 } : { key: 'credit', label: 'Credit owed' + (paid < 0 ? ' · ' + fmt(inv.amountCents - paid).replace('-', '') + ' left' : ''), days: 0 };
     if (paid >= inv.amountCents) return { key: 'paid', label: 'Paid', days: 0 };
     var days = inv.dueDate ? daysBetween(todayISO, inv.dueDate) : null;
     if (days !== null && days < 0) return { key: 'overdue', label: (-days) + ' day' + (days === -1 ? '' : 's') + ' overdue', days: days };

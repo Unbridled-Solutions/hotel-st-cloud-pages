@@ -10,7 +10,7 @@
  *   renderPacket(job, opts)              contract packet: builder order, Customer Sales Agreement, schedule, invoices, quote pages, elevations
  *   renderAgreementDoc(job, opts)        the Customer Sales Agreement (wording in FMAgreement), with signature blocks
  *   renderBuilderOrderDoc(job, opts)     a builder order's models and houses
- *   renderChangeOrderDoc(job, co, opts)  a charged change order for the buyer to sign: lines, pricing, signatures
+ *   renderChangeOrderDoc(job, co, opts)  a change order for the buyer to sign: charged, credit, courtesy or no change to the contract
  *   renderElevationDocs(job, pages, views, opts)  elevation sheets: one per wall (drawing + cabinet list), one 3D view per room
  *
  * `job` is a Phase 1 job (FMPhase1.normalizeLegacyProject). UMD: window.FMDocs in a browser.
@@ -22,7 +22,7 @@
   if (isNode) module.exports = api; else root.FMDocs = api;
 }(typeof globalThis !== 'undefined' ? globalThis : this, function (FM, Q, AG) {
   'use strict';
-  var VERSION = '1.3.0';
+  var VERSION = '1.4.0';
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function longDate(iso) {
@@ -141,7 +141,7 @@
       head('Customer Sales Agreement', 'Fremont Makers', opts) +
       jobFields(job, field('Quote date', longDate(job.quoteDate)) + field('Install / delivery', longDate(job.deliveryDate)) + field('Contract total', FM.fmt(s.originalCents)) +
         (job.installAddress ? field('Site', esc(job.installAddress)) : '')) +
-      body + '<p class="doc-law">' + esc(AG.LAW) + ' ' + esc(AG.ESIGN) + '</p>' +
+      body + '<p class="doc-law">' + esc(AG.LAW) + ' ' + esc(job.stage !== 'quote' && !(job.esign && (job.esign.provider === 'fm' || job.esign.provider === 'outside')) && AG.ESIGN_SIGNED ? AG.ESIGN_SIGNED : AG.ESIGN) + '</p>' +
       (opts.signedAgreementFile ? '<p class="doc-note">The signed copy of this agreement is on file: ' + esc(opts.signedAgreementFile) + '.</p>' : '') + sign,
       'Customer Sales Agreement');
   }
@@ -206,34 +206,48 @@
   }
 
   /*
-   * A charged change order, for the buyer to sign (modeled on Willow Creek's executed Change Order 1).
-   * co: { number, date, reason, note, amountCents, pricing: { discountPctOfCost, gaPct, taxPct }, priced: { lines, summary }, due }
-   *   priced.lines: [{ sku, desc, qty (negative = removed), unitCents, totalCents }]; nothing internal (cost, markup) is printed.
-   * opts: { logoBase, previousCents (contract total before this change), signedOn }
+   * A change order for the buyer to sign (modeled on Willow Creek's executed Change Order 1 and Penrose's courtesy Change Order 1).
+   * co: { number, date, reason, note, kind ('charge'|'custom'|'courtesy'|'notice'), amountCents, pricing, priced: { lines, summary }, due,
+   *       added, removed (courtesy: [{ sku, desc, qty, from?, to? }]), replaced: [{ sku, desc, qty, why }], waitFor: [{ sku, desc, qty }], newDeliveryDate }
+   *   priced.lines: [{ sku, desc, qty (negative = removed), unitCents, totalCents, extra? }]. Nothing internal (cost, markup, claims) is printed.
+   * opts: { logoBase, previousCents (contract total before this change), signedOn, printedNote }
    */
   function renderChangeOrderDoc(job, co, opts) {
     opts = opts || {};
-    var pr = co.priced || { lines: [], summary: null }, sm = pr.summary, P = co.pricing || {};
-    var before = opts.previousCents != null ? opts.previousCents : FM.contractSummary(job).originalCents;
+    var pr = co.priced || { lines: [], summary: null }, sm = pr.summary, P = co.pricing || {}, free = co.kind === 'courtesy' || co.kind === 'notice';
+    var before = opts.previousCents != null ? opts.previousCents : FM.contractSummary(job).originalCents, amt = free ? 0 : (co.amountCents || 0);
     function pct(n) { return String(Math.round(n * 100) / 100); }
-    var lines = (pr.lines || []).map(function (l) {
-      return '<tr><td>' + esc(l.desc || l.sku) + (l.removed || l.qty < 0 ? ' <span class="sub-inline">removed</span>' : '') + '</td><td>' + esc(l.sku) + '</td><td class="r">' + (l.qty < 0 ? '−' + (-l.qty) : l.qty) + '</td><td class="r">' + FM.fmt(l.unitCents) + '</td><td class="r">' + FM.fmt(l.totalCents) + '</td></tr>';
-    }).join('');
-    var rows = sm ? [['Cabinets', sm.cabinetsCents], sm.discountCents ? ['Mfr. bulk discount (' + pct(P.discountPctOfCost) + '%)', sm.discountCents] : null, sm.laborCents ? ['Assembly labor', sm.laborCents] : null,
-      sm.gaCents ? ['G&amp;A (' + pct(P.gaPct) + '%)', sm.gaCents] : null, sm.taxCents ? ['Tax (' + pct(P.taxPct) + '% on product)', sm.taxCents] : null].filter(Boolean) : [];
-    var sum = '<table class="doc-inv"><tbody>' + rows.map(function (r) { return '<tr><td>' + r[0] + '</td><td class="r">' + FM.fmt(r[1]) + '</td></tr>'; }).join('') +
-      '<tr class="is-total"><td>This change · Change Order ' + esc(co.number) + '</td><td class="r">' + FM.fmt(co.amountCents) + '</td></tr>' +
+    function qtyMove(l, sign) { return l.from != null && l.to != null ? l.from + ' → ' + l.to : (sign < 0 ? '−' : '+') + l.qty; }
+    var rows = [];
+    if (!free && pr.lines && pr.lines.length) pr.lines.forEach(function (l) {
+      rows.push('<tr><td>' + esc(l.desc || l.sku) + (l.removed || (l.qty < 0 && !l.extra) ? ' <span class="sub-inline">removed</span>' : '') + '</td><td>' + esc(l.sku || '') + '</td><td class="r">' + (l.qty < 0 ? '−' + (-l.qty) : l.qty) + '</td><td class="r">' + FM.fmt(l.unitCents) + '</td><td class="r">' + FM.fmt(l.totalCents) + '</td></tr>');
+    });
+    else {
+      (co.added || []).forEach(function (l) { rows.push('<tr><td>' + esc(l.desc || l.sku) + ' <span class="sub-inline">added</span></td><td>' + esc(l.sku) + '</td><td class="r">' + qtyMove(l, 1) + '</td><td class="r"></td><td class="r">' + (free ? 'No charge' : '') + '</td></tr>'); });
+      (co.removed || []).forEach(function (l) { rows.push('<tr><td>' + esc(l.desc || l.sku) + ' <span class="sub-inline">' + (l.to ? 'changed' : 'removed') + '</span></td><td>' + esc(l.sku) + '</td><td class="r">' + (l.from != null && l.to != null ? l.from + ' → ' + l.to : l.qty + ' → 0') + '</td><td class="r"></td><td class="r"></td></tr>'); });
+    }
+    (co.replaced || []).forEach(function (l) { rows.push('<tr><td>' + esc(l.desc || l.sku) + ' <span class="sub-inline">replaced' + (l.why ? ': ' + esc(l.why) : '') + '</span></td><td>' + esc(l.sku) + '</td><td class="r">' + l.qty + '</td><td class="r"></td><td class="r">No charge</td></tr>'); });
+    (co.waitFor || []).forEach(function (l) { rows.push('<tr><td>' + esc(l.desc || l.sku) + ' <span class="sub-inline">backordered</span></td><td>' + esc(l.sku) + '</td><td class="r">' + l.qty + '</td><td class="r" colspan="2">Now expected ' + esc(longDate(co.newDeliveryDate)) + '</td></tr>'); });
+    var money = !free && sm ? [['Cabinets', sm.cabinetsCents], sm.discountCents ? ['Mfr. bulk discount (' + pct(P.discountPctOfCost) + '%)', sm.discountCents] : null, sm.laborCents ? ['Assembly labor', sm.laborCents] : null,
+      sm.otherCents ? ['Other charges and credits', sm.otherCents] : null, sm.gaCents ? ['G&amp;A (' + pct(P.gaPct) + '%)', sm.gaCents] : null, sm.taxCents ? ['Tax (' + pct(P.taxPct) + '% on product)', sm.taxCents] : null].filter(function (r) { return r && (r[1] || r[0] === 'Cabinets'); }) : [];
+    var credit = amt < 0;
+    var sum = '<table class="doc-inv"><tbody>' + money.map(function (r) { return '<tr><td>' + r[0] + '</td><td class="r">' + FM.fmt(r[1]) + '</td></tr>'; }).join('') +
+      '<tr class="is-total"><td>This change · Change Order ' + esc(co.number) + (free ? (co.kind === 'courtesy' ? ' · courtesy' : ' · no change to the contract') : credit ? ' · credit' : '') + '</td><td class="r">' + FM.fmt(amt) + '</td></tr>' +
       '<tr><td>Contract total before this change</td><td class="r">' + FM.fmt(before) + '</td></tr>' +
-      '<tr><td>Contract total with this change</td><td class="r">' + FM.fmt(before + co.amountCents) + '</td></tr>' +
-      '<tr><td>Due</td><td class="r">' + (co.due ? longDate(co.due) : 'On signing') + '</td></tr></tbody></table>';
+      '<tr><td>Contract total with this change</td><td class="r">' + FM.fmt(before + amt) + '</td></tr>' +
+      (amt > 0 ? '<tr><td>Due</td><td class="r">' + (co.due ? longDate(co.due) : 'On signing') + '</td></tr>' : '') + '</tbody></table>';
+    var lead = co.kind === 'courtesy' ? '<p class="doc-lead"><b>Courtesy: this change is $0.</b> Your contract total stays ' + FM.fmt(before) + '. The cabinets below are substitutions or extras at no additional charge.</p>'
+      : co.kind === 'notice' ? '<p class="doc-lead"><b>No change to your contract.</b> Your contract total stays ' + FM.fmt(before) + '.' + ((co.replaced || []).length ? ' Replacement cabinets are at no charge to you.' : '') + (co.newDeliveryDate ? ' Delivery is now expected ' + longDate(co.newDeliveryDate) + '.' : '') + '</p>' : '';
+    var notes = free ? '<p class="doc-note">All terms of the Customer Sales Agreement are unchanged. The buyer\'s signature acknowledges the change; nothing is due.</p>'
+      : '<p class="doc-note">The original contracted total of ' + FM.fmt(FM.contractSummary(job).originalCents) + ' stays. ' + (credit ? 'This credit is applied to the next unpaid invoice, or refunded if none is left.' : 'This change order is billed on its own invoice' + (co.due ? '' : ', due on signing') + '; it does not replace the original payment schedule.') + ' All other terms of the Customer Sales Agreement are unchanged.</p>' +
+        (credit ? '' : '<p class="doc-note">Please make payment to Fremont Makers LLC. Job ' + esc(job.jobCode) + ' · Change order ' + esc(co.number) + '.</p>');
     var sign = '<section class="doc-sign"><div><span>Buyer signature</span><span>Printed name · ' + esc(job.customer) + '</span><span>Date</span></div>' +
       '<div><span>Fremont Makers LLC · signature</span><span>Printed name</span><span>Date</span></div></section>';
     return sheet('Change order ' + co.number,
       head('Change order', 'Change Order ' + co.number, opts) +
-      jobFields(job, field('Install / delivery', longDate(job.deliveryDate)) + field('Change date', longDate(co.date)) + field('Reason', esc(co.reason || '—') + (co.note ? '<span class="sub">' + esc(co.note) + '</span>' : ''))) +
-      (lines ? '<table class="doc-lines"><thead><tr><th>Description</th><th>SKU</th><th class="r">Qty</th><th class="r">Unit</th><th class="r">Total</th></tr></thead><tbody>' + lines + '</tbody></table>' : '') + sum +
-      '<div class="doc-notes"><p class="doc-note">The original contracted total of ' + FM.fmt(FM.contractSummary(job).originalCents) + ' stays. This change order is billed on its own invoice' + (co.due ? '' : ', due on signing') + '; it does not replace the original payment schedule. All other terms of the Customer Sales Agreement are unchanged.</p>' +
-      '<p class="doc-note">Please make payment to Fremont Makers LLC. Job ' + esc(job.jobCode) + ' · Change order ' + esc(co.number) + '.</p>' + (opts.printedNote ? '<p class="doc-note">' + esc(opts.printedNote) + '</p>' : '') + '</div>' + sign,
+      jobFields(job, field('Install / delivery', co.newDeliveryDate ? longDate(co.newDeliveryDate) + '<span class="sub">was ' + longDate(job.deliveryDate) + '</span>' : longDate(job.deliveryDate)) + field('Change date', longDate(co.date)) + field('Reason', esc(co.reason || '—') + (co.note ? '<span class="sub">' + esc(co.note) + '</span>' : ''))) +
+      lead + (rows.length ? '<table class="doc-lines"><thead><tr><th>Description</th><th>SKU</th><th class="r">Qty</th><th class="r">Unit</th><th class="r">Total</th></tr></thead><tbody>' + rows.join('') + '</tbody></table>' : '') + sum +
+      '<div class="doc-notes">' + notes + (opts.printedNote ? '<p class="doc-note">' + esc(opts.printedNote) + '</p>' : '') + '</div>' + sign,
       'Change order ' + co.number);
   }
 

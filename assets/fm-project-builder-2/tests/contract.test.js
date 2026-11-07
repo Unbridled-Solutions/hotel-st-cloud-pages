@@ -207,5 +207,48 @@ test('Dropbox Sign events after a paper signing are ignored', function () {
 });
 
 console.log('contract.test.js\n' + results.join('\n'));
+
+/* ===== Owner decisions, Nov 6 2026 (HANDOFF §33): reminders day 3 and 7, 30-day expiry, change orders through Dropbox Sign ===== */
+var JOB33 = { jobCode: 'FM-2611-501', customer: 'Hartley Homes', project: 'Elm St kitchen', signer: 'Dana Hartley', buyerEmail: 'dana@example.com', fmSigner: { name: 'Kristy Slaughenhaupt', email: 'kslaugh@unbridled.com' } };
+
+test('a contract request expires 30 days after it is sent', function () {
+  var r = K.signatureRequest(JOB33, { today: '2026-11-06' });
+  eq(r.body.expires_at, Date.UTC(2026, 11, 6) / 1000);   // Dec 6 2026, midnight UTC
+  eq(K.signatureRequest(JOB33, {}).body.expires_at, undefined);
+  eq(K.SETTINGS, { reminderDays: [3, 7], expiryDays: 30, countersign: 'email' });
+});
+
+test('an expired request unlocks prices and is logged; it never undoes a finished signing', function () {
+  var a = K.applyEvent({ requestId: 'r1', state: 'out_for_signature', jobStatus: 'proposed' }, { event: { event_type: 'signature_request_expired', event_time: '9' }, signature_request: { signature_request_id: 'r1' } });
+  eq([a.state.state, a.jobStatus, K.isQuoteFrozen(a.state.state)], ['expired', 'proposed', false]);
+  ok(/expired\. Prices are unlocked/.test(a.log), a.log);
+  var later = K.applyEvent(a.state, { event: { event_type: 'signature_request_signed', event_time: '10' }, signature_request: { signature_request_id: 'r1' } });
+  eq(later.state.state, 'expired');
+  var done = K.applyEvent({ requestId: 'r1', state: 'signed', jobStatus: 'contracted' }, { event: { event_type: 'signature_request_expired', event_time: '11' }, signature_request: { signature_request_id: 'r1' } });
+  eq(done.state.state, 'signed');
+});
+
+test('automatic reminders go on day 3 and day 7 to whoever still has to sign, once each', function () {
+  var es = { state: 'out_for_signature', sentOn: '2026-11-06', reminded: [], signers: [{ email: 'dana@example.com', status: 'awaiting_signature', order: 0 }, { email: 'kslaugh@unbridled.com', status: 'awaiting_signature', order: 1 }] };
+  eq(K.reminderDue(es, '2026-11-08'), null);
+  eq(K.reminderDue(es, '2026-11-09'), { day: 3, email: 'dana@example.com', log: 'Automatic reminder (day 3) sent to dana@example.com.' });
+  es.reminded = [3];
+  eq(K.reminderDue(es, '2026-11-12'), null);
+  es.state = 'buyer_signed'; es.signers[0].status = 'signed';
+  eq(K.reminderDue(es, '2026-11-13').email, 'kslaugh@unbridled.com');
+  es.state = 'signed'; eq(K.reminderDue(es, '2026-11-20'), null);
+});
+
+test('change orders: a charge or credit needs both signatures; a courtesy or no-change one only the buyer\'s', function () {
+  var c = K.changeOrderRequest(JOB33, { number: 3, kind: 'charge', amountCents: -39159, status: 'sent' }, { today: '2026-11-06' });
+  eq([c.url, c.body.signers.length, c.body.metadata, c.acknowledgementOnly], [K.API + '/signature_request/send', 2, { fm_job_code: 'FM-2611-501', fm_change_order: '3' }, false]);
+  ok(/a credit of \$391\.59/.test(c.body.message), c.body.message);
+  var a = K.changeOrderRequest(JOB33, { number: 2, kind: 'notice', amountCents: 0, status: 'recorded' }, {});
+  eq([a.body.signers.length, a.acknowledgementOnly], [1, true]); ok(/no change to your contract\) and acknowledge it\./.test(a.body.message), a.body.message);
+  ok(/Its invoice is due on signing/.test(K.changeOrderRequest(JOB33, { number: 4, kind: 'charge', amountCents: 47180 }, {}).body.message));
+  var threw = ''; try { K.changeOrderRequest(JOB33, { number: 5, kind: 'charge', status: 'withdrawn' }); } catch (e) { threw = e.message; }
+  eq(threw, 'Change order 5 was withdrawn.');
+});
+
 console.log((results.length - failed) + ' passed, ' + failed + ' failed');
 if (isNode && failed) process.exit(1);

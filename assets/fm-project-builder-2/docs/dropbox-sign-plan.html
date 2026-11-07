@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dropbox Sign in Project Builder</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: a working document. Left column narrates, right column shows the screen as it will look. Mock screens borrow Project Builder's own tokens. */
+:root {
+  --page: #EFE8DA; --surface: #FBF8F1; --surface-2: #F4EEE2; --line: #DDD3C0; --ink: #1F2B26; --ink-2: #4F5B54; --ink-3: #7D877F;
+  --accent: #243A32; --accent-soft: #DCE4DC; --accent-ink: #243A32;
+  --good: #3F6B47; --good-soft: #DDEBDD; --warn: #8A5A12; --warn-soft: #F6E7C8; --alert: #9A3B2E; --alert-soft: #F5DDD6; --info-soft: #E3EAF0;
+  --ds: #0061FE;
+  --f-display: "Playfair Display", Georgia, "Times New Roman", serif;
+  --f-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --page: #18231F; --surface: #22302A; --surface-2: #2A3933; --line: #3A4A43; --ink: #EDE8DC; --ink-2: #C3C8BF; --ink-3: #939C94;
+  --accent: #EFE8DA; --accent-soft: #33463E; --accent-ink: #D7E3D7;
+  --good: #9CC9A3; --good-soft: #2C4433; --warn: #E6C27E; --warn-soft: #4A3C22; --alert: #F0A595; --alert-soft: #4E2E28; --info-soft: #2B3A44; --ds: #6EA8FF; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --page: #18231F; --surface: #22302A; --surface-2: #2A3933; --line: #3A4A43; --ink: #EDE8DC; --ink-2: #C3C8BF; --ink-3: #939C94;
+  --accent: #EFE8DA; --accent-soft: #33463E; --accent-ink: #D7E3D7;
+  --good: #9CC9A3; --good-soft: #2C4433; --warn: #E6C27E; --warn-soft: #4A3C22; --alert: #F0A595; --alert-soft: #4E2E28; --info-soft: #2B3A44; --ds: #6EA8FF; color-scheme: dark }
+
+body { background: var(--page); color: var(--ink); font: 15px/1.55 var(--f-body); }
+.wrap { max-width: 1120px; margin: 0 auto; padding-block: 40px 72px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 56px; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 600; text-wrap: balance; margin: 0; line-height: 1.15; }
+h1 { font-size: clamp(30px, 4.4vw, 44px); }
+h2 { font-size: clamp(24px, 3vw, 30px); }
+h3 { font-size: 19px; }
+p { margin: 0; max-width: 68ch; }
+.eyebrow { font-size: 11.5px; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; color: var(--ink-3); }
+.lead { font-size: 17px; color: var(--ink-2); }
+.small { font-size: 13px; }
+.faint { color: var(--ink-3); }
+.muted { color: var(--ink-2); }
+code, .mono { font-family: var(--f-mono); font-size: 12.5px; }
+header.top { display: flex; flex-direction: column; gap: 14px; }
+.sample { display: inline-flex; gap: 8px; align-items: center; align-self: flex-start; font-size: 12.5px; background: var(--warn-soft); color: var(--warn); border-radius: 999px; padding: 4px 12px; font-weight: 600; }
+
+.tldr { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.tldr div { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.tldr b { font-size: 14px; }
+
+section.part { display: flex; flex-direction: column; gap: 22px; }
+.parthead { display: flex; flex-direction: column; gap: 8px; border-bottom: 1px solid var(--line); padding-bottom: 14px; }
+
+/* a step: narration left, screen right */
+.step { display: grid; grid-template-columns: minmax(0, 330px) minmax(0, 1fr); gap: 28px; align-items: start; }
+.step + .step { border-top: 1px dashed var(--line); padding-top: 28px; }
+.narr { display: flex; flex-direction: column; gap: 10px; position: sticky; top: calc(16px + env(safe-area-inset-top, 0px)); }
+.narr .n { font-family: var(--f-display); font-size: 15px; color: var(--ink-3); }
+.narr ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; color: var(--ink-2); font-size: 14px; }
+.behind { background: var(--surface-2); border-radius: 10px; padding: 10px 12px; font-size: 13px; color: var(--ink-2); display: flex; flex-direction: column; gap: 4px; }
+.behind b { color: var(--ink); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+
+/* mock app window */
+.win { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; box-shadow: 0 1px 0 var(--line), 0 10px 30px -18px rgba(20, 30, 25, .35); min-width: 0; }
+.bar { display: flex; align-items: center; gap: 10px; padding: 9px 14px; background: var(--surface-2); border-bottom: 1px solid var(--line); font-size: 12px; color: var(--ink-3); }
+.dots { display: flex; gap: 5px; } .dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--line); display: block; }
+.url { font-family: var(--f-mono); font-size: 11.5px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.screen { padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.jobhead { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: flex-start; }
+.jobhead .code { font-family: var(--f-mono); font-size: 11.5px; color: var(--ink-3); }
+.jobhead h4 { font-family: var(--f-display); font-size: 22px; margin: 2px 0 0; font-weight: 600; }
+.tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line); font-size: 13px; overflow-x: auto; }
+.tabs span { padding: 7px 10px; color: var(--ink-2); white-space: nowrap; }
+.tabs span.on { color: var(--ink); font-weight: 600; box-shadow: inset 0 -2px 0 var(--accent); }
+.pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 2px 10px; font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; background: var(--surface-2); color: var(--ink-2); white-space: nowrap; }
+.pill.good { background: var(--good-soft); color: var(--good); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.alert { background: var(--alert-soft); color: var(--alert); }
+.pill.info { background: var(--info-soft); color: var(--ink); }
+.card { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; background: var(--surface); }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.between { display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; }
+.btn { display: inline-flex; align-items: center; gap: 6px; font: 600 13px var(--f-body); border-radius: 8px; padding: 7px 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+.btn.primary { background: var(--accent); color: var(--surface); border-color: var(--accent); }
+.btn.quiet { border-color: transparent; background: transparent; color: var(--ink-2); }
+.btn.ds { background: var(--ds); color: #fff; border-color: var(--ds); }
+.checks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; font-size: 13.5px; }
+.checks li { display: flex; gap: 8px; align-items: baseline; }
+.checks li::before { content: "✓"; color: var(--good); font-weight: 700; }
+.field { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--ink-3); }
+.field .box { font-size: 13.5px; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; background: var(--surface); display: flex; justify-content: space-between; gap: 8px; }
+.note { border-radius: 8px; padding: 9px 12px; font-size: 13px; }
+.note.good { background: var(--good-soft); } .note.alert { background: var(--alert-soft); } .note.info { background: var(--info-soft); } .note.warn { background: var(--warn-soft); }
+
+/* status tracker */
+.track { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; }
+.track li { display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; position: relative; padding-right: 8px; min-width: 0; }
+.track .dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--line); background: var(--surface); position: relative; z-index: 1; }
+.track li::after { content: ""; position: absolute; top: 7px; left: 16px; right: 0; height: 2px; background: var(--line); }
+.track li:last-child::after { display: none; }
+.track li.done .dot { background: var(--good); border-color: var(--good); }
+.track li.done::after { background: var(--good); }
+.track li.now .dot { border-color: var(--warn); box-shadow: 0 0 0 4px var(--warn-soft); }
+.track b { font-size: 12.5px; }
+.track span { color: var(--ink-3); font-size: 11.5px; }
+.log { list-style: none; margin: 0; padding: 0; font-size: 12.5px; display: flex; flex-direction: column; gap: 4px; color: var(--ink-2); }
+.log li { display: flex; justify-content: space-between; gap: 10px; }
+.log li span:last-child { color: var(--ink-3); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* buyer side */
+.duo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+.mail { display: flex; flex-direction: column; gap: 10px; font-size: 13.5px; }
+.mail .hdr { font-size: 12px; color: var(--ink-3); display: flex; flex-direction: column; gap: 2px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+.paper { background: #fff; color: #222; border-radius: 6px; padding: 14px; font-size: 11px; display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--line); }
+.paper .ln { height: 6px; border-radius: 3px; background: #e8e4dc; }
+.sigbox { border: 2px dashed var(--ds); border-radius: 6px; padding: 8px; display: flex; justify-content: space-between; align-items: center; color: #0b3d91; font-weight: 600; background: #EEF4FF; }
+.sigbox i { font-family: "Brush Script MT", "Segoe Script", cursive; font-style: normal; font-size: 18px; color: #0b3d91; font-weight: 400; }
+.dsbar { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #555; }
+.dsbar b { color: var(--ds); }
+
+.task { display: flex; gap: 12px; align-items: center; border: 1px solid var(--line); border-left: 4px solid var(--warn); border-radius: 10px; padding: 10px 12px; flex-wrap: wrap; }
+.task div { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 13.5px; }
+.doc { display: flex; gap: 12px; align-items: center; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.doc .ic { width: 26px; height: 32px; border: 1.5px solid var(--ink-3); border-radius: 4px; flex: none; }
+.doc div { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 13.5px; }
+.doc .open { margin-left: auto; font-weight: 600; font-size: 13px; color: var(--accent-ink); }
+
+/* build plan */
+.recs { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+.phase { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.phase.first { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.phase ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 5px; font-size: 14px; color: var(--ink-2); }
+.flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; align-items: stretch; }
+.node { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 6px; font-size: 13px; min-width: 0; }
+.node h4 { margin: 0; font-size: 14px; font-family: var(--f-body); }
+.node.ds { border-color: var(--ds); }
+.node ol { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; color: var(--ink-2); }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); font-weight: 700; background: var(--surface-2); }
+tr:last-child td { border-bottom: 0; }
+td code { white-space: nowrap; }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+.list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--ink-2); }
+.list b { color: var(--ink); }
+.who { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; border-radius: 6px; padding: 1px 7px; margin-right: 6px; }
+.who.you { background: var(--warn-soft); color: var(--warn); }
+.who.hermes { background: var(--accent-soft); color: var(--accent-ink); }
+.decide { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.decide div { border: 1px solid var(--line); border-radius: 12px; padding: 14px; background: var(--surface); display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.decide .pick { font-size: 13px; color: var(--good); font-weight: 600; }
+pre.code { margin: 0; background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; font: 12px/1.6 var(--f-mono); overflow-x: auto; color: var(--ink); }
+
+@media (max-width: 860px) {
+  .step { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .narr { position: static; }
+  .flow { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .duo { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 520px) {
+  .flow { grid-template-columns: minmax(0, 1fr); }
+  .track { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .track li { flex-direction: row; align-items: center; gap: 10px; }
+  .track li::after { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <span class="eyebrow">Project Builder · Contract tab · plan for Hermes</span>
+    <h1>Dropbox Sign in Project Builder</h1>
+    <p class="lead">What the team and the buyer will see once the Dropbox Sign API is connected, and how I'd suggest Hermes builds it. Most of the logic already exists in the package (<code>FMContract</code>, HANDOFF §16); this is the last mile: the server, the callback and the screens going live.</p>
+    <span class="sample">Sample job for illustration: FM-2611-501 · Hartley kitchen</span>
+    <p class="note" role="note" style="margin-top:12px;border:1.5px solid currentColor;font-weight:600">On hold (owner, Nov 6): the Dropbox Sign API is $75/month, too much for now. The tool signs contracts and change orders itself instead, with a certificate of completion, and has steps for signing outside the tool. See HANDOFF §34. Don't build this page's plan.</p>
+  </header>
+
+  <div class="tldr" aria-label="Summary">
+    <div><span class="eyebrow">Launch with</span><b>Email signing for both signers</b><span class="small muted">Buyer signs from Dropbox Sign's email, then the Fremont Makers signer gets theirs. It only needs the paid API plan and the API key.</span></div>
+    <div><span class="eyebrow">Add next</span><b>"Sign here now" in the tool</b><span class="small muted">Signing on a tablet in person, and countersigning without leaving the tool. It needs Dropbox Sign to approve the API app first.</span></div>
+    <div><span class="eyebrow">Rule that keeps it safe</span><b>Only Dropbox Sign moves the status</b><span class="small muted">A job becomes Contracted only when Dropbox Sign's signed-and-verified message arrives. Never from a button.</span></div>
+  </div>
+
+  <!-- ================= Part 1: what it looks like ================= -->
+  <section class="part" aria-labelledby="p1">
+    <div class="parthead">
+      <span class="eyebrow">Part 1</span>
+      <h2 id="p1">What it will look like</h2>
+      <p class="muted">The same five moments every contract goes through. The screens are Project Builder's; step 3 is Dropbox Sign's own page, drawn simplified.</p>
+    </div>
+
+    <!-- 1 -->
+    <div class="step">
+      <div class="narr">
+        <span class="n">Step 1</span>
+        <h3>Ready to send</h3>
+        <p class="small muted">The Contract tab checks everything first. Once it's all green, one button sends it.</p>
+        <ul>
+          <li>Pick who signs for Fremont Makers on this job.</li>
+          <li><b>Send for signature</b> emails the buyer through Dropbox Sign.</li>
+          <li>Paper still works: print, sign, upload.</li>
+        </ul>
+        <div class="behind"><b>Behind it</b>The server turns the contract packet into a PDF, sends it with <code>POST /v3/signature_request/send</code>, and keeps a copy of exactly what was sent. Prices lock at this moment.</div>
+      </div>
+      <div class="win" role="img" aria-label="Contract tab, ready to send">
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="url">tools.fremontmakers.com/projectbuilder · FM-2611-501 · Contract</span></div>
+        <div class="screen">
+          <div class="jobhead"><div><span class="code">FM-2611-501</span><h4>Hartley Homes</h4><span class="small faint">Elm St kitchen · quoted Nov 6, 2026 · delivery Dec 18</span></div><span class="pill info">Proposed</span></div>
+          <div class="tabs"><span>Overview</span><span>Cabinets</span><span>Elevations</span><span>Change orders</span><span class="on">Contract</span><span>Invoices</span><span>Documents</span></div>
+          <div class="card">
+            <div class="between"><b>Ready to send</b><span class="pill good">All checks pass</span></div>
+            <ul class="checks"><li>Buyer: Dana Hartley · dana@example.com</li><li>Install address and delivery date</li><li>22 cabinet lines · total $14,860.20</li><li>Deposit $7,430.10 due on signing · balance at delivery</li><li>Elevations agreed (3 walls)</li></ul>
+          </div>
+          <div class="row">
+            <div class="field" style="flex:1 1 220px"><span>Signs for Fremont Makers on this job</span><span class="box">Kristy Slaughenhaupt <span class="faint">▾</span></span></div>
+          </div>
+          <div class="row">
+            <span class="btn primary">Send for signature</span>
+            <span class="btn">Sign here now <span class="pill" style="font-size:10px">later</span></span>
+            <span class="btn quiet">Signed on paper instead?</span>
+          </div>
+          <span class="small faint">Dana gets an email from Dropbox Sign. Kristy countersigns after Dana. Prices lock once it's sent.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2 -->
+    <div class="step">
+      <div class="narr">
+        <span class="n">Step 2</span>
+        <h3>Out for signature</h3>
+        <p class="small muted">The tab becomes a tracker. Each line comes from Dropbox Sign, so it's always true.</p>
+        <ul>
+          <li>See when the buyer opened it.</li>
+          <li><b>Send reminder</b> nudges them by email.</li>
+          <li><b>Cancel</b> pulls it back to change the quote, then send again.</li>
+        </ul>
+        <div class="behind"><b>Behind it</b>Dropbox Sign posts each event to our callback. The server checks its signature, ignores repeats, and updates the job with <code>FMContract.applyEvent</code>.</div>
+      </div>
+      <div class="win" role="img" aria-label="Contract tab tracking the signature">
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="url">tools.fremontmakers.com/projectbuilder · FM-2611-501 · Contract</span></div>
+        <div class="screen">
+          <div class="between"><b>Out for signature</b><span class="row"><span class="pill warn">Waiting on Dana</span><span class="pill">Prices locked</span></span></div>
+          <ol class="track" aria-label="Signature progress">
+            <li class="done"><span class="dot"></span><b>Sent</b><span>Nov 6 · 9:14 AM</span></li>
+            <li class="done"><span class="dot"></span><b>Opened</b><span>Nov 6 · 10:02 AM</span></li>
+            <li class="now"><span class="dot"></span><b>Buyer signs</b><span>Dana Hartley</span></li>
+            <li><span class="dot"></span><b>Countersign</b><span>Kristy</span></li>
+            <li><span class="dot"></span><b>Contracted</b><span>signed PDF saved</span></li>
+          </ol>
+          <div class="row"><span class="btn">Send reminder</span><span class="btn quiet">Cancel request</span><span class="small faint">Expires Dec 6 if not signed.</span></div>
+          <div class="card"><span class="eyebrow">Activity</span>
+            <ul class="log"><li><span>Dana opened the contract</span><span>Nov 6 · 10:02</span></li><li><span>Sent for signature by Lindsay Wyss · Kristy countersigns</span><span>Nov 6 · 9:14</span></li></ul>
+          </div>
+          <div class="note alert small"><b>If Dropbox Sign refuses it</b> (for example, the plan isn't upgraded yet) the job stays Proposed, the reason shows here, and there's a Retry button. No pop-ups, nothing half-done.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 -->
+    <div class="step">
+      <div class="narr">
+        <span class="n">Step 3</span>
+        <h3>The buyer signs</h3>
+        <p class="small muted">Dana gets one email and signs on her phone or computer. No account needed.</p>
+        <ul>
+          <li>Our wording in the subject and message.</li>
+          <li>Signature, date, printed name and initials land in the right spots on their own.</li>
+          <li>She can decline, which brings the job back to Proposed.</li>
+        </ul>
+        <div class="behind"><b>Behind it</b>The packet PDF carries hidden text tags like <code>[sig|req|signer1]</code>. Dropbox Sign turns them into fields, so nobody places boxes by hand.</div>
+      </div>
+      <div class="duo">
+        <div class="win" role="img" aria-label="The buyer's email">
+          <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="url">Dana's inbox</span></div>
+          <div class="screen mail">
+            <div class="hdr"><span><b style="color:var(--ink)">Dropbox Sign</b> on behalf of Fremont Makers</span><span>Your Fremont Makers contract: Elm St kitchen (FM-2611-501)</span></div>
+            <p>Please review and sign your cabinet contract for Elm St kitchen. The first invoice is due on signing; the factory order is placed once it is paid.</p>
+            <span class="btn ds" style="align-self:flex-start">Review &amp; sign</span>
+            <span class="small faint">Sent by Fremont Makers through Dropbox Sign</span>
+          </div>
+        </div>
+        <div class="win" role="img" aria-label="Dropbox Sign signing page, simplified">
+          <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="url">app.hellosign.com/sign/…</span></div>
+          <div class="screen">
+            <div class="dsbar"><span><b>Dropbox Sign</b> · Customer Sales Agreement · page 3 of 8</span><span>2 of 4 fields</span></div>
+            <div class="paper">
+              <b style="font-family:var(--f-display);font-size:13px">Customer Sales Agreement</b>
+              <span class="ln" style="width:94%"></span><span class="ln" style="width:88%"></span><span class="ln" style="width:91%"></span><span class="ln" style="width:60%"></span>
+              <div class="sigbox"><span>Buyer signature</span><i>Dana Hartley</i></div>
+              <div class="sigbox" style="border-style:solid;background:#fff"><span>Date</span><span>Nov 6, 2026</span></div>
+            </div>
+            <span class="btn ds" style="align-self:flex-end">Continue</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 -->
+    <div class="step">
+      <div class="narr">
+        <span class="n">Step 4</span>
+        <h3>Fremont Makers countersigns</h3>
+        <p class="small muted">Once Dana signs, Kristy gets Dropbox Sign's email, and the tool puts a task at the top of the Dashboard so it doesn't sit.</p>
+        <ul>
+          <li>At launch: Kristy signs from the email.</li>
+          <li>Later: <b>Countersign now</b> opens Dropbox Sign right inside the tool.</li>
+        </ul>
+        <div class="behind"><b>Behind it</b>Signer order is buyer first, Fremont Makers second, so Kristy's email only goes out after Dana signs. In-tool signing uses <code>embedded/sign_url</code>, requested the moment she clicks (the link lasts 60 minutes).</div>
+      </div>
+      <div class="win" role="img" aria-label="Dashboard with a countersign task">
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="url">tools.fremontmakers.com/projectbuilder · Dashboard</span></div>
+        <div class="screen">
+          <span class="eyebrow">Needs attention</span>
+          <div class="task"><div><b>Countersign the Hartley Homes contract</b><span class="small faint">Dana signed today at 2:41 PM · Kristy signs for Fremont Makers</span></div><span class="btn primary">Countersign now</span></div>
+          <div class="task" style="border-left-color:var(--line)"><div><b>Deposit due: Hartley Homes</b><span class="small faint">$7,430.10 · due on signing · factory order waits on it</span></div><span class="btn">Open</span></div>
+          <div class="note info small">Until in-tool signing is approved, "Countersign now" says "Check your email from Dropbox Sign" and offers <b>Resend Kristy's email</b>.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5 -->
+    <div class="step">
+      <div class="narr">
+        <span class="n">Step 5</span>
+        <h3>Contracted</h3>
+        <p class="small muted">When everyone has signed, the job moves to Contracted on its own and the signed PDF lands in Documents.</p>
+        <ul>
+          <li>The deposit invoice switches to due.</li>
+          <li>The signed PDF is checked by its fingerprint, like the other originals.</li>
+          <li>The audit trail from Dropbox Sign is saved with it.</li>
+        </ul>
+        <div class="behind"><b>Behind it</b><code>all_signed</code> makes it Contracted; <code>downloadable</code> tells the server to fetch the PDF with <code>GET /v3/signature_request/files/{id}</code> and store it with its SHA-256.</div>
+      </div>
+      <div class="win" role="img" aria-label="Job contracted, signed PDF in Documents">
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="url">tools.fremontmakers.com/projectbuilder · FM-2611-501 · Documents</span></div>
+        <div class="screen">
+          <div class="jobhead"><div><span class="code">FM-2611-501</span><h4>Hartley Homes</h4></div><span class="pill good">Contracted</span></div>
+          <ol class="track" aria-label="Signature progress, complete">
+            <li class="done"><span class="dot"></span><b>Sent</b><span>Nov 6</span></li><li class="done"><span class="dot"></span><b>Opened</b><span>Nov 6</span></li><li class="done"><span class="dot"></span><b>Buyer signed</b><span>Nov 6</span></li><li class="done"><span class="dot"></span><b>Countersigned</b><span>Nov 7</span></li><li class="done"><span class="dot"></span><b>Contracted</b><span>Nov 7</span></li>
+          </ol>
+          <div class="tabs"><span>Overview</span><span>Contract</span><span>Invoices</span><span class="on">Documents</span><span>Activity</span></div>
+          <div class="doc"><span class="ic"></span><div><b>Signed contract (Dropbox Sign)</b><span class="small faint">FM-2611-501 signed contract.pdf · 8 pages · completed Nov 7, 2026 · signed by Dana Hartley and Kristy Slaughenhaupt</span></div><span class="open">Open</span></div>
+          <div class="doc"><span class="ic"></span><div><b>Signing record</b><span class="small faint">Dropbox Sign audit trail: who signed, when, from which device</span></div><span class="open">Open</span></div>
+          <div class="note good small">✓ Same file Dropbox Sign holds (SHA-256 matches). Invoice 1, $7,430.10, is now due.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- change orders -->
+    <div class="step">
+      <div class="narr">
+        <span class="n">Also</span>
+        <h3>Change orders go the same way</h3>
+        <p class="small muted">Today a change order has a "Buyer signed (simulate)" button. With the API live it's sent the same way, and the status updates itself.</p>
+        <ul>
+          <li>Charged and credit change orders: buyer signs, then the invoice switches on.</li>
+          <li>Courtesy and no-change ones: an acknowledgement, no countersign needed.</li>
+        </ul>
+        <div class="behind"><b>Behind it</b>Same endpoint and callback. <code>metadata</code> carries the change order number, so the event finds the right one.</div>
+      </div>
+      <div class="win" role="img" aria-label="Change order out for signature">
+        <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="url">tools.fremontmakers.com/projectbuilder · FM-2609-314 · Change orders</span></div>
+        <div class="screen">
+          <div class="card">
+            <div class="between"><b>Change order 3 · credit</b><span class="row"><span class="pill warn">Out for signature</span><b>−$391.59</b></span></div>
+            <span class="small muted">Nov 6, 2026 · Cabinets removed or returned: buyer returning one WC2442</span>
+            <span class="small">Removed WC2442-VDH ×1 · Restocking fee $40.00</span>
+            <span class="small faint">Sent to Bernard Braddy through Dropbox Sign Nov 6 · opened 11:20 AM</span>
+            <div class="row"><span class="btn">Send reminder</span><span class="btn quiet">Open change order</span><span class="btn quiet">Withdraw</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Part 2: how to build it ================= -->
+  <section class="part" aria-labelledby="p2">
+    <div class="parthead">
+      <span class="eyebrow">Part 2</span>
+      <h2 id="p2">How I'd build it</h2>
+      <p class="muted">Two phases. The first gets every contract signed electronically and needs nothing from Dropbox Sign beyond the paid plan. The second adds signing inside the tool once Dropbox Sign approves the app.</p>
+    </div>
+
+    <div class="recs">
+      <div class="phase first">
+        <span class="eyebrow">Phase A · at launch</span>
+        <h3>Email signing, fully automatic status</h3>
+        <ul>
+          <li>Send for signature, buyer then Fremont Makers, both by email.</li>
+          <li>Tracker, reminders, cancel and resend.</li>
+          <li>Contracted only on Dropbox Sign's verified "all signed" message.</li>
+          <li>Signed PDF and audit trail saved to Documents.</li>
+          <li>Change orders through the same path.</li>
+          <li>Paper upload stays as the fallback.</li>
+        </ul>
+        <span class="small faint">Needs: paid API plan, API key on the server, callback URL.</span>
+      </div>
+      <div class="phase">
+        <span class="eyebrow">Phase B · after app approval</span>
+        <h3>Signing inside the tool</h3>
+        <ul>
+          <li><b>Sign here now</b>: the buyer signs on a tablet at the showroom or a site visit.</li>
+          <li><b>Countersign now</b>: the Fremont Makers signer signs without leaving the tool.</li>
+          <li>Optional "check, then send" view to adjust the message before it goes.</li>
+        </ul>
+        <span class="small faint">Needs: an API app for fremontmakers.com, approved by Dropbox Sign for embedded signing; its client ID; the signing frame allowed in the page's security settings.</span>
+      </div>
+    </div>
+
+    <h3>How the pieces talk</h3>
+    <div class="flow" role="list" aria-label="How the pieces connect">
+      <div class="node" role="listitem"><h4>Project Builder page</h4><ol><li>Ready check</li><li>Press Send</li><li>Shows the tracker</li></ol><span class="small faint">Never sees the API key.</span></div>
+      <div class="node" role="listitem"><h4>Our server</h4><ol><li>Renders the packet PDF</li><li>Calls Dropbox Sign</li><li>Saves request ID on the job</li><li>Logs who sent it</li></ol></div>
+      <div class="node ds" role="listitem"><h4>Dropbox Sign</h4><ol><li>Emails the buyer</li><li>Collects signatures in order</li><li>Posts an event at each step</li></ol></div>
+      <div class="node" role="listitem"><h4>Callback → job</h4><ol><li>Verify the event</li><li>Update status, log it</li><li>Fetch and store the signed PDF</li><li>Reply "Hello API Event Received"</li></ol></div>
+    </div>
+
+    <h3>Server endpoints</h3>
+    <p class="small muted">All under the new tool's address, behind employee sign-in except the callback, which Dropbox Sign calls and the server verifies. (These replace the <code>/api/fm/contracts/…</code> names in HANDOFF §16, to match <code>/api/projectbuilder/files</code>.)</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Endpoint</th><th>What it does</th><th>Dropbox Sign call</th></tr></thead>
+        <tbody>
+          <tr><td><code>POST /api/projectbuilder/esign/send</code></td><td>Send a contract or a change order. Body: job code, what (contract or change order N), mode. Runs the ready check again on the server first.</td><td><code>signature_request/send</code> (A) · <code>create_embedded</code> (B)</td></tr>
+          <tr><td><code>POST /api/projectbuilder/esign/remind</code></td><td>Send reminder to whoever is next.</td><td><code>signature_request/remind/{id}</code></td></tr>
+          <tr><td><code>POST /api/projectbuilder/esign/cancel</code></td><td>Cancel, so the quote can change or paper can be recorded. Prices unlock.</td><td><code>signature_request/cancel/{id}</code></td></tr>
+          <tr><td><code>POST /api/projectbuilder/esign/sign-url</code></td><td>Phase B. Get a one-time signing link when someone clicks Sign here now / Countersign now.</td><td><code>embedded/sign_url/{signature_id}</code></td></tr>
+          <tr><td><code>POST /api/projectbuilder/esign/callback</code></td><td>Public. Receives every event, verifies it, updates the job, fetches the signed PDF.</td><td>(Dropbox Sign calls us)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="cols">
+      <div class="phase">
+        <h3>The callback, done right</h3>
+        <ul class="list">
+          <li><b>Verify every event.</b> <code>event_hash</code> must equal HMAC-SHA256 of <code>event_time + event_type</code> using the API key. Reject anything else.</li>
+          <li><b>Always answer</b> HTTP 200 with the body <code>Hello API Event Received</code>, or Dropbox Sign keeps retrying.</li>
+          <li><b>Ignore repeats and strays.</b> Events come more than once and out of order; <code>applyEvent</code> already handles this. Match on <code>metadata.fm_job_code</code> and the request ID.</li>
+          <li><b>Save the raw event</b> for a year, so any dispute can be traced.</li>
+          <li><b>Don't do slow work inline.</b> Reply first, then fetch the PDF in the background.</li>
+        </ul>
+      </div>
+      <div class="phase">
+        <h3>The PDF that gets signed</h3>
+        <ul class="list">
+          <li>The packet is HTML today. The server prints it to PDF with headless Chrome, using <code>fm-phase1-print.css</code>, so what's signed matches what the team sees.</li>
+          <li>Text tags (<code>FMContract.TAGS</code>) sit invisibly on the signature lines; <code>use_text_tags</code> and <code>hide_text_tags</code> are on.</li>
+          <li>Store the exact PDF that was sent and its SHA-256 with the request, plus a contract version number.</li>
+          <li>After signing, store Dropbox Sign's signed copy beside it. Both stay; nothing is overwritten.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>What's stored on each job</h3>
+    <pre class="code">esign: {
+  requestId: "fa5c8a0b0f492d768749333ad6fcc214c111e967",   // Dropbox Sign signature_request_id
+  what: "contract",                     // or "change_order:3"
+  state: "out_for_signature",           // none → sending → out_for_signature → buyer_signed → signed → signed_pdf_ready
+  signers: [ { role: "buyer", name: "Dana Hartley", email: "dana@example.com", signatureId: "…", status: "awaiting_signature" },
+             { role: "fremont_makers", name: "Kristy Slaughenhaupt", email: "…", signatureId: "…", status: "awaiting_signature" } ],
+  sentPdf: { file: "FM-2611-501 contract v1.pdf", sha256: "…", version: 1 },
+  sentBy: "Lindsay Wyss", sentAt: "2026-11-06T09:14:00-07:00", expiresAt: "2026-12-06",
+  seen: [ "signature_request_sent@1793978040", … ],   // event keys already applied
+  testMode: false
+}</pre>
+
+    <h3>Getting it live</h3>
+    <div class="cols">
+      <ol class="list">
+        <li><span class="who you">You</span><b>Upgrade the Dropbox Sign API plan.</b> The free plan only allows test requests (approved Oct 27).</li>
+        <li><span class="who you">You</span><b>Give Hermes the API key</b> through your password manager or the server's secret settings, never in chat or email.</li>
+        <li><span class="who you">You</span><b>Confirm who can sign for Fremont Makers</b> and send Tayler's email.</li>
+        <li><span class="who hermes">Hermes</span>Set the account's callback URL to <code>tools.fremontmakers.com/api/projectbuilder/esign/callback</code>.</li>
+        <li><span class="who hermes">Hermes</span>Build the endpoints and the PDF step on the staging copy, with <code>test_mode</code> on.</li>
+      </ol>
+      <ol class="list" start="6">
+        <li><span class="who hermes">Hermes</span><b>Test run on staging</b>: send a sample to your own emails; sign as buyer, then as Fremont Makers; check Contracted, the PDF and the activity log. Then decline one, cancel one, and record one on paper.</li>
+        <li><span class="who you">You</span>Look at the test contract and its signed PDF and say go.</li>
+        <li><span class="who hermes">Hermes</span>Turn off <code>test_mode</code> on the live tool. First real contract goes out.</li>
+        <li><span class="who you">You</span><span class="who hermes">Hermes</span>Phase B: create the API app for fremontmakers.com and ask Dropbox Sign to approve embedded signing. It can take a few days.</li>
+      </ol>
+    </div>
+
+    <h3>Your three choices (decided Nov 6)</h3>
+    <div class="decide">
+      <div><b>Reminders</b><span class="muted small">A Send reminder button always. Should the tool also remind the buyer automatically?</span><span class="pick">✓ Decided: automatic reminder after 3 days, then after 7.</span></div>
+      <div><b>How long a contract stays open</b><span class="muted small">After this, the signing link stops working and the job goes back to Proposed with a note.</span><span class="pick">✓ Decided: 30 days, so prices don't sit locked for months.</span></div>
+      <div><b>Countersigning at launch</b><span class="muted small">By email from Dropbox Sign, or wait for Phase B so it happens inside the tool.</span><span class="pick">✓ Decided: email at launch. Don't hold up e-signing for the app approval.</span></div>
+    </div>
+  </section>
+</div>
+</body>
+</html>

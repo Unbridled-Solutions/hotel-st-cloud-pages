@@ -75,8 +75,9 @@
   changeOrders: [
     { number: 1, date: '2026-10-14', kind: 'courtesy', printedWhy: 'SKUs updated Oct 2026', printedThisChange: 0,
       removed: [ { sku: 'DC324-VDH', desc: 'Dark Hickory Shaker DC324', qty: 2 },
-                 { sku: 'VDC12-VDH', desc: 'Dark Hickory Shaker VDC12', qty: 1 } ],
-      removedSell: 1649.95,
+                 { sku: 'VDC12-VDH', desc: 'Dark Hickory Shaker VDC12', qty: 1 },
+                 { sku: 'VSB30-VDH', desc: 'Dark Hickory Shaker VSB30', qty: 1, from: 3, to: 2 } ],   // owner, Nov 6: VSB30 really went 3 → 2 (on the PDF; the old tool's record missed it)
+      removedSell: 2001.39,   // $1,649.95 the old tool noted (DC324 ×2, VDC12) + VSB30 ×1 at $351.44
       added: [ { sku: 'VDC42RS-VDH', desc: 'Dark Hickory Shaker VDC42RS', qty: 1, unitCostAsEntered: 0, unitCost: 707.92 },
                { sku: 'DC224-VDH', desc: 'Dark Hickory Shaker DC224', qty: 2, unitCostAsEntered: 0, unitCost: 446.26 } ],
       supplierOrder: '1000173203',
@@ -98,6 +99,10 @@
     { jobCode: 'FM-2609-314', title: 'Wholesale Cabinets order #1000173203', file: 'Updated Braddy WholesaleCabinets-1000173203 (2).pdf', pages: 1, bytes: 581317,
       sha256: '33091aa2e103f2ac31e1129abe4477091cee33f4292af9df033072788e8d1f77', kind: 'supplier-order',
       contains: 'VDC42RS ×1 and DC224 ×2, Oct 9 2026, $1,652.70 paid by card' },
+    { jobCode: 'FM-2609-314', changeOrder: 1, title: 'Change order 1 (courtesy, no charge)', file: 'FM-2609-314 · Braddy Builders COR 1.pdf', pages: 2, bytes: 401071,
+      sha256: '8bbd4a2c83b3b68a8e2734d3b08d55765ccc3b02453e88650d7038d072d02bb6', kind: 'change_order', addedOn: '2026-11-06', addedBy: 'Owner (Dropbox, Nov 6)',
+      contains: 'Oct 14 2026 · added VDC42RS ×1, DC224 ×2 · removed DC324 ×2, VDC12 ×1 · VSB30 3 → 2 · this change $0.00 · contract stays $10,973.11 · signature page blank',
+      note: 'Owner, Nov 6: VSB30-VDH 3 → 2 on this PDF is right; the old tool\'s record had missed it.' },
     { jobCode: 'FM-2609-276', title: 'Signed contract packet', file: 'Willow Creek Full House Order.pdf', pages: 27, bytes: 8404099,
       sha256: '9c415ace06e94d51cbf9c22c6045d8996f18468b375f4459b2f7e9d82840dbe9', kind: 'contract',
       contains: 'Builder order, agreement, payment schedule, invoices, 10 Final Job Quotes (154 lines)' }

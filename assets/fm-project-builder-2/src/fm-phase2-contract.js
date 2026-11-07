@@ -21,7 +21,11 @@
   else root.FMContract = factory();
 }(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
-  var VERSION = '0.5.0-phase2';
+  var VERSION = '0.6.0-phase2';
+
+  /* Owner decisions, Nov 6 2026 (HANDOFF §33): automatic reminders 3 and 7 days after sending; a request expires after
+     30 days unsigned; at launch Fremont Makers countersigns from Dropbox Sign's email (signing inside the tool comes later). */
+  var SETTINGS = { reminderDays: [3, 7], expiryDays: 30, countersign: 'email' };
   var API = 'https://api.hellosign.com/v3';
   var CALLBACK_ACK = 'Hello API Event Received';
 
@@ -36,7 +40,7 @@
 
   // Job e-sign states, in order. A later state is never replaced by an earlier one.
   var STATES = ['none', 'sending', 'out_for_signature', 'buyer_signed', 'signed', 'signed_pdf_ready'];
-  var STOP_STATES = { declined: 1, canceled: 1, error: 1 };
+  var STOP_STATES = { declined: 1, canceled: 1, error: 1, expired: 1 };
 
   function isEmail(s) { return typeof s === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim()); }
   function blank(s) { return s == null || String(s).trim() === ''; }
@@ -70,7 +74,7 @@
       block('status', 'job', 'Only a Proposed job can be contracted (this one is ' + job.status + ').');
     if (blank(job.customer)) block('customer', 'customer', 'Add the customer.');
     if (blank(job.signer) || looksPlaceholder(job.signer)) block('signer', 'customer', 'Add the name of the person who will sign.');
-    if (!isEmail(job.buyerEmail) || looksPlaceholder(job.buyerEmail)) block('buyerEmail', 'customer', 'Add the signer\'s email address. Dropbox Sign sends the contract there.');
+    if (!isEmail(job.buyerEmail) || looksPlaceholder(job.buyerEmail)) block('buyerEmail', 'customer', 'Add the signer\'s email address. The signing link and their signed copy go there.');
     if (blank(job.project)) block('project', 'customer', 'Add a project name.');
     var fs = job.fmSigner;
     if (!fs || blank(fs.name) || !isEmail(fs.email)) block('fmSigner', 'contract', 'Choose who signs for Fremont Makers on this job.');
@@ -134,7 +138,8 @@
    *                 (unclaimed_draft/create_embedded → claim_url)
    *   'in_person' – The buyer signs right now in a frame on our screen (office or tablet).
    *                 (signature_request/create_embedded → embedded/sign_url per signer)
-   * opts: { mode, clientId, requesterEmail, countersigner:{name,email}, testMode, contractVersion, fileName }
+   * opts: { mode, clientId, requesterEmail, countersigner:{name,email}, testMode, contractVersion, fileName, today, expiryDays }
+ *   today: when given, the request expires SETTINGS.expiryDays (30) days later (expires_at, a Unix time at midnight UTC).
    * Returns { method, url, body, then } – `then` names the follow-up call, if any.
    * The server adds the PDF as `files[0]` (multipart) before sending.
    */
@@ -162,6 +167,7 @@
       metadata: { fm_job_code: job.jobCode, fm_contract_version: String(opts.contractVersion || 1) },
       test_mode: !!opts.testMode
     };
+    if (isISO(opts.today)) body.expires_at = expiresAt(opts.today, opts.expiryDays);
     var r = { method: 'POST', body: body, then: null };
     if (mode === 'email') r.url = API + '/signature_request/send';
     else if (mode === 'in_person') {
@@ -174,6 +180,64 @@
       r.then = 'open claim_url in the frame';
     }
     return r;
+  }
+
+  function expiresAt(today, days) { return (day(today) + (days || SETTINGS.expiryDays)) * 86400; }
+
+  /*
+   * A change order sent through Dropbox Sign (replaces "Buyer signed (simulate)").
+   *   charge / custom (incl. credits): the buyer signs, then Fremont Makers countersigns, like the contract.
+   *   courtesy / notice (no charge, no change to the contract): the buyer acknowledges; no countersignature.
+   * job: { jobCode, customer, project, signer, buyerEmail, fmSigner }; co: { number, kind, amountCents, status }
+   * opts: { mode ('email' at launch), today, testMode, clientId }
+   * The server attaches the change order PDF (FMDocs.renderChangeOrderDoc printed to PDF) as files[0].
+   */
+  function changeOrderRequest(job, co, opts) {
+    opts = opts || {};
+    if (!co || !co.number) throw new Error('Which change order?');
+    if (co.status === 'withdrawn') throw new Error('Change order ' + co.number + ' was withdrawn.');
+    if (!isEmail(job.buyerEmail)) throw new Error('Add the buyer\'s email address first. Dropbox Sign sends the change order there.');
+    var ack = co.kind === 'courtesy' || co.kind === 'notice', mode = opts.mode || 'email';
+    var signers = [{ name: job.signer, email_address: String(job.buyerEmail).trim(), order: 0 }];
+    if (!ack) {
+      var cs = opts.countersigner || job.fmSigner;
+      if (!cs || blank(cs.name) || !isEmail(cs.email)) throw new Error('Choose who signs for Fremont Makers on this job first.');
+      signers.push({ name: cs.name, email_address: String(cs.email).trim(), order: 1 });
+    }
+    var what = ack ? (co.kind === 'courtesy' ? 'at no charge' : 'with no change to your contract') : co.amountCents < 0 ? 'a credit of ' + money(-co.amountCents) : money(co.amountCents);
+    var body = {
+      title: 'Fremont Makers · ' + job.jobCode + ' · Change order ' + co.number,
+      subject: 'Change order ' + co.number + ' for ' + job.project + ' (' + job.jobCode + ')',
+      message: 'Please review change order ' + co.number + ' for ' + job.project + ' (' + what + ') and ' + (ack ? 'acknowledge it.' : 'sign it.') +
+        (!ack && co.amountCents > 0 ? ' Its invoice is due on signing.' : ''),
+      signers: signers, use_text_tags: true, hide_text_tags: true,
+      metadata: { fm_job_code: job.jobCode, fm_change_order: String(co.number) },
+      test_mode: !!opts.testMode
+    };
+    if (isISO(opts.today)) body.expires_at = expiresAt(opts.today, opts.expiryDays);
+    var r = { method: 'POST', body: body, then: null, acknowledgementOnly: ack };
+    if (mode === 'email') r.url = API + '/signature_request/send';
+    else { if (blank(opts.clientId)) throw new Error('Signing in a frame needs the API app client_id.'); r.url = API + '/signature_request/create_embedded'; body.client_id = opts.clientId; r.then = 'GET ' + API + '/embedded/sign_url/{signature_id}'; }
+    return r;
+  }
+  function money(c) { var n = Math.abs(c); return '$' + Math.floor(n / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + ('0' + (n % 100)).slice(-2); }
+
+  /*
+   * Automatic reminders (owner, Nov 6): 3 and 7 days after sending, to whoever still has to sign. The server runs this once a day
+   * and calls POST /v3/signature_request/remind/{id} with that email. Each reminder goes once; a manual "Send reminder" doesn't
+   * change the schedule.
+   * es: { state, sentOn (YYYY-MM-DD), reminded: [days already sent], signers: [{ email, status ('awaiting_signature'|'signed') , order }] }
+   * Returns null, or { day, email, log }.
+   */
+  function reminderDue(es, today) {
+    if (!es || !isISO(es.sentOn) || !isISO(today)) return null;
+    if (['out_for_signature', 'buyer_signed'].indexOf(es.state) < 0) return null;
+    var age = day(today) - day(es.sentOn), done = es.reminded || [];
+    var d = SETTINGS.reminderDays.filter(function (x) { return age >= x && done.indexOf(x) < 0; }).pop();
+    if (d == null) return null;
+    var next = (es.signers || []).filter(function (g) { return g.status !== 'signed'; }).sort(function (a, b) { return (a.order || 0) - (b.order || 0); })[0];
+    if (!next) return null;
+    return { day: d, email: next.email, log: 'Automatic reminder (day ' + d + ') sent to ' + next.email + '.' };
   }
 
   /* Options for hellosign-embedded's client.open(url, options). skipDomainVerification
@@ -228,6 +292,9 @@
       case 'signature_request_canceled':
         if (s.state !== 'signed' && s.state !== 'signed_pdf_ready') { s.state = 'canceled'; changed = true; }
         log = 'Signature request canceled.'; break;
+      case 'signature_request_expired':
+        if (s.state !== 'signed' && s.state !== 'signed_pdf_ready') { s.state = 'expired'; changed = true; }
+        log = 'Not signed within ' + SETTINGS.expiryDays + ' days, so the request expired. Prices are unlocked; send it again when ready.'; break;
       case 'signature_request_invalid':
         s.state = 'error'; changed = true; log = 'Dropbox Sign could not process the contract PDF (check the signature fields).'; break;
       default: log = null;
@@ -237,7 +304,7 @@
 
   /* While a request is out (or signed), pricing is frozen. Declined/canceled/error unfreeze it. */
   function isQuoteFrozen(esignState) {
-    return ['sending', 'out_for_signature', 'buyer_signed', 'signed', 'signed_pdf_ready', 'signed_on_paper'].indexOf(esignState) >= 0;
+    return ['sending', 'out_for_signature', 'buyer_signed', 'signed', 'signed_pdf_ready', 'signed_on_paper', 'signed_outside'].indexOf(esignState) >= 0;
   }
 
   /*
@@ -282,7 +349,8 @@
   return {
     VERSION: VERSION, recordPaperSigned: recordPaperSigned, API: API, CALLBACK_ACK: CALLBACK_ACK, TAGS: TAGS, STATES: STATES,
     readiness: readiness, defaultDueDates: defaultDueDates, invoiceAmounts: invoiceAmounts,
-    signatureRequest: signatureRequest, embeddedOpenOptions: embeddedOpenOptions,
+    signatureRequest: signatureRequest, embeddedOpenOptions: embeddedOpenOptions, SETTINGS: SETTINGS,
+    changeOrderRequest: changeOrderRequest, reminderDue: reminderDue, expiresAt: expiresAt,
     applyEvent: applyEvent, isQuoteFrozen: isQuoteFrozen, isEmail: isEmail
   };
 }));

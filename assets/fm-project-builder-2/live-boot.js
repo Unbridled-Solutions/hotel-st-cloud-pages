@@ -1,5 +1,5 @@
 /*
- * Project Builder 2.10.0 live boot.
+ * Project Builder 2.11.0 live boot.
  * Canonical URL: /projectbuilder
  * GET ns=fm-quotes only (read-only import). Never POST that namespace.
  * New writes go to GET/POST ns=fm-phase1.
@@ -75,7 +75,13 @@
   }
 
   if (!root) return;
-  root.innerHTML = '<div class="fmp1-card p2-pad" style="grid-column:1/-1"><span class="fmp1-eyebrow">Project Builder · v2.10.0</span><p class="fmp1-muted">Reading jobs. The old builder is not being written.</p></div>';
+  var signPath = location.pathname.match(/^\/projectbuilder\/sign\/([^/]+)\/?$/);
+  if (signPath && !(location.hash || '').replace(/^#\/?/, '')) {
+    location.replace('/projectbuilder#/sign/' + encodeURIComponent(signPath[1]));
+    return;
+  }
+
+  root.innerHTML = '<div class="fmp1-card p2-pad" style="grid-column:1/-1"><span class="fmp1-eyebrow">Project Builder · v2.11.0</span><p class="fmp1-muted">Reading jobs. The old builder is not being written.</p></div>';
 
   Promise.all([
     fetch('/api/planner/bundle?ns=fm-quotes', { cache: 'no-store' }).then(function (r) {
@@ -105,6 +111,7 @@
     loadScripts([
       BASE + '/preview/phase2-app.js',
       BASE + '/preview/phase2-flows.js',
+      BASE + '/preview/phase2-sign.js',
       BASE + '/preview/phase2-elevations.js',
       BASE + '/preview/phase2-measure.js',
       BASE + '/preview/phase2-customers.js',

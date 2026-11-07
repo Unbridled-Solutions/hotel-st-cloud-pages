@@ -72,7 +72,7 @@ test('corrected math cannot be squared with the signed total by rounding', funct
 });
 
 test('source documents are listed for both jobs with checksums', function () {
-  eq(B.documents.map(function (d) { return d.jobCode + ' ' + d.kind; }), ['FM-2609-314 contract', 'FM-2609-314 supplier-order', 'FM-2609-276 contract']);
+  eq(B.documents.map(function (d) { return d.jobCode + ' ' + d.kind; }), ['FM-2609-314 contract', 'FM-2609-314 supplier-order', 'FM-2609-314 change_order', 'FM-2609-276 contract']);
   B.documents.forEach(function (d) { ok(/^[0-9a-f]{64}$/.test(d.sha256), d.file); });
 });
 
@@ -83,7 +83,7 @@ test('all 18 SKUs match the quote screen (8:34 PM): cost $5,766.96, assembly $40
   eq([sell, C(m.screenTotals.cabinets)], [742383, 742384]);   // the printed lines add to $7,423.83; the screen says $7,423.84 (the known 1¢ rounding issue, §14)
   eq(Math.round(m.assembly.rate * 100 * m.assembly.hours), C(m.contract.assembly));
   var co = B.changeOrders[0];
-  eq(co.removed.map(function (r) { return r.sku + ' ×' + r.qty; }), ['DC324-VDH ×2', 'VDC12-VDH ×1']);
+  eq(co.removed.map(function (r) { return r.sku + ' ×' + r.qty; }), ['DC324-VDH ×2', 'VDC12-VDH ×1', 'VSB30-VDH ×1']);
   eq(co.added.map(function (a) { return a.sku; }), m.lines.filter(function (l) { return l.noCharge; }).map(function (l) { return l.sku; }));
 });
 

@@ -16,7 +16,7 @@
   else root.FMChangeOrder = factory();
 }(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
-  var VERSION = '0.3.0-phase2';
+  var VERSION = '0.4.0-phase2';
 
   var REASONS = {
     backorder: 'Backordered item substituted',
@@ -46,12 +46,12 @@
   function courtesy(input, opts) {
     input = input || {}; opts = opts || {};
     var P = [], W = [];
-    var removed = (input.removed || []).map(function (l) { return { sku: l.sku, desc: l.desc || l.sku, qty: l.qty }; });
+    var removed = (input.removed || []).map(function (l) { var r = { sku: l.sku, desc: l.desc || l.sku, qty: l.qty }; if (l.from != null && l.to != null) { r.from = l.from; r.to = l.to; } return r; });
     var added = (input.added || []).map(function (l) { return { sku: l.sku, desc: l.desc || l.sku, qty: l.qty, unitCostCents: l.unitCostCents == null ? null : l.unitCostCents }; });
 
     if (!REASONS[input.reason]) P.push('Choose why this change is a courtesy.');
     if (input.reason === 'other' && blank(input.note)) P.push('Add a note saying why.');
-    if (!removed.length && !added.length) P.push('Add the cabinets that came off or went on.');
+    if (!removed.length && !added.length && !(input.replaced || []).length) P.push('Add the cabinets that came off or went on.');
     if (!isISO(input.date)) P.push('Enter the change date.');
     else if (opts.today && input.date > opts.today) P.push('The change date can\'t be in the future.');
     if (blank(input.requestedBy)) P.push('Sign in so the change is recorded under your name.');
@@ -65,8 +65,8 @@
     var credit = input.supplierCreditCents == null ? null : input.supplierCreditCents;
     if (removed.length && credit == null) W.push('Not known yet whether the supplier credited the removed cabinets (' + removed.map(lineLabel).join(', ') + '). Until it is, the absorbed cost assumes no credit.');
     if (added.length && paid == null) W.push('Link the supplier order for the added cabinets so the absorbed cost uses what was actually paid (with tax and discount).');
-    var spent = paid != null ? paid : addedCost;
-    var absorbed = spent - (credit || 0);
+    var replaced = cleanReplaced(input.replaced);
+    replaced.forEach(function (l) { if (!(l.unitCostCents > 0)) P.push('Enter what the replacement ' + l.sku + ' costs us.'); if (!CLAIMS[l.claim]) P.push('Say who the damage claim for ' + l.sku + ' goes to (or that we cover it).'); });
 
     var co = {
       kind: 'courtesy', number: input.number, date: input.date,
@@ -74,12 +74,14 @@
       removed: removed, added: added,
       amountCents: 0, customerChangeCents: 0, contractDeltaCents: 0,   // the customer is never charged
       addedCostCents: addedCost, supplierPaidCents: paid, supplierCreditCents: credit,
-      absorbedCents: absorbed, absorbedIsEstimate: removed.length > 0 && credit == null,
+      replaced: replaced, replacedCostCents: sum(replaced.map(function (l) { return (l.unitCostCents || 0) * l.qty; })),
+      absorbedCents: 0, absorbedIsEstimate: false,
       removedSellCents: input.removedSellCents == null ? null : input.removedSellCents,
       supplierOrder: input.supplierOrder || null,
       requestedBy: input.requestedBy || '', approvedBy: null, approvedAt: null,
       buyerAck: 'none', status: 'draft'
     };
+    var ab = absorbedFor(co); co.absorbedCents = ab.cents; co.absorbedIsEstimate = ab.estimate;
     return { ok: P.length === 0, problems: P, warnings: W, co: co };
   }
 
@@ -101,7 +103,7 @@
 
   /* What the customer sees. Never shows cost, margin or the absorbed amount. */
   function printed(co, job) {
-    var rows = co.removed.map(function (l) { return { action: 'Removed', sku: l.sku, desc: l.desc, qty: l.qty + ' → 0', price: '' }; })
+    var rows = co.removed.map(function (l) { return l.to ? { action: 'Changed', sku: l.sku, desc: l.desc, qty: l.from + ' → ' + l.to, price: '' } : { action: 'Removed', sku: l.sku, desc: l.desc, qty: (l.from != null ? l.from : l.qty) + ' → 0', price: '' }; })
       .concat(co.added.map(function (l) { return { action: 'Added', sku: l.sku, desc: l.desc, qty: '0 → ' + l.qty, price: 'No charge' }; }));
     return {
       title: 'Change Order ' + co.number + ' · Courtesy',
@@ -123,7 +125,9 @@
 
   var CHANGE_REASONS = {
     customer_request: 'Customer request', site_change: 'Site or plan change',
-    backorder: 'Backordered item substituted', our_mistake: 'Our mistake', other: 'Other'
+    backorder: 'Backordered item substituted', our_mistake: 'Our mistake', other: 'Other',
+    add: 'Cabinets added', swap: 'Cabinets swapped', remove: 'Cabinets removed or returned', backorder_wait: 'Backordered: new delivery date',
+    damage: 'Damaged cabinet replaced', mistake: 'Corrected at our cost'
   };
   function suffixOf(sku) { var p = String(sku || '').split('-'); return p.length > 1 ? p[p.length - 1].toUpperCase() : ''; }
 
@@ -207,10 +211,17 @@
       var labor = (settings.labor || []).filter(function (w) { return w.hours > 0 && w.rateCents > 0; });
       var pa = price(change.added, labor), pr = price(change.removed, null), a = parts(pa), r = parts(pr), summary = {};
       Object.keys(a).forEach(function (k) { summary[k] = a[k] - r[k]; });
+      // other charges or credits (restocking fee, freight, extra labor, a credit): at the amount entered, taxed only if marked taxable
+      var extras = cleanExtras(change.extras), exTax = 0;
+      extras.forEach(function (x) { if (x.taxable) exTax += Math.round(x.amountCents * (settings.taxPct || 0) / 100); });
+      summary.otherCents = sum(extras.map(function (x) { return x.amountCents; }));
+      summary.taxCents += exTax; summary.totalCents += summary.otherCents + exTax;
       var lines = (pa ? pa.lines.map(function (l) { return { sku: l.sku, desc: l.description, qty: l.qty, unitCostCents: l.unitCostCents, markupPct: l.markupPct, unitCents: l.unitCents, totalCents: l.totalCents }; }) : [])
-        .concat(pr ? pr.lines.map(function (l) { return { sku: l.sku, desc: l.description, qty: -l.qty, unitCostCents: l.unitCostCents, markupPct: l.markupPct, unitCents: l.unitCents, totalCents: -l.totalCents, removed: true }; }) : []);
+        .concat(pr ? pr.lines.map(function (l) { return { sku: l.sku, desc: l.description, qty: -l.qty, unitCostCents: l.unitCostCents, markupPct: l.markupPct, unitCents: l.unitCents, totalCents: -l.totalCents, removed: true }; }) : [])
+        .concat(extras.map(function (x) { return { sku: '', desc: x.label + (x.taxable ? ' (taxable)' : ''), qty: 1, unitCents: x.amountCents, totalCents: x.amountCents, extra: true }; }));
       return { ok: true, addedCents: a.totalCents, removedCents: r.totalCents, deltaCents: summary.totalCents, lines: lines, summary: summary,
                taxCents: summary.taxCents, costCents: summary.costCents,
+               removedCostCents: r.costCents, extras: extras,
                settings: { markupPct: settings.markupPct, discountPctOfCost: settings.discountPctOfCost, gaPct: settings.gaPct, taxPct: settings.taxPct, labor: labor } };
     } catch (e) { return { ok: false, error: e.message }; }
   }
@@ -221,8 +232,10 @@
    *   'courtesy' – $0 to the customer, cost absorbed, owner approves (see courtesy()).
    *   'custom'   – an agreed amount; needs a note saying why it differs.
    */
-  function choosePrice(choice, priced, custom) {
-    if (['charge', 'courtesy', 'custom'].indexOf(choice) < 0) return { ok: false, error: 'Choose how this change is priced: charge it, courtesy, or an agreed amount.' };
+  function choosePrice(choice, priced, custom, opts) {
+    opts = opts || {};
+    if (['charge', 'courtesy', 'custom', 'nochange'].indexOf(choice) < 0) return { ok: false, error: 'Choose how this change is priced: charge it, courtesy, an agreed amount, or no change to the contract.' };
+    if (choice === 'nochange') return opts.sellChanges ? { ok: false, error: '"No change to the contract" is for replacements and new dates only. Cabinets were added or removed, or a fee was entered: charge it, make it a courtesy, or enter an agreed amount.' } : { ok: true, amountCents: 0, kind: 'notice' };
     if (choice === 'courtesy') return { ok: true, amountCents: 0, kind: 'courtesy' };
     if (choice === 'charge') return priced && priced.ok ? { ok: true, amountCents: priced.deltaCents, kind: 'charge' } : { ok: false, error: 'Price the cabinets first.' };
     custom = custom || {};
@@ -246,7 +259,185 @@
     };
   }
 
-  return { VERSION: VERSION, REASONS: REASONS, CHANGE_REASONS: CHANGE_REASONS, courtesy: courtesy, approve: approve, printed: printed,
+
+  /* ================= What happened (2.11.0, HANDOFF.md §32) =================
+   * The flow starts from what happened, which picks the reason, opens the right tools and suggests (never chooses)
+   * how it's billed. Every type can still use every tool: add, remove, swap, replace, other charges, new date. */
+  var TYPES = {
+    add: { label: 'Add cabinets', help: 'The customer wants more cabinets or accessories.', reason: 'add', usually: 'charge' },
+    swap: { label: 'Swap cabinets', help: 'A different size, style or color in place of what was sold. Use Swap on the line.', reason: 'swap', usually: 'charge' },
+    remove: { label: 'Remove or return', help: 'Cabinets come off the order or come back. The customer is credited what they paid for them; add a restocking fee under Other charges if one applies.', reason: 'remove', usually: 'charge' },
+    backorder: { label: 'Backordered', help: 'A cabinet won\'t arrive in time. Swap in one that\'s in stock, or wait for it and record the new date.', reason: 'backorder', usually: 'courtesy' },
+    damage: { label: 'Damaged', help: 'A cabinet arrived or was installed damaged. Reorder it at our cost and note who the claim goes to.', reason: 'damage', usually: 'nochange' },
+    mistake: { label: 'Our mistake', help: 'Wrong cabinet ordered, measured or built. We fix it at our cost.', reason: 'mistake', usually: 'courtesy' },
+    other: { label: 'Something else', help: 'Extra labor, freight, a fee or a credit, or only a new delivery date.', reason: 'other', usually: null }
+  };
+  var CLAIMS = { supplier: 'Supplier (warranty / damage claim)', freight: 'Freight carrier', none: 'We cover it' };
+  var CHOICES = { charge: 'Charge it', courtesy: 'Courtesy ($0)', custom: 'Agreed amount', nochange: 'No change to the contract' };
+
+  function cleanReplaced(list) {
+    return (list || []).filter(function (l) { return l && l.qty > 0; }).map(function (l) {
+      return { sku: l.sku, desc: l.desc || l.sku, qty: l.qty, unitCostCents: l.unitCostCents == null ? null : l.unitCostCents, claim: l.claim || null, why: l.why || '' };
+    });
+  }
+  function cleanExtras(list) {
+    return (list || []).filter(function (x) { return x && !blank(x.label) && typeof x.amountCents === 'number' && !isNaN(x.amountCents) && x.amountCents !== 0; })
+      .map(function (x) { return { label: String(x.label).trim(), amountCents: Math.round(x.amountCents), taxable: !!x.taxable }; });
+  }
+
+  /* What changed between the list as signed and the list now. Quantities only; a line at 0 was removed. */
+  function diffLines(base, current) {
+    var before = {}; (base || []).forEach(function (l) { before[l.sku] = l; });
+    var seen = {}, added = [], removed = [];
+    (current || []).forEach(function (l) {
+      var b = before[l.sku]; seen[l.sku] = true;
+      if (!b && l.qty > 0) { var a = JSON.parse(JSON.stringify(l)); if (!l.mkEdited) delete a.markupPct; delete a.mkEdited; delete a.swapFor; added.push(a); }
+      else if (b && l.qty !== b.qty) (l.qty > b.qty ? added : removed).push({ sku: l.sku, desc: l.desc, qty: Math.abs(l.qty - b.qty), unitCostCents: l.unitCostCents, markupPct: l.qty > b.qty && l.mkEdited ? l.markupPct : b.markupPct, from: b.qty, to: l.qty });
+    });
+    (base || []).forEach(function (b) { if (!seen[b.sku] && b.qty > 0) removed.push({ sku: b.sku, desc: b.desc, qty: b.qty, unitCostCents: b.unitCostCents, markupPct: b.markupPct, from: b.qty, to: 0 }); });
+    return { added: added, removed: removed };
+  }
+
+  /* Swap one line for another: the old line goes down by qty, the new one goes on (or up) by qty. Never changes the input. */
+  function swapLine(current, sku, replacement, qty) {
+    var out = JSON.parse(JSON.stringify(current || [])), old = out.filter(function (l) { return l.sku === sku; })[0];
+    if (!old) return { ok: false, error: sku + ' isn\'t on the list.' };
+    if (!replacement || blank(replacement.sku)) return { ok: false, error: 'Enter the SKU it\'s swapped for.' };
+    if (String(replacement.sku).toUpperCase() === String(sku).toUpperCase()) return { ok: false, error: 'That\'s the same SKU. To replace a damaged one with the same cabinet, use Replace.' };
+    qty = qty == null ? old.qty : qty;
+    if (!(qty > 0) || qty > old.qty) return { ok: false, error: 'Swap between 1 and ' + old.qty + ' of ' + sku + '.' };
+    if (!(replacement.unitCostCents > 0)) return { ok: false, error: 'Enter what ' + replacement.sku + ' costs us.' };
+    old.qty -= qty;
+    var have = out.filter(function (l) { return String(l.sku).toUpperCase() === String(replacement.sku).toUpperCase(); })[0];
+    if (have) have.qty += qty;
+    else out.push({ sku: String(replacement.sku).trim(), desc: replacement.desc || String(replacement.sku).trim(), qty: qty, unitCostCents: replacement.unitCostCents, swapFor: sku });
+    return { ok: true, lines: out };
+  }
+
+  /* Add a cabinet by hand (not on a supplier PDF yet). Adds to the quantity if the SKU is already on the list. */
+  function addLine(current, line) {
+    line = line || {};
+    var P = [];
+    if (blank(line.sku)) P.push('Enter the SKU.');
+    if (!(line.qty > 0) || Math.floor(line.qty) !== line.qty) P.push('Quantity must be a whole number, 1 or more.');
+    if (!(line.unitCostCents > 0)) P.push('Enter what it costs us (the supplier\'s price before the manufacturer discount).');
+    if (P.length) return { ok: false, problems: P };
+    var out = JSON.parse(JSON.stringify(current || [])), sku = String(line.sku).trim().toUpperCase();
+    var have = out.filter(function (l) { return String(l.sku).toUpperCase() === sku; })[0];
+    if (have) { have.qty += line.qty; return { ok: true, lines: out, merged: true }; }
+    out.push({ sku: sku, desc: blank(line.desc) ? sku : String(line.desc).trim(), qty: line.qty, unitCostCents: line.unitCostCents });
+    return { ok: true, lines: out, merged: false };
+  }
+
+  /* Credits the shop gets back (returned cabinets, damage claims). Older courtesy change orders kept one supplierCreditCents. */
+  function creditsOf(co) {
+    if (co.credits) return co.credits;
+    return co.supplierCreditCents != null ? [{ amountCents: co.supplierCreditCents, for: 'returned', from: 'supplier' }] : [];
+  }
+  function claimPending(co) {
+    return (co.replaced || []).some(function (r) { return r.claim && r.claim !== 'none'; }) && !creditsOf(co).some(function (c) { return c.for === 'damaged'; });
+  }
+  /*
+   * What the shop absorbs on a change order (never shown to the customer):
+   *   courtesy: what was paid for the added cabinets + replacements − credits back
+   *   notice (no change to the contract): replacements − damage credits
+   *   charge / agreed amount: replacements − damage credits, plus whatever the supplier kept on returned cabinets
+   *     (the job cost already assumes a full credit; once the real credit is recorded the shortfall shows here)
+   * estimate: true while a credit or claim is still open.
+   */
+  function absorbedFor(co) {
+    var cr = creditsOf(co), amt = function (c) { return c.amountCents || 0; };
+    var ret = sum(cr.filter(function (c) { return c.for === 'returned'; }).map(amt)), dmg = sum(cr.filter(function (c) { return c.for === 'damaged'; }).map(amt));
+    var hasRet = cr.some(function (c) { return c.for === 'returned'; }), replaced = co.replacedCostCents || 0, removed = (co.removed || []).length > 0, pending = claimPending(co);
+    if (co.kind === 'courtesy') {
+      var spent = co.supplierPaidCents != null ? co.supplierPaidCents : (co.addedCostCents || 0);
+      return { cents: spent + replaced - ret - dmg, estimate: (removed && !hasRet) || pending };
+    }
+    if (co.kind === 'notice') return { cents: replaced - dmg, estimate: pending };
+    var short = hasRet && co.removedCostCents != null ? Math.max(0, co.removedCostCents - ret) : 0;
+    return { cents: replaced - dmg + short, estimate: pending || (removed && !hasRet) };
+  }
+  var COUNTS = { courtesy: { approved: 1 }, notice: { recorded: 1 }, charge: { signed: 1, invoiced: 1, paid: 1 }, custom: { signed: 1, invoiced: 1, paid: 1 } };
+  function counts(co) { return !!(COUNTS[co.kind] || {})[co.status]; }
+  /* The job's absorbed total: every change order that has gone through (approved, recorded or signed). */
+  function absorbedOnJob(changeOrders) { return sum((changeOrders || []).filter(counts).map(function (c) { return c.absorbedCents || 0; })); }
+
+  /*
+   * A change with no change to the contract: a damaged cabinet reordered at our cost, or a backorder the customer waits for.
+   * input: { number, date, type, note, requestedBy, replaced: [{ sku, desc, qty, unitCostCents, claim, why }], newDeliveryDate, waitFor: [{ sku, qty }] }
+   * Recorded right away (nothing for the customer to pay or sign); the buyer can be sent a notice to acknowledge.
+   */
+  function notice(input, opts) {
+    input = input || {}; opts = opts || {};
+    var P = [], replaced = cleanReplaced(input.replaced), wait = (input.waitFor || []).filter(function (w) { return w && w.qty > 0; });
+    if (!TYPES[input.type]) P.push('Choose what happened.');
+    if (blank(input.note)) P.push('Add a note for the paper trail.');
+    if (!isISO(input.date)) P.push('Enter the change date.');
+    if (blank(input.requestedBy)) P.push('Sign in so the change is recorded under your name.');
+    if (!replaced.length && !wait.length && !input.newDeliveryDate) P.push('Add a replacement, the backordered cabinets, or a new delivery date.');
+    if (wait.length && !isISO(input.newDeliveryDate)) P.push('Enter when the backordered cabinets are now expected.');
+    if (input.newDeliveryDate && !isISO(input.newDeliveryDate)) P.push('Enter the new delivery date as a date.');
+    replaced.forEach(function (l) {
+      if (!(l.unitCostCents > 0)) P.push('Enter what the replacement ' + l.sku + ' costs us.');
+      if (!CLAIMS[l.claim]) P.push('Say who the damage claim for ' + l.sku + ' goes to (or that we cover it).');
+    });
+    var co = { kind: 'notice', type: input.type, number: input.number, date: input.date, reason: input.type === 'backorder' && wait.length && !replaced.length ? CHANGE_REASONS.backorder_wait : CHANGE_REASONS[(TYPES[input.type] || {}).reason] || 'Other',
+      note: input.note || '', added: [], removed: [], replaced: replaced, waitFor: wait, newDeliveryDate: input.newDeliveryDate || null,
+      replacedCostCents: sum(replaced.map(function (l) { return (l.unitCostCents || 0) * l.qty; })), amountCents: 0, customerChangeCents: 0, contractDeltaCents: 0,
+      requestedBy: input.requestedBy || '', status: 'recorded', buyerAck: 'none', credits: [] };
+    var ab = absorbedFor(co); co.absorbedCents = ab.cents; co.absorbedIsEstimate = ab.estimate;
+    return { ok: P.length === 0, problems: P, co: co,
+      log: 'Change order ' + input.number + ' recorded (no change to the contract): ' + co.reason + '.' + (co.replacedCostCents ? ' Replacement cost ' + money(co.replacedCostCents) + (ab.estimate ? ', claim pending.' : ', absorbed by the shop.') : '') + (co.newDeliveryDate ? ' New delivery date ' + co.newDeliveryDate + '.' : '') };
+  }
+
+  /*
+   * Record money the shop got back: a supplier credit or refund for returned cabinets, or a damage claim paid by the supplier
+   * or freight carrier. input: { amountCents, on, reference, from: 'supplier'|'freight', for: 'returned'|'damaged', none } (none: they won't credit it)
+   * Returns { ok, co, deltaCents (change in absorbed), log } or { ok:false, error }.
+   */
+  function recordCredit(co, input, opts) {
+    input = input || {}; opts = opts || {};
+    if (['returned', 'damaged'].indexOf(input.for) < 0) return { ok: false, error: 'Is this for returned cabinets or a damage claim?' };
+    if (input.for === 'returned' && !(co.removed || []).length) return { ok: false, error: 'Nothing was removed on this change order.' };
+    if (input.for === 'damaged' && !(co.replaced || []).length) return { ok: false, error: 'Nothing was replaced on this change order.' };
+    var amount = input.none ? 0 : input.amountCents;
+    if (!input.none && !(amount > 0)) return { ok: false, error: 'Enter the amount credited, or tick "they won\'t credit it".' };
+    if (!isISO(input.on)) return { ok: false, error: 'Enter the date of the credit.' };
+    if (opts.today && input.on > opts.today) return { ok: false, error: 'The credit date can\'t be in the future.' };
+    if (blank(opts.by)) return { ok: false, error: 'Sign in first.' };
+    var next = JSON.parse(JSON.stringify(co)), was = co.absorbedCents || 0;
+    next.credits = creditsOf(co).map(function (c) { return JSON.parse(JSON.stringify(c)); }).concat([{ amountCents: amount, on: input.on, reference: input.reference || '', from: input.from === 'freight' ? 'freight' : 'supplier', for: input.for, none: !!input.none, by: opts.by }]);
+    var rets = next.credits.filter(function (c) { return c.for === 'returned'; });
+    if (rets.length) next.supplierCreditCents = sum(rets.map(function (c) { return c.amountCents; }));
+    var ab = absorbedFor(next); next.absorbedCents = ab.cents; next.absorbedIsEstimate = ab.estimate;
+    var who = input.from === 'freight' ? 'Freight carrier' : 'Supplier', what = input.for === 'returned' ? 'returned cabinets' : 'damage claim';
+    return { ok: true, co: next, deltaCents: ab.cents - was,
+      log: 'Change order ' + co.number + ': ' + (input.none ? who + ' won\'t credit the ' + what + '.' : who + ' credited ' + money(amount) + ' for the ' + what + (input.reference ? ' (' + input.reference + ')' : '') + '.') +
+        ' Shop absorbs ' + money(ab.cents) + (ab.estimate ? ' so far' : '') + ' (was ' + money(was) + ').' };
+  }
+
+  /* Take back a change order that hasn't gone through (sent for signature, or waiting for approval). It stays on the list. */
+  function withdraw(co, by, reason, on) {
+    if (['sent', 'pending approval', 'draft'].indexOf(co.status) < 0) return { ok: false, error: 'Change order ' + co.number + ' is ' + co.status + '. Only one that hasn\'t gone through can be withdrawn; make a new change order to undo it.' };
+    if (blank(reason)) return { ok: false, error: 'Say why it\'s withdrawn (for example: the buyer declined).' };
+    if (blank(by)) return { ok: false, error: 'Sign in first.' };
+    var next = JSON.parse(JSON.stringify(co)); next.status = 'withdrawn'; next.withdrawn = { by: by, on: on || null, reason: String(reason).trim() };
+    return { ok: true, co: next, log: 'Change order ' + co.number + ' withdrawn by ' + by + ': ' + next.withdrawn.reason + '. Nothing billed; the contract is unchanged.' };
+  }
+
+  /* What the team is told on the Price step: a suggestion only (the person still chooses). */
+  function suggest(type, diff, extras) {
+    var t = TYPES[type]; if (!t) return null;
+    var sells = (diff.added || []).length || (diff.removed || []).length || cleanExtras(extras).length;
+    if (!sells && ((diff.replaced || []).length || type === 'backorder' || type === 'damage')) return { choice: 'nochange', text: 'Usually: no change to the contract. The customer gets what they bought; the cost is recorded.' };
+    if (t.usually === 'courtesy') return { choice: 'courtesy', text: 'Usually a courtesy: the customer pays nothing more, and someone with full access approves what the shop absorbs.' };
+    if (t.usually === 'charge') return { choice: 'charge', text: type === 'remove' ? 'Usually charged: the customer is credited what they paid for the cabinets that came off, less any fee.' : 'Usually charged at the change order\'s pricing.' };
+    return null;
+  }
+
+  return { VERSION: VERSION, REASONS: REASONS, TYPES: TYPES, CLAIMS: CLAIMS, CHOICES: CHOICES, diffLines: diffLines, swapLine: swapLine, addLine: addLine,
+           creditsOf: creditsOf, claimPending: claimPending, absorbedFor: absorbedFor, absorbedOnJob: absorbedOnJob, counts: counts, notice: notice,
+           recordCredit: recordCredit, withdraw: withdraw, suggest: suggest, CHANGE_REASONS: CHANGE_REASONS, courtesy: courtesy, approve: approve, printed: printed,
            absorbedTotal: absorbedTotal, money: money, mergeLines: mergeLines, colorCheck: colorCheck, splitByColor: splitByColor,
            priceChange: priceChange, choosePrice: choosePrice, invoiceFor: invoiceFor, suffixOf: suffixOf };
 }));

@@ -2,7 +2,7 @@
 
 Fremont may iterate **this folder only**.
 
-- Live shop tool is `/projectbuilder` (this folder, pack **v2.10.0**). Writes `ns=fm-phase1` only.
+- Live shop tool is `/projectbuilder` (this folder, pack **v2.11.0**). Writes `ns=fm-phase1` only.
 - Old builder `/quote` (`fremont-makers-quote.html`, stamp **v1105a**) stays live as lookup / DNU. Do not edit it. Do not redirect it.
 - GET `ns=fm-quotes` only from 2.0. Never POST it. Never `wrangler kv key put` of `bundle:fm-quotes`.
 - Do not retarget `/quote` in `src/index.js`. Canonical new route is `/projectbuilder`.
