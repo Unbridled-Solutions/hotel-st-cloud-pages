@@ -1,8 +1,8 @@
 # Hermes: launch guide for the Project Builder (Phase 1 + 2)
 
-**From:** Fremont Makers (Linds) via Claude · **Date:** 2026-11-06 · **Package:** `fm-project-builder-phase1.zip`, version **2.11.0**
+**From:** Fremont Makers (Linds) via Claude · **Date:** 2026-11-09 · **Package:** `fm-project-builder-phase1.zip`, version **2.11.1**
 
-> **Updating from 2.10.0?** Use `fm-project-builder-update-2.10.0-to-2.11.0.zip` and read `UPGRADE-2.10.0-to-2.11.0.md`. It lists only what changed. The full zip is for a fresh start.
+> **Updating from 2.10.0?** Use `fm-project-builder-update-2.10.0-to-2.11.1.zip` and read `UPGRADE-2.10.0-to-2.11.1.md` (it covers 2.11.0 too). It lists only what changed. The full zip is for a fresh start.
 
 **Nothing is live yet.** Phase 1 and Phase 2 launch together as one new Project Builder at **`tools.fremontmakers.com/projectbuilder`**. The existing tool stays live at `tools.fremontmakers.com/quote`, unchanged. This guide is the order of work. `HANDOFF.md` has the detail; section numbers below (§) refer to it.
 
@@ -29,6 +29,7 @@
 3. **Read-only on legacy data.** Everything new is saved in the new store (`fm_phase1` / the shared database), never in the old tool's storage. The import reads a copy (§31).
 4. Styles stay scoped to `.fm-p1` and `.fm-p1-doc`.
 5. The owner signs off before anyone but the owner sees it.
+6. **Updates never overwrite data (every update, from now on).** Back up the database and files before installing. Never reset, reseed or re-import over live data; the sample and seed files are for the preview, the tests and the first import only. Create the live store with `FMStore.create({ live: true, … })` and leave **Reset sample data** off the live site. Add new fields; don't change existing records. Never delete uploads, signed copies or signing history. If an update seems to need it, ask the owner first. Details: HANDOFF §0 rule 9.
 
 If a step seems to need any change to the existing tool, stop and ask the owner.
 
@@ -36,7 +37,7 @@ If a step seems to need any change to the existing tool, stop and ask the owner.
 
 ## 1. Check the package
 1. Unzip, then check every file against `MANIFEST.json` (SHA-256).
-2. Run the tests. All must pass (21 files, 252 tests):
+2. Run the tests. All must pass (21 files, 255 tests):
 
 | Command | Must print |
 |---|---|
@@ -52,10 +53,10 @@ If a step seems to need any change to the existing tool, stop and ask the owner.
 | `node tests/theme.test.js` | `5 passed, 0 failed` |
 | `node tests/braddy.test.js` | `9 passed, 0 failed` |
 | `node tests/contract.test.js` | `26 passed, 0 failed` |
-| `node tests/changeorder.test.js` | `25 passed, 0 failed` |
+| `node tests/changeorder.test.js` | `27 passed, 0 failed` |
 | `node tests/bid.test.js` | `6 passed, 0 failed` |
 | `node tests/books.test.js` | `7 passed, 0 failed` |
-| `node tests/store.test.js` | `13 passed, 0 failed` |
+| `node tests/store.test.js` | `14 passed, 0 failed` |
 | `node tests/schedule.test.js` | `6 passed, 0 failed` |
 | `node tests/legacy.test.js` | `10 passed, 0 failed` |
 | `node tests/company.test.js` | `8 passed, 0 failed` |

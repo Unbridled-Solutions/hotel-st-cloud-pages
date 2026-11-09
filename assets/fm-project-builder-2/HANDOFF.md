@@ -1,8 +1,8 @@
 # Handoff to Hermes: Project Builder Phase 1 + 2
 
-**From:** Fremont Makers (Linds) via Claude · **Date:** 2026-11-06 · **Package version:** 2.11.0
+**From:** Fremont Makers (Linds) via Claude · **Date:** 2026-11-09 · **Package version:** 2.11.1
 
-## Current state (2.11.0, Nov 6 2026)
+## Current state (2.11.1, Nov 9 2026)
 
 *Rewritten each release, so you don't need the history below. The numbered sections are the detail.*
 
@@ -11,7 +11,11 @@
 > - **§32:** supporting documents in the Documents tab, the Braddy change order 1 PDF (VSB30 3 → 2 confirmed by the owner), and change orders for every kind of change (add, swap, return, backorder, damage, our mistake, other).
 > - §33: the Dropbox Sign plan, **on hold. Don't build it.**
 >
-> 21 test files, 252 tests.
+> 21 test files, 255 tests.
+>
+> **New in 2.11.1 (Nov 9):**
+> - **§0 rule 9: updates never overwrite data**, for this and every future update. Back up first, never reset or reseed live data, create the live store with `FMStore.create({ live: true })`.
+> - **§35:** the customer's signing page stands alone, with a confirmation and no way into the tool. Change orders get **Upload SKUs** and **Paste SKUs**.
 
 
 - **What this is:** a new Project Builder: Phase 1 quote and ledger math, plus the Phase 2 app `phase2.html`. **Nothing is live.** Follow `HERMES-LAUNCH.md`.
@@ -44,7 +48,7 @@
   - Elevations can go out marked preliminary.
   - The schedule can be adjusted after signing (§29).
 - **Server work still to do (yours):** sign-in and access levels, the shared database, file storage with SHA-256, the supplier PDF import, the public signing page (§34), field-measure sync, and **locking the old tool's open data address** behind sign-in (`HERMES-LAUNCH.md` §0, §2).
-- **Tests:** 21 files, 252 tests, all passing (`HERMES-LAUNCH.md` §1).
+- **Tests:** 21 files, 255 tests, all passing (`HERMES-LAUNCH.md` §1).
 - **Waiting on the owner:**
   - Tayler's email
   - the accountant: sales tax on lump-sum bid pages, the Balance sheet's $100,000 difference, loan principal on the P&L
@@ -114,6 +118,13 @@ The existing Project Builder is in daily use and **must not be overridden, repla
 6. **Scoped styles.** All CSS is under `.fm-p1` with `--fmp1-*` variables. Don't add global rules, and don't load the theme on current-tool pages.
 7. **Nothing is deleted.** A change order that was saved as its own project is *linked* to its parent in `fm_phase1`. The original record stays where it is.
 8. **Owner sign-off before the flag is turned on for anyone but Linds.**
+9. **Updates never overwrite data (owner, Nov 9; applies to every future update).** Live jobs, payments, change orders, documents, signatures, users and company books are the team's records. Installing a package changes code only.
+   - **Back up the database and file storage before every update**, and keep the backup until the owner confirms the update is good.
+   - **Never reset, reseed or re-import over live data.** `FMStore.seed`, the sample files (`preview/sample-data.js`, `willow-creek-full-order.js`, `braddy-penrose-order.js`, `company-books.js`) and `tests/fixtures/` are for the preview, the tests and the one-time first import only. Create the live store with `FMStore.create({ live: true, … })`: it skips the preview's seed corrections (`upgrade()`) and refuses **Reset sample data**. Don't show that button on the live site.
+   - **New fields are added, never replaced.** If a release needs a data change, add the new field with a default and leave existing values alone. If the release says an existing record should change (a correction the owner made), make that change through the tool as a logged edit with the owner's OK. Never write it straight to the database.
+   - **Uploaded files, signed copies, certificates and signing events are never deleted or replaced.** "Remove" hides a file and keeps it.
+   - **The old tool's data stays read-only** (rule 4).
+   - If an update seems to need changing or removing existing data, **stop and ask the owner first.**
 
 If any step below seems to require breaking a rule, stop and ask the owner.
 
@@ -1168,7 +1179,7 @@ Built Nov 4 from the owner's requests. (Willow Creek's figures below were update
 - **P&L revenue, broken out (owner, Nov 4):**
   - **"Where the money comes from"** lists cabinets at actual sale price, the manufacturer discount given to the customer, assembly labor and G&A. The agreed price above the itemized quote (Penrose, $2,188.06) and old-tool rounding ($0.03) each get their own row. A **Revenue by job** table shows the same columns for each job.
   - **Missing detail:** a job without line detail shows "Not broken out", with a note asking for its signed contract packet.
-- **Saved data upgrades on load:** `FMStore.create` runs `upgrade(state, seed)`. Jobs saved before the breakdown pick up `charges`, Willow Creek change order 1's lines, tax and cost, and its documents from the seed. It only fills what's missing. Phase 2 projects saved without `charges` get them worked out from their lines when the app loads.
+- **Saved data upgrades on load:** `FMStore.create` runs `upgrade(state, seed)`. **Preview only since 2.11.1: a live store (`live: true`) skips this, §0 rule 9.** Jobs saved before the breakdown pick up `charges`, Willow Creek change order 1's lines, tax and cost, and its documents from the seed. It only fills what's missing. Phase 2 projects saved without `charges` get them worked out from their lines when the app loads.
 - **Server:** run the same one-time fill when existing jobs are imported.
 - **Penrose change order 1 (owner, Nov 4):** Wholesale Cabinets refunded **$1,589.79** for the returned cabinets. The shop absorbed **$62.91** ($1,652.70 paid − $1,589.79), not $1,652.70. Penrose gross profit is now $4,810.80 (46.5%). Saved data picks up the refund on load.
 - **Reports & exports → Jobs CSV:** new columns for cabinets (sell), discount, assembly labor, G&A and other, plus cabinet cost as quoted, manufacturer's discount received, and net cabinet cost. Gross profit uses the net cost.
@@ -1239,7 +1250,7 @@ The owner gave access to the live tool (`tools.fremontmakers.com/quote`, build "
 - **Willow Creek change order 1 cost:** **$5,388.73**, the sum of its line costs from the old tool's record. It's no longer worked back from the discount ($5,388.80). The lines in `preview/willow-creek-full-order.js` carry `unitCost`.
   - Willow Creek gross profit is now **$25,747.54**, and the year to date **$30,558.34** (35.7%).
 - **Sample "today"** is now Nov 5. Tests about open invoices use an "as of Oct 27" copy of the sample (`asOfOct27`), so they still test open invoices.
-- **Saved data picks these up on load** (`upgrade()`):
+- **Saved data picks these up on load** (`upgrade()`) (preview only; a live store skips it, §0 rule 9):
   - payments recorded in the old tool later; a payment already recorded in the new tool is never overwritten
   - a change order cost that was an estimate, replaced by the real one
 
@@ -1310,9 +1321,9 @@ The owner gave access to the live tool (`tools.fremontmakers.com/quote`, build "
   - Removed sell is $2,001.39: the $1,649.95 the old tool noted, plus VSB30 at $351.44.
   - The shop's absorbed cost stays $62.91, because the $1,589.79 refund is unchanged.
   - The cabinet list shows "3 → 2, reduced by change order 1". The customer page prints "VSB30-VDH changed 3 → 2".
-  - `FMStore.upgrade` adds the line to saved data. It also replaces the check note that 2d1101a briefly showed.
+  - `FMStore.upgrade` adds the line to saved data. (Preview only. Live, the data comes from the first import, and later corrections are logged edits; §0 rule 9.) It also replaces the check note that 2d1101a briefly showed.
 - **Willow Creek change order 1:** both PDFs were already in the data (2.9.0). Their SHA-256s were checked against the owner's Dropbox copies on Nov 6 and match. They now show under change order 1.
-- **Saved data:** `FMStore.upgrade` adds documents added to the seed later to saved jobs (by file name) and keeps uploads.
+- **Saved data:** `FMStore.upgrade` adds documents added to the seed later to saved jobs (by file name) and keeps uploads. Preview only (§0 rule 9).
 
 ### Change orders, reworked (`src/fm-phase2-changeorder.js` 0.4.0, `preview/phase2-flows.js`)
 **Step 1, What happened.** Pick one of seven:
@@ -1522,3 +1533,51 @@ Nothing to buy. Endpoints:
 3. Back on the job: Dana ✓, **Countersign as Kristy Slaughenhaupt** → sign → "Everyone has signed" → **Open the signed copy**: the packet plus the certificate page (both signatures, times, browser, fingerprint, history). The job is Contracted; Documents lists "Signed contract with certificate", without a Remove button.
 4. **Reset, then Sign outside the tool:** **I sent it** freezes pricing; choose a PDF, tick both boxes, **Mark signed** → Contracted, "Signed outside the tool (Dropbox Sign website)", the PDF under Documents.
 5. **A charged change order:** saving it sends it; its card shows the signing block. After both sign, the change order is Signed with its invoice, and its signed copy sits under that change order in Documents.
+
+## 35. The signing page stands alone; Upload or Paste SKUs on change orders (Nov 9, 2.11.1)
+
+### The customer's signing page has no way into the tool (owner, Nov 9)
+*"Make sure the e sign portion doesn't allow the customer to 'go back to the tool' … they should just be able to access the document, sign, and then get a confirmation once signed."*
+
+The page at `/projectbuilder/sign/<link>` shows only:
+- the Fremont Makers logo
+- the document
+- the consent text and signing form
+- after signing, a confirmation
+
+Build it to these rules:
+- **Serve it as its own page, outside the app shell.** No sidebar, menu, job links, search or "Back" link. Don't load the app's scripts or the staff session on it. Even a signed-in employee opening a customer's link sees only the signing page.
+- **The link opens one document.** It shows nothing else about the job or the company.
+- **After signing, show a confirmation**: "Signed. Thank you, <first name>." with the document name and the time.
+  - If someone still has to sign, add: "Fremont Makers countersigns next. We'll email you the finished copy … You can close this page."
+  - When everyone has signed, add a **View or save your signed copy** button. It opens the signed PDF with its certificate, on the same page (live: the PDF itself or a download).
+- **Links already used, expired or canceled** show only their message (for example "You've signed", "This link expired"). They have no links either.
+- The striped "Preview only" bar in `phase2.html` (with "Back to the job") exists only so the team can get around the preview. It's hidden when `FM_CONFIG.live` is true. **Don't build it into the live page.**
+- When the Fremont Makers signer countersigns from their link, they get the same confirmation and go back to the tool by themselves.
+
+Code: `page()` and the `data-sgsigned` handler in `preview/phase2-sign.js`, plus `.sg-teambar` and `.sg-done*` in `phase2.html`.
+
+### Upload SKUs and Paste SKUs on the change order Cabinets step (owner, Nov 9)
+Next to **+ Add a cabinet** there are now two more ways to add cabinets. The **supplier PDF already on file** picker is still there.
+- **Upload SKUs:**
+  - **The supplier's PDF:** live, the server's shared supplier PDF reader (§15, §19, `HERMES-LAUNCH.md` §2 item 5) reads every SKU, quantity and cost from it and adds them. The PDF is also filed under the new change order in Documents. The preview can't read PDFs: it recognizes one already on file by its order number, and otherwise says to paste instead. It still attaches the PDF.
+  - **A CSV, TSV or text file:** read with `FMChangeOrder.parseSkus`.
+- **Paste SKUs:** one cabinet per line, with its quantity before or after the SKU ("W3042-SBW 2", "2 x DC224-VDH", "B15-SBW x3"). Rows copied from a spreadsheet work, and a header row (Item/SKU, Qty, Description, Cost/Price) is used when present. Repeats add up; no quantity means 1.
+- **What happens to the SKUs:**
+  - Known SKUs (on the order or on a supplier PDF on file) bring their description and cost and are added.
+  - SKUs with no cost are listed under **Needs a unit cost**, each with **Add with a cost**, which opens the Add form filled in.
+  - Lines the tool can't read are listed.
+- Code:
+  - `parseSkus` in `src/fm-phase2-changeorder.js`
+  - `addSkuList`, `readSkuFile`, `skuNoteHTML` and `attachCoFiles` in `preview/phase2-flows.js`
+  - +2 tests in `tests/changeorder.test.js`
+- Server: the PDF goes to the same reader endpoint New Project uses. Return `{ lines: [{ sku, qty, desc, unitCostCents }] }` and the preview's `addSkuList` does the rest.
+
+**Tests: 21 files, 255 tests** (with the live-store test in `store`).
+
+### Check
+1. **Sample quote → Contract → Send for signature → Sign as Dana (preview).** The only link on the page is in the striped preview bar. Sign. The confirmation says "Signed. Thank you, Dana." and that Fremont Makers countersigns next, with no buttons into the tool.
+2. **Countersign → View or save your signed copy.** The signed copy with its certificate opens over the page, and the address is still `#/sign/…`.
+3. **Penrose → Change orders → New change order → Add cabinets → Cabinets.**
+   - **Paste SKUs**: `2 x DC224-VDH`, `ZZZ999-VDH 1`, then **Add these**. DC224 is added ×2. ZZZ999 is listed under "Needs a unit cost".
+   - **Upload SKUs** with a CSV (`Item,Qty,Unit Price`): its lines are added.

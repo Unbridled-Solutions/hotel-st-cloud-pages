@@ -275,6 +275,19 @@ test('the customer document: courtesy and no-change versions say so and print no
   ok(/No change to your contract\./.test(h2) && /replaced: cracked side/.test(h2) && /November 20, 2026/.test(h2), 'notice'); ok(!/250\.00/.test(h2) && !/Supplier/.test(h2), 'no cost or claim printed');
 });
 
+test('a pasted SKU list: quantity before or after, repeats add up, no quantity means 1, junk is listed', function () {
+  var r = CO.parseSkus('W3042-SBW 2\n2 x DC224-VDH\nVDC42RS-VDH, 1\nB15-SBW x3\nW3042-sbw\nhello there friend\n');
+  eq(r.lines.map(function (l) { return [l.sku, l.qty]; }), [['W3042-SBW', 3], ['DC224-VDH', 2], ['VDC42RS-VDH', 1], ['B15-SBW', 3]]);
+  eq(r.skipped, ['hello there friend']);
+});
+
+test('a spreadsheet export with a header uses its SKU, quantity, description and cost columns', function () {
+  var r = CO.parseSkus('Item,Description,Qty,Unit Price\nW3042-SBW,"Wall 30x42",2,$153.88\nDC224-VDH,Drawer base,1,446.26\n');
+  eq(r.lines, [{ sku: 'W3042-SBW', qty: 2, desc: 'Wall 30x42', unitCostCents: 15388 }, { sku: 'DC224-VDH', qty: 1, desc: 'Drawer base', unitCostCents: 44626 }]);
+  var tab = CO.parseSkus('SKU\tQty\nB15-SBW\t4');
+  eq(tab.lines, [{ sku: 'B15-SBW', qty: 4 }]);
+});
+
 console.log('changeorder.test.js\n' + results.join('\n'));
 console.log((results.length - failed) + ' passed, ' + failed + ' failed');
 if (isNode && failed) process.exit(1);

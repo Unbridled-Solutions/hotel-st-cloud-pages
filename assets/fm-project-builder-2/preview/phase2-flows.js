@@ -47,7 +47,7 @@
   function samplePdfs() {
     var out = [];
     if (B) out.push({ id: 'penrose', name: 'Wholesale Cabinets · Penrose · Dark Hickory', lines: B.model.lines.filter(function (l) { return !l.noCharge; }).map(function (l) { return { sku: l.sku, desc: l.desc, qty: l.qty, unitCostCents: FM.toCents(l.unitCost) }; }) });
-    if (B && B.supplierOrders[0]) out.push({ id: 'b1000173203', name: 'Wholesale Cabinets order #1000173203 (VDC42RS, DC224)', lines: B.changeOrders[0].added.map(function (a) { return { sku: a.sku, desc: a.desc, qty: a.qty, unitCostCents: FM.toCents(a.unitCost) }; }) });
+    if (B && B.supplierOrders[0]) out.push({ id: 'b1000173203', orderNumber: B.supplierOrders[0].orderNumber, name: 'Wholesale Cabinets order #1000173203 (VDC42RS, DC224)', lines: B.changeOrders[0].added.map(function (a) { return { sku: a.sku, desc: a.desc, qty: a.qty, unitCostCents: FM.toCents(a.unitCost) }; }) });
     if (W) Object.keys(W.models).forEach(function (n) {
       out.push({ id: 'w-' + n, name: 'Wholesale Cabinets · ' + n + ' · ' + W.models[n].color, lines: W.models[n].lines.map(function (l) { return { sku: l.sku, desc: l.desc, qty: l.qty, unitCostCents: FM.toCents(l.unitCost) }; }) });
     });
@@ -471,6 +471,70 @@
   function replacedCost(f) { return (f.replaced || []).reduce(function (t, l) { return t + (l.unitCostCents || 0) * l.qty; }, 0); }
   function reasonLabel(f) { return f.type === 'backorder' && f.boMode === 'wait' ? CO.CHANGE_REASONS.backorder_wait : CO.CHANGE_REASONS[(CO.TYPES[f.type] || {}).reason] || 'Other'; }
   /* SKUs the team might type: what's on the job, then every supplier PDF on file, with their costs. */
+  /* Add a list of SKUs to the change order. Known SKUs (from the order or a supplier PDF on file) bring their description and cost;
+     ones without a cost wait in a list with "Add" so the team enters it. */
+  function addSkuList(c, f, parsed, source) {
+    var known = knownSkus(f), ready = [], missing = [];
+    parsed.lines.forEach(function (l) {
+      var k = known[l.sku] || null, cost = l.unitCostCents || (k && k.unitCostCents) || null;
+      if (cost) ready.push({ sku: k ? k.sku : l.sku, desc: l.desc || (k && k.desc) || '', qty: l.qty, unitCostCents: cost });
+      else missing.push({ sku: l.sku, qty: l.qty, desc: l.desc || (k && k.desc) || '' });
+    });
+    if (ready.length) f.current = CO.mergeLines(f.current, ready, 'add').lines;
+    f.skuNote = { source: source, added: ready.reduce(function (t, l) { return t + l.qty; }, 0), lines: ready.length, missing: missing, skipped: parsed.skipped };
+  }
+  function skuNoteHTML(c, f) {
+    var N = f.skuNote; if (!N) return '';
+    var esc = c.esc, parts = [];
+    if (N.pdfOnly) return '<div class="fmp1-note fmp1-note--info p2-small" role="status"><span><b>' + esc(N.source) + '</b> will be attached to this change order. Live, the tool reads every SKU and quantity from the supplier\'s PDF (the same reader as New Project). This preview can\'t read PDFs, so paste the SKUs or upload a spreadsheet of them.</span> <button class="fmp1-btn fmp1-btn--quiet" data-coskuok>OK</button></div>';
+    parts.push(N.lines ? 'Added ' + N.added + ' cabinet' + (N.added === 1 ? '' : 's') + ' (' + N.lines + ' SKU' + (N.lines === 1 ? '' : 's') + ') from ' + esc(N.source) + '.' : 'Nothing was added from ' + esc(N.source) + '.');
+    var miss = N.missing.length ? '<div class="p2-co-miss"><b>Needs a unit cost</b> (not on the order or a supplier PDF on file):<ul>' + N.missing.map(function (m, i) {
+      return '<li><span class="fmp1-code">' + esc(m.sku) + '</span> ×' + m.qty + ' <button class="fmp1-btn fmp1-btn--quiet" data-coaddsku="' + i + '">Add with a cost</button></li>'; }).join('') + '</ul></div>' : '';
+    var skip = N.skipped.length ? '<span class="p2-small">Couldn\'t read ' + N.skipped.length + ' line' + (N.skipped.length === 1 ? '' : 's') + ': ' + N.skipped.slice(0, 4).map(function (x) { return '"' + esc(x) + '"'; }).join(', ') + (N.skipped.length > 4 ? '…' : '') + '</span>' : '';
+    return '<div class="fmp1-note fmp1-note--' + (N.missing.length || N.skipped.length ? 'alert' : 'good') + ' p2-small p2-co-skunote" role="status"><span>' + parts.join(' ') + '</span>' + miss + skip + ' <button class="fmp1-btn fmp1-btn--quiet" data-coskuok>Done</button></div>';
+  }
+  /* Uploaded SKU files: CSV / text are read here. PDFs go to the shared supplier PDF reader on the server; in this preview a PDF
+     that's already on file (by its order number) is recognized, and any PDF is attached to the change order when it's saved. */
+  function readSkuFile(c, el) {
+    var f = c.ui.co, file = el.files && el.files[0]; if (!f || !file) return;
+    var ext = (/\.([a-z0-9]+)$/i.exec(file.name) || [])[1] || '';
+    el.value = '';
+    if (/^pdf$/i.test(ext)) {
+      return file.arrayBuffer().then(function (buf) {
+        f.attach = (f.attach || []).filter(function (a) { return a.name !== file.name; }).concat([{ name: file.name, size: file.size, type: 'application/pdf', blob: new Blob([buf], { type: 'application/pdf' }) }]);
+        var reader = window.FMSupplierPdf;
+        if (reader && reader.parseBuffer) {
+          return reader.parseBuffer(buf).then(function (parsed) {
+            if (parsed && parsed.lines && parsed.lines.length) addSkuList(c, f, parsed, file.name);
+            else f.skuNote = { source: file.name, pdfOnly: true };
+            c.render();
+          }).catch(function () {
+            f.skuNote = { source: file.name, pdfOnly: true };
+            c.render();
+          });
+        }
+        var on = samplePdfs().filter(function (p) { return p.orderNumber && file.name.indexOf(p.orderNumber) >= 0; })[0];
+        if (on) addSkuList(c, f, { lines: on.lines.map(function (l) { return { sku: l.sku, qty: l.qty, desc: l.desc, unitCostCents: l.unitCostCents }; }), skipped: [] }, file.name);
+        else f.skuNote = { source: file.name, pdfOnly: true };
+        c.render();
+      });
+    }
+    file.text().then(function (t) { addSkuList(c, f, CO.parseSkus(t), file.name); c.render(); });
+  }
+  /* Supplier PDFs uploaded on the Cabinets step are filed under the new change order. */
+  function attachCoFiles(c, jobCode, files) {
+    if (!files || !files.length || !c.files) return;
+    var j = c.store.job(jobCode), co = j.changeOrders[j.changeOrders.length - 1];
+    files.forEach(function (a) {
+      a.blob.arrayBuffer().then(function (buf) { return window.crypto.subtle.digest('SHA-256', buf); }).then(function (h) {
+        var hx = Array.prototype.map.call(new Uint8Array(h), function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+        var jj = c.store.job(jobCode), all = jj.documents || [], seq = all.length + 1; while (all.some(function (d) { return d.id === jobCode + '-doc' + seq; })) seq++;
+        var r = window.FMFiles.check({ name: a.name, size: a.size, type: a.type, sha256: hx }, { category: 'other', changeOrder: co.number, title: 'Supplier PDF · ' + a.name.replace(/\.pdf$/i, '') }, { jobCode: jobCode, by: c.me().name, today: c.TODAY, existing: all, seq: seq });
+        if (!r.ok) return;
+        return c.files.put(r.doc.id, a.blob).then(function () { c.store.update(jobCode, function (x) { x.documents = (x.documents || []).concat([r.doc]); return x; }, 'Supplier PDF attached to change order ' + co.number + ': ' + a.name + '.', c.me().name); c.render(); });
+      }).catch(function () { /* the change order is saved either way */ });
+    });
+  }
   function knownSkus(f) {
     var out = {}, cts = function (l) { return l.unitCostCents != null ? l.unitCostCents : l.unitCost != null ? FM.toCents(l.unitCost) : null; };
     function put(l) { var c = cts(l); if (l && l.sku && c > 0) out[String(l.sku).toUpperCase()] = { sku: l.sku, desc: l.desc, unitCostCents: c }; }
@@ -489,7 +553,7 @@
   }
   var CO_STEPS = ['What happened', 'Cabinets', 'Price', 'Review'];
   var CO_TIPS = {
-    add: 'Use + on a line, or Add a cabinet that isn\'t on the order yet. A supplier PDF adds all its lines at once.',
+    add: 'Use + on a line, or Add a cabinet that isn\'t on the order yet. To add many at once, use Upload SKUs (the supplier\'s PDF or a spreadsheet) or Paste SKUs.',
     swap: 'Click Swap on the line that\'s changing and enter the cabinet that takes its place.',
     remove: 'Use − to take cabinets off (down to 0 removes the line). The customer is credited what they paid. A restocking fee goes under Other charges below.',
     backorder: 'Click Swap on the backordered cabinet and enter the one that\'s in stock.',
@@ -599,7 +663,13 @@
             '<td><label class="p2-row p2-small"><input type="checkbox" data-coex="' + i + ':taxable"' + (x.taxable ? ' checked' : '') + '> taxable</label></td><td class="r"><button class="fmp1-btn fmp1-btn--quiet" data-corm="extras:' + i + '">Remove</button></td></tr>'; }).join('') + '</tbody></table></div>' : '') +
         '<div class="p2-row p2-wrap">' + EXTRA_PRESETS.map(function (p, i) { return '<button class="fmp1-btn fmp1-btn--quiet" data-coexadd="' + i + '">+ ' + p[0] + '</button>'; }).join('') + '</div></div>';
       body = '<p class="p2-note">' + esc(tip) + '</p>' +
-        '<div class="p2-row p2-wrap">' + (A ? '' : '<button class="fmp1-btn" data-coaddopen>+ Add a cabinet</button>') + '<label class="p2-fld" style="min-width:240px"><span>Or add every line from a supplier PDF</span><select class="fmp1-input" data-copdf><option value="">Choose a PDF…</option>' + samplePdfs().map(function (p) { return '<option value="' + p.id + '">' + esc(p.name) + '</option>'; }).join('') + '</select></label></div>' + addForm + list +
+        '<div class="p2-row p2-wrap p2-co-addrow">' + (A ? '' : '<button class="fmp1-btn" data-coaddopen>+ Add a cabinet</button>') +
+          '<label class="fmp1-btn p2-filebtn">Upload SKUs<input type="file" data-coskufile accept=".pdf,.csv,.tsv,.txt"></label>' +
+          '<button class="fmp1-btn" data-copaste aria-expanded="' + !!f.paste + '">Paste SKUs</button>' +
+          '<label class="p2-fld" style="min-width:240px"><span>Or a supplier PDF already on file</span><select class="fmp1-input" data-copdf><option value="">Choose a PDF…</option>' + samplePdfs().map(function (p) { return '<option value="' + p.id + '">' + esc(p.name) + '</option>'; }).join('') + '</select></label></div>' +
+        (f.paste ? '<div class="p2-form" data-coform><label class="p2-fld" style="flex:1 1 100%"><span>One cabinet per line, with its quantity: "W3042-SBW 2" or "2 x DC224". Copying rows from a spreadsheet works too.</span><textarea class="fmp1-input p2-co-paste" rows="6" data-copastetext data-autofocus>' + esc(f.paste.text || '') + '</textarea></label>' +
+          '<button class="fmp1-btn fmp1-btn--primary" data-copasteadd>Add these</button><button class="fmp1-btn fmp1-btn--quiet" data-copaste>Cancel</button></div>' : '') +
+        skuNoteHTML(c, f) + addForm + list +
         (bad.length ? '<div class="fmp1-note fmp1-note--alert p2-small" role="alert">' + bad.length + ' cabinet line' + (bad.length > 1 ? 's don\'t' : ' doesn\'t') + ' match this house\'s color (' + esc(COLORS[sfx] || sfx) + '): ' + bad.map(function (b) { return esc(b.sku); }).join(', ') + '. <label class="p2-row" style="display:inline-flex"><input type="checkbox" data-cocolor' + (f.colorOk ? ' checked' : '') + '> keep anyway (logged)</label></div>' : '') +
         '<div class="fmp1-table-wrap"><table class="fmp1-table p2-table p2-co-lines"><thead><tr><th>SKU</th><th>Description</th><th>Qty</th><th class="r">Change</th><th class="r">Unit cost</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>' + repl + waits + extras;
     } else if (f.step === 2) {
@@ -900,6 +970,10 @@
       if (t.dataset.cobo) { f.boMode = t.dataset.cobo; if (f.boMode === 'swap') f.waitFor = []; f.errors = []; c.render(); return true; }
       if (t.dataset.coqty) { var l = f.current[+t.dataset.coqty]; l.qty = Math.max(0, l.qty + (+t.dataset.d)); c.render(); return true; }
       if (t.hasAttribute('data-coaddopen')) { f.addForm = { sku: '', desc: '', qty: '1', cost: '' }; f.rowForm = null; c.render(); return true; }
+      if (t.hasAttribute('data-copaste')) { f.paste = f.paste ? null : { text: '' }; c.render(); return true; }
+      if (t.hasAttribute('data-copasteadd') && f.paste) { var pr = CO.parseSkus(f.paste.text); if (!pr.lines.length && !pr.skipped.length) return true; addSkuList(c, f, pr, 'the pasted list'); f.paste = null; c.render(); return true; }
+      if (t.hasAttribute('data-coskuok')) { f.skuNote = null; c.render(); return true; }
+      if (t.dataset.coaddsku != null && f.skuNote) { var mi = f.skuNote.missing.splice(+t.dataset.coaddsku, 1)[0]; f.addForm = { sku: mi.sku, desc: mi.desc || '', qty: String(mi.qty), cost: '' }; f.rowForm = null; if (!f.skuNote.missing.length && !f.skuNote.skipped.length) f.skuNote = null; c.render(); return true; }
       if (t.hasAttribute('data-coaddcancel')) { f.addForm = null; f.errors = []; c.render(); return true; }
       if (t.hasAttribute('data-coaddsave')) {
         var A = f.addForm, ar = CO.addLine(f.current, { sku: A.sku, desc: A.desc, qty: parseInt(A.qty, 10), unitCostCents: toCents(A.cost) });
@@ -932,7 +1006,7 @@
         var ins = document.querySelectorAll('[data-coex$=":' + (ps[0] === 'Other charge' ? 'label' : 'amount') + '"]'); if (ins.length) ins[ins.length - 1].focus(); return true; }
       if (t.hasAttribute('data-coreset')) { f.pricing = coDefaults(j); f.current.forEach(function (x) { if (x.mkEdited) { delete x.mkEdited; var b = f.base.filter(function (y) { return y.sku === x.sku; })[0]; if (b) x.markupPct = b.markupPct; else delete x.markupPct; } }); c.render(); return true; }
       if (t.dataset.cochoice) { f.choice = t.dataset.cochoice; f.errors = []; c.render(); return true; }
-      if (t.hasAttribute('data-cosave')) { var pe = saveCO(c, j, f); if (pe) { f.errors = pe; c.render(); return true; } c.ui.co = null; c.render(); return true; }
+      if (t.hasAttribute('data-cosave')) { var pe = saveCO(c, j, f); if (pe) { f.errors = pe; c.render(); return true; } attachCoFiles(c, j.jobCode, f.attach); c.ui.co = null; c.render(); return true; }
     }
     if (t.dataset.codoc) {
       var dco = j.changeOrders.filter(function (x) { return x.id === t.dataset.codoc; })[0], prev = FM.contractSummary(j).originalCents;
@@ -980,6 +1054,7 @@
     if (el.dataset.npplanpct) { d = loadDraft(c); d.pricing.plan[+el.dataset.npplanpct] = num(el.value) || 0; saveDraft(c); return; }
     if (el.dataset.npp) { d = loadDraft(c); d.pricing[el.dataset.npp] = /^assembly/.test(el.dataset.npp) ? el.value : num(el.value); if (el.dataset.npp === 'markupPct') reapply(d); saveDraft(c); refreshLater(c); return; }
     if (el.dataset.npline) { d = loadDraft(c); var ix = el.dataset.npline.split(':'), ln = d.models[+ix[0]].lines[+ix[1]]; ln.markupPct = num(el.value); ln.edited = true; saveDraft(c); refreshLater(c); return; }
+    if (el.hasAttribute('data-copastetext') && c.ui.co && c.ui.co.paste) { c.ui.co.paste.text = el.value; return; }
     if (el.dataset.cof && c.ui.co) { c.ui.co[el.dataset.cof] = el.value; return; }
     if (el.dataset.coadd && c.ui.co && c.ui.co.addForm) { var A = c.ui.co.addForm; A[el.dataset.coadd] = el.value; if (el.dataset.coadd === 'sku') fillFromSku(c, A, el.value); return; }
     if (el.dataset.corf && c.ui.co && c.ui.co.rowForm) { var R = c.ui.co.rowForm; R[el.dataset.corf] = el.value; if (el.dataset.corf === 'sku') fillFromSku(c, R, el.value); return; }
@@ -1040,6 +1115,7 @@
     if (el.dataset.cof === 'house' && c.ui.co) { var f = c.ui.co; f.house = el.value; f.base = baseLines(c, j, f.house); f.current = JSON.parse(JSON.stringify(f.base)); f.replaced = []; f.waitFor = []; c.render(); return; }
     if (el.dataset.coex && c.ui.co) { c.render(); return; }   // show the new total once the box is left
     if (el.dataset.cof === 'reason' && c.ui.co) { c.ui.co.reason = el.value; return; }
+    if (el.hasAttribute('data-coskufile') && c.ui.co) { readSkuFile(c, el); return; }
     if (el.hasAttribute('data-copdf') && c.ui.co) { var pd = pdfById(el.value); if (pd) { c.ui.co.current = CO.mergeLines(c.ui.co.current, pd.lines.map(function (l) { return { sku: l.sku, desc: l.desc, qty: l.qty, unitCostCents: l.unitCostCents }; }), 'add').lines; } c.render(); return; }
     if (el.hasAttribute('data-cocolor') && c.ui.co) { c.ui.co.colorOk = el.checked; c.render(); return; }
     if (el.hasAttribute('data-elack') && j.stage === 'quote') {

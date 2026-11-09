@@ -137,6 +137,53 @@
    * mode 'replace': the incoming list becomes the whole list.
    * Returns { lines, added:[{sku,desc,from,to}], removed:[…], changed:[…] }.
    */
+  /*
+   * Read a list of cabinet SKUs: pasted text, or a CSV / spreadsheet export (comma or tab separated).
+   * One cabinet per line, quantity before or after the SKU ("W3042-SBW 2", "2 x W3042-SBW", "W3042-SBW, 2", "W3042-SBW x2").
+   * A header row naming columns (sku / item, qty / quantity, description, cost / price) is used when present.
+   * No quantity means 1. The same SKU twice adds up. Returns { lines: [{ sku, qty, desc?, unitCostCents? }], skipped: [text] }.
+   */
+  var SKU_RE = /^[A-Z0-9][A-Z0-9.\/]*(?:-[A-Z0-9.\/]+)*$/i;
+  function parseSkus(text) {
+    var rows = String(text || '').replace(/\r/g, '').split('\n').map(function (r) { return r.trim(); }).filter(Boolean), out = {}, order = [], skipped = [], cols = null;
+    function cells(r) { return (r.indexOf('\t') >= 0 ? r.split('\t') : r.indexOf(',') >= 0 ? r.split(',') : r.split(/\s+/)).map(function (x) { return x.trim().replace(/^"|"$/g, ''); }).filter(function (x) { return x !== ''; }); }
+    function cents(v) { var n = parseFloat(String(v).replace(/[$,\s]/g, '')); return isNaN(n) || n <= 0 ? null : Math.round(n * 100); }
+    function add(sku, qty, desc, cost, raw) {
+      sku = String(sku || '').toUpperCase();
+      if (!SKU_RE.test(sku) || !/[A-Z]/.test(sku) || !/\d/.test(sku) || !(qty > 0) || qty !== Math.floor(qty)) { skipped.push(raw); return; }
+      if (!out[sku]) { out[sku] = { sku: sku, qty: 0 }; order.push(sku); }
+      out[sku].qty += qty;
+      if (desc && !out[sku].desc) out[sku].desc = desc;
+      if (cost && !out[sku].unitCostCents) out[sku].unitCostCents = cost;
+    }
+    rows.forEach(function (r, i) {
+      var c = cells(r), low = c.map(function (x) { return x.toLowerCase(); });
+      if (i === 0 && low.some(function (x) { return /^(sku|item|item #|item number|part|model)$/.test(x); })) {
+        cols = { sku: -1, qty: -1, desc: -1, cost: -1 };
+        low.forEach(function (x, k) {
+          if (cols.sku < 0 && /^(sku|item|item #|item number|part|model)$/.test(x)) cols.sku = k;
+          else if (cols.qty < 0 && /^(qty|quantity|qty\.|count)$/.test(x)) cols.qty = k;
+          else if (cols.desc < 0 && /^(description|desc|name)$/.test(x)) cols.desc = k;
+          else if (cols.cost < 0 && /^(cost|unit cost|price|unit price)$/.test(x)) cols.cost = k;
+        });
+        return;
+      }
+      if (cols) {   // a header told us which column is which (CSV cells keep their spaces)
+        var cc = (r.indexOf('\t') >= 0 ? r.split('\t') : r.split(',')).map(function (x) { return x.trim().replace(/^"|"$/g, ''); });
+        return add(cc[cols.sku], cols.qty >= 0 && cc[cols.qty] !== '' ? +cc[cols.qty] : 1, cols.desc >= 0 ? cc[cols.desc] : '', cols.cost >= 0 ? cents(cc[cols.cost]) : null, r);
+      }
+      var m = /^(\d+)\s*[x×]?\s+(\S+)$/i.exec(r) || null;
+      if (m) return add(m[2], +m[1], '', null, r);
+      m = /^(\S+?)[\s,\t]+(?:x|×|qty:?)?\s*(\d+)$/i.exec(r);
+      if (m) return add(m[1].replace(/,$/, ''), +m[2], '', null, r);
+      m = /^(\S+?)\s*[x×](\d+)$/i.exec(r);
+      if (m) return add(m[1], +m[2], '', null, r);
+      if (c.length === 1) return add(c[0], 1, '', null, r);
+      skipped.push(r);
+    });
+    return { lines: order.map(function (k) { return out[k]; }), skipped: skipped };
+  }
+
   function mergeLines(current, incoming, mode) {
     var cur = {}, order = [], out = {};
     (current || []).forEach(function (l) { cur[l.sku] = l; order.push(l.sku); });
@@ -438,6 +485,6 @@
   return { VERSION: VERSION, REASONS: REASONS, TYPES: TYPES, CLAIMS: CLAIMS, CHOICES: CHOICES, diffLines: diffLines, swapLine: swapLine, addLine: addLine,
            creditsOf: creditsOf, claimPending: claimPending, absorbedFor: absorbedFor, absorbedOnJob: absorbedOnJob, counts: counts, notice: notice,
            recordCredit: recordCredit, withdraw: withdraw, suggest: suggest, CHANGE_REASONS: CHANGE_REASONS, courtesy: courtesy, approve: approve, printed: printed,
-           absorbedTotal: absorbedTotal, money: money, mergeLines: mergeLines, colorCheck: colorCheck, splitByColor: splitByColor,
+           absorbedTotal: absorbedTotal, money: money, mergeLines: mergeLines, parseSkus: parseSkus, colorCheck: colorCheck, splitByColor: splitByColor,
            priceChange: priceChange, choosePrice: choosePrice, invoiceFor: invoiceFor, suffixOf: suffixOf };
 }));

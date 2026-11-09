@@ -194,7 +194,9 @@
     opts = opts || {};
     var storage = opts.storage || null;
     var state = (storage && storage.load && storage.load()) || clone(opts.seed);
-    if (opts.seed && state !== opts.seed) upgrade(state, opts.seed);
+    /* Live data is never overwritten by an update (owner, Nov 9). The seed corrections in upgrade() are for the preview only;
+       a live store (opts.live) skips them and can't be reset. Changes to live records go through the tool, logged with who did it. */
+    if (opts.seed && state !== opts.seed && !opts.live) upgrade(state, opts.seed);
     function save() { if (storage && storage.save) storage.save(state); }
     function job(code) { return state.jobs.filter(function (j) { return j.jobCode === code; })[0] || null; }
     function log(jobCode, text, by, at) {
@@ -233,7 +235,7 @@
         return { ok: true, company: state.company };
       },
       log: function (jobCode) { return state.log.filter(function (e) { return !jobCode || e.jobCode === jobCode; }); },
-      reset: function () { state = clone(opts.seed); save(); },
+      reset: function () { if (opts.live) return { ok: false, error: 'Live data is never reset. Reset sample data is for the preview only.' }; state = clone(opts.seed); save(); return { ok: true }; },
       /* Add a new job (from the New Project flow). Job codes must be unique. */
       addJob: function (j, by, at) {
         if (job(j.jobCode)) return { ok: false, error: 'Job ' + j.jobCode + ' already exists.' };

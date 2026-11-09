@@ -167,9 +167,11 @@
   /* ---------- the signer's page ---------- */
   function page(c, tk) {
     var esc = c.esc, hit = findByToken(c, tk);
-    var top = '<header class="sg-top"><span class="sg-brand">' + (window.FMQuote ? window.FMQuote.logoHTML({}) : '') + '<b>Fremont Makers</b></span>' +
-      '<span class="sg-previewnote">Preview of the signing page. Live, it\'s at ' + esc(BASE.replace(/^https?:\/\//, '')) + '/sign/… and needs no sign-in.</span>' +
-      (hit ? '<a class="fmp1-btn fmp1-btn--quiet" href="#/job/' + encodeURIComponent(hit.job.jobCode) + '/' + (hit.co ? 'changes' : 'contract') + '">Back to the job</a>' : '<a class="fmp1-btn fmp1-btn--quiet" href="#/projects">Back</a>') + '</header>';
+    /* What the signer sees has no way into the tool: no menu, no job links, nothing but the document, signing and a confirmation.
+       The bar above it exists only in this preview, so the team can get back; the live page never has it. */
+    var team = LIVE ? '' : '<div class="sg-teambar" role="note"><span><b>Preview only.</b> The customer never sees this bar. Live, this page is ' + esc(BASE.replace(/^https?:\/\//, '')) + '/sign/… on its own, with no sign-in and no way into the tool.</span>' +
+      (hit ? '<a href="#/job/' + encodeURIComponent(hit.job.jobCode) + '/' + (hit.co ? 'changes' : 'contract') + '">Back to the job</a>' : '<a href="#/projects">Back to projects</a>') + '</div>';
+    var top = team + '<header class="sg-top"><span class="sg-brand">' + (window.FMQuote ? window.FMQuote.logoHTML({}) : '') + '<b>Fremont Makers</b></span></header>';
     if (!hit) return top + '<main class="sg-main"><h1 class="fmp1-h">This link isn\'t valid</h1><p>Ask Fremont Makers for a new one.</p></main>';
     var req = hit.req, ck = S.check(req, tk, c.TODAY), me = ck.signer, U = c.ui.sg && c.ui.sg.token === tk ? c.ui.sg : (c.ui.sg = { token: tk, typed: '', consent: false, agree: false, drawn: null, draw: false });
     var verb = req.acknowledgementOnly ? 'acknowledge' : (me.role === 'fremont' ? 'countersign' : 'sign');
@@ -178,9 +180,13 @@
     var doc = '<div class="sg-doc" data-sgdoc aria-label="Document to sign" tabindex="0"><p class="p2-small">Loading the document…</p></div>' +
       '<p class="p2-small fmp1-faint sg-fp" data-sgfp>Document fingerprint (SHA-256) ' + esc(req.sha256.slice(0, 16)) + '…</p>';
     if (ck.stage === 'done') {
-      var done = S.status(req, c.TODAY) === 'completed';
-      return top + '<main class="sg-main">' + head + '<div class="fmp1-note fmp1-note--' + (done ? 'good' : 'info') + '" role="status"><span>' + esc(ck.error) + '</span></div>' +
-        (done ? '<p><button class="fmp1-btn fmp1-btn--primary" data-sgsigned="' + esc(tk) + '">Open the signed copy</button></p>' : '') + doc + '</main>';
+      var done = S.status(req, c.TODAY) === 'completed', when = me.signedAt ? S.when(me.signedAt).replace(/ \(.*$/, '') : '';
+      return top + '<main class="sg-main sg-donepage"><div class="sg-done" role="status"><span class="sg-tick" aria-hidden="true">✓</span>' +
+        '<h1 class="fmp1-h sg-h1">' + (req.acknowledgementOnly ? 'Acknowledged' : 'Signed') + '. Thank you, ' + esc(me.name.split(' ')[0]) + '.</h1>' +
+        '<p class="sg-lede">' + esc(req.title) + (when ? ' · ' + esc(when) : '') + '</p>' +
+        (done ? '<p>Everyone has signed. Save your copy; it includes a certificate page showing who signed and when.</p><p><button class="fmp1-btn fmp1-btn--primary" data-sgsigned="' + esc(tk) + '">View or save your signed copy</button></p>'
+          : '<p>Fremont Makers countersigns next. We\'ll email you the finished copy, with its certificate page, as soon as that\'s done. You can close this page.</p>') +
+        '<p class="p2-small fmp1-faint">Questions? Reply to the email that brought you here.</p></div></main>';
     }
     if (!ck.ok) return top + '<main class="sg-main">' + head + '<div class="fmp1-note fmp1-note--alert" role="status"><span>' + esc(ck.error) + '</span></div></main>';
     var sigPreview = U.draw ? '<div class="sg-pad"><canvas width="560" height="150" data-sgpad aria-label="Draw your signature here"></canvas><button class="fmp1-btn fmp1-btn--quiet" data-sgclear>Clear</button></div>'
@@ -251,10 +257,11 @@
   /* ---------- events ---------- */
   function keyTarget(c, j, key) { return key === 'ct' ? { req: j.esign && j.esign.request, co: null } : (function () { var co = j.changeOrders.filter(function (x) { return x.id === key; })[0]; return { req: co && co.esign && co.esign.request, co: co }; })(); }
   function click(c, t) {
+    var signPath = location.pathname.match(/^\/projectbuilder\/sign\/([^/]+)\/?$/);
     var h = location.hash.replace(/^#\/?/, '').split('/'), j = h[0] === 'job' ? c.store.job(decodeURIComponent(h[1])) : null, k, T;
-    // signing page
-    if (h[0] === 'sign') {
-      var tk = decodeURIComponent(h[1] || ''), hit = findByToken(c, tk), U = c.ui.sg;
+    // signing page — public URL /projectbuilder/sign/<token> or preview hash #/sign/<token>
+    if (signPath || h[0] === 'sign') {
+      var tk = decodeURIComponent((signPath && signPath[1]) || h[1] || ''), hit = findByToken(c, tk), U = c.ui.sg;
       if (!hit) return false;
       if (t.hasAttribute('data-sgdraw')) { U.draw = !U.draw; if (!U.draw) U.drawn = null; c.render(); return true; }
       if (t.hasAttribute('data-sgclear')) { U.drawn = null; c.render(); return true; }
@@ -272,9 +279,9 @@
         if (res.completed) finish(c, hit, res.request).then(function () { c.render(); }); else c.render();
         return true;
       }
-      if (t.dataset.sgsigned) {
+      if (t.dataset.sgsigned) {   // opens the signed copy right here, over the signing page; never into the tool
         var dd = (hit.job.documents || []).filter(function (x) { return x.signRequest === hit.req.id; })[0];
-        if (dd) { location.hash = '#/job/' + encodeURIComponent(hit.job.jobCode) + '/documents'; setTimeout(function () { c.openDoc('file', FF.key(dd), c.store.job(hit.job.jobCode)); c.render(); }, 0); }
+        if (dd) { c.openDoc('file', FF.key(dd), c.store.job(hit.job.jobCode)); c.ui.viewer.title = dd.title; c.ui.viewer.from = '[data-sgsigned]'; c.render(); }
         return true;
       }
       return false;

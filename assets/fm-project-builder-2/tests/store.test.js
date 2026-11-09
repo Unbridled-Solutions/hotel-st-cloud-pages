@@ -142,6 +142,17 @@ test('Nov 5: payments made in the existing tool, and the real change order cost,
   eq(s2.job('FM-2609-314').invoices[2].payments.length, 1, 'a payment already recorded in the new tool is never overwritten');
 });
 
+test('a live store is never overwritten: no seed corrections on load, and reset is refused', function () {
+  var saved = { jobs: [{ jobCode: 'FM-1', invoices: [{ id: 'i1', amountCents: 100, payments: [] }], changeOrders: [], documents: [] }], log: [], seq: 0 };
+  var seedX = { jobs: [{ jobCode: 'FM-1', invoices: [{ id: 'i1', amountCents: 100, payments: [{ amountCents: 100 }] }], changeOrders: [], documents: [{ file: 'x.pdf' }] }], company: { months: [] }, log: [], seq: 0 };
+  var copy = JSON.stringify(saved);
+  var st = ST.create({ live: true, seed: seedX, storage: { load: function () { return JSON.parse(copy); }, save: function () {} } });
+  var j = st.job('FM-1');
+  eq([j.invoices[0].payments.length, j.documents.length], [0, 0]);
+  eq(st.reset().ok, false);
+  eq(st.job('FM-1').invoices[0].id, 'i1');
+});
+
 console.log('store.test.js\n' + results.join('\n'));
 
 test('saved data picks up documents added later (Braddy change order 1 PDF) and keeps uploads', function () {

@@ -1,8 +1,10 @@
 /*
- * Project Builder 2.11.0 live boot.
+ * Project Builder 2.11.1 live boot.
  * Canonical URL: /projectbuilder
  * GET ns=fm-quotes only (read-only import). Never POST that namespace.
  * New writes go to GET/POST ns=fm-phase1.
+ * FMStore.create({ live: true }) — never reset or reseed over live jobs.
+ * /projectbuilder/sign/<token> stays on that URL (no menu, no hash into the app).
  */
 (function () {
   'use strict';
@@ -12,6 +14,7 @@
   window.FM_CONFIG.live = true;
   window.FM_CONFIG.filesBase = BASE + '/files/';
   window.FM_CONFIG.logoBase = BASE + '/assets/brand/';
+  window.FM_CONFIG.signBase = 'https://tools.fremontmakers.com/projectbuilder';
 
   function esc(s) {
     return String(s == null ? '' : s)
@@ -75,13 +78,8 @@
   }
 
   if (!root) return;
-  var signPath = location.pathname.match(/^\/projectbuilder\/sign\/([^/]+)\/?$/);
-  if (signPath && !(location.hash || '').replace(/^#\/?/, '')) {
-    location.replace('/projectbuilder#/sign/' + encodeURIComponent(signPath[1]));
-    return;
-  }
 
-  root.innerHTML = '<div class="fmp1-card p2-pad" style="grid-column:1/-1"><span class="fmp1-eyebrow">Project Builder · v2.11.0</span><p class="fmp1-muted">Reading jobs. The old builder is not being written.</p></div>';
+  root.innerHTML = '<div class="fmp1-card p2-pad" style="grid-column:1/-1"><span class="fmp1-eyebrow">Project Builder · v2.11.1</span><p class="fmp1-muted">Reading jobs. Existing records are not reset. The old builder is not being written.</p></div>';
 
   Promise.all([
     fetch('/api/planner/bundle?ns=fm-quotes', { cache: 'no-store' }).then(function (r) {
