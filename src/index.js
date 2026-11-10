@@ -13,6 +13,7 @@ import { handleVenueInquire } from './venue-inquire.js';
 import { handleEateryReservations } from './eatery-reservations.js';
 import { handleFmHellosign } from './fm-hellosign.js';
 import { handleFmProjectBuilderFiles } from './fm-project-builder-files.js';
+import { handleFmProjectBuilderSign } from './fm-project-builder-sign.js';
 
 const AIRTABLE_BASE = "appUUjLXEUwlyx23M";
 const SOCC_TABLE    = "SOCC%20Barista%20Applications";
@@ -302,6 +303,10 @@ export default {
 
     if (url.pathname.startsWith("/api/projectbuilder/files")) {
       return handleFmProjectBuilderFiles(request, env);
+    }
+
+    if (url.pathname.startsWith("/api/projectbuilder/sign")) {
+      return handleFmProjectBuilderSign(request, env);
     }
 
     if (url.pathname.startsWith("/api/events/")) {

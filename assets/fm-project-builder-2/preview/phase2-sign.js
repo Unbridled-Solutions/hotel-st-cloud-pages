@@ -49,8 +49,28 @@
   function err(c, msg) { c.ui.sgErr = msg; c.render(); }
 
   /* ---------- sending ---------- */
+  function applyJob(c, job) {
+    if (!job || !job.jobCode) return;
+    c.store.update(job.jobCode, function () { return job; }, null, c.me().name);
+  }
   function send(c, j, co) {
     var html = co ? window.P2Flows.coDocHTML(c, j, co) : c.packetHTML(j);
+    if (LIVE) {
+      return fetch('/api/projectbuilder/sign/send', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, cache: 'no-store',
+        body: JSON.stringify({
+          jobCode: j.jobCode, kind: co ? 'change_order' : 'contract',
+          coNumber: co ? co.number : null, coId: co ? co.id : null,
+          html: html, buyer: buyerOf(j), fremont: j.fmSigner || null, by: c.me().name
+        })
+      }).then(function (r) { return r.json(); }).then(function (out) {
+        if (!out || !out.ok) throw new Error((out && (out.error || (out.problems && out.problems.join(' ')))) || 'Could not send.');
+        c.ui.sgErr = null; c.ui.sgCopied = null;
+        if (out.job) applyJob(c, out.job);
+        else saveReq(c, j.jobCode, co ? co.id : null, out.request, out.log);
+        c.render();
+      }).catch(function (e) { err(c, e.message); });
+    }
     return sha(html).then(function (h) {
       var buyer = buyerOf(j), fm = j.fmSigner || null;
       var made = S.create({ kind: co ? 'change_order' : 'contract', coNumber: co ? co.number : null, sha256: h,
@@ -208,7 +228,15 @@
   function after(c, tk) {
     var hit = findByToken(c, tk); if (!hit) return;
     var box = document.querySelector('[data-sgdoc]');
-    if (box) c.files.get('sign-' + hit.req.id).then(function (blob) {
+    if (box && LIVE) {
+      fetch('/api/projectbuilder/sign/' + encodeURIComponent(tk) + '/document', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (out) {
+        if (!out || !out.html) { box.innerHTML = '<p class="p2-small">The frozen document is not on the server yet.</p>'; return; }
+        box.innerHTML = out.html; fit(box);
+        var fp = document.querySelector('[data-sgfp]');
+        if (fp) fp.textContent = 'Document fingerprint (SHA-256) ' + (out.sha256 || '').slice(0, 16) + '… ✓ same document that was sent';
+        c.ui.sg && (c.ui.sg.shownHash = out.sha256);
+      }).catch(function () { box.innerHTML = '<p class="p2-small">Could not load the document.</p>'; });
+    } else if (box) c.files.get('sign-' + hit.req.id).then(function (blob) {
       if (!blob) { box.innerHTML = '<p class="p2-small">This request was sent from a different browser, so the preview can\'t show the frozen document. Live, the server shows it.</p>'; return; }
       return blob.text().then(function (html) {
         box.innerHTML = html; fit(box);
@@ -267,11 +295,33 @@
       if (t.hasAttribute('data-sgclear')) { U.drawn = null; c.render(); return true; }
       if (t.hasAttribute('data-sgdecline')) { U.declining = !U.declining; c.render(); return true; }
       if (t.dataset.sgdeclinego) {
+        if (LIVE) {
+          fetch('/api/projectbuilder/sign/' + encodeURIComponent(tk), {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, cache: 'no-store',
+            body: JSON.stringify({ action: 'decline', reason: U.why })
+          }).then(function (r) { return r.json(); }).then(function (out) {
+            if (!out || !out.ok) { U.errors = [out && out.error || 'Could not decline.']; c.render(); return; }
+            if (out.job) applyJob(c, out.job); else saveReq(c, hit.job.jobCode, hit.co ? hit.co.id : null, out.request, out.log);
+            U.errors = null; c.render();
+          }).catch(function (e) { U.errors = [e.message]; c.render(); });
+          return true;
+        }
         var dr = S.decline(hit.req, tk, U.why, ctxFor(c));
         if (!dr.ok) { U.errors = [dr.error]; c.render(); return true; }
         saveReq(c, hit.job.jobCode, hit.co ? hit.co.id : null, dr.request, dr.log); U.errors = null; c.render(); return true;
       }
       if (t.dataset.sgsign) {
+        if (LIVE) {
+          fetch('/api/projectbuilder/sign/' + encodeURIComponent(tk), {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, cache: 'no-store',
+            body: JSON.stringify({ action: 'sign', consent: U.consent, agree: U.agree, typedName: U.typed, drawn: U.draw ? U.drawn : null })
+          }).then(function (r) { return r.json(); }).then(function (out) {
+            if (!out || !out.ok) { U.errors = (out && out.problems) || [out && out.error || 'Could not sign.']; c.render(); return; }
+            if (out.job) applyJob(c, out.job); else saveReq(c, hit.job.jobCode, hit.co ? hit.co.id : null, out.request, out.log);
+            U.errors = null; c.render();
+          }).catch(function (e) { U.errors = [e.message]; c.render(); });
+          return true;
+        }
         var res = S.sign(hit.req, tk, { consent: U.consent, agree: U.agree, typedName: U.typed, drawn: U.draw ? U.drawn : null }, ctxFor(c, { sha256: U.shownHash || null }));
         if (!res.ok) { U.errors = res.problems; c.render(); return true; }
         U.errors = null;
@@ -295,6 +345,18 @@
     if (t.dataset.sgcancel != null && t.hasAttribute('data-sgcancel')) { c.ui.sgCancel = t.dataset.sgcancel || null; c.ui.sgCancelWhy = ''; c.render(); return true; }
     if (t.dataset.sgcancelgo) {
       T = keyTarget(c, j, t.dataset.sgcancelgo);
+      if (LIVE && T.req) {
+        fetch('/api/projectbuilder/sign/' + encodeURIComponent(T.req.id) + '/cancel', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, cache: 'no-store',
+          body: JSON.stringify({ by: c.me().name, reason: c.ui.sgCancelWhy })
+        }).then(function (r) { return r.json(); }).then(function (out) {
+          if (!out || !out.ok) return err(c, out && out.error || 'Could not cancel.');
+          c.ui.sgCancel = null; c.ui.sgErr = null;
+          if (out.job) applyJob(c, out.job); else saveReq(c, j.jobCode, T.co ? T.co.id : null, out.request, out.log);
+          c.render();
+        }).catch(function (e) { err(c, e.message); });
+        return true;
+      }
       var cr = S.cancel(T.req, c.me().name, c.ui.sgCancelWhy, nowAt(c));
       if (!cr.ok) return err(c, cr.error), true;
       c.ui.sgCancel = null; c.ui.sgErr = null; saveReq(c, j.jobCode, T.co ? T.co.id : null, cr.request, cr.log); c.render(); return true;
