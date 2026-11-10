@@ -12,10 +12,7 @@
  * Server sets at (UTC), ip, userAgent. Tokens are secrets — never logged whole.
  */
 
-import { createRequire } from "node:module";
-
-const require = createRequire(import.meta.url);
-const FMSign = require("./../assets/fm-project-builder-2/src/fm-phase2-sign.js");
+import FMSign from "../assets/fm-project-builder-2/src/fm-phase2-sign.js";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
