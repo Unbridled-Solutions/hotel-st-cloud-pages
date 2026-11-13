@@ -648,16 +648,27 @@ export default {
     if (url.pathname === '/api/planner/bundle' && request.method === 'POST') {
       const ns = url.searchParams.get('ns');
       if (!ns) return new Response(JSON.stringify({ error: 'Missing ns param' }), { status: 400, headers: CORS });
+      const MAX_BUNDLE = 25 * 1024 * 1024; // KV value cap; ARI 1.8.1 asks 25 MB + 413 not 500
+      const cl = Number(request.headers.get('content-length') || 0);
+      if (cl > MAX_BUNDLE) {
+        return new Response(JSON.stringify({ success: false, error: 'Payload too large' }), { status: 413, headers: CORS });
+      }
       try {
         const body = await request.json();
         const raw = await env.PLANNER_DATA.get(`bundle:${ns}`);
         const existing = raw ? JSON.parse(raw) : {};
         const merged = mergePlannerBundle(existing, body, ns);
         if (ns === 'fm-quotes') canonicalizeFmQuotesBundle(merged);
-        await env.PLANNER_DATA.put(`bundle:${ns}`, JSON.stringify(merged));
+        const mergedJson = JSON.stringify(merged);
+        if (mergedJson.length > MAX_BUNDLE) {
+          return new Response(JSON.stringify({ success: false, error: 'Payload too large' }), { status: 413, headers: CORS });
+        }
+        await env.PLANNER_DATA.put(`bundle:${ns}`, mergedJson);
         return new Response(JSON.stringify({ success: true }), { status: 200, headers: CORS });
       } catch (err) {
-        return new Response(JSON.stringify({ success: false, error: err.message }), { status: 500, headers: CORS });
+        const msg = String((err && err.message) || err);
+        const tooBig = /too large|size limit|exceed|413/i.test(msg);
+        return new Response(JSON.stringify({ success: false, error: tooBig ? 'Payload too large' : msg }), { status: tooBig ? 413 : 500, headers: CORS });
       }
     }
 
