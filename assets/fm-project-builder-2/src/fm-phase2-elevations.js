@@ -189,14 +189,18 @@
       var sp = upperItems[i], w = sp.w || 0, h = sp.h || 0, lift = +it.topOffset || 0;
       var y0 = upperTop + lift - h;   // staggered uppers: raise or lower one cabinet's top
       if (lift && upperTop + lift > ceil - s.soffit + 1e-6) issues.push({ level: 'error', item: it.id, text: (sp.code || sp.label) + ' would go ' + inches(upperTop + lift - (ceil - s.soffit)) + ' past the ' + (s.soffit ? 'soffit' : 'ceiling') + '.' });
-      var x = ucur + (+it.gapBefore || 0), moved = true, guard = 0;
+      var x = ucur + (+it.gapBefore || 0), moved = true, guard = 0, x0 = x, hit = null;
       while (moved && guard++ < 50) {   // step past anything below that reaches up into this cabinet (a pantry, a tall fridge)
         moved = false;
         for (var b = 0; b < base.length; b++) {
           var q = base[b];
-          if (q.y + q.h > y0 + 1e-6 && overlaps(x, x + w, q.x, q.x + q.w)) { x = q.x + q.w; moved = true; }
+          if (q.y + q.h > y0 + 1e-6 && overlaps(x, x + w, q.x, q.x + q.w)) { if (!hit) hit = q; x = q.x + q.w; moved = true; }
         }
       }
+      // Say why it moved, and how to keep it over the tall item instead: raise it (drag it up, or Raise / lower top).
+      if (hit && w) { var need = Math.ceil((hit.y + hit.h - y0) * 2) / 2, room = (ceil - s.soffit) - (upperTop + lift);
+        issues.push({ level: 'warn', item: it.id, fix: { kind: 'raise', by: need }, text: (sp.code || sp.label) + ' would hit the ' + (hit.code || hit.label) + ' below it, so it was moved past it (' + inches(x - x0) + ' to the right). ' +
+          (need <= room + 1e-6 ? 'To keep it above the ' + (hit.code || hit.label) + ', drag it up ' + inches(need) + ' (or raise its top ' + inches(need) + ').' : 'There isn\'t room to raise it ' + inches(need) + ' under the ' + (s.soffit ? 'soffit' : 'ceiling') + '; use a shorter cabinet over the ' + (hit.code || hit.label) + '.') }); }
       if (!sp.w) issues.push({ level: 'error', item: it.id, text: 'Enter the size for ' + (sp.code || sp.label) + ' before it can be drawn.' });
       else if (sp.layer !== 'upper') issues.push({ level: 'error', item: it.id, text: (sp.code || sp.label) + ' sits on the floor; move it to the base run.' });
       if (h && y0 < s.baseHeight + s.counter + 12 - 1e-6) issues.push({ level: 'warn', item: it.id, text: (sp.code || sp.label) + ' hangs ' + inches(y0 - s.baseHeight - s.counter) + ' over the counter; 15″ or more is usual.' });
@@ -227,6 +231,14 @@
       base.concat(upper).forEach(function (p) {
         if (p.w && p.h && overlaps(p.x, p.x + p.w, ox0, ox1) && overlaps(p.y, p.y + p.h, oy0, oy1))
           issues.push({ level: 'error', item: p.id, text: (p.code || p.label) + ' covers the ' + (o.kind === 'door' ? 'door' : 'window') + '.' });
+      });
+    });
+    upper.forEach(function (p) {   // nothing drawn may sit on top of anything else
+      if (!p.w || !p.h) return;
+      base.concat(upper).forEach(function (q) {
+        if (q === p || !q.w || !q.h || (q.run === 'upper' && q.index < p.index)) return;
+        if (overlaps(p.x, p.x + p.w, q.x, q.x + q.w) && overlaps(p.y, p.y + p.h, q.y, q.y + q.h))
+          issues.push({ level: 'error', item: p.id, text: (p.code || p.label) + ' overlaps ' + (q.code || q.label) + ' by ' + inches(Math.min(p.y + p.h, q.y + q.h) - Math.max(p.y, q.y)) + '. Drag it up or down, or move it along the wall.' });
       });
     });
     base.forEach(function (p) {
@@ -575,7 +587,8 @@
     var code = 'CUST' + n, label = String(input.label || '').trim() || 'Custom ' + kinds[kind].toLowerCase();
     return { ok: true, code: code, size: { kind: kind, w: w, h: h, d: d, label: label, style: kind === 'wall' ? 'doors' : 'combo', source: 'sketch' } };
   }
-  function finishFor(color) { return FINISH[color] || FINISH['']; }
+  /* A supplier code (SBW), a catalog or team color key (FMColors, HANDOFF §44), or a #hex. */
+  function finishFor(color) { var C = typeof FMColors !== 'undefined' ? FMColors : null; return FINISH[color] || (C && C.hex(color)) || (/^#[0-9a-f]{6}$/i.test(String(color || '')) ? color : null) || FINISH['']; }
 
   /* Door and drawer faces in the item's own box (x right, y up from its bottom). */
   function fronts(p, s) {

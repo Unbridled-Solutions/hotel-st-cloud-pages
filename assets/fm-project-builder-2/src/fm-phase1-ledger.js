@@ -192,7 +192,7 @@
       { id: 'void', to: 'quote', label: 'Void contract…', fields: ['reason'], tone: 'quiet', guard: function (j) { return contractSummary(j).paidCents > 0 ? 'Payments are recorded on this job. Refund them before voiding.' : null; } }
     ],
     deposit_paid: [{ id: 'order', to: 'factory_ordered', label: 'Record factory order', fields: ['date'] }],
-    factory_ordered: [{ id: 'deliver', to: 'delivered', label: 'Record delivery', fields: ['date'] }],
+    factory_ordered: [{ id: 'deliver', to: 'delivered', label: 'Record delivery or pickup', fields: ['date'] }],
     delivered: [{ id: 'final', to: 'final_paid', label: 'Confirm final payment', fields: ['date'], guard: function (j) { var b = contractSummary(j).balanceCents; return b > 0 ? 'Balance of ' + fmt(b) + ' is still open.' : null; } }],
     final_paid: [{ id: 'close', to: 'complete', label: 'Close job', fields: ['date'] }],
     complete: [],

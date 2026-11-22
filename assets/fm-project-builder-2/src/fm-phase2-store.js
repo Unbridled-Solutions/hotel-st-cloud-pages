@@ -141,7 +141,7 @@
     });
   }
 
-  function counts(j) { return !j.testVoid; }
+  function counts(j) { return !j.testVoid && !j.designTemplate; }   // designs in the library (FMDesigns) are never jobs
 
   /*
    * Charges on a job, broken out (HANDOFF §30). One part per model / house group, per change order, and for any agreed
@@ -179,13 +179,16 @@
     return { parts: parts, totals: totals };
   }
 
+  /* What we actually paid suppliers (job costs, HANDOFF §42), or null when nothing is logged. */
+  function actualCost(job) { var l = (job.jobCosts || []).filter(function (e) { return !e.removed; }); return l.length ? l.reduce(function (t, e) { return t + (e.totalCents || 0); }, 0) : null; }
+
   /* The shape Company Books (FMBooks) reads. */
   function toBooks(job) {
     var s = FM.contractSummary(job);
     return { jobCode: job.jobCode, customer: job.customer, project: job.projectName, stage: job.stage,
       contractedOn: job.contractedOn || null, quoteDate: job.quoteDate || null, deliveryDate: job.deliveryDate || null,
       contractCents: s.currentCents, taxCents: job.taxCents || 0, costCents: job.costCents == null ? null : job.costCents,
-      absorbedCents: job.absorbedCents || 0, invoices: job.invoices, testVoid: !!job.testVoid, charges: charges(job) };
+      absorbedCents: job.absorbedCents || 0, actualCostCents: actualCost(job), invoices: job.invoices, testVoid: !!job.testVoid, charges: charges(job) };
   }
 
   var METHODS = { check: 'Check', ach: 'ACH / bank transfer', card: 'Card', cash: 'Cash' };
@@ -197,7 +200,23 @@
     /* Live data is never overwritten by an update (owner, Nov 9). The seed corrections in upgrade() are for the preview only;
        a live store (opts.live) skips them and can't be reset. Changes to live records go through the tool, logged with who did it. */
     if (opts.seed && state !== opts.seed && !opts.live) upgrade(state, opts.seed);
-    function save() { if (storage && storage.save) storage.save(state); }
+    /* Nothing entered gets lost (HANDOFF §41). A live storage adapter's save may return a promise: until it resolves, the change
+       is also kept in opts.journal (the browser) and status() reports it pending; a failure is reported and the journal kept, so
+       the next load puts it back. The preview's storage saves at once. */
+    var st = { pending: 0, failed: null, since: 0, savedAt: null, restored: 0 }, listeners = [];
+    if (opts.journal && opts.journal.read) { var jr0 = null; try { jr0 = opts.journal.read(); } catch (e) { jr0 = null; } if (jr0 && jr0.state && jr0.changes) { state = jr0.state; st.restored = jr0.changes; } }
+    function notify() { listeners.forEach(function (f) { try { f(st); } catch (e) { /* ignore */ } }); }
+    function save() {
+      if (!storage || !storage.save) return;
+      var r; try { r = storage.save(state); } catch (e) { st.failed = e.message || 'save failed'; notify(); return; }
+      if (r && typeof r.then === 'function') {
+        if (!st.pending) st.since = Date.now(); st.pending++;
+        if (opts.journal && opts.journal.write) { try { opts.journal.write({ state: state, changes: st.pending, at: new Date().toISOString() }); } catch (e) { /* storage full: still saving */ } }
+        r.then(function () { st.pending--; st.failed = null; st.savedAt = new Date().toISOString(); if (!st.pending && opts.journal && opts.journal.clear) opts.journal.clear(); notify(); },
+               function (e) { st.pending--; st.failed = (e && e.message) || 'save failed'; notify(); });
+        notify();
+      } else st.savedAt = new Date().toISOString();
+    }
     function job(code) { return state.jobs.filter(function (j) { return j.jobCode === code; })[0] || null; }
     function log(jobCode, text, by, at) {
       state.seq += 1;
@@ -205,6 +224,8 @@
     }
     return {
       VERSION: VERSION, METHODS: METHODS,
+      status: function () { return { pending: st.pending, failed: st.failed, since: st.since, savedAt: st.savedAt, restored: st.restored }; },
+      onStatus: function (fn) { listeners.push(fn); },
       get state() { return state; },
       /* Jobs that count. Jobs marked Test / Void are left out of every list, total and report; pass { all: true } to include them. */
       jobs: function (o) { return o && o.all ? state.jobs : state.jobs.filter(counts); },
@@ -235,6 +256,65 @@
         return { ok: true, company: state.company };
       },
       log: function (jobCode) { return state.log.filter(function (e) { return !jobCode || e.jobCode === jobCode; }); },
+      /* Company settings (HANDOFF §39): the finance email. Full access only; logged. */
+      settings: function () { return state.settings || {}; },
+      saveSetting: function (key, value, user, at) {
+        if (!user || user.access !== 'full') return { ok: false, error: 'Only someone with Full access can change company settings.' };
+        if (key === 'financeEmail' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || ''))) return { ok: false, error: 'Enter a full email address.' };
+        if (key === 'reviewLink' && value && !/^https:\/\/\S+$/.test(String(value))) return { ok: false, error: 'Enter the full review link, starting with https://' };
+        if (key === 'cabinetColors') {   // Designs → colors (HANDOFF §44): catalog keys or { key, name, hex }
+          if (!Array.isArray(value) || value.some(function (x) { return !(typeof x === 'string' && x) && !(x && typeof x === 'object' && x.key && x.name && /^#[0-9a-f]{6}$/i.test(x.hex || '')); })) return { ok: false, error: 'That color list isn\'t valid.' };
+          state.settings = state.settings || {}; var was0 = (state.settings.cabinetColors || []).length; state.settings.cabinetColors = JSON.parse(JSON.stringify(value));
+          log('COMPANY', 'Cabinet colors changed by ' + user.name + ' (' + was0 + ' → ' + value.length + ' on the list).', user.name, at); save();
+          return { ok: true };
+        }
+        if (key === 'emailTemplates') {   // Company → Email templates (HANDOFF §43): { <kind>: { subject, body } }, a blank one goes back to the original wording
+          if (!value || typeof value !== 'object' || Array.isArray(value)) return { ok: false, error: 'Nothing to save.' };
+          state.settings = state.settings || {}; var kinds = Object.keys(value).filter(function (k) { var t = value[k] || {}; return String(t.subject || '').trim() || String(t.body || '').trim(); }), keep = {};
+          kinds.forEach(function (k) { keep[k] = { subject: String(value[k].subject || ''), body: String(value[k].body || '') }; });
+          state.settings.emailTemplates = keep; log('COMPANY', 'Email templates changed by ' + user.name + (kinds.length ? ' (reworded: ' + kinds.join(', ') + ').' : ' (all back to the original wording).'), user.name, at); save();
+          return { ok: true };
+        }
+        state.settings = state.settings || {}; var was = state.settings[key]; state.settings[key] = value;
+        log('COMPANY', 'Setting ' + key + ' changed' + (was ? ' from ' + was : '') + ' to ' + value + ' by ' + user.name + '.', user.name, at); save();
+        return { ok: true };
+      },
+      /* "Need an update?" requests (FMRequests, HANDOFF §36). Kept in their own list, never inside a job; logged under 'REQUESTS'. */
+      requests: function () { return state.requests || []; },
+      nextRequestNumber: function () { return (state.requests || []).reduce(function (m, r) { return Math.max(m, r.number || 0); }, 0) + 1; },
+      addRequest: function (req, by, at) {
+        if (!req || !req.id) return { ok: false, error: 'Nothing to save.' };
+        state.requests = state.requests || [];
+        if (state.requests.some(function (r) { return r.id === req.id; })) return { ok: false, error: req.id + ' is already saved.' };
+        state.requests.unshift(clone(req)); log('REQUESTS', req.id + ' sent by ' + req.by + ': ' + req.where + '.', by, at); save();
+        return { ok: true, request: state.requests[0] };
+      },
+      updateRequest: function (req, text, by, at) {
+        var i = (state.requests || []).map(function (r) { return r.id; }).indexOf(req && req.id);
+        if (i < 0) return { ok: false, error: 'No request ' + (req && req.id) + '.' };
+        state.requests[i] = clone(req); if (text) log('REQUESTS', text, by, at); save();
+        return { ok: true, request: state.requests[i] };
+      },
+      /* Wholesale Cabinets mail-in (FMMailIn, HANDOFF §46): emails read from the forwarding inbox. Kept in their own list (state.mailIn,
+         added when the first one arrives), never deleted; logged under 'MAIL'. An item never holds the raw email. */
+      mailIn: function () { return state.mailIn || []; },
+      addMailIn: function (item, at) {
+        if (!item || !item.id) return { ok: false, error: 'Nothing to save.' };
+        state.mailIn = state.mailIn || [];
+        if (state.mailIn.some(function (m) { return m.id === item.id; })) return { ok: false, duplicate: true, error: 'That email is already in the inbox.' };
+        var keep = clone(item); delete keep.raw;
+        state.mailIn.unshift(keep); log('MAIL', 'Email from ' + (keep.from || 'unknown') + ': ' + keep.subject + (keep.status === 'ignored' ? ' (not for a job: ' + keep.reason + ')' : '') + '.', 'Mail-in', at); save();
+        return { ok: true, item: state.mailIn[0] };
+      },
+      /* Only the inbox fields change: filed on a job, set aside, or back to waiting. What was read from the email stays as it was. */
+      updateMailIn: function (id, patch, text, by, at) {
+        var m = (state.mailIn || []).filter(function (x) { return x.id === id; })[0];
+        if (!m) return { ok: false, error: 'No email ' + id + '.' };
+        if (patch.status && ['waiting', 'filed', 'ignored'].indexOf(patch.status) < 0) return { ok: false, error: 'Unknown status.' };
+        ['status', 'jobCode', 'filedBy', 'filedOn', 'auto', 'reason', 'error'].forEach(function (k) { if (patch[k] !== undefined) m[k] = patch[k]; });
+        if (text) log(m.jobCode || 'MAIL', text, by, at); save();
+        return { ok: true, item: m };
+      },
       reset: function () { if (opts.live) return { ok: false, error: 'Live data is never reset. Reset sample data is for the preview only.' }; state = clone(opts.seed); save(); return { ok: true }; },
       /* Add a new job (from the New Project flow). Job codes must be unique. */
       addJob: function (j, by, at) {
@@ -267,6 +347,21 @@
           x.invoices = x.invoices.map(function (v) { if (v.id !== invId) return v; v.payments = (v.payments || []).concat([{ amountCents: refund ? -p.amountCents : p.amountCents, date: p.date, method: p.method, reference: String(p.reference || '').trim() }]); return v; });
           return x;
         }, (refund ? 'Refund of ' : 'Payment of ') + FM.fmt(p.amountCents) + ' recorded on ' + inv.label + ' (' + METHODS[p.method] + (p.reference ? ' ' + p.reference : '') + ').', by, at);
+        return { ok: true, job: r.job };
+      },
+      /* Add a check number (or other reference) to a payment that was recorded without one. Only fills a blank reference;
+         an existing one is never overwritten (HANDOFF §0 rule 9). Logged with who added it. */
+      setPaymentReference: function (code, invId, index, reference, by, at) {
+        var j = job(code); if (!j) return { ok: false, error: 'No job ' + code + '.' };
+        var inv = j.invoices.filter(function (x) { return x.id === invId; })[0]; if (!inv) return { ok: false, error: 'No invoice ' + invId + '.' };
+        var pay = (inv.payments || [])[index]; if (!pay) return { ok: false, error: 'No such payment.' };
+        var ref = String(reference || '').trim();
+        if (!ref) return { ok: false, error: 'Enter the check number.' };
+        if (String(pay.reference || '').trim()) return { ok: false, error: 'This payment already has ' + pay.reference + '.' };
+        var r = this.update(code, function (x) {
+          x.invoices.forEach(function (v) { if (v.id === invId) { v.payments[index].reference = ref; if (!v.payments[index].method) v.payments[index].method = 'check'; } });
+          return x;
+        }, 'Check number ' + ref + ' added to the ' + FM.fmt(pay.amountCents) + ' payment of ' + pay.date + ' on ' + inv.label + '.', by, at);
         return { ok: true, job: r.job };
       }
     };

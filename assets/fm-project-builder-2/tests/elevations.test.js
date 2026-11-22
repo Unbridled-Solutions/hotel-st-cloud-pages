@@ -256,6 +256,24 @@ test('sketching without SKUs: every standard size reads from its code; custom si
   eq(EL2.copyRooms([{ walls: [{ base: [{ sku: 'B30' }, { sku: 'CUST1' }] }] }], [{ sku: 'B30-SBW' }]).unmatched, [{ code: 'CUST1', count: 1 }], 'sketch cabinets match the real SKUs by code later');
 });
 
+test('an upper that would hit a tall fridge moves past it, says why, and offers to raise it; raised, it sits above the fridge', function () {
+  var fridge = it({ appliance: 'fridge', h: 72 }), over = it({ sku: 'W3630' }), tall = it({ sku: 'W3042' });
+  var L = EL.layoutWall({ lengthIn: 144, specs: { ceiling: 102 }, base: [fridge], upper: [over, tall] });
+  var u = L.upper[0], warn = L.issues.filter(function (i) { return i.fix && i.fix.kind === 'raise'; })[0];
+  ok(u.x >= 36 - 1e-6, 'moved past the fridge: ' + u.x);
+  ok(warn && warn.fix.by === 6 && /drag it up 6/.test(warn.text), 'raise by 6: ' + JSON.stringify(warn));
+  over.topOffset = 6;
+  var L2 = EL.layoutWall({ lengthIn: 144, specs: { ceiling: 102 }, base: [fridge], upper: [over, tall] });
+  eq([L2.upper[0].x, L2.upper[0].y], [0, 72]);
+  eq(L2.issues.filter(function (i) { return /overlaps|would hit/.test(i.text); }).length, 0);
+});
+
+test('anything drawn on top of something else is an error that says by how much', function () {
+  var a = it({ sku: 'W3030' }), b = it({ sku: 'W3015', topOffset: -20, gapBefore: -30 });
+  var L = EL.layoutWall({ lengthIn: 120, upper: [a, b] });
+  ok(L.issues.some(function (i) { return /overlaps W30(30|15) by 10/.test(i.text); }), JSON.stringify(L.issues.map(function (i) { return i.text; })));
+});
+
 console.log('elevations.test.js\n' + results.join('\n'));
 console.log((results.length - failed) + ' passed, ' + failed + ' failed');
 if (isNode && failed) process.exit(1);

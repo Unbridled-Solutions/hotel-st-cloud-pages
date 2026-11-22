@@ -144,6 +144,27 @@ test('signing outside the tool: mark it sent, then upload the signed copy', func
   eq(S.recordOutside({ state: 'none' }, { method: 'paper', signedOn: '2026-11-08', file: { name: 'scan.jpg', bytes: 9, sha256: HASH }, buyerSignedAll: true, fmSigned: true, by: 'L' }, {}).state.state, 'signed_on_paper');
 });
 
+test('contracts: the buyer initials each section before signing; the certificate shows it; the countersigner doesn\'t initial', function () {
+  var r = S.create(DOC, Object.assign({}, OPTS, { initials: ['payment', 'elevations', 'delivery', 'warranty'], amountCents: 819083 })).request;
+  eq([r.initials.length, r.amountCents], [4, 819083]);
+  var bad = S.sign(r, T1, { consent: true, agree: true, typedName: 'Dana Ortiz', initials: { payment: 'DO' } }, ctx('2026-11-07T15:30:00Z'));
+  eq(bad.ok, false); ok(/1 of 4 done/.test(bad.problems[0]));
+  var good = S.sign(r, T1, { consent: true, agree: true, typedName: 'Dana Ortiz', initials: { payment: 'DO', elevations: 'DO', delivery: 'DO', warranty: 'DO' } }, ctx('2026-11-07T15:30:00Z'));
+  eq(good.ok, true); eq(Object.keys(good.request.signers[0].initials), ['payment', 'elevations', 'delivery', 'warranty']);
+  ok(good.request.events.some(function (e) { return e.type === 'initialed'; }));
+  var done = S.sign(good.request, T2, { consent: true, agree: true, typedName: 'Kristy Slaughenhaupt' }, ctx('2026-11-07T18:00:00Z'));
+  eq(done.completed, true);
+  ok(/Initialed 4 sections \(DO\)/.test(S.renderCertificate(done.request, { timeZone: 'UTC' })));
+  eq(S.initialsOf('Rod  Stambaugh'), 'RS');
+});
+
+test('a design goes to the customer to approve: acknowledgement only, "approved" in the log', function () {
+  var r = S.create({ kind: 'design', sha256: HASH, version: 2 }, Object.assign({}, OPTS, { acknowledgementOnly: true, fremont: null, tokens: [T1] }));
+  eq([r.ok, r.request.title, r.request.signers.length], [true, 'Design for approval', 1]);
+  var s = S.sign(r.request, T1, { consent: true, agree: true, typedName: 'Dana Ortiz' }, ctx('2026-11-07T15:30:00Z'));
+  eq(s.completed, true); ok(/Design version 2 approved by Dana Ortiz/.test(s.log), s.log);
+});
+
 console.log('sign.test.js\n' + results.join('\n'));
 console.log((results.length - failed) + ' passed, ' + failed + ' failed');
 if (isNode && failed) process.exit(1);

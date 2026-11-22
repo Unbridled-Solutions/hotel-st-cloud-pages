@@ -38,7 +38,7 @@ var PEN = job('FM-2609-314'), WIL = job('FM-2609-276');
 
 test('every document starts with the logo', function () {
   var html = D.renderInvoiceDoc(PEN, PEN.invoices[1], { today: TODAY });
-  ok(html.indexOf('<header class="doc-head"><div class="doc-logo"') > -1, 'logo first in header');
+  ok(/<header class="doc-head[^"]*"><div class="doc-logo"/.test(html), 'logo first in header');
   has(html, 'fm-tagline-juniper.png'); hasNot(html, 'fm-mark');
 });
 

@@ -20,7 +20,7 @@
   else root.FMSign = factory();
 }(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
-  var VERSION = '1.0.0';
+  var VERSION = '1.1.0';
   var SETTINGS = { expiryDays: 30, reminderDays: [3, 7] };
 
   /* What the signer agrees to before signing (ESIGN Act §7001(c) consumer disclosure, in plain words). */
@@ -33,6 +33,9 @@
   ];
   var CONSENT_LABEL = 'I agree to use electronic records and signatures for this document.';
   var AGREE_LABEL = 'I have reviewed the document and I sign it.';
+  var DESIGN_AGREE = 'I approve this design.';
+  /* Sections the buyer initials on a contract (owner, Nov 19), matching FMDocs.INITIALS */
+  var INITIALS = { payment: 'Payment terms', elevations: 'Measurements and elevations', delivery: 'Delivery, inspection, and assembly', warranty: 'Warranty' };
 
   var OUTSIDE = {
     dropbox_web: { label: 'Dropbox Sign website', help: 'Upload the PDF at sign.dropbox.com and send it there (no API needed).' },
@@ -64,7 +67,7 @@
   function create(doc, opts) {
     doc = doc || {}; opts = opts || {};
     var P = [], buyer = opts.buyer || {}, fm = opts.acknowledgementOnly ? null : (opts.fremont || null), tokens = opts.tokens || [];
-    if (doc.kind !== 'contract' && doc.kind !== 'change_order') P.push('Say what is being signed.');
+    if (doc.kind !== 'contract' && doc.kind !== 'change_order' && doc.kind !== 'design') P.push('Say what is being signed.');
     if (!goodHash(doc.sha256)) P.push('The document\'s fingerprint (SHA-256) is missing, so it can\'t be frozen for signing.');
     if (blank(buyer.name)) P.push('Add the name of the person signing for the buyer.');
     if (!isEmail(buyer.email)) P.push('Add the buyer\'s email address. Their copy and any reminders go there.');
@@ -81,7 +84,8 @@
     if (fm) signers.push({ role: 'fremont', name: String(fm.name).trim(), email: fm.email.trim(), order: 2, token: tokens[1], status: 'waiting' });
     var req = {
       id: opts.id || ('sig-' + (opts.jobCode || 'job') + '-' + tokens[0].slice(0, 8)), version: VERSION,
-      kind: doc.kind, title: doc.title || (doc.kind === 'contract' ? 'Contract packet' : 'Change order ' + doc.coNumber),
+      kind: doc.kind, title: doc.title || (doc.kind === 'contract' ? 'Contract packet' : doc.kind === 'design' ? 'Design for approval' : 'Change order ' + doc.coNumber),
+      initials: (opts.initials || []).filter(function (k) { return INITIALS[k]; }), amountCents: opts.amountCents != null ? opts.amountCents : null, project: opts.project || null, version: doc.version || null,
       jobCode: opts.jobCode || null, coNumber: doc.coNumber != null ? doc.coNumber : null, pages: doc.pages || null,
       sha256: doc.sha256, acknowledgementOnly: !!opts.acknowledgementOnly,
       sentOn: opts.today, sentAt: opts.at || opts.today, sentBy: opts.by, expiresOn: addDays(opts.today, SETTINGS.expiryDays),
@@ -145,19 +149,23 @@
     if (blank(input.typedName)) P.push('Type your full name to sign.');
     else if (norm(input.typedName) !== norm(s.name)) P.push('Type your name as it appears on the document: ' + s.name + '. If that name is wrong, ask Fremont Makers to correct it and resend.');
     if (input.drawn != null && !/^data:image\/png;base64,[A-Za-z0-9+/=]{100,}$/.test(input.drawn)) P.push('The drawn signature didn\'t come through. Draw it again or use your typed name.');
-    if (!input.agree) P.push('Tick the box to confirm you have reviewed and sign the document.');
+    var need = s.role === 'buyer' ? (r.initials || []) : [], got = input.initials || {}, done = need.filter(function (k) { return !blank(got[k]); });
+    if (done.length < need.length) P.push('Initial each highlighted section: ' + done.length + ' of ' + need.length + ' done.');
+    if (!input.agree) P.push(r.kind === 'design' ? 'Tick the box to approve the design.' : 'Tick the box to confirm you have reviewed and sign the document.');
     if (P.length) return { ok: false, problems: P, request: req, completed: false };
     var t = stamp(ctx);
     if (!s.viewedAt) { s.viewedAt = t.at; r.events.push({ at: t.at, type: 'viewed', role: s.role, name: s.name, ip: t.ip, userAgent: t.userAgent, text: s.name + ' opened the document.' }); }
     s.status = 'signed'; s.consentAt = t.at; s.signedAt = t.at; s.ip = t.ip; s.userAgent = t.userAgent;
     s.typedName = String(input.typedName).trim(); s.method = input.drawn ? 'drawn' : 'typed'; if (input.drawn) s.drawn = input.drawn;
+    if (need.length) { s.initials = {}; need.forEach(function (k) { s.initials[k] = { text: String(got[k]).trim().slice(0, 6), at: t.at }; });
+      r.events.push({ at: t.at, type: 'initialed', role: s.role, name: s.name, ip: t.ip, userAgent: t.userAgent, text: s.name + ' initialed ' + need.map(function (k) { return INITIALS[k]; }).join(', ') + ' (' + s.initials[need[0]].text + ').' }); }
     r.events.push({ at: t.at, type: 'consented', role: s.role, name: s.name, ip: t.ip, userAgent: t.userAgent, text: s.name + ' agreed to sign electronically.' });
-    var verb = r.acknowledgementOnly ? 'acknowledged' : 'signed';
+    var verb = r.kind === 'design' ? 'approved' : r.acknowledgementOnly ? 'acknowledged' : 'signed';
     r.events.push({ at: t.at, type: 'signed', role: s.role, name: s.name, ip: t.ip, userAgent: t.userAgent, text: s.name + ' ' + verb + ' (' + (s.method === 'drawn' ? 'drew a signature' : 'typed their name') + ').' });
     var next = nextSigner(r), completed = !next;
     if (completed) { r.status = 'completed'; r.completedAt = t.at; r.events.push({ at: t.at, type: 'completed', text: 'Everyone has ' + verb + '. Signed copy sent to ' + r.signers.map(function (x) { return x.email; }).join(' and ') + '.' }); }
     return { ok: true, problems: [], request: r, completed: completed, next: next ? { name: next.name, email: next.email, role: next.role, token: next.token } : null,
-             log: (r.kind === 'contract' ? 'Contract' : 'Change order ' + r.coNumber) + ' ' + verb + ' by ' + s.name + ' (' + ROLES[s.role] + ').' + (completed ? ' Everyone has ' + verb + '.' : ' Next: ' + next.name + '.') };
+             log: (r.kind === 'contract' ? 'Contract' : r.kind === 'design' ? 'Design version ' + (r.version || '') : 'Change order ' + r.coNumber) + ' ' + verb + ' by ' + s.name + ' (' + ROLES[s.role] + ').' + (completed ? ' Everyone has ' + verb + '.' : ' Next: ' + next.name + '.') };
   }
 
   /* The signer declines. A reason is required so the team knows what to fix. */
@@ -298,7 +306,8 @@
       sentAt: req.sentAt, sentBy: req.sentBy, completedAt: req.completedAt || null, status: req.status, acknowledgementOnly: req.acknowledgementOnly,
       signers: req.signers.map(function (s) {
         return { role: ROLES[s.role], name: s.name, email: s.email, status: s.status, viewedAt: s.viewedAt || null, consentAt: s.consentAt || null, signedAt: s.signedAt || null,
-                 ip: s.ip || null, userAgent: s.userAgent || null, browser: browser(s.userAgent), method: s.method || null, typedName: s.typedName || null };
+                 ip: s.ip || null, userAgent: s.userAgent || null, browser: browser(s.userAgent), method: s.method || null, typedName: s.typedName || null,
+                 initials: s.initials ? Object.keys(s.initials).map(function (k) { return { section: INITIALS[k] || k, text: s.initials[k].text, at: s.initials[k].at }; }) : [] };
       }),
       events: req.events.map(function (e) { return { at: e.at, type: e.type, text: e.text, ip: e.ip || null }; })
     };
@@ -316,7 +325,7 @@
     }).join('');
     var rows = c.signers.map(function (s) {
       return '<tr><td><b>' + esc(s.name) + '</b><br>' + esc(s.role) + '<br>' + esc(s.email) + '</td><td>Opened ' + esc(when(s.viewedAt, tz)) + '<br>Agreed to e-sign ' + esc(when(s.consentAt, tz)) + '<br><b>' + verb + ' ' + esc(when(s.signedAt, tz)) + '</b></td>' +
-        '<td>' + (s.method === 'drawn' ? 'Drew a signature' : s.method === 'typed' ? 'Typed their name' : '—') + '<br>IP ' + esc(s.ip || '—') + '<br>' + esc(s.browser) + '</td></tr>';
+        '<td>' + (s.method === 'drawn' ? 'Drew a signature' : s.method === 'typed' ? 'Typed their name' : '—') + (s.initials.length ? '<br>Initialed ' + s.initials.length + ' section' + (s.initials.length > 1 ? 's' : '') + ' (' + esc(s.initials[0].text) + ')' : '') + '<br>IP ' + esc(s.ip || '—') + '<br>' + esc(s.browser) + '</td></tr>';
     }).join('');
     var log = c.events.map(function (e) { return '<tr><td>' + esc(when(e.at, tz)) + '</td><td>' + esc(e.text) + (e.ip ? ' <span class="cert-ip">IP ' + esc(e.ip) + '</span>' : '') + '</td></tr>'; }).join('');
     return '<article class="fm-p1-doc doc-sheet doc-cert" aria-label="Certificate of completion">' +
@@ -332,7 +341,9 @@
       '<footer class="doc-foot doc-foot--end"><span>Fremont Makers LLC · 719 Main Street, Cañon City, CO 81212</span><span class="pg">Certificate of completion</span></footer></article>';
   }
 
-  return { VERSION: VERSION, SETTINGS: SETTINGS, CONSENT: CONSENT, CONSENT_LABEL: CONSENT_LABEL, AGREE_LABEL: AGREE_LABEL, OUTSIDE: OUTSIDE, ROLES: ROLES,
+  /* Initials from a name: "Dana Ortiz" → "DO" (what the Initial buttons fill in; the signer can change it) */
+  function initialsOf(name) { return String(name || '').trim().split(/\s+/).filter(Boolean).map(function (w) { return w.charAt(0).toUpperCase(); }).join('').slice(0, 4); }
+  return { VERSION: VERSION, INITIALS: INITIALS, DESIGN_AGREE: DESIGN_AGREE, initialsOf: initialsOf, SETTINGS: SETTINGS, CONSENT: CONSENT, CONSENT_LABEL: CONSENT_LABEL, AGREE_LABEL: AGREE_LABEL, OUTSIDE: OUTSIDE, ROLES: ROLES,
            create: create, status: status, check: check, open: open, sign: sign, decline: decline, cancel: cancel,
            reminderDue: reminderDue, remind: remind, jobState: jobState, link: link, email: email, nextSigner: nextSigner,
            markSentOutside: markSentOutside, recordOutside: recordOutside, certificate: certificate, renderCertificate: renderCertificate, when: when, browser: browser };

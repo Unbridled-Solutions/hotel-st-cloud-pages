@@ -64,7 +64,9 @@
   function loadDraft(c) {
     if (c.ui.draft) return c.ui.draft;
     try { var s = window.localStorage.getItem(DRAFT_KEY); if (s) { c.ui.draft = migrate(JSON.parse(s)); return c.ui.draft; } } catch (e) { /* none */ }
-    c.ui.draft = blankDraft(c); return c.ui.draft;
+    c.ui.draft = blankDraft(c);
+    if (c.ui.referralFrom) { c.ui.draft.customer = "__new"; c.ui.draft.newCustomer = c.ui.referralFrom.name; c.ui.draft.referredBy = { jobCode: c.ui.referralFrom.from, customer: c.ui.referralFrom.customer }; c.ui.referralFrom = null; saveDraft(c); }   // a referral from close-out (HANDOFF §42)
+    return c.ui.draft;
   }
   /* drafts saved before addresses had fields and assembly had hours */
   function migrate(d) {
@@ -176,7 +178,9 @@
       if (d.kind === 'builder') d.models.forEach(function (m, k) { if (!m.name.trim() || !(m.qty >= 1)) e.push('Model ' + (k + 1) + ' needs a name and at least 1 house.'); });
     }
     if (i === 2 && !d.noSkus) d.models.forEach(function (m) { if (!m.lines.length) e.push((m.name || 'The home') + ' has no cabinets yet. Add the supplier PDF, or choose "No, sketch first".'); });
-    if (i === 3) {
+    if (i === 2 && d.noSkus && d.wantDesign && !d.fromDesign) e.push('Choose the design, or pick Sketch first.');
+    if (i === 2 && d.wantOrder && !d.fromOrder) e.push('Choose the previous order, or pick another way to start.');
+    if (i === 3 && !d.noSkus) {
       ['markupPct', 'discountPctOfCost', 'gaPct', 'taxPct'].forEach(function (k) { if (!(d.pricing[k] >= 0)) e.push('Pricing values must be 0 or more.'); });
       var ah = String(d.pricing.assemblyHours == null ? '' : d.pricing.assemblyHours).trim();
       if (!ah) e.push('Enter the assembly hours per home (0 if there\'s no assembly).'); else if (!(num(ah) >= 0)) e.push('Assembly hours must be a number.');
@@ -195,6 +199,8 @@
   function renderNew(c) {
     var d = loadDraft(c), esc = c.esc, $f = c.money, t = orderTotals(d);
     var rail = '<nav class="p2-tabs" aria-label="New project steps">' + NP_STEPS.map(function (s, i) {
+      if (i === 3 && d.noSkus) return '<span class="np-skip" title="No SKUs yet, so there\'s nothing to price">4. Price · after the SKUs</span>';
+      if (i === 2 && d.noSkus) s = 'Cabinets or design';
       var done = i < d.step && !stepErrors(c, d, i).length;
       return '<a href="#/new" data-npstep="' + i + '"' + (i === d.step ? ' aria-current="page"' : '') + '>' + (done ? '✓ ' : (i + 1) + '. ') + s + '</a>';
     }).join('') + '</nav>';
@@ -202,7 +208,7 @@
     var errs = d.errors && d.errors.length ? '<div class="fmp1-note fmp1-note--alert p2-small" role="alert"><ul class="p2-errs">' + d.errors.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>' : '';
     var foot = '<div class="p2-between"><span class="p2-row"><button class="fmp1-btn fmp1-btn--quiet" data-npback' + (d.step ? '' : ' disabled') + '>Back</button><button class="fmp1-btn fmp1-btn--quiet" data-npdiscard>Discard draft</button></span>' +
       (d.step < 4 ? '<button class="fmp1-btn fmp1-btn--primary" data-npnext>Next</button>' : '<button class="fmp1-btn fmp1-btn--primary" data-npcreate>Create project</button>') + '</div>';
-    var side = '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Live total</span><span class="p2-bignum">' + (t.ok ? $f(t.total) : '—') + '</span>' +
+    var side = '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Live total</span><span class="p2-bignum">' + (d.noSkus ? 'Not priced yet' : t.ok ? $f(t.total) : '—') + '</span>' +
       '<span class="p2-small fmp1-faint">' + (d.kind === 'single' ? 'One home' : t.homes + ' homes') + (d.bid ? ' · agreed bid' : '') + ' · draft saves as you go</span></div>';
     var note = d.note ? '<div class="fmp1-note fmp1-note--info p2-small p2-between" style="align-items:flex-start"><span>' + esc(d.note) + '</span><button class="p2-linkbtn p2-small" data-npnoteclose aria-label="Close this note">✕</button></div>' : '';
     return '<div class="p2-np"><div class="p2-between"><div><h1 class="fmp1-h p2-h1">New project</h1><p class="p2-sub">Five steps on one page. Leave any time; the draft is kept.</p></div>' + side + '</div>' + rail + note + errs +
@@ -214,7 +220,7 @@
     return '<h2 class="fmp1-h" style="font-size:20px">Who is this for?</h2><div class="p2-grid">' +
       '<label class="p2-fld"><span>Customer</span><select class="fmp1-input" data-np="customer"><option value="">Choose…</option>' +
       customers(c).map(function (n) { return '<option' + (d.customer === n ? ' selected' : '') + '>' + esc(n) + '</option>'; }).join('') + '<option value="__new"' + (d.customer === '__new' ? ' selected' : '') + '>+ New customer</option></select></label>' +
-      (d.customer === '__new' ? fld('New customer name', 'data-np="newCustomer"', d.newCustomer) : '') + tplChips(c, d) +
+      (d.customer === '__new' ? fld('New customer name', 'data-np="newCustomer"', d.newCustomer) : '') + (d.referredBy ? '<p class="p2-small" style="flex-basis:100%">Referred by ' + esc(d.referredBy.customer) + ' (' + esc(d.referredBy.jobCode) + ')</p>' : '') + tplChips(c, d) +
       fld('Project name', 'data-np="project"', d.project) + fld('Signer', 'data-np="signer"', d.signer) + fld('Signer email (for e-signature)', 'data-np="email"', d.email, 'email') +
       '</div><p class="p2-note">The customer holds contact details only. Pricing is set on this job in the Price step.</p>';
   }
@@ -238,11 +244,21 @@
   function npCabinets(c, d) {
     var esc = c.esc, $f = c.money, pdfs = samplePdfs();
     function opts(sel) { return pdfs.map(function (p) { return '<option value="' + p.id + '"' + (sel === p.id ? ' selected' : '') + '>' + esc(p.name) + ' · ' + p.lines.length + ' line' + (p.lines.length === 1 ? '' : 's') + '</option>'; }).join(''); }
-    var ask = '<div class="p2-np-skus"><b>Do you have SKUs to upload?</b><div class="p2-chips" role="group" aria-label="Do you have SKUs?">' +
-      '<button class="fmp1-btn" data-npskus="yes" aria-pressed="' + !d.noSkus + '">Yes, from the supplier PDF</button><button class="fmp1-btn" data-npskus="no" aria-pressed="' + !!d.noSkus + '">No, sketch first</button></div></div>';
-    if (d.noSkus) return '<h2 class="fmp1-h" style="font-size:20px">Cabinets</h2>' + ask +
-      '<div class="fmp1-note fmp1-note--info p2-small">The project starts without cabinets or a price. Its Elevations tab opens as a sketch with industry-standard sizes, custom sizes and a color to show. Add the supplier PDF there when you have it; the quote is priced then, with the settings on the next step.</div>';
-    return '<h2 class="fmp1-h" style="font-size:20px">Cabinets</h2>' + ask +
+    // Owner, Nov 19: a project doesn't need cabinets to start. Four ways in (HANDOFF §40)
+    var way = d.noSkus ? (d.wantDesign ? 'design' : 'sketch') : (d.wantOrder ? 'order' : 'pdf');
+    var ask = '<div class="p2-np-skus"><b>How do you want to start?</b><div class="np-ways" role="group" aria-label="How to start">' + [
+        ['pdf', 'The supplier\'s SKUs', 'Upload the supplier PDF and price it now.'], ['sketch', 'Sketch first', 'No SKUs yet. Draw the elevations; price it once the customer approves the design.'],
+        ['design', 'From a design', 'Start from a saved design in the Designs library.'], ['order', 'From a previous order', 'Copy the cabinets and drawings of a past project.']].map(function (w) {
+        return '<button class="np-way" data-npway="' + w[0] + '" aria-pressed="' + (way === w[0]) + '"><b>' + w[1] + '</b><span>' + w[2] + '</span></button>'; }).join('') + '</div></div>';
+    if (d.noSkus) {
+      var designs = window.FMDesigns ? window.FMDesigns.library(c.store.jobs({ all: true })) : [];
+      return '<h2 class="fmp1-h" style="font-size:20px">Cabinets or design</h2>' + ask +
+        (way === 'design' ? '<label class="p2-fld" style="max-width:420px"><span>Design</span><select class="fmp1-input" data-npdesign><option value="">Choose a design…</option>' + designs.map(function (x) { return '<option value="' + esc(x.code) + '"' + (d.fromDesign === x.code ? ' selected' : '') + '>' + esc(x.name + ' · ' + x.kindLabel + ' · ' + x.walls + ' wall' + (x.walls === 1 ? '' : 's')) + '</option>'; }).join('') + '</select></label>' + (designs.length ? '' : '<p class="p2-small fmp1-faint">No designs saved yet. Make one under Projects › Designs, or sketch this one.</p>') : '') +
+        '<div class="fmp1-note fmp1-note--info p2-small">No SKUs and no price yet, so the pricing step is skipped. The project opens on its Elevations tab' + (d.fromDesign ? ' with the design\'s drawings' : ' as a sketch, with standard sizes, custom sizes and a color') + '. When the customer approves the design, add the SKUs on the Estimate tab and price it there.</div>';
+    }
+    var orders = way === 'order' ? c.store.jobs().filter(function (j) { return orderLines(j).length; }) : [];
+    var orderPick = way === 'order' ? '<label class="p2-fld" style="max-width:460px"><span>Previous order</span><select class="fmp1-input" data-nporder><option value="">Choose a project…</option>' + orders.map(function (j) { return '<option value="' + esc(j.jobCode) + '"' + (d.fromOrder === j.jobCode ? ' selected' : '') + '>' + esc(j.customer + ' · ' + (j.projectName || j.jobCode) + ' · ' + j.jobCode) + '</option>'; }).join('') + '</select></label><p class="p2-small fmp1-faint">Its cabinets and drawings are copied; this job\'s own pricing settings are used. Customer templates are on the first step.</p>' : '';
+    return '<h2 class="fmp1-h" style="font-size:20px">Cabinets</h2>' + ask + orderPick +
       (d.elevations && d.elevations.rooms.length ? '<p class="p2-small fmp1-muted">Drawings come along: ' + d.elevations.rooms.length + ' room' + (d.elevations.rooms.length === 1 ? '' : 's') + '. Cabinets you add here show as "to place" on the Elevations tab.</p>' : '') + d.models.map(function (m, i) {
       var colors = {}; m.lines.forEach(function (l) { colors[suffix(l.sku)] = 1; }); var cs = Object.keys(colors);
       var cost = m.lines.reduce(function (t, l) { return t + l.unitCostCents * l.qty; }, 0), units = m.lines.reduce(function (t, l) { return t + (+l.qty || 0); }, 0);
@@ -253,10 +269,18 @@
         '</tbody></table></div></div>' : '<p class="p2-small fmp1-faint">No cabinets yet. Pick the supplier PDF to see its lines here.</p>';
       return '<section class="p2-np-model"><div class="p2-between"><b>' + esc(d.kind === 'single' ? (d.project || 'The home') : (m.name || 'Model ' + (i + 1)) + ' × ' + m.qty) + '</b>' +
         (cs.length ? '<span class="p2-small">' + (cs.length === 1 ? 'Color from the SKUs: <b>' + esc(COLORS[cs[0]] || cs[0]) + '</b>' : '<b style="color:var(--fmp1-alert-ink)">Mixed colors: ' + cs.map(function (x) { return esc(COLORS[x] || x); }).join(', ') + '</b>') + '</span>' : '') + '</div>' +
-        '<div class="p2-np-pick"><label class="p2-fld"><span>Supplier PDF</span><select class="fmp1-input" data-nppdf="' + i + '"><option value="">Choose a PDF…</option>' + opts(m.pdf) + '</select></label>' +
+        '<div class="p2-np-pick"><label class="fmp1-btn p2-filebtn">Upload the supplier PDF<input type="file" accept=".pdf,.csv,.txt" data-npfile="' + i + '"></label><label class="p2-fld"><span>Or a supplier PDF on file</span><select class="fmp1-input" data-nppdf="' + i + '"><option value="">Choose a PDF…</option>' + opts(m.pdf) + '</select></label>' +
+        (m.reading ? '<span class="p2-small" role="status">' + esc(m.reading) + '</span>' : '') +
         (m.lines.length ? '<label class="p2-fld"><span>Add from another PDF <span class="fmp1-faint">(same SKUs add up)</span></span><select class="fmp1-input" data-npaddpdf="' + i + '"><option value="">Choose a PDF…</option>' + opts('') + '</select></label>' : '') + '</div>' +
         preview + '</section>';
     }).join('') + '<p class="p2-small fmp1-faint">Sample orders stand in for the supplier PDFs in this preview.</p>';
+  }
+  /* A past order's cabinets: on the job, or (Penrose, Willow Creek) in the order files the preview was built from */
+  function orderLines(j) {
+    if (B && j.jobCode === B.jobCode) return B.model.lines.filter(function (l) { return !l.noCharge; }).map(function (l) { return { sku: l.sku, desc: l.desc, qty: l.qty, unitCostCents: FM.toCents(l.unitCost) }; });
+    if (W && j.jobCode === W.jobCode) { var k = Object.keys(W.models)[0]; return W.models[k].lines.map(function (l) { return { sku: l.sku, desc: l.desc, qty: l.qty, unitCostCents: FM.toCents(l.unitCost) }; }); }
+    var m = (j.models || []).filter(function (x) { return (x.lines || []).length; })[0];
+    return m ? m.lines.map(function (l) { return { sku: l.sku, desc: l.desc, qty: l.qty, unitCostCents: l.unitCostCents != null ? l.unitCostCents : FM.toCents(l.unitCost), noCharge: l.noCharge }; }) : [];
   }
   function npPrice(c, d) {
     var esc = c.esc, $f = c.money, p = d.pricing;
@@ -303,6 +327,13 @@
   function npReview(c, d) {
     var esc = c.esc, $f = c.money, t = orderTotals(d), plan = d.pricing.plan;
     var amts = t.ok ? K.invoiceAmounts(t.total, plan) : [], dues = K.defaultDueDates(c.TODAY, d.install, plan);
+    if (d.noSkus) return '<h2 class="fmp1-h" style="font-size:20px">Review and create</h2><div class="p2-grid"><ul class="p2-list">' +
+      '<li><span>Customer</span><b>' + esc(d.customer === '__new' ? d.newCustomer : d.customer) + '</b></li><li><span>Project</span><b>' + esc(d.project) + '</b></li>' +
+      '<li><span>Signer</span><b>' + esc(d.signer) + ' · ' + esc(d.email) + '</b></li><li><span>Homes</span><b>' + t.homes + '</b></li><li><span>Address</span><b>' + esc(d.address) + '</b></li>' +
+      '<li><span>Start</span><b>' + (d.fromDesign ? 'From the design ' + esc(d.fromDesignName || d.fromDesign) : 'Sketch first') + '</b></li><li><span>Price</span><b>Not priced yet</b></li></ul>' +
+      '<div class="p2-form" style="flex-direction:column;align-items:stretch">' + fld('Install / delivery date (estimate)', 'data-np="install" min="' + c.TODAY + '"', d.install, 'date') +
+      '<p class="p2-small">Next: draw or check the elevations, get the customer\'s approval on the design, then add the SKUs and price it on the Estimate tab. The payment plan and pricing come with the estimate.</p></div></div>' +
+      '<p class="p2-note">Creating saves the project as a Quote, gives it a job code, and logs who created it.</p>';
     return '<h2 class="fmp1-h" style="font-size:20px">Review and create</h2><div class="p2-grid"><ul class="p2-list">' +
       '<li><span>Customer</span><b>' + esc(d.customer === '__new' ? d.newCustomer : d.customer) + '</b></li><li><span>Project</span><b>' + esc(d.project) + '</b></li>' +
       '<li><span>Signer</span><b>' + esc(d.signer) + ' · ' + esc(d.email) + '</b></li><li><span>Homes</span><b>' + t.homes + '</b></li><li><span>Address</span><b>' + esc(d.address) + '</b></li>' +
@@ -327,20 +358,23 @@
       quoteDate: c.TODAY, deliveryDate: d.install, originalContractCents: t.total, houses: houses, history: [], changeOrders: [],
       contacts: { signer: d.signer.trim(), buyerEmail: d.email.trim() }, source: { system: 'phase2' }, stage: 'quote', installAddress: A.format(d.addr), installAddr: JSON.parse(JSON.stringify(d.addr)),
       invoices: plan.map(function (p, i) { return { id: code + '-inv' + (i + 1), label: invoiceLabel(d.pricing, i), role: i === 0 ? 'deposit' : 'progress', changeOrderId: null, dueDate: dues[i], amountCents: amts[i], status: 'open', payments: [] }; }),
-      taxCents: t.tax, costCents: t.cost, absorbedCents: 0, documents: [], fmSigner: null, esign: { state: 'none' }, contractedOn: null,
+      taxCents: t.tax, costCents: t.cost, absorbedCents: 0, documents: [], fmSigner: null, esign: { state: 'none' }, contractedOn: null, referredBy: d.referredBy || null,
       pricing: { markupPct: d.pricing.markupPct, discountPctOfCost: d.pricing.discountPctOfCost, gaPct: d.pricing.gaPct, taxPct: d.pricing.taxPct, assemblyCents: asmCents(d), assemblyHours: asmHours(d), assemblyRateCents: asmRate(d),
         plan: plan.slice(), planNames: planStages(d.pricing).map(function (x) { return x.name; }), planMode: d.pricing.planMode === 'custom' ? 'custom' : 'preset', copiedFrom: d.copiedFrom || null },
       models: d.models.map(function (m) { return { name: d.kind === 'single' ? d.project.trim() : m.name.trim(), qty: d.kind === 'single' ? 1 : m.qty, lines: JSON.parse(JSON.stringify(m.lines)) }; }),
       bid: d.bid ? { bidCents: toCents(d.bidAmount), itemizedCents: t.itemized } : null };
     job.charges = jobCharges(job);
     if (d.noSkus) { job.models.forEach(function (m) { m.lines = []; }); job.charges = { parts: [] }; job.elevations = { rooms: [], sizes: {}, versions: [], revisions: [], sketch: { color: 'SBW', by: c.me().name, on: c.TODAY } }; }
+    if (d.noSkus) { job.designFirst = true; if (d.fromDesign) job.fromDesign = { code: d.fromDesign, name: d.fromDesignName || d.fromDesign }; }   // priced after the customer approves the design (HANDOFF §37, §40)
+    if (d.fromOrder) job.copiedFromOrder = d.fromOrder;
     if (d.duplicatedFrom) job.duplicatedFrom = d.duplicatedFrom;
     if (d.customerId) job.customerId = d.customerId;
     if (d.fromTemplate) job.fromTemplate = d.fromTemplate;
     if (d.elevations && d.elevations.rooms.length) {
       var keyFor = {}; d.models.forEach(function (m, i) { keyFor[m.id] = job.models[i].name || 'Model ' + (i + 1); });
       var rs = d.elevations.rooms.filter(function (r) { return keyFor[r.set]; }).map(function (r) { r = JSON.parse(JSON.stringify(r)); r.set = keyFor[r.set]; return r; });
-      if (rs.length) job.elevations = { rooms: rs, sizes: JSON.parse(JSON.stringify(d.elevations.sizes || {})), versions: [], revisions: [], copiedFrom: d.duplicatedFrom || null };
+      if (rs.length) job.elevations = { rooms: rs, sizes: JSON.parse(JSON.stringify(d.elevations.sizes || {})), versions: [], revisions: [], copiedFrom: d.duplicatedFrom || d.fromOrder || d.fromDesign || null };
+      if (rs.length && d.noSkus) job.elevations.sketch = { color: (d.elevations.sketch && d.elevations.sketch.color) || 'SBW', by: c.me().name, on: c.TODAY };
     }
     return c.store.addJob(job, c.me().name);
   }
@@ -363,6 +397,8 @@
       var p = priceJobModel(x, m); if (!p.ok) return; var n = m.qty || 1; itemized += p.summary.totalCents * n;
       parts.push(S.part((m.name || 'Model ' + (i + 1)) + (n > 1 ? ' × ' + n : ''), p.summary, n, p.internal.costCents));
     });
+    var EX = window.FMEstimate ? window.FMEstimate.extras(x) : null;   // extras and discounts on the estimate (HANDOFF §37)
+    if (EX && EX.rows.length) { itemized += EX.amountCents + EX.taxCents; parts.push(S.part('Extras and discounts', { otherCents: EX.amountCents, taxCents: EX.taxCents, totalCents: EX.amountCents + EX.taxCents }, 1, EX.costCents, 'extras')); }
     if (x.bid && x.bid.bidCents && x.bid.bidCents !== itemized) parts.push(S.part('Agreed bid price ' + (x.bid.bidCents > itemized ? 'above' : 'below') + ' the itemized quote', { otherCents: x.bid.bidCents - itemized, totalCents: x.bid.bidCents - itemized }, 1, 0, 'agreed'));
     return { parts: parts };
   }
@@ -370,6 +406,8 @@
   function reprice(x) {
     var itemized = 0, tax = 0, cost = 0;
     x.models.forEach(function (mm) { if (!mm.lines.length) return; var p = priceJobModel(x, mm); if (!p.ok) return; var n = mm.qty || 1; itemized += p.summary.totalCents * n; tax += p.summary.taxCents * n; cost += p.internal.costCents * n; });
+    var EX = window.FMEstimate ? window.FMEstimate.extras(x) : null;
+    if (EX && EX.rows.length) { itemized += EX.amountCents + EX.taxCents; tax += EX.taxCents; cost += EX.costCents; }
     var total = x.bid ? x.bid.bidCents : itemized; if (x.bid) x.bid.itemizedCents = itemized;
     var was = x.originalContractCents; x.originalContractCents = total; x.taxCents = tax; x.costCents = cost;
     var amts = K.invoiceAmounts(total, x.pricing.plan || [100]); x.invoices.forEach(function (inv, i) { if (amts[i] != null && !inv.changeOrderId) inv.amountCents = amts[i]; });
@@ -441,6 +479,7 @@
      Backordered (wait for it), other charges or credits, and a new delivery date. */
   function baseLines(c, j, house) {
     if (B && j.jobCode === B.jobCode) return B.model.lines.filter(function (l) { return !l.noCharge; }).map(function (l) { return { sku: l.sku, desc: l.desc, qty: l.qty, unitCostCents: FM.toCents(l.unitCost), markupPct: l.markupPct }; });
+    if (house === WHOLE || house === EVERY) return [];   // new items for the whole order, or the same new items on every house: nothing to change on a house
     if (W && j.jobCode === W.jobCode) { var h = j.houses.filter(function (x) { return x.jobCode === house; })[0] || j.houses[0]; return W.models[h.model].lines.map(function (l) { return { sku: l.sku, desc: l.desc, qty: l.qty, unitCostCents: FM.toCents(l.unitCost), markupPct: l.markupPct }; }); }
     if (j.models && j.models[0]) return JSON.parse(JSON.stringify(j.models[0].lines));
     return [];
@@ -461,7 +500,18 @@
     return { markupPct: num(p.markupPct), discountPctOfCost: num(p.discountPctOfCost), gaPct: num(p.gaPct), taxPct: num(p.taxPct),
       labor: h > 0 && r > 0 ? [{ role: 'Assembly', rateCents: r, hours: h }] : [] };
   }
-  function coDiff(f) { var d = CO.diffLines(f.base, f.current); d.replaced = f.replaced || []; return d; }
+  /* "Every house": the lines are per house; the change order is for all of them (quantities × the number of houses). */
+  function coDiff(f) { var d = CO.diffLines(f.base, f.current); d.replaced = f.replaced || [];
+    if (f.mult > 1) { ['added', 'removed'].forEach(function (k) { d[k] = d[k].map(function (l) { var z = JSON.parse(JSON.stringify(l)); z.qty = l.qty * f.mult; if (z.from != null) { z.from *= f.mult; z.to *= f.mult; } z.perHouse = l.qty; return z; }); }); }
+    return d; }
+  var WHOLE = '__order', EVERY = '__every';
+  /* Which houses a builder-order change order covers, in words (card and printed change order) */
+  function appliesTo(j, co) {
+    if (!co.house || !(j.houses && j.houses.length > 1)) return '';
+    if (co.house === WHOLE) return 'Whole order';
+    if (co.house === EVERY) return 'Every house (' + j.houses.length + ')';
+    var h = j.houses.filter(function (x) { return x.jobCode === co.house; })[0]; return h ? h.name : '';
+  }
   function coExtras(f) { return (f.extras || []).map(function (x) { return { label: x.label, amountCents: toCents(x.amount), taxable: !!x.taxable }; }); }
   function goodExtras(f) { return coExtras(f).filter(function (x) { return String(x.label || '').trim() && x.amountCents && !isNaN(x.amountCents); }); }
   function coPriced(f) { var d = coDiff(f); return CO.priceChange({ added: d.added, removed: d.removed, extras: goodExtras(f) }, coSettings(f)); }
@@ -486,8 +536,10 @@
   function skuNoteHTML(c, f) {
     var N = f.skuNote; if (!N) return '';
     var esc = c.esc, parts = [];
-    if (N.pdfOnly) return '<div class="fmp1-note fmp1-note--info p2-small" role="status"><span><b>' + esc(N.source) + '</b> will be attached to this change order. Live, the tool reads every SKU and quantity from the supplier\'s PDF (the same reader as New Project). This preview can\'t read PDFs, so paste the SKUs or upload a spreadsheet of them.</span> <button class="fmp1-btn fmp1-btn--quiet" data-coskuok>OK</button></div>';
-    parts.push(N.lines ? 'Added ' + N.added + ' cabinet' + (N.added === 1 ? '' : 's') + ' (' + N.lines + ' SKU' + (N.lines === 1 ? '' : 's') + ') from ' + esc(N.source) + '.' : 'Nothing was added from ' + esc(N.source) + '.');
+    if (N.reading) return '<div class="fmp1-note fmp1-note--info p2-small" role="status"><span>' + esc(N.reading) + ' This can take a few seconds for a scanned PDF.</span></div>';
+    if (N.pdfOnly) return '<div class="fmp1-note fmp1-note--alert p2-small" role="status"><span><b>' + esc(N.source) + '</b> will be attached to this change order, but its items couldn\'t be read' + (N.error ? ' (' + esc(N.error) + ')' : '') + '. Paste the SKUs or upload a spreadsheet of them.</span> <button class="fmp1-btn fmp1-btn--quiet" data-coskuok>OK</button></div>';
+    parts.push(N.lines ? 'Added ' + N.added + ' item' + (N.added === 1 ? '' : 's') + ' (' + N.lines + ' line' + (N.lines === 1 ? '' : 's') + ') from ' + esc(N.source) + '.' : 'Nothing was added from ' + esc(N.source) + '.');
+    if (N.fees) parts.push(N.fees + ' fee' + (N.fees > 1 ? 's' : '') + ' (shipping or freight) went under Other charges.');
     var miss = N.missing.length ? '<div class="p2-co-miss"><b>Needs a unit cost</b> (not on the order or a supplier PDF on file):<ul>' + N.missing.map(function (m, i) {
       return '<li><span class="fmp1-code">' + esc(m.sku) + '</span> ×' + m.qty + ' <button class="fmp1-btn fmp1-btn--quiet" data-coaddsku="' + i + '">Add with a cost</button></li>'; }).join('') + '</ul></div>' : '';
     var skip = N.skipped.length ? '<span class="p2-small">Couldn\'t read ' + N.skipped.length + ' line' + (N.skipped.length === 1 ? '' : 's') + ': ' + N.skipped.slice(0, 4).map(function (x) { return '"' + esc(x) + '"'; }).join(', ') + (N.skipped.length > 4 ? '…' : '') + '</span>' : '';
@@ -502,21 +554,16 @@
     if (/^pdf$/i.test(ext)) {
       return file.arrayBuffer().then(function (buf) {
         f.attach = (f.attach || []).filter(function (a) { return a.name !== file.name; }).concat([{ name: file.name, size: file.size, type: 'application/pdf', blob: new Blob([buf], { type: 'application/pdf' }) }]);
-        var reader = window.FMSupplierPdf;
-        if (reader && reader.parseBuffer) {
-          return reader.parseBuffer(buf).then(function (parsed) {
-            if (parsed && parsed.lines && parsed.lines.length) addSkuList(c, f, parsed, file.name);
-            else f.skuNote = { source: file.name, pdfOnly: true };
-            c.render();
-          }).catch(function () {
-            f.skuNote = { source: file.name, pdfOnly: true };
-            c.render();
-          });
-        }
-        var on = samplePdfs().filter(function (p) { return p.orderNumber && file.name.indexOf(p.orderNumber) >= 0; })[0];
-        if (on) addSkuList(c, f, { lines: on.lines.map(function (l) { return { sku: l.sku, qty: l.qty, desc: l.desc, unitCostCents: l.unitCostCents }; }), skipped: [] }, file.name);
-        else f.skuNote = { source: file.name, pdfOnly: true };
-        c.render();
+        // Read the PDF (its text, or OCR when it's a picture of the page) and add every item; fees go under Other charges (HANDOFF §40)
+        f.skuNote = { source: file.name, reading: 'Reading ' + file.name + '…' }; c.render();
+        if (!window.P2Pdf) { f.skuNote = { source: file.name, pdfOnly: true }; c.render(); return; }
+        return window.P2Pdf.read(new Blob([buf], { type: 'application/pdf' }), function (msg) { if (c.ui.co === f) { f.skuNote = { source: file.name, reading: msg }; c.render(); } }).then(function (res) {
+          if (c.ui.co !== f) return;
+          addSkuList(c, f, { lines: window.FMSupplierPdf.toLines(res), skipped: res.problems }, file.name + (res.orderNumber ? ' (order ' + res.orderNumber + ')' : ''));
+          res.fees.forEach(function (x) { f.extras.push({ label: x.label, amount: (x.amountCents / 100).toFixed(2), taxable: false }); });
+          if (res.fees.length) f.skuNote.fees = res.fees.length;
+          c.render();
+        }, function (e) { if (c.ui.co === f) { f.skuNote = { source: file.name, pdfOnly: true, error: e.message }; c.render(); } });
       });
     }
     file.text().then(function (t) { addSkuList(c, f, CO.parseSkus(t), file.name); c.render(); });
@@ -551,9 +598,9 @@
     for (var k in (over || {})) f[k] = over[k];
     return f;
   }
-  var CO_STEPS = ['What happened', 'Cabinets', 'Price', 'Review'];
+  var CO_STEPS = ['What happened', 'Products', 'Price', 'Review'];
   var CO_TIPS = {
-    add: 'Use + on a line, or Add a cabinet that isn\'t on the order yet. To add many at once, use Upload SKUs (the supplier\'s PDF or a spreadsheet) or Paste SKUs.',
+    add: 'Add the new products: Add a product, Upload SKUs or Paste SKUs, or + on a line already on the order. Nothing on the order has to change. To add many at once, use Upload SKUs (the supplier\'s PDF or a spreadsheet) or Paste SKUs.',
     swap: 'Click Swap on the line that\'s changing and enter the cabinet that takes its place.',
     remove: 'Use − to take cabinets off (down to 0 removes the line). The customer is credited what they paid. A restocking fee goes under Other charges below.',
     backorder: 'Click Swap on the backordered cabinet and enter the one that\'s in stock.',
@@ -578,7 +625,7 @@
     var credits = CO.creditsOf(co).filter(function (cr) { return cr.on || cr.by; }).map(function (cr) { return '<span class="p2-small fmp1-faint">' + (cr.from === 'freight' ? 'Freight carrier' : 'Supplier') + (cr.none ? ' won\'t credit the ' : ' credited ' + $f(cr.amountCents) + ' for the ') + (cr.for === 'returned' ? 'returned cabinets' : 'damage claim') + (cr.on ? ', ' + c.longDate(cr.on) : '') + (cr.reference ? ' (' + esc(cr.reference) + ')' : '') + '</span>'; }).join('');
     var acts = [];
     if (co.status === 'pending approval') acts.push(full ? '<button class="fmp1-btn fmp1-btn--primary" data-coapprove="' + esc(co.id) + '">Approve courtesy</button>' : '<span class="p2-small fmp1-faint">Waiting for someone with full access to approve.</span>');
-    if (co.status !== 'withdrawn') acts.push('<button class="fmp1-btn' + (acts.length ? ' fmp1-btn--quiet' : '') + '" data-codoc="' + esc(co.id) + '">Open change order</button>');
+    if (co.status !== 'withdrawn') if (co.status !== 'sent') acts.push('<button class="fmp1-btn' + (acts.length ? ' fmp1-btn--quiet' : '') + '" data-codoc="' + esc(co.id) + '">Open the change order' + (co.amountCents > 0 ? ' invoice' : '') + '</button>');
     if (co.status !== 'withdrawn' && ((co.removed || []).length || (co.replaced || []).length)) acts.push('<button class="fmp1-btn fmp1-btn--quiet" data-cocredit="' + esc(co.id) + '">Record a credit</button>');
     if (co.status !== 'withdrawn') acts.push('<label class="fmp1-btn fmp1-btn--quiet p2-filebtn">Attach a file<input type="file" data-upload data-upco="' + co.number + '" accept="' + window.FMFiles.accept() + '"></label>');
     if (co.status === 'sent' || co.status === 'pending approval') acts.push('<button class="fmp1-btn fmp1-btn--quiet" data-cowd="' + esc(co.id) + '">Withdraw</button>');
@@ -596,7 +643,7 @@
       (ui.coWd.error ? '<span class="p2-small" role="alert" style="color:var(--fmp1-alert-ink);flex-basis:100%">' + esc(ui.coWd.error) + '</span>' : '') + '</div>';
     var docs = c.docRows(j, { packet: false, changeOrder: co.number });
     return '<li style="flex-direction:column;align-items:stretch"' + (co.status === 'withdrawn' ? ' class="p2-co-wd"' : '') + '><div class="p2-between"><b>Change order ' + co.number + (co.kind === 'courtesy' ? ' · courtesy' : co.kind === 'notice' ? ' · no change to the contract' : co.amountCents < 0 ? ' · credit' : '') + '</b><span class="p2-row"><span class="fmp1-pill ' + (CO_TONE[co.status] || '') + '">' + esc(co.status) + '</span><b>' + $f(co.amountCents || 0) + '</b></span></div>' +
-      '<span class="p2-small fmp1-muted">' + c.longDate(co.date) + ' · ' + esc(co.reason || '') + (co.note ? ': ' + esc(co.note) : '') + '</span>' + (moves ? '<span class="p2-small">' + moves + '</span>' : '') +
+      '<span class="p2-small fmp1-muted">' + c.longDate(co.date) + ' · ' + esc(co.reason || '') + (co.note ? ': ' + esc(co.note) : '') + (appliesTo(j, co) ? ' · <b>' + esc(appliesTo(j, co)) + '</b>' : '') + '</span>' + (moves ? (moves.split(' · ').length > 4 ? '<details class="p2-small co-moves"><summary>' + moves.split(' · ').length + ' changes to the order</summary>' + moves + '</details>' : '<span class="p2-small">' + moves + '</span>') : '') +
       (co.newDeliveryDate ? '<span class="p2-small">New delivery date ' + c.longDate(co.newDeliveryDate) + (co.status === 'sent' || co.status === 'pending approval' ? ' (applies once it goes through)' : '') + '</span>' : '') +
       (own ? '<span class="p2-small fmp1-faint">Priced with ' + own + (co.differsFromJob && co.differsFromJob.length || co.source ? ' (its own settings)' : '') + (co.priced && co.priced.printed ? '. Numbers as printed on the executed PDF.' : '') + '</span>' : '') +
       (window.P2Elev && window.P2Elev.coNote ? window.P2Elev.coNote(c, j, co) : '') + absorbed + credits +
@@ -611,8 +658,8 @@
     var head = '<div class="fmp1-card p2-pad"><div class="p2-between"><span class="fmp1-eyebrow">Change orders · ' + cos.length + '</span>' +
       (f ? '' : canStart ? '<button class="fmp1-btn fmp1-btn--primary" data-costart>New change order</button>' : '<span class="p2-small fmp1-faint">Change orders apply to signed jobs. Edit the quote instead.</span>') + '</div>' +
       (c.ui.up && c.ui.up.job === j.jobCode && c.ui.up.co != null && (c.ui.up.msg || c.ui.up.err) ? (c.ui.up.err ? '<div class="fmp1-note fmp1-note--alert p2-small" role="alert"><span>' + c.esc(c.ui.up.err.join(' ')) + '</span></div>' : '<div class="fmp1-note fmp1-note--good p2-small" role="status">✓ ' + c.esc(c.ui.up.msg) + '</div>') : '') +
-      (cos.length ? '<ul class="p2-list">' + cos.map(function (co) { return coCard(c, j, co); }).join('') + '</ul>' : '<p class="p2-empty">No change orders on this job. Anything that changes after the contract is signed (more cabinets, a swap, a return, a backorder, damage) goes here.</p>') + '</div>';
-    return head + (f ? coFlow(c, j, f) : '');
+      (cos.length ? '<ul class="p2-list">' + cos.slice().reverse().map(function (co) { return coCard(c, j, co); }).join('') + '</ul>' : '<p class="p2-empty">No change orders on this job. Anything that changes after the contract is signed (more cabinets, a swap, a return, a backorder, damage) goes here.</p>') + '</div>';
+    return (f ? coFlow(c, j, f) : '') + head;   // the new change order opens at the top, above the ones already on the job
   }
 
   function coFlow(c, j, f) {
@@ -623,15 +670,15 @@
       body = '<div class="p2-cotypes" role="group" aria-label="What happened">' + Object.keys(CO.TYPES).map(function (k) {
           return '<button class="p2-cotype" data-cotype="' + k + '" aria-pressed="' + (f.type === k) + '"><b>' + esc(CO.TYPES[k].label) + '</b><span>' + esc(CO.TYPES[k].help) + '</span></button>'; }).join('') + '</div>' +
         (f.type === 'backorder' ? '<div class="p2-chips" role="group" aria-label="Backordered: what are we doing?"><button class="fmp1-btn" data-cobo="swap" aria-pressed="' + (f.boMode === 'swap') + '"><b>Swap in another cabinet</b></button><button class="fmp1-btn" data-cobo="wait" aria-pressed="' + (f.boMode === 'wait') + '"><b>Wait for it</b>&nbsp;and record the new date</button></div>' : '') +
-        (j.houses && j.houses.length > 1 ? '<label class="p2-fld"><span>House</span><select class="fmp1-input" data-cof="house">' + j.houses.map(function (h) { return '<option value="' + esc(h.jobCode) + '"' + (f.house === h.jobCode ? ' selected' : '') + '>' + esc(h.name + ' · ' + h.color) + '</option>'; }).join('') + '</select></label><p class="p2-note">A PDF that covers several houses is split by color; each color goes to the houses that use it.</p>' : '') +
+        (j.houses && j.houses.length > 1 ? '<label class="p2-fld"><span>Which houses?</span><select class="fmp1-input" data-cof="house">' + '<option value="' + WHOLE + '"' + (f.house === WHOLE ? ' selected' : '') + '>The whole order (new items, not for one house)</option><option value="' + EVERY + '"' + (f.house === EVERY ? ' selected' : '') + '>Every house: the same change on each of the ' + j.houses.length + '</option>' + j.houses.map(function (h) { return '<option value="' + esc(h.jobCode) + '"' + (f.house === h.jobCode ? ' selected' : '') + '>' + esc(h.name + ' · ' + h.color) + '</option>'; }).join('') + '</select></label><p class="p2-note">A PDF that covers several houses is split by color; each color goes to the houses that use it.</p>' : '') +
         '<label class="p2-fld"><span>What happened, in a sentence (for the paper trail)</span><textarea class="fmp1-input" rows="2" data-cof="note" placeholder="' + esc(T ? { add: 'Buyer added a pantry cabinet', swap: 'Buyer wants a 36" sink base instead of the 30"', remove: 'Buyer is returning two wall cabinets', backorder: 'B30 backordered until Dec 12', damage: 'W3042 arrived with a cracked side panel', mistake: 'We ordered the wrong hinge side', other: 'Second delivery trip' }[f.type] : '') + '">' + esc(f.note) + '</textarea></label>' +
         '<div class="p2-row p2-wrap">' + fld('New delivery date' + (f.type === 'backorder' && f.boMode === 'wait' ? '' : ' (only if it moves)'), 'data-cof="newDate"', f.newDate, 'date') +
         '<span class="p2-small fmp1-faint">Now ' + c.longDate(j.deliveryDate) + '. It changes on the job once this change order goes through.</span></div>';
     } else if (f.step === 1) {
-      var bad = CO.colorCheck(f.current.filter(function (l) { return l.qty > 0; }), sfx), before = {}, wait = f.type === 'backorder' && f.boMode === 'wait';
+      var bad = f.house === WHOLE || f.house === EVERY ? [] : CO.colorCheck(f.current.filter(function (l) { return l.qty > 0; }), sfx), before = {}, wait = f.type === 'backorder' && f.boMode === 'wait';
       f.base.forEach(function (l) { before[l.sku] = l.qty; });
       var tip = CO_TIPS[wait ? 'backorder_wait' : f.type] || CO_TIPS.other, known = knownSkus(f), A = f.addForm, R = f.rowForm;
-      var addForm = A ? '<div class="p2-form" data-coform><b style="flex-basis:100%">Add a cabinet</b>' + fld('SKU', 'data-coadd="sku" list="p2-co-skus" data-autofocus', A.sku) + fld('Description', 'data-coadd="desc"', A.desc) +
+      var addForm = A ? '<div class="p2-form" data-coform><b style="flex-basis:100%">Add a product</b>' + fld('SKU', 'data-coadd="sku" list="p2-co-skus" data-autofocus', A.sku) + fld('Description', 'data-coadd="desc"', A.desc) +
           fld('Qty', 'data-coadd="qty" inputmode="numeric"', A.qty) + fld('Unit cost ($)', 'data-coadd="cost" inputmode="decimal"', A.cost) +
           '<button class="fmp1-btn fmp1-btn--primary" data-coaddsave>Add</button><button class="fmp1-btn fmp1-btn--quiet" data-coaddcancel>Cancel</button>' +
           '<span class="p2-small fmp1-faint" style="flex-basis:100%">A SKU from the order or a supplier PDF fills in its description and cost. Unit cost is the supplier\'s price before the manufacturer discount.</span>' +
@@ -663,7 +710,8 @@
             '<td><label class="p2-row p2-small"><input type="checkbox" data-coex="' + i + ':taxable"' + (x.taxable ? ' checked' : '') + '> taxable</label></td><td class="r"><button class="fmp1-btn fmp1-btn--quiet" data-corm="extras:' + i + '">Remove</button></td></tr>'; }).join('') + '</tbody></table></div>' : '') +
         '<div class="p2-row p2-wrap">' + EXTRA_PRESETS.map(function (p, i) { return '<button class="fmp1-btn fmp1-btn--quiet" data-coexadd="' + i + '">+ ' + p[0] + '</button>'; }).join('') + '</div></div>';
       body = '<p class="p2-note">' + esc(tip) + '</p>' +
-        '<div class="p2-row p2-wrap p2-co-addrow">' + (A ? '' : '<button class="fmp1-btn" data-coaddopen>+ Add a cabinet</button>') +
+        (f.mult > 1 ? '<div class="fmp1-note fmp1-note--info p2-small"><span>Quantities here are <b>per house</b>. The change order covers all ' + f.mult + ' houses, so each line counts ×' + f.mult + ' on the price and the printed change order.</span></div>' : f.house === WHOLE ? '<div class="fmp1-note fmp1-note--info p2-small"><span>New items for the whole order. The houses\' cabinets aren\'t listed because nothing on them changes.</span></div>' : '') +
+        '<div class="p2-row p2-wrap p2-co-addrow">' + (A ? '' : '<button class="fmp1-btn" data-coaddopen>+ Add a product</button>') +
           '<label class="fmp1-btn p2-filebtn">Upload SKUs<input type="file" data-coskufile accept=".pdf,.csv,.tsv,.txt"></label>' +
           '<button class="fmp1-btn" data-copaste aria-expanded="' + !!f.paste + '">Paste SKUs</button>' +
           '<label class="p2-fld" style="min-width:240px"><span>Or a supplier PDF already on file</span><select class="fmp1-input" data-copdf><option value="">Choose a PDF…</option>' + samplePdfs().map(function (p) { return '<option value="' + p.id + '">' + esc(p.name) + '</option>'; }).join('') + '</select></label></div>' +
@@ -717,11 +765,11 @@
           (f.priced.summary.laborCents ? ' · assembly ' + num(f.pricing.asmHours) + ' h × ' + $f(toCents(f.pricing.asmRate)) : '') + '</b></li>' : '') +
         '<li><span>This change</span><b>' + $f(isNaN(amt) ? 0 : amt) + (f.choice === 'courtesy' ? ' (courtesy)' : f.choice === 'nochange' ? ' (no change to the contract)' : '') + '</b></li>' +
         '<li><span>Billing</span><b>' + (amt > 0 ? 'Its own invoice, due on signing' : amt < 0 ? 'A credit on the next invoice' : 'No invoice') + '</b></li></ul>' +
-        '<p class="p2-note">' + (f.choice === 'courtesy' ? 'Saves as a courtesy change order for someone with full access to approve, then goes to the buyer to acknowledge.' : f.choice === 'nochange' ? 'Recorded now. The delivery date and the shop\'s cost update on the job right away.' : 'Sends to the buyer for signature. The contract total, the invoice and any new date switch on when it\'s signed.') + '</p>';
+        '<p class="p2-note">' + (f.choice === 'courtesy' ? 'Saves as a courtesy change order for someone with full access to approve, then goes to the buyer to acknowledge.' : f.choice === 'nochange' ? 'Recorded now. The delivery date and the shop\'s cost update on the job right away.' : '<b>Finalize</b> locks the price and gives you the change order invoice to download. Then get it signed: e-sign in the tool, or paper. The contract total and any new date switch on when it\'s signed.') + '</p>';
     }
     var errs = f.errors && f.errors.length ? '<div class="fmp1-note fmp1-note--alert p2-small" role="alert"><ul class="p2-errs">' + f.errors.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>' : '';
     return '<div class="fmp1-card p2-pad" data-coflow><div class="p2-between"><b>New change order ' + ((j.changeOrders || []).length + 1) + (T ? ' · ' + esc(T.label) : '') + '</b><button class="fmp1-btn fmp1-btn--quiet" data-cocancel>Cancel</button></div>' + tabs + errs + body +
-      '<div class="p2-between"><button class="fmp1-btn fmp1-btn--quiet" data-coback' + (f.step ? '' : ' disabled') + '>Back</button>' + (f.step < 3 ? '<button class="fmp1-btn fmp1-btn--primary" data-conext>Next</button>' : '<button class="fmp1-btn fmp1-btn--primary" data-cosave>' + (f.choice === 'courtesy' ? 'Save for approval' : f.choice === 'nochange' ? 'Record it' : 'Send for signature') + '</button>') + '</div></div>';
+      '<div class="p2-between"><button class="fmp1-btn fmp1-btn--quiet" data-coback' + (f.step ? '' : ' disabled') + '>Back</button>' + (f.step < 3 ? '<button class="fmp1-btn fmp1-btn--primary" data-conext>Next</button>' : '<button class="fmp1-btn fmp1-btn--primary" data-cosave>' + (f.choice === 'courtesy' ? 'Save for approval' : f.choice === 'nochange' ? 'Record it' : 'Finalize') + '</button>') + '</div></div>';
   }
   function coStepErrors(c, j, f) {
     var e = [], d = coDiff(f), iso = /^\d{4}-\d{2}-\d{2}$/;
@@ -738,7 +786,7 @@
       if (bad.length) e.push('Each other charge or credit needs a name and an amount (or remove it).');
       if (!d.added.length && !d.removed.length && !f.replaced.length && !goodExtras(f).length && !f.waitFor.length && !f.newDate)
         e.push(f.type === 'backorder' && f.boMode === 'wait' ? 'Click Backordered on at least one cabinet.' : 'Change at least one cabinet (add, remove, swap or replace), or add a charge or credit.');
-      if (CO.colorCheck(f.current.filter(function (l) { return l.qty > 0; }), houseSuffix(c, j, f.house)).length && !f.colorOk) e.push('Fix the wrong-color cabinets, or tick "keep anyway".');
+      if (f.house !== WHOLE && f.house !== EVERY && CO.colorCheck(f.current.filter(function (l) { return l.qty > 0; }), houseSuffix(c, j, f.house)).length && !f.colorOk) e.push('Fix the wrong-color cabinets, or tick "keep anyway".');
     }
     if (f.step === 2) {
       var P = f.pricing, names = { markupPct: 'Markup', discountPctOfCost: 'Discount', gaPct: 'G&A', taxPct: 'Sales tax' };
@@ -783,8 +831,8 @@
       replaced: JSON.parse(JSON.stringify(f.replaced)), replacedCostCents: replacedCost(f), removedCostCents: pz.removedCostCents, extras: pz.extras, credits: [],
       pricing: pz.settings, differsFromJob: coDiffers(j, f), priced: { lines: pz.lines, summary: pz.summary } }, extra);
     var ab = CO.absorbedFor(rec); rec.absorbedCents = ab.cents; rec.absorbedIsEstimate = ab.estimate;
-    c.store.update(j.jobCode, function (x) { x.changeOrders = x.changeOrders.concat([rec]); return x; }, 'Change order ' + n + ' (' + c.money(amt) + ') saved by ' + who + '; sending it for signature.', who);
-    if (window.P2Sign) window.P2Sign.sendCO(c, j.jobCode, id);
+    c.store.update(j.jobCode, function (x) { x.changeOrders = x.changeOrders.concat([rec]); return x; }, 'Change order ' + n + ' (' + c.money(amt) + ') finalized by ' + who + '; waiting on the buyer\'s signature.', who);
+    c.ui.coDone = id;   // the card opens on "1. Download the invoice · 2. Get it signed" (HANDOFF §44)
     return null;
   }
 
@@ -801,6 +849,13 @@
     var r = K.readiness(readinessJob(j), { today: c.TODAY, authorizedSigners: signers().filter(function (p) { return p.email; }) });
     var eb = window.P2Elev && window.P2Elev.contractBlocker ? window.P2Elev.contractBlocker(c, j) : null;
     if (eb) { r.blockers.push(eb); r.ready = false; }
+    // The contract uses the approved estimate (HANDOFF §37); design-first projects need the design approved before pricing
+    if (window.FMEstimate && j.stage === 'quote') {
+      if (window.FMEstimate.needsDesignApproval(j)) { r.blockers.push({ id: 'design', step: 'design', message: 'The customer hasn\'t approved the design yet.' }); r.ready = false; }
+      else if (!j.designFirst && !j.designApproval && j.elevations && (j.elevations.rooms || []).length) r.warnings.push({ id: 'drawings', message: 'The customer hasn\'t approved the drawings yet (Elevations tab, Customer approved). Recommended, not required.' });
+      var es = window.FMEstimate.status(j);
+      if (es.key !== 'approved') { r.blockers.push({ id: 'estimate', step: 'estimate', message: es.key === 'changed' ? 'The estimate changed after it was approved. Approve it again.' : 'Approve the estimate first (Estimate tab, step 4).' }); r.ready = false; }
+    }
     return r;
   }
   /* Where each readiness problem is fixed: a field on the Ready card, or another tab. */
@@ -808,7 +863,8 @@
     dueDates: 'ct-sched', duePast: 'ct-sched', dueOrder: 'ct-sched', fmSigner: 'ct-fmsigner', elevations: 'ct-elack' };
   function fixLink(c, j, b) {
     if (FIX[b.id]) return '<a href="#" class="p2-fix" data-ctfix="' + FIX[b.id] + '">Fix</a>';
-    if (b.id === 'lines' || b.id === 'total' || b.id === 'quoteMath') return '<a class="p2-fix" href="#/job/' + encodeURIComponent(j.jobCode) + '/cabinets">Cabinets tab</a>';
+    if (b.id === 'lines' || b.id === 'total' || b.id === 'quoteMath' || b.id === 'estimate') return '<a class="p2-fix" href="#/job/' + encodeURIComponent(j.jobCode) + '/estimate">Estimate tab</a>';
+    if (b.id === 'design') return '<a class="p2-fix" href="#/job/' + encodeURIComponent(j.jobCode) + '/elevations">Elevations tab</a>';
     return '';
   }
   /* Contract details and the payment schedule, editable until the contract goes out. The deposit is due on signing. */
@@ -852,6 +908,8 @@
       signers().map(function (p, i) { return '<option value="' + i + '"' + (p.email ? '' : ' disabled') + (j.fmSigner && p.email && j.fmSigner.email === p.email ? ' selected' : '') + '>' + esc(p.name) + (p.email ? '' : ' (add an email on the Users page)') + '</option>'; }).join('') + '</select></label>';
     var send = window.P2Sign ? window.P2Sign.contractCard(c, j, r) : '';
     var errs = c.ui.esErr ? '<div class="fmp1-note fmp1-note--alert p2-small" role="alert">' + esc(c.ui.esErr) + '</div>' : '';
+    // The contract builder (HANDOFF §38): steps on the left, the agreement updating on the right
+    if (window.P2Contract) return window.P2Contract.render(c, j, { r: r, out: out, checks: checks, signer: signer, details: contractDetails(c, j, r, out), ack: window.P2Elev && window.P2Elev.contractAck ? window.P2Elev.contractAck(c, j, out) : '', send: send, errs: errs, fixLink: function (b) { return fixLink(c, j, b); } });
     return '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Ready to contract?</span>' + (checks ? '<ul class="p2-list p2-checks">' + checks + '</ul>' : '<p class="p2-ok">✓ Everything checks out.</p>') +
       (window.P2Elev && window.P2Elev.contractAck ? window.P2Elev.contractAck(c, j, out) : '') + signer + contractDetails(c, j, r, out) + '</div>' +
       '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Send for signature</span>' + c.docRows(j, { kind: '__none', packetTitle: 'Contract packet (draft)', packetSub: 'What the buyer will sign: summary, schedule, invoices, quote' + (j.elevations && j.elevations.rooms && j.elevations.rooms.length ? ' and elevations' : '') }) + errs + send + '</div>';
@@ -886,7 +944,7 @@
   function coDocHTML(c, j, dco) {
     var prev = FM.contractSummary(j).originalCents;
     j.changeOrders.forEach(function (x) { if (x.number < dco.number && FM.coCountsTowardContract(x)) prev += x.amountCents || 0; });
-    return D.renderChangeOrderDoc(j, dco, { previousCents: prev, printedNote: dco.priced && dco.priced.printed ? 'Reprinted from the executed change order. Sell prices as printed there.' : '' });
+    return D.renderChangeOrderDoc(j, dco, { appliesTo: appliesTo(j, dco), previousCents: prev, printedNote: dco.priced && dco.priced.printed ? 'Reprinted from the executed change order. Sell prices as printed there.' : '' });
   }
   /* A change order the buyer signed (in the tool, or a signed copy uploaded) goes through: contract total, invoice, lines, delivery date. */
   function coSigned(c, jobCode, coId, how) {
@@ -911,6 +969,13 @@
       if (E && E.rooms && E.rooms.length) { E.versions = E.versions || []; E.versions.push({ n: E.versions.length + 1, label: x.elevAck ? 'As signed · preliminary' : 'As signed', signed: true, at: new Date().toISOString(), by: who, rooms: JSON.parse(JSON.stringify(E.rooms)), sizes: JSON.parse(JSON.stringify(E.sizes || {})) }); }
       return x;
     }, 'Contract signed (' + how + '). Job is now Contracted; the deposit is due today.', who);
+    // Issue the invoices the moment it's fully signed (HANDOFF §39). If anything goes wrong, say so in Activity rather than stop.
+    if (window.FMInvoicing) {
+      try {
+        var iss = window.FMInvoicing.issue(c.store.job(j.jobCode), new Date().toISOString());
+        if (iss.ok) c.store.update(j.jobCode, function (x) { x.invoices = iss.invoices; return x; }, iss.log + ' The deposit invoice is ready to send.', who);
+      } catch (e) { c.store.update(j.jobCode, function (x) { return x; }, 'Issuing the invoices didn\'t finish (' + e.message + '). Use Issue the invoices on the Invoices tab.', 'system'); }
+    }
   }
 
   /* ================= events ================= */
@@ -925,9 +990,14 @@
     // New project
     if (r[0] === 'new') {
       d = loadDraft(c);
-      if (t.dataset.npstep) { d.step = +t.dataset.npstep; d.errors = []; saveDraft(c); c.render(); return true; }
-      if (t.hasAttribute('data-npnext')) { var e = stepErrors(c, d, d.step); d.errors = e; if (!e.length) d.step++; saveDraft(c); c.render(); return true; }
-      if (t.hasAttribute('data-npback')) { d.step = Math.max(0, d.step - 1); d.errors = []; saveDraft(c); c.render(); return true; }
+      if (t.dataset.npstep) { d.step = +t.dataset.npstep; if (d.step === 3 && d.noSkus) d.step = 4; d.errors = []; saveDraft(c); c.render(); return true; }
+      if (t.hasAttribute('data-npnext')) { var e = stepErrors(c, d, d.step); d.errors = e; if (!e.length) d.step += d.step === 2 && d.noSkus ? 2 : 1; saveDraft(c); c.render(); return true; }   // a sketch or design has nothing to price yet
+      if (t.hasAttribute('data-npback')) { d.step = Math.max(0, d.step - (d.step === 4 && d.noSkus ? 2 : 1)); d.errors = []; saveDraft(c); c.render(); return true; }
+      if (t.dataset.npway) {
+        var wv = t.dataset.npway; d.noSkus = wv === 'sketch' || wv === 'design'; d.wantDesign = wv === 'design'; d.wantOrder = wv === 'order'; if (wv !== 'design') d.fromDesign = ''; if (wv !== 'order') d.fromOrder = '';
+        if (wv !== 'design' && d.elevationsFrom === 'design') { d.elevations = null; d.elevationsFrom = ''; }
+        d.errors = []; saveDraft(c); c.render(); return true;
+      }
       if (t.hasAttribute('data-npdiscard')) { clearDraft(c); c.render(); return true; }
       if (t.hasAttribute('data-npnoteclose')) { d.note = ''; saveDraft(c); c.render(); return true; }
       if (t.dataset.nptpl && window.P2Customers) {
@@ -954,12 +1024,12 @@
         if (d.fromTemplate) c.store.update(res.job.jobCode, function (x) { return x; }, 'Started from a customer template' + (d.project ? ' ("' + d.project + '")' : '') + '.', c.me().name);
         if (window.P2Customers) window.P2Customers.refresh(c);
         if (d.duplicatedFrom) c.store.update(res.job.jobCode, function (x) { return x; }, 'Duplicated from ' + d.duplicatedFrom + ' (customer, cabinets, pricing' + (res.job.elevations ? ', drawings' : '') + ').', c.me().name);
-        clearDraft(c); c.go('#/job/' + encodeURIComponent(res.job.jobCode) + '/overview'); return true;
+        clearDraft(c); c.go('#/job/' + encodeURIComponent(res.job.jobCode) + (res.job.designFirst ? '/elevations' : '/overview')); return true;   // a sketch or design opens on its drawing
       }
     }
     if (!j) return false;
     // Change orders
-    if (t.hasAttribute('data-costart')) { c.ui.co = newCO(c, j); c.ui.coCredit = c.ui.coWd = null; c.render(); return true; }
+    if (t.hasAttribute('data-costart')) { c.ui.co = newCO(c, j); c.ui.coCredit = c.ui.coWd = null; c.render(); setTimeout(function () { var cf = document.querySelector('[data-coflow]'); if (cf && cf.scrollIntoView) cf.scrollIntoView({ block: 'start' }); }, 0); return true; }
     var f = c.ui.co;
     if (f && f.job === j.jobCode) {
       if (t.hasAttribute('data-cocancel')) { c.ui.co = null; c.render(); return true; }
@@ -1056,7 +1126,7 @@
     if (el.dataset.npline) { d = loadDraft(c); var ix = el.dataset.npline.split(':'), ln = d.models[+ix[0]].lines[+ix[1]]; ln.markupPct = num(el.value); ln.edited = true; saveDraft(c); refreshLater(c); return; }
     if (el.hasAttribute('data-copastetext') && c.ui.co && c.ui.co.paste) { c.ui.co.paste.text = el.value; return; }
     if (el.dataset.cof && c.ui.co) { c.ui.co[el.dataset.cof] = el.value; return; }
-    if (el.dataset.coadd && c.ui.co && c.ui.co.addForm) { var A = c.ui.co.addForm; A[el.dataset.coadd] = el.value; if (el.dataset.coadd === 'sku') fillFromSku(c, A, el.value); return; }
+    if (el.dataset.coadd && c.ui.co && c.ui.co.addForm) { var AF = c.ui.co.addForm; AF[el.dataset.coadd] = el.value; if (el.dataset.coadd === 'sku') fillFromSku(c, AF, el.value); return; }
     if (el.dataset.corf && c.ui.co && c.ui.co.rowForm) { var R = c.ui.co.rowForm; R[el.dataset.corf] = el.value; if (el.dataset.corf === 'sku') fillFromSku(c, R, el.value); return; }
     if (el.dataset.coex && c.ui.co) { var ex = el.dataset.coex.split(':'), xr = c.ui.co.extras[+ex[0]]; if (xr) xr[ex[1]] = ex[1] === 'taxable' ? el.checked : el.value; return; }
     if (el.dataset.cocr && c.ui.coCredit) { c.ui.coCredit[el.dataset.cocr] = el.type === 'checkbox' ? el.checked : el.value; return; }
@@ -1076,6 +1146,35 @@
   function refreshLater(c) { clearTimeout(timer); timer = setTimeout(function () { var a = document.activeElement, key = a && (a.dataset.npp || a.dataset.npline || a.dataset.np || a.dataset.cop || a.dataset.coline), sel = a && a.selectionStart, selEnd = a && a.selectionEnd; c.render(); if (key) { var n = document.querySelector('[data-npp="' + key + '"],[data-npline="' + key + '"],[data-np="' + key + '"],[data-cop="' + key + '"],[data-coline="' + key + '"]'); if (n) { n.focus(); try { n.setSelectionRange(sel, selEnd); } catch (x) { /* number inputs */ } } } }, 450); }
   function change(c, e) {
     var el = e.target, d;
+    if (el.hasAttribute('data-npdesign')) {   // copy a design's drawings into the new project (HANDOFF §40)
+      d = loadDraft(c); var des = c.store.job(el.value);
+      d.fromDesign = des ? des.jobCode : ''; d.fromDesignName = des ? des.customer : '';
+      if (des && des.elevations) { var mid = d.models[0].id, E0 = des.elevations; d.elevations = { rooms: JSON.parse(JSON.stringify(E0.rooms || [])).map(function (r) { r.set = mid; return r; }), sizes: JSON.parse(JSON.stringify(E0.sizes || {})), sketch: E0.sketch ? { color: E0.sketch.color } : null }; d.elevationsFrom = 'design'; }
+      if (des && !d.project) d.project = des.customer;
+      saveDraft(c); c.render(); return;
+    }
+    if (el.hasAttribute('data-nporder')) {   // copy a previous order's cabinets and drawings; this job's own pricing settings apply
+      d = loadDraft(c); var src = c.store.job(el.value); d.fromOrder = src ? src.jobCode : '';
+      if (src) {
+        var mk = d.pricing.markupPct, m0 = d.models[0], srcM = (src.models || []).filter(function (m) { return (m.lines || []).length; })[0];
+        m0.lines = orderLines(src).filter(function (l) { return +l.qty > 0 && !l.noCharge && l.unitCostCents > 0; }).map(function (l) { return { sku: l.sku, desc: l.desc || '', qty: l.qty, unitCostCents: l.unitCostCents, markupPct: mk }; });
+        m0.added = 'Copied from ' + src.customer + ' (' + src.jobCode + ')';
+        var Es = src.elevations; if (Es && (Es.rooms || []).length) { var mid2 = m0.id; d.elevations = { rooms: JSON.parse(JSON.stringify(Es.rooms)).filter(function (r) { return !srcM || r.set === srcM.name || (src.models || []).length === 1; }).map(function (r) { r.set = mid2; return r; }), sizes: JSON.parse(JSON.stringify(Es.sizes || {})) }; d.elevationsFrom = 'order'; }
+      }
+      saveDraft(c); refreshLater(c); c.render(); return;
+    }
+    if (el.dataset.npfile != null) {   // upload the supplier PDF (or a spreadsheet of SKUs) for this home
+      d = loadDraft(c); var mi = +el.dataset.npfile, file = el.files && el.files[0], mm = d.models[mi]; if (!file || !mm) return; el.value = '';
+      var done = function (lines, note) { mm.lines = CO.mergeLines(mm.lines || [], lines.map(function (l) { return { sku: l.sku, desc: l.desc || '', qty: l.qty, unitCostCents: l.unitCostCents, markupPct: d.pricing.markupPct }; }), 'add').lines; mm.added = note; mm.reading = ''; saveDraft(c); refreshLater(c); c.render(); };
+      if (/\.pdf$/i.test(file.name) && window.P2Pdf) {
+        mm.reading = 'Reading ' + file.name + '…'; c.render();
+        window.P2Pdf.read(file, function (msg) { mm.reading = msg; c.render(); }).then(function (res) {
+          var lines = window.FMSupplierPdf.toLines(res).filter(function (l) { return l.unitCostCents > 0; });
+          done(lines, lines.length + ' line' + (lines.length === 1 ? '' : 's') + ' from ' + file.name + (res.problems.length ? ' · check: ' + res.problems[0] : '') + (res.fees.length ? ' · ' + res.fees.length + ' fee(s) not added (add freight later on the Estimate)' : ''));
+        }, function (er) { mm.reading = file.name + ': ' + er.message; c.render(); });
+      } else file.text().then(function (txt) { var pr = CO.parseSkus(txt); done(pr.lines.filter(function (l) { return l.unitCostCents > 0; }), pr.lines.length + ' line(s) from ' + file.name + (pr.lines.some(function (l) { return !(l.unitCostCents > 0); }) ? ' · lines without a cost were left out' : '')); });
+      return;
+    }
     if (el.dataset.np === 'customer') {
       d = loadDraft(c); d.customer = el.value;
       var pc = window.P2Customers && el.value !== '__new' ? window.P2Customers.byName(c, el.value) : null;
@@ -1112,7 +1211,7 @@
     }
     var r = location.hash.replace(/^#\/?/, '').split('/'), j = r[0] === 'job' ? c.store.job(decodeURIComponent(r[1])) : null;
     if (!j) return;
-    if (el.dataset.cof === 'house' && c.ui.co) { var f = c.ui.co; f.house = el.value; f.base = baseLines(c, j, f.house); f.current = JSON.parse(JSON.stringify(f.base)); f.replaced = []; f.waitFor = []; c.render(); return; }
+    if (el.dataset.cof === 'house' && c.ui.co) { var f = c.ui.co; f.house = el.value; f.mult = el.value === EVERY ? j.houses.length : 1; f.base = baseLines(c, j, f.house); f.current = JSON.parse(JSON.stringify(f.base)); f.replaced = []; f.waitFor = []; c.render(); return; }
     if (el.dataset.coex && c.ui.co) { c.render(); return; }   // show the new total once the box is left
     if (el.dataset.cof === 'reason' && c.ui.co) { c.ui.co.reason = el.value; return; }
     if (el.hasAttribute('data-coskufile') && c.ui.co) { readSkuFile(c, el); return; }
@@ -1130,7 +1229,7 @@
   }
 
   window.P2NewProject = { render: renderNew, blankDraft: blankDraft, migrate: migrate };
-  window.P2Flows = { contracted: contracted, coSigned: coSigned, readyCheck: readyCheck, readinessJob: readinessJob, coDocHTML: coDocHTML, planStages: planStages, addToQuote: addToQuote, addSkus: addSkus, samplePdfs: samplePdfs, startCO: startCO, changes: renderChanges, contract: renderContract, click: click, input: input, change: change, quotesFor: quotesFor, signers: signers, dupConfirm: dupConfirm, fromTemplate: fromTemplate };
+  window.P2Flows = { reprice: reprice, contractDetails: contractDetails, DEFAULTS: DEFAULTS, nextCode: nextCode, contracted: contracted, coSigned: coSigned, readyCheck: readyCheck, readinessJob: readinessJob, coDocHTML: coDocHTML, planStages: planStages, addToQuote: addToQuote, addSkus: addSkus, samplePdfs: samplePdfs, startCO: startCO, changes: renderChanges, contract: renderContract, click: click, input: input, change: change, quotesFor: quotesFor, signers: signers, dupConfirm: dupConfirm, fromTemplate: fromTemplate };
   /* Projects made in this preview before charges were broken out get their breakdown worked out from their lines */
   if (window.P2 && window.P2.ctx) (function () {
     var c0 = window.P2.ctx();

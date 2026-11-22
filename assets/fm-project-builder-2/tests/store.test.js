@@ -153,6 +153,65 @@ test('a live store is never overwritten: no seed corrections on load, and reset 
   eq(st.job('FM-1').invoices[0].id, 'i1');
 });
 
+test('a live store loads data saved before 2.14.0 as it is: job costs, reviews and tax rates stay absent until someone adds them; books fall back to the quoted cost', function () {
+  var saved = { jobs: [{ jobCode: 'FM-1', customer: 'A', stage: 'delivered', originalContractCents: 1000, taxCents: 0, costCents: 500, history: [], invoices: [{ id: 'i1', amountCents: 1000, payments: [] }], changeOrders: [], documents: [], pricing: { taxPct: 7.9 } }], log: [], seq: 0 };
+  var copy = JSON.stringify(saved), wrote = null;
+  var st = ST.create({ live: true, seed: SEED, storage: { load: function () { return JSON.parse(copy); }, save: function (d) { wrote = d; } } });
+  var j = st.job('FM-1');
+  eq([j.jobCosts, j.review, j.referrals, j.taxRate, j.pricing.taxPct, wrote], [undefined, undefined, undefined, undefined, 7.9, null]);
+  eq(ST.toBooks(j).actualCostCents, null);
+  var me = { name: 'Linds', access: 'full' };
+  eq(st.saveSetting('reviewLink', 'g.page/x', me).ok, false);
+  eq(st.saveSetting('reviewLink', 'https://g.page/r/x/review', me).ok, true);
+  eq(st.saveSetting('reviewLink', 'https://x', { name: 'T', access: 'standard' }).ok, false);
+  eq(JSON.stringify(st.job('FM-1')) === JSON.stringify(j), true, 'a setting never touches a job');
+});
+
+test('email templates (2.15.0) are a company setting: Full access only, blank ones dropped, logged, and no job changes', function () {
+  var st = fresh(), before = JSON.stringify(st.jobs({ all: true })), me = { name: 'Linds', access: 'full' };
+  eq(st.saveSetting('emailTemplates', { invoice: { subject: 'Hi', body: 'x' } }, { name: 'T', access: 'standard' }).ok, false);
+  eq(st.saveSetting('emailTemplates', 'nope', me).ok, false);
+  eq(st.saveSetting('emailTemplates', { invoice: { subject: 'Invoice {invoiceNumbers}', body: '' }, 'thank-you': { subject: ' ', body: '' } }, me).ok, true);
+  eq(st.settings().emailTemplates, { invoice: { subject: 'Invoice {invoiceNumbers}', body: '' } });
+  ok(st.log().some(function (e) { return /Email templates changed by Linds \(reworded: invoice\)/.test(e.text); }));
+  eq(st.saveSetting('emailTemplates', {}, me).ok, true); eq(st.settings().emailTemplates, {});
+  eq(JSON.stringify(st.jobs({ all: true })), before, 'templates never touch a job');
+});
+
+test('cabinet colors (2.16.0) are a company setting: Full access, a valid list only, logged, and no job changes', function () {
+  var st = fresh(), before = JSON.stringify(st.jobs({ all: true })), me = { name: 'Linds', access: 'full' };
+  eq(st.saveSetting('cabinetColors', ['scandi-sage-green'], { name: 'T', access: 'standard' }).ok, false);
+  eq(st.saveSetting('cabinetColors', [{ key: 'x', name: 'X', hex: 'red' }], me).ok, false);
+  eq(st.saveSetting('cabinetColors', ['scandi-sage-green', { key: 'c-bronze', name: 'Bronze', hex: '#54504a' }], me).ok, true);
+  eq(st.settings().cabinetColors.length, 2); ok(st.log().some(function (e) { return /Cabinet colors changed by Linds \(0 → 2/.test(e.text); }));
+  eq(JSON.stringify(st.jobs({ all: true })), before);
+});
+
+test('a missing check number can be added to a payment, once; an existing one is never overwritten', function () {
+  var st = fresh(), j = st.job('FM-2609-314'), inv = j.invoices[0];
+  eq(String(inv.payments[0].reference || ''), '');
+  eq(st.setPaymentReference('FM-2609-314', inv.id, 0, '', 'Linds').ok, false);
+  eq(st.setPaymentReference('FM-2609-314', inv.id, 0, ' 2911 ', 'Linds').ok, true);
+  eq(st.job('FM-2609-314').invoices[0].payments[0].reference, '2911');
+  eq(st.setPaymentReference('FM-2609-314', inv.id, 0, '9999', 'Linds').ok, false);
+  ok(/Check number 2911 added/.test(st.log('FM-2609-314')[0].text));
+});
+
+test('nothing entered gets lost: a pending server save is journaled in the browser; a failure is reported; the journal comes back on load', function () {
+  var resolveSave, journal = null;
+  var storage = { load: function () { return null; }, save: function () { return { then: function (ok, bad) { resolveSave = { ok: ok, bad: bad }; } }; } };
+  var jr = { read: function () { return journal; }, write: function (x) { journal = JSON.parse(JSON.stringify(x)); }, clear: function () { journal = null; } };
+  var st = ST.create({ seed: SEED, storage: storage, journal: jr });
+  st.update('FM-2609-314', function (x) { x.projectName = 'Penrose (edited)'; return x; }, 'edit', 'Linds');
+  eq([st.status().pending, !!journal, journal.changes], [1, true, 1]);
+  resolveSave.bad(new Error('offline'));
+  eq([st.status().pending, st.status().failed], [0, 'offline']);
+  var again = ST.create({ seed: SEED, storage: { load: function () { return null; }, save: function () {} }, journal: jr });
+  eq([again.job('FM-2609-314').projectName, again.status().restored], ['Penrose (edited)', 1]);
+  st.update('FM-2609-314', function (x) { return x; }, null, 'Linds'); resolveSave.ok();
+  eq([st.status().pending, journal], [0, null]);
+});
+
 console.log('store.test.js\n' + results.join('\n'));
 
 test('saved data picks up documents added later (Braddy change order 1 PDF) and keeps uploads', function () {

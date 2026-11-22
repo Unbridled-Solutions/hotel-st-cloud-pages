@@ -1,11 +1,28 @@
 /*
- * Shared Wholesale Cabinets PDF reader for New Project and change-order Upload SKUs.
+ * Shared Wholesale Cabinets PDF harvest for New Project and change-order Upload SKUs.
  * Copied from the live /quote harvest (read-only). Does not edit that tool.
  * Returns { lines: [{ sku, qty, desc, unitCostCents }], skipped: [] }.
+ *
+ * Do NOT replace window.FMSupplierPdf. src/fm-phase2-supplierpdf.js owns parse() / toLines()
+ * (change-order Upload SKUs + P2Pdf). This file only adds harvest() / parseBuffer().
+ * Overwriting the whole object made parse a missing function and attached the PDF with no SKUs.
  */
 (function (root, factory) {
-  if (typeof module === 'object' && module.exports) module.exports = factory();
-  else root.FMSupplierPdf = factory();
+  var extra = factory();
+  function assignPdf(prev, extra) {
+    prev = prev || {};
+    prev.harvest = extra.harvest;
+    prev.parseBuffer = extra.parseBuffer;
+    prev.HARVEST_VERSION = extra.HARVEST_VERSION;
+    return prev;
+  }
+  if (typeof module === 'object' && module.exports) {
+    var prev = {};
+    try { prev = require('./fm-phase2-supplierpdf.js'); } catch (e) { prev = {}; }
+    module.exports = assignPdf(prev, extra);
+  } else {
+    root.FMSupplierPdf = assignPdf(root.FMSupplierPdf || {}, extra);
+  }
 }(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   var SUFFIXES = ['SBW', 'VDH', 'UMO', 'SWD', 'WWT', 'LGR', 'CGY', 'TSP'];
@@ -131,5 +148,5 @@
     }).then(harvest);
   }
 
-  return { harvest: harvest, parseBuffer: parseBuffer, VERSION: '2.11.1' };
+  return { harvest: harvest, parseBuffer: parseBuffer, HARVEST_VERSION: '2.11.1' };
 }));

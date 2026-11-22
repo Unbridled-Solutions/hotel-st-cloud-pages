@@ -191,7 +191,7 @@
     } else if (wall) {
       drawing = '<div class="p2-el-canvas' + (ed ? ' is-edit' : '') + '" data-elcanvas>' + EL.svgElevation(lay, { title: S.room.name + ' · ' + wall.name, color: S.set.color, uid: 'w', interactive: true, selected: u.sel }) + '<div class="p2-el-dragtip" hidden></div></div>' +
         selBar(c, S, wall, lay, ed, E) +
-        (ed && !u.sel ? '<p class="p2-small fmp1-faint">Click a cabinet to select it. Drag it along the wall to move it: drop it in open space to put it there, or onto other cabinets to change the order.</p>' : '') + issuesHTML(c, lay, wall, E);
+        (ed && !u.sel ? '<p class="p2-small fmp1-faint">Click a cabinet to select it. Drag it along the wall to move it: drop it in open space to put it there, or onto other cabinets to change the order. Drag an upper up or down to raise or lower it.</p>' : '') + issuesHTML(c, lay, wall, E);
     } else drawing = '<p class="p2-empty">This room has no walls yet.' + (ed ? ' Add one to start.' : '') + '</p>';
 
     var center = '<div class="fmp1-card p2-pad p2-el-main">' + walls + drawing + '</div>';
@@ -238,9 +238,10 @@
     var esc = c.esc, it = f.it, list = wall[f.run] || [], i = list.indexOf(it), p = lay[f.run][i], sp = it.appliance ? null : EL.parseSku(it.sku, E.sizes), id = esc(it.id);
     return '<div class="p2-el-selbar" role="region" aria-label="Selected item"><div class="p2-el-selinfo"><span class="fmp1-eyebrow">Selected</span>' +
       '<b>' + esc(itemName(it, E.sizes)) + '</b><span class="p2-small fmp1-muted">' + (sp ? esc(EL.describe(sp)) : esc((EL.APPLIANCES[it.appliance] || {}).label || '')) +
-      (p ? ' · ' + (f.run === 'upper' ? 'upper run' : 'base run') + ', ' + EL.inches(p.x) + ' from left' : '') + '</span></div>' +
+      (p ? ' · ' + (f.run === 'upper' ? 'upper run' : 'base run') + ', ' + EL.inches(p.x) + ' from left' + (f.run === 'upper' ? ', bottom ' + EL.inches(p.y) + ' off the floor' + (it.topOffset ? ' (top ' + (it.topOffset > 0 ? 'raised ' : 'lowered ') + EL.inches(Math.abs(it.topOffset)) + ')' : '') : '') : '') + '</span></div>' +
       '<div class="p2-row">' + (ed ? '<button class="fmp1-btn fmp1-btn--quiet" data-elmove="' + id + ':-1"' + (i === 0 ? ' disabled' : '') + '>← Left</button>' +
         '<button class="fmp1-btn fmp1-btn--quiet" data-elmove="' + id + ':1"' + (i === list.length - 1 ? ' disabled' : '') + '>Right →</button>' +
+        (f.run === 'upper' ? '<button class="fmp1-btn fmp1-btn--quiet" data-ellift="' + id + ':1" title="Raise it 1 inch (or drag it up)">↑ Up 1″</button><button class="fmp1-btn fmp1-btn--quiet" data-ellift="' + id + ':-1" title="Lower it 1 inch">↓ Down 1″</button>' : '') +
         (sp ? '<button class="fmp1-btn fmp1-btn--quiet" data-elsize="' + esc(sp.code) + '">Size…</button>' : '') +
         '<button class="fmp1-btn p2-el-rmbtn" data-elrm="' + id + '" title="Or press Delete">Remove</button>' : '') +
         '<button class="fmp1-btn fmp1-btn--quiet" data-elsel="' + id + '" aria-label="Deselect" title="Deselect (Esc)">✕</button></div></div>';
@@ -267,7 +268,8 @@
   function issueList(c, list) {
     return '<ul class="p2-list p2-small">' + list.map(function (i) {
       return '<li style="justify-content:flex-start"><span class="p2-dot' + (i.level === 'error' ? ' alert' : i.level === 'tip' ? ' tip' : '') + '" aria-hidden="true"></span><span>' + c.esc(i.text) + '</span>' +
-        (i.item ? '<button class="p2-linkbtn" data-elsel="' + c.esc(i.item) + '">Show</button>' : '') + '</li>'; }).join('') + '</ul>';
+        (i.item ? '<button class="p2-linkbtn" data-elsel="' + c.esc(i.item) + '">Show</button>' : '') +
+        (i.item && i.fix && i.fix.kind === 'raise' ? '<button class="p2-linkbtn" data-ellift="' + c.esc(i.item) + ':' + i.fix.by + '">Raise it ' + EL.inches(i.fix.by) + '</button>' : '') + '</li>'; }).join('') + '</ul>';
   }
   /* planning advice (landing space, clearances, fillers, walkways): worth a look, never blocks anything */
   function checksHTML(c, checks, title) {
@@ -290,7 +292,7 @@
             '<span class="p2-small fmp1-faint">' + (p ? 'at ' + EL.inches(p.x) + ' · ' + EL.inches(p.w) : '') + (sp && !sp.sure ? ' · <b style="color:var(--fmp1-alert-ink)">check size</b>' : '') + '</span></div>' +
             (sel ? '<div class="p2-el-edit">' + (sp ? '<span class="p2-small fmp1-muted">' + esc(EL.describe(sp)) + '</span>' : '') +
               '<div class="p2-row">' + num('data-elitemf="' + esc(it.id) + ':x"', 'From left (in)', p ? p.x : '', dis + ' style="width:90px"') + num('data-elitemf="' + esc(it.id) + ':gapBefore"', 'Space before (in)', it.gapBefore || 0, dis + ' style="width:90px"') +
-              (it.appliance ? num('data-elitemf="' + esc(it.id) + ':w"', 'Width (in)', p ? p.w : '', dis + ' style="width:80px"') : '') +
+              (it.appliance ? num('data-elitemf="' + esc(it.id) + ':w"', 'Width (in)', p ? p.w : '', dis + ' style="width:80px"') + (p && p.h ? num('data-elitemf="' + esc(it.id) + ':h"', 'Height (in)', p.h, dis + ' style="width:80px" title="The exact height, from the spec sheet"') : '') : '') +
               (run === 'upper' ? num('data-elitemf="' + esc(it.id) + ':topOffset"', 'Raise / lower top (in)', it.topOffset || 0, dis + ' style="width:90px" title="Staggered uppers: + raises, − lowers"') : '') + '</div>' +
               (ed ? '<div class="p2-row"><button class="fmp1-btn fmp1-btn--quiet" data-elmove="' + esc(it.id) + ':-1"' + (i === 0 ? ' disabled' : '') + ' aria-label="Move left">← Left</button>' +
                 '<button class="fmp1-btn fmp1-btn--quiet" data-elmove="' + esc(it.id) + ':1"' + (i === items.length - 1 ? ' disabled' : '') + ' aria-label="Move right">Right →</button>' +
@@ -350,7 +352,7 @@
   /* Sketch mode: standard sizes to add, a custom size, the color, and a way to bring the SKUs in later */
   function sketchPanel(c, j, S, ed, E) {
     var esc = c.esc, u = c.ui.el, canAdd = ed && S.wall && u.view === 'front', color = S.set.color;
-    var colors = '<div class="p2-el-colors" role="group" aria-label="Color">' + EL.FINISHES.map(function (f) {
+    var colors = window.P2Colors ? window.P2Colors.picker(c, color, 'elcolor', { disabled: !ed }) : '<div class="p2-el-colors" role="group" aria-label="Color">' + EL.FINISHES.map(function (f) {
       return '<button class="p2-el-swatch" data-elcolor="' + f[0] + '" aria-pressed="' + (color === f[0]) + '" title="' + esc(f[1]) + '"' + (ed ? '' : ' disabled') + '><i style="background:' + EL.finishFor(f[0]) + '"></i>' + esc(f[1]) + '</button>'; }).join('') + '</div>';
     var placed = EL.placedCounts(S.rooms);
     var groups = EL.STANDARD.map(function (g, gi) {
@@ -499,7 +501,7 @@
     var x = cur(c, j); if (!x) return false;
     var u = x.u, ed = editable(j), d = t.dataset;
     function done() { c.render(); return true; }
-    if (d.elcolor && ed && x.S.set.sketch) { var fn = (EL.FINISHES.filter(function (f) { return f[0] === d.elcolor; })[0] || [])[1]; save(c, j, 'sketch color set to ' + fn + '.', function (E) { E.sketch.color = d.elcolor; }); return done(); }
+    if (d.elcolor && ed && x.S.set.sketch) { var fn = window.FMColors ? window.FMColors.short(d.elcolor) : (EL.FINISHES.filter(function (f) { return f[0] === d.elcolor; })[0] || [])[1]; save(c, j, 'sketch color set to ' + fn + '.', function (E) { E.sketch.color = d.elcolor; }); return done(); }
     if (t.hasAttribute('data-elcustadd') && ed && x.S.wall) {
       var cs = EL.customSize(x.E.sizes, u.cust || {}); u.custOpen = true;
       if (!cs.ok) { u.custErr = cs.problems.join(' '); return done(); }
@@ -622,6 +624,9 @@
       save(c, j, EL.APPLIANCES[pr[1]].label.toLowerCase() + ' added to ' + wall.name + '.', function (E) { var w2 = findWall(E, u); w2[pr[0]] = (w2[pr[0]] || []).concat([{ id: aid, appliance: pr[1], gapBefore: 0 }]); });
       u.sel = aid; return done();
     }
+    if (d.ellift && wall) {   // raise or lower an upper (Up / Down buttons, or "Raise it" on a warning)
+      var lf = d.ellift.split(':'); liftBy(c, j, x, lf[0], +lf[1]); return done();
+    }
     if (d.elmove && wall) {
       var mv = d.elmove.split(':');
       save(c, j, 'moved an item on ' + wall.name + '.', function (E) {
@@ -708,7 +713,7 @@
       var pr = d.elitemf.split(':'), v = parseFloat(el.value);
       if (isNaN(v) || (v < 0 && pr[1] !== 'topOffset')) { c.render(); return true; }
       if (pr[1] === 'x') { moveTo(c, j, x, pr[0], v); c.render(); return true; }
-      save(c, j, 'item on ' + wall.name + ': ' + (pr[1] === 'w' ? 'width' : pr[1] === 'topOffset' ? 'top raised/lowered' : 'space before') + ' ' + EL.inches(v) + '.', function (E) { var fi = findItem(findWall(E, u), pr[0]); if (fi) fi.it[pr[1]] = v; });
+      save(c, j, 'item on ' + wall.name + ': ' + (pr[1] === 'w' ? 'width' : pr[1] === 'h' ? 'height' : pr[1] === 'topOffset' ? 'top raised/lowered' : 'space before') + ' ' + EL.inches(v) + '.', function (E) { var fi = findItem(findWall(E, u), pr[0]); if (fi) fi.it[pr[1]] = v; });
       c.render(); return true;
     }
     if (d.elopenf && wall) {
@@ -732,6 +737,12 @@
     var x = cur(c, j); if (x && x.S.room) box.innerHTML = room3D(c, x.R, x.S.room, x.S.set);
   }
 
+  function liftBy(c, j, x, id, by, to) {
+    var f0 = findItem(x.S.wall, id); if (!f0 || f0.run !== 'upper') return;
+    var nv = to != null ? to : (+f0.it.topOffset || 0) + by; nv = Math.round(nv * 2) / 2;
+    save(c, j, itemName(f0.it, x.E.sizes) + ' on ' + x.S.wall.name + ': top ' + (nv ? (nv > 0 ? 'raised ' : 'lowered ') + EL.inches(Math.abs(nv)) : 'back in line') + '.', function (E) { var fi = findItem(findWall(E, x.u), id); if (fi) fi.it.topOffset = nv; });
+    x.u.sel = id;
+  }
   function moveTo(c, j, x, id, toX) {
     var wall = x.S.wall, res = EL.moveItem(wall, id, toX, x.E.sizes, x.opts); if (!res.moved) return;
     var f0 = findItem(wall, id), name = f0 ? itemName(f0.it, x.E.sizes) : 'An item';
@@ -781,14 +792,28 @@
       var id = g.getAttribute('data-elitem'), lay = x.lay; if (!lay) return;
       var p = lay.base.concat(lay.upper).filter(function (q) { return q.id === id; })[0]; if (!p || !p.w) return;
       var svg = g.ownerSVGElement, m = svg.getScreenCTM(); if (!m) return;
-      slide = { id: id, g: g, svg: svg, perPx: 1 / m.a, x0: e.clientX, from: p.x, w: p.w, name: p.code || p.label, moved: false, pid: e.pointerId, c: c, j: j, x: x, tip: svg.parentNode.querySelector('.p2-el-dragtip') };
+      var f1 = findItem(x.S.wall, id);
+      slide = { id: id, g: g, svg: svg, perPx: 1 / m.a, perPy: 1 / Math.abs(m.d || m.a), x0: e.clientX, y0: e.clientY, from: p.x, w: p.w, name: p.code || p.label, moved: false, pid: e.pointerId, c: c, j: j, x: x, tip: svg.parentNode.querySelector('.p2-el-dragtip'),
+        upper: p.run === 'upper', lift: f1 ? (+f1.it.topOffset || 0) : 0, axis: null, maxLift: lay.ceiling - ((lay.specs && lay.specs.soffit) || 0) - lay.upperTop };
       try { svg.setPointerCapture(e.pointerId); } catch (er) { /* ignore */ }
     });
     root.addEventListener('pointermove', function (e) {
       if (!slide || e.pointerId !== slide.pid) return;
-      var dxPx = e.clientX - slide.x0;
-      if (!slide.moved && Math.abs(dxPx) < 4) return;
+      var dxPx = e.clientX - slide.x0, dyPx = e.clientY - slide.y0;
+      if (!slide.moved && Math.abs(dxPx) < 4 && Math.abs(dyPx) < 4) return;
+      if (!slide.axis) slide.axis = slide.upper && Math.abs(dyPx) > Math.abs(dxPx) ? 'y' : 'x';   // uppers go up and down too
       slide.moved = true; e.preventDefault();
+      if (slide.axis === 'y') {
+        var nl = Math.min(slide.maxLift, Math.round((slide.lift - dyPx * slide.perPy) * 2) / 2);   // no higher than the ceiling or soffit
+        slide.newLift = nl; slide.res = { mode: 'lift' };
+        slide.g.setAttribute('transform', 'translate(0 ' + (-(nl - slide.lift)).toFixed(2) + ')');
+        if (slide.tip) {
+          slide.tip.hidden = false; slide.tip.textContent = slide.name + ' · top ' + (nl ? (nl > 0 ? 'raised ' : 'lowered ') + EL.inches(Math.abs(nl)) : 'in line with the others');
+          var ry = slide.svg.parentNode.getBoundingClientRect();
+          slide.tip.style.left = Math.max(4, Math.min(ry.width - 180, e.clientX - ry.left + 12)) + 'px'; slide.tip.style.top = Math.max(4, e.clientY - ry.top - 34) + 'px';
+        }
+        return;
+      }
       var want = slide.from + dxPx * slide.perPx, res = EL.moveItem(slide.x.S.wall, slide.id, want, slide.x.E.sizes, slide.x.opts);
       var shown = res.mode === 'placed' ? res.x : want;
       slide.g.setAttribute('transform', 'translate(' + (shown - slide.from).toFixed(2) + ' 0)');
@@ -812,6 +837,7 @@
       }
       swallowClick = true; setTimeout(function () { swallowClick = false; }, 0);
       if (cancel || !s.res) { s.c.render(); return; }
+      if (s.axis === 'y') { if (s.newLift !== s.lift) liftBy(s.c, s.j, s.x, s.id, 0, s.newLift); s.c.render(); return; }
       moveTo(s.c, s.j, s.x, s.id, s.from + (e.clientX - s.x0) * s.perPx);
       s.c.render();
     }
@@ -869,7 +895,38 @@
       (body || '<tr><td colspan="5" class="p2-empty">No projects yet.</td></tr>') + '</tbody></table></div>';
   }
 
-  window.P2Elev = { tab: tab, index: index, click: click, change: change, input: input, bind: bind, docPages: docPages, contractAck: contractAck, contractBlocker: contractBlocker, prelim: function (c, j) { return prelimText(completeness(c, j)); }, coNote: coNote, setsFor: setsFor };
+  /* The design on the project's Overview (like TJ's "The build" card): a 3D view of the first room that's drawn, with a strip of the
+     other rooms, the counts, the finish and whether the customer approved it. Empty string when nothing is drawn yet. */
+  function hero(c, j) {
+    var E0 = j.elevations || blankE(), drawn = [];
+    if (!(E0.rooms || []).length) return '';
+    setsFor(c, j).forEach(function (set) {
+      var E = readE(E0, set);
+      roomsOfSet(E, set.key).forEach(function (room) {
+        var R = roomLayouts(room, set, E).filter(function (we) { return we.layout.base.length || we.layout.upper.length; });
+        if (R.length) drawn.push({ room: room, set: set, R: R });
+      });
+    });
+    var esc = c.esc, code = encodeURIComponent(j.jobCode), walls = (E0.rooms || []).reduce(function (n, r) { return n + (r.walls || []).length; }, 0);
+    var first = drawn[0], color = first ? first.set.color : (E0.sketch && E0.sketch.color) || '';
+    var pic;
+    try { pic = first ? EL.svg3D(first.R, { color: color, title: '3D view of ' + first.room.name }) : ''; } catch (e) { pic = ''; }
+    var others = drawn.slice(1, 4).map(function (d, i) {
+      var s; try { s = EL.svgPlan(d.R, { color: d.set.color, title: 'Floor plan of ' + d.room.name }); } catch (e) { s = ''; }
+      return '<figure class="dh-mini">' + s + '<figcaption>' + esc(d.room.name) + '</figcaption></figure>';
+    }).join('');
+    var a = j.designApproval, vers = E0.versions || [], req = j.designSign && j.designSign.request;
+    var appr = a ? '<b class="dh-ok">✓ Approved, version ' + a.version + '</b>' : req && req.status === 'out' ? '<b>Sent to the customer to approve</b>' : j.stage !== 'quote' ? '<b>Contract signed</b>' : '<b class="dh-no">Not yet</b>';
+    return '<div class="fmp1-card p2-pad dh-card"><div class="p2-between"><span class="fmp1-eyebrow">The design</span><a class="fmp1-btn" href="#/job/' + code + '/elevations">Open the drawing</a></div>' +
+      (pic ? '<a class="dh-pic" href="#/job/' + code + '/elevations" aria-label="Open the drawing">' + pic + '</a>' : '<div class="dh-pic dh-pic--empty"><p class="p2-small fmp1-muted">Rooms are set up, but no cabinets are placed yet.</p></div>') +
+      (others ? '<div class="dh-strip">' + others + '</div>' : '') +
+      '<ul class="p2-list p2-small"><li><span>Rooms</span><b>' + (E0.rooms || []).map(function (r) { return esc(r.name); }).join(', ') + '</b></li><li><span>Walls</span><b>' + walls + '</b></li>' +
+      (color ? '<li><span>Finish</span><b>' + esc(color) + '</b></li>' : '') +
+      (j.fromDesign ? '<li><span>Started from</span><b><a href="#/job/' + encodeURIComponent(j.fromDesign.code) + '/elevations">' + esc(j.fromDesign.name) + '</a></b></li>' : '') +
+      '<li><span>Saved versions</span><b>' + vers.length + '</b></li><li><span>Customer approval</span>' + appr + '</li></ul></div>';
+  }
+
+  window.P2Elev = { hero: hero, tab: tab, index: index, click: click, change: change, input: input, bind: bind, docPages: docPages, contractAck: contractAck, contractBlocker: contractBlocker, prelim: function (c, j) { return prelimText(completeness(c, j)); }, coNote: coNote, setsFor: setsFor };
   // this file loads after the app: hook up the drawing and redraw the page that's showing
   var appRoot = document.getElementById('p2');
   if (appRoot && window.P2) { bind(appRoot, window.P2.ctx); window.P2.render(); }

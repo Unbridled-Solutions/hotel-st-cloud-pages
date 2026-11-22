@@ -13,6 +13,9 @@
   var DEMO = demoQuote(); SEED.jobs.push(DEMO);
   var LIVE = !!(window.FM_CONFIG && window.FM_CONFIG.live);
   var store = ST.create({ live: LIVE, seed: SEED, storage: (window.FM_CONFIG && window.FM_CONFIG.storage) || ST.browserStorage('fm_phase2_preview') });
+  // Live: the server's storage saves asynchronously; show "Not saved yet" and ask before leaving while a save is pending (HANDOFF §41)
+  if (store.onStatus) store.onStatus(function () { if (typeof render === 'function') setTimeout(render, 0); });
+  window.addEventListener('beforeunload', function (e) { var s0 = store.status && store.status(); if (s0 && s0.pending) { e.preventDefault(); e.returnValue = ''; } });
   if (!LIVE && !store.job(DEMO.jobCode)) store.addJob(DEMO, 'Sample data');
 
   /* ---------- users (HANDOFF §23): everyone has full access for now; a Coordinator level can be added later ---------- */
@@ -79,8 +82,6 @@
     return '<span class="fmp1-pill ' + cls + '">' + esc(BK.STAGE_LABEL[s] || s) + '</span>';
   }
   function route() {
-    var signPath = location.pathname.match(/^\/projectbuilder\/sign\/([^/]+)\/?$/);
-    if (signPath) return { area: 'sign', a: decodeURIComponent(signPath[1] || '') };
     var h = (location.hash || '#/books/dashboard').replace(/^#\/?/, '').split('/');
     return { area: h[0] || 'books', a: decodeURIComponent(h[1] || ''), b: h[2] || '' };
   }
@@ -99,7 +100,7 @@
     if (j.stage === 'quote') return 'Send the contract';
     if (j.stage === 'contract_signed') return dep && FM.invoicePaidCents(dep) < dep.amountCents ? 'Collect the deposit' : 'Confirm the deposit';
     if (j.stage === 'deposit_paid') return 'Place the factory order';
-    if (j.stage === 'factory_ordered') return 'Record delivery';
+    if (j.stage === 'factory_ordered') return 'Record delivery or pickup';
     if (j.stage === 'delivered') return balance(j) > 0 ? 'Collect the final payment' : 'Confirm final payment';
     if (j.stage === 'final_paid') return 'Close the job';
     return 'Done';
@@ -113,9 +114,12 @@
     }
     return '<aside class="p2-side" aria-label="Project Builder">' +
       '<div class="p2-brand"><span class="fmp1-logo fmp1-logo--tagline" role="img" aria-label="Fremont Makers, making freedom"></span><span class="fmp1-faint p2-small">Project Builder</span></div>' +
-      '<a class="p2-newbtn" href="#/new"' + (r.area === 'new' ? ' aria-current="page"' : '') + '><span aria-hidden="true">+</span> New project</a>' +
+      '<div class="p2-start" role="group" aria-label="Start"><span class="p2-start-k">Start</span><div class="p2-start-btns">' +
+        '<a class="p2-newbtn" href="#/new"' + (r.area === 'new' ? ' aria-current="page"' : '') + ' aria-label="New project"><span aria-hidden="true">+</span> Project</a>' +
+        '<a class="p2-newbtn" href="#/designs/new" aria-label="New design"><span aria-hidden="true">+</span> Design</a></div></div>' +
+      (window.P2Search ? window.P2Search.box(ctx()) : '') +
       '<nav class="p2-nav" aria-label="Projects"><h2>Projects</h2>' +
-        link('#/projects', 'All projects', r.area === 'projects' || (r.area === 'job' && r.b !== 'elevations')) + link('#/elevations', 'Elevations', r.area === 'elevations' || (r.area === 'job' && r.b === 'elevations')) + link('#/customers', 'Customers', r.area === 'customers') + link('#/measure', 'Field measure', r.area === 'measure') + '</nav>' +
+        link('#/projects', 'All projects', r.area === 'projects' || (r.area === 'job' && r.b !== 'elevations' && !/^DES-/.test(r.a))) + link('#/board', 'Order board', r.area === 'board') + link('#/shipping', 'Shipping', r.area === 'shipping', window.P2Ship ? window.P2Ship.counts(ctx()) : 0) + link('#/designs', 'Designs', r.area === 'designs' || (r.area === 'job' && /^DES-/.test(r.a))) + link('#/elevations', 'Elevations', r.area === 'elevations' || (r.area === 'job' && r.b === 'elevations' && !/^DES-/.test(r.a))) + link('#/customers', 'Customers', r.area === 'customers') + link('#/measure', 'Field measure', r.area === 'measure') + '</nav>' +
       '<nav class="p2-nav" aria-label="Company books"><h2>Company books</h2>' +
         link('#/books/dashboard', 'Dashboard', r.area === 'books' && r.a === 'dashboard') +
         link('#/books/pipeline', 'Pipeline', r.a === 'pipeline') +
@@ -125,16 +129,20 @@
         link('#/books/company', 'Company P&amp;L', r.a === 'company') +
         link('#/books/jobbalances', 'Job balances', r.a === 'jobbalances') +
         link('#/books/balance', 'Balance sheet', r.a === 'balance') + link('#/books/exports', 'Reports &amp; exports', r.a === 'exports') + '</nav>' +
-      '<nav class="p2-nav" aria-label="Company"><h2>Company</h2>' + link('#/users', 'Users', r.area === 'users') + '</nav>' +
+      '<nav class="p2-nav" aria-label="Company"><h2>Company</h2>' + link('#/users', 'Users', r.area === 'users') + link('#/emails', 'Email templates', r.area === 'emails') +
+        link('#/updates', 'Update requests', r.area === 'updates', window.FMRequests ? window.FMRequests.counts(store.requests()).open : 0) + '</nav>' +
+
       '<div class="p2-side-foot">' + FMTheme.toggleHTML(FMTheme.get(root)) +
         '<label class="p2-fld"><span>Signed in as</span><select class="fmp1-input" data-actor>' +
         users.map(function (u) { return '<option value="' + esc(u.id) + '"' + (u.id === me().id ? ' selected' : '') + '>' + esc(u.name) + ' · ' + esc(ACCESS[u.access] || u.access) + '</option>'; }).join('') +
-        '</select></label>' + (LIVE ? '' : '<button class="fmp1-btn fmp1-btn--quiet" data-reset>Reset sample data</button>') +
-        '<span class="fmp1-faint">' + (LIVE ? 'Live · jobs saved in the cloud · /quote is lookup only' : 'Preview · sample data · nothing here touches the live tool') + '</span></div></aside>';
+        '</select></label><button class="fmp1-btn fmp1-btn--quiet" data-reset>Reset sample data</button>' +
+        '<span class="fmp1-faint">Preview · sample data · nothing here touches the live tool</span></div></aside>';
   }
 
   function render() {
     var r = route(), body;
+    if (window.FMColors && store.settings) window.FMColors.use(store.settings().cabinetColors);   // the team's cabinet colors (HANDOFF §44)
+    if (r.area === 'receive' && window.P2Ship) { var rp = (location.hash || '').replace(/^#\/?/, '').split('/').slice(1).map(decodeURIComponent); return window.P2Ship.openReceive(ctx(), rp); }
     if (r.area === 'sign' && window.P2Sign) { root.innerHTML = '<div class="sg-wrap">' + window.P2Sign.page(ctx(), r.a) + viewerHTML() + '</div>'; root.classList.remove('is-measure'); root.classList.add('is-sign'); var sv = root.querySelector('[data-close-viewer]'); if (sv) { sv.focus(); fitViewer(); } window.P2Sign.after(ctx(), r.a); return; }
     if (r.area === 'projects') body = viewProjects();
     else if (r.area === 'job') body = viewJob(store.job(r.a), r.b || 'overview');
@@ -142,10 +150,17 @@
     else if (r.area === 'elevations') body = window.P2Elev ? window.P2Elev.index(ctx()) : '<p>Elevations are loading…</p>';
     else if (r.area === 'customers') body = window.P2Customers ? (r.a ? window.P2Customers.profile(ctx(), r.a) : window.P2Customers.list(ctx())) : '<p>Customers are loading…</p>';
     else if (r.area === 'measure') body = window.P2Measure ? (r.a ? window.P2Measure.page(ctx(), r.a) : window.P2Measure.list(ctx())) : '<p>Field measure is loading…</p>';
+    else if (r.area === 'board') body = window.P2Group3 ? window.P2Group3.boardPage(ctx()) : '<p>The order board is loading…</p>';
+    else if (r.area === 'designs' && r.a === 'new') { ui.ds = { form: 'new' }; history.replaceState(null, '', '#/designs'); return render(); }
+    else if (r.area === 'designs') body = window.P2Designs ? window.P2Designs.page(ctx()) : '<p>Designs are loading…</p>';
+    else if (r.area === 'shipping') body = window.P2Ship ? window.P2Ship.page(ctx()) : '<p>Shipping is loading…</p>';
+    else if (r.area === 'emails') body = window.P2Emails ? window.P2Emails.page(ctx()) : '<p>Email templates are loading…</p>';
+    else if (r.area === 'updates') body = window.P2Requests ? window.P2Requests.page(ctx()) : '<p>Update requests are loading…</p>';
     else if (r.area === 'new') body = window.P2NewProject ? window.P2NewProject.render(ctx()) : '<p>New project is loading…</p>';
     else body = viewBooks(r.a || 'dashboard');
     var notLive = window.FM_CONFIG && window.FM_CONFIG.live ? '' : '<div class="p2-previewbar" role="note"><b>Preview, not the live tool.</b> Sample data, saved only in this browser: nothing here is shared with anyone, backed up, or sent. Don\'t enter real jobs until the server is connected.</div>';
-    root.innerHTML = nav(r) + '<main class="p2-main" id="p2-main">' + notLive + body + viewerHTML() + '</main>';
+    var ss = store.status ? store.status() : null, saving = ss && (ss.failed || ss.pending > 0 && Date.now() - ss.since > 2500) ? '<div class="p2-unsaved" role="alert"><b>Not saved yet.</b> ' + (ss.failed ? 'The last change didn\'t reach the server (' + esc(ss.failed) + '). It\'s kept in this browser and will be sent again; keep this tab open and tell Lindsay if this stays.' : 'Still saving ' + ss.pending + ' change' + (ss.pending > 1 ? 's' : '') + '… keep this tab open.') + '</div>' : '';
+    root.innerHTML = nav(r) + '<main class="p2-main" id="p2-main">' + notLive + saving + body + viewerHTML() + '</main>' + (window.P2Requests ? (ui.req ? '' : '<button class="p2-needbtn" data-rqstart title="Report a problem or an idea"><span class="p2-needq" aria-hidden="true">?</span><span><b>Need an update?</b><span>Report a problem or idea</span></span></button>') + window.P2Requests.dialog(ctx()) : '');
     root.classList.toggle('is-measure', r.area === 'measure'); root.classList.remove('is-sign');   // on a phone, field measure keeps the menu short
     var vc = root.querySelector('[data-close-viewer]'); if (vc) { vc.focus(); fitViewer(); }
     var f = root.querySelector('[data-autofocus]'); if (f && !vc) f.focus({ preventScroll: true });
@@ -166,25 +181,26 @@
       return ok && (!q || (j.jobCode + ' ' + j.customer + ' ' + j.projectName).toLowerCase().indexOf(q) >= 0);
     }).map(function (j) {
       var s = FM.contractSummary(j), houses = j.houses && j.houses.length > 1, open = ui.open[j.jobCode];
-      var row = '<tr><td><span class="fmp1-code">' + esc(j.jobCode) + '</span></td><td><b>' + esc(j.customer) + '</b><br><span class="fmp1-faint p2-small">' + esc(houses ? j.houses.length + ' houses · builder order' : (j.projectName || '—')) + '</span>' +
+      var row = '<tr><td><span class="fmp1-code">' + esc(j.jobCode) + '</span></td><td><a class="p2-rowlink" href="#/job/' + encodeURIComponent(j.jobCode) + '/overview"><b>' + esc(j.customer) + '</b></a><br><span class="fmp1-faint p2-small">' + esc(houses ? j.houses.length + ' houses · builder order' : (j.projectName || '—')) + '</span>' +
         (houses ? '<br><button class="p2-tog" data-houses="' + esc(j.jobCode) + '" aria-expanded="' + !!open + '">' + (open ? '▾ Hide houses' : '▸ Show houses') + '</button>' : '') + '</td>' +
         '<td>' + jobPill(j) + '</td><td class="r">' + $f(s.currentCents) + '</td><td class="r">' + (j.stage === 'quote' || j.stage === 'lost' || j.testVoid ? '—' : $f(balance(j))) + '</td>' +
-        '<td class="p2-small">' + esc(j.testVoid ? 'Not counted: ' + j.testVoid.reason : nextStep(j)) + '</td><td class="r p2-act"><a class="fmp1-btn" href="#/job/' + encodeURIComponent(j.jobCode) + '/overview">Open</a></td></tr>';
-      if (houses && open) row += j.houses.map(function (h) { return '<tr class="p2-houses"><td class="fmp1-code">' + esc(h.jobCode) + '</td><td colspan="2">' + esc(h.name) + ' · ' + esc(h.color) + '</td><td class="r">' + $f(h.totalCents) + '</td><td colspan="3"></td></tr>'; }).join('');
+        '<td class="p2-small">' + esc(j.testVoid ? 'Not counted: ' + j.testVoid.reason : nextStep(j)) + '</td></tr>';
+      if (houses && open) row += j.houses.map(function (h) { return '<tr class="p2-houses"><td class="fmp1-code">' + esc(h.jobCode) + '</td><td colspan="2">' + esc(h.name) + ' · ' + esc(h.color) + '</td><td class="r">' + $f(h.totalCents) + '</td><td colspan="2"></td></tr>'; }).join('');
       return row;
     }).join('');
     return '<div class="p2-between"><div><h1 class="fmp1-h p2-h1">All projects</h1><p class="p2-sub">Every job, its stage, what\'s owed and the next step. Builder orders keep their houses folded inside the job.</p></div>' +
       '<a class="fmp1-btn fmp1-btn--primary" href="#/new">New project</a></div>' +
       '<div class="p2-row"><input class="fmp1-input p2-search" type="search" placeholder="Search customer, project or job code" aria-label="Search projects" data-q value="' + esc(ui.q) + '">' +
       '<div class="p2-chips" role="group" aria-label="Filter">' + Object.keys(FILTERS).filter(function (k) { return k !== 'void' || nVoid || ui.filter === 'void'; }).map(function (k) { return '<button class="fmp1-btn" data-filter="' + k + '" aria-pressed="' + (ui.filter === k) + '">' + FILTERS[k] + (k === 'void' ? ' · ' + nVoid : '') + '</button>'; }).join('') + '</div></div>' +
-      '<div class="fmp1-card fmp1-table-wrap"><table class="fmp1-table p2-table"><thead><tr><th>Job</th><th>Customer</th><th>Stage</th><th class="r">Contract</th><th class="r">Balance</th><th>Next step</th><th><span class="fmp1-faint">Open</span></th></tr></thead><tbody>' +
-      (rows || '<tr><td colspan="7" class="p2-empty">No projects match.</td></tr>') + '</tbody></table></div>';
+      '<div class="fmp1-card fmp1-table-wrap"><table class="fmp1-table p2-table"><thead><tr><th>Job</th><th>Customer</th><th>Stage</th><th class="r">Contract</th><th class="r">Balance</th><th>Next step</th></tr></thead><tbody>' +
+      (rows || '<tr><td colspan="6" class="p2-empty">No projects match.</td></tr>') + '</tbody></table></div>';
   }
 
   /* ---------- job page ---------- */
-  var TABS = { overview: 'Overview', cabinets: 'Cabinets', elevations: 'Elevations', changes: 'Change orders', contract: 'Contract', invoices: 'Invoices', documents: 'Documents', activity: 'Activity' };
+  var TABS = { overview: 'Overview', cabinets: 'Cabinets', elevations: 'Elevations', estimate: 'Estimate', changes: 'Change orders', contract: 'Contract', invoices: 'Invoices', shipping: 'Shipping', documents: 'Documents', activity: 'Activity' };
   function viewJob(j, tab) {
     if (!j) return '<h1 class="fmp1-h p2-h1">Project not found</h1><a class="fmp1-btn" href="#/projects">Back to all projects</a>';
+    if (j.designTemplate && window.P2Designs) return window.P2Designs.jobView(ctx(), j, tab);
     var s = FM.contractSummary(j), nd = nextDue(j), idx = FM.STAGES.map(function (x) { return x.key; }).indexOf(j.stage);
     var stages = '<div class="fmp1-stages" role="list" aria-label="Stage">' + FM.STAGES.map(function (x, i) {
       return '<div role="listitem" class="fmp1-stage' + (j.stage === 'lost' ? '' : i < idx || (i === idx && j.stage === 'complete') ? ' is-done' : i === idx ? ' is-now' : '') + '"><i></i><span>' + esc(x.label) + '</span></div>';
@@ -198,12 +214,13 @@
       var def = FM.availableActions(j).filter(function (a) { return a.id === ui.act.id; })[0];
       if (def) form = '<div class="p2-form"><b>' + esc(def.label) + '</b>' + def.fields.map(function (f) {
         return '<label class="p2-fld"><span>' + (f === 'date' ? 'Date' : 'Reason') + '</span><input class="fmp1-input" data-actfield="' + f + '" ' + (f === 'date' ? 'type="date" value="' + TODAY + '" max="' + TODAY + '"' : 'type="text"') + (f !== 'date' ? ' data-autofocus' : '') + '></label>';
-      }).join('') + '<button class="fmp1-btn fmp1-btn--primary" data-actsave>Save</button><button class="fmp1-btn fmp1-btn--quiet" data-actcancel>Cancel</button>' +
+      }).join('') + (def.id === 'order' && window.FMShipping ? '<label class="p2-fld"><span>Wholesale Cabinets order # (optional)</span><input class="fmp1-input" inputmode="numeric" data-actwc placeholder="1000174448"></label><span class="p2-small fmp1-faint" style="flex-basis:100%">Or drop the confirmation email on the <a href="#/job/' + encodeURIComponent(j.jobCode) + '/shipping">Shipping tab</a>; it fills in the lines and the ship date. Tip: in the order notes, ask the carrier to call the shop before delivery (business deliveries come unannounced).</span>' : '') +
+        '<button class="fmp1-btn fmp1-btn--primary" data-actsave>Save</button><button class="fmp1-btn fmp1-btn--quiet" data-actcancel>Cancel</button>' +
         (ui.act.error ? '<span class="p2-small" role="alert" style="color:var(--fmp1-alert-ink)">' + esc(ui.act.error) + '</span>' : '') + '</div>';
     }
     var head = '<div class="fmp1-card p2-jobhead"><div class="p2-between"><div><span class="fmp1-code">' + esc(j.jobCode) + '</span><h1 class="fmp1-h p2-h1">' + esc(j.customer) + '</h1>' +
       '<span class="fmp1-muted">' + esc(j.projectName || '') + (j.quoteDate ? ' · quoted ' + longDate(j.quoteDate) : '') + (j.deliveryDate ? ' · delivery ' + longDate(j.deliveryDate) + ' (estimate)' : '') + '</span></div>' + jobPill(j) + '</div>' + voidBanner(j) +
-      (j.stage !== 'lost' ? stages : '') +
+      (j.stage !== 'lost' ? stepsBar(j, tab) : '') +
       (j.stage === 'quote' || j.stage === 'lost' ? '<div class="fmp1-money"><div><span class="k">' + (j.stage === 'lost' ? 'Quoted (lost)' : 'Quote total') + '</span><span class="v">' + $f(s.currentCents) + '</span></div></div>' :
       '<div class="fmp1-money"><div><span class="k">Contract</span><span class="v">' + $f(s.currentCents) + '</span>' + (s.changeOrderCount ? '<span class="p2-small fmp1-faint">incl. ' + s.changeOrderCount + ' change order' + (s.changeOrderCount > 1 ? 's' : '') + '</span>' : '') + '</div>' +
         '<div><span class="k">Paid</span><span class="v">' + $f(s.paidCents) + '</span></div><div><span class="k">Balance</span><span class="v">' + $f(s.balanceCents) + '</span></div>' +
@@ -213,8 +230,21 @@
     var tabs = '<nav class="p2-tabs" aria-label="Project sections">' + Object.keys(TABS).map(function (k) {
       return '<a href="#/job/' + encodeURIComponent(j.jobCode) + '/' + k + '"' + (k === tab ? ' aria-current="page"' : '') + '>' + TABS[k] + '</a>';
     }).join('') + '</nav>';
-    var bodyFn = { overview: tabOverview, cabinets: tabCabinets, elevations: tabElevations, changes: tabChanges, contract: tabContract, invoices: tabInvoices, documents: tabDocuments, activity: tabActivity }[tab] || tabOverview;
+    var bodyFn = { estimate: function (jj) { return window.P2Estimate ? window.P2Estimate.render(ctx(), jj) : '<p>Estimate is loading…</p>'; }, shipping: function (jj) { return window.P2Ship ? window.P2Ship.tab(ctx(), jj) : '<p>Shipping is loading…</p>'; }, overview: tabOverview, cabinets: tabCabinets, elevations: tabElevations, changes: tabChanges, contract: tabContract, invoices: tabInvoices, documents: tabDocuments, activity: tabActivity }[tab] || tabOverview;
     return head + tabs + bodyFn(j);
+  }
+
+  /* ---------- One clear next step (HANDOFF §41): five numbered steps and "Next up" ---------- */
+  function stepsBar(j, tab) {
+    var S = window.FMSteps; if (!S) return '';
+    var shp = window.FMShipping ? window.FMShipping.status(j, TODAY) : null;
+    var st = S.of(j, { estimateStatus: window.FMEstimate ? window.FMEstimate.status(j) : null, shipping: shp }), nx = st.next;
+    var bar = '<ol class="js-steps" aria-label="Where this project is">' + st.steps.map(function (s, i) {
+      return '<li class="is-' + s.state + '"' + (s.state === 'now' ? ' aria-current="step"' : '') + '><span>' + (s.state === 'done' ? '✓' : i + 1) + '</span>' + esc(s.label) + '</li>'; }).join('') + '</ol>';
+    var users = window.P2Users ? window.P2Users.list() : [];
+    var sales = '<label class="js-sales"><span>Salesperson</span><select class="fmp1-input" data-jobsales><option value="">Choose…</option>' + users.map(function (u) { return '<option' + (u.name === j.salesperson ? ' selected' : '') + '>' + esc(u.name) + '</option>'; }).join('') + '</select></label>';
+    var next = nx ? '<div class="js-next"><span class="fmp1-eyebrow">Next up</span><b>' + esc(nx.text) + '</b>' + (nx.tab !== tab ? '<a class="fmp1-btn fmp1-btn--primary" href="#/job/' + encodeURIComponent(j.jobCode) + '/' + nx.tab + '">Go</a>' : '<span class="p2-small fmp1-faint">on this page</span>') + '</div>' : '';
+    return bar + '<div class="js-row">' + next + sales + '</div>' + (shp && window.P2Ship ? '<div class="js-ship"><span class="fmp1-eyebrow">Shipping</span>' + window.P2Ship.badge(ctx(), j) + (tab !== 'shipping' ? '<a class="p2-small" href="#/job/' + encodeURIComponent(j.jobCode) + '/shipping">Open</a>' : '') + '</div>' : '');
   }
 
   /* ---------- Test / Void (HANDOFF §29): Full access only; the project leaves every total, list and report ---------- */
@@ -235,6 +265,7 @@
   }
   function tabOverview(j) {
     var warn = FM.jobWarnings(j).filter(function (w) { return !((j.stage === 'quote' || j.stage === 'lost') && w.key === 'billing'); }).map(function (w) { return '<li><span>' + esc(w.text) + '</span></li>'; }).join('');
+    if (window.FMShipping) warn += window.FMShipping.attention(j, TODAY).map(function (w) { return '<li><span>' + esc(w.text) + '</span><a class="p2-small" href="#/job/' + encodeURIComponent(j.jobCode) + '/shipping">Shipping</a></li>'; }).join('');
     var p = j.pricing;
     var pricing = p ? '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">This job\'s pricing</span><ul class="p2-list">' +
       (p.markupPct != null ? '<li><span>Markup</span><b>' + p.markupPct + '%</b></li>' : '<li><span>Markup</span><b>' + esc(p.note || 'Per line') + '</b></li>') +
@@ -243,8 +274,9 @@
         p.assemblyCents != null ? '<li><span>Assembly (per home)</span><b>' + $f(p.assemblyCents) + ' flat</b></li>' : '') +
       (p.plan && window.P2Flows ? '<li><span>Payment plan</span><b>' + window.P2Flows.planStages(p).map(function (st) { return esc(st.name) + ' ' + st.pct + '%'; }).join(' · ') + '</b></li>' : '') + '</ul><p class="p2-note">Set on this job, never per customer.</p></div>' : '';
     var log = store.log(j.jobCode).slice(0, 5).map(function (e) { return '<li><span>' + esc(e.text) + '</span><span class="fmp1-faint p2-small">' + esc(e.by) + '</span></li>'; }).join('');
-    return '<div class="p2-grid"><div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Needs attention</span>' + (warn ? '<ul class="p2-list">' + warn + '</ul>' : '<p class="p2-ok">Nothing on this job needs attention.</p>') + '</div>' +
-      pricing + '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Recent activity</span>' + (log ? '<ul class="p2-list">' + log + '</ul>' : '<p class="p2-empty">No activity recorded in this preview yet.</p>') + '</div></div>';
+    var design = window.P2Elev && window.P2Elev.hero ? window.P2Elev.hero(ctx(), j) : '';
+    return design + '<div class="p2-grid"><div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Needs attention</span>' + (warn ? '<ul class="p2-list">' + warn + '</ul>' : '<p class="p2-ok">Nothing on this job needs attention.</p>') + '</div>' +
+      (window.P2Emails ? window.P2Emails.card(ctx(), j) : '') + pricing + '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Recent activity</span>' + (log ? '<ul class="p2-list">' + log + '</ul>' : '<p class="p2-empty">No activity recorded in this preview yet.</p>') + '</div>' + (window.P2Group3 ? window.P2Group3.closeCard(ctx(), j) : '') + '</div>';
   }
 
   function tabCabinets(j) {
@@ -284,7 +316,7 @@
     if (window.P2Flows && window.P2Flows.changes) return window.P2Flows.changes(ctx(), j);
     return '<div class="fmp1-card p2-pad"><p class="p2-empty">Change orders are loading…</p></div>';
   }
-  function tabElevations(j) { return window.P2Elev ? window.P2Elev.tab(ctx(), j) : '<div class="fmp1-card p2-pad"><p class="p2-empty">Elevations are loading…</p></div>'; }
+  function tabElevations(j) { return window.P2Elev ? (window.P2Designs ? window.P2Designs.approvalCard(ctx(), j) : '') + window.P2Elev.tab(ctx(), j) : '<div class="fmp1-card p2-pad"><p class="p2-empty">Elevations are loading…</p></div>'; }
   function tabContract(j) {
     if (window.P2Flows && window.P2Flows.contract) return window.P2Flows.contract(ctx(), j);
     return '<div class="fmp1-card p2-pad"><p class="p2-empty">Contract is loading…</p></div>';
@@ -293,11 +325,16 @@
   function tabInvoices(j) {
     var live = j.invoices.filter(function (i) { return i.status !== 'void'; });
     var rows = live.map(function (inv) {
-      var st = FM.invoiceState(inv, TODAY), paidC = FM.invoicePaidCents(inv), share = FM.invoicePercent(inv, j), pays = (inv.payments || []).map(function (p) {
-        return longDate(p.date) + ' · ' + $f(p.amountCents) + (p.reference ? ' · ' + esc(p.reference) : ' · <span style="color:var(--fmp1-alert-ink)">no check #</span>');
+      var st = FM.invoiceState(inv, TODAY), paidC = FM.invoicePaidCents(inv), share = FM.invoicePercent(inv, j), pays = (inv.payments || []).map(function (p, pi) {
+        var key = inv.id + ':' + pi, editing = ui.chk && ui.chk.key === key;
+        var ref = p.reference ? ' · ' + esc(p.reference) : editing
+          ? '<span class="p2-chkform"><input class="fmp1-input" data-chkref value="' + esc(ui.chk.value || '') + '" placeholder="Check #" aria-label="Check number" data-autofocus inputmode="numeric"><button class="fmp1-btn fmp1-btn--primary" data-chksave="' + esc(key) + '">Save</button><button class="fmp1-btn fmp1-btn--quiet" data-chkcancel>Cancel</button>' +
+            (ui.chk.error ? '<span role="alert" style="color:var(--fmp1-alert-ink)">' + esc(ui.chk.error) + '</span>' : '') + '</span>'
+          : ' · <span style="color:var(--fmp1-alert-ink)">no check #</span> <button class="p2-linkbtn" data-chkadd="' + esc(key) + '">Add check #</button>';
+        return longDate(p.date) + ' · ' + $f(p.amountCents) + ref;
       }).join('<br>');
       var tone = st.key === 'paid' ? 'fmp1-pill--good' : st.key === 'overdue' || st.key === 'credit' ? 'fmp1-pill--alert' : 'fmp1-pill--proposed';
-      var row = '<tr><td><button class="p2-linkbtn" data-open-inv="' + esc(inv.id) + '">' + esc(inv.label) + '</button><br><span class="fmp1-faint p2-small">Due ' + longDate(inv.dueDate) + '</span></td>' +
+      var row = '<tr><td><button class="p2-linkbtn" data-open-inv="' + esc(inv.id) + '">' + esc(inv.label) + '</button><br><span class="fmp1-faint p2-small">Due ' + longDate(inv.dueDate) + '</span>' + (window.P2Invoicing ? window.P2Invoicing.rowTag(ctx(), j, inv) : '') + '</td>' +
         '<td><span class="fmp1-pill ' + tone + '">' + esc(st.label) + '</span></td><td class="r">' + (inv.role === 'change_order' || inv.amountCents < 0 ? '<span class="fmp1-faint p2-small">change order</span>' : share.actual.toFixed(2) + '%') + '</td>' +
         '<td class="r"><b>' + $f(inv.amountCents) + '</b></td><td class="p2-small">' + (pays || '<span class="fmp1-faint">None yet</span>') +
         (st.key !== 'paid' && st.key !== 'void' && !(ui.pay && ui.pay.inv === inv.id) ? '<div style="margin-top:6px"><button class="fmp1-btn" data-pay="' + esc(inv.id) + '">' + (inv.amountCents < 0 ? 'Record refund' : 'Record payment') + '</button></div>' : '') + '</td></tr>';
@@ -307,10 +344,11 @@
     var s = FM.contractSummary(j);
     return '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Invoices · ' + live.length + ' <span class="p2-small fmp1-faint" style="letter-spacing:0;text-transform:none;font-weight:400">· click an invoice to open it</span></span>' +
       (ui.paidNote ? '<div class="fmp1-note fmp1-note--good p2-small" role="status" data-paidnote>✓ ' + esc(ui.paidNote) + '</div>' : '') +
+      (window.P2Invoicing ? window.P2Invoicing.panel(ctx(), j) : '') +
       '<div class="fmp1-table-wrap"><table class="fmp1-table p2-table p2-invtable"><thead><tr><th>Invoice</th><th>Status</th><th class="r">Share</th><th class="r">Amount</th><th>Payments</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
       (s.invoicesMatchContract ? '<div class="fmp1-note fmp1-note--good p2-small">✓ Invoices add up to the contract total of ' + $f(s.currentCents) + '.</div>'
         : '<div class="fmp1-note fmp1-note--alert p2-small">Invoices total ' + $f(s.invoicedCents) + '; the contract is ' + $f(s.currentCents) + '.</div>') +
-      schedPanel(j) + docRows(j, { kind: '__none', packetSub: 'All invoices together, with the payment schedule and quote' }) + '</div>';
+      schedPanel(j) + docRows(j, { kind: '__none', packetSub: 'All invoices together, with the payment schedule and quote' }) + '</div>' + (window.P2Group3 ? window.P2Group3.costsCard(ctx(), j) : '');
   }
   /* ---------- Adjust the payment schedule after signing (HANDOFF §29, FMSchedule) ---------- */
   function schedPanel(j) {
@@ -399,7 +437,7 @@
     return '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Documents · ' + (S.count + (j.stage !== 'lost' ? 1 : 0)) + '</span>' +
       sec('Contract and invoices', '', contract || '<p class="p2-small fmp1-faint">No signed files attached yet.</p>') +
       sec('Change orders', 'Each change order\'s own document, plus anything attached to it (signed copy, supplier quote, damage photos).', cos) +
-      sec('Supplier orders', '', supplier) +
+      sec('Supplier orders & shipping', '', supplier) +
       sec('Supporting documents', 'Architectural plans, photos and anything else from the client that belongs with the job.', form + note + (supporting || '<p class="p2-empty">Nothing uploaded yet.</p>')) +
       removed + '</div>';
   }
@@ -423,6 +461,9 @@
         '<td class="r p2-act">' + (u.id === mine || lastFull ? '' : '<button class="fmp1-btn fmp1-btn--quiet" data-userrm="' + esc(u.id) + '">Remove</button>') + '</td></tr>';
     }).join('');
     return head('Users', 'Who can sign in to the Project Builder and what they can do. Every change anyone makes is logged with their name.') +
+      '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Finance email</span><p class="p2-small">Where the executed agreement and invoices go when a contract is fully signed (Invoices tab → Send to finance).</p>' +
+      '<div class="p2-form"><label class="p2-fld" style="min-width:200px"><span>Name</span><input class="fmp1-input" data-finname value="' + esc(window.P2Invoicing ? window.P2Invoicing.financeName(ctx()) : '') + '"' + (me().access === 'full' ? '' : ' disabled') + '></label><label class="p2-fld" style="min-width:280px"><span>Email</span><input class="fmp1-input" type="email" data-finemail value="' + esc((store.settings().financeEmail) || (window.FMInvoicing ? window.FMInvoicing.SETTINGS.financeEmail : '')) + '"' + (me().access === 'full' ? '' : ' disabled') + '></label>' +
+      (me().access === 'full' ? '<button class="fmp1-btn" data-finsave>Save</button>' : '<span class="p2-small fmp1-faint">Full access can change it.</span>') + (ui.finMsg ? '<span class="p2-small" role="status">' + esc(ui.finMsg) + '</span>' : '') + '</div></div>' +
       '<div class="fmp1-card fmp1-table-wrap"><table class="fmp1-table p2-table p2-users"><thead><tr><th>Name</th><th>Email</th><th>Access</th><th>Contracts</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
       '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Add a user</span><div class="p2-form">' +
         '<label class="p2-fld"><span>Name</span><input class="fmp1-input" data-newuser="name"></label><label class="p2-fld"><span>Email</span><input class="fmp1-input" type="email" data-newuser="email"></label>' +
@@ -469,12 +510,16 @@
 
   function booksDashboard(jobs) {
     var d = BK.dashboard(jobs, TODAY);
+    var steps = window.FMSteps ? window.FMSteps.today(store.jobs(), window.FMSign, TODAY, { estimateStatus: window.FMEstimate ? window.FMEstimate.status : null, shipping: window.FMShipping ? function (jj) { return window.FMShipping.attention(jj, TODAY); } : null }) : [];
+    var todos = steps.concat(window.FMInvoicing ? window.FMInvoicing.todo(store.jobs(), TODAY).map(function (x) { x.status = x.kind === 'invoice' ? 'Send' : 'Finance'; return x; }) : []).map(function (x) {
+      var jj = store.job(x.jobCode) || {}; return { jobCode: x.jobCode, tab: x.tab, tone: x.kind === 'remind' || x.kind === 'countersign' || x.tone === 'alert' ? 'alert' : 'check', status: x.status, title: x.text, customer: jj.customer, action: 'Open' }; });
+    d.attention = (window.P2Mail ? window.P2Mail.today(ctx()) : []).concat(todos, d.attention);
     var kpis = '<div class="p2-kpis">' + d.kpis.map(function (k) {
       return '<div class="fmp1-card p2-kpi"><span class="k">' + esc(k.label) + '</span><span class="v">' + (k.pct !== undefined ? k.pct + '%' : $f(k.cents)) + '</span>' + (k.note ? '<span class="p2-small fmp1-faint">' + esc(k.note) + '</span>' : '') + '</div>';
     }).join('') + '</div>';
     // a task list: status label, what and who, the amount, and one button that goes where it gets fixed (no sentences as links)
     var att = d.attention.length ? '<ul class="p2-tasks">' + d.attention.map(function (a) {
-      var href = '#/job/' + encodeURIComponent(a.jobCode) + '/' + (a.tab || 'overview');
+      var href = a.href || '#/job/' + encodeURIComponent(a.jobCode) + '/' + (a.tab || 'overview');
       return '<li class="p2-task is-' + (a.tone === 'alert' ? 'alert' : 'check') + '"><span class="p2-task-status">' + esc(a.status || (a.tone === 'alert' ? 'Overdue' : 'Check')) + '</span>' +
         '<span class="p2-task-main"><b>' + esc(a.title || a.text) + '</b><span class="p2-task-who">' + esc(a.customer || '') + (a.jobCode ? ' · ' + esc(a.jobCode) : '') + '</span>' + (a.detail ? '<span class="p2-task-detail">' + esc(a.detail) + '</span>' : '') + '</span>' +
         (a.amountCents ? '<span class="p2-task-amt">' + $f(a.amountCents) + '</span>' : '<span></span>') +
@@ -482,7 +527,7 @@
     var del = d.deliveries.length ? '<ul class="p2-list">' + d.deliveries.map(function (x) {
       return '<li><span>' + jobLink(x.jobCode, x.customer) + '<br><span class="fmp1-faint p2-small">' + esc(x.project || '') + '</span></span><span class="r">' + longDate(x.deliveryDate) + '<br><span class="p2-small fmp1-faint">' + $f(x.balanceCents) + ' still owed</span></span></li>'; }).join('') + '</ul>' : '<p class="p2-empty">No deliveries in the next 30 days.</p>';
     return head('Dashboard', 'Money in, money owed, and what needs doing. Sample data as of ' + longDate(TODAY) + '.') + kpis +
-      '<div class="p2-grid"><div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Needs attention · ' + d.attention.length + '</span>' + att + '</div>' +
+      '<div class="p2-grid"><div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Today · ' + d.attention.length + ' to do</span>' + att + '</div>' +
       '<div class="fmp1-card p2-pad"><span class="fmp1-eyebrow">Deliveries in the next 30 days (estimates)</span>' + del + '</div></div>';
   }
 
@@ -568,7 +613,7 @@
     var rows = pl.jobs.map(function (x) {
       var key = 'pl:' + x.jobCode, open = ui.open[key];
       var row = '<tr><td>' + jobLink(x.jobCode, x.customer) + '<br><span class="fmp1-faint p2-small">' + esc(x.project || x.jobCode) + '</span><br><button class="p2-tog" data-houses="' + esc(key) + '" aria-expanded="' + !!open + '">' + (open ? '▾ Hide breakdown' : '▸ Breakdown') + '</button></td>' +
-        '<td class="r">' + $f(x.contractCents) + '</td><td class="r">' + $f(x.taxCents) + '</td><td class="r">' + $f(x.revenueCents) + '</td><td class="r">' + (x.costKnown ? $f(x.costCents) : '<span class="fmp1-faint">not on file</span>') + '</td>' +
+        '<td class="r">' + $f(x.contractCents) + '</td><td class="r">' + $f(x.taxCents) + '</td><td class="r">' + $f(x.revenueCents) + '</td><td class="r">' + (x.costKnown ? $f(x.costCents) + (x.costActual ? '<br><span class="p2-small fmp1-faint">actual, from job costs</span>' : '') : '<span class="fmp1-faint">not on file</span>') + '</td>' +
         '<td class="r">' + money(x.absorbedCents) + '</td><td class="r"><b>' + $f(x.grossProfitCents) + '</b></td><td class="r">' + x.marginPct + '%</td></tr>';
       if (open) row += '<tr class="p2-pl-detail"><td colspan="8">' + plDetail(x) + '</td></tr>';
       return row;
@@ -838,7 +883,23 @@
 
   /* ---------- events ---------- */
   root.addEventListener('click', function (e) {
-    var t = e.target.closest('button, a[data-npstep], a[data-costep], a[data-ctfix], a[data-coreset]'); if (!t) return;
+    // a table row with a link in it opens like the link (like TJ's): click anywhere on the row, not just the name
+    var tr = e.target.closest('.p2-table tbody tr');
+    if (tr && !e.target.closest('a, button, input, select, textarea, label, summary') && !(window.getSelection && String(window.getSelection()))) {
+      var rl = tr.querySelector('a[href^="#/"]'); if (rl) { location.hash = rl.getAttribute('href'); return; }
+    }
+    var t = e.target.closest('button, a[data-npstep], a[data-costep], a[data-ctfix], a[data-coreset], a[data-esstep], a[data-cbstep]'); if (!t) return;
+    if (window.P2Colors && window.P2Colors.click(ctx(), t)) return;
+    if (window.P2Requests && window.P2Requests.click(ctx(), t)) { if (t.tagName === 'A') e.preventDefault(); return; }
+    if (window.P2Estimate && window.P2Estimate.click(ctx(), t)) { if (t.tagName === 'A') e.preventDefault(); return; }
+    if (window.P2Designs && window.P2Designs.click(ctx(), t)) { if (t.tagName === 'A') e.preventDefault(); return; }
+    if (window.P2Contract && window.P2Contract.click(ctx(), t)) { if (t.tagName === 'A') e.preventDefault(); return; }
+    if (window.P2Invoicing && window.P2Invoicing.click(ctx(), t)) return;
+    if (window.P2Group3 && window.P2Group3.click(ctx(), t)) return;
+    if (window.P2Emails && window.P2Emails.click(ctx(), t)) return;
+    if (window.P2Mail && window.P2Mail.click(ctx(), t)) return;
+    if (window.P2Ship && window.P2Ship.click(ctx(), t)) return;
+    if (t.hasAttribute('data-finsave')) { var fv = (root.querySelector('[data-finemail]') || {}).value || '', fn = ((root.querySelector('[data-finname]') || {}).value || '').trim(); var fr = store.saveSetting('financeEmail', fv.trim(), me()); if (fr.ok) fr = store.saveSetting('financeName', fn, me()); ui.finMsg = fr.ok ? 'Saved. Finance packages go to ' + (fn ? fn + ' (' + fv.trim() + ')' : fv.trim()) + '.' : fr.error; return render(); }
     if (window.P2Sign && window.P2Sign.click(ctx(), t)) { if (t.tagName === 'A') e.preventDefault(); return; }
     if (t.tagName === 'A') e.preventDefault();   // the step tabs of New Project and change orders are links: switch steps, don't navigate
     var r = route(), j = r.area === 'job' ? store.job(r.a) : null;
@@ -854,6 +915,13 @@
     if (t.hasAttribute('data-printdl')) { downloadViewer(); return; }
     if (t.dataset.gopay) { ui.pendingPay = { inv: t.dataset.inv }; ui.paidNote = null; return go('#/job/' + encodeURIComponent(t.dataset.gopay) + '/invoices'); }
     if (t.dataset.pay) { ui.pay = { inv: t.dataset.pay }; ui.paidNote = null; return render(); }
+    if (t.dataset.chkadd) { ui.chk = { key: t.dataset.chkadd, value: '' }; return render(); }
+    if (t.hasAttribute('data-chkcancel')) { ui.chk = null; return render(); }
+    if (t.dataset.chksave && j && ui.chk) {
+      var ck = t.dataset.chksave.split(':'), cr = store.setPaymentReference(j.jobCode, ck[0], +ck[1], ui.chk.value, me().name);
+      if (!cr.ok) { ui.chk.error = cr.error; return render(); }
+      ui.chk = null; ui.paidNote = 'Check number saved. It shows on the invoice, in Payments and in Reconcile.'; return render();
+    }
     if (t.hasAttribute('data-paycancel')) { ui.pay = null; return render(); }
     if (t.hasAttribute('data-paysave') && j) {
       var v = {}; [].forEach.call(root.querySelectorAll('[data-payf]'), function (el) { v[el.dataset.payf] = el.value; });
@@ -880,7 +948,9 @@
       var a = FM.applyAction(j, ui.act.id, input, me().name);
       if (!a.ok) { ui.act.error = a.error; return render(); }
       var def = FM.availableActions(j).filter(function (x) { return x.id === ui.act.id; })[0];
-      store.update(j.jobCode, function () { return a.job; }, def.label + (input.date ? ' (' + input.date + ')' : '') + (input.reason ? ': ' + input.reason : '') + '.', me().name);
+      var wcEl = root.querySelector('[data-actwc]'), wcNo = wcEl ? wcEl.value.trim() : '', nj = a.job, wlog = '';
+      if (wcNo && window.FMShipping) { var wo = window.FMShipping.addOrder(nj, { number: wcNo, lines: [], placedOn: input.date }, { by: me().name, today: TODAY }); if (!wo.ok) { ui.act.error = wo.error; return render(); } nj = wo.job; wlog = ' ' + wo.log; }
+      store.update(j.jobCode, function () { return nj; }, def.label + (input.date ? ' (' + input.date + ')' : '') + (input.reason ? ': ' + input.reason : '') + '.' + wlog, me().name);
       ui.act = null; return render();
     }
     if (t.dataset.docrm) { ui.docRm = { id: t.dataset.docrm, reason: '' }; return render(); }
@@ -905,16 +975,29 @@
     if (window.P2Flows && window.P2Flows.click && window.P2Flows.click(ctx(), t, e) !== false) return;
   });
   root.addEventListener('input', function (e) {
+    if (window.P2Emails && window.P2Emails.input(ctx(), e)) return;
+    if (window.P2Colors && window.P2Colors.input(ctx(), e)) return;
+    if (window.P2Mail && window.P2Mail.input(ctx(), e)) return;
+    if (window.P2Ship && window.P2Ship.input(ctx(), e)) return;
     if ((e.target.dataset.schedf || e.target.dataset.schedq) && schedInput(e.target)) return;
     if (e.target.dataset.upf) { var ur = route(); ui.up = ui.up && ui.up.job === ur.a ? ui.up : { job: ur.a }; ui.up[e.target.dataset.upf] = e.target.value; ui.up.msg = ui.up.err = null; return; }
     if (e.target.hasAttribute('data-docrmr') && ui.docRm) { ui.docRm.reason = e.target.value; return; }
     if (e.target.hasAttribute('data-q')) { ui.q = e.target.value; var pos = e.target.selectionStart; render(); var s = root.querySelector('[data-q]'); s.focus(); s.setSelectionRange(pos, pos); }
     if (window.P2Customers && window.P2Customers.input(ctx(), e)) return;
     if (window.P2Elev && window.P2Elev.input(ctx(), e)) return;
+    if (window.P2Search && window.P2Search.input(ctx(), e)) return;
+    if (window.P2Requests && window.P2Requests.input(ctx(), e)) return;
+    if (window.P2Estimate && window.P2Estimate.input(ctx(), e)) return;
+    if (window.P2Designs && window.P2Designs.input(ctx(), e)) return;
+    if (window.P2Group3 && window.P2Group3.input(ctx(), e)) return;
+    if (e.target.hasAttribute('data-chkref') && ui.chk) { ui.chk.value = e.target.value; return; }
     if (window.P2Sign && window.P2Sign.input(ctx(), e)) return;
     if (window.P2Flows && window.P2Flows.input) window.P2Flows.input(ctx(), e);
   });
   root.addEventListener('change', function (e) {
+    if (window.P2Emails && window.P2Emails.change(ctx(), e)) return;
+    if (window.P2Mail && window.P2Mail.change(ctx(), e)) return;
+    if (window.P2Ship && window.P2Ship.change(ctx(), e)) return;
     if (e.target.dataset.schedf || e.target.dataset.schedq) { schedInput(e.target); if (e.target.dataset.schedf) render(); return; }   // re-total once a box is left
     if (e.target.hasAttribute('data-upload')) { upload(e.target); return; }
     if (e.target.dataset.upf === 'category') { render(); return; }   // show that kind's hint
@@ -925,6 +1008,12 @@
     if (window.P2Customers && window.P2Customers.change(ctx(), e)) return;
     if (window.P2Measure && window.P2Measure.change(ctx(), e)) return;
     if (window.P2Elev && window.P2Elev.change(ctx(), e)) return;
+    if (window.P2Requests && window.P2Requests.change(ctx(), e)) return;
+    if (e.target.hasAttribute('data-jobsales')) { var jr = route(), jv = e.target.value || null; store.update(jr.a, function (x) { x.salesperson = jv; return x; }, 'Salesperson set to ' + (jv || 'none') + ' by ' + me().name + '.', me().name); return render(); }
+    if (window.P2Group3 && window.P2Group3.change(ctx(), e)) return;
+    if (window.P2Estimate && window.P2Estimate.change(ctx(), e)) return;
+    if (window.P2Contract && window.P2Contract.change(ctx(), e)) return;
+    if (window.P2Designs && window.P2Designs.input(ctx(), e)) return;
     if (window.P2Sign && window.P2Sign.change(ctx(), e)) return;
     if (window.P2Flows && window.P2Flows.change) window.P2Flows.change(ctx(), e);
   });

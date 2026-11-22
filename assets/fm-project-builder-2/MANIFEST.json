@@ -1,8 +1,13 @@
 {
   "package": "fm-project-builder-phase1",
-  "version": "2.11.1",
+  "version": "2.16.0",
   "created": "2026-10-27",
   "changes": [
+    "2.16.0: Owner's Nov 20 work (HANDOFF §44-§46). §44: change orders end in Finalize (Download the invoice, Get it signed), who signs fixed in place (P2Sign.whoForm), Fix a mistake; invoices and change orders in the original change order look with lines grouped by color (FMDocs 1.5.0); cabinet colors from the catalog (FMColors, 4 tests; settings.cabinetColors). §45: shipping, receiving and damage claims Phase A (FMShipping, 6 tests): Shipping tab, reading WC emails (payment details never read), receiving with the 5-day window, claims and the claim packet, Shipping page, four customer emails; jobs gain supplierOrders and claims. §46: the Wholesale Cabinets inbox (FMMailIn, 8 tests): forwards from hello@fremontmakers.com to fremontmakers@gmail.com read by the server (Gmail API) and filed on their jobs; store mailIn/addMailIn/updateMailIn. Additive only.",
+    "2.15.0: Owner's review of 2.14.0 (HANDOFF §43): Start + Project / + Design at the top of the menu; Search placeholder; click anywhere on a table row to open it; the design (3D view, plans, approval) on a project's Overview (P2Elev.hero); new change order opens at the top; emails to the customer (FMEmails, 5 tests): ten templates suggested by stage on Overview, editable under Company > Email templates (settings.emailTemplates, Full access, logged), used by signing and invoice emails; order board shows blockers with fix buttons (FMCloseout 1.1.0 blocker/fixFor). Additive only; no new server work.",
+    "2.14.0: Group 3 (HANDOFF §42, FMCloseout, 8 tests): job costs from supplier invoice PDFs or by hand, Job P&L uses actual cost when logged; order board (#/board) moving jobs through the ledger's guards; close-out check, printable handoff packet (installed list, warranty as signed, care guide, review QR), review and referrals; sales tax from the site address (server endpoint) or typed with a reason, what's taxed list, assembly labor stays untaxed (owner). All new fields additive; store test for data saved before 2.14.0.",
+    "2.13.0: Designs library and design approval; step-by-step estimate with approval; contract builder with live agreement; e-sign welcome, initials on four sections, countersign notices, thank-you pages; invoices issued on signing and sent to the customer and finance (Sara Thorp); drag uppers up/down; Add check #; New Project without cabinets; change orders for additional products and the whole order / every house; supplier PDFs read in the browser (text or OCR); five project steps with Next up, Today, save journal, search, salesperson, drawing approval (HANDOFF §37-§41).",
+    "2.12.0: \"Need an update?\" (FMRequests, 7 tests): a floating button on every page opens a three-step form (kind, where they were, words + urgency + screenshots); requests are emailed to the owner (POST /api/projectbuilder/requests, same shape as TJ's Log & Timber) and listed under Company › Update requests with statuses and notes. Also carries 2.11.0 and 2.11.1 (HANDOFF §36).",
     "2.11.1: Updates never overwrite data (owner, Nov 9; HANDOFF §0 rule 9): back up first, no reset/reseed over live data, FMStore.create({ live: true }) skips seed corrections and refuses reset (+1 test). Customer signing page stands alone with a confirmation and no way into the tool. Upload SKUs / Paste SKUs on change orders (FMChangeOrder.parseSkus, +2 tests); supplier PDFs attached to the change order. RELEASE-NOTES.md entries for 2.11.0 and 2.11.1 (HANDOFF §35).",
     "2.11.0: Signing in the tool with a certificate of completion (FMSign, 15 tests): one secret link per signer, consent disclosure, typed or drawn signature, document frozen by SHA-256, reminders day 3/7, 30-day expiry, signed copy with certificate filed under Documents; guided signing outside the tool (send your usual way, upload, Mark signed); charged change orders sent for signature when saved. Dropbox Sign API on hold (owner, Nov 6: $75/month). Documents tab sections and supporting-document uploads (FMFiles, 10 tests). Braddy change order 1 PDF attached; VSB30 3 to 2 confirmed. Change orders for every kind of change: add, swap, return with restocking, backorder swap or wait, damage with claims, our mistake, other charges, no-change notices, supplier credits, withdraw, credit invoices and refunds (HANDOFF §32-§34).",
     "2.10.0: Reads the existing tool's real cloud data (FMLegacy, Nov 5 fixture, 10 tests); Company P&L and Balance Sheet carried over with the owner's numbers, Full access editing, logged (FMCompany, 8 tests); Job P&L / Job balances renamed; data up to Nov 5 (Penrose invoice 3 paid, Willow Creek CO 1 invoice paid, CO 1 real cost $5,388.73); address /projectbuilder with /quote kept live (do-not-use for the team); plus the Nov 4 work: gross profit drill-down with net cabinet cost, revenue breakdown, Penrose refund, Elevation/Layout/3D views, sketch without SKUs (HANDOFF.md 30-31, UPGRADE-2.9.0-to-2.10.0.md)",
@@ -70,8 +75,6 @@
     "changeorder 27",
     "bid 6",
     "books 7",
-    "store 14",
-    "elevations 21",
     "measure 5",
     "reports 8",
     "address 6",
@@ -79,23 +82,36 @@
     "company 8",
     "legacy 10",
     "files 10",
-    "sign 15"
+    "requests 7",
+    "sign 17",
+    "elevations 23",
+    "store 19",
+    "estimate 5",
+    "designs 4",
+    "invoicing 5",
+    "supplierpdf 3",
+    "steps 4",
+    "closeout 10",
+    "emails 5",
+    "colors 4",
+    "mailin 8",
+    "shipping 6"
   ],
   "files": [
     {
       "path": "HANDOFF.md",
-      "bytes": 186903,
-      "sha256": "2d399873952c29d69c3181fd97c927dbad50fb662be01a859cbab8294861ad9e"
+      "bytes": 249529,
+      "sha256": "253599bc65715ae084bda9610cb65b2840836f7932398bf4beb6a8d8c870ce31"
     },
     {
       "path": "HERMES-LAUNCH.md",
-      "bytes": 16991,
-      "sha256": "f73926f2d0406b30238fc0d1d599ddf387ff8f4616e79aa63f45a046919a5e69"
+      "bytes": 19569,
+      "sha256": "10243fb87097992468fc99a74d006d75c056c1a7f3a03ad0c8458b555a46167d"
     },
     {
       "path": "RELEASE-NOTES.md",
-      "bytes": 2702,
-      "sha256": "a660373bd841856a08442231caa38c4a63e4a276c60e8dec4384c7631d217357"
+      "bytes": 11562,
+      "sha256": "07591c1d94ac7b58e46a19ed60a712b6bd622912d4c9052f6f3ca4c02f1192d6"
     },
     {
       "path": "UPGRADE-2.10.0-to-2.11.0.md",
@@ -106,6 +122,31 @@
       "path": "UPGRADE-2.10.0-to-2.11.1.md",
       "bytes": 4949,
       "sha256": "ac917997dd1da3ebbab6b55beb3dfc8ccdedc094c1738ca095e2f821aed4aac0"
+    },
+    {
+      "path": "UPGRADE-2.10.0-to-2.12.0.md",
+      "bytes": 5640,
+      "sha256": "c37db0a4497a7391fcaab198a5484543c5170a518e0d4fdd9e8ef8c888152c28"
+    },
+    {
+      "path": "UPGRADE-2.10.0-to-2.13.0.md",
+      "bytes": 6174,
+      "sha256": "c796918ad4c8ce6d0fa8c0a37f4977093903e9a5da2e6eaefba00aee01266433"
+    },
+    {
+      "path": "UPGRADE-2.10.0-to-2.14.0.md",
+      "bytes": 6104,
+      "sha256": "d749ecc1fa82774e5fc0ecde8245c5bf8c8d04e4e1cb32b189d78feffbdc5fab"
+    },
+    {
+      "path": "UPGRADE-2.10.0-to-2.15.0.md",
+      "bytes": 7272,
+      "sha256": "0f39301e4690b68ece7d5632f78e14785feabbffd3f8c2793846a9bdd82a77d9"
+    },
+    {
+      "path": "UPGRADE-2.10.0-to-2.16.0.md",
+      "bytes": 10405,
+      "sha256": "2a55aeb4bad008b340a9939f04655bb30473b54d14fec236cf8a237a263e1ea3"
     },
     {
       "path": "UPGRADE-2.7.2-to-2.8.0.md",
@@ -189,8 +230,8 @@
     },
     {
       "path": "phase2.html",
-      "bytes": 47401,
-      "sha256": "4593832c52471c7aab50c764a327ed2a40bb97f40f6b99505e5f33bc47d7a22f"
+      "bytes": 81675,
+      "sha256": "03217c9b7cd8f62d343a501ffeb42c2274c55fe42dcd2a2979ebc1288674fd41"
     },
     {
       "path": "preview.html",
@@ -214,8 +255,13 @@
     },
     {
       "path": "preview/phase2-app.js",
-      "bytes": 106287,
-      "sha256": "dea2f269512b486d48e7fd84563d2b66b55409a2c85ddc9aea6ced84f1dfa7dc"
+      "bytes": 119780,
+      "sha256": "b238b51e4b870cfcb86e428035ca9b61106190aba6e7ca461a8e78633ec24702"
+    },
+    {
+      "path": "preview/phase2-colors.js",
+      "bytes": 5469,
+      "sha256": "1f2bd3bd388ed8de82759ffb560a887157db21d6913cbeac6525e90f3fda0260"
     },
     {
       "path": "preview/phase2-company.js",
@@ -223,19 +269,54 @@
       "sha256": "e0dc5b7bb36d2f8ddb8df8f6674cc8af2b4374392171127363ab03c4c051096e"
     },
     {
+      "path": "preview/phase2-contract.js",
+      "bytes": 13949,
+      "sha256": "3a77749aa05b8b2cc8bdd3e91ea360076863c9043ba26694f597432305d05afb"
+    },
+    {
       "path": "preview/phase2-customers.js",
       "bytes": 22520,
       "sha256": "bfbb15b4eb44a116c27a317326daba9f3ab54b301cc25532ccccc4d85b72e37c"
     },
     {
+      "path": "preview/phase2-designs.js",
+      "bytes": 16548,
+      "sha256": "8c2c631cd96f5b6100dfcdcb04dfc3dc562a4e8c19c3669fe07edb5b8596f0be"
+    },
+    {
       "path": "preview/phase2-elevations.js",
-      "bytes": 81725,
-      "sha256": "a8d2ff4e349e2ca26fced6b6d35b2769a08df80dcc41080e936fa98c342704b0"
+      "bytes": 87688,
+      "sha256": "9d42b599e15b1a6d0bfe968801e5c51f860ed885ecb698058befe4eb6c7c8462"
+    },
+    {
+      "path": "preview/phase2-emails.js",
+      "bytes": 13742,
+      "sha256": "f7010067b9e9eb8b04b71a876bad904627e0d5719868651ecd4d5d6da09e41cf"
+    },
+    {
+      "path": "preview/phase2-estimate.js",
+      "bytes": 31950,
+      "sha256": "6e0efd45f444f7dc96dd407099a53ee7ae58c3d234173f4a6d5ab305f7348225"
     },
     {
       "path": "preview/phase2-flows.js",
-      "bytes": 128747,
-      "sha256": "43e6a48d78c7ea355c3e76bf588d9a12af50784db41ff3b99e205150c1cfbc76"
+      "bytes": 145189,
+      "sha256": "2f5fb5634fd6e63e4bd36c2bc1ed534c6ef8789cfcfad9623ea2a345bf1c7b14"
+    },
+    {
+      "path": "preview/phase2-group3.js",
+      "bytes": 31292,
+      "sha256": "49723a8478de932855258affafb95bc25a23ee971f1e29f4f195dd765b08be65"
+    },
+    {
+      "path": "preview/phase2-invoicing.js",
+      "bytes": 10076,
+      "sha256": "c1446ed774aa5d9f1312f15b59fa3ee6abf04f722822a21e5e811dbb3cbc11ad"
+    },
+    {
+      "path": "preview/phase2-mailin.js",
+      "bytes": 11087,
+      "sha256": "13f99a094ef846d637cb1fc8373540295471e41293b2fb1277822c16bec2aa60"
     },
     {
       "path": "preview/phase2-measure.js",
@@ -243,14 +324,34 @@
       "sha256": "e9ecaf287ee77a496456e2ace856a0bb76f50116296d126d75ac4c236806f3a9"
     },
     {
+      "path": "preview/phase2-pdf.js",
+      "bytes": 3634,
+      "sha256": "c2149ef3e8cf1dc95832be77f8ece7fe2e374689446a77ad0fd49b737b5a9a27"
+    },
+    {
       "path": "preview/phase2-reports.js",
       "bytes": 7725,
       "sha256": "71bff32377f55410e89b61a7b3ea7ca76285ea470b80d5319371903d9d57db31"
     },
     {
+      "path": "preview/phase2-requests.js",
+      "bytes": 19034,
+      "sha256": "1a95ea41028c2e4026f5640b5d538316db1450f73d998b7ad302403ac4f4e362"
+    },
+    {
+      "path": "preview/phase2-search.js",
+      "bytes": 6402,
+      "sha256": "99e1d93f11513a495c76f87ffd03cd1bba7c2e859db3f46638e7d6e7edd0fd1a"
+    },
+    {
+      "path": "preview/phase2-shipping.js",
+      "bytes": 53067,
+      "sha256": "7ee9095fedde104e27cb10961788db6ae319330df69b9d16a9bcb8fdcd6d34ee"
+    },
+    {
       "path": "preview/phase2-sign.js",
-      "bytes": 37087,
-      "sha256": "14f4915ff333c4ebcbf379f7e26c406bd47f607379e89288a1f54dc787468fad"
+      "bytes": 56194,
+      "sha256": "655cfa434e67601a39b695c2d20794723c16990f42845bf934ac18a95bcc656b"
     },
     {
       "path": "preview/quote-preview.js",
@@ -279,13 +380,13 @@
     },
     {
       "path": "src/fm-phase1-docs.js",
-      "bytes": 24451,
-      "sha256": "24cc6200fa167104e6c1192c905d4bcfceb3c450508201e1244aefe3cf93559b"
+      "bytes": 31026,
+      "sha256": "3d41a7864c8c6d3b24f9ed65228e0a1757715445445e5fd8f9f7f00b3171a5fb"
     },
     {
       "path": "src/fm-phase1-ledger.js",
-      "bytes": 21544,
-      "sha256": "7654c4c5e0302eff2ac59c09ae119a38535d191744b1f7066b7f1f4e60105422"
+      "bytes": 21554,
+      "sha256": "b2137c91b310cc4de83fb59eedb7be0e924cb6fd87c61e0815754943ac8fb9f7"
     },
     {
       "path": "src/fm-phase1-pricing.js",
@@ -294,8 +395,8 @@
     },
     {
       "path": "src/fm-phase1-print.css",
-      "bytes": 8647,
-      "sha256": "545f91a1a990d47496543d83643b7a21730b11329cf3c4aed71bec0a16628cf0"
+      "bytes": 11567,
+      "sha256": "1e3a23b4a48b70bb7a8a8a4861baada2ccb29acb4ad4df5477ab97a6289b0be6"
     },
     {
       "path": "src/fm-phase1-quote.js",
@@ -329,13 +430,23 @@
     },
     {
       "path": "src/fm-phase2-books.js",
-      "bytes": 20388,
-      "sha256": "3892feb5c191fb05c4baecc6e1b2d05246fdfd921e842521208a9835f418201a"
+      "bytes": 20567,
+      "sha256": "d0e535859cb4ddfbb839f0b93b10ce1f795f9274060a1e7f85b40c16b6559ed0"
     },
     {
       "path": "src/fm-phase2-changeorder.js",
-      "bytes": 37012,
-      "sha256": "739cd3b432f491a046bad645a92c6a3c88dc0848bfcc3c84484bce43e16ffe2c"
+      "bytes": 37091,
+      "sha256": "905becb53db225d24295af3e725410cda60b2d978e33d0332bd7c93d2575c784"
+    },
+    {
+      "path": "src/fm-phase2-closeout.js",
+      "bytes": 17718,
+      "sha256": "d56512bf733a1b3d67c27df173789a59d029cbed3f7fcf73f796179612979d7e"
+    },
+    {
+      "path": "src/fm-phase2-colors.js",
+      "bytes": 11805,
+      "sha256": "7cd13132246e5f731ec5ed47a39bd9fe8a06f52523e10114e24cbaa4d2e72a46"
     },
     {
       "path": "src/fm-phase2-company.js",
@@ -353,9 +464,24 @@
       "sha256": "00135d90db12b5a8b54b2a5ee3ea24f6de51e1683c0bcab74dfc42dfd4d72778"
     },
     {
+      "path": "src/fm-phase2-designs.js",
+      "bytes": 7809,
+      "sha256": "19a582a819e6723cbcab315111a2330be3a75b8cf00f0161635d4c5ed3a90ebf"
+    },
+    {
       "path": "src/fm-phase2-elevations.js",
-      "bytes": 77525,
-      "sha256": "0f1dc2f2e4de9b002b0be26d44e805a236152d3ac48ebf430edba89bc9e116d2"
+      "bytes": 79237,
+      "sha256": "5f0b03b2323a6c75019035fa89f0e71c65f213b8d11321b49b5e1bbd7cbf14ef"
+    },
+    {
+      "path": "src/fm-phase2-emails.js",
+      "bytes": 21867,
+      "sha256": "a03f8b4762be793e3c82f7456f17b36ff1ec4930b9529d97243acd0a352d4b56"
+    },
+    {
+      "path": "src/fm-phase2-estimate.js",
+      "bytes": 11942,
+      "sha256": "1c6aa54071d228e4c96f2b9232a67844603809788c0e670718b0a91c9df059b5"
     },
     {
       "path": "src/fm-phase2-files.js",
@@ -363,9 +489,19 @@
       "sha256": "7b7e2c658f21702a9e50438eb0a9416cd9c24d75f60245bfe8317b25a08ac0ad"
     },
     {
+      "path": "src/fm-phase2-invoicing.js",
+      "bytes": 10982,
+      "sha256": "c62365771f4a509c85b1b111876bbb580eb43e512c3274c44e1463a7137e2258"
+    },
+    {
       "path": "src/fm-phase2-legacy.js",
       "bytes": 11634,
       "sha256": "cef1ca38645f690e2148fb39966df0df533996d062436972da9fc6cedc489c83"
+    },
+    {
+      "path": "src/fm-phase2-mailin.js",
+      "bytes": 16439,
+      "sha256": "6223db169c1b78ddcb48689552f94cba76afef4ce0c2981a0bbe6f9df3b9fe8a"
     },
     {
       "path": "src/fm-phase2-measure.js",
@@ -378,19 +514,39 @@
       "sha256": "a70c1c7fa83ecb26e1db7e261a7f82fe39c043f7f17c349e12fc1660c1b84f5c"
     },
     {
+      "path": "src/fm-phase2-requests.js",
+      "bytes": 12611,
+      "sha256": "d1c8c68b2ccf332cb5cb657c96b4910c73fec8123c8ae96cc940fbf3105cc080"
+    },
+    {
       "path": "src/fm-phase2-schedule.js",
       "bytes": 8534,
       "sha256": "b054e8c2adf134c4abd8ba62f63a221692c8f90ffa03baf26149851467fc7512"
     },
     {
+      "path": "src/fm-phase2-shipping.js",
+      "bytes": 33326,
+      "sha256": "656d7b2cf0816ef18fabb62bcd102c6308436d8feb59c14b96768a2c8919a102"
+    },
+    {
       "path": "src/fm-phase2-sign.js",
-      "bytes": 29180,
-      "sha256": "86e793a211cbfc0a6f2311764d785515c339d1d2e0d19b5e532e8826fcc5b120"
+      "bytes": 31282,
+      "sha256": "1d75a39c43333fbfee27f784668b57ce53dc0918c36cf75318cdae0713272dab"
+    },
+    {
+      "path": "src/fm-phase2-steps.js",
+      "bytes": 7901,
+      "sha256": "e62942e23482b57848da71c23fc08977c31a712480f287bd7758b71c7c2890c1"
     },
     {
       "path": "src/fm-phase2-store.js",
-      "bytes": 22927,
-      "sha256": "7f893d001b4888c8e80de46813ec23e2cf0c6fd7fd33f679a78a57c20c17d078"
+      "bytes": 31944,
+      "sha256": "52cdea50d294429162303aca2e978e1fe8ef8bfd97f762d2d269f21eaa9cc6fd"
+    },
+    {
+      "path": "src/fm-phase2-supplierpdf.js",
+      "bytes": 6058,
+      "sha256": "3023def3baa949a6cdcd06431e4b0f2c1eec689a6b8c67e83d2321cf7ac9ee5f"
     },
     {
       "path": "tests/activity.test.js",
@@ -423,6 +579,16 @@
       "sha256": "580dc1bf97589ce02d33cf551bd359c85995bd7db97edfa261155cccc8733fec"
     },
     {
+      "path": "tests/closeout.test.js",
+      "bytes": 9103,
+      "sha256": "c55afe1b5d0356b50d0bd6c2623e2e3a6529627943c325781811c5dbc5446bcd"
+    },
+    {
+      "path": "tests/colors.test.js",
+      "bytes": 4286,
+      "sha256": "768a71371c98c959a6a9e7f46f4e61293ba5a7e5a193bf884a124269df80a558"
+    },
+    {
       "path": "tests/company.test.js",
       "bytes": 6828,
       "sha256": "0064bf0b694bc19333f347df0251cae9ac2857046bbaa978280bc063e507f9be"
@@ -433,14 +599,29 @@
       "sha256": "d01e4eea6271429253d64b3806e60c54184a6ac1eb4ca91f94ef6084c3d3643c"
     },
     {
+      "path": "tests/designs.test.js",
+      "bytes": 3333,
+      "sha256": "46d572f925b4a18154ef56ebc743a3a07d2ff7bb0691988ce3d399daf45d4db9"
+    },
+    {
       "path": "tests/docs.test.js",
-      "bytes": 9348,
-      "sha256": "c1b672639b4679901b1817d4e4eb635105949d63701199debb47c1c7482a3a1b"
+      "bytes": 9345,
+      "sha256": "f7517064bc97360fe9bcc201bdaa185c831c597056ea75509639046adfa8abf1"
     },
     {
       "path": "tests/elevations.test.js",
-      "bytes": 20324,
-      "sha256": "270973568601e35aea26b02568a714ad41808822337499ffbf145d8109397f86"
+      "bytes": 21627,
+      "sha256": "48f17f98973ec38bc5b9125d464e7103096a173fe7c01d1417600793a3bdf661"
+    },
+    {
+      "path": "tests/emails.test.js",
+      "bytes": 6191,
+      "sha256": "e8e0c51130ea1a8fa6f290868c159fc0c8d8f897c51f18829b1aa3f87189758a"
+    },
+    {
+      "path": "tests/estimate.test.js",
+      "bytes": 4604,
+      "sha256": "a2d835bfd136fd12108a1ae523f03dcbd3d194236cbd32abcffdf9c49e9af6f6"
     },
     {
       "path": "tests/files.test.js",
@@ -453,6 +634,16 @@
       "sha256": "539fa5b3e3bbb8040bc473af72f429dd0d3d0537579fc4f334ab5be30bb0ac62"
     },
     {
+      "path": "tests/fixtures/wc-emails.js",
+      "bytes": 29519,
+      "sha256": "d754ffe26c638d51217a74e5c91ee7c3e0440666b153ef587a2b21ba298ce000"
+    },
+    {
+      "path": "tests/invoicing.test.js",
+      "bytes": 4171,
+      "sha256": "b91ea4630f576e673504a4e23ea2a0c96ed88f10a7bcec916a6455871093e86e"
+    },
+    {
       "path": "tests/ledger.test.js",
       "bytes": 10476,
       "sha256": "cbfe8adb2c1fc76d9be6f84226ad41cff11b5ac13db41e18c7af1b0f1d9a94b9"
@@ -461,6 +652,11 @@
       "path": "tests/legacy.test.js",
       "bytes": 7549,
       "sha256": "d39be18d4f83f1d32e231acc575b0852dd92dfcbaedda8deb412539e13ce29e2"
+    },
+    {
+      "path": "tests/mailin.test.js",
+      "bytes": 12106,
+      "sha256": "73d8b0eaef3fee3c763e6f32aab4e182103ebce25ba2d238766a5cca8293f7a3"
     },
     {
       "path": "tests/measure.test.js",
@@ -483,19 +679,39 @@
       "sha256": "74579f2f74ae0b95eb9b2751fdbbae8df46b176f604a66df99430a9018691aca"
     },
     {
+      "path": "tests/requests.test.js",
+      "bytes": 5922,
+      "sha256": "daca3673b98173cdae9d32ede134cb17eb326fd5215ba2619f2766a064a813fd"
+    },
+    {
       "path": "tests/schedule.test.js",
       "bytes": 5251,
       "sha256": "5932decf1444d7dbf44e3c5690f39f88e82f82c2353b2b6465b0c5462942f675"
     },
     {
+      "path": "tests/shipping.test.js",
+      "bytes": 8818,
+      "sha256": "477c97dc8604c2ddae8c807415c82891e05b845b2d169a0a44439fdb9f0bca66"
+    },
+    {
       "path": "tests/sign.test.js",
-      "bytes": 9941,
-      "sha256": "3c269e3bbd102ee8e30e006bde8a2abe00a47e2f383c74c11607cf4c1cb424c8"
+      "bytes": 11758,
+      "sha256": "2685f7df40743e6a625dab698f8161f8e8b509fa513f4bf117b5ce5385793ba2"
+    },
+    {
+      "path": "tests/steps.test.js",
+      "bytes": 3657,
+      "sha256": "180d3c8ba41b00d039b6a8484d20f5b1bee2ff0d957fa2f67e869eeadd449621"
     },
     {
       "path": "tests/store.test.js",
-      "bytes": 14599,
-      "sha256": "e229f527a2df4241ca5235dc32d71191362d36d340f3edfbf7637c9151d3cd6d"
+      "bytes": 19466,
+      "sha256": "84d3e2c013c1740281e3a836967d4c5b0601cf1a4540bad65934dbde8230ae9c"
+    },
+    {
+      "path": "tests/supplierpdf.test.js",
+      "bytes": 3680,
+      "sha256": "f9af4c8b6f58e3d59d886cd9bd7a626ae345cb4251fe7b22848950e5d366fa66"
     },
     {
       "path": "tests/theme.test.js",

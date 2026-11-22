@@ -309,6 +309,14 @@ export default {
       return handleFmProjectBuilderSign(request, env);
     }
 
+    if (url.pathname === "/api/projectbuilder/tax-rate" && request.method === "GET") {
+      return new Response(JSON.stringify({
+        error: "Type the rate until Colorado lookup is wired",
+        ratePct: null,
+        parts: []
+      }), { status: 501, headers: CORS });
+    }
+
     if (url.pathname.startsWith("/api/events/")) {
       const eventRes = await handleEventCheckout(request, env);
       if (eventRes) return eventRes;

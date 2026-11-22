@@ -1,8 +1,8 @@
 # Hermes: launch guide for the Project Builder (Phase 1 + 2)
 
-**From:** Fremont Makers (Linds) via Claude · **Date:** 2026-11-09 · **Package:** `fm-project-builder-phase1.zip`, version **2.11.1**
+**From:** Fremont Makers (Linds) via Claude · **Date:** 2026-11-20 · **Package:** `fm-project-builder-phase1.zip`, version **2.16.0**
 
-> **Updating from 2.10.0?** Use `fm-project-builder-update-2.10.0-to-2.11.1.zip` and read `UPGRADE-2.10.0-to-2.11.1.md` (it covers 2.11.0 too). It lists only what changed. The full zip is for a fresh start.
+> **Updating from 2.10.0?** Use `fm-project-builder-update-2.10.0-to-2.16.0.zip` and read `UPGRADE-2.10.0-to-2.16.0.md` (it covers 2.11.0 through 2.16.0).
 
 **Nothing is live yet.** Phase 1 and Phase 2 launch together as one new Project Builder at **`tools.fremontmakers.com/projectbuilder`**. The existing tool stays live at `tools.fremontmakers.com/quote`, unchanged. This guide is the order of work. `HANDOFF.md` has the detail; section numbers below (§) refer to it.
 
@@ -37,7 +37,7 @@ If a step seems to need any change to the existing tool, stop and ask the owner.
 
 ## 1. Check the package
 1. Unzip, then check every file against `MANIFEST.json` (SHA-256).
-2. Run the tests. All must pass (21 files, 255 tests):
+2. Run the tests. All must pass (32 files, 325 tests):
 
 | Command | Must print |
 |---|---|
@@ -46,7 +46,7 @@ If a step seems to need any change to the existing tool, stop and ask the owner.
 | `node tests/pricing.test.js` | `11 passed, 0 failed` |
 | `node tests/quote.test.js` | `15 passed, 0 failed` |
 | `node tests/docs.test.js` | `10 passed, 0 failed` |
-| `node tests/elevations.test.js` | `21 passed, 0 failed` |
+| `node tests/elevations.test.js` | `23 passed, 0 failed` |
 | `node tests/measure.test.js` | `5 passed, 0 failed` |
 | `node tests/reports.test.js` | `8 passed, 0 failed` |
 | `node tests/address.test.js` | `6 passed, 0 failed` |
@@ -56,12 +56,23 @@ If a step seems to need any change to the existing tool, stop and ask the owner.
 | `node tests/changeorder.test.js` | `27 passed, 0 failed` |
 | `node tests/bid.test.js` | `6 passed, 0 failed` |
 | `node tests/books.test.js` | `7 passed, 0 failed` |
-| `node tests/store.test.js` | `14 passed, 0 failed` |
+| `node tests/store.test.js` | `19 passed, 0 failed` |
 | `node tests/schedule.test.js` | `6 passed, 0 failed` |
 | `node tests/legacy.test.js` | `10 passed, 0 failed` |
 | `node tests/company.test.js` | `8 passed, 0 failed` |
 | `node tests/files.test.js` | `10 passed, 0 failed` |
-| `node tests/sign.test.js` | `15 passed, 0 failed` |
+| `node tests/sign.test.js` | `17 passed, 0 failed` |
+| `node tests/requests.test.js` | `7 passed, 0 failed` |
+| `node tests/estimate.test.js` | `5 passed, 0 failed` |
+| `node tests/designs.test.js` | `4 passed, 0 failed` |
+| `node tests/invoicing.test.js` | `5 passed, 0 failed` |
+| `node tests/supplierpdf.test.js` | `3 passed, 0 failed` |
+| `node tests/steps.test.js` | `4 passed, 0 failed` |
+| `node tests/closeout.test.js` | `10 passed, 0 failed` |
+| `node tests/emails.test.js` | `5 passed, 0 failed` |
+| `node tests/colors.test.js` | `4 passed, 0 failed` |
+| `node tests/shipping.test.js` | `6 passed, 0 failed` |
+| `node tests/mailin.test.js` | `8 passed, 0 failed` |
 
 3. Open `phase2.html` through a static server from the package root and click through it. **That page is the screen reference** for everything below.
 
@@ -80,15 +91,21 @@ These are simulated in the preview and must be real before launch:
 4. **File storage** for signed PDFs, supplier orders, signed copies, and the team's uploads (plans, photos, specs, emails; up to 25 MB each), each with its SHA-256. Removing a file hides it and keeps it (§14, §32).
 5. **Supplier PDF import.** Port the existing tool's Wholesale Cabinets PDF reader into one shared import used by New Project and change orders. Read its code; don't change the old tool. Adding a PDF never lowers a quantity (§15, §19).
 6. **Signing in the tool (§34).** No Dropbox Sign: the owner put the API on hold (Nov 6, $75/month). Build the public signing page `/projectbuilder/sign/<link>` and its endpoints with `FMSign`. The server sets every time, IP address and browser, freezes the document as a PDF with its SHA-256, and appends the certificate of completion. Links go out from the team's own mail app, so no email service is needed. Also build "Sign outside the tool" (upload the signed copy, Mark signed).
+8. **Email for invoices and the finance package (§39):** `POST /api/projectbuilder/invoices/send` and `/invoices/finance`. Finance is Sara Thorp, sthorp@unbridled.com (a company setting). The countersign email goes out when the buyer signs (§38). Customer emails use the team's wording: `FMEmails.compose(kind, FMEmails.varsFor(job, …), settings.emailTemplates)` for the subject and text (§43).
+9. **Supplier PDF reading (§40):** allow cdnjs.cloudflare.com and cdn.jsdelivr.net in the CSP (pdf.js and tesseract.js run in the browser), or run the same reading on the server.
+10. **Saving that never loses a change (§41):** give the live store a `journal` (browser storage) along with the server storage adapter.
+11. **Sales tax rate from the site address (§42):** `GET /api/projectbuilder/tax-rate?address=…` returns `{ ratePct, parts: [{ name, pct }] }`, the parts adding up to the rate (Colorado's sales tax lookup or your provider). Allow cdnjs.cloudflare.com for the handoff packet's QR code (qrcodejs 1.0.0), already allowed for §40.
+12. **The Wholesale Cabinets inbox (§46):** read fremontmakers@gmail.com (forwards from hello@fremontmakers.com) through the Gmail API every 5 minutes, run each message through `FMMailIn.ingest` → `store.addMailIn` → `FMMailIn.autoFile` / `file`, and label it in Gmail (never delete). The refresh token goes in the secret store. Shipping photos and bills of lading use the same file storage as §32 (§45).
+7. **"Need an update?" email (§36).** `POST /api/projectbuilder/requests` sends the team's problem reports and ideas to the owner, with the recipient fixed on the server (`lwyss@unbridled.com`). Use the same email sender as TJ's Log & Timber, whose request shape is the same.
 
 ## 3. Screens (match `phase2.html`)
 - **Sidebar:**
-  - a filled "+ New project" button first
-  - **Projects:** All projects, Elevations, Customers, Field measure
+  - **Start:** a filled **+ Project** button and an outlined **+ Design** button side by side, above search (§43)
+  - **Projects:** All projects, **Order board** (§42), **Shipping** (§45, §46), Designs, Elevations, Customers, Field measure
   - **Company books:** Dashboard, Pipeline, Deposits due, Reconcile, **Job P&L**, **Company P&L**, **Job balances**, **Balance sheet**, Reports & exports
-  - **Company:** Users
+  - **Company:** Users, **Email templates** (§43), Update requests
   - the Paper / Dark switch and the "FREMONT MAKERS / making freedom" logo (§13, §20, §22, §23, §31)
-- **All projects:** search, filters, balance and next step, with builder-order houses folded in (§22).
+- **All projects:** search, filters, balance and next step, with builder-order houses folded in (§22). Click anywhere on a row to open it; this goes for every table row with a link in it (§43).
 - **Job page:** the header on every tab, and the tabs Overview, Cabinets, **Elevations**, Change orders, Contract, Invoices, Documents, Activity (§21, §22, §23). **Documents** has four sections: contract and invoices, change orders, supplier orders, supporting documents with uploads (§32).
 - **Customers (§25):**
   - profiles with contacts (who signs, who gets invoices, who's on site), addresses, notes and their projects

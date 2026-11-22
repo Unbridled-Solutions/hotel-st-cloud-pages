@@ -1,8 +1,8 @@
 # Handoff to Hermes: Project Builder Phase 1 + 2
 
-**From:** Fremont Makers (Linds) via Claude · **Date:** 2026-11-09 · **Package version:** 2.11.1
+**From:** Fremont Makers (Linds) via Claude · **Date:** 2026-11-19 · **Package version:** 2.15.0
 
-## Current state (2.11.1, Nov 9 2026)
+## Current state (2.16.0, Nov 20 2026)
 
 *Rewritten each release, so you don't need the history below. The numbered sections are the detail.*
 
@@ -11,11 +11,33 @@
 > - **§32:** supporting documents in the Documents tab, the Braddy change order 1 PDF (VSB30 3 → 2 confirmed by the owner), and change orders for every kind of change (add, swap, return, backorder, damage, our mistake, other).
 > - §33: the Dropbox Sign plan, **on hold. Don't build it.**
 >
-> 21 test files, 255 tests.
+> 27 test files, 289 tests.
 >
 > **New in 2.11.1 (Nov 9):**
 > - **§0 rule 9: updates never overwrite data**, for this and every future update. Back up first, never reset or reseed live data, create the live store with `FMStore.create({ live: true })`.
 > - **§35:** the customer's signing page stands alone, with a confirmation and no way into the tool. Change orders get **Upload SKUs** and **Paste SKUs**.
+>
+> **New in 2.12.0 (Nov 12), §36:** "Need an update?": a button on every page for the team to report problems and ideas, emailed to the owner (same design and email request as TJ's Log & Timber).
+>
+> **New in 2.13.0 (Nov 19), §37–§41:**
+> - Designs library and the customer's design approval before pricing; the step-by-step estimate with approval; New Project can start without cabinets (sketch, design, previous order).
+> - The contract builder with the agreement updating beside it; stronger e-signing (welcome, initials on four sections, countersign notices, thank-you pages).
+> - Invoices issued on full signature and sent to the customer and to finance (Sara Thorp).
+> - Change orders for additional products, the whole order or every house; supplier PDFs read in the browser (text or OCR).
+> - Group 2: five project steps with Next up, the Today list, nothing lost on save, search, salesperson, drawing approval.
+> - Elevations: drag uppers up and down; Add check #.
+>
+> 2.12.0 also carries everything from 2.11.0 and 2.11.1, which weren't installed separately.
+>
+> **New in 2.14.0 (Nov 19), §42:** job costs from supplier invoices (Job P&L uses what was actually paid), the order board, close-out with the handoff packet, review and referrals, and sales tax from the site address (**needs a server endpoint from Hermes**). Assembly labor stays untaxed (owner).
+>
+> **New in 2.15.0 (Nov 19), §43:** from the owner's review of 2.14.0: **Start: + Project / + Design** at the top of the menu, click anywhere on a row to open it, the design (3D view) on a project's Overview, new change orders open at the top, **emails to the customer** (ten templates suggested at each step, editable under Company → Email templates), and the order board says how to fix a blocked move. No new server work. 29 test files, 305 tests.
+>
+> **New in 2.16.0 (Nov 20), §44–§46:**
+> - **§44:** from the owner's review of 2.15.0: change orders end in **Finalize**, then Download the invoice and Get it signed; who signs is fixed in place, with **Fix a mistake** to pull a request back; invoices and change orders look like the original Fremont Makers change order, with lines grouped by color; **cabinet colors** from fremontmakers.com/catalog (`FMColors`, company setting `cabinetColors`).
+> - **§45:** shipping, receiving and damage claims (Phase A): a Shipping tab on every job, reading Wholesale Cabinets emails, receiving on a phone with the 5-day window, claims with a printable packet, the Shipping page. Jobs gain `supplierOrders` and `claims`.
+> - **§46:** **the Wholesale Cabinets inbox.** Emails forwarded from hello@fremontmakers.com to fremontmakers@gmail.com go on their jobs. The page side is done (`FMMailIn`); **the server work is yours**: read that inbox through the Gmail API every 5 minutes and run each message through `FMMailIn.ingest` → `store.addMailIn` → `autoFile`/`file`. Steps in §46 "Server work".
+> - Additive only: new company data `mailIn` and the setting `cabinetColors`; nothing existing is rewritten. 32 test files, 325 tests.
 
 
 - **What this is:** a new Project Builder: Phase 1 quote and ledger math, plus the Phase 2 app `phase2.html`. **Nothing is live.** Follow `HERMES-LAUNCH.md`.
@@ -47,8 +69,8 @@
   - The deposit is due on signing.
   - Elevations can go out marked preliminary.
   - The schedule can be adjusted after signing (§29).
-- **Server work still to do (yours):** sign-in and access levels, the shared database, file storage with SHA-256, the supplier PDF import, the public signing page (§34), field-measure sync, and **locking the old tool's open data address** behind sign-in (`HERMES-LAUNCH.md` §0, §2).
-- **Tests:** 21 files, 255 tests, all passing (`HERMES-LAUNCH.md` §1).
+- **Server work still to do (yours):** sign-in and access levels, the shared database, file storage with SHA-256, the supplier PDF import, the public signing page (§34, §35), the "Need an update?" email (§36), the sales tax lookup (§42), field-measure sync, and **locking the old tool's open data address** behind sign-in (`HERMES-LAUNCH.md` §0, §2).
+- **Tests:** 28 files, 298 tests, all passing (`HERMES-LAUNCH.md` §1).
 - **Waiting on the owner:**
   - Tayler's email
   - the accountant: sales tax on lump-sum bid pages, the Balance sheet's $100,000 difference, loan principal on the P&L
@@ -1581,3 +1603,529 @@ Next to **+ Add a cabinet** there are now two more ways to add cabinets. The **s
 3. **Penrose → Change orders → New change order → Add cabinets → Cabinets.**
    - **Paste SKUs**: `2 x DC224-VDH`, `ZZZ999-VDH 1`, then **Add these**. DC224 is added ×2. ZZZ999 is listed under "Needs a unit cost".
    - **Upload SKUs** with a CSV (`Item,Qty,Unit Price`): its lines are added.
+
+## 36. "Need an update?": problem reports and ideas from the team, emailed to the owner (Nov 12, 2.12.0)
+
+*Owner, Nov 12: "create a 'need an update?' feature … where the team can drop a quick feature request or bug notification and it emails me at lwyss@unbridled.com … make it intuitive so we know which portion of the tool they're referring to and walk them through the process but make it quick. Team is not super tech savvy."*
+
+**TJ's Log & Timber has the same feature** (its `HERMES-HANDOFF.md` §14). The two use the same flow and the same email request shape, so **one email sender on the server serves both.**
+
+### What the team sees
+- **A floating "Need an update?" button**, bottom-right on every page of the tool. It's hidden when printing, and it's not on the customer signing page (§35).
+- **It opens a three-step form:**
+  1. **What kind?** Four big choices; one tap moves on:
+     - Something isn't working
+     - A number looks wrong
+     - I'm stuck or confused
+     - I have an idea
+  2. **Where?** It shows the page they were on, worked out for them: the customer, project and job code, the tab, any change order or New Project step that's open, and any document open in the viewer. For example: "Braddy Builders · Penrose (FM-2609-314) › Change orders › new change order, step: Cabinets". **Yes, it's here** confirms it, or they pick another part of the tool from a plain list.
+  3. **Tell us.** One box with a question that fits the kind they picked, and an example. Then **How urgent?** (It's stopping my work / Soon, please / It can wait), up to 3 optional screenshots with "How do I take a screenshot?" help for Mac, Windows and iPhone, and **Send to Lindsay**.
+- **Confirmation:** "Sent. Thank you!" with the request number (REQ-0007). If the email fails, the request is still saved, and an **Email it to Lindsay** button opens their mail app with everything filled in. The preview always shows that button, since it can't send email.
+- **Company › Update requests** (with a count of open ones) lists every request: Open / Sent by me / All.
+  - Each row opens to show the words, screenshots, the details the tool added, the history, and **Go to that page**.
+  - Full access can set **Working on it / Fixed / Not doing / Question for you**, with a note. A note is required for Not doing and Question.
+  - Anyone can **Add note**. A reply to a question puts the request back to New.
+
+### What the tool adds by itself
+- who sent it and when (Mountain Time)
+- the page address and job
+- the version
+- the browser and screen size
+- **the last errors that showed on their screen** (up to 5)
+
+The team never has to describe any of this.
+
+### Code
+- `src/fm-phase2-requests.js` (`window.FMRequests` 1.0.0, pure): `KINDS`, `URGENCY`, `STATUS`, `AREAS`, `where(hash, open)`, `check`, `create`, `email` (subject, body, mailto), `setStatus`, `addNote`, `counts`.
+- `src/fm-phase2-store.js`:
+  - `requests()`, `nextRequestNumber()`, `addRequest`, `updateRequest`.
+  - Kept in their own `requests` list (an added field, per §0 rule 9), never inside a job, and logged under `REQUESTS`.
+- `preview/phase2-requests.js` (`window.P2Requests`): the button, the form, the list page `#/updates`, and the error capture.
+- `phase2.html`: the scripts and `.rq-*` / `.p2-needbtn` styles. `preview/phase2-app.js`: the route, the sidebar link and the event hooks.
+- `tests/requests.test.js` (7 tests).
+
+### Server (Hermes)
+- **`POST /api/projectbuilder/requests`** (signed in only). The JSON body is the same shape as TJ's:
+
+  `{ to, subject, text, request, screenshots: [{ name, type, base64 }] }` → `{ ok: true }`
+
+  The tool builds `subject` and `text` with `FMRequests.email()`.
+- **Hard-code the recipient on the server:** `lwyss@unbridled.com`, as a setting the owner can change later. Ignore `to` from the page.
+- Send the email with the server's email sender (the same one TJ's dashboard uses), with screenshots attached (max 10 MB each, max 3).
+- Save the request in the shared `requests` collection. Record when the email went out (`emailed: { at, messageId }`).
+- On failure, return `{ ok: false }` and keep the request. The page then shows the mail-app button.
+- Status changes and notes: `PATCH /api/projectbuilder/requests/:id` (signed in). Only Full access can change status; anyone can add a note.
+- Optional later: email the person who sent it when their request is marked Fixed or gets a question.
+- Set `FM_CONFIG.version` to the package version, so requests say which version they came from.
+
+**Tests: 22 files, 262 tests** (`requests` 7 new).
+
+### Check (preview, after Reset sample data)
+1. **Penrose → Invoices**, then **Need an update?** (bottom right) → **A number looks wrong**. Step 2 says "Braddy Builders · Penrose (FM-2609-314) › Invoices".
+2. **Yes, it's here** → type a sentence → **It's stopping my work** → add a screenshot → **Send to Lindsay**. You see "Sent. Thank you!", REQ-0001 and **Email it to Lindsay**. The mail app opens with the subject "[Stopping work] Project Builder REQ-0001: …" and the page, browser and time filled in.
+3. **See update requests**: the request is listed, with a count beside **Update requests** in the menu. Open it. **Not doing** without a note asks for one; **Fixed** with a note moves it out of Open.
+4. Start one on **Change orders** with a new change order open, at step 2. "Where" names the step.
+
+## 37. Elevation designs, design approval, the step-by-step estimate; moving cabinets up; adding a missing check number (Nov 19, 2.13.0)
+
+*Owner, Nov 19: build TJ's process improvements into Fremont Makers (group 1), plus: "drag and drop need to be able to move the cabinets up" (Rod Stambaugh office kitchen: the cabinet over the fridge looked like it overlapped it); "elevations to be their own start of a project and templates similar to TJ's 'all designs' … get a design approval before getting them a price"; "a spot to add a check number whenever it's missing".*
+
+### Elevations: up and down, exact appliance heights, no hidden overlaps
+- **Drag an upper up or down** on the drawing. It raises or lowers that cabinet's top (`topOffset`, snapped to ½″) and stops at the ceiling or soffit. The selected-item bar also has **↑ Up 1″ / ↓ Down 1″**, and each upper shows how high its bottom sits off the floor.
+- **Appliances take an exact height** (Height field next to Width), from the spec sheet.
+- **An upper over a tall item:**
+  - If it would hit something below (a fridge, a pantry), the layout still moves it past, but now it says so: "W3630 would hit the Refrigerator below it, so it was moved past it… drag it up 6″".
+  - One click on **Raise it 6″** puts it back over the fridge.
+  - If there isn't room under the ceiling, it says to use a shorter cabinet.
+- **Anything drawn on top of anything else is an error** that says by how much.
+- Code: `layoutWall` in `src/fm-phase2-elevations.js` (`fix: { kind: 'raise', by }` on the issue); vertical drag, `liftBy`, `data-ellift` in `preview/phase2-elevations.js`. +2 tests.
+
+### A missing check number can be added
+On the Invoices tab, a payment with "no check #" now has **Add check #**.
+- `FMStore.setPaymentReference(job, invoice, paymentIndex, ref, by)` only fills a blank reference; it never overwrites one (§0 rule 9).
+- It's logged. Reconcile stops flagging it.
+- +1 test.
+
+### Designs (like TJ's "All designs")
+- **Projects › Designs** (`#/designs`) lists every saved design, with a drawing of its first wall, a room filter, and how many projects started from it.
+  - **New design**: name, room (kitchen, bath, office or bar, laundry, built-ins, other) and color. It opens in the elevations editor (standard and custom sizes, no SKUs).
+  - **Save a project as a design**: copies a project's drawings, with no prices. The project isn't changed.
+- A design is stored as its own record: `designTemplate`, code `DES-0001`. **It's never a job:** `FMStore` leaves it out of every list, total, report and export. It opens like a project, with only Elevations and Activity.
+- **Start a project from this design** (customer, project, who signs, email) makes a new job:
+  - design-first (`designFirst`, `fromDesign`)
+  - the design's drawings copied in, no SKUs or prices yet
+  - the job's own default pricing settings (pricing stays per job)
+- Code: `src/fm-phase2-designs.js` (`window.FMDesigns`: `create`, `fromProject`, `startProject`, `library`) and `preview/phase2-designs.js`. 4 tests.
+
+### Design approval before pricing
+A design-first project's Elevations tab shows **Design approval · before pricing**: draw → save a version → the customer approves it → add the SKUs and price it. The customer can approve in one of two ways:
+- **Send it to them to approve (e-sign):** the saved version's elevation sheets go out as an approval request. It's acknowledgement only, using the same signing page and certificate. When they approve, the approval is recorded, and the approved sheets with their certificate are filed under Documents.
+- **Approved in person / by email or text:** pick the version and note who approved it and when.
+
+Until it's approved, the Estimate tab says "Design approval comes first", with **Price it anyway…** (a reason is required and logged). The contract's ready check blocks it. Code: `FMEstimate.approveDesign`, `job.designApproval` / `designApprovalSkipped` / `designSign`.
+
+### The estimate, step by step
+A new **Estimate** tab with a running total pinned on top:
+1. **Cabinets.** Per model:
+   - quantity − / +, markup per line, Remove
+   - **+ Add a cabinet** (SKU fills in the description and cost)
+   - **Upload SKUs** (CSV/text read here; supplier PDFs go to the server's PDF reader), **Paste SKUs**, or a supplier PDF on file
+   - SKUs with no known cost wait under "needs a unit cost"
+2. **Assembly and delivery.** Hours and rate, the delivery/install estimate, and this job's pricing settings (markup, manufacturer discount, G&A, tax). Set on the job, never per customer.
+3. **Extras and discounts.** Hardware, crown, freight, install, a sale. Product extras carry sales tax; labor, freight and discounts don't. Extras are now part of the job total, the invoices and the books (`reprice`, `jobCharges`).
+4. **Review and approve.** For the team only:
+   - totals per model, our cost after the manufacturer discount, and gross margin
+   - every line's cost, net cost, markup, price and margin
+   - flags: no cost (error), at cost, under the minimum margin (20%, `FMEstimate.SETTINGS.minMarginPct`), lines not adding up (error), and the elevations vs. the estimate, with **Add to the estimate**
+   - **Approve this estimate** records who, when, the total and the margin, plus a fingerprint of the lines and settings. Any later change shows "Changed since … approved"
+   - **Print or save PDF** gives an internal approval sheet
+
+**The contract requires the approved estimate** (ready-check blocker with a link to the Estimate tab). Code: `src/fm-phase2-estimate.js` (`window.FMEstimate`) and `preview/phase2-estimate.js`. 5 tests.
+
+### Server (Hermes)
+- Store the new fields as **added** fields (§0 rule 9):
+  - `designTemplate` records
+  - on jobs: `designFirst`, `fromDesign`, `designApproval`, `designApprovalSkipped`, `designSign`, `estimateApproval`, `extras`, `salesperson`, `contractTerms`
+  - on invoices: `number`, `taxCents`, `preTaxCents`, `issuedAt`, `sent`
+  - on jobs: `financeSent`
+  - in company settings: `settings.financeEmail`
+- Existing jobs have none of these; the tool treats them as empty. **Never backfill an approval onto a signed job.**
+- **Upload SKUs** on the Estimate uses the same supplier PDF reader endpoint as New Project and change orders (§35).
+- Designs need no endpoint of their own: they're records in the same store, excluded from every job list, total, report and export by `FMStore` (`counts`). Server-side reports must exclude `designTemplate` records too.
+
+## 38. The contract builder; stronger e-signing (Nov 19, 2.13.0)
+
+### The contract builder
+The Contract tab of a quote is now steps on the left and **the agreement on the right**, updating as you type:
+1. **Buyer, site and schedule**: the contract details and payment schedule, as before.
+2. **Price and scope**: the **approved estimate**: total, models, extras, tax, assembly and the delivery estimate. Plus the design approval and the "send without complete elevations" choice.
+3. **Exhibit A**: the Final Job Quote (always) and the elevation sheets, plus a tick list of supporting documents from the Documents tab (plans, photos, specs) to attach as Addendum A-1, A-2…
+4. **Special conditions**: add, edit or remove; quick picks for common ones. Each appears in a "Special conditions" section.
+5. **Review and send**: the ready check, who countersigns, the **salesperson** (new `job.salesperson`; gets the "buyer signed" email; countersigns by default), and the signing card (§34).
+
+Each step shows **!** when something on it is missing. **Still missing (n)** lists every gap in red above the preview, and each links to its step. **Preview the agreement** opens it full size to print.
+
+**Agreement wording:** `FMDocs.renderAgreementDoc` adds the Special conditions and Exhibit A sections **only for contracts built with the builder** (`job.contractTerms`). Contracts signed before this (Penrose, Willow Creek) reprint exactly as signed.
+
+**Server:** when sending, append each ticked Exhibit A document's PDF pages after the agreement, each headed "Addendum A-n", **before** taking the SHA-256. The fingerprint covers them. The preview lists them by name.
+
+### Stronger e-signing (to match TJ's)
+- **A short welcome** at the top of the signing page: what it is, the price, three steps, and how long the link works.
+- **Initials on four sections**: Payment terms; Measurements and elevations; Delivery, inspection, and assembly; Warranty. (The Fremont agreement has no cancellation section.)
+  - The sections are highlighted. A progress bar shows "Initials 2 of 4", and **Next section to initial** jumps there.
+  - Each box has **Initial here: RS** (from their name), with undo.
+  - Signing is refused until all four are done (`FMSign.sign` checks `request.initials`).
+  - The initials are recorded with the time on the signer and in the history, and the certificate says "Initialed 4 sections (RS)".
+- **The signed copy shows what was signed:** the buyer's initials and date in each box, and each party's signature (typed or drawn) and date on the signature block (`fillSigned`). The countersigner sees the buyer's initials and signature on their own link.
+- **The countersigner hears right away.** When the buyer signs:
+  - live, the server emails the countersigner their link, and the salesperson too if it's someone else
+  - in the preview, the contract card has **Email Kristy the link**
+  - the dashboard shows **Countersign** at the top until it's done
+- **Thank-you pages:**
+  - The buyer sees what happens next.
+  - After countersigning, Fremont Makers sees **Fully executed**, with what just happened (signed copy filed, invoices issued with the tax total, the deposit invoice ready to send, the finance package ready), **View or save the signed copy** and **Go to the project**.
+  - Customer pages never link into the tool (§35); the countersigner's does, because they're staff.
+- Code:
+  - `src/fm-phase2-sign.js` 1.1.0 (`INITIALS`, `initialsOf`, `DESIGN_AGREE`; `create` takes `initials`, `amountCents`, `project`; kind `design`)
+  - `src/fm-phase1-docs.js` (`INITIALS`, `exhibitList`; initial boxes and `data-sig` / `data-sigdate` hooks on the signature block)
+  - `preview/phase2-sign.js` (`thanks`, `fillSigned`, `sendDesign`, `panel`, `todo`, `countersignMail`)
+  - `preview/phase2-contract.js` (`window.P2Contract`)
+  - +2 sign tests
+- **Server:** the public signing page (§35) shows the same welcome, highlighted sections and initial buttons, and `POST /api/projectbuilder/sign/:token` accepts `initials: { payment, elevations, delivery, warranty }`. It sends the countersigner email (and the salesperson's) when the buyer signs. The final PDF writes the initials and signatures into the agreement, then appends the certificate.
+
+## 39. Issuing invoices; sending them to the customer; the package to finance (Nov 19, 2.13.0)
+
+- **When a contract is fully signed, its invoices are issued.** This applies whether it was signed in the tool, outside it, or on paper (`contracted()` in `preview/phase2-flows.js`).
+  - They're numbered by job (`FM-2611-101-1`, `-2` …).
+  - Each gets its share of the sales tax (the last takes the pennies), so they add up to the signed price and tax exactly, plus its amount before tax.
+  - If issuing fails, Activity says so, and the Invoices tab shows **Issue the invoices** (also shown for any signed job without numbers).
+- **Invoices tab:** each invoice shows its number, **Ready to send / Sent … / Sent at its stage / Paid**, and before-tax + tax.
+- **Send to customer** has three steps: **Save the PDF** (the invoices open to print), **Open the email** (to the buyer, with amounts, tax, due dates and how to pay filled in), **Mark as sent**. When it's ready:
+  - the deposit, at signing
+  - a middle invoice, once the factory order is placed
+  - the last invoice, at delivery, or when any invoice's due date arrives
+  - change order invoices, when signed
+- **Package to finance:** the signed agreement with its certificate and every invoice, to finance: **Sara Thorp, sthorp@unbridled.com** (owner confirmed Nov 19; the same as TJ's). The email opens "Sara,". Full access can change the name and address on the Users page (`settings.financeEmail`, `settings.financeName`). Same three steps.
+- **With the server's email connected** (`FM_CONFIG.email`), both are one button: `POST /api/projectbuilder/invoices/send { jobCode, invoices: [ids] }` and `POST /api/projectbuilder/invoices/finance { jobCode }`, attaching the PDFs. If either fails, the page falls back to the three steps. Live, also send the deposit invoice to the customer automatically when the contract is fully signed.
+- **Dashboard:** "Send" (invoices ready) and "Finance" (package not sent) tasks.
+- Code: `src/fm-phase2-invoicing.js` (`window.FMInvoicing`: `issue`, `taxSplit`, `ready`, `readyList`, `stateOf`, `markSent`, `customerEmail`, `financeEmail`, `markFinanceSent`, `todo`), `preview/phase2-invoicing.js`, and `FMStore.settings` / `saveSetting`. 5 tests.
+
+**Tests: 25 files, 281 tests** (new: `estimate` 5, `designs` 4, `invoicing` 5; `sign` 17, `elevations` 23, `store` 15).
+
+### Check (preview, after Reset sample data)
+1. **Designs › New design.** Draw a wall with a refrigerator and a W3630 over it. The warning offers **Raise it 6″** and the cabinet moves above the fridge. Drag another upper up and down.
+2. **Start a project from this design.** On its Elevations tab: **Save version**, then **Send it to them to approve (e-sign)** → **Sign as Rod (preview)** → approve. The card says approved, and the approved sheets are under Documents.
+3. **Estimate tab.** Pick a supplier PDF on file. Set assembly 6 h, add Hardware $250 in step 3. Step 4 shows margins and the elevations comparison. **Approve this estimate.**
+4. **Contract tab.** The steps show **!** where something is missing, and the red list is above the agreement. Fill them, add a special condition (it appears in the agreement), pick the countersigner and salesperson, and **Send for signature**.
+5. **The buyer's link.** The welcome shows the price and "Initials 0 of 4". Signing is refused at 1 of 4. Initial all four and sign.
+6. **Dashboard** shows **Countersign**. **Countersign**: Kristy sees Rod's initials and signature. The thank-you lists 2 invoices issued with the tax. The signed copy has the initials and both signatures.
+7. **Invoices tab.** **Send to customer** walks through three steps → Sent. **Send to finance** → Sent to finance.
+8. **Penrose › Invoices.** **Add check #** on invoice 1 → 2911.
+
+## 40. New Project without cabinets; change orders for additional products and the whole order; reading supplier PDFs (Nov 19, 2.13.0)
+
+*Owner, Nov 19: "you shouldn't have to have cabinets to start the project; you could just move into elevations or templates from previous orders, and if you opt to proceed with just a sketch, you don't need the price / payment plan / markup options." Change orders: "Add Additional Products instead of cabinets"; "apply a change order to all houses, or entire project when it isn't specific to one house"; "the attached PDF … won't add the SKUs … sometimes you might just want to add net new items and not adjust anything on the project". Also: take out "No monthly fee." on the contract's Review and send.*
+
+### New Project
+**How do you want to start?** has four choices on step 3:
+- **The supplier's SKUs:** upload the supplier PDF (read as described below) or pick one on file.
+- **Sketch first:** no SKUs.
+- **From a design:** pick a design from the Designs library; its drawings are copied in.
+- **From a previous order:** copies a past project's cabinets and drawings, priced with this job's own settings. Penrose and Willow Creek are included.
+
+Customer templates stay on step 1.
+
+**Sketch first and From a design skip the Price step.** There's no markup, plan or price, and Review says "Not priced yet". The project is design-first (§37): it opens on its Elevations tab, the customer approves the design, then it's priced on the Estimate tab.
+
+Code: `npCabinets`, `orderLines`, `createJob` (`designFirst`, `fromDesign`, `copiedFromOrder`) and the `data-npway`, `data-npdesign`, `data-nporder`, `data-npfile` handlers in `preview/phase2-flows.js`.
+
+**Fixed:** typing in New Project's address fields threw an error, because a variable called `A` in the change order code hid the address module. It's renamed.
+
+### Change orders
+- The **Add** type is **Add additional products**: cabinets, accessories, hardware or anything else, and **nothing on the order has to change**. The step is **Products**, and the button is **+ Add a product**.
+- **Builder orders (Willow Creek):** **Which houses?** offers:
+  - **The whole order (new items, not for one house)**
+  - **Every house: the same change on each of the 10**: quantities are per house and ×10 on the price and the printed change order
+  - or one house, as before
+
+  In both new choices the houses' cabinets aren't listed, the house color check is skipped, and `co.house` is saved as `__order` or `__every`. Signing never rewrites a house's lines. The card and the printed change order show **Applies to**.
+- **Upload SKUs with a supplier PDF now adds its items.** Items that aren't on the order are added as new lines. Shipping or freight fees go under **Other charges**. The PDF is still filed with the change order.
+- The Estimate tab's **Upload SKUs** and New Project use the same reader.
+
+### Reading supplier PDFs
+The Wholesale Cabinets order PDFs the team gets are pictures of the page, with no text inside. Two files, `src/fm-phase2-supplierpdf.js` (`window.FMSupplierPdf`) and `preview/phase2-pdf.js` (`window.P2Pdf`), read them in three steps:
+1. **Text first:** pdf.js 3.11.174 from cdnjs reads the PDF's text.
+2. **OCR when there's no text:** each page is rendered at 2.5× and recognized with tesseract.js 5.1.0. The English data comes from jsdelivr, `@tesseract.js-data/eng@1.0.0/4.0.0_best_int`. A one-page order takes about 3 seconds in a visible tab, longer in a background one.
+3. **Turn the text into items:** `FMSupplierPdf.parse` turns the lines into items, fees, the order number and the totals.
+   - **Items** come from "SKU Quantity Price Subtotal" headers, with "color qty $price $subtotal" lines.
+   - **Products without a SKU** (moldings) keep their name and color.
+   - **Fees** are shipping, freight or delivery.
+   - It checks the items add up to the PDF's subtotal and reports anything that doesn't.
+
+Tested on the text of two real orders (1000173203 cabinets; 1000175910 moldings plus a shipping fee). Both add up to the cent. 3 tests.
+
+**Server:** the same two libraries can run in the browser as they do here (allow cdnjs and jsdelivr in the CSP), or run the same reading on the server and return the `FMSupplierPdf.parse` shape. Either way, keep the PDF with the job or change order.
+
+## 41. Group 2: one clear next step, Today, nothing gets lost, search, salesperson, drawing approval (Nov 19, 2.13.0)
+
+- **Five numbered steps** on every project replace the stage bar: **Start · Design · Estimate & contract · Order & deliver · Close out**. Each shows ✓ when done, and the step the job is on is highlighted.
+  - **Next up** says what to do, with **Go** to the page where it's done. For example: Draw the elevations → Get the customer's approval → Add the SKUs and price it → Approve the estimate → Build and send the contract → Countersign → Collect the deposit → Place the factory order → Record the delivery → Collect the final payment → Close out.
+  - A signed job counts as started even if its contact details are incomplete.
+  - Code: `src/fm-phase2-steps.js` (`window.FMSteps.of`) and `stepsBar` in `preview/phase2-app.js`.
+- **Today** on the Dashboard (it was Needs attention), with each project's task first:
+  - countersign (naming the salesperson)
+  - day 3 and day 7 signing reminders due (contracts, designs and change orders)
+  - designs waiting on the customer's approval
+  - estimates that changed after approval
+  - courtesy change orders to approve
+  - invoices ready to send, and packages for finance (§39)
+  - then the books' own items
+
+  Code: `FMSteps.today`.
+- **Nothing you enter gets lost.**
+  - `FMStore.create({ storage, journal })`: when the live storage adapter's `save` returns a promise, the change is also written to `journal` (the browser, e.g. localStorage) until it resolves.
+  - `status()` gives `{ pending, failed, since, savedAt, restored }`. The page shows **Not saved yet** after 2.5 s pending, or on a failure, and the browser asks before closing a tab with a save pending.
+  - On the next load, a journal that never cleared is put back (`restored`).
+  - **Hermes:** pass a journal (`read`, `write`, `clear`) with the live store.
+  - 1 test.
+- **Search from any page:** a box at the top of the menu, opened with **/** or Ctrl/Cmd + K.
+  - It searches projects (name, project, job code, signer, email, phone, address, houses), customers (contacts, emails, phones, addresses) and designs.
+  - Results are grouped, with a line saying where each stands and what matched. Use ↑ ↓ and Enter to open one.
+  - Code: `preview/phase2-search.js`.
+- **Salesperson on every project:** a picker in the project header (`job.salesperson`, logged). It's the same field as the contract builder's, used for the countersign email and Today.
+- **The customer approves a drawing version** on any quote with elevations, not just design-first ones: the same card, in person, by email, or e-signed (§37). It's **recommended, not required**: the contract's ready check shows a warning until it's approved. For design-first projects it's still required before pricing.
+
+**Tests: 27 files, 289 tests** (new: `supplierpdf` 3, `steps` 4; `store` 16).
+
+### Check (preview, after Reset sample data)
+1. **New project.** Fill steps 1 and 2. On step 3, choose **Sketch first** → **Next** goes straight to Review ("Not priced yet"; step 4 is crossed out) → **Create** opens the Elevations tab with the design approval card.
+2. **New project → From a previous order → Braddy Builders · Penrose:** 16 lines and the price appear.
+3. **Willow Creek → Change orders → New → Add additional products → The whole order.** **Upload SKUs** with a Wholesale Cabinets PDF: its items are added, and the shipping fee goes under Other charges. Price it and save. The card says "Whole order".
+4. **Penrose:** the header shows ✓ Start, Design, Estimate & contract; "Order & deliver" is the current step; Next up says "Place the factory order". Pick a salesperson.
+5. **Type "penrose" in the search box** → open the project. **Dashboard** shows **Today**.
+6. **Contract tab** of a quote with drawings but no approval shows "The customer hasn't approved the drawings yet" as a warning.
+
+## 42. Group 3: job costs, the order board, close-out and the handoff packet, sales tax from the site address (Nov 19, 2.14.0)
+
+All pure logic is in `src/fm-phase2-closeout.js` (`window.FMCloseout` 1.0.0); the screens are `preview/phase2-group3.js` (`window.P2Group3`). Every new field is additive with a default (§0 rule 9): `job.jobCosts`, `job.review`, `job.referrals`, `job.referredBy`, `job.taxRate`, and the company setting `reviewLink`. Nothing existing is rewritten.
+
+- **Job costs (Invoices tab, below the invoices).** What we actually paid suppliers.
+  - **Upload supplier invoice** reads the PDF in the browser (text or OCR, §39's `P2Pdf` + `FMSupplierPdf`) → `FMCloseout.fromSupplier` → the team checks each line and what it was for (cabinets, moldings, hardware, freight, labor, other) → **Add costs**. The PDF is filed in Documents as a supplier order. **Add a cost by hand** for anything that can't be read.
+  - The card shows the quoted cost **net of the manufacturer discount** (the same way Company books takes it off), the actual cost, the margin and how far over or under the estimate it came in.
+  - **Remove** marks an entry removed (who, when) and keeps it on file; it's never deleted.
+  - **Company books:** when a job has job costs, `FMStore.toBooks` passes `actualCostCents` and Job P&L uses it as the cabinet cost (marked "actual, from job costs"); otherwise the quoted cost less the manufacturer discount, as before. `FMBooks` row: `costActual`.
+- **Order board** (`#/board`, "Order board" under Projects). Every signed job in six columns: Contract signed · Deposit paid · Factory ordered · Delivered · Final payment · Complete.
+  - Drag a card to a later column, focus it and press **Shift + →**, or click **Move to …**. A date box sets the date for moves.
+  - `FMCloseout.moveTo` steps through the ledger's own actions one at a time (`FMPhase1.applyAction`), so the job page's guards apply: no factory order before the deposit is recorded, no final payment with a balance open. It stops at the first guard and keeps the steps already made. Jobs only move forward; going back is the job page's Void contract.
+  - Each move is logged. The next invoice comes due as the job moves (§39's ready-to-send rules).
+- **Close out (Overview, once delivered).**
+  - **Final billing check:** paid in full, every invoice paid, no change order left unsigned. No supplier invoices logged is a warning, not a blocker. It also shows the final margin against the estimate.
+  - **Close out the project** moves it to Complete. Full-access users can **Close it anyway…** with a reason (logged).
+  - **Handoff packet** (print or save as PDF): what was installed (room by room from the elevations, or by model from the SKUs), the warranty as signed and the date it runs through (one year from purchase: the contract date), a cabinet care guide, how to reach us, and a QR code to leave a review. The QR uses qrcodejs 1.0.0 from cdnjs; the link is the company setting **Review link** (Full access, saved from the card).
+  - **Log the review** (when asked, where, link, what they said, OK to use photos) and **referrals** (name plus a phone or email). **Start a project** from a referral opens New Project with the name filled in and `referredBy` set to this job.
+- **Sales tax (Estimate step 2, under the pricing settings).**
+  - **Use the site address rate** calls `GET /api/projectbuilder/tax-rate?address=…` and expects `{ ratePct, parts: [{ name, pct }] }`. The parts must add up to the rate; the job stores the rate, the parts, the address and the date checked, and reprices. **Hermes: build this endpoint** (Colorado's sales tax lookup or your provider); in the preview it isn't connected and the page says to type the rate.
+  - **Type a different rate…** needs a reason (tax-exempt buyer, out-of-state delivery…).
+  - **What's taxed and what isn't:** cabinets and parts after the manufacturer discount are taxed; assembly labor and G&A aren't; extras by kind.
+  - Signed jobs keep the tax they were signed with; a change goes through a change order.
+  - **Decided by the owner (Nov 19):** assembly labor stays untaxed. Tax is on product only, as before.
+
+**Tests: 28 files, 298 tests** (new: `closeout` 8; `store` 17, with a test that data saved before 2.14.0 loads unchanged).
+
+**Data (§0 rule 9):** nothing in 2.14.0 changes existing records. Old jobs simply have no `jobCosts`, `review`, `referrals`, `referredBy` or `taxRate` until someone adds one; Job P&L falls back to the quoted cost less the manufacturer discount, exactly as in 2.13.0. Board moves go through the same ledger actions as the job page and are logged. Removing a job cost marks it removed and keeps it. A tax rate can only be set on an unsigned quote that isn't out for signature. The `reviewLink` setting is Full access only and must start with https://.
+
+### Check (preview, after Reset sample data)
+1. **Order board:** Braddy is under Deposit paid. **Move to Factory ordered**, then drag it to Final payment: it records delivery and final payment (it's paid in full). Willow Creek won't pass Delivered → Final payment while a balance is open.
+2. **Penrose → Overview:** the close-out card. Save a review link, **Open the handoff packet** (two pages, SKUs listed, QR code). Log a review, add a referral, **Close out the project**. **Start a project** from the referral.
+3. **Willow Creek → Invoices:** **Add a cost by hand** ($41,250). The card shows actual vs quoted (net of the $6,320.74 discount); **Job P&L** uses the actual cost.
+4. **A quote → Estimate → step 2:** **Type a different rate…** 0% with a reason; the tax drops to $0.
+
+## 43. Owner's Nov 19 feedback: Start buttons, clickable rows, the design on Overview, emails to the customer, board fixes (Nov 19, 2.15.0)
+
+From the owner's review of 2.14.0, compared with TJ's Project Builder.
+
+- **Start: + Project / + Design** at the top of the menu, above search. **+ Design** opens Designs with the New design form (`#/designs/new`).
+- **Search** box text is just "Search" (the / shortcut still works).
+- **Click anywhere on a row** to open it, like TJ's: any table row with a link in it (All projects, Customers, Pipeline, Job balances, Job P&L…) opens that link. Buttons, inputs and the house toggles in a row still do their own thing. All projects no longer has an Open column; the customer name is the link (for the keyboard).
+- **The design on Overview** (like TJ's kickoff "The build" card): when a project has elevations, a 3D view of the first drawn room, floor plans of up to three more, the rooms, walls, finish, the design it started from, saved versions and whether the customer approved it. **Open the drawing** goes to Elevations. `P2Elev.hero(c, j)`.
+- **New change order opens at the top** of the Change orders tab, above the ones already on the job, and scrolls into view.
+- **Emails to the customer** (`src/fm-phase2-emails.js`, `window.FMEmails` 1.0.0; screens `preview/phase2-emails.js`, `window.P2Emails`):
+  - Ten templates, in project order: design ready to approve, contract ready to sign, signing reminder, signed (thank you and what's next), invoices, payment received, cabinets ordered, delivered (final invoice), change order to sign, thank you (care guide, warranty, review link, referrals).
+  - **Overview → Email the customer** suggests the ones that fit where the job is now (`FMEmails.suggest`), fills them in from the job (`varsFor`), and opens them in the team's mail app or copies them. Edits there are for that one email. Writing an email changes nothing on the job.
+  - **Company → Email templates** (`#/emails`): Full access rewords any template; fill-ins in {braces} are checked (`FMEmails.check`); **Go back to the original wording**. Saved as `settings.emailTemplates = { <kind>: { subject, body } }` through `saveSetting` (Full access only, logged; blank ones dropped). A new key with no default needed: no template saved means the original wording.
+  - The signing emails (contract, reminder, change order, design) and **Send to customer** on Invoices now use these templates too.
+  - **Server work:** none required. When the server sends email (§39), use `FMEmails.compose(kind, FMEmails.varsFor(job, …), settings.emailTemplates)` for the subject and text so the team's wording is what goes out.
+- **Order board fixes:** a card that can't move yet says why (deposit not recorded, balance open) with a button to fix it. A blocked drag shows the reason with **Record the deposit payment →** / **Record the final payment →** (opens the job's Invoices tab with that invoice's payment form open) and **Open the job**. `FMCloseout.blocker(job)`, `FMCloseout.fixFor(job, action)`; `moveTo` now returns `fix` and `stoppedAt` when blocked (FMCloseout 1.1.0).
+
+**Tests: 29 files, 305 tests** (new: `emails` 5; `closeout` 9, with board fixes; `store` 18, with email templates).
+
+**Data (§0 rule 9):** additive only. The one new stored value is the company setting `emailTemplates`; nothing on a job changes.
+
+### Check (preview, after Reset sample data)
+1. The menu shows **Start: + Project / + Design**; **+ Design** opens the New design form.
+2. **All projects:** click a row's stage or balance; the project opens.
+3. **The Kitchen and baths sample quote → Overview:** "The design" card with the 3D kitchen.
+4. **Willow Creek → Overview → Email the customer:** pick **Payment received**; the amounts fill in. **Company → Email templates:** change a subject, Save, see "Edited"; type `{bogus}` and Save is refused.
+5. **Order board:** move Willow Creek to Delivered, then to Final payment: it's refused with **Record the final payment →**, which opens Invoice 2's payment form.
+6. **Willow Creek → Change orders → New change order:** it opens at the top.
+
+## 44. Owner's Nov 20 feedback: Finalize for change orders, fix signers in place, cleaner invoices, cabinet colors (Nov 20, 2.16.0)
+
+From the owner's review of 2.15.0, with ideas taken from TJ's change order and signing flow. Released in 2.16.0.
+
+- **Change orders end in Finalize.** The last step of New change order is **Finalize** (charged and agreed-amount change orders; courtesy is still "Save for approval", no-change is still "Record it"). It locks the price and records the change order as waiting on the buyer (status `sent`, as before), but no longer starts e-signing by itself. The change order's card then opens on two numbered steps:
+  1. **Download the invoice** (the change order document, which is the change order invoice).
+  2. **Get it signed:** **E-sign in the tool** or **Paper or emailed PDF** (upload the signed copy, as in §34).
+- **Who signs, right where you sign** (the old dead end: "Choose who signs for Fremont Makers on the Contract tab first", and the Contract tab can't be edited after signing). The e-sign step shows the buyer's name, the buyer's email, who countersigns for Fremont Makers and the salesperson, saved on the job as you change them (logged). Problems are listed in place (for example "for HelloSign isn't an email address") and **Send for e-signature** waits until they're fixed. `P2Sign.whoForm`.
+- **Fix a mistake** on any request that's out: it pulls the request back (the link stops working, logged) and reopens the fields to send it again. Cancel request is still there.
+- Courtesy and no-change change orders are sent as acknowledgement only (no countersigner needed).
+- Change orders list newest first; a long list of cabinet moves folds into "14 changes to the order".
+- **Invoices and change orders look like the original Fremont Makers change order** (`FMDocs` 1.5.0): the logo centered, a spaced kicker, a large serif title ("Change Order 2 Invoice"), two columns of details, totals at the right ending in **Amount due this invoice**. Cabinet lines are **grouped by color** (a heading with the color chip) and each line shows the SKU and what it is ("W3042-SBW · Wall cabinet 30″ wide, 42″ tall", "Outside corner molding, 8 ft"), instead of a description that repeats the SKU. The PAID stamp moved to the top right.
+- **Cabinet colors** (`src/fm-phase2-colors.js`, `window.FMColors` 1.0.0; picker `preview/phase2-colors.js`):
+  - The 88 colors on fremontmakers.com/catalog (as of Nov 20), each with a plain name, its collection, its page and a color chip sampled from the door photo. Dark Hickory's chip is set by hand (its photo didn't sample).
+  - **New design** and the **Elevations sketch** pick a color from chips; **+ Add a color** searches the catalog or makes your own (name + color). Added colors go on the company list for everyone: `settings.cabinetColors = [catalog key | { key, name, hex }]` through `saveSetting` (Full access, logged).
+  - Drawings take any of them (`FMElev.finishFor` accepts a supplier code, a color key or a #hex). `FMDesigns.create` accepts any color.
+- **Start: + Project and + Design** are the same filled color.
+
+**Tests: 30 files, 310 tests** (new: `colors` 4; `store` 19, with cabinet colors; `docs` updated for the new header).
+
+**Data (§0 rule 9):** additive only. The new stored value is the company setting `cabinetColors`; editing who signs updates `contacts.signer`, `contacts.buyerEmail`, `fmSigner` and `salesperson` on that job, logged, exactly as the Contract tab does before signing. Existing change orders and signed copies are untouched.
+
+**Server work:** none new. The signing endpoints (§34) also need the cancel-and-resend that **Fix a mistake** uses (`FMSign.cancel`), already in §34.
+
+### Check (preview, after Reset sample data)
+1. **Willow Creek → Change orders → New change order:** Something else, a note, add one cabinet, Charge it, **Finalize**. The card shows **1. Download the invoice** and **2. Get it signed**.
+2. The buyer email reads "for HelloSign": it's flagged. Type a real email, choose who countersigns: **Send for e-signature** turns on. Send, then **Fix a mistake**: the fields come back with "Send for e-signature again".
+3. **Paper or emailed PDF** shows the upload.
+4. **Open the change order invoice:** the centered header, lines under color headings, the totals at the right.
+5. **Designs → + Design → + Add a color:** search "sage", pick one; it's selected and on the list.
+
+## 45. Shipping, receiving and damage claims, Phase A (Nov 20, 2.16.0)
+
+The owner's spec ("Shipping, Receiving & Damage Claims"), trimmed after review so the Project Builder stays the one place the team checks: no new board columns, one Shipping page instead of four, no paid tracking service yet, and nothing needs new server work. Logic: `src/fm-phase2-shipping.js` (`window.FMShipping` 1.0.0). Screens: `preview/phase2-shipping.js` (`window.P2Ship`).
+
+**Owner's answers (Nov 20):**
+- Invoice timing stays as it is. Builders pay on different schedules, so nothing here moves an invoice.
+- 1330 College Ave is sometimes the real ship-to, as well as the shop at 719 Main St. Any other address is flagged.
+- Customers sometimes pick up, so "Record delivery" is now "Record delivery or pickup".
+- Wholesale Cabinets has no assigned rep. Claims go to customerservice@wholesalecabinets.com (from the After Purchase Packet).
+- Phase B forwarding address: Wholesale Cabinets emails will be forwarded to **fremontmakers@gmail.com**.
+
+**What's in Phase A:**
+- **Shipping tab** on every job (between Invoices and Documents):
+  - **+ Add an order or shipment:** drop in the Wholesale Cabinets email (the .eml from a mail app) or paste it.
+    - **Order confirmation:** reads the order #, placed date, estimated ship date, ship-to (flagged unless it's the shop or College Ave), item lines (the SHIPPING FEE row is skipped) and totals. It checks the lines against what was sold (warnings only) and asks which houses it covers and what it's for (the job, a change order, or a replacement for a claim).
+    - **Shipment update:** reads the order #, shipment #, carrier, tracking or PRO number, which items ("the moss green shaker items": an order can ship in parts by color), the tracking link and the carrier's number for scheduling.
+    - Or type the order # or a shipment in by hand.
+  - Saving the job's first order also records the factory order (same ledger step and log as before). **Record factory order** on the job header also takes an optional WC order #, and reminds the team to ask for a call before delivery.
+  - **Payment details are never read or stored.**
+- **Receiving** (phone-first; also `#/receive/<job>/<order>/<shipment>`, the QR code on the printed checklist):
+  - At the truck: the rules (count against the BOL, write damage on it before signing, don't refuse, get the exception #), a photo of the BOL, and "Damage noted on the BOL?" Yes opens the draft claim with the exception #.
+  - **Received** (or picked up) starts the **5-day window** (deadline = received + 5).
+  - Inspection: a countdown, **Everything arrived, no damage** (one tap), **All good** per color group, a ✓ per line, and ⚠ on any line.
+- **Claims** (supplier-facing; change orders stay customer-facing):
+  - One draft claim per Wholesale Cabinets order, so all replacements ship together (the packet's rule). Problems are added from receiving or with **Report damage or a missing item** during assembly or install: damaged / missing / wrong item, part, qty, house, "Does it stop assembly?" (doors and drawer fronts default to no), photos (required for damage) and a note. Blocking items flag the house as blocked.
+  - **Print the claim packet**: our info, order #, shipment #, carrier and tracking, received date, BOL exception #, the items table, then photos two per page, labeled by SKU and part.
+  - **Email it to Wholesale Cabinets** opens a draft to customerservice@wholesalecabinets.com; a person attaches the packet and photos and sends it. Then **Mark submitted** (emailed or filed in the account, with their claim #).
+  - The replacement order is added as "Replacement for claim N" and moves the claim through replacement ordered → shipped → received. **Close the claim** (replacements received, a credit, or denied with a reason).
+  - **Open claims block close-out** and the board's move to Complete, with a link to the claim.
+- **One status line everywhere**: on the job header (under Next up), the order board card and the Shipping tab. For example "In transit · Old Dominion PRO 39212935785", "At the shop since Nov 5 · inspect by Nov 10 (2 days left)", "1 item to claim · submit by Nov 10". **Next up** follows the shipping step: record the order → receive → finish inspecting → submit the claim.
+- **Needs attention and Today**:
+  - deposit paid 3+ days with no WC order
+  - a ship-to that isn't ours
+  - inspection due within 2 days
+  - a claim not submitted
+  - a blocked house
+- **Shipping page** (`#/shipping`, sidebar under Projects, with a count of urgent items): Arriving, To inspect (by deadline), Open claims, and a box to drop in any Wholesale Cabinets email (shipments find their job by order #; confirmations ask which job).
+- **Customer emails** (Email the customer suggests them): Cabinets shipped, Cabinets at our shop, A few pieces are being replaced, Replacement pieces are in.
+- **Printouts**: the receiving checklist (rules at the top, lines with Received / Damaged / Missing boxes, exception # and signature lines, QR code) and the claim packet. Photos and BOLs are filed under Documents → **Supplier orders & shipping**.
+
+**Data (§0 rule 9):** additive only. Jobs gain `supplierOrders` and `claims` (shapes at the top of `fm-phase2-shipping.js`). Removing a claim item marks it removed and keeps it. Nothing touches invoices, the contract or the books. Claim credits are recorded on the claim; putting them on Job P&L is a later step.
+
+**Tests:** 31 files, 317 tests (new: `shipping` 6, using the owner's two real emails in `tests/fixtures/wc-emails.js` with mail-server headers, the attachment and the card digits removed; `closeout` 10).
+
+**Phase B (built Nov 20, §46):** the page side of reading fremontmakers@gmail.com is in `FMMailIn`; the server work is in §46. Photo and BOL storage use the same file storage as §32.
+
+**Phase C (optional, later):** a tracking service (AfterShip or ShipEngine) for ETAs and the delivered time; a daily digest.
+
+### Check (preview, after Reset sample data)
+1. **Willow Creek → Shipping → + Add an order or shipment:** paste the order confirmation (`tests/fixtures/wc-emails.js` has it). It reads #1000174448, ships about Nov 2, College Ave ✓, two lines. **Save the order**: the job moves to Factory ordered.
+2. Type order #1000174155, then paste the shipment email: Old Dominion PRO 39212935785, the moss green items, call 800-235-5569. Save: the header reads "In transit".
+3. **Receive the shipment** (try it at phone width): No damage → **Received**. "Inspect by Nov 10 · 5 days left".
+4. **⚠ Report damage:** Damaged, a door, a photo, a note → **Add to the claim**. **Everything arrived, no damage**, then back to the tab: "1 item to claim · submit by Nov 10".
+5. **Print the claim packet** (the photo on page 2), **Mark submitted**. The order board won't move the job to Complete while the claim is open.
+
+## 46. Wholesale Cabinets mail-in: emails forwarded to fremontmakers@gmail.com go on their jobs (Nov 20, 2.16.0)
+
+**Owner (Nov 20):** the forward is set up. hello@fremontmakers.com now forwards Wholesale Cabinets email to **fremontmakers@gmail.com**. Build the flow so the team doesn't paste emails any more. Later the same day: the emails will arrive **from hello@fremontmakers.com as forwards**, with the same subjects and content as the samples. Hermes reads that inbox and does the right thing in the tool.
+
+**What the team sees**
+- **Shipping page → Inbox · fremontmakers@gmail.com**, above Arriving / To inspect / Open claims.
+  - **Files itself:** an email that is from Wholesale Cabinets, reads cleanly, and has a certain job. That means a shipment whose WC order # is on exactly one job, or an order confirmation whose number was typed on the job when the factory order was recorded. The job's log says "(from the fremontmakers@gmail.com inbox)".
+  - **Needs a job:** everything else waits with what was read: order # and lines, or carrier and tracking/PRO.
+    - If one job clearly fits, it's suggested: "Looks like Willow Creek Estates: 2 of 2 cabinets are on its quote, waiting on its factory order", with **File on Willow Creek Estates**.
+    - Otherwise there's a job picker (likely jobs first) and **File**, or **Not for a job**.
+  - **Recently filed** and **Not for a job** lists (promos, other WC mail, anything not from Wholesale Cabinets), with **Put back**.
+- **Filing an order** on a job at Deposit paid moves it to Factory ordered, same as saving it by hand.
+- **Filing a shipment** whose order isn't on the job adds the order by number, then the shipment.
+- **Order # typed earlier:** when someone typed the order # while recording the factory order, the confirmation **fills in the blanks**: lines, ship date, ship-to and totals. Nothing already entered is changed.
+- **Where it shows up:**
+  - The sidebar **Shipping** count includes emails waiting for a job.
+  - **Today** has one line per waiting email ("Email · Shipment … needs a job · File it").
+- Dropping an email in by hand still works.
+- The preview has **Preview only: simulate an email arriving** (drop an .eml or paste its source). On the live site, emails arrive by themselves.
+
+**Safety rules**
+- **Never kept:**
+  - The raw email. An inbox item holds the subject, the sender, the date and what was read, nothing else.
+  - Payment details. `FMShipping` never reads them, and a test checks the inbox item has none.
+- **Only Wholesale Cabinets mail is read:** From must be @wholesalecabinets.com or @wc-us.com, after unwrapping a forward. Anything else is set aside as "Not from Wholesale Cabinets" and never filed.
+  - DKIM and SPF are not used to decide this. The owner's samples arrive through a mail-security gateway that breaks both, so a check on them would reject the real emails.
+  - Auto-filing still needs an order # that is already on a job.
+- **Forwards from hello@fremontmakers.com** (the team's own mailbox, `FMMailIn.FORWARDERS`):
+  - If the original Wholesale Cabinets headers are still in the forward, they decide, as above. A forward from hello@ that wraps someone else's email is still set aside.
+  - If the forward has **no original headers left** (some forwarding rules strip them), an email from hello@fremontmakers.com is trusted as Wholesale Cabinets and read the same way. The item shows `how: 'forwarder'`.
+  - Hermes passes `forwarderAuth: false` to `ingest` when Gmail's `Authentication-Results` header for that message doesn't show `dmarc=pass` for fremontmakers.com (a spoofed hello@). Then it's set aside. Our own domain's check isn't broken by the gateway the way WC's is; if it turns out it is, leave `forwarderAuth` out and tell the owner.
+  - Another team mailbox can be added with `settings.mailInForwarders: ['…@fremontmakers.com']`.
+  - A leading `Fwd:` / `FW:` is taken off the subject.
+- **Tracking links** are kept only for carrier sites: fedex.com, odfl.com, ups.com, estes-express.com, xpo.com, saia.com and others in `FMMailIn`, https only. Any other link is dropped. For FedEx the tool builds the link itself.
+- **Nothing is sent** to Wholesale Cabinets or customers, and invoices, the contract and the books are untouched.
+- **Data (§0 rule 9): additive only.**
+  - A new company-level list, `state.mailIn`, is added when the first email arrives and never deleted.
+  - `updateMailIn` changes only `status`, `jobCode`, `filedBy`, `filedOn`, `auto`, `reason` and `error`. What was read stays as it was.
+  - Entries are logged under `MAIL`, and filing is logged on the job.
+
+**Forwards it understands:**
+- the original message as-is (a forwarding rule or redirect, the usual case)
+- Gmail "---------- Forwarded message ---------"
+- Outlook "From / Sent / To / Subject"
+- forwarded as an attachment (message/rfc822)
+- forwarded by hello@fremontmakers.com with only the body left (trusted forwarder, see Safety rules)
+
+**Files**
+
+| File | What |
+|---|---|
+| `src/fm-phase2-mailin.js` (new, FMMailIn 1.0.0) | `unwrap`, `ingest(raw, { jobs, linesOf, settings, receivedAt })` → inbox item, `match`, `autoFile(item)`, `file(job, item, ctx)` → FMShipping result plus `orderAction`, `fillOrder`, `safeUrl`, `summary`, `waiting` |
+| `preview/phase2-mailin.js` (new, P2Mail) | the Inbox card, Today lines, the sidebar count, the preview simulator |
+| `src/fm-phase2-store.js` | `mailIn()`, `addMailIn(item, at)` (de-duplicated by id; drops any `raw`), `updateMailIn(id, patch, text, by, at)` |
+| `src/fm-phase2-shipping.js` | `toText` keeps `<name@example.com>` so forwarded headers can be read |
+| `preview/phase2-shipping.js`, `preview/phase2-app.js`, `phase2.html` | the card on the Shipping page, the count, Today, events, CSS |
+| `tests/mailin.test.js` (new) | 8 tests: the owner's two emails, all forward styles, forwards from hello@fremontmakers.com, a look-alike sender, carrier-only links, filling a typed order, the store |
+
+**Server work (Hermes)**
+1. **Access to fremontmakers@gmail.com.** Recommended: the **Gmail API**.
+   - Create a Google Cloud OAuth client, and set the consent screen to **In production**. In "Testing" mode, refresh tokens expire after 7 days.
+   - Scope: `https://www.googleapis.com/auth/gmail.modify`. It's needed to add labels. It never deletes.
+   - The owner signs in once. Store the refresh token in the server's secret store, never in the repo, chat or email.
+   - Fallback: IMAP with a Google app password (2-Step Verification on). Same rules for the secret.
+2. **Every 5 minutes** (or Gmail push through Pub/Sub `users.watch`, if you prefer):
+   - list `in:inbox -label:PB-read newer_than:30d`
+   - for each message, `users.messages.get(format=raw)` and base64url-decode it to text
+   - build `item = FMMailIn.ingest(raw, { jobs: store.jobs(), linesOf: job => <the job's sold lines [{ sku, qty }]: its quote or estimate lines, per house>, settings: { shipTo: … }, receivedAt: <internalDate as ISO>, forwarderAuth: <false only when From is hello@fremontmakers.com and Authentication-Results lacks dmarc=pass for fremontmakers.com> })`
+   - call `store.addMailIn(item)`. A duplicate (same Message-ID) is fine: skip it.
+   - if `FMMailIn.autoFile(item)`, do the same as `P2Mail.fileOn(…, auto=true)`:
+     - `FMMailIn.file(job, item, { by: 'Mail-in', today, settings })`
+     - if `orderAction`, run `FMPhase1.applyAction(job, 'order', { date: item.order.placedOn || today }, 'Mail-in')`
+     - `store.update(jobCode, …, log)`, then `store.updateMailIn(item.id, { status: 'filed', jobCode, filedBy: 'Mail-in', filedOn: today, auto: true })`
+   - label the message `PB-read`, plus `PB-filed`, `PB-needs-job` or `PB-not-for-a-job`. **Never delete, archive or mark spam.** The Gmail inbox stays a full backup.
+   - Discard `raw` from memory after `ingest`. Don't log it. Attachments (WC's "After the purchase" PDF) are ignored.
+3. **The page's actions** (File, Not for a job, Put back) are the store calls in `preview/phase2-mailin.js`. Server-side they need a signed-in user, and are logged with their name.
+4. **First run:** process the last 30 days once.
+   - Orders already entered by hand come up as duplicates ("already on the job"), and their item is marked filed.
+   - Nothing on a job is changed except blanks filled on an order whose # was typed.
+5. **CSP:** nothing new in the browser. Gmail is reached from the server only.
+6. **Monitoring:** if the Gmail token stops working, show a banner on the Shipping page: "The inbox hasn't been read since <time>". Email the owner once a day until it's fixed.
+
+**Phase C (optional, later):** a tracking service (AfterShip or ShipEngine) for ETAs and the delivered time.
+
+**Tests:** 32 files, 325 tests.
+
+### Check (preview, after Reset sample data)
+1. **Shipping → Preview only: simulate an email arriving.** Paste the order confirmation from `tests/fixtures/wc-emails.js` (`WC_ORDER_EML`) and click **Deliver to the inbox**. It waits with "Looks like Willow Creek Estates: 2 of 2 cabinets are on its quote". The sidebar shows Shipping 1, and Today has "Email · Order #1000174448 · 2 lines · ships about Nov 2 needs a job".
+2. **File on Willow Creek Estates:** the job moves to Factory ordered. The log ends "(from the fremontmakers@gmail.com inbox) Factory order recorded."
+3. Deliver `WC_SHIP_EML` (order #1000174155, not on a job): "Order #1000174155 isn't on a job yet." Pick Willow Creek and click **File**. The order is added by number, with the Old Dominion shipment.
+4. Deliver a WC text email for order #1000174448 with a FedEx tracking number: "Filed automatically on Willow Creek Estates", listed under Recently filed as "filed automatically".
+5. Deliver the same email again: "That email is already in the inbox."
+6. Deliver an email from any other address: set aside under **Not for a job** as "Not from Wholesale Cabinets".
+7. Deliver the shipment as a forward from hello@fremontmakers.com with only the body (From: hello@fremontmakers.com, Subject: FW: Wholesale Cabinets: Shipment # … update): it's read as Wholesale Cabinets, and the subject shows without "FW:".

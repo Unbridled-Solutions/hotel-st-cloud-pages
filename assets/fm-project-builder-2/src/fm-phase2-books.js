@@ -156,12 +156,13 @@
       var ch = j.charges || { parts: [], totals: {} }, ct = ch.totals || {};
       var kindSum = function (k) { return (ch.parts || []).filter(function (p) { return p.kind === k; }).reduce(function (s, p) { return s + (p.otherCents || 0); }, 0); };
       var agreed = kindSum('agreed'), unbroken = (ch.parts || []).filter(function (p) { return p.kind === 'gap' && /^Not broken out/.test(p.label); }).reduce(function (s, p) { return s + (p.otherCents || 0); }, 0);
-      var revenue = j.contractCents - j.taxCents, quoted = j.costCents || 0, mfr = j.costCents == null ? 0 : -(ct.discountCents || 0), cost = quoted - mfr, absorbed = j.absorbedCents || 0, gp = revenue - cost - absorbed;
+      var actual = j.actualCostCents != null, revenue = j.contractCents - j.taxCents, quoted = j.costCents || 0, mfr = actual || j.costCents == null ? 0 : -(ct.discountCents || 0), cost = actual ? j.actualCostCents : quoted - mfr,   /* job costs logged: what was actually paid (HANDOFF §42) */
+          absorbed = j.absorbedCents || 0, gp = revenue - cost - absorbed;
       return { jobCode: j.jobCode, customer: j.customer, project: j.project, contractCents: j.contractCents, taxCents: j.taxCents,
                cabinetsCents: ct.cabinetsCents || 0, discountCents: ct.discountCents || 0, laborCents: ct.laborCents || 0, gaCents: ct.gaCents || 0, otherCents: ct.otherCents || 0,
                agreedCents: agreed, roundingCents: (ct.otherCents || 0) - agreed - unbroken, unbrokenCents: unbroken,
                parts: ch.parts || [],
-               revenueCents: revenue, quotedCostCents: quoted, mfrDiscountCents: mfr, costCents: cost, costKnown: j.costCents != null, absorbedCents: absorbed, grossProfitCents: gp, marginPct: pct(gp, revenue) };
+               revenueCents: revenue, quotedCostCents: quoted, mfrDiscountCents: mfr, costCents: cost, costKnown: j.costCents != null || actual, costActual: actual, absorbedCents: absorbed, grossProfitCents: gp, marginPct: pct(gp, revenue) };
     });
     var t = { contractCents: 0, taxCents: 0, cabinetsCents: 0, discountCents: 0, laborCents: 0, gaCents: 0, otherCents: 0, agreedCents: 0, roundingCents: 0, unbrokenCents: 0, revenueCents: 0, quotedCostCents: 0, mfrDiscountCents: 0, costCents: 0, absorbedCents: 0, grossProfitCents: 0 };
     booked.forEach(function (r) { Object.keys(t).forEach(function (k) { t[k] += r[k]; }); });

@@ -126,7 +126,7 @@
   var CHANGE_REASONS = {
     customer_request: 'Customer request', site_change: 'Site or plan change',
     backorder: 'Backordered item substituted', our_mistake: 'Our mistake', other: 'Other',
-    add: 'Cabinets added', swap: 'Cabinets swapped', remove: 'Cabinets removed or returned', backorder_wait: 'Backordered: new delivery date',
+    add: 'Additional products', swap: 'Cabinets swapped', remove: 'Cabinets removed or returned', backorder_wait: 'Backordered: new delivery date',
     damage: 'Damaged cabinet replaced', mistake: 'Corrected at our cost'
   };
   function suffixOf(sku) { var p = String(sku || '').split('-'); return p.length > 1 ? p[p.length - 1].toUpperCase() : ''; }
@@ -311,7 +311,7 @@
    * The flow starts from what happened, which picks the reason, opens the right tools and suggests (never chooses)
    * how it's billed. Every type can still use every tool: add, remove, swap, replace, other charges, new date. */
   var TYPES = {
-    add: { label: 'Add cabinets', help: 'The customer wants more cabinets or accessories.', reason: 'add', usually: 'charge' },
+    add: { label: 'Add additional products', help: 'The customer wants more: cabinets, accessories, hardware or other products. Nothing on the order has to change.', reason: 'add', usually: 'charge' },
     swap: { label: 'Swap cabinets', help: 'A different size, style or color in place of what was sold. Use Swap on the line.', reason: 'swap', usually: 'charge' },
     remove: { label: 'Remove or return', help: 'Cabinets come off the order or come back. The customer is credited what they paid for them; add a restocking fee under Other charges if one applies.', reason: 'remove', usually: 'charge' },
     backorder: { label: 'Backordered', help: 'A cabinet won\'t arrive in time. Swap in one that\'s in stock, or wait for it and record the new date.', reason: 'backorder', usually: 'courtesy' },

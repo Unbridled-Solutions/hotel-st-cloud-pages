@@ -1,5 +1,5 @@
 /*
- * Project Builder 2.11.1 live boot.
+ * Project Builder 2.16.0 live boot.
  * Canonical URL: /projectbuilder
  * GET ns=fm-quotes only (read-only import). Never POST that namespace.
  * New writes go to GET/POST ns=fm-phase1.
@@ -62,24 +62,29 @@
       save: function (st) {
         cached = st;
         if (timer) clearTimeout(timer);
-        timer = setTimeout(function () {
-          fetch('/api/planner/bundle?ns=fm-phase1', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            cache: 'no-store',
-            body: JSON.stringify({
-              'fm-phase1-state': st,
-              'fm-phase1-savedAt': new Date().toISOString()
-            })
-          }).catch(function () { /* keep in memory if cloud save fails */ });
-        }, 500);
+        return new Promise(function (resolve, reject) {
+          timer = setTimeout(function () {
+            fetch('/api/planner/bundle?ns=fm-phase1', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              cache: 'no-store',
+              body: JSON.stringify({
+                'fm-phase1-state': st,
+                'fm-phase1-savedAt': new Date().toISOString()
+              })
+            }).then(function (r) {
+              if (!r.ok) throw new Error('phase1 POST ' + r.status);
+              resolve();
+            }).catch(reject);
+          }, 500);
+        });
       }
     };
   }
 
   if (!root) return;
 
-  root.innerHTML = '<div class="fmp1-card p2-pad" style="grid-column:1/-1"><span class="fmp1-eyebrow">Project Builder · v2.11.1</span><p class="fmp1-muted">Reading jobs. Existing records are not reset. The old builder is not being written.</p></div>';
+  root.innerHTML = '<div class="fmp1-card p2-pad" style="grid-column:1/-1"><span class="fmp1-eyebrow">Project Builder · v2.16.0</span><p class="fmp1-muted">Reading jobs. Existing records are not reset. The old builder is not being written.</p></div>';
 
   Promise.all([
     fetch('/api/planner/bundle?ns=fm-quotes', { cache: 'no-store' }).then(function (r) {
@@ -110,6 +115,18 @@
       BASE + '/preview/phase2-app.js',
       BASE + '/preview/phase2-flows.js',
       BASE + '/preview/phase2-sign.js',
+      BASE + '/preview/phase2-requests.js',
+      BASE + '/preview/phase2-estimate.js',
+      BASE + '/preview/phase2-designs.js',
+      BASE + '/preview/phase2-contract.js',
+      BASE + '/preview/phase2-invoicing.js',
+      BASE + '/preview/phase2-pdf.js?v=pdfparse1',
+      BASE + '/preview/phase2-search.js',
+      BASE + '/preview/phase2-group3.js',
+      BASE + '/preview/phase2-emails.js',
+      BASE + '/preview/phase2-colors.js',
+      BASE + '/preview/phase2-shipping.js',
+      BASE + '/preview/phase2-mailin.js',
       BASE + '/preview/phase2-elevations.js',
       BASE + '/preview/phase2-measure.js',
       BASE + '/preview/phase2-customers.js',
